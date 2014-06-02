@@ -1,0 +1,95 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+	    android:id="@+id/editReferralUrl"
+        android:layout_width="260dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:hint="referral url"
+        android:gravity="center"
+	    />
+    
+    <Button
+        android:id="@+id/cmdRefreshURL"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/editReferralUrl"
+        android:text="Refresh URL"
+        />
+    
+    <TextView 
+        android:id="@+id/txtInstallCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:padding="5dp"
+        android:text="install count = "
+        android:layout_below="@+id/cmdRefreshURL"/>
+    
+    <TextView 
+        android:id="@+id/txtInstallCreditCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="install credits = "
+        android:layout_below="@+id/txtInstallCount"/>
+    
+    <TextView 
+        android:id="@+id/txtEventCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+       	android:text="buy count = "
+        android:layout_below="@+id/txtInstallCreditCount"/>
+    
+    <TextView 
+        android:id="@+id/txtEventCreditCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="buy credits = "
+        android:layout_below="@+id/txtEventCount"/>
+    
+    <Button
+        android:id="@+id/cmdRefreshCounts"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/txtEventCreditCount"
+        android:text="Refresh Counts"
+        />
+    
+    <Button
+        android:id="@+id/cmdCreditInstall"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/cmdRefreshCounts"
+        android:text="Credit Install"
+        />
+    <Button
+        android:id="@+id/cmdCreditBuy"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/cmdCreditInstall"
+        android:text="Credit Buy"
+        />
+    <Button
+        android:id="@+id/cmdCommitBuyAction"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/cmdCreditBuy"
+        android:text="Execute Buy"
+        />
+</RelativeLayout>
+    
