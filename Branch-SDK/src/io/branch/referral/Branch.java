@@ -363,7 +363,7 @@ public class Branch {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
 						if (initFinishedCallback_ != null) {
-							initFinishedCallback_.onInitFinished();
+							initFinishedCallback_.onInitFinished(getReferringParams());
 						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						if (serverResponse.has("link_click_id")) {
@@ -377,7 +377,7 @@ public class Branch {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
 						if (initFinishedCallback_ != null) {
-							initFinishedCallback_.onInitFinished();
+							initFinishedCallback_.onInitFinished(getReferringParams());
 						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED)) {
 						ServerRequest req = requestQueue_.get(0);
@@ -403,7 +403,7 @@ public class Branch {
 	}
 	
 	public interface BranchReferralInitListener {
-		public void onInitFinished();
+		public void onInitFinished(JSONObject referringParams);
 	}
 	
 	public interface BranchReferralStateChangedListener {

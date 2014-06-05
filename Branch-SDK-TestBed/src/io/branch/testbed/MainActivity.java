@@ -1,5 +1,12 @@
 package io.branch.testbed;
 
+import java.util.Iterator;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchReferralInitListener;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,7 +46,7 @@ public class MainActivity extends Activity {
 		cmdRefreshUrl.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				txtUrl.setText(Branch.getReferralURL());
+				//txtUrl.setText(Branch.getReferralURL());
 			}
 		});
 		
@@ -76,11 +83,21 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Branch branch = Branch.getInstance(this.getApplicationContext(), "fake_key");
-		Branch.setStateChangedCallback(new BranchReferralStateChangeListener() {
+		final Branch branch = Branch.getInstance(this.getApplicationContext(), "fake_key");
+		branch.initUserSession(new BranchReferralInitListener() {
 			@Override
-			public void onStateChanged() {
-				Log.i("BloomTestBed", "Bloom test bed on update called");
+			public void onInitFinished(JSONObject referringParams) {
+				Log.i("BranchTestBed", "branch init complete!");
+				JSONObject params = branch.getReferringParams();
+				try {
+					Iterator<?> keys = params.keys();
+					while (keys.hasNext()) {
+						String key = (String) keys.next();
+						Log.i("BranchTestBed", key + ", " + referringParams.getString(key));
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 			}
 		});
 	}
