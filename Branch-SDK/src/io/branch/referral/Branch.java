@@ -9,9 +9,7 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.util.Log;
 
-public class Branch {
-	public static final String ACTION_INSTALL = "install";
-	
+public class Branch {	
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 10;
 
@@ -49,11 +47,11 @@ public class Branch {
 	}
 	
 	public void initUserSession(BranchReferralInitListener callback) {
+		initFinishedCallback_ = callback;
 		if (!isInit_) {
 			initSession();
 			isInit_ = true;
 		}
-		initFinishedCallback_ = callback;
 	}
 	
 	public void initUserSession() {
@@ -195,20 +193,26 @@ public class Branch {
 		}
 	}
 	
-	private void generateShortLink(String tag, String params) {
-		JSONObject linkPost = new JSONObject();
-		try {
-			linkPost.put("app_id", prefHelper_.getAppKey());
-			linkPost.put("device_id", prefHelper_.getDeviceID());
-			linkPost.put("user_id", prefHelper_.getUserID());
-			if (tag != null)
-				linkPost.put("tag", tag);
-			if (params != null)
-				linkPost.put("data", params);
-		} catch (JSONException ex) {
-			ex.printStackTrace();
-		}
-		kRemoteInterface_.createCustomUrl(linkPost);
+	private void generateShortLink(final String tag, final String params) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject linkPost = new JSONObject();
+				try {
+					linkPost.put("app_id", prefHelper_.getAppKey());
+					linkPost.put("device_id", prefHelper_.getDeviceID());
+					linkPost.put("user_id", prefHelper_.getUserID());
+					if (tag != null)
+						linkPost.put("tag", tag);
+					if (params != null)
+						linkPost.put("data", params);
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
+				processNextQueueItem();
+			}
+		}).start();
 	}
 	
 	private void processNextQueueItem() {
@@ -221,21 +225,26 @@ public class Branch {
 				ServerRequest req = requestQueue_.get(0);
 				
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-					Log.i("AppidemicSDK", "calling register install");
+					Log.i("BranchSDK", "calling register install");
 					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE);
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					Log.i("AppidemicSDK", "calling register open");
+					Log.i("BranchSDK", "calling register open");
 					kRemoteInterface_.registerOpen();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS) && hasUser()) {
-					Log.i("AppidemicSDK", "calling get referrals");
+					Log.i("BranchSDK", "calling get referrals");
 					kRemoteInterface_.getReferrals();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED) && hasUser()) {
-					Log.i("AppidemicSDK", "calling credit referrals");
+					Log.i("BranchSDK", "calling credit referrals");
 					kRemoteInterface_.creditUserForReferrals(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser()){
-					Log.i("AppidemicSDK", "calling completed action");
+					Log.i("BranchSDK", "calling completed action");
 					kRemoteInterface_.userCompletedAction(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser()) {
+					Log.i("BranchSDK", "calling completed action");
+					kRemoteInterface_.createCustomUrl(req.getPost());
 				}
+			} else {
+				serverSema_.release();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
