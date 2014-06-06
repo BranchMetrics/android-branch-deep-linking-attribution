@@ -26,7 +26,6 @@ public class RemoteInterface {
 	public static final String KEY_SERVER_CALL_TAG = "server_call_tag";
 	public static final String KEY_SERVER_CALL_STATUS_CODE = "httpcode";
 
-	public static final String NO_IDENT_VALUE = "no_value";
 	public static final String NO_TAG_VALUE = "no_tag";
 
 	private HttpClient getGenericHttpClient() {

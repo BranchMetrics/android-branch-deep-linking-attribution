@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 public class PrefHelper {
-	public static final String NO_STRING_VALUE = "none";
+	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
@@ -43,11 +43,11 @@ public class PrefHelper {
 	}
 	
 	public String getAPIBaseUrl() {
-		return "http://appidemic.io/";
+		return "http://api.branchmetrics.io/";
 	}
 	
 	public String getShortURL() {
-		return "pdm.io/";
+		return "bnc.lt/";
 	}
 	
 	public void setAppKey(String key) {

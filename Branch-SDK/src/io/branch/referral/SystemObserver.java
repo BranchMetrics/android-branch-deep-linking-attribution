@@ -15,7 +15,7 @@ import android.view.Display;
 import android.view.WindowManager;
 
 public class SystemObserver {
-	private static final String BLANK = "no_value";
+	private static final String BLANK = "bnc_no_value";
 
 	private Context context_;
 	

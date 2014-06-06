@@ -79,7 +79,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void userCompletedAction(JSONObject post) {
-		String urlExtend = "v1/action/" + prefHelper_.getUserID();
+		String urlExtend = "v1/event";
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_COMPLETE_ACTION));
 		}
