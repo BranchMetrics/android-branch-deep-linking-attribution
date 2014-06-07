@@ -189,30 +189,32 @@ public class Branch {
 			}
 			return url;
 		} else {
-			return "init imcomplete, did you call init";
+			return "init incomplete, did you call init yet?";
 		}
 	}
 	
 	private void generateShortLink(final String tag, final String params) {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject linkPost = new JSONObject();
-				try {
-					linkPost.put("app_id", prefHelper_.getAppKey());
-					linkPost.put("device_id", prefHelper_.getDeviceID());
-					linkPost.put("user_id", prefHelper_.getUserID());
-					if (tag != null)
-						linkPost.put("tag", tag);
-					if (params != null)
-						linkPost.put("data", params);
-				} catch (JSONException ex) {
-					ex.printStackTrace();
+		if (hasUser()) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					JSONObject linkPost = new JSONObject();
+					try {
+						linkPost.put("app_id", prefHelper_.getAppKey());
+						linkPost.put("device_id", prefHelper_.getDeviceID());
+						linkPost.put("user_id", prefHelper_.getUserID());
+						if (tag != null)
+							linkPost.put("tag", tag);
+						if (params != null)
+							linkPost.put("data", params);
+					} catch (JSONException ex) {
+						ex.printStackTrace();
+					}
+					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
+					processNextQueueItem();
 				}
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
-				processNextQueueItem();
-			}
-		}).start();
+			}).start();
+		}
 	}
 	
 	private void processNextQueueItem() {
@@ -355,6 +357,7 @@ public class Branch {
 						retryLastRequest();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
 						processReferralCounts(serverResponse);
+						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 						String appInstallID = serverResponse.getString("app_install_id");
 						prefHelper_.setUserID(serverResponse.getString("user_id"));
@@ -374,6 +377,7 @@ public class Branch {
 						if (initFinishedCallback_ != null) {
 							initFinishedCallback_.onInitFinished(getReferringParams());
 						}
+						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						if (serverResponse.has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
@@ -388,20 +392,22 @@ public class Branch {
 						if (initFinishedCallback_ != null) {
 							initFinishedCallback_.onInitFinished(getReferringParams());
 						}
+						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED)) {
 						ServerRequest req = requestQueue_.get(0);
 						String action = req.getPost().getString("action");
-						int credits = req.getPost().getInt("credits");
+						int credits = req.getPost().getInt("credit");
 						prefHelper_.setActionCreditCount(action, prefHelper_.getActionCreditCount(action)+credits);
 						prefHelper_.setActionBalanceCount(action, Math.max(0, prefHelper_.getActionTotalCount(action)-prefHelper_.getActionCreditCount(action)));
+						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						String url = serverResponse.getString("url");
 						if (linkCreateCallback_ != null) {
 							linkCreateCallback_.onLinkCreate(url);
 						}
+						requestQueue_.remove(0);
 					}
 					
-					requestQueue_.remove(0);
 
 					processNextQueueItem();
 				} catch (JSONException ex) {
