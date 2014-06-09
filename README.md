@@ -147,7 +147,9 @@ To get the number of install events that occurred from this user's links:
 
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.loadPoints(new BranchReferralStateChangedListener() {
-	public void onStateChanged() {
+	public void onStateChanged(boolean changed) {
+		// changed will indicate if there was a state change from before
+
 		int newInstallsFromUser = branch.getBalance("install")
 
 		// reward the user

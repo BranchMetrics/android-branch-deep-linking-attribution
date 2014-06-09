@@ -259,7 +259,26 @@ public class Branch {
 	private void retryLastRequest() {
 		retryCount_ = retryCount_ + 1;
 		if (retryCount_ > MAX_RETRIES) {
-			requestQueue_.remove(0);
+			ServerRequest req = requestQueue_.remove(0);
+			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+				if (initFinishedCallback_ != null) {
+					JSONObject obj = new JSONObject();
+					try {
+						obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
+					} catch(JSONException ex) {
+						ex.printStackTrace();
+					}
+					initFinishedCallback_.onInitFinished(obj);
+				}
+			} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
+				if (stateChangedCallback_ != null) {
+					stateChangedCallback_.onStateChanged(false);
+				}
+			} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
+				if (linkCreateCallback_ != null) {
+					linkCreateCallback_.onLinkCreate("Trouble reaching server. Please try again in a few minutes");
+				}
+			}
 			retryCount_ = 0;
 		} else {
 			try {
@@ -339,10 +358,8 @@ public class Branch {
 				e.printStackTrace();
 			}			
 		}
-		if (updateListener) {
-			if (stateChangedCallback_ != null) {
-				stateChangedCallback_.onStateChanged();
-			}
+		if (stateChangedCallback_ != null) {
+			stateChangedCallback_.onStateChanged(updateListener);
 		}
 	}
 	
@@ -424,7 +441,7 @@ public class Branch {
 	}
 	
 	public interface BranchReferralStateChangedListener {
-		public void onStateChanged();
+		public void onStateChanged(boolean changed);
 	}
 	
 	public interface BranchLinkCreateListener {
