@@ -51,6 +51,8 @@ public class Branch {
 		if (!isInit_) {
 			initSession();
 			isInit_ = true;
+		} else {
+			if (callback != null) callback.onInitFinished(getReferringParams());
 		}
 	}
 	

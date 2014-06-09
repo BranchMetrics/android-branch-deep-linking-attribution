@@ -93,18 +93,47 @@ All of the above options are the same (ie tagging, data passing) but you need to
 ```java
 // get a simple url to track events with
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-String urlToShare = branch.getShortUrl(new BranchLinkCreateListener() {
+branch.getShortUrl(new BranchLinkCreateListener() {
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
 });
 
 // or 
+// associate data with a link
+// you can access this data from anyone instance that installs or opens the app from this link (amazing...)
+JSONObject dataToInclude = new JSONObject();
+try {
+	dataToInclude.put("user", "Joe");
+	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
+	dataToInclude.put("description", "Joe likes long walks on the beach...")
+} catch (JSONException ex) {
+	
+}
 
-String urlToShare = branch.getShortUrl("twitter", jsonParams, new BranchLinkCreateListener() {});
-String urlToShare = branch.getShortUrl("twitter", new BranchLinkCreateListener() {});
-String urlToShare = branch.getShortUrl(jsonParams, new BranchLinkCreateListener() {});
+branch.getShortUrl(dataToInclude, new BranchLinkCreateListener() {
+	public void onLinkCreate(String url) {
+		// show the link to the user or share it immediately
+	}
+});
 
+// or 
+// get a url with a tag for analytics in the dashboard
+// example tag could be "fb", "email", "twitter"
+
+branch.getShortUrl("twitter", new BranchLinkCreateListener() {
+	public void onLinkCreate(String url) {
+		// show the link to the user or share it immediately
+	}
+});
+
+// or
+
+branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
+	public void onLinkCreate(String url) {
+		// show the link to the user or share it immediately
+	}
+});
 ```
 
 ### Get/reward event points
