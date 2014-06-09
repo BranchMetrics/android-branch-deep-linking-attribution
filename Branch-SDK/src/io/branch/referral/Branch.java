@@ -6,12 +6,14 @@ import java.util.concurrent.Semaphore;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 public class Branch {	
 	private static final int INTERVAL_RETRY = 3000;
-	private static final int MAX_RETRIES = 10;
+	private static final int MAX_RETRIES = 5;
 
 	private static Branch branchReferral_;
 	private boolean isInit_;
@@ -23,6 +25,8 @@ public class Branch {
 	private BranchRemoteInterface kRemoteInterface_;
 	private PrefHelper prefHelper_;
 		
+	private Context context_;
+	
 	private Semaphore serverSema_;
 	private ArrayList<ServerRequest> requestQueue_;
 	private int networkCount_;
@@ -35,6 +39,7 @@ public class Branch {
 		requestQueue_ = new ArrayList<ServerRequest>();
 		serverSema_ = new Semaphore(1);
 		isInit_ = false;
+		context_ = context;
 		networkCount_ = 0;
 	}
 	
@@ -49,7 +54,12 @@ public class Branch {
 	public void initUserSession(BranchReferralInitListener callback) {
 		initFinishedCallback_ = callback;
 		if (!isInit_) {
-			initSession();
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					initSession();
+				}
+			}).start();
 			isInit_ = true;
 		} else {
 			if (callback != null) callback.onInitFinished(getReferringParams());
@@ -79,17 +89,31 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				retryCount_ = 0;
-				JSONObject post = new JSONObject();
-				try {
-					post.put("action", action);
-					post.put("credit", credit);
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
+				int creditsToAdd = 0;
+				int total = prefHelper_.getActionTotalCount(action);
+				int prevCredits = prefHelper_.getActionCreditCount(action);
+				
+				if ((credit + prevCredits) > total) {
+					creditsToAdd = total - prevCredits;
+				} else {
+					creditsToAdd = credit;
 				}
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED, post));
-				processNextQueueItem();
+				
+				
+				if (creditsToAdd > 0) {
+					retryCount_ = 0;
+					JSONObject post = new JSONObject();
+					try {
+						post.put("app_id", prefHelper_.getAppKey());
+						post.put("event", action);
+						post.put("credit", creditsToAdd);
+					} catch (JSONException ex) {
+						ex.printStackTrace();
+						return;
+					}
+					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED, post));
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -101,7 +125,10 @@ public class Branch {
 				retryCount_ = 0;
 				JSONObject post = new JSONObject();
 				try {
-					post.put("action", action);
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("device_id", prefHelper_.getDeviceID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) post.put("link_click_id", prefHelper_.getLinkClickID());
+					post.put("event", action);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -159,19 +186,19 @@ public class Branch {
 	}
 	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, null);
+		generateShortLink(null, null, callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, params.toString());
+		generateShortLink(null, params.toString(), callback);
 	}
 	
 	public void getShortUrl(String tag, BranchLinkCreateListener callback) {
-		generateShortLink(tag, null);
+		generateShortLink(tag, null, callback);
 	}
 	
 	public void getShortUrl(String tag, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tag, params.toString());
+		generateShortLink(tag, params.toString(), callback);
 	}
 	
 	// PRIVATE FUNCTIONS
@@ -195,7 +222,8 @@ public class Branch {
 		}
 	}
 	
-	private void generateShortLink(final String tag, final String params) {
+	private void generateShortLink(final String tag, final String params, BranchLinkCreateListener callback) {
+		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			new Thread(new Runnable() {
 				@Override
@@ -259,26 +287,32 @@ public class Branch {
 	private void retryLastRequest() {
 		retryCount_ = retryCount_ + 1;
 		if (retryCount_ > MAX_RETRIES) {
-			ServerRequest req = requestQueue_.remove(0);
-			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-				if (initFinishedCallback_ != null) {
-					JSONObject obj = new JSONObject();
-					try {
-						obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
-					} catch(JSONException ex) {
-						ex.printStackTrace();
+			final ServerRequest req = requestQueue_.remove(0);
+			Handler mainHandler = new Handler(context_.getMainLooper());
+			mainHandler.post(new Runnable() {
+				@Override
+				public void run() {
+					if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+						if (initFinishedCallback_ != null) {
+							JSONObject obj = new JSONObject();
+							try {
+								obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
+							} catch(JSONException ex) {
+								ex.printStackTrace();
+							}
+							initFinishedCallback_.onInitFinished(obj);
+						}
+					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
+						if (stateChangedCallback_ != null) {
+							stateChangedCallback_.onStateChanged(false);
+						}
+					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
+						if (linkCreateCallback_ != null) {
+							linkCreateCallback_.onLinkCreate("Trouble reaching server. Please try again in a few minutes");
+						}
 					}
-					initFinishedCallback_.onInitFinished(obj);
 				}
-			} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
-				if (stateChangedCallback_ != null) {
-					stateChangedCallback_.onStateChanged(false);
-				}
-			} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-				if (linkCreateCallback_ != null) {
-					linkCreateCallback_.onLinkCreate("Trouble reaching server. Please try again in a few minutes");
-				}
-			}
+			});
 			retryCount_ = 0;
 		} else {
 			try {
@@ -358,9 +392,16 @@ public class Branch {
 				e.printStackTrace();
 			}			
 		}
-		if (stateChangedCallback_ != null) {
-			stateChangedCallback_.onStateChanged(updateListener);
-		}
+		final boolean finUpdateListener = updateListener;
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (stateChangedCallback_ != null) {
+					stateChangedCallback_.onStateChanged(finUpdateListener);
+				}
+			}
+		});
 	}
 	
 	public class ReferralNetworkCallback implements NetworkCallback {
@@ -378,11 +419,10 @@ public class Branch {
 						processReferralCounts(serverResponse);
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-						String appInstallID = serverResponse.getString("app_install_id");
+						String url = serverResponse.getString("link");
 						prefHelper_.setUserID(serverResponse.getString("user_id"));
 						prefHelper_.setDeviceID(serverResponse.getString("device_id"));
-						prefHelper_.setAppInstallID(appInstallID);
-						prefHelper_.setUserURL(prefHelper_.getShortURL() + "a/" + appInstallID);
+						prefHelper_.setUserURL(url);
 						if (serverResponse.has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
 						} else {
@@ -393,9 +433,15 @@ public class Branch {
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
-						if (initFinishedCallback_ != null) {
-							initFinishedCallback_.onInitFinished(getReferringParams());
-						}
+						Handler mainHandler = new Handler(context_.getMainLooper());
+						mainHandler.post(new Runnable() {
+							@Override
+							public void run() {
+								if (initFinishedCallback_ != null) {
+									initFinishedCallback_.onInitFinished(getReferringParams());
+								}
+							}
+						});
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						if (serverResponse.has("link_click_id")) {
@@ -408,9 +454,15 @@ public class Branch {
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
-						if (initFinishedCallback_ != null) {
-							initFinishedCallback_.onInitFinished(getReferringParams());
-						}
+						Handler mainHandler = new Handler(context_.getMainLooper());
+						mainHandler.post(new Runnable() {
+							@Override
+							public void run() {
+								if (initFinishedCallback_ != null) {
+									initFinishedCallback_.onInitFinished(getReferringParams());
+								}
+							}
+						});
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED)) {
 						ServerRequest req = requestQueue_.get(0);
@@ -420,10 +472,18 @@ public class Branch {
 						prefHelper_.setActionBalanceCount(action, Math.max(0, prefHelper_.getActionTotalCount(action)-prefHelper_.getActionCreditCount(action)));
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-						String url = serverResponse.getString("url");
-						if (linkCreateCallback_ != null) {
-							linkCreateCallback_.onLinkCreate(url);
-						}
+						final String url = serverResponse.getString("url");
+						Handler mainHandler = new Handler(context_.getMainLooper());
+						mainHandler.post(new Runnable() {
+							@Override
+							public void run() {
+								if (linkCreateCallback_ != null) {
+									linkCreateCallback_.onLinkCreate(url);
+								}
+							}
+						});
+						requestQueue_.remove(0);
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION)) {
 						requestQueue_.remove(0);
 					}
 					

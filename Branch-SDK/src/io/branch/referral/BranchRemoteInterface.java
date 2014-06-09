@@ -63,7 +63,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void registerOpen() {
-		String urlExtend = "v1/open/" + prefHelper_.getUserID();
+		String urlExtend = "v1/open";
 		if (callback_ != null) {
 			JSONObject openPost = new JSONObject();
 			try {

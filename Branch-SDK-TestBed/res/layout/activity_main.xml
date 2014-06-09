@@ -9,7 +9,7 @@
         android:layout_height="40dp"
         android:layout_centerHorizontal="true"
         android:layout_alignParentTop="true"
-        android:hint="referral url"
+        android:hint="long referral url"
         android:gravity="center"
 	    />
     
@@ -19,7 +19,26 @@
         android:layout_height="40dp"
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/editReferralUrl"
-        android:text="Refresh URL"
+        android:text="Refresh Long URL"
+        />
+    
+    <EditText
+	    android:id="@+id/editReferralShortUrl"
+        android:layout_width="260dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/cmdRefreshURL"
+        android:hint="short referral url"
+        android:gravity="center"
+	    />
+    
+    <Button
+        android:id="@+id/cmdRefreshShortURL"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/editReferralShortUrl"
+        android:text="Refresh Long URL"
         />
     
     <TextView 
@@ -29,7 +48,7 @@
         android:layout_marginTop="5dp"
         android:padding="5dp"
         android:text="install count = "
-        android:layout_below="@+id/cmdRefreshURL"/>
+        android:layout_below="@+id/cmdRefreshShortURL"/>
     
     <TextView 
         android:id="@+id/txtInstallCreditCount"

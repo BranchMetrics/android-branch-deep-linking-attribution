@@ -94,6 +94,7 @@ public class RemoteInterface {
 	public JSONObject make_restful_post(JSONObject body, String url, String tag) {
 		try {    	
 			Log.i("KindredReferral", "posting to " + url);
+			Log.i("BranchSDK", "Post value = " + body.toString());
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");

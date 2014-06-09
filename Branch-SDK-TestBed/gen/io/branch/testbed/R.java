@@ -20,17 +20,19 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int cmdCommitBuyAction=0x7f06000a;
-        public static final int cmdCreditBuy=0x7f060009;
-        public static final int cmdCreditInstall=0x7f060008;
-        public static final int cmdRefreshCounts=0x7f060007;
+        public static final int cmdCommitBuyAction=0x7f06000c;
+        public static final int cmdCreditBuy=0x7f06000b;
+        public static final int cmdCreditInstall=0x7f06000a;
+        public static final int cmdRefreshCounts=0x7f060009;
+        public static final int cmdRefreshShortURL=0x7f060004;
         public static final int cmdRefreshURL=0x7f060002;
         public static final int container=0x7f060000;
+        public static final int editReferralShortUrl=0x7f060003;
         public static final int editReferralUrl=0x7f060001;
-        public static final int txtEventCount=0x7f060005;
-        public static final int txtEventCreditCount=0x7f060006;
-        public static final int txtInstallCount=0x7f060003;
-        public static final int txtInstallCreditCount=0x7f060004;
+        public static final int txtEventCount=0x7f060007;
+        public static final int txtEventCreditCount=0x7f060008;
+        public static final int txtInstallCount=0x7f060005;
+        public static final int txtInstallCreditCount=0x7f060006;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
