@@ -105,6 +105,7 @@ public class Branch {
 					JSONObject post = new JSONObject();
 					try {
 						post.put("app_id", prefHelper_.getAppKey());
+						post.put("app_install_id", prefHelper_.getAppInstallID());
 						post.put("event", action);
 						post.put("credit", creditsToAdd);
 					} catch (JSONException ex) {
@@ -126,7 +127,7 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
-					post.put("device_id", prefHelper_.getDeviceID());
+					post.put("app_install_id", prefHelper_.getAppInstallID());
 					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) post.put("link_click_id", prefHelper_.getLinkClickID());
 					post.put("event", action);
 				} catch (JSONException ex) {
@@ -231,8 +232,7 @@ public class Branch {
 					JSONObject linkPost = new JSONObject();
 					try {
 						linkPost.put("app_id", prefHelper_.getAppKey());
-						linkPost.put("device_id", prefHelper_.getDeviceID());
-						linkPost.put("user_id", prefHelper_.getUserID());
+						linkPost.put("app_install_id", prefHelper_.getAppInstallID());
 						if (tag != null)
 							linkPost.put("tag", tag);
 						if (params != null)
@@ -257,23 +257,19 @@ public class Branch {
 				ServerRequest req = requestQueue_.get(0);
 				
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-					Log.i("BranchSDK", "calling register install");
 					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE);
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					Log.i("BranchSDK", "calling register open");
 					kRemoteInterface_.registerOpen();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS) && hasUser()) {
-					Log.i("BranchSDK", "calling get referrals");
 					kRemoteInterface_.getReferrals();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED) && hasUser()) {
-					Log.i("BranchSDK", "calling credit referrals");
 					kRemoteInterface_.creditUserForReferrals(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser()){
-					Log.i("BranchSDK", "calling completed action");
 					kRemoteInterface_.userCompletedAction(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser()) {
-					Log.i("BranchSDK", "calling completed action");
 					kRemoteInterface_.createCustomUrl(req.getPost());
+				} else if (!hasUser()) {
+					Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
 				}
 			} else {
 				serverSema_.release();
@@ -345,7 +341,7 @@ public class Branch {
 	}
 	
 	private boolean hasUser() {
-		return !prefHelper_.getUserID().equals(PrefHelper.NO_STRING_VALUE);
+		return !prefHelper_.getAppInstallID().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
 	private void registerInstall() {
@@ -419,10 +415,8 @@ public class Branch {
 						processReferralCounts(serverResponse);
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-						String url = serverResponse.getString("link");
-						prefHelper_.setUserID(serverResponse.getString("user_id"));
-						prefHelper_.setDeviceID(serverResponse.getString("device_id"));
-						prefHelper_.setUserURL(url);
+						prefHelper_.setAppInstallID(serverResponse.getString("app_install_id"));
+						prefHelper_.setUserURL(serverResponse.getString("link"));
 						if (serverResponse.has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
 						} else {

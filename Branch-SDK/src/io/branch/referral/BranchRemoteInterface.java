@@ -68,7 +68,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 			JSONObject openPost = new JSONObject();
 			try {
 				openPost.put("app_id", prefHelper_.getAppKey());
-				openPost.put("device_id", prefHelper_.getDeviceID());
+				openPost.put("app_install_id", prefHelper_.getAppInstallID());
 				openPost.put("app_version", sysObserver_.getAppVersion());
 				openPost.put("os_version", sysObserver_.getOSVersion());
 			} catch (JSONException ex) {
@@ -86,14 +86,14 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void creditUserForReferrals(JSONObject post) {
-		String urlExtend = "v1/credit/" + prefHelper_.getUserID();
+		String urlExtend = "v1/credit/" + prefHelper_.getAppInstallID();
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_CREDIT_REFERRED));
 		}
 	}
 	
 	public void getReferrals() {
-		String urlExtend = "v1/referrals/" + prefHelper_.getUserID() + "/" + prefHelper_.getAppKey();
+		String urlExtend = "v1/referrals/" + prefHelper_.getAppInstallID();
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRALS));
 		}

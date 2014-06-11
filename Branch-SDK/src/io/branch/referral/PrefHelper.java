@@ -11,8 +11,7 @@ public class PrefHelper {
 
 	private static final String KEY_APP_KEY = "bnc_app_key";
 	
-	private static final String KEY_USER_ID = "bnc_user_id";
-	private static final String KEY_DEVICE_ID = "bnc_device_id";
+	private static final String KEY_APP_INSTALL_ID = "bnc_app_install_id";
 	private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
 	private static final String KEY_SESSION_PARAMS = "bnc_session_params";
 	private static final String KEY_USER_URL = "bnc_user_url";
@@ -53,20 +52,12 @@ public class PrefHelper {
 		return getString(KEY_APP_KEY);
 	}
 	
-	public void setUserID(String user_id) {
-		setString(KEY_USER_ID, user_id);
+	public void setAppInstallID(String app_install_id) {
+		setString(KEY_APP_INSTALL_ID, app_install_id);
 	}
 	
-	public String getUserID() {
-		return getString(KEY_USER_ID);
-	}
-	
-	public void setDeviceID(String device_id) {
-		setString(KEY_DEVICE_ID, device_id);
-	}
-	
-	public String getDeviceID() {
-		return getString(KEY_DEVICE_ID);
+	public String getAppInstallID() {
+		return getString(KEY_APP_INSTALL_ID);
 	}
 	
 	public void setLinkClickID(String link_click_id) {
