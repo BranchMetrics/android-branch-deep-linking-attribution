@@ -423,7 +423,8 @@ public class Branch {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}	
 						if (serverResponse.has("data")) {
-							prefHelper_.setSessionParams(serverResponse.getJSONObject("data").toString());
+							String params = serverResponse.getString("data");
+							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
@@ -444,7 +445,8 @@ public class Branch {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}
 						if (serverResponse.has("data")) {
-							prefHelper_.setSessionParams(serverResponse.getString("data"));
+							String params = serverResponse.getString("data");
+							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
