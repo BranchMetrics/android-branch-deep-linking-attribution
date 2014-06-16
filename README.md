@@ -2,11 +2,13 @@
 
 ### Install library project
 
-Download code from here (not yet live):
-https://s3-us-west-1.amazonaws.com/branchhost/Branch-SDK.zip
+Download code from here:
+https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
 
-The testbed project (not working yet):
-https://s3-us-west-1.amazonaws.com/branchhost/Branch-SDK-TestBed.zip
+The testbed project:
+https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-TestBed.zip
+
+Or just clone this project!
 
 ### Initialize SDK (registers install/open events)
 

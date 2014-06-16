@@ -51,6 +51,10 @@ public class Branch {
 		return branchReferral_;
 	}
 	
+	public void resetUserSession() {
+		isInit_ = false;
+	}
+	
 	public void initUserSession(BranchReferralInitListener callback) {
 		initFinishedCallback_ = callback;
 		if (!isInit_) {
