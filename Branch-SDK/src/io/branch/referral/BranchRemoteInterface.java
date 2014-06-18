@@ -86,7 +86,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void creditUserForReferrals(JSONObject post) {
-		String urlExtend = "v1/credit/" + prefHelper_.getAppInstallID();
+		String urlExtend = "v1/credit";
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_CREDIT_REFERRED));
 		}

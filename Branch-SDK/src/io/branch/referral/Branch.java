@@ -466,7 +466,7 @@ public class Branch {
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED)) {
 						ServerRequest req = requestQueue_.get(0);
-						String action = req.getPost().getString("action");
+						String action = req.getPost().getString("event");
 						int credits = req.getPost().getInt("credit");
 						prefHelper_.setActionCreditCount(action, prefHelper_.getActionCreditCount(action)+credits);
 						prefHelper_.setActionBalanceCount(action, Math.max(0, prefHelper_.getActionTotalCount(action)-prefHelper_.getActionCreditCount(action)));
