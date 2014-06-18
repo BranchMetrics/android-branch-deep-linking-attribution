@@ -74,6 +74,25 @@ public class Branch {
 		initUserSession(null);
 	}
 	
+	public void identifyUser(final String userId) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("app_install_id", prefHelper_.getAppInstallID());
+					post.put("identity", userId);
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
 	public void loadPoints() {
 		loadPoints(null);
 	}
@@ -272,6 +291,8 @@ public class Branch {
 					kRemoteInterface_.userCompletedAction(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser()) {
 					kRemoteInterface_.createCustomUrl(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasUser()) {
+					kRemoteInterface_.identifyUser(req.getPost());
 				} else if (!hasUser()) {
 					Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
 				}
@@ -483,7 +504,7 @@ public class Branch {
 							}
 						});
 						requestQueue_.remove(0);
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION)) {
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 						requestQueue_.remove(0);
 					}
 					

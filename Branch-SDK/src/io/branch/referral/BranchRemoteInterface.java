@@ -12,7 +12,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_COMPLETE_ACTION = "t_complete_action";
 	public static final String REQ_TAG_GET_REFERRALS = "t_get_referral";
 	public static final String REQ_TAG_GET_CUSTOM_URL = "t_get_custom_url";
-
+	public static final String REQ_TAG_IDENTIFY = "t_identify_user";
 	public static final String REQ_TAG_CREDIT_REFERRED = "t_credit_referred";
 
 	private SystemObserver sysObserver_;
@@ -103,6 +103,13 @@ public class BranchRemoteInterface extends RemoteInterface {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL));
+		}
+	}
+	
+	public void identifyUser(JSONObject post) {
+		String urlExtend = "v1/identify";
+		if (callback_ != null) {
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_IDENTIFY));
 		}
 	}
 }
