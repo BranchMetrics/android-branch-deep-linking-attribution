@@ -576,8 +576,8 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
 						
-						if (serverResponse.has("data")) {
-							String params = serverResponse.getString("data");
+						if (serverResponse.has("referring_data")) {
+							String params = serverResponse.getString("referring_data");
 							prefHelper_.setInstallParams(params);
 						} else {
 							prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);

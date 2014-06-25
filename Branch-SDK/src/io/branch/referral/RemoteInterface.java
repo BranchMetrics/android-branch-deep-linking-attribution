@@ -48,7 +48,7 @@ public class RemoteInterface {
 		    	BufferedReader rd = new BufferedReader(new InputStreamReader(instream));
 		    	
 		    	String line = rd.readLine();
-				if (PrefHelper.LOG) Log.i("KindredReferral", "returned " + line);
+				if (PrefHelper.LOG) Log.i("BranchSDK", "returned " + line);
 
 		    	if (line != null) {
 		    		JSONObject tempJson = new JSONObject(line);	
@@ -71,7 +71,7 @@ public class RemoteInterface {
 	
 	public JSONObject make_restful_get(String url, String tag) {
 		try {    	
-			if (PrefHelper.LOG) Log.i("KindredSDK", "getting " + url);
+			if (PrefHelper.LOG) Log.i("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient().execute(request);
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
@@ -93,7 +93,7 @@ public class RemoteInterface {
 
 	public JSONObject make_restful_post(JSONObject body, String url, String tag) {
 		try {    	
-			if (PrefHelper.LOG) Log.i("KindredReferral", "posting to " + url);
+			if (PrefHelper.LOG) Log.i("BranchSDK", "posting to " + url);
 			if (PrefHelper.LOG) Log.i("BranchSDK", "Post value = " + body.toString());
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
