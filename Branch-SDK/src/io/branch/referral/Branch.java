@@ -52,6 +52,13 @@ public class Branch {
 		return branchReferral_;
 	}
 	
+	public static Branch getInstance() {
+		if (branchReferral_ == null) {
+			Log.i("BranchSDK", "Branch Warning: getInstance called before getInstance with key. Please init");
+		}
+		return branchReferral_;
+	}
+	
 	public void resetUserSession() {
 		isInit_ = false;
 	}

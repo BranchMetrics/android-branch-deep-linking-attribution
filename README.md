@@ -24,18 +24,75 @@ If you created a custom link with your own custom dictionary data, you probably 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.initUserSession(new BranchReferralInitListener(){
-	public void onInitFinished() {
-		JSONObject myParams = branch.getReferringParams();
+	public void onInitFinished(JSONObject referringParams) {
 		// show the user some custom stuff or do some action based on what data you associate with a link
 		// will be empty if no data found
 
 		// here is the data from the example below if a new user clicked on Joe's link and installed the app
-		String name = myParams.getString("user"); // returns Joe
-		String profileUrl = myParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
-		String description = myParams.getString("description"); // returns Joe likes long walks on the beach...
+		String name = referringParams.getString("user"); // returns Joe
+		String profileUrl = referringParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
+		String description = referringParams.getString("description"); // returns Joe likes long walks on the beach...
 	}
 });
 ```
+
+#### Retrieve session (install or open) parameters
+
+These session parameters will be available at any point later on with this command. If no params, the dictionary will be empty. This refreshes with every new session (app installs AND app opens)
+```java
+Branch branch = Branch.getInstance();
+JSONObject sessionParams = branch.getReferringParams(); 
+```
+
+#### Retrieve install (install only) parameters
+
+If you ever want to access the original session params (the parameters passed in for the first install event only), you can use this line. This is useful if you only want to reward users who newly installed the app from a referral link or something.
+```java
+Branch branch = Branch.getInstance();
+JSONObject sessionParams = branch.getInstallReferringParams(); 
+```
+
+### Persistent identities
+
+Often, you might have your own user IDs, or want referral and event data to persist across platforms or uninstall/reinstall. It's helpful if you know your users access your service from different devices. This where we introduce the concept of an 'identity'.
+
+To identify a user, just call:
+```java
+Branch branch = Branch.getInstance();
+JSONObject sessionParams = branch.identifyUser(@"your user id"); 
+```
+
+#### OR
+
+We store these identities, and associate the referral connections among them. Therefore, if we see that you are identifying a user that already exists, we'll return the parameters associated with the first creation of that identity. You just need to register for the callback block.
+
+```java
+Branch branch = Branch.getInstance();
+JSONObject sessionParams = branch.identifyUser(@"your user id", new BranchReferralInitListener() {
+	public void onInitFinished(JSONObject installParams) {
+		// here is the data from the example below if a new user clicked on Joe's link and installed the app
+		String name = installParams.getString("user"); // returns Joe
+		String profileUrl = installParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
+		String description = installParams.getString("description"); // returns Joe likes long walks on the beach...
+	}
+});
+```
+
+You can access these parameters at any time thereafter using this call.
+```java
+Branch branch = Branch.getInstance();
+JSONObject installParams = branch.getInstallReferringParams();
+```
+
+#### Logout
+
+If you provide a logout function in your app, be sure to clear the user when the logout completes. This will ensure that all the stored parameters get cleared and all events are properly attributed to the right identity.
+
+```java
+Branch branch = Branch.getInstance();
+JSONObject installParams = branch.clearUser();
+```
+
 
 ### Register custom events
 
@@ -55,42 +112,9 @@ Some example events you might want to track:
 
 ### Generate URLs
 
-#### Long links (immediate return but no shortening done)
-
-There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that?
-
-```java
-// get a simple url to track events with
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-String urlToShare = branch.getLongURL();
-
-// get a url with a tag for analytics in the dashboard
-// example tag could be "fb", "email", "twitter"
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-String urlToShare = branch.getLongURL("twitter");
-
-// associate data with a link
-// you can access this data from anyone instance that installs or opens the app from this link (amazing...)
-JSONObject dataToInclude = new JSONObject();
-try {
-	dataToInclude.put("user", "Joe");
-	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
-	dataToInclude.put("description", "Joe likes long walks on the beach...")
-} catch (JSONException ex) {
-	
-}
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-String urlToShare = branch.getLongURL(dataToInclude);
-
-// or
-
-String urlToShare = branch.getLongURL("twitter", dataToInclude);
-
-```
-
 #### Short links (for social media sharing)
 
-All of the above options are the same (ie tagging, data passing) but you need to pass a callback. This will be called when you link is prepared (which should return very quickly, ~ 100 ms to process)
+There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that? You need to pass a callback for when you link is prepared (which should return very quickly, ~ 100 ms to process). If you don't want a callback, and can tolerate long links, check out the section right below.
 
 ```java
 // get a simple url to track events with
@@ -138,29 +162,30 @@ branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
 });
 ```
 
-### Get/reward event points
+#### Long links (immediate return but no shortening done)
 
-These functions will help you reward your users for sharing their links, and save the fact that you rewarded them to our server.
-
-
-To get the number of install events that occurred from this user's links:
+Generating long links are immediate return, but can be long as the associated parameters are base64 encoded into the url itself.
 
 ```java
-
+// get a simple url to track events with
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-branch.loadPoints(new BranchReferralStateChangedListener() {
-	public void onStateChanged(boolean changed) {
-		// changed will indicate if there was a state change from before
-
-		int newInstallsFromUser = branch.getBalance("install")
-
-		// reward the user
-	}
-});
-
-
-// adds two credits towards the outstanding balance
-// this will reduce the number returned by getBalance("install") by 2
-branch.creditUserForReferral("install", 2);
-
+String urlToShare = branch.getLongURL();
 ```
+
+all of the above options with tagging and data passing are available.
+
+### Referral system rewarding functionality
+
+In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:
+1) Reward the original user for taking action (eg. inviting, purchasing, etc)
+2) Reward the invitee for installing the app from the original user's referral link
+3) Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something)
+
+These reward definitions are created on the dashboard, under the 'Referral Program Configuration' ** coming soon **
+
+In the SDK, we have a way to track and record history of earned points. So every user has the following:
+1) A reward credit total (this is total historical earned reward points)
+2) A reward redemption total. This is the total earned reward points claimed. This helps keep track of whether you've already rewarded that user or not.
+3) A reward credit balance (total-redeemed). This will tell you how many credits to award the user
+
+SECTION IN PROGRESS
