@@ -569,6 +569,8 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
 						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
+						prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
+						prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
