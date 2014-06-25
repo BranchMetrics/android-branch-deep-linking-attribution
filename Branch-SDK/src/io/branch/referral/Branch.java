@@ -579,19 +579,20 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
 						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
+						prefHelper_.setUserURL(serverResponse.getString("link"));
+						
 						prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
 						prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
+						prefHelper_.setUserURL(serverResponse.getString("link"));
 						
 						if (serverResponse.has("referring_data")) {
 							String params = serverResponse.getString("referring_data");
 							prefHelper_.setInstallParams(params);
-						} else {
-							prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
-						}
+						} 
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override
