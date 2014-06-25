@@ -18,7 +18,8 @@ public class Branch {
 	private static Branch branchReferral_;
 	private boolean isInit_;
 	
-	private BranchReferralInitListener initFinishedCallback_;
+	private BranchReferralInitListener initSessionFinishedCallback_;
+	private BranchReferralInitListener initIdentityFinishedCallback_;
 	private BranchReferralStateChangedListener stateChangedCallback_;
 	private BranchLinkCreateListener linkCreateCallback_;
 	
@@ -56,7 +57,7 @@ public class Branch {
 	}
 	
 	public void initUserSession(BranchReferralInitListener callback) {
-		initFinishedCallback_ = callback;
+		initSessionFinishedCallback_ = callback;
 		if (!isInit_) {
 			new Thread(new Runnable() {
 				@Override
@@ -65,13 +66,18 @@ public class Branch {
 				}
 			}).start();
 			isInit_ = true;
-		} else {
+		} else if (!installOrOpenInQueue()) {
 			if (callback != null) callback.onInitFinished(getReferringParams());
 		}
 	}
 	
 	public void initUserSession() {
 		initUserSession(null);
+	}
+	
+	public void identifyUser(String userId, BranchReferralInitListener callback) {
+		initIdentityFinishedCallback_ = callback;
+		identifyUser(userId);
 	}
 	
 	public void identifyUser(final String userId) {
@@ -81,13 +87,31 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
-					post.put("app_install_id", prefHelper_.getAppInstallID());
+					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("identity", userId);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
 				}
 				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
+	public void clearUser() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("session_id", prefHelper_.getSessionID());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
 				processNextQueueItem();
 			}
 		}).start();
@@ -128,7 +152,7 @@ public class Branch {
 					JSONObject post = new JSONObject();
 					try {
 						post.put("app_id", prefHelper_.getAppKey());
-						post.put("app_install_id", prefHelper_.getAppInstallID());
+						post.put("identity_id", prefHelper_.getIdentityID());
 						post.put("event", action);
 						post.put("credit", creditsToAdd);
 					} catch (JSONException ex) {
@@ -150,8 +174,7 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
-					post.put("app_install_id", prefHelper_.getAppInstallID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) post.put("link_click_id", prefHelper_.getLinkClickID());
+					post.put("session_id", prefHelper_.getSessionID());
 					post.put("event", action);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -175,22 +198,14 @@ public class Branch {
 		return prefHelper_.getActionBalanceCount(action);
 	}
 	
+	public JSONObject getInstallReferringParams() {
+		String storedParam = prefHelper_.getInstallParams();
+		return convertParamsStringToDictionary(storedParam);
+	}
+	
 	public JSONObject getReferringParams() {
-		if (prefHelper_.getSessionParams().equals(PrefHelper.NO_STRING_VALUE)) {
-			return new JSONObject();
-		} else {
-			try {
-				return new JSONObject(prefHelper_.getSessionParams());
-			} catch (JSONException e) {
-				byte[] encodedArray = Base64.decode(prefHelper_.getSessionParams().getBytes(), Base64.NO_WRAP);
-				try {
-					return new JSONObject(new String(encodedArray));
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return new JSONObject();
-				}
-			}
-		}
+		String storedParam = prefHelper_.getSessionParams();
+		return convertParamsStringToDictionary(storedParam);
 	}
 	
 	public String getLongURL() {
@@ -255,7 +270,7 @@ public class Branch {
 					JSONObject linkPost = new JSONObject();
 					try {
 						linkPost.put("app_id", prefHelper_.getAppKey());
-						linkPost.put("app_install_id", prefHelper_.getAppInstallID());
+						linkPost.put("identity_id", prefHelper_.getIdentityID());
 						if (tag != null)
 							linkPost.put("tag", tag);
 						if (params != null)
@@ -267,6 +282,24 @@ public class Branch {
 					processNextQueueItem();
 				}
 			}).start();
+		}
+	}
+	
+	private JSONObject convertParamsStringToDictionary(String paramString) {
+		if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
+			return new JSONObject();
+		} else {
+			try {
+				return new JSONObject(paramString);
+			} catch (JSONException e) {
+				byte[] encodedArray = Base64.decode(paramString.getBytes(), Base64.NO_WRAP);
+				try {
+					return new JSONObject(new String(encodedArray));
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return new JSONObject();
+				}
+			}
 		}
 	}
 	
@@ -293,6 +326,10 @@ public class Branch {
 					kRemoteInterface_.createCustomUrl(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasUser()) {
 					kRemoteInterface_.identifyUser(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && hasUser()) {
+					kRemoteInterface_.registerClose();
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasUser()) {
+					kRemoteInterface_.logoutUser(req.getPost());
 				} else if (!hasUser()) {
 					Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
 				}
@@ -313,15 +350,15 @@ public class Branch {
 			mainHandler.post(new Runnable() {
 				@Override
 				public void run() {
-					if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-						if (initFinishedCallback_ != null) {
+					if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN) ) {
+						if (initSessionFinishedCallback_ != null) {
 							JSONObject obj = new JSONObject();
 							try {
 								obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
 							} catch(JSONException ex) {
 								ex.printStackTrace();
 							}
-							initFinishedCallback_.onInitFinished(obj);
+							initSessionFinishedCallback_.onInitFinished(obj);
 						}
 					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
 						if (stateChangedCallback_ != null) {
@@ -330,6 +367,16 @@ public class Branch {
 					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						if (linkCreateCallback_ != null) {
 							linkCreateCallback_.onLinkCreate("Trouble reaching server. Please try again in a few minutes");
+						}
+					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
+						if (initIdentityFinishedCallback_ != null) {
+							JSONObject obj = new JSONObject();
+							try {
+								obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
+							} catch(JSONException ex) {
+								ex.printStackTrace();
+							}
+							initIdentityFinishedCallback_.onInitFinished(obj);
 						}
 					}
 				}
@@ -344,10 +391,10 @@ public class Branch {
 		}
 	}
 	
-	private boolean installInQueue() {
+	private boolean installOrOpenInQueue() {
 		for (int i = 0; i < requestQueue_.size(); i++) {
 			ServerRequest req = requestQueue_.get(i);
-			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
+			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 				return true;
 			}
 		}
@@ -366,11 +413,11 @@ public class Branch {
 	}
 	
 	private boolean hasUser() {
-		return !prefHelper_.getAppInstallID().equals(PrefHelper.NO_STRING_VALUE);
+		return !prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
 	private void registerInstall() {
-		if (!installInQueue()) {
+		if (!installOrOpenInQueue()) {
 			requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
 		} else {
 			moveInstallToFront();
@@ -440,8 +487,21 @@ public class Branch {
 						processReferralCounts(serverResponse);
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-						prefHelper_.setAppInstallID(serverResponse.getString("app_install_id"));
+						prefHelper_.setDeviceFingerPrintID(serverResponse.getString("device_fingerprint_id"));
+						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
 						prefHelper_.setUserURL(serverResponse.getString("link"));
+						prefHelper_.setSessionID(serverResponse.getString("session_id"));
+						
+						ServerRequest req = requestQueue_.get(0);
+						if (!req.getPost().has("update")) {
+							if (serverResponse.has("data")) {
+								String params = serverResponse.getString("data");
+								prefHelper_.setInstallParams(params);
+							} else {
+								prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
+							}
+						}
+						
 						if (serverResponse.has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
 						} else {
@@ -457,13 +517,15 @@ public class Branch {
 						mainHandler.post(new Runnable() {
 							@Override
 							public void run() {
-								if (initFinishedCallback_ != null) {
-									initFinishedCallback_.onInitFinished(getReferringParams());
+								if (initSessionFinishedCallback_ != null) {
+									initSessionFinishedCallback_.onInitFinished(getReferringParams());
 								}
 							}
 						});
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+						prefHelper_.setSessionID(serverResponse.getString("session_id"));
+						
 						if (serverResponse.has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
 						} else {
@@ -479,8 +541,8 @@ public class Branch {
 						mainHandler.post(new Runnable() {
 							@Override
 							public void run() {
-								if (initFinishedCallback_ != null) {
-									initFinishedCallback_.onInitFinished(getReferringParams());
+								if (initSessionFinishedCallback_ != null) {
+									initSessionFinishedCallback_.onInitFinished(getReferringParams());
 								}
 							}
 						});
@@ -504,7 +566,31 @@ public class Branch {
 							}
 						});
 						requestQueue_.remove(0);
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
+						prefHelper_.setSessionID(serverResponse.getString("session_id"));
+						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
+						
+						requestQueue_.remove(0);
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
+						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
+						
+						if (serverResponse.has("data")) {
+							String params = serverResponse.getString("data");
+							prefHelper_.setInstallParams(params);
+						} else {
+							prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
+						}
+						Handler mainHandler = new Handler(context_.getMainLooper());
+						mainHandler.post(new Runnable() {
+							@Override
+							public void run() {
+								if (initIdentityFinishedCallback_ != null) {
+									initIdentityFinishedCallback_.onInitFinished(getInstallReferringParams());
+								}
+							}
+						});
+						requestQueue_.remove(0);
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 						requestQueue_.remove(0);
 					}
 					

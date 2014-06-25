@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -15,7 +16,7 @@ import android.view.Display;
 import android.view.WindowManager;
 
 public class SystemObserver {
-	private static final String BLANK = "bnc_no_value";
+	public static final String BLANK = "bnc_no_value";
 
 	private Context context_;
 	
@@ -113,6 +114,23 @@ public class SystemObserver {
 	
 	public int getOSVersion() {
 		return android.os.Build.VERSION.SDK_INT;
+	}
+	
+	@SuppressLint("NewApi")
+	public int getUpdateState() {
+		if (android.os.Build.VERSION.SDK_INT >= 9) {
+			try {
+				PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+				if (packageInfo.lastUpdateTime != packageInfo.firstInstallTime) {
+					return 1;
+				} else {
+					return 0;
+				}
+			} catch (NameNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+		return 0;
 	}
 	
 	public DisplayMetrics getScreenDisplay() {

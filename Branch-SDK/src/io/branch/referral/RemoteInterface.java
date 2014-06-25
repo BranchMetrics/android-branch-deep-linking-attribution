@@ -48,7 +48,7 @@ public class RemoteInterface {
 		    	BufferedReader rd = new BufferedReader(new InputStreamReader(instream));
 		    	
 		    	String line = rd.readLine();
-				Log.i("KindredReferral", "returned " + line);
+				if (PrefHelper.LOG) Log.i("KindredReferral", "returned " + line);
 
 		    	if (line != null) {
 		    		JSONObject tempJson = new JSONObject(line);	
@@ -61,9 +61,9 @@ public class RemoteInterface {
 			    } 
 		    }
 		} catch (JSONException ex) {
-	   		Log.i(getClass().getSimpleName(), "JSON exception: " + ex.getMessage());
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "JSON exception: " + ex.getMessage());
 	   	} catch (IOException ex) { 
-    		Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
+	   		if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
 		}
 		
 		return jsonreturn;
@@ -71,14 +71,14 @@ public class RemoteInterface {
 	
 	public JSONObject make_restful_get(String url, String tag) {
 		try {    	
-			Log.i("KindredSDK", "getting " + url);
+			if (PrefHelper.LOG) Log.i("KindredSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient().execute(request);
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
 		} catch (ClientProtocolException ex) {
-	    		Log.i(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
 		} catch (IOException ex) { 
-    		Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
     		JSONObject jsonreturn = new JSONObject();;
     		try {
 				jsonreturn.put(KEY_SERVER_CALL_STATUS_CODE, 500);
@@ -93,15 +93,15 @@ public class RemoteInterface {
 
 	public JSONObject make_restful_post(JSONObject body, String url, String tag) {
 		try {    	
-			Log.i("KindredReferral", "posting to " + url);
-			Log.i("BranchSDK", "Post value = " + body.toString());
+			if (PrefHelper.LOG) Log.i("KindredReferral", "posting to " + url);
+			if (PrefHelper.LOG) Log.i("BranchSDK", "Post value = " + body.toString());
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient().execute(request);
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
 		} catch (Exception ex) {
-			Log.i(getClass().getSimpleName(), "Exception: " + ex.getMessage());
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Exception: " + ex.getMessage());
 			ex.printStackTrace();
 			JSONObject jsonreturn = new JSONObject();	
 			try {

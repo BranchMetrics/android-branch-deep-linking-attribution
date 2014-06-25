@@ -20,9 +20,12 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int cmdCommitBuyAction=0x7f06000c;
-        public static final int cmdCreditBuy=0x7f06000b;
-        public static final int cmdCreditInstall=0x7f06000a;
+        public static final int cmdClearUser=0x7f06000c;
+        public static final int cmdCommitBuyAction=0x7f06000f;
+        public static final int cmdCreditBuy=0x7f06000d;
+        public static final int cmdCreditInstall=0x7f06000b;
+        public static final int cmdIdentifyUser=0x7f06000a;
+        public static final int cmdPrintInstallParam=0x7f06000e;
         public static final int cmdRefreshCounts=0x7f060009;
         public static final int cmdRefreshShortURL=0x7f060004;
         public static final int cmdRefreshURL=0x7f060002;

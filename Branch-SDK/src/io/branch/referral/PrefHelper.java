@@ -5,15 +5,20 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 public class PrefHelper {
+	public static final boolean LOG = true;
+	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
 	private static final String KEY_APP_KEY = "bnc_app_key";
 	
-	private static final String KEY_APP_INSTALL_ID = "bnc_app_install_id";
+	private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
+	private static final String KEY_SESSION_ID = "bnc_session_id";
+	private static final String KEY_IDENTITY_ID = "bnc_identity_id";
 	private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
 	private static final String KEY_SESSION_PARAMS = "bnc_session_params";
+	private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
 	private static final String KEY_USER_URL = "bnc_user_url";
 	
 	private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
@@ -52,12 +57,28 @@ public class PrefHelper {
 		return getString(KEY_APP_KEY);
 	}
 	
-	public void setAppInstallID(String app_install_id) {
-		setString(KEY_APP_INSTALL_ID, app_install_id);
+	public void setDeviceFingerPrintID(String device_fingerprint_id) {
+		setString(KEY_DEVICE_FINGERPRINT_ID, device_fingerprint_id);
 	}
 	
-	public String getAppInstallID() {
-		return getString(KEY_APP_INSTALL_ID);
+	public String getDeviceFingerPrintID() {
+		return getString(KEY_DEVICE_FINGERPRINT_ID);
+	}
+	
+	public void setSessionID(String session_id) {
+		setString(KEY_SESSION_ID, session_id);
+	}
+	
+	public String getSessionID() {
+		return getString(KEY_SESSION_ID);
+	}
+	
+	public void setIdentityID(String device_fingerprint_id) {
+		setString(KEY_IDENTITY_ID, device_fingerprint_id);
+	}
+	
+	public String getIdentityID() {
+		return getString(KEY_IDENTITY_ID);
 	}
 	
 	public void setLinkClickID(String link_click_id) {
@@ -74,6 +95,14 @@ public class PrefHelper {
 	
 	public void setSessionParams(String params) {
 		setString(KEY_SESSION_PARAMS, params);
+	}
+	
+	public String getInstallParams() {
+		return getString(KEY_INSTALL_PARAMS);
+	}
+	
+	public void setInstallParams(String params) {
+		setString(KEY_INSTALL_PARAMS, params);
 	}
 	
 	public void setUserURL(String user_url) {

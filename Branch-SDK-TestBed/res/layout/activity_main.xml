@@ -76,38 +76,76 @@
     
     <Button
         android:id="@+id/cmdRefreshCounts"
-        android:layout_width="180dp"
+        android:layout_width="130dp"
         android:layout_height="40dp"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentLeft="true"
         android:layout_below="@+id/txtEventCreditCount"
+        android:textSize="14sp"
         android:text="Refresh Counts"
         />
     
     <Button
-        android:id="@+id/cmdCreditInstall"
-        android:layout_width="180dp"
+        android:id="@+id/cmdIdentifyUser"
+        android:layout_width="130dp"
         android:layout_height="40dp"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/txtEventCreditCount"
+        android:textSize="14sp"
+        android:text="Identify User"
+        />
+    
+    <Button
+        android:id="@+id/cmdCreditInstall"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
         android:layout_marginTop="5dp"
         android:layout_below="@+id/cmdRefreshCounts"
+        android:textSize="14sp"
         android:text="Credit Install"
         />
+    
+    <Button
+        android:id="@+id/cmdClearUser"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/cmdRefreshCounts"
+        android:textSize="14sp"
+        android:text="Clear User"
+        />
+    
     <Button
         android:id="@+id/cmdCreditBuy"
-        android:layout_width="180dp"
+        android:layout_width="130dp"
         android:layout_height="40dp"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentLeft="true"
         android:layout_marginTop="5dp"
         android:layout_below="@+id/cmdCreditInstall"
+        android:textSize="14sp"
         android:text="Credit Buy"
         />
+    
+    <Button
+        android:id="@+id/cmdPrintInstallParam"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/cmdCreditInstall"
+        android:textSize="14sp"
+        android:text="Print Install Param"
+        />
+    
     <Button
         android:id="@+id/cmdCommitBuyAction"
-        android:layout_width="180dp"
+        android:layout_width="130dp"
         android:layout_height="40dp"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentLeft="true"
         android:layout_marginTop="5dp"
         android:layout_below="@+id/cmdCreditBuy"
+        android:textSize="14sp"
         android:text="Execute Buy"
         />
 </RelativeLayout>
