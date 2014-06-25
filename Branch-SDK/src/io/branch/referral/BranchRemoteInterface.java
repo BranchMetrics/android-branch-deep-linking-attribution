@@ -135,7 +135,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void identifyUser(JSONObject post) {
-		String urlExtend = "v1/identify";
+		String urlExtend = "v1/profile";
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_IDENTIFY));
 		}

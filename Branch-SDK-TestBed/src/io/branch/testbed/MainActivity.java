@@ -33,6 +33,9 @@ public class MainActivity extends Activity {
 	Button cmdCreditInstall;
 	Button cmdCreditBuy;
 	Button cmdCommitBuy;
+	Button cmdIdentifyUser;
+	Button cmdLogoutUser;
+	Button cmdPrintInstallParams;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,17 +54,62 @@ public class MainActivity extends Activity {
 		cmdCreditInstall = (Button) findViewById(R.id.cmdCreditInstall);
 		cmdCreditBuy = (Button) findViewById(R.id.cmdCreditBuy);
 		cmdCommitBuy = (Button) findViewById(R.id.cmdCommitBuyAction);
+		cmdIdentifyUser = (Button) findViewById(R.id.cmdIdentifyUser);
+		cmdLogoutUser = (Button) findViewById(R.id.cmdClearUser);
+		cmdPrintInstallParams = (Button) findViewById(R.id.cmdPrintInstallParam);
+		
+		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				branch.identifyUser("my_super_user", new BranchReferralInitListener() {
+					@Override
+					public void onInitFinished(JSONObject referringParams) {
+						Log.i("BranchTestBed", "install params = " + referringParams.toString());
+					}
+				});
+			}
+		});
+		
+		cmdLogoutUser.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				branch.clearUser();
+			}
+		});
+		
+		cmdPrintInstallParams.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				JSONObject obj = branch.getInstallReferringParams();
+				Log.i("BranchTestBed", "install params = " + obj.toString());
+			}
+		});
 		
 		cmdRefreshUrl.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				txtUrl.setText(branch.getLongURL());
+				JSONObject obj = new JSONObject();
+				try {
+					obj.put("name", "test name");
+					obj.put("message", "hello there with long url");
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+				String url = branch.getLongURL("test_tag", obj);
+				txtUrl.setText(url);
 			}
 		});
 		cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				branch.getShortUrl(new BranchLinkCreateListener() {
+				JSONObject obj = new JSONObject();
+				try {
+					obj.put("name", "test name");
+					obj.put("message", "hello there with short url");
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+				branch.getShortUrl("tag", obj, new BranchLinkCreateListener() {
 					@Override
 					public void onLinkCreate(String url) {
 						txtShortUrl.setText(url);
@@ -111,7 +159,7 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		branch= Branch.getInstance(this.getApplicationContext(), "4652133735465757");
+		branch= Branch.getInstance(this.getApplicationContext(), "5680621892404085");
 		branch.initUserSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams) {

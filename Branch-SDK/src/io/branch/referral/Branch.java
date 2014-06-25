@@ -492,8 +492,8 @@ public class Branch {
 						prefHelper_.setUserURL(serverResponse.getString("link"));
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
 						
-						ServerRequest req = requestQueue_.get(0);
-						if (!req.getPost().has("update")) {
+						SystemObserver observer = new SystemObserver(context_);
+						if (observer.getUpdateState() == 0) {
 							if (serverResponse.has("data")) {
 								String params = serverResponse.getString("data");
 								prefHelper_.setInstallParams(params);
