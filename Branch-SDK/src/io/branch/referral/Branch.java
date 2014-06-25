@@ -75,6 +75,16 @@ public class Branch {
 		initUserSession(null);
 	}
 	
+	public void closeSession() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
 	public void identifyUser(String userId, BranchReferralInitListener callback) {
 		initIdentityFinishedCallback_ = callback;
 		identifyUser(userId);
