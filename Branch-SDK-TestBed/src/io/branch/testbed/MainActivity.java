@@ -26,12 +26,11 @@ public class MainActivity extends Activity {
 	Button cmdRefreshUrl;
 	Button cmdRefreshShortUrl;
 	TextView txtInstallCount;
-	TextView txtInstallCreditCount;
+	TextView txtRewardBalance;
 	TextView txtEventCount;
-	TextView txtEventCreditCount;
 	Button cmdRefreshCounts;
-	Button cmdCreditInstall;
-	Button cmdCreditBuy;
+	Button cmdRedeemFive;
+	Button cmdRefreshReward;
 	Button cmdCommitBuy;
 	Button cmdIdentifyUser;
 	Button cmdLogoutUser;
@@ -48,11 +47,10 @@ public class MainActivity extends Activity {
 		cmdRefreshShortUrl = (Button) findViewById(R.id.cmdRefreshShortURL);
 		txtInstallCount = (TextView) findViewById(R.id.txtInstallCount);
 		txtEventCount = (TextView) findViewById(R.id.txtEventCount);
-		txtInstallCreditCount = (TextView) findViewById(R.id.txtInstallCreditCount);
-		txtEventCreditCount = (TextView) findViewById(R.id.txtEventCreditCount);
+		txtRewardBalance = (TextView) findViewById(R.id.txtRewardBalance);
 		cmdRefreshCounts = (Button) findViewById(R.id.cmdRefreshCounts);
-		cmdCreditInstall = (Button) findViewById(R.id.cmdCreditInstall);
-		cmdCreditBuy = (Button) findViewById(R.id.cmdCreditBuy);
+		cmdRedeemFive = (Button) findViewById(R.id.cmdRedeemFive);
+		cmdRefreshReward = (Button) findViewById(R.id.cmdRefreshReward);
 		cmdCommitBuy = (Button) findViewById(R.id.cmdCommitBuyAction);
 		cmdIdentifyUser = (Button) findViewById(R.id.cmdIdentifyUser);
 		cmdLogoutUser = (Button) findViewById(R.id.cmdClearUser);
@@ -117,36 +115,41 @@ public class MainActivity extends Activity {
 				});
 			}
 		});
+		
 		cmdRefreshCounts.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.loadPoints(new BranchReferralStateChangedListener() {
+				branch.loadRewards(new BranchReferralStateChangedListener() {
 					@Override
 					public void onStateChanged(boolean changed) {
 						Log.i("BranchTestBed", "changed = " + changed);
-						txtInstallCount.setText("install count = " + branch.getTotal("install"));
-						txtEventCount.setText("buy event count = " + branch.getTotal("buy"));
-						txtInstallCreditCount.setText("install credit count = " + branch.getCredit("install"));
-						txtEventCreditCount.setText("buy event credit count = " + branch.getCredit("buy"));
+						txtInstallCount.setText("install total = " + branch.getTotalCountsForAction("install") + ", unique = " + branch.getUniqueCountsForAction("install"));
+						txtEventCount.setText("buy total = " + branch.getTotalCountsForAction("buy") + ", unique = " + branch.getUniqueCountsForAction("buy"));
 					}
 				});
 			}
 		});
 		
-		cmdCreditInstall.setOnClickListener(new OnClickListener() {
+		cmdRefreshReward.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v) {
-				branch.creditUserForReferral("install", 1);
+			public void onClick(View arg0) {
+				branch.loadRewards(new BranchReferralStateChangedListener() {
+					@Override
+					public void onStateChanged(boolean changed) {
+						Log.i("BranchTestBed", "changed = " + changed);
+						txtRewardBalance.setText("rewards = " + branch.getCredits());
+					}
+				});
 			}
 		});
 		
-		cmdCreditBuy.setOnClickListener(new OnClickListener() {
+		cmdRedeemFive.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.creditUserForReferral("buy", 1);
+				branch.redeemRewards(5);
 			}
 		});
-		
+
 		cmdCommitBuy.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {

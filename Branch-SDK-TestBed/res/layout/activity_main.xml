@@ -42,21 +42,21 @@
         />
     
     <TextView 
-        android:id="@+id/txtInstallCount"
+        android:id="@+id/txtRewardBalance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:padding="5dp"
-        android:text="install count = "
+        android:text="credits = "
         android:layout_below="@+id/cmdRefreshShortURL"/>
     
     <TextView 
-        android:id="@+id/txtInstallCreditCount"
+        android:id="@+id/txtInstallCount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
-        android:text="install credits = "
-        android:layout_below="@+id/txtInstallCount"/>
+        android:text="install count = "
+        android:layout_below="@+id/txtRewardBalance"/>
     
     <TextView 
         android:id="@+id/txtEventCount"
@@ -64,22 +64,14 @@
         android:layout_height="wrap_content"
         android:padding="5dp"
        	android:text="buy count = "
-        android:layout_below="@+id/txtInstallCreditCount"/>
-    
-    <TextView 
-        android:id="@+id/txtEventCreditCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="buy credits = "
-        android:layout_below="@+id/txtEventCount"/>
+        android:layout_below="@+id/txtInstallCount"/>
     
     <Button
         android:id="@+id/cmdRefreshCounts"
         android:layout_width="130dp"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/txtEventCreditCount"
+        android:layout_below="@+id/txtEventCount"
         android:textSize="14sp"
         android:text="Refresh Counts"
         />
@@ -89,20 +81,20 @@
         android:layout_width="130dp"
         android:layout_height="40dp"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/txtEventCreditCount"
+        android:layout_below="@+id/txtEventCount"
         android:textSize="14sp"
         android:text="Identify User"
         />
     
     <Button
-        android:id="@+id/cmdCreditInstall"
+        android:id="@+id/cmdRedeemFive"
         android:layout_width="130dp"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
         android:layout_marginTop="5dp"
         android:layout_below="@+id/cmdRefreshCounts"
         android:textSize="14sp"
-        android:text="Credit Install"
+        android:text="Redeem 5"
         />
     
     <Button
@@ -117,14 +109,14 @@
         />
     
     <Button
-        android:id="@+id/cmdCreditBuy"
-        android:layout_width="130dp"
+        android:id="@+id/cmdRefreshReward"
+        android:layout_width="150dp"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
         android:layout_marginTop="5dp"
-        android:layout_below="@+id/cmdCreditInstall"
+        android:layout_below="@+id/cmdRedeemFive"
         android:textSize="14sp"
-        android:text="Credit Buy"
+        android:text="Refresh Rewards"
         />
     
     <Button
@@ -133,7 +125,7 @@
         android:layout_height="40dp"
         android:layout_alignParentRight="true"
         android:layout_marginTop="5dp"
-        android:layout_below="@+id/cmdCreditInstall"
+        android:layout_below="@+id/cmdRedeemFive"
         android:textSize="14sp"
         android:text="Print Install Param"
         />
@@ -144,7 +136,7 @@
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
         android:layout_marginTop="5dp"
-        android:layout_below="@+id/cmdCreditBuy"
+        android:layout_below="@+id/cmdRefreshReward"
         android:textSize="14sp"
         android:text="Execute Buy"
         />
