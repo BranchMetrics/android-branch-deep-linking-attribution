@@ -24,6 +24,7 @@ If you created a custom link with your own custom dictionary data, you probably 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.initUserSession(new BranchReferralInitListener(){
+	@Override
 	public void onInitFinished(JSONObject referringParams) {
 		// show the user some custom stuff or do some action based on what data you associate with a link
 		// will be empty if no data found
@@ -68,7 +69,8 @@ We store these identities, and associate the referral connections among them. Th
 
 ```java
 Branch branch = Branch.getInstance();
-JSONObject sessionParams = branch.identifyUser(@"your user id", new BranchReferralInitListener() {
+JSONObject sessionParams = branch.identifyUser(@"your user id", new BranchReferralInitListener() {	
+	@Override
 	public void onInitFinished(JSONObject installParams) {
 		// here is the data from the example below if a new user clicked on Joe's link and installed the app
 		String name = installParams.getString("user"); // returns Joe
@@ -120,6 +122,7 @@ There are a bunch of options for creating these links. You can tag them for anal
 // get a simple url to track events with
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.getShortUrl(new BranchLinkCreateListener() {
+	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
@@ -138,6 +141,7 @@ try {
 }
 
 branch.getShortUrl(dataToInclude, new BranchLinkCreateListener() {
+	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
@@ -148,6 +152,7 @@ branch.getShortUrl(dataToInclude, new BranchLinkCreateListener() {
 // example tag could be "fb", "email", "twitter"
 
 branch.getShortUrl("twitter", new BranchLinkCreateListener() {
+	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
@@ -156,6 +161,7 @@ branch.getShortUrl("twitter", new BranchLinkCreateListener() {
 // or
 
 branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
+	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
@@ -181,11 +187,30 @@ In a standard referral system, you have 2 parties: the original user and the inv
 2) Reward the invitee for installing the app from the original user's referral link
 3) Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something)
 
-These reward definitions are created on the dashboard, under the 'Referral Program Configuration' ** coming soon **
+These reward definitions are created on the dashboard, under the 'Referral Program Configuration' ** coming soon ** Please contact alex@branchmetrics.io and he will create these rules manually for you.
 
-In the SDK, we have a way to track and record history of earned points. So every user has the following:
-1) A reward credit total (this is total historical earned reward points)
-2) A reward redemption total. This is the total earned reward points claimed. This helps keep track of whether you've already rewarded that user or not.
-3) A reward credit balance (total-redeemed). This will tell you how many credits to award the user
+#### Get reward balance
 
-SECTION IN PROGRESS
+Reward balances change randomly on the backend when certain actions are taken (defined by your rules), so you'll need to make an asynchronous call to retrieve the balance. Here is the syntax:
+
+```java
+Branch branch = Branch.getInstance();
+branch.loadRewards(new BranchReferralStateChangedListener() {
+	@Override
+	public void onStateChanged(boolean changed) {
+		// changed boolean will indicate if the balance changed from what is currently in memory
+
+		// will return the balance of the current user's credits
+		int credits = branch.getCredits();
+	}
+});
+```
+
+#### Redeem all or some of the reward balance (store state)
+
+We will store how many of the rewards have been deployed so that you don't have to track it on your end. In order to save that you gave the credits to the user, you can call redeem. Redemptions will reduce the balance of outstanding credits permanently.
+
+```java
+Branch branch = Branch.getInstance();
+branch.redeemRewards(5);
+```
