@@ -183,11 +183,14 @@ all of the above options with tagging and data passing are available.
 ### Referral system rewarding functionality
 
 In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:
+
 1) Reward the original user for taking action (eg. inviting, purchasing, etc)
+
 2) Reward the invitee for installing the app from the original user's referral link
+
 3) Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something)
 
-These reward definitions are created on the dashboard, under the 'Referral Program Configuration' ** coming soon ** Please contact alex@branchmetrics.io and he will create these rules manually for you.
+These reward definitions are created on the dashboard, under the 'Referral Program Configuration' **coming soon** Please contact alex@branchmetrics.io and he will create these rules manually for you.
 
 #### Get reward balance
 
