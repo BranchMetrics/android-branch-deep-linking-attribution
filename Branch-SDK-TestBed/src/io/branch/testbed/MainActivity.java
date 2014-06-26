@@ -119,7 +119,7 @@ public class MainActivity extends Activity {
 		cmdRefreshCounts.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.loadRewards(new BranchReferralStateChangedListener() {
+				branch.loadActionCounts(new BranchReferralStateChangedListener() {
 					@Override
 					public void onStateChanged(boolean changed) {
 						Log.i("BranchTestBed", "changed = " + changed);

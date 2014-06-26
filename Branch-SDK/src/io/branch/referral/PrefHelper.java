@@ -1,11 +1,13 @@
 package io.branch.referral;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 public class PrefHelper {
-	public static final boolean LOG = true;
+	public static final boolean LOG = false;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
@@ -21,8 +23,10 @@ public class PrefHelper {
 	private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
 	private static final String KEY_USER_URL = "bnc_user_url";
 	
+	private static final String KEY_BUCKETS = "bnc_buckets";
 	private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
 	
+	private static final String KEY_ACTIONS = "bnc_actions";
 	private static final String KEY_TOTAL_BASE = "bnc_total_base_";
 	private static final String KEY_UNIQUE_BASE = "bnc_balance_base_";
 	
@@ -74,8 +78,8 @@ public class PrefHelper {
 		return getString(KEY_SESSION_ID);
 	}
 	
-	public void setIdentityID(String device_fingerprint_id) {
-		setString(KEY_IDENTITY_ID, device_fingerprint_id);
+	public void setIdentityID(String identity_id) {
+		setString(KEY_IDENTITY_ID, identity_id);
 	}
 	
 	public String getIdentityID() {
@@ -114,14 +118,51 @@ public class PrefHelper {
 		return getString(KEY_USER_URL);
 	}
 	
+	public void clearUserValues() {
+		ArrayList<String> buckets = getBuckets();
+		for (String bucket : buckets) {
+			setCreditCount(bucket, 0);
+		}
+		setBuckets(new ArrayList<String>());
+		
+		ArrayList<String> actions = getActions();
+		for (String action : actions) {
+			setActionTotalCount(action, 0);
+			setActionUniqueCount(action, 0);
+		}
+		setActions(new ArrayList<String>());
+	}
+	
 	// REWARD TRACKING CALLS
+	
+	private ArrayList<String> getBuckets() {
+		String bucketList = getString(KEY_BUCKETS);
+		if (bucketList.equals(NO_STRING_VALUE)) {
+			return new ArrayList<String>();
+		} else {
+			return deserializeString(bucketList);
+		}
+	}
+	
+	private void setBuckets(ArrayList<String> buckets) {
+		if (buckets.size() == 0) {
+			setString(KEY_BUCKETS, NO_STRING_VALUE);
+		} else {
+			setString(KEY_BUCKETS, serializeArrayList(buckets));
+		}
+	}
 	
 	public void setCreditCount(int count) {
 		setCreditCount("default", count);
 	}
 	
-	public void setCreditCount(String action, int count) {
-		setInteger(KEY_CREDIT_BASE + action, count);
+	public void setCreditCount(String bucket, int count) {
+		ArrayList<String> buckets = getBuckets();
+		if (!buckets.contains(bucket)) {
+			buckets.add(bucket);
+			setBuckets(buckets);
+		}
+		setInteger(KEY_CREDIT_BASE + bucket, count);
 	}
 	
 	public int getCreditCount() {
@@ -134,7 +175,29 @@ public class PrefHelper {
 	
 	// EVENT REFERRAL INSTALL CALLS
 	
+	private ArrayList<String> getActions() {
+		String actionList = getString(KEY_ACTIONS);
+		if (actionList.equals(NO_STRING_VALUE)) {
+			return new ArrayList<String>();
+		} else {
+			return deserializeString(actionList);
+		}
+	}
+	
+	private void setActions(ArrayList<String> actions) {
+		if (actions.size() == 0) {
+			setString(KEY_ACTIONS, NO_STRING_VALUE);
+		} else {
+			setString(KEY_ACTIONS, serializeArrayList(actions));
+		}
+	}
+	
 	public void setActionTotalCount(String action, int count) {
+		ArrayList<String> actions = getActions();
+		if (!actions.contains(action)) {
+			actions.add(action);
+			setActions(actions);
+		}
 		setInteger(KEY_TOTAL_BASE + action, count);
 	}
 	
@@ -151,6 +214,24 @@ public class PrefHelper {
 	}
 	
 	// ALL GENERIC CALLS
+	
+	private String serializeArrayList(ArrayList<String> strings) {
+		String retString = "";
+		for (String value : strings) {
+			retString = retString + value + ",";
+		}
+		retString = retString.substring(0, retString.length()-1);
+		return retString;
+	}
+	
+	private ArrayList<String> deserializeString(String list) {
+		ArrayList<String> strings = new ArrayList<String>();
+		String[] stringArr = list.split(",");
+		for (int i = 0; i < stringArr.length; i++) {
+			strings.add(stringArr[i]);
+		}
+		return strings;
+	}
 	
 	public int getInteger(String key) {
 		return prefHelper_.appSharedPrefs_.getInt(key, 0);

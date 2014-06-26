@@ -98,22 +98,24 @@ public class Branch {
 	}
 	
 	public void identifyUser(final String userId) {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("app_id", prefHelper_.getAppKey());
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("identity", userId);
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
+		if (!identifyInQueue()) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					JSONObject post = new JSONObject();
+					try {
+						post.put("app_id", prefHelper_.getAppKey());
+						post.put("identity_id", prefHelper_.getIdentityID());
+						post.put("identity", userId);
+					} catch (JSONException ex) {
+						ex.printStackTrace();
+						return;
+					}
+					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
+					processNextQueueItem();
 				}
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
-				processNextQueueItem();
-			}
-		}).start();
+			}).start();
+		}
 	}
 	
 	public void clearUser() {
@@ -432,6 +434,16 @@ public class Branch {
 		}
 	}
 	
+	private boolean identifyInQueue() {
+		for (int i = 0; i < requestQueue_.size(); i++) {
+			ServerRequest req = requestQueue_.get(i);
+			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private boolean installOrOpenInQueue() {
 		for (int i = 0; i < requestQueue_.size(); i++) {
 			ServerRequest req = requestQueue_.get(i);
@@ -644,6 +656,7 @@ public class Branch {
 						
 						prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
 						prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+						prefHelper_.clearUserValues();
 						
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
