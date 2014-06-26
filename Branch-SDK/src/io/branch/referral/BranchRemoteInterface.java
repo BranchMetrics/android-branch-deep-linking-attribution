@@ -11,11 +11,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_REGISTER_OPEN = "t_register_open";
 	public static final String REQ_TAG_REGISTER_CLOSE = "t_register_close";
 	public static final String REQ_TAG_COMPLETE_ACTION = "t_complete_action";
-	public static final String REQ_TAG_GET_REFERRALS = "t_get_referral";
+	public static final String REQ_TAG_GET_REFERRAL_COUNTS = "t_get_referral_counts";
+	public static final String REQ_TAG_GET_REWARDS = "t_get_rewards";
+	public static final String REQ_TAG_REDEEM_REWARDS = "t_redeem_rewards";
 	public static final String REQ_TAG_GET_CUSTOM_URL = "t_get_custom_url";
 	public static final String REQ_TAG_IDENTIFY = "t_identify_user";
 	public static final String REQ_TAG_LOGOUT = "t_logout";
-	public static final String REQ_TAG_CREDIT_REFERRED = "t_credit_referred";
 
 	private SystemObserver sysObserver_;
 	private PrefHelper prefHelper_;
@@ -113,17 +114,24 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	public void creditUserForReferrals(JSONObject post) {
-		String urlExtend = "v1/credit";
+	public void redeemRewards(JSONObject post) {
+		String urlExtend = "v1/redeem";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_CREDIT_REFERRED));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REDEEM_REWARDS));
 		}
 	}
 	
-	public void getReferrals() {
+	public void getRewards() {
+		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID();
+		if (callback_ != null) {
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS));
+		}
+	}
+	
+	public void getReferralCounts() {
 		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRALS));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS));
 		}
 	}
 	

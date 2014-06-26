@@ -134,49 +134,83 @@ public class Branch {
 		}).start();
 	}
 	
-	public void loadPoints() {
-		loadPoints(null);
+	public void loadActionCounts() {
+		loadActionCounts(null);
 	}
 	
-	public void loadPoints(BranchReferralStateChangedListener callback) {
+	public void loadActionCounts(BranchReferralStateChangedListener callback) {
 		stateChangedCallback_ = callback;
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRALS, null));
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
 				processNextQueueItem();
 			}
 		}).start();
 	}
 	
-	public void creditUserForReferral(final String action, final int credit) {
+	public void loadRewards() {
+		loadRewards(null);
+	}
+	
+	public void loadRewards(BranchReferralStateChangedListener callback) {
+		stateChangedCallback_ = callback;
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				int creditsToAdd = 0;
-				int total = prefHelper_.getActionTotalCount(action);
-				int prevCredits = prefHelper_.getActionCreditCount(action);
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
+	public int getCredits() {
+		return prefHelper_.getCreditCount();
+	}
+	
+	public int getCreditsForBucket(String bucket) {
+		return prefHelper_.getCreditCount(bucket);
+	}
+	
+	public int getTotalCountsForAction(String action) {
+		return prefHelper_.getActionTotalCount(action);
+	}
+	
+	public int getUniqueCountsForAction(String action) {
+		return prefHelper_.getActionUniqueCount(action);
+	}
+	
+	public void redeemRewards(int count) {
+		redeemRewards("default", count);
+	}
+	
+	public void redeemRewards(final String bucket, final int count) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				int creditsToRedeem = 0;
+				int credits = prefHelper_.getCreditCount(bucket);
 				
-				if ((credit + prevCredits) > total) {
-					creditsToAdd = total - prevCredits;
+				if (count > credits) {
+					creditsToRedeem = credits;
+					Log.i("BranchSDK", "Branch Warning: You're trying to redeem more credits than are available. Have you updated loaded rewards");
 				} else {
-					creditsToAdd = credit;
+					creditsToRedeem = count;
 				}
 				
-				
-				if (creditsToAdd > 0) {
+				if (creditsToRedeem > 0) {
 					retryCount_ = 0;
 					JSONObject post = new JSONObject();
 					try {
 						post.put("app_id", prefHelper_.getAppKey());
 						post.put("identity_id", prefHelper_.getIdentityID());
-						post.put("event", action);
-						post.put("credit", creditsToAdd);
+						post.put("bucket", bucket);
+						post.put("amount", creditsToRedeem);
 					} catch (JSONException ex) {
 						ex.printStackTrace();
 						return;
 					}
-					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED, post));
+					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post));
 					processNextQueueItem();
 				}
 			}
@@ -201,18 +235,6 @@ public class Branch {
 				processNextQueueItem();
 			}
 		}).start();
-	}
-	
-	public int getTotal(String action) {
-		return prefHelper_.getActionTotalCount(action);
-	}
-	
-	public int getCredit(String action) {
-		return prefHelper_.getActionCreditCount(action);
-	}
-	
-	public int getBalance(String action) {
-		return prefHelper_.getActionBalanceCount(action);
 	}
 	
 	public JSONObject getInstallReferringParams() {
@@ -333,10 +355,12 @@ public class Branch {
 					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE);
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 					kRemoteInterface_.registerOpen();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS) && hasUser()) {
-					kRemoteInterface_.getReferrals();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED) && hasUser()) {
-					kRemoteInterface_.creditUserForReferrals(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser()) {
+					kRemoteInterface_.getReferralCounts();
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser()) {
+					kRemoteInterface_.getRewards();
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser()) {
+					kRemoteInterface_.redeemRewards(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser()){
 					kRemoteInterface_.userCompletedAction(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser()) {
@@ -377,7 +401,7 @@ public class Branch {
 							}
 							initSessionFinishedCallback_.onInitFinished(obj);
 						}
-					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
+					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
 						if (stateChangedCallback_ != null) {
 							stateChangedCallback_.onStateChanged(false);
 						}
@@ -466,13 +490,44 @@ public class Branch {
 			try {
 				JSONObject counts = obj.getJSONObject(key);
 				int total = counts.getInt("total");
-				int credits = counts.getInt("credits");
-				if (total != prefHelper_.getActionTotalCount(key) || credits != prefHelper_.getActionCreditCount(key)) {
+				int unique = counts.getInt("unique");
+				
+				if (total != prefHelper_.getActionTotalCount(key) || unique != prefHelper_.getActionUniqueCount(key)) {
 					updateListener = true;
 				}
 				prefHelper_.setActionTotalCount(key, total);
-				prefHelper_.setActionCreditCount(key, credits);
-				prefHelper_.setActionBalanceCount(key, Math.max(0, total-credits));
+				prefHelper_.setActionUniqueCount(key, unique);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}			
+		}
+		final boolean finUpdateListener = updateListener;
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (stateChangedCallback_ != null) {
+					stateChangedCallback_.onStateChanged(finUpdateListener);
+				}
+			}
+		});
+	}
+	
+	private void processRewardCounts(JSONObject obj) {
+		boolean updateListener = false;
+		Iterator<?> keys = obj.keys();
+		while (keys.hasNext()) {
+			String key = (String)keys.next();
+			if (key.equals(BranchRemoteInterface.KEY_SERVER_CALL_STATUS_CODE) || key.equals(BranchRemoteInterface.KEY_SERVER_CALL_TAG))
+				continue;
+			
+			try {
+				int credits = obj.getInt(key);
+				
+				if (credits != prefHelper_.getCreditCount(key)) {
+					updateListener = true;
+				}
+				prefHelper_.setCreditCount(key, credits);
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}			
@@ -498,10 +553,16 @@ public class Branch {
 					String requestTag = serverResponse.getString(BranchRemoteInterface.KEY_SERVER_CALL_TAG);
 					
 					networkCount_ = 0;
-					if (status != 200) {
+					if (status >= 500) {
 						retryLastRequest();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRALS)) {
+					} else if (status >= 400 && status < 500) {
+						Log.i("BranchSDK", "Branch API Error: " + serverResponse.getString("message"));
+						requestQueue_.remove(0);
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 						processReferralCounts(serverResponse);
+						requestQueue_.remove(0);
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
+						processRewardCounts(serverResponse);
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 						prefHelper_.setDeviceFingerPrintID(serverResponse.getString("device_fingerprint_id"));
@@ -564,13 +625,6 @@ public class Branch {
 							}
 						});
 						requestQueue_.remove(0);
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_CREDIT_REFERRED)) {
-						ServerRequest req = requestQueue_.get(0);
-						String action = req.getPost().getString("event");
-						int credits = req.getPost().getInt("credit");
-						prefHelper_.setActionCreditCount(action, prefHelper_.getActionCreditCount(action)+credits);
-						prefHelper_.setActionBalanceCount(action, Math.max(0, prefHelper_.getActionTotalCount(action)-prefHelper_.getActionCreditCount(action)));
-						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getString("url");
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -610,7 +664,7 @@ public class Branch {
 							}
 						});
 						requestQueue_.remove(0);
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
 						requestQueue_.remove(0);
 					}
 					

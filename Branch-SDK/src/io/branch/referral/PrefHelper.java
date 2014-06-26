@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 public class PrefHelper {
-	public static final boolean LOG = false;
+	public static final boolean LOG = true;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
@@ -22,8 +22,9 @@ public class PrefHelper {
 	private static final String KEY_USER_URL = "bnc_user_url";
 	
 	private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
+	
 	private static final String KEY_TOTAL_BASE = "bnc_total_base_";
-	private static final String KEY_BALANCE_BASE = "bnc_balance_base_";
+	private static final String KEY_UNIQUE_BASE = "bnc_balance_base_";
 	
 
 	private static PrefHelper prefHelper_;
@@ -113,30 +114,40 @@ public class PrefHelper {
 		return getString(KEY_USER_URL);
 	}
 	
+	// REWARD TRACKING CALLS
+	
+	public void setCreditCount(int count) {
+		setCreditCount("default", count);
+	}
+	
+	public void setCreditCount(String action, int count) {
+		setInteger(KEY_CREDIT_BASE + action, count);
+	}
+	
+	public int getCreditCount() {
+		return getCreditCount("default");
+	}
+	
+	public int getCreditCount(String bucket) {
+		return getInteger(KEY_CREDIT_BASE + bucket);
+	}
+	
 	// EVENT REFERRAL INSTALL CALLS
 	
 	public void setActionTotalCount(String action, int count) {
 		setInteger(KEY_TOTAL_BASE + action, count);
 	}
 	
-	public void setActionBalanceCount(String action, int count) {
-		setInteger(KEY_BALANCE_BASE + action, count);
-	}
-	
-	public void setActionCreditCount(String action, int count) {
-		setInteger(KEY_CREDIT_BASE + action, count);
+	public void setActionUniqueCount(String action, int count) {
+		setInteger(KEY_UNIQUE_BASE + action, count);
 	}
 	
 	public int getActionTotalCount(String action) {
 		return getInteger(KEY_TOTAL_BASE + action);
 	}
 	
-	public int getActionBalanceCount(String action) {
-		return getInteger(KEY_BALANCE_BASE + action);
-	}
-	
-	public int getActionCreditCount(String action) {
-		return getInteger(KEY_CREDIT_BASE + action);
+	public int getActionUniqueCount(String action) {
+		return getInteger(KEY_UNIQUE_BASE + action);
 	}
 	
 	// ALL GENERIC CALLS
