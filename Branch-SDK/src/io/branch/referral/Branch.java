@@ -72,12 +72,16 @@ public class Branch {
 		initUserSession(null);
 	}
 	
-	public void initUserSessionAndIsReferrable() {
-		initUserSessionAndIsReferrable(null);
+	public void initUserSession(boolean isReferrable) {
+		initUserSession(null, isReferrable);
 	}
 	
-	public void initUserSessionAndIsReferrable(BranchReferralInitListener callback) {
-		this.prefHelper_.setIsReferrable();
+	public void initUserSession(BranchReferralInitListener callback, boolean isReferrable) {
+		if (isReferrable) {
+			this.prefHelper_.setIsReferrable();
+		} else {
+			this.prefHelper_.clearIsReferrable();
+		}
 		initUserSessionInternal(callback);
 	}
 	
