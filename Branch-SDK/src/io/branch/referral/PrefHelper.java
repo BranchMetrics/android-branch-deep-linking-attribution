@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 public class PrefHelper {
-	public static final boolean LOG = false;
+	public static final boolean LOG = true;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
@@ -22,7 +22,8 @@ public class PrefHelper {
 	private static final String KEY_SESSION_PARAMS = "bnc_session_params";
 	private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
 	private static final String KEY_USER_URL = "bnc_user_url";
-	
+	private static final String KEY_IS_REFERRABLE = "bnc_is_referrable";
+
 	private static final String KEY_BUCKETS = "bnc_buckets";
 	private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
 	
@@ -116,6 +117,18 @@ public class PrefHelper {
 	
 	public String getUserURL() {
 		return getString(KEY_USER_URL);
+	}
+	
+	public int getIsReferrable() {
+		return getInteger(KEY_IS_REFERRABLE);
+	}
+	
+	public void setIsReferrable() {
+		setInteger(KEY_IS_REFERRABLE, 1);
+	}
+	
+	public void clearIsReferrable() {
+		setInteger(KEY_IS_REFERRABLE, 0);
 	}
 	
 	public void clearUserValues() {

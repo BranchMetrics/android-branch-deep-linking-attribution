@@ -64,6 +64,24 @@ public class Branch {
 	}
 	
 	public void initUserSession(BranchReferralInitListener callback) {
+		this.prefHelper_.clearIsReferrable();
+		initUserSessionInternal(callback);
+	}
+	
+	public void initUserSession() {
+		initUserSession(null);
+	}
+	
+	public void initUserSessionAndIsReferrable() {
+		initUserSessionAndIsReferrable(null);
+	}
+	
+	public void initUserSessionAndIsReferrable(BranchReferralInitListener callback) {
+		this.prefHelper_.setIsReferrable();
+		initUserSessionInternal(callback);
+	}
+	
+	private void initUserSessionInternal(BranchReferralInitListener callback) {
 		initSessionFinishedCallback_ = callback;
 		if (!isInit_) {
 			new Thread(new Runnable() {
@@ -76,10 +94,6 @@ public class Branch {
 		} else if (!installOrOpenInQueue()) {
 			if (callback != null) callback.onInitFinished(getReferringParams());
 		}
-	}
-	
-	public void initUserSession() {
-		initUserSession(null);
 	}
 	
 	public void closeSession() {
