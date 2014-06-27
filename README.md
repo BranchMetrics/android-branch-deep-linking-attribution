@@ -12,7 +12,7 @@ Or just clone this project!
 
 ### Initialize SDK (registers install/open events)
 
-Called when app first initializes a session. It's safe to call this multiple times on a session if you have trouble isolating it to a single call per session.
+Called when app first initializes a session. It's safe to call this multiple times on a session if you have trouble isolating it to a single call per session. **NOTE** please email alex@branchmetrics.io for an app ID.
 ```java
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.initUserSession();
@@ -35,6 +35,15 @@ branch.initUserSession(new BranchReferralInitListener(){
 		String description = referringParams.getString("description"); // returns Joe likes long walks on the beach...
 	}
 });
+```
+
+#### Close session
+
+Optional: If you want to optionally track session lengths, please add this line to your cleanUp re
+
+```java
+Branch branch = Branch.getInstance();
+branch.closeSession();
 ```
 
 #### Retrieve session (install or open) parameters
