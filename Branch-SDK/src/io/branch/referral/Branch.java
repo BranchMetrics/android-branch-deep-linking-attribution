@@ -25,7 +25,7 @@ public class Branch {
 	
 	private BranchRemoteInterface kRemoteInterface_;
 	private PrefHelper prefHelper_;
-		
+	private SystemObserver systemObserver_;
 	private Context context_;
 	
 	private Semaphore serverSema_;
@@ -36,6 +36,7 @@ public class Branch {
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
 		kRemoteInterface_ = new BranchRemoteInterface(context);
+		systemObserver_ = new SystemObserver(context);
 		kRemoteInterface_.setNetworkCallbackListener(new ReferralNetworkCallback());
 		requestQueue_ = new ArrayList<ServerRequest>();
 		serverSema_ = new Semaphore(1);
@@ -64,7 +65,11 @@ public class Branch {
 	}
 	
 	public void initUserSession(BranchReferralInitListener callback) {
-		this.prefHelper_.clearIsReferrable();
+		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
+			prefHelper_.setIsReferrable();
+		} else {
+			prefHelper_.clearIsReferrable();
+		}	
 		initUserSessionInternal(callback);
 	}
 	
@@ -600,8 +605,7 @@ public class Branch {
 						prefHelper_.setUserURL(serverResponse.getString("link"));
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
 						
-						SystemObserver observer = new SystemObserver(context_);
-						if (observer.getUpdateState() == 0) {
+						if (prefHelper_.getIsReferrable() == 1) {
 							if (serverResponse.has("data")) {
 								String params = serverResponse.getString("data");
 								prefHelper_.setInstallParams(params);
@@ -638,6 +642,14 @@ public class Branch {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
 						} else {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
+						}
+						if (prefHelper_.getIsReferrable() == 1) {
+							if (serverResponse.has("data")) {
+								String params = serverResponse.getString("data");
+								prefHelper_.setInstallParams(params);
+							} else {
+								prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
+							}
 						}
 						if (serverResponse.has("data")) {
 							String params = serverResponse.getString("data");

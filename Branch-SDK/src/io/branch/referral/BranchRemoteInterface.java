@@ -65,14 +65,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				installPost.put("screen_height", dMetrics.heightPixels);
 				installPost.put("screen_width", dMetrics.widthPixels);
 				installPost.put("wifi", sysObserver_.getWifiConnected());
-				if (prefHelper_.getIsReferrable() == 1) {
-					installPost.put("is_referrable", 1);
-				} else {
-					if (sysObserver_.getUpdateState() == 0) {
-						installPost.put("is_referrable", 1);
-					}
-				}
-				
+				installPost.put("is_referrable", prefHelper_.getIsReferrable());
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
@@ -88,9 +81,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				openPost.put("app_id", prefHelper_.getAppKey());
 				openPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 				openPost.put("identity_id", prefHelper_.getIdentityID());
-				if (prefHelper_.getIsReferrable() == 1) {
-					openPost.put("is_referrable", 1);
-				}
+				openPost.put("is_referrable", prefHelper_.getIsReferrable());
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
 					openPost.put("app_version", sysObserver_.getAppVersion());
 				openPost.put("os_version", sysObserver_.getOSVersion());
