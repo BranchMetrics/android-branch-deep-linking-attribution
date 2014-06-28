@@ -1,5 +1,7 @@
 ## Installation
 
+Current compiled SDK footprint is *20kb*
+
 ### Install library project
 
 Download code from here:
