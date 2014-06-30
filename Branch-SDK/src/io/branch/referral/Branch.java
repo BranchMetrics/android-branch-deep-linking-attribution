@@ -647,9 +647,7 @@ public class Branch {
 							if (serverResponse.has("data")) {
 								String params = serverResponse.getString("data");
 								prefHelper_.setInstallParams(params);
-							} else {
-								prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
-							}
+							} 
 						}
 						if (serverResponse.has("data")) {
 							String params = serverResponse.getString("data");
