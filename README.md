@@ -114,6 +114,13 @@ Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.userCompletedAction("your_custom_event"); 
 ```
 
+OR if you want to store some state with the event
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
+branch.userCompletedAction("your_custom_event", (JSONObject)appState); 
+```
+
 Some example events you might want to track:
 ```java
 "complete_purchase"
@@ -202,6 +209,8 @@ In a standard referral system, you have 2 parties: the original user and the inv
 3) Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something)
 
 These reward definitions are created on the dashboard, under the 'Referral Program Configuration' **coming soon** Please contact alex@branchmetrics.io and he will create these rules manually for you.
+
+Warning: For a referral program, you should not use unique awards for custom events and redeem pre-identify call. This can allow users to cheat the system.
 
 #### Get reward balance
 
