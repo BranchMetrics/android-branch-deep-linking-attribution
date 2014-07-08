@@ -140,5 +140,16 @@
         android:textSize="14sp"
         android:text="Execute Buy"
         />
+    
+    <Button
+        android:id="@+id/cmdCommitBuyMetadataAction"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/cmdRefreshReward"
+        android:textSize="14sp"
+        android:text="Buy with metadata"
+        />
 </RelativeLayout>
     

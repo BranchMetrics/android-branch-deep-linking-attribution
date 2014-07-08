@@ -242,7 +242,7 @@ public class Branch {
 		}).start();
 	}
 	
-	public void userCompletedAction(final String action) {
+	public void userCompletedAction(final String action, final JSONObject metadata) {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -252,6 +252,7 @@ public class Branch {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("session_id", prefHelper_.getSessionID());
 					post.put("event", action);
+					if (metadata != null) post.put("metadata", metadata);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -260,6 +261,10 @@ public class Branch {
 				processNextQueueItem();
 			}
 		}).start();
+	}
+	
+	public void userCompletedAction(final String action) {
+		userCompletedAction(action, null);
 	}
 	
 	public JSONObject getInstallReferringParams() {

@@ -32,6 +32,7 @@ public class MainActivity extends Activity {
 	Button cmdRedeemFive;
 	Button cmdRefreshReward;
 	Button cmdCommitBuy;
+	Button cmdCommitBuyMetadata;
 	Button cmdIdentifyUser;
 	Button cmdLogoutUser;
 	Button cmdPrintInstallParams;
@@ -55,6 +56,7 @@ public class MainActivity extends Activity {
 		cmdIdentifyUser = (Button) findViewById(R.id.cmdIdentifyUser);
 		cmdLogoutUser = (Button) findViewById(R.id.cmdClearUser);
 		cmdPrintInstallParams = (Button) findViewById(R.id.cmdPrintInstallParam);
+		cmdCommitBuyMetadata = (Button) findViewById(R.id.cmdCommitBuyMetadataAction);
 		
 		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
 			@Override
@@ -156,7 +158,23 @@ public class MainActivity extends Activity {
 				branch.userCompletedAction("buy");
 			}
 		});
+		cmdCommitBuyMetadata.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				JSONObject params = new JSONObject();
+				try {
+					params.put("name", "Alex");
+					params.put("boolean", true);
+					params.put("int", 1);
+					params.put("double", 0.13415512301);
+				} catch(JSONException e) {
+					e.printStackTrace();
+				}
+				branch.userCompletedAction("buy", params);
+			}
 		
+		});
 	}
 	
 	@Override
