@@ -457,6 +457,29 @@ public class Branch {
 		}
 	}
 	
+	private void updateAllRequestsInQueue() {
+		try {
+			for (int i = 0; i < requestQueue_.size(); i++) {
+				ServerRequest req = requestQueue_.get(i);
+				if (req.getPost() != null) {
+					Iterator<?> keys = req.getPost().keys();
+		    		while (keys.hasNext()) {
+		    			String key = (String)keys.next();
+		    			if (key.equals("app_id")) {
+		    				req.getPost().put(key, prefHelper_.getAppKey());
+		    			} else if (key.equals("session_id")) {
+		    				req.getPost().put(key, prefHelper_.getSessionID());
+		    			} else if (key.equals("identity_id")) {
+		    				req.getPost().put(key, prefHelper_.getIdentityID());
+		    			}
+		    		}	
+				}
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}	
+	}
+	
 	private boolean identifyInQueue() {
 		for (int i = 0; i < requestQueue_.size(); i++) {
 			ServerRequest req = requestQueue_.get(i);
@@ -625,6 +648,9 @@ public class Branch {
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
+						
+						updateAllRequestsInQueue();
+						
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override
