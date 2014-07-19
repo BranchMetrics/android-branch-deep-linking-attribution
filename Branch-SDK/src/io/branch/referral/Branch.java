@@ -47,17 +47,21 @@ public class Branch {
 	
 	public static Branch getInstance(Context context, String key) {
 		if (branchReferral_ == null) {
-			branchReferral_ = new Branch(context.getApplicationContext());
+			branchReferral_ = Branch.initInstance(context);
 		}
 		branchReferral_.prefHelper_.setAppKey(key);
 		return branchReferral_;
 	}
 	
-	public static Branch getInstance() {
+	public static Branch getInstance(Context context) {
 		if (branchReferral_ == null) {
-			Log.i("BranchSDK", "Branch Warning: getInstance called before getInstance with key. Please init");
+			branchReferral_ = Branch.initInstance(context);
 		}
 		return branchReferral_;
+	}
+	
+	private static Branch initInstance(Context context) {
+		return new Branch(context.getApplicationContext());
 	}
 	
 	public void resetUserSession() {
@@ -113,6 +117,10 @@ public class Branch {
 				processNextQueueItem();
 			}
 		}).start();
+	}
+	
+	public boolean hasIdentity() {
+		return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
 	public void identifyUser(String userId, BranchReferralInitListener callback) {
@@ -715,6 +723,7 @@ public class Branch {
 						
 						prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
 						prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+						prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
 						prefHelper_.clearUserValues();
 						
 						requestQueue_.remove(0);
@@ -726,6 +735,12 @@ public class Branch {
 							String params = serverResponse.getString("referring_data");
 							prefHelper_.setInstallParams(params);
 						} 
+						if (requestQueue_.size() > 0) {
+							ServerRequest req = requestQueue_.get(0);
+							if (req.getPost() != null && req.getPost().has("identity")) {
+								prefHelper_.setIdentity(req.getPost().getString("identity"));
+							}
+						}
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override

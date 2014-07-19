@@ -18,6 +18,7 @@ public class PrefHelper {
 	private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
 	private static final String KEY_SESSION_ID = "bnc_session_id";
 	private static final String KEY_IDENTITY_ID = "bnc_identity_id";
+	private static final String KEY_IDENTITY = "bnc_identity";
 	private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
 	private static final String KEY_SESSION_PARAMS = "bnc_session_params";
 	private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
@@ -85,6 +86,14 @@ public class PrefHelper {
 	
 	public String getIdentityID() {
 		return getString(KEY_IDENTITY_ID);
+	}
+	
+	public void setIdentity(String identity) {
+		setString(KEY_IDENTITY, identity);
+	}
+	
+	public String getIdentity() {
+		return getString(KEY_IDENTITY);
 	}
 	
 	public void setLinkClickID(String link_click_id) {
