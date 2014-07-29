@@ -14,7 +14,8 @@ Or just clone this project!
 
 ### Initialize SDK (registers install/open events)
 
-Called when app first initializes a session. It's safe to call this multiple times on a session if you have trouble isolating it to a single call per session. **NOTE** please email alex@branchmetrics.io for an app ID.
+Called when app first initializes a session. It's safe to call this multiple times on a session if you have trouble isolating it to a single call per session. **NOTE** You can sign up for your own app id at http://dashboard.branchmetrics.io
+
 ```java
 Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 branch.initUserSession();
