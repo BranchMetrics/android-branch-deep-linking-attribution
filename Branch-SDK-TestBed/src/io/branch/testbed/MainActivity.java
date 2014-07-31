@@ -196,9 +196,14 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 				}
 			}
-		});
+		}, this.getIntent().getData());
 	}
 
 
+	@Override
+	protected void onStop() {
+		super.onStop();
+		branch.closeSession();
+	}
 
 }

@@ -19,7 +19,8 @@ public class PrefHelper {
 	private static final String KEY_SESSION_ID = "bnc_session_id";
 	private static final String KEY_IDENTITY_ID = "bnc_identity_id";
 	private static final String KEY_IDENTITY = "bnc_identity";
-	private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
+	private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";	
+	private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
 	private static final String KEY_SESSION_PARAMS = "bnc_session_params";
 	private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
 	private static final String KEY_USER_URL = "bnc_user_url";
@@ -102,6 +103,14 @@ public class PrefHelper {
 	
 	public String getLinkClickID() {
 		return getString(KEY_LINK_CLICK_ID);
+	}
+	
+	public void setLinkClickIdentifier(String identifer) {
+		setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
+	}
+	
+	public String getLinkClickIdentifier() {
+		return getString(KEY_LINK_CLICK_IDENTIFIER);
 	}
 	
 	public String getSessionParams() {

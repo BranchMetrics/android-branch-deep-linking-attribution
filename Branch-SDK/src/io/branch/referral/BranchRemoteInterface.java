@@ -22,7 +22,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 	private PrefHelper prefHelper_;
 	private NetworkCallback callback_;
 	
-	
 	public BranchRemoteInterface() {}
 	
 	public BranchRemoteInterface(Context context) {
@@ -66,6 +65,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 				installPost.put("screen_width", dMetrics.widthPixels);
 				installPost.put("wifi", sysObserver_.getWifiConnected());
 				installPost.put("is_referrable", prefHelper_.getIsReferrable());
+				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+					installPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
+				}
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
@@ -85,6 +87,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
 					openPost.put("app_version", sysObserver_.getAppVersion());
 				openPost.put("os_version", sysObserver_.getOSVersion());
+				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
+				}
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}

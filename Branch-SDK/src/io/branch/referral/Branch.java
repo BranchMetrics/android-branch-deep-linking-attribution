@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
 
@@ -77,12 +78,30 @@ public class Branch {
 		initUserSessionInternal(callback);
 	}
 	
+	public void initUserSession(BranchReferralInitListener callback, Uri data) {
+		if (data != null) {
+			if (data.getQueryParameter("link_click_id") != null) {
+				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
+			}
+		}
+		initUserSession(callback);
+	}
+	
 	public void initUserSession() {
 		initUserSession(null);
 	}
 	
 	public void initUserSession(boolean isReferrable) {
 		initUserSession(null, isReferrable);
+	}
+	
+	public void initUserSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
+		if (data != null) {
+			if (data.getQueryParameter("link_click_id") != null) {
+				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
+			}
+		}
+		initUserSession(callback, isReferrable);
 	}
 	
 	public void initUserSession(BranchReferralInitListener callback, boolean isReferrable) {
@@ -113,6 +132,7 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
+				isInit_ = false;
 				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
 				processNextQueueItem();
 			}
@@ -640,6 +660,7 @@ public class Branch {
 						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
 						prefHelper_.setUserURL(serverResponse.getString("link"));
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
+						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 						
 						if (prefHelper_.getIsReferrable() == 1) {
 							if (serverResponse.has("data")) {
@@ -676,7 +697,7 @@ public class Branch {
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
-						
+						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 						if (serverResponse.has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
 						} else {
