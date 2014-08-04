@@ -50,9 +50,11 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 
-### Initialize SDK And Register Deep Link Router
+### Initialize SDK And Register Deep Link Routing Function
 
-Called in your splash activity where you handle. It's safe to call this multiple times on a session if you have trouble isolating it to a single call per session. If you created a custom link with your own custom dictionary data, you probably want to know when the user session init finishes, so you can check that data. If so, you can init with this callback:
+Called in your splash activity where you handle. If you created a custom link with your own custom dictionary data, you probably want to know when the user session init finishes, so you can check that data. Think of this callback as your "deep link router". If your app opens with some data, you want to route the user depending on the data you passed in. Otherwise, send them to a generic install flow.
+
+This deep link routing callback is called 100% of the time on init, with your link params or an empty dictionary if none present.
 
 ```java
 @Override
@@ -63,8 +65,8 @@ public void onStart() {
 	branch.initUserSession(new BranchReferralInitListener(){
 		@Override
 		public void onInitFinished(JSONObject referringParams) {
-			// show the user some custom stuff or do some action based on what data you associate with a link
-			// will be empty if no data found
+			// params are the deep linked params associated with the link that the user clicked before showing up
+			// params will be empty if no data found
 
 			// here is the data from the example below if a new user clicked on Joe's link and installed the app
 			String name = referringParams.getString("user"); // returns Joe
@@ -72,6 +74,7 @@ public void onStart() {
 			String description = referringParams.getString("description"); // returns Joe likes long walks on the beach...
 
 			// route to a profile page in the app for Joe
+			// show a customer welcome
 		}
 	}, this.getIntent().getData());
 }
@@ -102,7 +105,7 @@ JSONObject sessionParams = branch.getReferringParams();
 If you ever want to access the original session params (the parameters passed in for the first install event only), you can use this line. This is useful if you only want to reward users who newly installed the app from a referral link or something.
 ```java
 Branch branch = Branch.getInstance();
-JSONObject installnParams = branch.getInstallReferringParams(); 
+JSONObject installParams = branch.getInstallReferringParams(); 
 ```
 
 ### Persistent identities
@@ -116,38 +119,12 @@ if (!branch.hasIdentity())
 	branch.identifyUser(@"your user id"); 
 ```
 
-#### OR
-
-We store these identities, and associate the referral connections among them. Therefore, if we see that you are identifying a user that already exists, we'll return the parameters associated with the first creation of that identity. You just need to register for the callback block.
-
-```java
-Branch branch = Branch.getInstance();
-if (!branch.hasIdentity()) {
-	branch.identifyUser(@"your user id", new BranchReferralInitListener() {	
-		@Override
-		public void onInitFinished(JSONObject installParams) {
-			// here is the data from the example below if a new user clicked on Joe's link and installed the app
-			String name = installParams.getString("user"); // returns Joe
-			String profileUrl = installParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
-			String description = installParams.getString("description"); // returns Joe likes long walks on the beach...
-		}
-	});
-}
-```
-
-You can access these parameters at any time thereafter using this call.
-```java
-Branch branch = Branch.getInstance();
-JSONObject installParams = branch.getInstallReferringParams();
-```
-
 #### Logout
 
 If you provide a logout function in your app, be sure to clear the user when the logout completes. This will ensure that all the stored parameters get cleared and all events are properly attributed to the right identity.
 
 ```java
-Branch branch = Branch.getInstance();
-JSONObject installParams = branch.clearUser();
+Branch.getInstance().clearUser();
 ```
 
 ### Register custom events
@@ -178,18 +155,9 @@ Some example events you might want to track:
 There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that? You need to pass a callback for when you link is prepared (which should return very quickly, ~ 100 ms to process). If you don't want a callback, and can tolerate long links, check out the section right below.
 
 ```java
-// get a simple url to track events with
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-branch.getShortUrl(new BranchLinkCreateListener() {
-	@Override
-	public void onLinkCreate(String url) {
-		// show the link to the user or share it immediately
-	}
-});
-
-// or 
 // associate data with a link
-// you can access this data from anyone instance that installs or opens the app from this link (amazing...)
+// you can access this data from any instance that installs or opens the app from this link (amazing...)
+
 JSONObject dataToInclude = new JSONObject();
 try {
 	dataToInclude.put("user", "Joe");
@@ -199,26 +167,10 @@ try {
 	
 }
 
-branch.getShortUrl(dataToInclude, new BranchLinkCreateListener() {
-	@Override
-	public void onLinkCreate(String url) {
-		// show the link to the user or share it immediately
-	}
-});
-
-// or 
-// get a url with a tag for analytics in the dashboard
+// associate a url with a tag for analytics in the dashboard
 // example tag could be "fb", "email", "twitter"
 
-branch.getShortUrl("twitter", new BranchLinkCreateListener() {
-	@Override
-	public void onLinkCreate(String url) {
-		// show the link to the user or share it immediately
-	}
-});
-
-// or
-
+Branch branch = Branch.getInstance();
 branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
 	@Override
 	public void onLinkCreate(String url) {
@@ -226,6 +178,8 @@ branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
 	}
 });
 ```
+
+There are other methods which exclude tag and data if you don't want to pass those. Explore the autocomplete functionality.
 
 **Note** 
 You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following optional keys in the params JSONObject:
@@ -243,18 +197,6 @@ Also, you do custom redirection by inserting the following optional keys in the 
 "$ios_url"
 "$ipad_url"
 ```
-
-### Long links (immediate return but no shortening done)
-
-Generating long links are immediate return, but can be long as the associated parameters are base64 encoded into the url itself.
-
-```java
-// get a simple url to track events with
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-String urlToShare = branch.getLongURL();
-```
-
-all of the above options with tagging and data passing are available.
 
 ## Referral system rewarding functionality
 
