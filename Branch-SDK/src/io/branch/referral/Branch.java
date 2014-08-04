@@ -91,6 +91,15 @@ public class Branch {
 		initUserSession(null);
 	}
 	
+	public void initUserSessionWithData(Uri data) {
+		if (data != null) {
+			if (data.getQueryParameter("link_click_id") != null) {
+				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
+			}
+		}
+		initUserSession(null);
+	}
+	
 	public void initUserSession(boolean isReferrable) {
 		initUserSession(null, isReferrable);
 	}
