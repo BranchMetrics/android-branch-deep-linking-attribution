@@ -19,9 +19,10 @@ You can sign up for your own app id at http://dashboard.branchmetrics.io
 ## Configuration (for tracking)
 
 Ideally, you want to use our links any time you have an external link pointing to your app (share, invite, referral, etc) because:
-1) Our dashboard can tell you where your installs are coming from
-2) Our links are the highest possible converting channel to new downloads and users
-3) You can pass that shared data across install to give new users a custom welcome or show them the content they expect to see
+
+1. Our dashboard can tell you where your installs are coming from
+1. Our links are the highest possible converting channel to new downloads and users
+1. You can pass that shared data across install to give new users a custom welcome or show them the content they expect to see
 
 Our linking infrastructure will support anything you want to build. If it doesn't, we'll fix it so that it does: just reach out to alex@branchmetrics.io with requests.
 

@@ -331,19 +331,27 @@ public class Branch {
 	}
 	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, null, callback);
+		generateShortLink(null, null, null, null, null, callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, params.toString(), callback);
+		generateShortLink(null, null, null, null, params.toString(), callback);
 	}
 	
 	public void getShortUrl(String tag, BranchLinkCreateListener callback) {
-		generateShortLink(tag, null, callback);
+		ArrayList<String> tags = new ArrayList<String>();
+		tags.add(tag);
+		generateShortLink(tags, null, null, null, null, callback);
 	}
 	
 	public void getShortUrl(String tag, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tag, params.toString(), callback);
+		ArrayList<String> tags = new ArrayList<String>();
+		tags.add(tag);
+		generateShortLink(tags, null, null, null, params.toString(), callback);
+	}
+	
+	public void getShortUrl(ArrayList<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		
 	}
 	
 	// PRIVATE FUNCTIONS
@@ -367,7 +375,7 @@ public class Branch {
 		}
 	}
 	
-	private void generateShortLink(final String tag, final String params, BranchLinkCreateListener callback) {
+	private void generateShortLink(final ArrayList<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			new Thread(new Runnable() {
@@ -377,8 +385,18 @@ public class Branch {
 					try {
 						linkPost.put("app_id", prefHelper_.getAppKey());
 						linkPost.put("identity_id", prefHelper_.getIdentityID());
-						if (tag != null)
-							linkPost.put("tag", tag);
+						if (tags != null) {
+							linkPost.put("tags", tags.toString());
+						}
+						if (channel != null) {
+							linkPost.put("channel", channel);
+						}
+						if (feature != null) {
+							linkPost.put("feature", feature);
+						}
+						if (stage != null) {
+							linkPost.put("stage", stage);
+						}
 						if (params != null)
 							linkPost.put("data", params);
 					} catch (JSONException ex) {
