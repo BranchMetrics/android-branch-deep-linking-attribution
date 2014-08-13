@@ -13,6 +13,12 @@ import android.os.Handler;
 import android.util.Log;
 
 public class Branch {	
+	public static String BRANCH_FEATURE_TAG_SHARE = "share";
+	public static String BRANCH_FEATURE_TAG_REFERRAL = "referral";
+	public static String BRANCH_FEATURE_TAG_INVITE = "invite";
+	public static String BRANCH_FEATURE_TAG_DEAL = "deal";
+	public static String BRANCH_FEATURE_TAG_GIFT = "gift";
+	
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
 
