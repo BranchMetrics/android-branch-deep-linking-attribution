@@ -357,7 +357,7 @@ public class Branch {
 	}
 	
 	public void getShortUrl(ArrayList<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		
+		generateShortLink(tags, channel, feature, stage, params.toString(), callback);
 	}
 	
 	// PRIVATE FUNCTIONS
