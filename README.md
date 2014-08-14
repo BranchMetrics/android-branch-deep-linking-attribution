@@ -168,11 +168,18 @@ try {
 	
 }
 
-// associate a url with a tag for analytics in the dashboard
-// example tag could be "fb", "email", "twitter"
+// associate a url with a set of tags, channel, feature, and stage for better analytics.
+// tags: null or example set of tags could be "version1", "trial6", etc
+// channel: null or examples: "facebook", "twitter", "text_message", etc
+// feature: null or examples: Branch.FEATURE_TAG_SHARE, Branch.FEATURE_TAG_REFERRAL, "unlock", etc
+// stage: null or examples: "past_customer", "logged_in", "level_6"
+
+ArrayList<String> tags = new ArrayList<String>();
+tags.put("version1");
+tags.put("trial6");
 
 Branch branch = Branch.getInstance();
-branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
+branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
@@ -180,7 +187,7 @@ branch.getShortUrl("twitter", dataToInclude, new BranchLinkCreateListener() {
 });
 ```
 
-There are other methods which exclude tag and data if you don't want to pass those. Explore the autocomplete functionality.
+There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
 **Note** 
 You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following optional keys in the params JSONObject:

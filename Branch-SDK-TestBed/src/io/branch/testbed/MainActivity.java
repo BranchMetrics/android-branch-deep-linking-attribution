@@ -1,5 +1,6 @@
 package io.branch.testbed;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.json.JSONException;
@@ -109,7 +110,10 @@ public class MainActivity extends Activity {
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}
-				branch.getShortUrl("tag", obj, new BranchLinkCreateListener() {
+				ArrayList<String> tags = new ArrayList<String>();
+				tags.add("tag1");
+				tags.add("tag2");
+				branch.getShortUrl(tags, "channel1", "feature1", "1", obj, new BranchLinkCreateListener() {
 					@Override
 					public void onLinkCreate(String url) {
 						txtShortUrl.setText(url);

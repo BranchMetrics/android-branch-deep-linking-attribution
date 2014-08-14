@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.Semaphore;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,11 +14,11 @@ import android.os.Handler;
 import android.util.Log;
 
 public class Branch {	
-	public static String BRANCH_FEATURE_TAG_SHARE = "share";
-	public static String BRANCH_FEATURE_TAG_REFERRAL = "referral";
-	public static String BRANCH_FEATURE_TAG_INVITE = "invite";
-	public static String BRANCH_FEATURE_TAG_DEAL = "deal";
-	public static String BRANCH_FEATURE_TAG_GIFT = "gift";
+	public static String FEATURE_TAG_SHARE = "share";
+	public static String FEATURE_TAG_REFERRAL = "referral";
+	public static String FEATURE_TAG_INVITE = "invite";
+	public static String FEATURE_TAG_DEAL = "deal";
+	public static String FEATURE_TAG_GIFT = "gift";
 	
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
@@ -391,8 +392,12 @@ public class Branch {
 					try {
 						linkPost.put("app_id", prefHelper_.getAppKey());
 						linkPost.put("identity_id", prefHelper_.getIdentityID());
+						
 						if (tags != null) {
-							linkPost.put("tags", tags.toString());
+							JSONArray tagArray = new JSONArray();
+							for (String tag : tags) 
+								tagArray.put(tag);
+							linkPost.put("tags", tagArray);
 						}
 						if (channel != null) {
 							linkPost.put("channel", channel);
