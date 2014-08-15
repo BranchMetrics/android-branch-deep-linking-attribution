@@ -1,9 +1,14 @@
 package io.branch.referral;
 
+import io.branch.referral.ApkParser;
+import java.io.InputStream;
+import java.util.jar.JarFile;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -12,6 +17,7 @@ import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -33,6 +39,29 @@ public class SystemObserver {
 			return androidID;
 		} else 
 			return BLANK;
+	}
+	
+	public String getURIScheme() {
+		PackageManager pm = context_.getPackageManager();
+	    try {
+	        ApplicationInfo ai = pm.getApplicationInfo(context_.getPackageName(), 0);
+	        String sourceApk = ai.publicSourceDir;
+	        Log.i("BranchUriSchemer", "source APK file " + sourceApk);
+	        try {
+	            JarFile jf = new JarFile(sourceApk);
+	            InputStream is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+	            byte[] xml = new byte[is.available()];
+	            is.read(xml);
+	            String scheme = new ApkParser().decompressXML(xml);
+	            jf.close();
+	            return scheme;
+	          } catch (Exception ex) {
+	        	  ex.printStackTrace();
+	          }
+	    } catch (NameNotFoundException e) {
+	        e.printStackTrace();
+	    }
+		return BLANK;
 	}
 	
 	public String getAppVersion() {
