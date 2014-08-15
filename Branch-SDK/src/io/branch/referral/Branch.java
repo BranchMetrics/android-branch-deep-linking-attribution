@@ -165,6 +165,8 @@ public class Branch {
 	}
 	
 	public void identifyUser(final String userId) {
+		if (hasIdentity())
+			return;
 		if (!identifyInQueue()) {
 			new Thread(new Runnable() {
 				@Override
@@ -700,6 +702,10 @@ public class Branch {
 						prefHelper_.setSessionID(serverResponse.getString("session_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 						
+						if (serverResponse.has("identity")) {
+							prefHelper_.setIdentity(serverResponse.getString("identity"));
+						}
+						
 						if (prefHelper_.getIsReferrable() == 1) {
 							if (serverResponse.has("data")) {
 								String params = serverResponse.getString("data");
@@ -741,6 +747,11 @@ public class Branch {
 						} else {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}
+						
+						if (serverResponse.has("identity")) {
+							prefHelper_.setIdentity(serverResponse.getString("identity"));
+						}
+						
 						if (prefHelper_.getIsReferrable() == 1) {
 							if (serverResponse.has("data")) {
 								String params = serverResponse.getString("data");
