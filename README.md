@@ -116,8 +116,7 @@ Often, you might have your own user IDs, or want referral and event data to pers
 To identify a user, just call:
 ```java
 Branch branch = Branch.getInstance();
-if (!branch.hasIdentity())
-	branch.identifyUser(@"your user id"); 
+branch.identifyUser(@"your user id"); 
 ```
 
 #### Logout
