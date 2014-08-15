@@ -470,7 +470,11 @@ public class Branch {
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasUser()) {
 					kRemoteInterface_.logoutUser(req.getPost());
 				} else if (!hasUser()) {
-					Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+					if (!hasAppKey()) {
+						Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+					} else {
+						initUserSession();
+					}
 				}
 			} else {
 				serverSema_.release();
@@ -582,6 +586,10 @@ public class Branch {
 			}
 		}
 		requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
+	}
+	
+	private boolean hasAppKey() {
+		return !prefHelper_.getAppKey().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
 	private boolean hasUser() {
