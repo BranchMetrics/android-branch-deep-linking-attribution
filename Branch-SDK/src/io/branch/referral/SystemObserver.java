@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import io.branch.referral.ApkParser;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.jar.JarFile;
 
 import android.Manifest;
@@ -34,7 +35,7 @@ public class SystemObserver {
 		if (context_ != null) { 
 			String androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
 			if (androidID == null) {
-				androidID = BLANK;
+				androidID = UUID.randomUUID().toString();;
 			}
 			return androidID;
 		} else 
