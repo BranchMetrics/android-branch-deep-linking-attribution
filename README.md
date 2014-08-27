@@ -123,6 +123,8 @@ branch.identifyUser(@"your user id");
 
 If you provide a logout function in your app, be sure to clear the user when the logout completes. This will ensure that all the stored parameters get cleared and all events are properly attributed to the right identity.
 
+**Warning** this call will clear the referral credits and attribution on the device.
+
 ```java
 Branch.getInstance().clearUser();
 ```
