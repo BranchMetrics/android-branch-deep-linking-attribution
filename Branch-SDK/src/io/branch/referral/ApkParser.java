@@ -83,7 +83,7 @@ public class ApkParser {
 		
 					String attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
 					String attrValue = attrValueSi!=-1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x"+Integer.toHexString(attrResId);
-					if (PrefHelper.LOG) Log.i("BranchAPKParser", "name = " + attrName + ", value = " + attrValue);
+					//if (PrefHelper.LOG) Log.i("BranchAPKParser", "name = " + attrName + ", value = " + attrValue);
 					if (attrName.equals("scheme")) {
 						return attrValue;
 					}
@@ -98,7 +98,7 @@ public class ApkParser {
 			} else if (tag0 == endDocTag) {  // END OF XML DOC TAG
 				break;
 			} else {
-				if (PrefHelper.LOG) Log.i("BranchAPKParser", "  Unrecognized tag code '"+Integer.toHexString(tag0) +"' at offset "+off);
+				//if (PrefHelper.LOG) Log.i("BranchAPKParser", "  Unrecognized tag code '"+Integer.toHexString(tag0) +"' at offset "+off);
 				break;
 			}
 		} // end of while loop scanning tags and attributes of XML tree
