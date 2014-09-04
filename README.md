@@ -4,7 +4,7 @@ Current compiled SDK footprint is *25kb*
 
 ### Install library project
 
-Download code from here:
+Download JAR file from here:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
 
 The testbed project:
