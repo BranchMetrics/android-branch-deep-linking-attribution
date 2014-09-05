@@ -89,7 +89,7 @@ Optional: If you want to optionally track session lengths, please add this line 
 @Override
 public void onStop() {
 	super.onStop();
-	Branch.getInstance().closeSession();
+	Branch.getInstance(getApplicationContext()).closeSession();
 }
 ```
 
@@ -97,7 +97,7 @@ public void onStop() {
 
 These session parameters will be available at any point later on with this command. If no params, the dictionary will be empty. This refreshes with every new session (app installs AND app opens)
 ```java
-Branch branch = Branch.getInstance();
+Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject sessionParams = branch.getReferringParams(); 
 ```
 
@@ -105,7 +105,7 @@ JSONObject sessionParams = branch.getReferringParams();
 
 If you ever want to access the original session params (the parameters passed in for the first install event only), you can use this line. This is useful if you only want to reward users who newly installed the app from a referral link or something.
 ```java
-Branch branch = Branch.getInstance();
+Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject installParams = branch.getInstallReferringParams(); 
 ```
 
@@ -115,7 +115,7 @@ Often, you might have your own user IDs, or want referral and event data to pers
 
 To identify a user, just call:
 ```java
-Branch branch = Branch.getInstance();
+Branch branch = Branch.getInstance(getApplicationContext());
 branch.identifyUser(@"your user id"); 
 ```
 
@@ -126,20 +126,20 @@ If you provide a logout function in your app, be sure to clear the user when the
 **Warning** this call will clear the referral credits and attribution on the device.
 
 ```java
-Branch.getInstance().clearUser();
+Branch.getInstance(getApplicationContext()).clearUser();
 ```
 
 ### Register custom events
 
 ```java
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
+Branch branch = Branch.getInstance(getApplicationContext());
 branch.userCompletedAction("your_custom_event"); 
 ```
 
 OR if you want to store some state with the event
 
 ```java
-Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
+Branch branch = Branch.getInstance(getApplicationContext());
 branch.userCompletedAction("your_custom_event", (JSONObject)appState); 
 ```
 
@@ -179,7 +179,7 @@ ArrayList<String> tags = new ArrayList<String>();
 tags.put("version1");
 tags.put("trial6");
 
-Branch branch = Branch.getInstance();
+Branch branch = Branch.getInstance(getApplicationContext());
 branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
 	public void onLinkCreate(String url) {
@@ -226,7 +226,7 @@ Warning: For a referral program, you should not use unique awards for custom eve
 Reward balances change randomly on the backend when certain actions are taken (defined by your rules), so you'll need to make an asynchronous call to retrieve the balance. Here is the syntax:
 
 ```java
-Branch branch = Branch.getInstance();
+Branch branch = Branch.getInstance(getApplicationContext());
 branch.loadRewards(new BranchReferralStateChangedListener() {
 	@Override
 	public void onStateChanged(boolean changed) {
@@ -243,6 +243,6 @@ branch.loadRewards(new BranchReferralStateChangedListener() {
 We will store how many of the rewards have been deployed so that you don't have to track it on your end. In order to save that you gave the credits to the user, you can call redeem. Redemptions will reduce the balance of outstanding credits permanently.
 
 ```java
-Branch branch = Branch.getInstance();
+Branch branch = Branch.getInstance(getApplicationContext());
 branch.redeemRewards(5);
 ```
