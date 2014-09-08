@@ -1,7 +1,10 @@
 package io.branch.referral;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 
 import org.json.JSONArray;
@@ -20,6 +23,7 @@ public class Branch {
 	public static String FEATURE_TAG_DEAL = "deal";
 	public static String FEATURE_TAG_GIFT = "gift";
 	
+	private static final int SESSION_KEEPALIVE = 30000;
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
 
@@ -35,6 +39,8 @@ public class Branch {
 	private PrefHelper prefHelper_;
 	private SystemObserver systemObserver_;
 	private Context context_;
+
+	private Timer closeTimer;
 	
 	private Semaphore serverSema_;
 	private ArrayList<ServerRequest> requestQueue_;
@@ -48,6 +54,7 @@ public class Branch {
 		kRemoteInterface_.setNetworkCallbackListener(new ReferralNetworkCallback());
 		requestQueue_ = new ArrayList<ServerRequest>();
 		serverSema_ = new Semaphore(1);
+		closeTimer = new Timer();
 		isInit_ = false;
 		context_ = context;
 		networkCount_ = 0;
@@ -145,17 +152,25 @@ public class Branch {
 	}
 	
 	public void closeSession() {
-		new Thread(new Runnable() {
+		if (closeTimer == null)
+			return;
+		clearTimer();
+		closeTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				isInit_ = false;
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
-				processNextQueueItem();
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						isInit_ = false;
+						requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
+						processNextQueueItem();
+					}
+				}).start();
 			}
-		}).start();
+		}, SESSION_KEEPALIVE);
 	}
 	
-	public boolean hasIdentity() {
+	public boolean isIdentified() {
 		return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
@@ -165,7 +180,7 @@ public class Branch {
 	}
 	
 	public void identifyUser(final String userId) {
-		if (hasIdentity())
+		if (isIdentified())
 			return;
 		if (!identifyInQueue()) {
 			new Thread(new Runnable() {
@@ -331,14 +346,6 @@ public class Branch {
 		return generateLongLink(null, params.toString());
 	}
 	
-	public String getLongURL(String tag) {
-		return generateLongLink(tag, null);
-	}
-	
-	public String getLongURL(String tag, JSONObject params) {
-		return generateLongLink(tag, params.toString());
-	}
-	
 	public void getShortUrl(BranchLinkCreateListener callback) {
 		generateShortLink(null, null, null, null, null, callback);
 	}
@@ -347,20 +354,46 @@ public class Branch {
 		generateShortLink(null, null, null, null, params.toString(), callback);
 	}
 	
-	public void getShortUrl(String tag, BranchLinkCreateListener callback) {
-		ArrayList<String> tags = new ArrayList<String>();
-		tags.add(tag);
-		generateShortLink(tags, null, null, null, null, callback);
+	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
+		String stringParams = null;
+		if (params != null)
+			stringParams = params.toString();
+		generateShortLink(null, channel, FEATURE_TAG_REFERRAL, null, stringParams, callback);
 	}
 	
-	public void getShortUrl(String tag, JSONObject params, BranchLinkCreateListener callback) {
-		ArrayList<String> tags = new ArrayList<String>();
-		tags.add(tag);
-		generateShortLink(tags, null, null, null, params.toString(), callback);
+	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
+		String stringParams = null;
+		if (params != null)
+			stringParams = params.toString();
+		generateShortLink(tags, channel, FEATURE_TAG_REFERRAL, null, stringParams, callback);
 	}
 	
-	public void getShortUrl(ArrayList<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, feature, stage, params.toString(), callback);
+	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
+		String stringParams = null;
+		if (params != null)
+			stringParams = params.toString();
+		generateShortLink(null, channel, FEATURE_TAG_SHARE, null, stringParams, callback);
+	}
+	
+	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
+		String stringParams = null;
+		if (params != null)
+			stringParams = params.toString();
+		generateShortLink(tags, channel, FEATURE_TAG_SHARE, null, stringParams, callback);
+	}
+	
+	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		String stringParams = null;
+		if (params != null)
+			stringParams = params.toString();
+		generateShortLink(null, channel, feature, stage, stringParams, callback);
+	}
+	
+	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		String stringParams = null;
+		if (params != null)
+			stringParams = params.toString();
+		generateShortLink(tags, channel, feature, stage, stringParams, callback);
 	}
 	
 	// PRIVATE FUNCTIONS
@@ -384,7 +417,7 @@ public class Branch {
 		}
 	}
 	
-	private void generateShortLink(final ArrayList<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
+	private void generateShortLink(final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			new Thread(new Runnable() {
@@ -449,28 +482,32 @@ public class Branch {
 				
 				ServerRequest req = requestQueue_.get(0);
 				
+				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+					clearTimer();
+				}
+				
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE);
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 					kRemoteInterface_.registerOpen();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getRewards();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser() && hasSession()) {
 					kRemoteInterface_.redeemRewards(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser()){
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser() && hasSession()){
 					kRemoteInterface_.userCompletedAction(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser() && hasSession()) {
 					kRemoteInterface_.createCustomUrl(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasUser() && hasSession()) {
 					kRemoteInterface_.identifyUser(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && hasUser() && hasSession()) {
 					kRemoteInterface_.registerClose();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasUser()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasUser() && hasSession()) {
 					kRemoteInterface_.logoutUser(req.getPost());
 				} else if (!hasUser()) {
-					if (!hasAppKey()) {
+					if (!hasAppKey() && hasSession()) {
 						Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
 					} else {
 						initUserSession();
@@ -588,8 +625,20 @@ public class Branch {
 		requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
 	}
 	
+	private void clearTimer() {
+		if (closeTimer == null)
+			return;
+		closeTimer.cancel();
+		closeTimer.purge();
+		closeTimer = new Timer();
+	}
+	
 	private boolean hasAppKey() {
 		return !prefHelper_.getAppKey().equals(PrefHelper.NO_STRING_VALUE);
+	}
+	
+	private boolean hasSession() {
+		return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
 	private boolean hasUser() {

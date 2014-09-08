@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}
-				String url = branch.getLongURL("test_tag", obj);
+				String url = branch.getLongURL(obj);
 				txtUrl.setText(url);
 			}
 		});
