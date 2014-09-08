@@ -146,8 +146,19 @@ public class Branch {
 				}
 			}).start();
 			isInit_ = true;
-		} else if (!installOrOpenInQueue()) {
+		} else if (hasUser() && hasSession() && !installOrOpenInQueue()) {
 			if (callback != null) callback.onInitFinished(getReferringParams());
+		} else {
+			if ((!hasUser() || !hasSession()) && !installOrOpenInQueue()) {
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						initSession();
+					}
+				}).start();
+			} else {
+				processNextQueueItem();
+			}
 		}
 	}
 	
@@ -510,6 +521,7 @@ public class Branch {
 					if (!hasAppKey() && hasSession()) {
 						Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
 					} else {
+						networkCount_ = 0;
 						initUserSession();
 					}
 				}
@@ -741,11 +753,11 @@ public class Branch {
 					String requestTag = serverResponse.getString(BranchRemoteInterface.KEY_SERVER_CALL_TAG);
 					
 					networkCount_ = 0;
-					if (status >= 500) {
-						retryLastRequest();
-					} else if (status >= 400 && status < 500) {
+					if (status >= 400 && status < 500) {
 						Log.i("BranchSDK", "Branch API Error: " + serverResponse.getString("message"));
 						requestQueue_.remove(0);
+					} else if (status != 200) {
+						retryLastRequest();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 						processReferralCounts(serverResponse);
 						requestQueue_.remove(0);
