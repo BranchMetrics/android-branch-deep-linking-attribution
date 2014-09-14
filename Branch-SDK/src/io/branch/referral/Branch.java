@@ -23,7 +23,7 @@ public class Branch {
 	public static String FEATURE_TAG_DEAL = "deal";
 	public static String FEATURE_TAG_GIFT = "gift";
 	
-	private static final int SESSION_KEEPALIVE = 30000;
+	private static final int SESSION_KEEPALIVE = 500;
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
 
