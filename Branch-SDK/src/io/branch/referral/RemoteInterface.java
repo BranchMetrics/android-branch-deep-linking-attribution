@@ -29,7 +29,7 @@ public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
 
 	private HttpClient getGenericHttpClient() {
-		int timeout = 10000;
+		int timeout = 3000;
 		HttpParams httpParams = new BasicHttpParams();
 		HttpConnectionParams.setConnectionTimeout(httpParams, timeout);
 		HttpConnectionParams.setSoTimeout(httpParams, timeout);
