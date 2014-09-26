@@ -140,7 +140,6 @@ public class Branch {
 	}
 	
 	private void initUserSessionInternal(BranchReferralInitListener callback) {
-		Log.i("Branch", context_.getClass().toString());
 		initSessionFinishedCallback_ = callback;
 		if (!isInit_) {
 			new Thread(new Runnable() {
