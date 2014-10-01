@@ -150,7 +150,7 @@ public class Branch {
 			}).start();
 			isInit_ = true;
 		} else if (hasUser() && hasSession() && !installOrOpenInQueue()) {
-			if (callback != null) callback.onInitFinished(getReferringParams());
+			if (callback != null) callback.onInitFinished(new JSONObject());
 		} else {
 			if ((!hasUser() || !hasSession()) && !installOrOpenInQueue()) {
 				new Thread(new Runnable() {
