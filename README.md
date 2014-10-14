@@ -62,6 +62,7 @@ This deep link routing callback is called 100% of the time on init, with your li
 public void onStart() {
 	super.onStart();
 
+	// sign up to get your key at http://branch.io
 	Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 	branch.initUserSession(new BranchReferralInitListener(){
 		@Override
