@@ -54,7 +54,7 @@ public class PrefHelper {
 	}
 	
 	public String getAPIBaseUrl() {
-		return "http://api.branchmetrics.io/";
+		return "https://api.branch.io/";
 	}
 
 	public void setAppKey(String key) {
