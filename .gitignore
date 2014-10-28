@@ -1,4 +1,5 @@
 *.class
 Branch-SDK-TestBed/.settings/org.eclipse.jdt.core.prefs
 Branch-SDK/.settings/org.eclipse.jdt.core.prefs
-Branch-SDK/gen/io/branch/referral/BuildConfig.java
+Branch-SDK/gen/
+Branch-SDK/bin/
