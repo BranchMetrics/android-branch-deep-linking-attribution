@@ -34,6 +34,7 @@ public class Branch {
 	private BranchReferralInitListener initIdentityFinishedCallback_;
 	private BranchReferralStateChangedListener stateChangedCallback_;
 	private BranchLinkCreateListener linkCreateCallback_;
+	private BranchListResponseListener creditHistoryCallback_;
 	
 	private BranchRemoteInterface kRemoteInterface_;
 	private PrefHelper prefHelper_;
@@ -311,6 +312,48 @@ public class Branch {
 		}).start();
 	}
 	
+	public void getCreditHistory(BranchListResponseListener callback) {
+		getCreditHistory(null, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
+	}
+	
+	public void getCreditHistory(final String bucket, BranchListResponseListener callback) {
+		getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
+	}
+	
+	public void getCreditHistory(final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
+		getCreditHistory(null, afterId, length, order, callback);
+	}
+	
+	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
+		creditHistoryCallback_ = callback;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("length", length);
+					post.put("direction", order.ordinal());
+
+					if (bucket != null) {
+						post.put("bucket", bucket);
+					}
+					
+					if (afterId != null) {
+						post.put("begin_after_id", afterId);
+					}
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
 	public void userCompletedAction(final String action, final JSONObject metadata) {
 		new Thread(new Runnable() {
 			@Override
@@ -504,6 +547,8 @@ public class Branch {
 					kRemoteInterface_.getRewards();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser() && hasSession()) {
 					kRemoteInterface_.redeemRewards(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY) && hasUser() && hasSession()) {
+					kRemoteInterface_.getCreditHistory(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser() && hasSession()){
 					kRemoteInterface_.userCompletedAction(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser() && hasSession()) {
@@ -552,6 +597,10 @@ public class Branch {
 					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
 						if (stateChangedCallback_ != null) {
 							stateChangedCallback_.onStateChanged(false);
+						}
+					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
+						if (creditHistoryCallback_ != null) {
+							creditHistoryCallback_.onReceivingResponse(null);
 						}
 					} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						if (linkCreateCallback_ != null) {
@@ -692,16 +741,14 @@ public class Branch {
 		}
 	} 
 	
-	private void processReferralCounts(JSONObject obj) {
+	private void processReferralCounts(ServerResponse resp) {
 		boolean updateListener = false;
-		Iterator<?> keys = obj.keys();
+		Iterator<?> keys = resp.getObject().keys();
 		while (keys.hasNext()) {
 			String key = (String)keys.next();
-			if (key.equals(BranchRemoteInterface.KEY_SERVER_CALL_STATUS_CODE) || key.equals(BranchRemoteInterface.KEY_SERVER_CALL_TAG))
-				continue;
 			
 			try {
-				JSONObject counts = obj.getJSONObject(key);
+				JSONObject counts = resp.getObject().getJSONObject(key);
 				int total = counts.getInt("total");
 				int unique = counts.getInt("unique");
 				
@@ -726,16 +773,14 @@ public class Branch {
 		});
 	}
 	
-	private void processRewardCounts(JSONObject obj) {
+	private void processRewardCounts(ServerResponse resp) {
 		boolean updateListener = false;
-		Iterator<?> keys = obj.keys();
+		Iterator<?> keys = resp.getObject().keys();
 		while (keys.hasNext()) {
 			String key = (String)keys.next();
-			if (key.equals(BranchRemoteInterface.KEY_SERVER_CALL_STATUS_CODE) || key.equals(BranchRemoteInterface.KEY_SERVER_CALL_TAG))
-				continue;
 			
 			try {
-				int credits = obj.getInt(key);
+				int credits = resp.getObject().getInt(key);
 				
 				if (credits != prefHelper_.getCreditCount(key)) {
 					updateListener = true;
@@ -757,17 +802,29 @@ public class Branch {
 		});
 	}
 	
+	private void processCreditHistory(final ServerResponse resp) {
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (creditHistoryCallback_ != null) {
+					creditHistoryCallback_.onReceivingResponse(resp.getArray());
+				}
+			}
+		});
+	}
+	
 	public class ReferralNetworkCallback implements NetworkCallback {
 		@Override
-		public void finished(JSONObject serverResponse) {
+		public void finished(ServerResponse serverResponse) {
 			if (serverResponse != null) {
 				try {
-					int status = serverResponse.getInt(BranchRemoteInterface.KEY_SERVER_CALL_STATUS_CODE);
-					String requestTag = serverResponse.getString(BranchRemoteInterface.KEY_SERVER_CALL_TAG);
+					int status = serverResponse.getStatusCode();
+					String requestTag = serverResponse.getTag();
 					
 					networkCount_ = 0;
 					if (status >= 400 && status < 500) {
-						Log.i("BranchSDK", "Branch API Error: " + serverResponse.getString("message"));
+						Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						requestQueue_.remove(0);
 					} else if (status != 200) {
 						retryLastRequest();
@@ -777,29 +834,32 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
 						processRewardCounts(serverResponse);
 						requestQueue_.remove(0);
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
+						processCreditHistory(serverResponse);
+						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-						prefHelper_.setDeviceFingerPrintID(serverResponse.getString("device_fingerprint_id"));
-						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
-						prefHelper_.setUserURL(serverResponse.getString("link"));
-						prefHelper_.setSessionID(serverResponse.getString("session_id"));
+						prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString("device_fingerprint_id"));
+						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
+						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
+						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 						
 						if (prefHelper_.getIsReferrable() == 1) {
-							if (serverResponse.has("data")) {
-								String params = serverResponse.getString("data");
+							if (serverResponse.getObject().has("data")) {
+								String params = serverResponse.getObject().getString("data");
 								prefHelper_.setInstallParams(params);
 							} else {
 								prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
 							}
 						}
 						
-						if (serverResponse.has("link_click_id")) {
-							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
+						if (serverResponse.getObject().has("link_click_id")) {
+							prefHelper_.setLinkClickID(serverResponse.getObject().getString("link_click_id"));
 						} else {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}	
-						if (serverResponse.has("data")) {
-							String params = serverResponse.getString("data");
+						if (serverResponse.getObject().has("data")) {
+							String params = serverResponse.getObject().getString("data");
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
@@ -818,22 +878,22 @@ public class Branch {
 						});
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-						prefHelper_.setSessionID(serverResponse.getString("session_id"));
+						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-						if (serverResponse.has("link_click_id")) {
-							prefHelper_.setLinkClickID(serverResponse.getString("link_click_id"));
+						if (serverResponse.getObject().has("link_click_id")) {
+							prefHelper_.setLinkClickID(serverResponse.getObject().getString("link_click_id"));
 						} else {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}
 						
 						if (prefHelper_.getIsReferrable() == 1) {
-							if (serverResponse.has("data")) {
-								String params = serverResponse.getString("data");
+							if (serverResponse.getObject().has("data")) {
+								String params = serverResponse.getObject().getString("data");
 								prefHelper_.setInstallParams(params);
 							} 
 						}
-						if (serverResponse.has("data")) {
-							String params = serverResponse.getString("data");
+						if (serverResponse.getObject().has("data")) {
+							String params = serverResponse.getObject().getString("data");
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
@@ -849,7 +909,7 @@ public class Branch {
 						});
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-						final String url = serverResponse.getString("url");
+						final String url = serverResponse.getObject().getString("url");
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override
@@ -861,9 +921,9 @@ public class Branch {
 						});
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
-						prefHelper_.setSessionID(serverResponse.getString("session_id"));
-						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
-						prefHelper_.setUserURL(serverResponse.getString("link"));
+						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
+						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
+						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
 						
 						prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
 						prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
@@ -872,11 +932,11 @@ public class Branch {
 						
 						requestQueue_.remove(0);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
-						prefHelper_.setIdentityID(serverResponse.getString("identity_id"));
-						prefHelper_.setUserURL(serverResponse.getString("link"));
+						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
+						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
 						
-						if (serverResponse.has("referring_data")) {
-							String params = serverResponse.getString("referring_data");
+						if (serverResponse.getObject().has("referring_data")) {
+							String params = serverResponse.getObject().getString("referring_data");
 							prefHelper_.setInstallParams(params);
 						} 
 						if (requestQueue_.size() > 0) {
@@ -918,5 +978,14 @@ public class Branch {
 	
 	public interface BranchLinkCreateListener {
 		public void onLinkCreate(String url);
+	}
+	
+	public interface BranchListResponseListener {
+		public void onReceivingResponse(JSONArray list);
+	}
+	
+	public enum CreditHistoryOrder {
+	    kMostRecentFirst,
+	    kLeastRecentFirst
 	}
 }
