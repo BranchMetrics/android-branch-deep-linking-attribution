@@ -793,7 +793,9 @@ public class Branch {
 					
 					networkCount_ = 0;
 					if (status >= 400 && status < 500) {
-						Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
+						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
+							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
+						}
 						requestQueue_.remove(0);
 					} else if (status != 200) {
 						retryLastRequest();
