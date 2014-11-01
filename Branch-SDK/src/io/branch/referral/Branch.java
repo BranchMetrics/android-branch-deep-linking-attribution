@@ -389,85 +389,54 @@ public class Branch {
 		return convertParamsStringToDictionary(storedParam);
 	}
 	
-	public String getLongURL() {
-		return generateLongLink(null, null);
-	}
-	
-	public String getLongURL(JSONObject params) {
-		return generateLongLink(null, params.toString());
-	}
-	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, null, null, null, null, callback);
+		generateShortLink(null, null, null, null, stringifyParams(null), callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, null, null, null, params.toString(), callback);
+		generateShortLink(null, null, null, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		String stringParams = null;
-		if (params != null)
-			stringParams = params.toString();
-		generateShortLink(null, channel, FEATURE_TAG_REFERRAL, null, stringParams, callback);
+		generateShortLink(null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		String stringParams = null;
-		if (params != null)
-			stringParams = params.toString();
-		generateShortLink(tags, channel, FEATURE_TAG_REFERRAL, null, stringParams, callback);
+		generateShortLink(tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		String stringParams = null;
-		if (params != null)
-			stringParams = params.toString();
-		generateShortLink(null, channel, FEATURE_TAG_SHARE, null, stringParams, callback);
+		generateShortLink(null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		String stringParams = null;
-		if (params != null)
-			stringParams = params.toString();
-		generateShortLink(tags, channel, FEATURE_TAG_SHARE, null, stringParams, callback);
+		generateShortLink(tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		String stringParams = null;
-		if (params != null)
-			stringParams = params.toString();
-		generateShortLink(null, channel, feature, stage, stringParams, callback);
+		generateShortLink(null, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		String stringParams = null;
-		if (params != null)
-			stringParams = params.toString();
-		generateShortLink(tags, channel, feature, stage, stringParams, callback);
+		generateShortLink(tags, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	// PRIVATE FUNCTIONS
-
-	private String generateLongLink(String tag, String params) {
-		if (hasUser()) {
-			String url = prefHelper_.getUserURL();
-			if (tag != null) {
-				url = url + "?t=" + tag;
-				if (params != null) {
-					byte[] encodedArray = Base64.encode(params.getBytes(), Base64.NO_WRAP);
-					url = url + "&d=" + new String(encodedArray);
-				}
-			} else if (params != null) {
-				byte[] encodedArray = Base64.encode(params.getBytes(), Base64.NO_WRAP);
-				url = url + "?d=" + new String(encodedArray); 
-			}
-			return url;
-		} else {
-			return "init incomplete, did you call init yet?";
-		}
-	}
 	
+	private String stringifyParams(JSONObject params) {
+		if (params == null) {
+			params = new JSONObject();
+		}
+		
+		try {
+			params.put("source", "android");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return params.toString();
+	}
+
 	private void generateShortLink(final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
