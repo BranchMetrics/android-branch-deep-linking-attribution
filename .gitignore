@@ -1,1 +1,7 @@
 *.class
+Branch-SDK-TestBed/*
+Branch-SDK/.settings/*
+Branch-SDK/gen/*
+Branch-SDK/bin/*
+Branch-SDK-TestBed/bin/*
+Branch-SDK-TestBed/gen/*
