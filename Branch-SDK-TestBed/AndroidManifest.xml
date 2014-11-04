@@ -31,6 +31,9 @@
             	<category android:name="android.intent.category.BROWSABLE" />
         	</intent-filter>
         </activity>
+        <activity
+            android:name="io.branch.testbed.CreditHistoryActivity">
+        </activity>
     </application>
 
 </manifest>
