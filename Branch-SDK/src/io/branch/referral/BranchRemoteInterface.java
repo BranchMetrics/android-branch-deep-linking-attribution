@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import java.util.Iterator;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,6 +16,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_GET_REFERRAL_COUNTS = "t_get_referral_counts";
 	public static final String REQ_TAG_GET_REWARDS = "t_get_rewards";
 	public static final String REQ_TAG_REDEEM_REWARDS = "t_redeem_rewards";
+	public static final String REQ_TAG_GET_REWARD_HISTORY = "t_get_reward_history";
 	public static final String REQ_TAG_GET_CUSTOM_URL = "t_get_custom_url";
 	public static final String REQ_TAG_IDENTIFY = "t_identify_user";
 	public static final String REQ_TAG_LOGOUT = "t_logout";
@@ -107,14 +110,14 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public void registerClose() {
 		String urlExtend = "v1/close";
 		if (callback_ != null) {
-			JSONObject openPost = new JSONObject();
+			JSONObject closePost = new JSONObject();
 			try {
-				openPost.put("app_id", prefHelper_.getAppKey());
-				openPost.put("session_id", prefHelper_.getSessionID());
+				closePost.put("app_id", prefHelper_.getAppKey());
+				closePost.put("session_id", prefHelper_.getSessionID());
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(openPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE));
+			callback_.finished(make_restful_post(closePost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE));
 		}
 	}
 	
@@ -146,6 +149,14 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	public void getCreditHistory(JSONObject post) {
+		String params = this.convertJSONtoString(post);
+		String urlExtend = "v1/credithistory" + params;
+		if (callback_ != null) {
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY));
+		}
+	}
+	
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
@@ -165,5 +176,37 @@ public class BranchRemoteInterface extends RemoteInterface {
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_LOGOUT));
 		}
+	}
+	
+	private String convertJSONtoString(JSONObject json) {
+		StringBuilder result = new StringBuilder();
+		
+		if (json != null) {
+	        Iterator<String> iter = json.keys();
+	        if (iter.hasNext()) {
+	        	boolean first = true;
+	        	do {
+	        		if (first) {
+		        		result.append("?");
+		        		first = false;
+		        	} else {
+		        		result.append("&");
+		        	}
+	        		
+	        		String key = iter.next();
+	        		String value;
+	        		try {
+						value = json.getString(key);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						return null;
+					}
+	        		
+	        		result.append(key + "=" + value);
+	        	} while (iter.hasNext());
+	        }
+	    }
+		
+		return result.toString();
 	}
 }

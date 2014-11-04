@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Iterator;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -17,15 +16,13 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
 
 public class RemoteInterface {
-	public static final String KEY_SERVER_CALL_TAG = "server_call_tag";
-	public static final String KEY_SERVER_CALL_STATUS_CODE = "httpcode";
-
 	public static final String NO_TAG_VALUE = "no_tag";
 
 	private HttpClient getGenericHttpClient() {
@@ -36,40 +33,38 @@ public class RemoteInterface {
 		return new DefaultHttpClient(httpParams);
 	}
 	
-	private JSONObject processEntityForJSON (HttpEntity entity, int statusCode, String tag) {
-		JSONObject jsonreturn = new JSONObject();;
+	private ServerResponse processEntityForJSON (HttpEntity entity, int statusCode, String tag) {
+		ServerResponse result = new ServerResponse(tag, statusCode);
 		try {
-			jsonreturn.put(KEY_SERVER_CALL_STATUS_CODE, statusCode);
-			jsonreturn.put(KEY_SERVER_CALL_TAG, tag);
-			
 			if (entity != null) {
 		    	InputStream instream = entity.getContent();
-		    	
 		    	BufferedReader rd = new BufferedReader(new InputStreamReader(instream));
 		    	
 		    	String line = rd.readLine();
 				if (PrefHelper.LOG) Log.i("BranchSDK", "returned " + line);
 
 		    	if (line != null) {
-		    		JSONObject tempJson = new JSONObject(line);	
-		    		Iterator<?> keys = tempJson.keys();
-		    		while (keys.hasNext()) {
-		    			String key = (String)keys.next();
-		    			jsonreturn.put(key, tempJson.get(key));
-		    		}	
-		    		return jsonreturn;
+		    		try {
+		    			JSONObject jsonObj = new JSONObject(line);
+		    			result.setPost(jsonObj);
+		    		} catch (JSONException ex) {
+		    			try {
+		    				JSONArray jsonArray = new JSONArray(line);
+		    				result.setPost(jsonArray);
+		    			} catch (JSONException ex2) {
+		    				if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "JSON exception: " + ex2.getMessage());
+		    			}
+		    		}
 			    } 
 		    }
-		} catch (JSONException ex) {
-			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "JSON exception: " + ex.getMessage());
 	   	} catch (IOException ex) { 
 	   		if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
 		}
 		
-		return jsonreturn;
+		return result;
 	}
 	
-	public JSONObject make_restful_get(String url, String tag) {
+	public ServerResponse make_restful_get(String url, String tag) {
 		try {    	
 			if (PrefHelper.LOG) Log.i("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
@@ -79,19 +74,12 @@ public class RemoteInterface {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
 		} catch (IOException ex) { 
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
-    		JSONObject jsonreturn = new JSONObject();;
-    		try {
-				jsonreturn.put(KEY_SERVER_CALL_STATUS_CODE, 500);
-				jsonreturn.put(KEY_SERVER_CALL_TAG, tag);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-			return jsonreturn;
+			return new ServerResponse(tag, 500);
 		}
 		return null;
 	}
 
-	public JSONObject make_restful_post(JSONObject body, String url, String tag) {
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag) {
 		try {    	
 			if (PrefHelper.LOG) Log.i("BranchSDK", "posting to " + url);
 			if (PrefHelper.LOG) Log.i("BranchSDK", "Post value = " + body.toString());
@@ -103,14 +91,7 @@ public class RemoteInterface {
 		} catch (Exception ex) {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Exception: " + ex.getMessage());
 			ex.printStackTrace();
-			JSONObject jsonreturn = new JSONObject();	
-			try {
-				jsonreturn.put(KEY_SERVER_CALL_TAG, tag);
-				jsonreturn.put(KEY_SERVER_CALL_STATUS_CODE, 500);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}  
-			return jsonreturn;
+			return new ServerResponse(tag, 500);
 		}
 	}
 }

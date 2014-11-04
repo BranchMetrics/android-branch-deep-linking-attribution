@@ -11,6 +11,7 @@ import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,9 +23,7 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 	Branch branch;
 	
-	EditText txtUrl;
 	EditText txtShortUrl;
-	Button cmdRefreshUrl;
 	Button cmdRefreshShortUrl;
 	TextView txtInstallCount;
 	TextView txtRewardBalance;
@@ -37,15 +36,14 @@ public class MainActivity extends Activity {
 	Button cmdIdentifyUser;
 	Button cmdLogoutUser;
 	Button cmdPrintInstallParams;
+	Button cmdGetCreditHistory;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		txtUrl = (EditText) findViewById(R.id.editReferralUrl);
 		txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
-		cmdRefreshUrl = (Button) findViewById(R.id.cmdRefreshURL);
 		cmdRefreshShortUrl = (Button) findViewById(R.id.cmdRefreshShortURL);
 		txtInstallCount = (TextView) findViewById(R.id.txtInstallCount);
 		txtEventCount = (TextView) findViewById(R.id.txtEventCount);
@@ -58,6 +56,7 @@ public class MainActivity extends Activity {
 		cmdLogoutUser = (Button) findViewById(R.id.cmdClearUser);
 		cmdPrintInstallParams = (Button) findViewById(R.id.cmdPrintInstallParam);
 		cmdCommitBuyMetadata = (Button) findViewById(R.id.cmdCommitBuyMetadataAction);
+		cmdGetCreditHistory = (Button) findViewById(R.id.cmdGetCreditHistory);
 		
 		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
 			@Override
@@ -75,6 +74,10 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				branch.clearUser();
+				
+				txtRewardBalance.setText("rewards = ");
+				txtInstallCount.setText("install count =");
+				txtEventCount.setText("buy count =");
 			}
 		});
 		
@@ -86,20 +89,6 @@ public class MainActivity extends Activity {
 			}
 		});
 		
-		cmdRefreshUrl.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				JSONObject obj = new JSONObject();
-				try {
-					obj.put("name", "test name");
-					obj.put("message", "hello there with long url");
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-				}
-				String url = branch.getLongURL(obj);
-				txtUrl.setText(url);
-			}
-		});
 		cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
@@ -162,6 +151,7 @@ public class MainActivity extends Activity {
 				branch.userCompletedAction("buy");
 			}
 		});
+		
 		cmdCommitBuyMetadata.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -178,6 +168,15 @@ public class MainActivity extends Activity {
 				branch.userCompletedAction("buy", params);
 			}
 		
+		});
+		
+		cmdGetCreditHistory.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.i("BranchTestBed", "Getting credit history...");
+				Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
+				startActivity(i);
+			}
 		});
 	}
 	
