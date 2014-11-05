@@ -84,7 +84,7 @@ public void onStart() {
 
 #### Close session
 
-Optional: If you want to optionally track session lengths, please add this line to your onStop or cleanup routine
+Required: this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened.
 
 ```java
 @Override
