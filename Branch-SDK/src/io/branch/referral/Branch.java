@@ -686,7 +686,12 @@ public class Branch {
 				break;
 			}
 		}
-		requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
+		
+		if (networkCount_ == 0) {
+			requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
+		} else {
+			requestQueue_.add(1, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
+		}
 	}
 	
 	private void clearTimer() {
@@ -725,9 +730,17 @@ public class Branch {
 		return !prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE);
 	}
 	
+	private void insertRequestAtFront(ServerRequest req) {
+		if (networkCount_ == 0) {
+			requestQueue_.add(0, req);
+		} else {
+			requestQueue_.add(1, req);
+		}
+	}
+	
 	private void registerInstall() {
 		if (!installOrOpenInQueue()) {
-			requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
+			insertRequestAtFront(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
 		} else {
 			moveInstallToFront();
 		}
@@ -735,7 +748,7 @@ public class Branch {
 	}
 	
 	private void registerOpen() {
-		requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN, null));
+		insertRequestAtFront(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN, null));
 		processNextQueueItem();
 	}
 	
@@ -829,7 +842,7 @@ public class Branch {
 					String requestTag = serverResponse.getTag();
 					
 					hasNetwork_ = true;
-					networkCount_ = 0;
+					
 					if (status >= 400 && status < 500) {
 						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
@@ -839,6 +852,9 @@ public class Branch {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
 							handleFailure();
+							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+								requestQueue_.remove(0);
+							}
 							Log.i("BranchSDK", "Branch API Error: " + "poor network connectivity. Please try again later.");
 						} else {
 							retryLastRequest();
@@ -975,6 +991,8 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
 						requestQueue_.remove(0);
 					}
+					
+					networkCount_ = 0;
 					
 					if (hasNetwork_) {
 						processNextQueueItem();
