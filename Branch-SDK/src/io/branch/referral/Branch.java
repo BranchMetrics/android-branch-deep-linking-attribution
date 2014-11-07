@@ -852,7 +852,7 @@ public class Branch {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
 							handleFailure();
-							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 								requestQueue_.remove(0);
 							}
 							Log.i("BranchSDK", "Branch API Error: " + "poor network connectivity. Please try again later.");
