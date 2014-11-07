@@ -158,7 +158,7 @@ public class Branch {
 		} else if (hasUser() && hasSession() && !installOrOpenInQueue()) {
 			if (callback != null) callback.onInitFinished(new JSONObject());
 		} else {
-			if ((!hasUser() || !hasSession()) && !installOrOpenInQueue()) {
+			if (!installOrOpenInQueue()) {
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -172,19 +172,31 @@ public class Branch {
 	}
 	
 	public void closeSession() {
-		if (keepAlive_)
+		if (keepAlive_) {
 			return;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				isInit_ = false;
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
-				
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
+		}
+		
+		// else, real close
+		isInit_ = false;
+		
+		if (!hasNetwork_) {
+	        // if there's no network connectivity, purge the old install/open
+	        ServerRequest req = requestQueue_.get(0);
+	        if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+	            requestQueue_.remove(0);
+	        }
+	    } else {
+	    	new Thread(new Runnable() {
+				@Override
+				public void run() {
+					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
+					
+					if (initFinished_ || !hasNetwork_) {
+						processNextQueueItem();
+					}
 				}
-			}
-		}).start();
+			}).start();
+	    }
 	}
 	
 	public boolean isIdentified() {
@@ -852,7 +864,7 @@ public class Branch {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
 							handleFailure();
-							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 								requestQueue_.remove(0);
 							}
 							Log.i("BranchSDK", "Branch API Error: " + "poor network connectivity. Please try again later.");
