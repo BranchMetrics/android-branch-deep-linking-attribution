@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -24,6 +26,7 @@ import android.util.Log;
 
 public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
+	public static final int NO_CONNECTIVITY_STATUS = -1009;
 
 	private HttpClient getGenericHttpClient() {
 		int timeout = 3000;
@@ -72,6 +75,12 @@ public class RemoteInterface {
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
 		} catch (ClientProtocolException ex) {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
+		} catch (SocketException ex) {
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+		} catch (UnknownHostException ex) {
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
 		} catch (IOException ex) { 
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
 			return new ServerResponse(tag, 500);
@@ -88,6 +97,12 @@ public class RemoteInterface {
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient().execute(request);
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
+		} catch (SocketException ex) {
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+		} catch (UnknownHostException ex) {
+			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
 		} catch (Exception ex) {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Exception: " + ex.getMessage());
 			ex.printStackTrace();
