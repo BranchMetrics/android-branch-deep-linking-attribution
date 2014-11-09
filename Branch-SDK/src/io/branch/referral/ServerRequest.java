@@ -1,8 +1,11 @@
 package io.branch.referral;
 
+import java.io.Serializable;
+
 import org.json.JSONObject;
 
-public class ServerRequest {
+public class ServerRequest implements Serializable {
+	private static final long serialVersionUID = -160195137341529315L;
 	private String tag_;
 	private JSONObject post_;
 	
