@@ -3,6 +3,7 @@ package io.branch.referral;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.json.JSONArray;
@@ -11,32 +12,31 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class ServerRequestQueue {
-	
-	// This is thread-safe because static member variables initialized are guaranteed to be
-	// created the first time they are accessed, hence lazy instantiation, too!
-	private static final ServerRequestQueue SharedInstance = new ServerRequestQueue();
 	private static final String PREF_KEY = "BNCServerRequestQueue";
-	
-	private static SharedPreferences sharedPref;
+	private static ServerRequestQueue SharedInstance;	
+	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
-	private LinkedList<ServerRequest> queue;
+	private List<ServerRequest> queue;
 
     public static ServerRequestQueue getInstance(Context c) {
-   		SharedInstance.initSharedPrefs(c);
+    	if(SharedInstance == null) {
+    		synchronized(ServerRequestQueue.class) {
+    			if(SharedInstance == null) {
+    				SharedInstance = new ServerRequestQueue(c);
+    			}
+    		}
+    	}
     	return SharedInstance;
     }
     
-    private ServerRequestQueue () {
-    	queue = retrieve();
-    }
-    
-    private void initSharedPrefs(Context c) {
-    	if (sharedPref == null) {
-    		sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
-    		editor = sharedPref.edit();
-    	}
+    private ServerRequestQueue (Context c) {
+    	sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
+		editor = sharedPref.edit();
+		queue = retrieve();
+		if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Retrieved from persist: " + toString());
     }
     
     private void persist() {
@@ -51,13 +51,13 @@ public class ServerRequestQueue {
 					jsonArr.put(iter.next().toJSON());
 				}
 				
-				editor.putString(PREF_KEY, jsonArr.toString());
+				editor.putString(PREF_KEY, jsonArr.toString()).commit();
 			}
 		}).start();
     }
     
-    private static LinkedList<ServerRequest> retrieve() {
-    	LinkedList<ServerRequest> result = (LinkedList<ServerRequest>)Collections.synchronizedList(new LinkedList<ServerRequest>());
+    private List<ServerRequest> retrieve() {
+    	List<ServerRequest> result = Collections.synchronizedList(new LinkedList<ServerRequest>());
     	String jsonStr = sharedPref.getString(PREF_KEY, null);
     	
     	if (jsonStr != null) {
@@ -89,7 +89,7 @@ public class ServerRequestQueue {
 	public ServerRequest dequeue() {
 		ServerRequest req = null;
 		try {
-			req = queue.removeFirst();
+			req = queue.remove(0);
 			persist();
 		} catch (NoSuchElementException ex) {
 		}
@@ -99,7 +99,7 @@ public class ServerRequestQueue {
 	public ServerRequest peek() {
 		ServerRequest req = null;
 		try {
-			req = queue.getFirst();
+			req = queue.get(0);
 		} catch (NoSuchElementException ex) {
 		}
 		return req;
@@ -163,5 +163,16 @@ public class ServerRequestQueue {
 	    } else {
 	    	insert(req, 1);
 	    }
+	}
+	
+	public String toString() {
+		JSONArray jsonArr = new JSONArray();
+		synchronized(queue) {
+			Iterator<ServerRequest> iter = queue.iterator();
+			while (iter.hasNext()) {
+				jsonArr.put(iter.next().toJSON());
+			}
+		}
+		return jsonArr.toString();
 	}
 }
