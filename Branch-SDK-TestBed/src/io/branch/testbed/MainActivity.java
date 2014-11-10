@@ -188,9 +188,8 @@ public class MainActivity extends Activity {
 			@Override
 			public void onInitFinished(JSONObject referringParams) {
 				Log.i("BranchTestBed", "branch init complete!");
-				JSONObject params = branch.getReferringParams();
 				try {
-					Iterator<?> keys = params.keys();
+					Iterator<?> keys = referringParams.keys();
 					while (keys.hasNext()) {
 						String key = (String) keys.next();
 						Log.i("BranchTestBed", key + ", " + referringParams.getString(key));
