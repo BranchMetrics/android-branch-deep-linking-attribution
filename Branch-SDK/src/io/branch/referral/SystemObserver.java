@@ -26,20 +26,27 @@ public class SystemObserver {
 	public static final String BLANK = "bnc_no_value";
 
 	private Context context_;
+	private boolean isRealHardwareId;
 	
 	public SystemObserver(Context context) {
 		context_ = context;
+		isRealHardwareId = true;
 	}
 	
 	public String getUniqueID() {
 		if (context_ != null) { 
 			String androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
 			if (androidID == null) {
-				androidID = UUID.randomUUID().toString();;
+				androidID = UUID.randomUUID().toString();
+				isRealHardwareId = false;
 			}
 			return androidID;
 		} else 
 			return BLANK;
+	}
+	
+	public boolean hasRealHardwareId() {
+		return isRealHardwareId;
 	}
 	
 	public String getURIScheme() {

@@ -44,8 +44,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 				installPost.put("app_id", prefHelper_.getAppKey());
 				if (!installID.equals(PrefHelper.NO_STRING_VALUE))
 					installPost.put("link_click_id", installID);
-				if (!sysObserver_.getUniqueID().equals(SystemObserver.BLANK))
+				if (!sysObserver_.getUniqueID().equals(SystemObserver.BLANK)) {
 					installPost.put("hardware_id", sysObserver_.getUniqueID());
+					installPost.put("is_hardware_id_real", sysObserver_.hasRealHardwareId());
+				}
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
 					installPost.put("app_version", sysObserver_.getAppVersion());
 				if (!sysObserver_.getCarrier().equals(SystemObserver.BLANK))
