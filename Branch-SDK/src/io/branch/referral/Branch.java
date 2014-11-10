@@ -10,7 +10,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
@@ -216,9 +215,8 @@ public class Branch {
 		identifyUser(userId);
 	}
 	
-	@SuppressLint("NewApi") 
 	public void identifyUser(final String userId) {
-		if (userId == null || userId.isEmpty()) {
+		if (userId == null || userId.length() == 0) {
 			return;
 		}
 		
