@@ -36,7 +36,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		callback_ = callback;
 	}
 	
-	public void registerInstall(String installID) {
+	public void registerInstall(String installID, boolean debug) {
 		String urlExtend = "v1/install";
 		if (callback_ != null) {
 			JSONObject installPost = new JSONObject();
@@ -77,6 +77,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					installPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
+				installPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
@@ -84,7 +85,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	public void registerOpen() {
+	public void registerOpen(boolean debug) {
 		String urlExtend = "v1/open";
 		if (callback_ != null) {
 			JSONObject openPost = new JSONObject();
@@ -102,6 +103,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
+				openPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}

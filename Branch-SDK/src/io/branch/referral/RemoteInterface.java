@@ -27,6 +27,7 @@ import android.util.Log;
 public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
+	private static final String SDK_VERSION = "1.1.0";
 
 	private HttpClient getGenericHttpClient() {
 		int timeout = 3000;
@@ -69,6 +70,11 @@ public class RemoteInterface {
 	
 	public ServerResponse make_restful_get(String url, String tag) {
 		try {    	
+			if (url.indexOf('?') == -1) {
+				url += "?sdk=android" + SDK_VERSION;
+			} else {
+				url += "&sdk=android" + SDK_VERSION;
+			}
 			if (PrefHelper.LOG) Log.i("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient().execute(request);
@@ -90,6 +96,7 @@ public class RemoteInterface {
 
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag) {
 		try {    	
+			body.put("sdk", "android" + SDK_VERSION);
 			if (PrefHelper.LOG) Log.i("BranchSDK", "posting to " + url);
 			if (PrefHelper.LOG) Log.i("BranchSDK", "Post value = " + body.toString());
 		    HttpPost request = new HttpPost(url);

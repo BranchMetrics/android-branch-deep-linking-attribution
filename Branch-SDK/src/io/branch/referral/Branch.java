@@ -52,6 +52,8 @@ public class Branch {
 	private boolean initFinished_;
 	private boolean hasNetwork_;
 	
+	private boolean debug_;
+	
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
 		kRemoteInterface_ = new BranchRemoteInterface(context);
@@ -65,6 +67,7 @@ public class Branch {
 		networkCount_ = 0;
 		initFinished_ = false;
 		hasNetwork_ = true;
+		debug_ = false;
 	}
 	
 	public static Branch getInstance(Context context, String key) {
@@ -90,6 +93,11 @@ public class Branch {
 	
 	public void resetUserSession() {
 		isInit_ = false;
+	}
+	
+	// if you want to flag debug, call this before initUserSession
+	public void setDebug() {
+		debug_ = true;
 	}
 	
 	public void initUserSession(BranchReferralInitListener callback) {
@@ -552,9 +560,9 @@ public class Branch {
 				}
 				
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE);
+					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE, debug_);
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					kRemoteInterface_.registerOpen();
+					kRemoteInterface_.registerOpen(debug_);
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {
