@@ -1,14 +1,13 @@
 package io.branch.referral;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -18,8 +17,9 @@ public class ServerRequestQueue {
 	// This is thread-safe because static member variables initialized are guaranteed to be
 	// created the first time they are accessed, hence lazy instantiation, too!
 	private static final ServerRequestQueue SharedInstance = new ServerRequestQueue();
+	private static final String PREF_KEY = "BNCServerRequestQueue";
 	
-	private SharedPreferences sharedPref;
+	private static SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
 	private LinkedList<ServerRequest> queue;
 
@@ -29,7 +29,7 @@ public class ServerRequestQueue {
     }
     
     private ServerRequestQueue () {
-    	queue = (LinkedList<ServerRequest>)Collections.synchronizedList(new LinkedList<ServerRequest>());
+    	queue = retrieve();
     }
     
     private void initSharedPrefs(Context c) {
@@ -43,36 +43,37 @@ public class ServerRequestQueue {
     	new Thread(new Runnable() {
 			@Override
 			public void run() {
-				synchronized (queue) {
-					Iterator<ServerRequest> iter = queue.iterator();
-					while (iter.hasNext()) {
-//						editor.put
-						System.out.println("item: " + iter.next());
-					}
+				LinkedList<ServerRequest> copyQueue = new LinkedList<ServerRequest>(queue);
+				
+				JSONArray jsonArr = new JSONArray();
+				Iterator<ServerRequest> iter = copyQueue.iterator();
+				while (iter.hasNext()) {
+					jsonArr.put(iter.next().toJSON());
 				}
+				
+				editor.putString(PREF_KEY, jsonArr.toString());
 			}
 		}).start();
     }
     
-//    /** Read the object from Base64 string. */
-//    private static Object fromString( String s ) throws IOException ,
-//                                                        ClassNotFoundException {
-//         byte [] data = Base64Coder.decode( s );
-//         ObjectInputStream ois = new ObjectInputStream( 
-//                                         new ByteArrayInputStream(  data ) );
-//         Object o  = ois.readObject();
-//         ois.close();
-//         return o;
-//    }
-//
-//     /** Write the object to a Base64 string. */
-//     private static String toString( Serializable o ) throws IOException {
-//         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//         ObjectOutputStream oos = new ObjectOutputStream( baos );
-//         oos.writeObject( o );
-//         oos.close();
-//         return new String( Base64Coder.encode( baos.toByteArray() ) );
-//     }
+    private static LinkedList<ServerRequest> retrieve() {
+    	LinkedList<ServerRequest> result = (LinkedList<ServerRequest>)Collections.synchronizedList(new LinkedList<ServerRequest>());
+    	String jsonStr = sharedPref.getString(PREF_KEY, null);
+    	
+    	if (jsonStr != null) {
+    		try {
+    			JSONArray jsonArr = new JSONArray(jsonStr);
+    			for (int i = 0; i < jsonArr.length(); i++) {
+    				JSONObject json = jsonArr.getJSONObject(i);
+    				ServerRequest req = ServerRequest.fromJSON(json);
+    				result.add(req);
+    			}
+    		} catch (JSONException e) {
+    		}
+    	}
+    	
+    	return result;
+    }
     
 	public int getSize() {
 		return queue.size();
@@ -85,17 +86,79 @@ public class ServerRequestQueue {
 		}
 	}
     
-//	- (void)enqueue:(ServerRequest *)request;
-//	- (ServerRequest *)dequeue;
-//	- (ServerRequest *)peek;
-//	- (ServerRequest *)peekAt:(unsigned int)index;
-//	- (void)insert:(ServerRequest *)request at:(unsigned int)index;
-//	- (ServerRequest *)removeAt:(unsigned int)index;
-//	- (void)persist;
-//
-//	- (BOOL)containsInstallOrOpen;
-//	- (BOOL)containsClose;
-//	- (void)moveInstallOrOpenToFront:(NSString *)tag;
-//
-//	+ (id)getInstance;
+	public ServerRequest dequeue() {
+		ServerRequest req = null;
+		try {
+			req = queue.removeFirst();
+			persist();
+		} catch (NoSuchElementException ex) {
+		}
+		return req;
+	}
+
+	public ServerRequest peek() {
+		ServerRequest req = null;
+		try {
+			req = queue.getFirst();
+		} catch (NoSuchElementException ex) {
+		}
+		return req;
+	}
+	
+	public ServerRequest peekAt(int index) {
+		ServerRequest req = null;
+		try {
+			req = queue.get(index);
+		} catch (NoSuchElementException ex) {
+		}
+		return req;
+	}
+	
+	public void insert(ServerRequest request, int index) {
+		try {
+			queue.add(index, request);
+			persist();
+		} catch (IndexOutOfBoundsException ex) {
+		}
+	}
+	
+	public ServerRequest removeAt(int index) {
+		ServerRequest req = null;
+		try {
+			req = queue.remove(index);
+			persist();
+		} catch (IndexOutOfBoundsException ex) {
+		}
+		return req;
+	}
+
+	private boolean containsInstallOrOpen() {
+		synchronized(queue) {
+			Iterator<ServerRequest> iter = queue.iterator();
+			while (iter.hasNext()) {
+				ServerRequest req = iter.next();
+				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean containsClose() {
+		synchronized(queue) {
+			Iterator<ServerRequest> iter = queue.iterator();
+			while (iter.hasNext()) {
+				ServerRequest req = iter.next();
+				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void moveInstallOrOpenToFront(String tag) {
+		
+	}
 }
