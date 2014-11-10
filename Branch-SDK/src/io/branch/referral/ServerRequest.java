@@ -10,6 +10,10 @@ public class ServerRequest {
 	private String tag_;
 	private JSONObject post_;
 	
+	public ServerRequest(String tag) {
+		this(tag, null);
+	}
+	
 	public ServerRequest(String tag, JSONObject post) {
 		tag_ = tag;
 		post_ = post;

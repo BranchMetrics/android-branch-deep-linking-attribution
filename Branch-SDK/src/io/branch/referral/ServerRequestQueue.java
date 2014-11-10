@@ -132,7 +132,7 @@ public class ServerRequestQueue {
 		return req;
 	}
 
-	private boolean containsInstallOrOpen() {
+	public boolean containsInstallOrOpen() {
 		synchronized(queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
@@ -145,20 +145,23 @@ public class ServerRequestQueue {
 		return false;
 	}
 	
-	public boolean containsClose() {
+	public void moveInstallOrOpenToFront(String tag, int networkCount) {
 		synchronized(queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
-				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
-					return true;
+				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+					iter.remove();
+					break;
 				}
 			}
 		}
-		return false;
-	}
-	
-	public void moveInstallOrOpenToFront(String tag) {
-		
+	    
+	    ServerRequest req = new ServerRequest(tag);
+	    if (networkCount == 0) {
+	    	insert(req, 0);
+	    } else {
+	    	insert(req, 1);
+	    }
 	}
 }

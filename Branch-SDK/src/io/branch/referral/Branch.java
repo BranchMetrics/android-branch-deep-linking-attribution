@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Timer;
@@ -45,7 +44,7 @@ public class Branch {
 	private boolean keepAlive_;
 	
 	private Semaphore serverSema_;
-	private ArrayList<ServerRequest> requestQueue_;
+	private ServerRequestQueue requestQueue_;
 	private int networkCount_;
 	private int retryCount_;
 	
@@ -57,7 +56,7 @@ public class Branch {
 		kRemoteInterface_ = new BranchRemoteInterface(context);
 		systemObserver_ = new SystemObserver(context);
 		kRemoteInterface_.setNetworkCallbackListener(new ReferralNetworkCallback());
-		requestQueue_ = new ArrayList<ServerRequest>();
+		requestQueue_ = ServerRequestQueue.getInstance(context);
 		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
 		keepAlive_ = false;
@@ -147,6 +146,7 @@ public class Branch {
 	
 	private void initUserSessionInternal(BranchReferralInitListener callback) {
 		initSessionFinishedCallback_ = callback;
+		
 		if (!isInit_) {
 			new Thread(new Runnable() {
 				@Override
@@ -155,18 +155,21 @@ public class Branch {
 				}
 			}).start();
 			isInit_ = true;
-		} else if (hasUser() && hasSession() && !installOrOpenInQueue()) {
-			if (callback != null) callback.onInitFinished(new JSONObject());
 		} else {
-			if (!installOrOpenInQueue()) {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						initSession();
-					}
-				}).start();
+			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
+			if (hasUser() && hasSession() && !installOrOpenInQueue) {
+				if (callback != null) callback.onInitFinished(new JSONObject());
 			} else {
-				processNextQueueItem();
+				if (!installOrOpenInQueue) {
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							initSession();
+						}
+					}).start();
+				} else {
+					processNextQueueItem();
+				}
 			}
 		}
 	}
@@ -181,15 +184,15 @@ public class Branch {
 		
 		if (!hasNetwork_) {
 	        // if there's no network connectivity, purge the old install/open
-	        ServerRequest req = requestQueue_.get(0);
+	        ServerRequest req = requestQueue_.peek();
 	        if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-	            requestQueue_.remove(0);
+	            requestQueue_.dequeue();
 	        }
 	    } else {
 	    	new Thread(new Runnable() {
 				@Override
 				public void run() {
-					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
 					
 					if (initFinished_ || !hasNetwork_) {
 						processNextQueueItem();
@@ -199,39 +202,35 @@ public class Branch {
 	    }
 	}
 	
-	public boolean isIdentified() {
-		return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
-	}
-	
 	public void identifyUser(String userId, BranchReferralInitListener callback) {
 		initIdentityFinishedCallback_ = callback;
 		identifyUser(userId);
 	}
 	
 	public void identifyUser(final String userId) {
-		if (isIdentified())
+		if (userId == null || userId.isEmpty()) {
 			return;
-		if (!identifyInQueue()) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					JSONObject post = new JSONObject();
-					try {
-						post.put("app_id", prefHelper_.getAppKey());
-						post.put("identity_id", prefHelper_.getIdentityID());
-						post.put("identity", userId);
-					} catch (JSONException ex) {
-						ex.printStackTrace();
-						return;
-					}
-					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
-					
-					if (initFinished_ || !hasNetwork_) {
-						processNextQueueItem();
-					}
-				}
-			}).start();
 		}
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("identity", userId);
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
+				
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
+			}
+		}).start();
 	}
 	
 	public void clearUser() {
@@ -246,7 +245,7 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
 				
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
@@ -264,7 +263,7 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
 				
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
@@ -282,7 +281,7 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
 				
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
@@ -337,7 +336,7 @@ public class Branch {
 						ex.printStackTrace();
 						return;
 					}
-					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post));
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post));
 					
 					if (initFinished_ || !hasNetwork_) {
 						processNextQueueItem();
@@ -383,7 +382,7 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
 				
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
@@ -407,7 +406,7 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION, post));
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION, post));
 				
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
@@ -509,7 +508,7 @@ public class Branch {
 					} catch (JSONException ex) {
 						ex.printStackTrace();
 					}
-					requestQueue_.add(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
 					
 					if (initFinished_ || !hasNetwork_) {
 						processNextQueueItem();
@@ -540,11 +539,11 @@ public class Branch {
 	private void processNextQueueItem() {
 		try {
 			serverSema_.acquire();
-			if (networkCount_ == 0 && requestQueue_.size() > 0) {
+			if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
 				networkCount_ = 1;
 				serverSema_.release();
 				
-				ServerRequest req = requestQueue_.get(0);
+				ServerRequest req = requestQueue_.peek();
 				
 				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 					keepAlive();
@@ -590,7 +589,7 @@ public class Branch {
 	}
 	
 	private void handleFailure() {
-		final ServerRequest req = requestQueue_.get(0);
+		final ServerRequest req = requestQueue_.peek();
 		Handler mainHandler = new Handler(context_.getMainLooper());
 		mainHandler.post(new Runnable() {
 			@Override
@@ -636,7 +635,7 @@ public class Branch {
 		retryCount_ = retryCount_ + 1;
 		if (retryCount_ > MAX_RETRIES) {
 			handleFailure();
-			requestQueue_.remove(0);
+			requestQueue_.dequeue();
 			retryCount_ = 0;
 		} else {
 			try {
@@ -649,8 +648,8 @@ public class Branch {
 	
 	private void updateAllRequestsInQueue() {
 		try {
-			for (int i = 0; i < requestQueue_.size(); i++) {
-				ServerRequest req = requestQueue_.get(i);
+			for (int i = 0; i < requestQueue_.getSize(); i++) {
+				ServerRequest req = requestQueue_.peekAt(i);
 				if (req.getPost() != null) {
 					Iterator<?> keys = req.getPost().keys();
 		    		while (keys.hasNext()) {
@@ -668,42 +667,6 @@ public class Branch {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}	
-	}
-	
-	private boolean identifyInQueue() {
-		for (int i = 0; i < requestQueue_.size(); i++) {
-			ServerRequest req = requestQueue_.get(i);
-			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean installOrOpenInQueue() {
-		for (int i = 0; i < requestQueue_.size(); i++) {
-			ServerRequest req = requestQueue_.get(i);
-			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private void moveInstallToFront() {
-		for (int i = 0; i < requestQueue_.size(); i++) {
-			ServerRequest req = requestQueue_.get(i);
-			if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-				requestQueue_.remove(i);
-				break;
-			}
-		}
-		
-		if (networkCount_ == 0) {
-			requestQueue_.add(0, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
-		} else {
-			requestQueue_.add(1, new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
-		}
 	}
 	
 	private void clearTimer() {
@@ -744,31 +707,26 @@ public class Branch {
 	
 	private void insertRequestAtFront(ServerRequest req) {
 		if (networkCount_ == 0) {
-			requestQueue_.add(0, req);
+			requestQueue_.insert(req, 0);
 		} else {
-			requestQueue_.add(1, req);
+			requestQueue_.insert(req, 1);
 		}
 	}
 	
-	private void registerInstall() {
-		if (!installOrOpenInQueue()) {
-			insertRequestAtFront(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, null));
+	private void registerInstallOrOpen(String tag) {
+		if (!requestQueue_.containsInstallOrOpen()) {
+			insertRequestAtFront(new ServerRequest(tag));
 		} else {
-			moveInstallToFront();
+			requestQueue_.moveInstallOrOpenToFront(tag, networkCount_);
 		}
-		processNextQueueItem();
-	}
-	
-	private void registerOpen() {
-		insertRequestAtFront(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN, null));
 		processNextQueueItem();
 	}
 	
 	private void initSession() {
 		if (hasUser()) {
-			registerOpen();
+			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN);
 		} else {
-			registerInstall();
+			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL);
 		}
 	} 
 	
@@ -859,13 +817,13 @@ public class Branch {
 						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (status != 200) {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
 							handleFailure();
 							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
-								requestQueue_.remove(0);
+								requestQueue_.dequeue();
 							}
 							Log.i("BranchSDK", "Branch API Error: " + "poor network connectivity. Please try again later.");
 						} else {
@@ -873,13 +831,13 @@ public class Branch {
 						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 						processReferralCounts(serverResponse);
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
 						processRewardCounts(serverResponse);
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
 						processCreditHistory(serverResponse);
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 						prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString("device_fingerprint_id"));
 						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
@@ -919,7 +877,7 @@ public class Branch {
 								}
 							}
 						});
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
@@ -951,7 +909,7 @@ public class Branch {
 								}
 							}
 						});
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getObject().getString("url");
@@ -964,7 +922,7 @@ public class Branch {
 								}
 							}
 						});
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
@@ -975,7 +933,7 @@ public class Branch {
 						prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
 						prefHelper_.clearUserValues();
 						
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
 						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
@@ -984,8 +942,8 @@ public class Branch {
 							String params = serverResponse.getObject().getString("referring_data");
 							prefHelper_.setInstallParams(params);
 						} 
-						if (requestQueue_.size() > 0) {
-							ServerRequest req = requestQueue_.get(0);
+						if (requestQueue_.getSize() > 0) {
+							ServerRequest req = requestQueue_.peek();
 							if (req.getPost() != null && req.getPost().has("identity")) {
 								prefHelper_.setIdentity(req.getPost().getString("identity"));
 							}
@@ -999,9 +957,9 @@ public class Branch {
 								}
 							}
 						});
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
-						requestQueue_.remove(0);
+						requestQueue_.dequeue();
 					}
 					
 					networkCount_ = 0;
