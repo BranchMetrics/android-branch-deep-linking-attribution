@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +13,6 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
@@ -37,25 +37,26 @@ public class ServerRequestQueue {
     	sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
 		editor = sharedPref.edit();
 		queue = retrieve();
-		if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Retrieved from persist: " + toString());
     }
     
     private void persist() {
     	new Thread(new Runnable() {
 			@Override
 			public void run() {
-				synchronized(jsonArr) {
-					LinkedList<ServerRequest> copyQueue = new LinkedList<ServerRequest>(queue);
-					jsonArr = new JSONArray();
-					Iterator<ServerRequest> iter = copyQueue.iterator();
-					while (iter.hasNext()) {
-						JSONObject json = iter.next().toJSON();
-						if (json != null) {
-							jsonArr.put(json);
-						}
+				LinkedList<ServerRequest> copyQueue = new LinkedList<ServerRequest>(queue);
+				jsonArr = new JSONArray();
+				Iterator<ServerRequest> iter = copyQueue.iterator();
+				while (iter.hasNext()) {
+					JSONObject json = iter.next().toJSON();
+					if (json != null) {
+						jsonArr.put(json);
 					}
-					
+				}
+				
+				try {
 					editor.putString(PREF_KEY, jsonArr.toString()).commit();
+				} catch (ConcurrentModificationException ex) {
+					ex.printStackTrace();
 				}
 			}
 		}).start();
@@ -172,19 +173,5 @@ public class ServerRequestQueue {
 	    } else {
 	    	insert(req, 1);
 	    }
-	}
-	
-	public String toString() {
-		jsonArr = new JSONArray();
-		synchronized(queue) {
-			Iterator<ServerRequest> iter = queue.iterator();
-			while (iter.hasNext()) {
-				JSONObject json = iter.next().toJSON();
-				if (json != null) {
-					jsonArr.put(json);
-				}
-			}
-		}
-		return jsonArr.toString();
 	}
 }
