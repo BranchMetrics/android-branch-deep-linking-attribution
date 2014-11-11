@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
@@ -20,7 +21,6 @@ public class ServerRequestQueue {
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
 	private List<ServerRequest> queue;
-	private JSONArray jsonArr;
 
     public static ServerRequestQueue getInstance(Context c) {
     	if(SharedInstance == null) {
@@ -43,8 +43,11 @@ public class ServerRequestQueue {
     	new Thread(new Runnable() {
 			@Override
 			public void run() {
-				LinkedList<ServerRequest> copyQueue = new LinkedList<ServerRequest>(queue);
-				jsonArr = new JSONArray();
+				LinkedList<ServerRequest> copyQueue;
+				synchronized(queue) {
+					copyQueue = new LinkedList<ServerRequest>(queue);
+				}
+				JSONArray jsonArr = new JSONArray();
 				Iterator<ServerRequest> iter = copyQueue.iterator();
 				while (iter.hasNext()) {
 					JSONObject json = iter.next().toJSON();
@@ -56,6 +59,11 @@ public class ServerRequestQueue {
 				try {
 					editor.putString(PREF_KEY, jsonArr.toString()).commit();
 				} catch (ConcurrentModificationException ex) {
+					if (PrefHelper.LOG) Log.i("Persisting Queue: ", jsonArr.toString());
+				} finally {
+					try {
+						editor.putString(PREF_KEY, jsonArr.toString()).commit();
+					} catch (ConcurrentModificationException ex) {}
 				}
 			}
 		}).start();
@@ -67,7 +75,7 @@ public class ServerRequestQueue {
     	
     	if (jsonStr != null) {
     		try {
-    			jsonArr = new JSONArray(jsonStr);
+    			JSONArray jsonArr = new JSONArray(jsonStr);
     			for (int i = 0; i < jsonArr.length(); i++) {
     				JSONObject json = jsonArr.getJSONObject(i);
     				ServerRequest req = ServerRequest.fromJSON(json);
@@ -77,8 +85,6 @@ public class ServerRequestQueue {
     			}
     		} catch (JSONException e) {
     		}
-    	} else {
-    		jsonArr = new JSONArray();
     	}
     	
     	return result;
