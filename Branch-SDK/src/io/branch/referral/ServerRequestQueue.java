@@ -48,7 +48,10 @@ public class ServerRequestQueue {
 				JSONArray jsonArr = new JSONArray();
 				Iterator<ServerRequest> iter = copyQueue.iterator();
 				while (iter.hasNext()) {
-					jsonArr.put(iter.next().toJSON());
+					JSONObject json = iter.next().toJSON();
+					if (json != null) {
+						jsonArr.put(json);
+					}
 				}
 				
 				editor.putString(PREF_KEY, jsonArr.toString()).commit();
@@ -66,7 +69,9 @@ public class ServerRequestQueue {
     			for (int i = 0; i < jsonArr.length(); i++) {
     				JSONObject json = jsonArr.getJSONObject(i);
     				ServerRequest req = ServerRequest.fromJSON(json);
-    				result.add(req);
+    				if (req != null) {
+    					result.add(req);
+    				}
     			}
     		} catch (JSONException e) {
     		}
@@ -170,7 +175,10 @@ public class ServerRequestQueue {
 		synchronized(queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
-				jsonArr.put(iter.next().toJSON());
+				JSONObject json = iter.next().toJSON();
+				if (json != null) {
+					jsonArr.put(json);
+				}
 			}
 		}
 		return jsonArr.toString();
