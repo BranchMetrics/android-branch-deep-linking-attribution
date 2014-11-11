@@ -20,6 +20,7 @@ public class ServerRequestQueue {
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
 	private List<ServerRequest> queue;
+	private JSONArray jsonArr;
 
     public static ServerRequestQueue getInstance(Context c) {
     	if(SharedInstance == null) {
@@ -43,18 +44,19 @@ public class ServerRequestQueue {
     	new Thread(new Runnable() {
 			@Override
 			public void run() {
-				LinkedList<ServerRequest> copyQueue = new LinkedList<ServerRequest>(queue);
-				
-				JSONArray jsonArr = new JSONArray();
-				Iterator<ServerRequest> iter = copyQueue.iterator();
-				while (iter.hasNext()) {
-					JSONObject json = iter.next().toJSON();
-					if (json != null) {
-						jsonArr.put(json);
+				synchronized(jsonArr) {
+					LinkedList<ServerRequest> copyQueue = new LinkedList<ServerRequest>(queue);
+					jsonArr = new JSONArray();
+					Iterator<ServerRequest> iter = copyQueue.iterator();
+					while (iter.hasNext()) {
+						JSONObject json = iter.next().toJSON();
+						if (json != null) {
+							jsonArr.put(json);
+						}
 					}
+					
+					editor.putString(PREF_KEY, jsonArr.toString()).commit();
 				}
-				
-				editor.putString(PREF_KEY, jsonArr.toString()).commit();
 			}
 		}).start();
     }
@@ -65,7 +67,7 @@ public class ServerRequestQueue {
     	
     	if (jsonStr != null) {
     		try {
-    			JSONArray jsonArr = new JSONArray(jsonStr);
+    			jsonArr = new JSONArray(jsonStr);
     			for (int i = 0; i < jsonArr.length(); i++) {
     				JSONObject json = jsonArr.getJSONObject(i);
     				ServerRequest req = ServerRequest.fromJSON(json);
@@ -75,6 +77,8 @@ public class ServerRequestQueue {
     			}
     		} catch (JSONException e) {
     		}
+    	} else {
+    		jsonArr = new JSONArray();
     	}
     	
     	return result;
@@ -171,7 +175,7 @@ public class ServerRequestQueue {
 	}
 	
 	public String toString() {
-		JSONArray jsonArr = new JSONArray();
+		jsonArr = new JSONArray();
 		synchronized(queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
