@@ -56,7 +56,6 @@ public class ServerRequestQueue {
 				try {
 					editor.putString(PREF_KEY, jsonArr.toString()).commit();
 				} catch (ConcurrentModificationException ex) {
-					ex.printStackTrace();
 				}
 			}
 		}).start();
