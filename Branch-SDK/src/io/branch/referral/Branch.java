@@ -99,51 +99,90 @@ public class Branch {
 		debug_ = true;
 	}
 	
+	@Deprecated
 	public void initUserSession(BranchReferralInitListener callback) {
+		initSession(callback);
+	}
+
+	public void initSession(BranchReferralInitListener callback) {
 		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
 		} else {
 			prefHelper_.clearIsReferrable();
-		}	
+		}
 		initUserSessionInternal(callback);
 	}
-	
+
+	@Deprecated
 	public void initUserSession(BranchReferralInitListener callback, Uri data) {
+		initSession(callback, data);
+	}
+
+	public void initSession(BranchReferralInitListener callback, Uri data) {
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
-		initUserSession(callback);
+		initSession(callback);
 	}
-	
+
+	@Deprecated
 	public void initUserSession() {
-		initUserSession(null);
+		initSession();
 	}
-	
+
+	public void initSession() {
+		initSession(null);
+	}
+
+	@Deprecated
 	public void initUserSessionWithData(Uri data) {
+		initSessionWithData(data);
+	}
+
+	public void initSessionWithData(Uri data) {
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
-		initUserSession(null);
+		initSession(null);
 	}
-	
+
+	@Deprecated
 	public void initUserSession(boolean isReferrable) {
-		initUserSession(null, isReferrable);
+		initSession(isReferrable);
 	}
-	
-	public void initUserSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
+
+	public void initSession(boolean isReferrable) {
+		initSession(null, isReferrable);
+	}
+
+	@Deprecated
+	public void initUserSession(BranchReferralInitListener callback,
+			boolean isReferrable, Uri data) {
+		initSession(callback, isReferrable, data);
+	}
+
+	public void initSession(BranchReferralInitListener callback,
+			boolean isReferrable, Uri data) {
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
-		initUserSession(callback, isReferrable);
+		initSession(callback, isReferrable);
 	}
-	
-	public void initUserSession(BranchReferralInitListener callback, boolean isReferrable) {
+
+	@Deprecated
+	public void initUserSession(BranchReferralInitListener callback,
+			boolean isReferrable) {
+		initSession(callback, isReferrable);
+	}
+
+	public void initSession(BranchReferralInitListener callback,
+			boolean isReferrable) {
 		if (isReferrable) {
 			this.prefHelper_.setIsReferrable();
 		} else {
@@ -159,7 +198,7 @@ public class Branch {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					initSession();
+					initializeSession();
 				}
 			}).start();
 			isInit_ = true;
@@ -172,7 +211,7 @@ public class Branch {
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							initSession();
+							initializeSession();
 						}
 					}).start();
 				} else {
@@ -210,16 +249,26 @@ public class Branch {
 	    }
 	}
 	
+	@Deprecated
 	public void identifyUser(String userId, BranchReferralInitListener callback) {
+		setIdentity(userId, callback);
+	}
+	
+	public void setIdentity(String userId, BranchReferralInitListener callback) {
 		initIdentityFinishedCallback_ = callback;
 		identifyUser(userId);
 	}
-	
+
+	@Deprecated
 	public void identifyUser(final String userId) {
+		setIdentity(userId);
+	}
+	
+	public void setIdentity(final String userId) {
 		if (userId == null || userId.length() == 0) {
 			return;
 		}
-		
+
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -233,15 +282,20 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
-				
+
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
 				}
 			}
 		}).start();
 	}
-	
+
+	@Deprecated
 	public void clearUser() {
+		logout();
+	}
+	
+	public void logout() {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -254,7 +308,7 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
-				
+
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
 				}
@@ -427,12 +481,22 @@ public class Branch {
 		userCompletedAction(action, null);
 	}
 	
+	@Deprecated
 	public JSONObject getInstallReferringParams() {
+		return getFirstReferringParams();
+	}
+	
+	public JSONObject getFirstReferringParams() {
 		String storedParam = prefHelper_.getInstallParams();
 		return convertParamsStringToDictionary(storedParam);
 	}
-	
+
+	@Deprecated
 	public JSONObject getReferringParams() {
+		return getLatestReferringParams();
+	}
+	
+	public JSONObject getLatestReferringParams() {
 		String storedParam = prefHelper_.getSessionParams();
 		return convertParamsStringToDictionary(storedParam);
 	}
@@ -730,7 +794,7 @@ public class Branch {
 		processNextQueueItem();
 	}
 	
-	private void initSession() {
+	private void initializeSession() {
 		if (hasUser()) {
 			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN);
 		} else {

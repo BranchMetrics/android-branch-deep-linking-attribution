@@ -64,10 +64,8 @@ public class SystemObserver {
 	            jf.close();
 	            return scheme;
 	          } catch (Exception ex) {
-	        	  ex.printStackTrace();
 	          }
 	    } catch (NameNotFoundException e) {
-	        e.printStackTrace();
 	    }
 		return BLANK;
 	}
@@ -80,7 +78,6 @@ public class SystemObserver {
 			 else
 				 return BLANK;
 		 } catch (NameNotFoundException e) {
-			 e.printStackTrace();
 		 }
 		 return BLANK;
 	}
@@ -102,7 +99,6 @@ public class SystemObserver {
                 return bluetoothAdapter.isEnabled();
             }
         } catch (SecurityException e) {
-            e.printStackTrace();
         }
         return false;
 	}
@@ -123,7 +119,6 @@ public class SystemObserver {
 		try {
 			return context_.getPackageManager().hasSystemFeature("android.hardware.nfc");
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return false;
 	}
@@ -132,7 +127,6 @@ public class SystemObserver {
 		try {
 			return context_.getPackageManager().hasSystemFeature("android.hardware.telephony");
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return false;
 	}
@@ -164,7 +158,6 @@ public class SystemObserver {
 					return 0;
 				}
 			} catch (NameNotFoundException e) {
-				e.printStackTrace();
 			}
 		}
 		return 0;

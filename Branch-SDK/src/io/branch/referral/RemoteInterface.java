@@ -112,7 +112,6 @@ public class RemoteInterface {
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
 		} catch (Exception ex) {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Exception: " + ex.getMessage());
-			ex.printStackTrace();
 			return new ServerResponse(tag, 500);
 		}
 	}

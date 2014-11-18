@@ -1,15 +1,16 @@
 package io.branch.testbed;
 
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchLinkCreateListener;
+import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.Branch.BranchReferralStateChangedListener;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Branch.BranchLinkCreateListener;
-import io.branch.referral.Branch.BranchReferralInitListener;
-import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -61,7 +62,7 @@ public class MainActivity extends Activity {
 		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.identifyUser("my_great_user", new BranchReferralInitListener() {
+				branch.setIdentity("my_great_user", new BranchReferralInitListener() {
 					@Override
 					public void onInitFinished(JSONObject referringParams) {
 						Log.i("BranchTestBed", "install params = " + referringParams.toString());
@@ -73,7 +74,7 @@ public class MainActivity extends Activity {
 		cmdLogoutUser.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.clearUser();
+				branch.logout();
 				
 				txtRewardBalance.setText("rewards = ");
 				txtInstallCount.setText("install count =");
@@ -84,7 +85,7 @@ public class MainActivity extends Activity {
 		cmdPrintInstallParams.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				JSONObject obj = branch.getInstallReferringParams();
+				JSONObject obj = branch.getFirstReferringParams();
 				Log.i("BranchTestBed", "install params = " + obj.toString());
 			}
 		});
@@ -184,7 +185,7 @@ public class MainActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 		branch = Branch.getInstance(this.getApplicationContext(), "5680621892404085");
-		branch.initUserSession(new BranchReferralInitListener() {
+		branch.initSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams) {
 				Log.i("BranchTestBed", "branch init complete!");

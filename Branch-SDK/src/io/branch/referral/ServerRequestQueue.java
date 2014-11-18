@@ -43,27 +43,25 @@ public class ServerRequestQueue {
     	new Thread(new Runnable() {
 			@Override
 			public void run() {
-				LinkedList<ServerRequest> copyQueue;
 				synchronized(queue) {
-					copyQueue = new LinkedList<ServerRequest>(queue);
-				}
-				JSONArray jsonArr = new JSONArray();
-				Iterator<ServerRequest> iter = copyQueue.iterator();
-				while (iter.hasNext()) {
-					JSONObject json = iter.next().toJSON();
-					if (json != null) {
-						jsonArr.put(json);
+					JSONArray jsonArr = new JSONArray();
+					Iterator<ServerRequest> iter = queue.iterator();
+					while (iter.hasNext()) {
+						JSONObject json = iter.next().toJSON();
+						if (json != null) {
+							jsonArr.put(json);
+						}
 					}
-				}
-				
-				try {
-					editor.putString(PREF_KEY, jsonArr.toString()).commit();
-				} catch (ConcurrentModificationException ex) {
-					if (PrefHelper.LOG) Log.i("Persisting Queue: ", jsonArr.toString());
-				} finally {
+					
 					try {
 						editor.putString(PREF_KEY, jsonArr.toString()).commit();
-					} catch (ConcurrentModificationException ex) {}
+					} catch (ConcurrentModificationException ex) {
+						if (PrefHelper.LOG) Log.i("Persisting Queue: ", jsonArr.toString());
+					} finally {
+						try {
+							editor.putString(PREF_KEY, jsonArr.toString()).commit();
+						} catch (ConcurrentModificationException ex) {}
+					}
 				}
 			}
 		}).start();
