@@ -1,3 +1,13 @@
+## API renaming since v1.1.2
+
+Deprecated API | Renamed to
+-------------- | -------------
+all of initUserSession(...) | initSession(...)
+all of identifyUser(...) | setIdentity(...)
+clearUser() | logout()
+getInstallReferringParams() | getFirstReferringParams()
+getReferringParams() | getLatestReferringParams()
+
 ## Installation
 
 Current compiled SDK footprint is *25kb*
@@ -64,7 +74,7 @@ public void onStart() {
 
 	// sign up to get your key at http://branch.io
 	Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
-	branch.initUserSession(new BranchReferralInitListener(){
+	branch.initSession(new BranchReferralInitListener(){
 		@Override
 		public void onInitFinished(JSONObject referringParams) {
 			// params are the deep linked params associated with the link that the user clicked before showing up
@@ -99,7 +109,7 @@ public void onStop() {
 These session parameters will be available at any point later on with this command. If no params, the dictionary will be empty. This refreshes with every new session (app installs AND app opens)
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-JSONObject sessionParams = branch.getReferringParams(); 
+JSONObject sessionParams = branch.getLatestReferringParams();
 ```
 
 #### Retrieve install (install only) parameters
@@ -107,7 +117,7 @@ JSONObject sessionParams = branch.getReferringParams();
 If you ever want to access the original session params (the parameters passed in for the first install event only), you can use this line. This is useful if you only want to reward users who newly installed the app from a referral link or something.
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-JSONObject installParams = branch.getInstallReferringParams(); 
+JSONObject installParams = branch.getFirstReferringParams();
 ```
 
 ### Persistent identities
@@ -117,7 +127,7 @@ Often, you might have your own user IDs, or want referral and event data to pers
 To identify a user, just call:
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.identifyUser(@"your user id"); 
+branch.setIdentity(@"your user id");
 ```
 
 #### Logout
@@ -127,21 +137,21 @@ If you provide a logout function in your app, be sure to clear the user when the
 **Warning** this call will clear the referral credits and attribution on the device.
 
 ```java
-Branch.getInstance(getApplicationContext()).clearUser();
+Branch.getInstance(getApplicationContext()).logout();
 ```
 
 ### Register custom events
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.userCompletedAction("your_custom_event"); 
+branch.userCompletedAction("your_custom_event");
 ```
 
 OR if you want to store some state with the event
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.userCompletedAction("your_custom_event", (JSONObject)appState); 
+branch.userCompletedAction("your_custom_event", (JSONObject)appState);
 ```
 
 Some example events you might want to track:
@@ -167,7 +177,7 @@ try {
 	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
 	dataToInclude.put("description", "Joe likes long walks on the beach...")
 } catch (JSONException ex) {
-	
+
 }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
@@ -191,7 +201,7 @@ branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", da
 
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
-**Note** 
+**Note**
 You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following optional keys in the params JSONObject:
 ```java
 "$og_app_id"
