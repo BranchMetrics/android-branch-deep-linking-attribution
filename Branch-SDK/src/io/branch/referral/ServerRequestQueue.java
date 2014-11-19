@@ -43,8 +43,8 @@ public class ServerRequestQueue {
     	new Thread(new Runnable() {
 			@Override
 			public void run() {
+				JSONArray jsonArr = new JSONArray();
 				synchronized(queue) {
-					JSONArray jsonArr = new JSONArray();
 					Iterator<ServerRequest> iter = queue.iterator();
 					while (iter.hasNext()) {
 						JSONObject json = iter.next().toJSON();
