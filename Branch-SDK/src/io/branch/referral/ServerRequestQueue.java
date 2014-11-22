@@ -104,6 +104,7 @@ public class ServerRequestQueue {
 		try {
 			req = queue.remove(0);
 			persist();
+		} catch (IndexOutOfBoundsException ex) {
 		} catch (NoSuchElementException ex) {
 		}
 		return req;
@@ -113,6 +114,7 @@ public class ServerRequestQueue {
 		ServerRequest req = null;
 		try {
 			req = queue.get(0);
+		} catch (IndexOutOfBoundsException ex) {
 		} catch (NoSuchElementException ex) {
 		}
 		return req;
@@ -122,6 +124,7 @@ public class ServerRequestQueue {
 		ServerRequest req = null;
 		try {
 			req = queue.get(index);
+		} catch (IndexOutOfBoundsException ex) {
 		} catch (NoSuchElementException ex) {
 		}
 		return req;

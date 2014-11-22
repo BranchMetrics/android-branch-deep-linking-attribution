@@ -256,7 +256,7 @@ public class Branch {
 	
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
 		initIdentityFinishedCallback_ = callback;
-		identifyUser(userId);
+		setIdentity(userId);
 	}
 
 	@Deprecated
@@ -648,7 +648,7 @@ public class Branch {
 						Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
 					} else {
 						networkCount_ = 0;
-						initUserSession();
+						initSession();
 					}
 				}
 			} else {
@@ -945,7 +945,7 @@ public class Branch {
 							@Override
 							public void run() {
 								if (initSessionFinishedCallback_ != null) {
-									initSessionFinishedCallback_.onInitFinished(getReferringParams());
+									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams());
 								}
 							}
 						});
@@ -977,7 +977,7 @@ public class Branch {
 							@Override
 							public void run() {
 								if (initSessionFinishedCallback_ != null) {
-									initSessionFinishedCallback_.onInitFinished(getReferringParams());
+									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams());
 								}
 							}
 						});
@@ -1025,12 +1025,12 @@ public class Branch {
 							@Override
 							public void run() {
 								if (initIdentityFinishedCallback_ != null) {
-									initIdentityFinishedCallback_.onInitFinished(getInstallReferringParams());
+									initIdentityFinishedCallback_.onInitFinished(getFirstReferringParams());
 								}
 							}
 						});
 						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) || requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
+					} else {
 						requestQueue_.dequeue();
 					}
 					

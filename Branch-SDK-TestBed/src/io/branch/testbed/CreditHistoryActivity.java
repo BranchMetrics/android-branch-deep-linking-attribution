@@ -66,7 +66,10 @@ public class CreditHistoryActivity extends Activity {
 							} catch (ParseException e) {
 								e.printStackTrace();
 							}
-							list.add(new CreditTransaction(bucket + " : " + amount, transaction.isNull("referrer") ? null : transaction.getString("referrer"), xactDate));
+							list.add(new CreditTransaction(bucket + " : " + amount,
+															transaction.isNull("referrer") ? null : transaction.getString("referrer"),
+															transaction.isNull("referree") ? null : transaction.getString("referree"),		
+															xactDate));
 						}
 						
 						
@@ -129,7 +132,7 @@ public class CreditHistoryActivity extends Activity {
 			}
 
 			holder.transactionView.setText(((CreditTransaction)listData.get(position)).getTransaction());
-			holder.referrerView.setText(((CreditTransaction)listData.get(position)).getReferrer());
+			holder.referrerView.setText(((CreditTransaction)listData.get(position)).getReferInfo());
 			holder.dateView.setText(((CreditTransaction)listData.get(position)).getDate());
 
 			return convertView;
@@ -146,15 +149,17 @@ public class CreditHistoryActivity extends Activity {
 	private class CreditTransaction {
 		private String transaction;
 		private String referrer;
+		private String referree;
 		private Date date;
 		
 		public CreditTransaction(String bucket) {
-			this(bucket, null, null);
+			this(bucket, null, null, null);
 		}
 		
-		public CreditTransaction(String transaction, String referrer, Date date) {
+		public CreditTransaction(String transaction, String referrer, String referree, Date date) {
 			this.transaction = transaction;
 			this.referrer = referrer;
+			this.referree = referree;
 			this.date = date;
 		}
 		
@@ -162,8 +167,24 @@ public class CreditHistoryActivity extends Activity {
 			return this.transaction; 
 		}
 		
-		public String getReferrer() {
-			return this.referrer != null ? "(" + this.referrer + ")" : ""; 
+		public String getReferInfo() {
+			StringBuilder sb = new StringBuilder();
+			if (this.referrer != null || this.referree != null) {
+				boolean hasReferrer = false;
+				sb.append("(");
+				if (this.referrer != null) {
+					hasReferrer = true;
+					sb.append("referrer: " + this.referrer);
+				}
+				if (this.referree != null) {
+					if (hasReferrer) {
+						sb.append(" -> ");
+					}
+					sb.append("referree: " + this.referree);
+				}
+				sb.append(")");
+			}
+			return sb.toString(); 
 		}
 		
 		public String getDate() {
