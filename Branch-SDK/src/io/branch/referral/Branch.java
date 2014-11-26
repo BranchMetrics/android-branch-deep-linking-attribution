@@ -232,7 +232,7 @@ public class Branch {
 		if (!hasNetwork_) {
 	        // if there's no network connectivity, purge the old install/open
 	        ServerRequest req = requestQueue_.peek();
-	        if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+	        if (req != null && (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
 	            requestQueue_.dequeue();
 	        }
 	    } else {
