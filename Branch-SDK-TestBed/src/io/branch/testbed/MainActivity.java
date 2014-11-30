@@ -38,6 +38,7 @@ public class MainActivity extends Activity {
 	Button cmdLogoutUser;
 	Button cmdPrintInstallParams;
 	Button cmdGetCreditHistory;
+	Button cmdReferralCode;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +59,7 @@ public class MainActivity extends Activity {
 		cmdPrintInstallParams = (Button) findViewById(R.id.cmdPrintInstallParam);
 		cmdCommitBuyMetadata = (Button) findViewById(R.id.cmdCommitBuyMetadataAction);
 		cmdGetCreditHistory = (Button) findViewById(R.id.cmdGetCreditHistory);
+		cmdReferralCode = (Button) findViewById(R.id.cmdReferralCode);
 		
 		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
 			@Override
@@ -176,6 +178,15 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				Log.i("BranchTestBed", "Getting credit history...");
 				Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
+				startActivity(i);
+			}
+		});
+		
+		cmdReferralCode.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.i("BranchTestBed", "Navigating to Referral Code...");
+				Intent i = new Intent(getApplicationContext(), ReferralCodeActivity.class);
 				startActivity(i);
 			}
 		});
