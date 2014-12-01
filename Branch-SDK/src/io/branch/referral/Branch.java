@@ -604,6 +604,7 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("referral_code", code);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
