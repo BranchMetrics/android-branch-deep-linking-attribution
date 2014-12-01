@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 public class ReferralCodeActivity extends Activity {
@@ -25,6 +26,8 @@ public class ReferralCodeActivity extends Activity {
 	EditText txtAmount;
 	EditText txtPrefix;
 	EditText txtExpiration;
+	RadioGroup radioType;
+	RadioGroup radioLocation;
 	Button cmdGetReferralCode;
 	Button cmdValidateReferralCode;
 	Button cmdRedeemReferralCode;
@@ -39,6 +42,8 @@ public class ReferralCodeActivity extends Activity {
 		txtAmount = (EditText) findViewById(R.id.editAmount);
 		txtPrefix = (EditText) findViewById(R.id.editPrefix);
 		txtExpiration = (EditText) findViewById(R.id.editExpiration);
+		radioType = (RadioGroup) findViewById(R.id.codeType);
+		radioLocation = (RadioGroup) findViewById(R.id.codeLocation);
 		txtValid = (TextView) findViewById(R.id.txtValid);
 		cmdGetReferralCode = (Button) findViewById(R.id.cmdGetReferralCode);
 		cmdValidateReferralCode = (Button) findViewById(R.id.cmdValidateReferralCode);
@@ -68,7 +73,7 @@ public class ReferralCodeActivity extends Activity {
 					}
 				}
 				
-				branch.getReferralCode(prefix, amount, expiration, new BranchReferralInitListener() {
+				branch.getReferralCode(prefix, amount, getCalculationType(), getLocation(), new BranchReferralInitListener() {
 					@Override
 					public void onInitFinished(JSONObject referralCode) {
 						try {
@@ -88,13 +93,14 @@ public class ReferralCodeActivity extends Activity {
 				
 				final String referral_code = txtReferralCode.getText().toString();
 				if (referral_code.length() > 0) {
-					branch.getReferralCode(referral_code, new BranchReferralInitListener() {
+					branch.validateReferralCode(referral_code, new BranchReferralInitListener() {
 						@Override
 						public void onInitFinished(JSONObject referralCode) {
 							try {
 								String code = referralCode.getString("referral_code");
 								if (referral_code.equals(code)) {
 									txtValid.setVisibility(View.VISIBLE);
+									txtValid.setText("Valid");
 								}
 							} catch (JSONException e) {
 								e.printStackTrace();
@@ -108,12 +114,51 @@ public class ReferralCodeActivity extends Activity {
 		cmdRedeemReferralCode.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				txtValid.setVisibility(View.GONE);
+
 				final String referral_code = txtReferralCode.getText().toString();
 				if (referral_code.length() > 0) {
-					branch.redeemReferralCode(referral_code);
+					branch.applyReferralCode(referral_code, new BranchReferralInitListener() {
+						@Override
+						public void onInitFinished(JSONObject referralCode) {
+							try {
+								String code = referralCode.getString("referral_code");
+								if (referral_code.equals(code)) {
+									txtValid.setVisibility(View.VISIBLE);
+									txtValid.setText("Applied");
+								}
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						}
+					});
 				}
 			}
 		});
+	}
+	
+	public int getCalculationType() {
+		switch(radioType.getCheckedRadioButtonId()) {
+			case R.id.type0:
+				return 0;
+			case R.id.type1:
+				return 1;
+			default:
+				return 0;
+		}
+	}
+	
+	public int getLocation() {
+		switch(radioLocation.getCheckedRadioButtonId()) {
+			case R.id.location0:
+				return 0;
+			case R.id.location2:
+				return 2;
+			case R.id.location3:
+				return 3;
+			default:
+				return 0;
+		}
 	}
 	
 	@Override
