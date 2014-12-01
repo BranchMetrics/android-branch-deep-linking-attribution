@@ -27,8 +27,13 @@ public class Branch {
 	public static String REEFERRAL_BUCKET_DEFAULT = "default";
 	public static String REFERRAL_CODE_TYPE = "credit";
 	public static int REFERRAL_CREATION_SOURCE_SDK = 2;
-	public static int REFERRAL_CALCULATION_TYPE_TOTAL = 0;
-	public static int REFERRAL_LOCATION_RECEIVER = 0;
+	
+	public static int REFERRAL_CODE_LOCATION_REFERREE = 0;
+	public static int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
+	public static int REFERRAL_CODE_LOCATION_BOTH = 3;
+	
+	public static int REFERRAL_CODE_AWARD_UNLIMITED = 1;
+	public static int REFERRAL_CODE_AWARD_UNIQUE = 0;
 	
 	private static final int SESSION_KEEPALIVE = 5000;
 	private static final int INTERVAL_RETRY = 3000;
@@ -545,19 +550,19 @@ public class Branch {
 	
 
 	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
-		this.getReferralCode(null, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CALCULATION_TYPE_TOTAL, REFERRAL_LOCATION_RECEIVER, callback);
+		this.getReferralCode(null, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 	
 	public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CALCULATION_TYPE_TOTAL, REFERRAL_LOCATION_RECEIVER, callback);
+		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 	
 	public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
-		this.getReferralCode(null, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CALCULATION_TYPE_TOTAL, REFERRAL_LOCATION_RECEIVER, callback);
+		this.getReferralCode(null, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 	
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CALCULATION_TYPE_TOTAL, REFERRAL_LOCATION_RECEIVER, callback);
+		this.getReferralCode(prefix, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 	
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
@@ -595,7 +600,7 @@ public class Branch {
 		}).start();
 	}
 	
-	public void getReferralCode(final String code, BranchReferralInitListener callback) {
+	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
 		validateReferralCodeCallback_ = callback;
 		
 		new Thread(new Runnable() {
@@ -619,8 +624,23 @@ public class Branch {
 		}).start();
 	}
 	
-	public void redeemReferralCode(final String code) {
-		this.userCompletedAction(REDEEM_CODE + "-" + code);
+	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
+		this.validateReferralCode(code, new BranchReferralInitListener() {
+			@Override
+			public void onInitFinished(JSONObject referringParams) {
+				if (referringParams.has("referral_code")) {
+					userCompletedAction(REDEEM_CODE + "-" + code);
+					if (callback != null) {
+						callback.onInitFinished(referringParams);
+					}
+				} else {
+					if (callback != null) {
+						callback.onInitFinished(new JSONObject());
+					}
+				}
+			}
+		});
+		
 	}
 	
 	// PRIVATE FUNCTIONS
