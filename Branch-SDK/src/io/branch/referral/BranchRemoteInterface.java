@@ -102,6 +102,8 @@ public class BranchRemoteInterface extends RemoteInterface {
 				String uriScheme = sysObserver_.getURIScheme();
 				if (!uriScheme.equals(SystemObserver.BLANK)) 
 					openPost.put("uri_scheme", uriScheme);
+				if (!sysObserver_.getOS().equals(SystemObserver.BLANK))
+					openPost.put("os", sysObserver_.getOS());
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
