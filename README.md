@@ -275,7 +275,7 @@ branch.getReferralCode(new BranchReferralInitListener() {
 		}
 	}
 });
-```java
+```
 
 ### Create referral code
 
@@ -301,7 +301,7 @@ branch.getReferralCode(5, new BranchReferralInitListener() {
 		}
 	}
 });
-```java
+```
 
 Alternatively, you can specify a prefix for the referral code.
 The resulting code will have your prefix, concatenated with a 4 character long unique alpha-numeric string wrapped in the same data structure.
@@ -322,7 +322,7 @@ branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {
 		}
 	}
 });
-```java
+```
 
 If you want to specify an expiration date for the referral code, you can add an expiration parameter.
 The prefix parameter is optional here, i.e. it could be getReferralCode(5, expirationDate, new BranchReferralInitListener()...
@@ -343,7 +343,7 @@ branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListen
 		}
 	}
 });
-```java
+```
 
 You can also tune the referral code to the finest granularity, with the following additional parameters:
 
@@ -376,4 +376,4 @@ branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWA
 		}
 	}
 });
-```java
+```
