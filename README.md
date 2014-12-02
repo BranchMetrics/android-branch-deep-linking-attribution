@@ -257,3 +257,123 @@ We will store how many of the rewards have been deployed so that you don't have 
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.redeemRewards(5);
 ```
+
+### Get referral code
+
+Retrieve the referral code created by current user
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode(new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```java
+
+### Create referral code
+
+Create a new referral code for the current user, only if this user doesn't have any existing non-expired referral code.
+
+In the simplest form, just specify an amount for the referral code.
+The returned referral code is a 6 character long unique alpha-numeric string wrapped inside the params dictionary with key @"referral_code".
+
+**amount** _int_
+: The amount of credit to redeem when user applies the referral code
+
+```java
+// Create a referral code of 5 credits
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode(5, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```java
+
+Alternatively, you can specify a prefix for the referral code.
+The resulting code will have your prefix, concatenated with a 4 character long unique alpha-numeric string wrapped in the same data structure.
+
+**prefix** _String_
+: The prefix to the referral code that you desire
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```java
+
+If you want to specify an expiration date for the referral code, you can add an expiration parameter.
+The prefix parameter is optional here, i.e. it could be getReferralCode(5, expirationDate, new BranchReferralInitListener()...
+
+**expiration** _Date_
+: The expiration date of the referral code
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```java
+
+You can also tune the referral code to the finest granularity, with the following additional parameters:
+
+**bucket** _String_
+: The name of the bucket to use. If none is specified, defaults to 'default'
+
+**calculation_type**  _int_
+: This defines whether the referral code can be applied indefinitely, or only once per user
+
+1. _REFERRAL_CODE_AWARD_UNLIMITED_ - referral code can be applied continually
+1. _REFERRAL_CODE_AWARD_UNIQUE_ - a user can only apply a specific referral code once
+
+**location** _int_
+: The user to reward for applying the referral code
+
+1. _REFERRAL_CODE_LOCATION_REFERREE_ - the user applying the referral code receives credit
+1. _REFERRAL_CODE_LOCATION_REFERRING_USER_ - the user who created the referral code receives credit
+1. _REFERRAL_CODE_LOCATION_BOTH_ - both the creator and applicant receive credit
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```java

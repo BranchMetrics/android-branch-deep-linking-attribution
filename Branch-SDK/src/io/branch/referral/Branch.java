@@ -548,7 +548,29 @@ public class Branch {
 		generateShortLink(tags, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
-
+	public void getReferralCode(BranchReferralInitListener callback) {
+		getReferralCodeCallback_ = callback;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
+			}
+		}).start();
+	}
+	
 	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
 		this.getReferralCode(null, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
