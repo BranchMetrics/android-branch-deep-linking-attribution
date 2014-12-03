@@ -50,6 +50,7 @@ public class Branch {
 	private BranchListResponseListener creditHistoryCallback_;
 	private BranchReferralInitListener getReferralCodeCallback_;
 	private BranchReferralInitListener validateReferralCodeCallback_;
+	private BranchReferralInitListener applyReferralCodeCallback_;
 	
 	private BranchRemoteInterface kRemoteInterface_;
 	private PrefHelper prefHelper_;
@@ -652,22 +653,28 @@ public class Branch {
 	}
 	
 	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
-		this.validateReferralCode(code, new BranchReferralInitListener() {
+		applyReferralCodeCallback_ = callback;
+		
+		new Thread(new Runnable() {
 			@Override
-			public void onInitFinished(JSONObject referringParams) {
-				if (referringParams.has("referral_code")) {
-					userCompletedAction(REDEEM_CODE + "-" + code);
-					if (callback != null) {
-						callback.onInitFinished(referringParams);
-					}
-				} else {
-					if (callback != null) {
-						callback.onInitFinished(new JSONObject());
-					}
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("session_id", prefHelper_.getSessionID());
+					post.put("referral_code", code);
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post));
+				
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
 				}
 			}
-		});
-		
+		}).start();
 	}
 	
 	// PRIVATE FUNCTIONS
@@ -788,6 +795,8 @@ public class Branch {
 					kRemoteInterface_.getReferralCode(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE) && hasUser() && hasSession()) {
 					kRemoteInterface_.validateReferralCode(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE) && hasUser() && hasSession()) {
+					kRemoteInterface_.applyReferralCode(req.getPost());
 				} else if (!hasUser()) {
 					if (!hasAppKey() && hasSession()) {
 						Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
@@ -850,6 +859,10 @@ public class Branch {
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
 					if (validateReferralCodeCallback_ != null) {
 						validateReferralCodeCallback_.onInitFinished(null);
+					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
+					if (applyReferralCodeCallback_ != null) {
+						applyReferralCodeCallback_.onInitFinished(null);
 					}
 				}
 			}
@@ -1076,6 +1089,30 @@ public class Branch {
 		});
 	}
 	
+	private void processReferralCodeApply(final ServerResponse resp) {
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (applyReferralCodeCallback_ != null) {
+					try {
+						JSONObject json;
+						// check if a valid referral code json is returned
+				        if (!resp.getObject().has(REFERRAL_CODE)) {
+				        	json = new JSONObject();
+				        	json.put("error_message", "Invalid referral code");
+				        } else {
+				        	json = resp.getObject();
+				        }
+				        applyReferralCodeCallback_.onInitFinished(json);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
+	
 	public class ReferralNetworkCallback implements NetworkCallback {
 		@Override
 		public void finished(ServerResponse serverResponse) {
@@ -1236,6 +1273,9 @@ public class Branch {
 						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
 						processReferralCodeValidation(serverResponse);
+						requestQueue_.dequeue();
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
+						processReferralCodeApply(serverResponse);
 						requestQueue_.dequeue();
 					} else {
 						requestQueue_.dequeue();

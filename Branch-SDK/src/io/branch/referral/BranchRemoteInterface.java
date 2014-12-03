@@ -22,6 +22,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_LOGOUT = "t_logout";
 	public static final String REQ_TAG_GET_REFERRAL_CODE = "t_get_referral_code";
 	public static final String REQ_TAG_VALIDATE_REFERRAL_CODE = "t_validate_referral_code";
+	public static final String REQ_TAG_APPLY_REFERRAL_CODE = "t_apply_referral_code";
 
 	private SystemObserver sysObserver_;
 	private PrefHelper prefHelper_;
@@ -199,6 +200,18 @@ public class BranchRemoteInterface extends RemoteInterface {
 			urlExtend = "v1/referralcode/" + post.getString("referral_code");
 			if (callback_ != null) {
 				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_VALIDATE_REFERRAL_CODE));
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void applyReferralCode(JSONObject post) {
+		String urlExtend;
+		try {
+			urlExtend = "v1/applycode/" + post.getString("referral_code");
+			if (callback_ != null) {
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_APPLY_REFERRAL_CODE));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
