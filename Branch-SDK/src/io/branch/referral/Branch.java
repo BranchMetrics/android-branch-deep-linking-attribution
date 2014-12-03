@@ -1192,6 +1192,9 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+						if (serverResponse.getObject().has("identity_id")) {
+							prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
+						}
 						if (serverResponse.getObject().has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getObject().getString("link_click_id"));
 						} else {
