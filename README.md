@@ -377,3 +377,58 @@ branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWA
 	}
 });
 ```
+
+### Validate referral code
+
+Validate if a referral code exists in Branch system and is still valid (not expired). If valid, return the referral code JSONObject in the call back.
+
+**code** _String_
+: The referral code to validate
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.validateReferralCode(referral_code, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
+				String code = referralCode.getString("referral_code");
+				if (referral_code.equals(code)) {
+					// valid
+				} else {
+					// invalid (should never happen)
+				}
+			} else {
+				// invalid
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+### Apply referral code
+
+Apply a referral code if it exists in Branch system and is still valid (not expired). If the code is valid, return the referral code JSONObject in the call back.
+
+**code** _String_
+: The referral code to apply
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.applyReferralCode(referral_code, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			if (!referralCode.has("error_message")) {
+				// applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.
+			} else {
+				// invalid code
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
