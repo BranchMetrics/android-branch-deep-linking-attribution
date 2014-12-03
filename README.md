@@ -382,8 +382,8 @@ branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWA
 
 Validate if a referral code exists in Branch system and is still valid.
 A code is vaild if:
-1. It hasn't expired.
-1. If its calculation type is uniqe, it hasn't been applied by current user.
+1. _It hasn't expired._
+1. _If its calculation type is uniqe, it hasn't been applied by current user._
 If valid, returns the referral code JSONObject in the call back.
 
 **code** _String_
