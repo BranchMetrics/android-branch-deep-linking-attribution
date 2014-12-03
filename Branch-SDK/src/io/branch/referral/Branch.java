@@ -27,6 +27,7 @@ public class Branch {
 	public static String REEFERRAL_BUCKET_DEFAULT = "default";
 	public static String REFERRAL_CODE_TYPE = "credit";
 	public static int REFERRAL_CREATION_SOURCE_SDK = 2;
+	public static String REFERRAL_CODE = "referral_code";
 	
 	public static int REFERRAL_CODE_LOCATION_REFERREE = 0;
 	public static int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
@@ -1034,11 +1035,15 @@ public class Branch {
 			public void run() {
 				if (getReferralCodeCallback_ != null) {
 					try {
-						JSONObject data = resp.getObject();
-						String event = data.getString("event");
-						String code = event.substring(REDEEM_CODE.length() + 1);
-				        data.put("referral_code", code);
-				        getReferralCodeCallback_.onInitFinished(data);
+						JSONObject json;
+						// check if a valid referral code json is returned
+				        if (!resp.getObject().has(REFERRAL_CODE)) {
+				        	json = new JSONObject();
+				        	json.put("error_message", "Failed to get referral code");
+				        } else {
+				        	json = resp.getObject();
+				        }
+				        getReferralCodeCallback_.onInitFinished(json);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -1054,11 +1059,15 @@ public class Branch {
 			public void run() {
 				if (validateReferralCodeCallback_ != null) {
 					try {
-						JSONObject data = resp.getObject();
-						String event = data.getString("event");
-						String code = event.substring(REDEEM_CODE.length() + 1);
-				        data.put("referral_code", code);
-				        validateReferralCodeCallback_.onInitFinished(data);
+						JSONObject json;
+						// check if a valid referral code json is returned
+				        if (!resp.getObject().has(REFERRAL_CODE)) {
+				        	json = new JSONObject();
+				        	json.put("error_message", "Invalid referral code");
+				        } else {
+				        	json = resp.getObject();
+				        }
+				        validateReferralCodeCallback_.onInitFinished(json);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}

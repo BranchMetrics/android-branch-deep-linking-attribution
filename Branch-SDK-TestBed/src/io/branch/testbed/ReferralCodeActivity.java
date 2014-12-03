@@ -73,13 +73,18 @@ public class ReferralCodeActivity extends Activity {
 					}
 				}
 				
-				branch.getReferralCode(prefix, amount, getCalculationType(), getLocation(), new BranchReferralInitListener() {
+				branch.getReferralCode(prefix, amount, expiration, null, getCalculationType(), getLocation(), new BranchReferralInitListener() {
 					@Override
 					public void onInitFinished(JSONObject referralCode) {
 						try {
-							txtReferralCode.setText(referralCode.getString("referral_code"));
+							// Ugly! will add error code soon.
+							if (!referralCode.has("error_message")) {
+								txtReferralCode.setText(referralCode.getString("referral_code"));
+							} else {
+								txtReferralCode.setText(referralCode.getString("error_message"));
+							}
 						} catch (JSONException e) {
-							txtReferralCode.setText("Invalid code");
+							txtReferralCode.setText("Error parsing JSON");
 						}
 					}
 				});
@@ -97,13 +102,20 @@ public class ReferralCodeActivity extends Activity {
 						@Override
 						public void onInitFinished(JSONObject referralCode) {
 							try {
-								String code = referralCode.getString("referral_code");
-								if (referral_code.equals(code)) {
-									txtValid.setVisibility(View.VISIBLE);
-									txtValid.setText("Valid");
+								txtValid.setVisibility(View.VISIBLE);
+								if (!referralCode.has("error_message")) {
+									
+									String code = referralCode.getString("referral_code");
+									if (referral_code.equals(code)) {
+										txtValid.setText("Valid");
+									} else {
+										txtValid.setText("Mismatch!");
+									}
+								} else {
+									txtValid.setText("Invalid");
 								}
 							} catch (JSONException e) {
-								e.printStackTrace();
+								txtReferralCode.setText("Error parsing JSON");
 							}
 						}
 					});
@@ -122,13 +134,20 @@ public class ReferralCodeActivity extends Activity {
 						@Override
 						public void onInitFinished(JSONObject referralCode) {
 							try {
-								String code = referralCode.getString("referral_code");
-								if (referral_code.equals(code)) {
-									txtValid.setVisibility(View.VISIBLE);
-									txtValid.setText("Applied");
+								txtValid.setVisibility(View.VISIBLE);
+								if (!referralCode.has("error_message")) {
+									
+									String code = referralCode.getString("referral_code");
+									if (referral_code.equals(code)) {
+										txtValid.setText("Applied");
+									} else {
+										txtValid.setText("Mismatch!");
+									}
+								} else {
+									txtValid.setText("Invalid");
 								}
 							} catch (JSONException e) {
-								e.printStackTrace();
+								txtReferralCode.setText("Error parsing JSON");
 							}
 						}
 					});
