@@ -387,12 +387,12 @@ Validate if a referral code exists in Branch system and is still valid (not expi
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.validateReferralCode(referral_code, new BranchReferralInitListener() {
+branch.validateReferralCode(code, new BranchReferralInitListener() {
 	@Override
 	public void onInitFinished(JSONObject referralCode) {
 		try {
 			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
-				String code = referralCode.getString("referral_code");
+				String referral_code = referralCode.getString("referral_code");
 				if (referral_code.equals(code)) {
 					// valid
 				} else {
