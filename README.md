@@ -190,8 +190,11 @@ ArrayList<String> tags = new ArrayList<String>();
 tags.put("version1");
 tags.put("trial6");
 
+// Link 'type' can be used for scenarios where you want the link to only deep link the first time. 
+// Use _null_, _LINK_TYPE_UNLIMITED_USE_ or _LINK_TYPE_ONE_TIME_USE_
+
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
+branch.getShortUrl(LINK_TYPE_UNLIMITED_USE, tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately

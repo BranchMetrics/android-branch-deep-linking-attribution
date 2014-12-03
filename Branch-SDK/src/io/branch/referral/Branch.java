@@ -36,6 +36,9 @@ public class Branch {
 	public static int REFERRAL_CODE_AWARD_UNLIMITED = 1;
 	public static int REFERRAL_CODE_AWARD_UNIQUE = 0;
 	
+	public static int LINK_TYPE_UNLIMITED_USE = 0;
+	public static int LINK_TYPE_ONE_TIME_USE = 1;
+	
 	private static final int SESSION_KEEPALIVE = 5000;
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
@@ -519,35 +522,43 @@ public class Branch {
 	}
 	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, null, null, null, stringifyParams(null), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, null, null, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(type, null, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(type, tags, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getReferralCode(BranchReferralInitListener callback) {
@@ -697,7 +708,7 @@ public class Branch {
 		return params.toString();
 	}
 
-	private void generateShortLink(final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
+	private void generateShortLink(final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			new Thread(new Runnable() {
@@ -707,6 +718,10 @@ public class Branch {
 					try {
 						linkPost.put("app_id", prefHelper_.getAppKey());
 						linkPost.put("identity_id", prefHelper_.getIdentityID());
+						
+						if (type != 0) {
+							linkPost.put("type", type);
+						}
 						
 						if (tags != null) {
 							JSONArray tagArray = new JSONArray();
