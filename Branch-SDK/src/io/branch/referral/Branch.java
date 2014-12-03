@@ -522,31 +522,31 @@ public class Branch {
 	}
 	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(0, null, null, null, null, stringifyParams(null), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, null, null, null, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -554,7 +554,7 @@ public class Branch {
 	}
 	
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(0, tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
