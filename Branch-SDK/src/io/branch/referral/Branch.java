@@ -221,6 +221,7 @@ public class Branch {
 			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
 				if (callback != null) callback.onInitFinished(new JSONObject());
+				keepAlive();
 			} else {
 				if (!installOrOpenInQueue) {
 					new Thread(new Runnable() {
