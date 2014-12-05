@@ -39,7 +39,7 @@ public class Branch {
 	private static final int SESSION_KEEPALIVE = 5000;
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
-
+	
 	private static Branch branchReferral_;
 	private boolean isInit_;
 	
@@ -214,6 +214,7 @@ public class Branch {
 				@Override
 				public void run() {
 					initializeSession();
+					recoverFromQueue();
 				}
 			}).start();
 			isInit_ = true;
@@ -228,15 +229,15 @@ public class Branch {
 						@Override
 						public void run() {
 							initializeSession();
+							recoverFromQueue();
 						}
 					}).start();
 				} else {
 					processNextQueueItem();
+					recoverFromQueue();
 				}
 			}
 		}
-		
-		recoverFromQueue();
 	}
 	
 	private void recoverFromQueue() {
@@ -731,7 +732,6 @@ public class Branch {
 	}
 	
 	private void processNextQueueItem() {
-		Log.i("==============", requestQueue_.toString());	//temp
 		try {
 			serverSema_.acquire();
 			if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
@@ -1092,7 +1092,6 @@ public class Branch {
 		@Override
 		public void finished(ServerResponse serverResponse) {
 			if (serverResponse != null) {
-				Log.i("---------------", serverResponse.getTag());	//temp
 				try {
 					int status = serverResponse.getStatusCode();
 					String requestTag = serverResponse.getTag();
