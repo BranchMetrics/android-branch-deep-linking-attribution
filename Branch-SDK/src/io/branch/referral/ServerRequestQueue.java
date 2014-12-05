@@ -92,6 +92,10 @@ public class ServerRequestQueue {
 		return queue.size();
 	}
 	
+	public boolean isEmpty() {
+		return queue.size() == 0;
+	}
+	
 	public void enqueue(ServerRequest request) {
 		if (request != null) {
 			queue.add(request);
@@ -159,6 +163,19 @@ public class ServerRequestQueue {
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		synchronized(queue) {
+			Iterator<ServerRequest> iter = queue.iterator();
+			while (iter.hasNext()) {
+				ServerRequest req = iter.next();
+				sb.append(req.getTag() + "; ");
+			}
+		}
+		return sb.toString();
 	}
 	
 	public void moveInstallOrOpenToFront(String tag, int networkCount) {
