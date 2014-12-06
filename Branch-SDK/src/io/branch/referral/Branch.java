@@ -512,43 +512,51 @@ public class Branch {
 	}
 	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(type, null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(type, tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getReferralCode(BranchReferralInitListener callback) {
@@ -686,7 +694,7 @@ public class Branch {
 		return params.toString();
 	}
 
-	private void generateShortLink(final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
+	private void generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			new Thread(new Runnable() {
@@ -707,6 +715,11 @@ public class Branch {
 								tagArray.put(tag);
 							linkPost.put("tags", tagArray);
 						}
+						
+						if (alias != null) {
+							linkPost.put("alias", alias);
+						}
+						
 						if (channel != null) {
 							linkPost.put("channel", channel);
 						}
@@ -829,7 +842,7 @@ public class Branch {
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					if (linkCreateCallback_ != null) {
-						linkCreateCallback_.onLinkCreate("Trouble reaching server. Please try again in a few minutes");
+						linkCreateCallback_.onLinkCreate(null);
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 					if (initIdentityFinishedCallback_ != null) {
@@ -1114,7 +1127,23 @@ public class Branch {
 					boolean needRecovery = !hasNetwork_;
 					hasNetwork_ = true;
 					
-					if (status >= 400 && status < 500) {
+					if (status == 409) {
+						if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
+							Handler mainHandler = new Handler(context_.getMainLooper());
+							mainHandler.post(new Runnable() {
+								@Override
+								public void run() {
+									if (linkCreateCallback_ != null) {
+										linkCreateCallback_.onLinkCreate(null);
+									}
+								}
+							});
+						} else {
+							Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+							handleFailure();
+						}
+						requestQueue_.dequeue();
+					} else if (status >= 400 && status < 500) {
 						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}

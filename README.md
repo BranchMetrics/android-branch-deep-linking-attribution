@@ -193,13 +193,18 @@ tags.put("trial6");
 // Link 'type' can be used for scenarios where you want the link to only deep link the first time. 
 // Use _null_, _LINK_TYPE_UNLIMITED_USE_ or _LINK_TYPE_ONE_TIME_USE_
 
+// Link 'alias' can be used to label the endpoint on the link. For example: http://bnc.lt/AUSTIN28. 
+// Be careful about aliases: these are immutable objects permanently associated with the data and associated paramters you pass into the link. When you create one in the SDK, it's tied to that user identity as well (automatically specified by the Branch internals). If you want to retrieve the same link again, you'll need to call getShortUrl with all of the same parameters from before.
+
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getShortUrl(LINK_TYPE_UNLIMITED_USE, tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
+branch.getShortUrl("AUSTIN34", tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
 });
+
+// The callback will return null if the link generation fails (or if the alias specified is aleady taken.)
 ```
 
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
