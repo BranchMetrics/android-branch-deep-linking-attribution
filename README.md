@@ -190,13 +190,21 @@ ArrayList<String> tags = new ArrayList<String>();
 tags.put("version1");
 tags.put("trial6");
 
+// Link 'type' can be used for scenarios where you want the link to only deep link the first time. 
+// Use _null_, _LINK_TYPE_UNLIMITED_USE_ or _LINK_TYPE_ONE_TIME_USE_
+
+// Link 'alias' can be used to label the endpoint on the link. For example: http://bnc.lt/AUSTIN28. 
+// Be careful about aliases: these are immutable objects permanently associated with the data and associated paramters you pass into the link. When you create one in the SDK, it's tied to that user identity as well (automatically specified by the Branch internals). If you want to retrieve the same link again, you'll need to call getShortUrl with all of the same parameters from before.
+
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
+branch.getShortUrl("AUSTIN34", tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
 	public void onLinkCreate(String url) {
 		// show the link to the user or share it immediately
 	}
 });
+
+// The callback will return null if the link generation fails (or if the alias specified is aleady taken.)
 ```
 
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
@@ -256,4 +264,186 @@ We will store how many of the rewards have been deployed so that you don't have 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.redeemRewards(5);
+```
+
+### Get referral code
+
+Retrieve the referral code created by current user
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode(new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+### Create referral code
+
+Create a new referral code for the current user, only if this user doesn't have any existing non-expired referral code.
+
+In the simplest form, just specify an amount for the referral code.
+The returned referral code is a 6 character long unique alpha-numeric string wrapped inside the params dictionary with key @"referral_code".
+
+**amount** _int_
+: The amount of credit to redeem when user applies the referral code
+
+```java
+// Create a referral code of 5 credits
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode(5, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+Alternatively, you can specify a prefix for the referral code.
+The resulting code will have your prefix, concatenated with a 4 character long unique alpha-numeric string wrapped in the same data structure.
+
+**prefix** _String_
+: The prefix to the referral code that you desire
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+If you want to specify an expiration date for the referral code, you can add an expiration parameter.
+The prefix parameter is optional here, i.e. it could be getReferralCode(5, expirationDate, new BranchReferralInitListener()...
+
+**expiration** _Date_
+: The expiration date of the referral code
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+You can also tune the referral code to the finest granularity, with the following additional parameters:
+
+**bucket** _String_
+: The name of the bucket to use. If none is specified, defaults to 'default'
+
+**calculation_type**  _int_
+: This defines whether the referral code can be applied indefinitely, or only once per user
+
+1. _REFERRAL_CODE_AWARD_UNLIMITED_ - referral code can be applied continually
+1. _REFERRAL_CODE_AWARD_UNIQUE_ - a user can only apply a specific referral code once
+
+**location** _int_
+: The user to reward for applying the referral code
+
+1. _REFERRAL_CODE_LOCATION_REFERREE_ - the user applying the referral code receives credit
+1. _REFERRAL_CODE_LOCATION_REFERRING_USER_ - the user who created the referral code receives credit
+1. _REFERRAL_CODE_LOCATION_BOTH_ - both the creator and applicant receive credit
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			String code = referralCode.getString("referral_code");
+			// do whatever with code
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+### Validate referral code
+
+Validate if a referral code exists in Branch system and is still valid.
+A code is vaild if:
+
+1. It hasn't expired.
+1. If its calculation type is uniqe, it hasn't been applied by current user.
+
+If valid, returns the referral code JSONObject in the call back.
+
+**code** _String_
+: The referral code to validate
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.validateReferralCode(code, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
+				String referral_code = referralCode.getString("referral_code");
+				if (referral_code.equals(code)) {
+					// valid
+				} else {
+					// invalid (should never happen)
+				}
+			} else {
+				// invalid
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
+```
+
+### Apply referral code
+
+Apply a referral code if it exists in Branch system and is still valid (see above).
+If the code is valid, returns the referral code JSONObject in the call back.
+
+**code** _String_
+: The referral code to apply
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.applyReferralCode(code, new BranchReferralInitListener() {
+	@Override
+	public void onInitFinished(JSONObject referralCode) {
+		try {
+			if (!referralCode.has("error_message")) {
+				// applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.
+			} else {
+				// invalid code
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+});
 ```

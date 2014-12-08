@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,10 +23,26 @@ public class Branch {
 	public static String FEATURE_TAG_DEAL = "deal";
 	public static String FEATURE_TAG_GIFT = "gift";
 	
+	public static String REDEEM_CODE = "$redeem_code";
+	public static String REEFERRAL_BUCKET_DEFAULT = "default";
+	public static String REFERRAL_CODE_TYPE = "credit";
+	public static int REFERRAL_CREATION_SOURCE_SDK = 2;
+	public static String REFERRAL_CODE = "referral_code";
+	
+	public static int REFERRAL_CODE_LOCATION_REFERREE = 0;
+	public static int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
+	public static int REFERRAL_CODE_LOCATION_BOTH = 3;
+	
+	public static int REFERRAL_CODE_AWARD_UNLIMITED = 1;
+	public static int REFERRAL_CODE_AWARD_UNIQUE = 0;
+	
+	public static int LINK_TYPE_UNLIMITED_USE = 0;
+	public static int LINK_TYPE_ONE_TIME_USE = 1;
+	
 	private static final int SESSION_KEEPALIVE = 5000;
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
-
+	
 	private static Branch branchReferral_;
 	private boolean isInit_;
 	
@@ -34,6 +51,9 @@ public class Branch {
 	private BranchReferralStateChangedListener stateChangedCallback_;
 	private BranchLinkCreateListener linkCreateCallback_;
 	private BranchListResponseListener creditHistoryCallback_;
+	private BranchReferralInitListener getReferralCodeCallback_;
+	private BranchReferralInitListener validateReferralCodeCallback_;
+	private BranchReferralInitListener applyReferralCodeCallback_;
 	
 	private BranchRemoteInterface kRemoteInterface_;
 	private PrefHelper prefHelper_;
@@ -48,7 +68,6 @@ public class Branch {
 	private int networkCount_;
 	private int retryCount_;
 	
-	private boolean initFinished_;
 	private boolean hasNetwork_;
 	
 	private boolean debug_;
@@ -64,7 +83,6 @@ public class Branch {
 		keepAlive_ = false;
 		isInit_ = false;
 		networkCount_ = 0;
-		initFinished_ = false;
 		hasNetwork_ = true;
 		debug_ = false;
 	}
@@ -199,6 +217,7 @@ public class Branch {
 				@Override
 				public void run() {
 					initializeSession();
+					recoverFromQueue();
 				}
 			}).start();
 			isInit_ = true;
@@ -206,18 +225,33 @@ public class Branch {
 			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
 				if (callback != null) callback.onInitFinished(new JSONObject());
+				keepAlive();
 			} else {
 				if (!installOrOpenInQueue) {
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
 							initializeSession();
+							recoverFromQueue();
 						}
 					}).start();
 				} else {
 					processNextQueueItem();
+					recoverFromQueue();
 				}
 			}
+		}
+	}
+	
+	private void recoverFromQueue() {
+		int queueSize = requestQueue_.getSize();
+		for (int i = 0; i < queueSize; i++) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					processNextQueueItem();
+				}
+			}).start();
 		}
 	}
 	
@@ -232,7 +266,7 @@ public class Branch {
 		if (!hasNetwork_) {
 	        // if there's no network connectivity, purge the old install/open
 	        ServerRequest req = requestQueue_.peek();
-	        if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+	        if (req != null && (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
 	            requestQueue_.dequeue();
 	        }
 	    } else {
@@ -240,10 +274,7 @@ public class Branch {
 				@Override
 				public void run() {
 					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
-					
-					if (initFinished_ || !hasNetwork_) {
-						processNextQueueItem();
-					}
+					processNextQueueItem();
 				}
 			}).start();
 	    }
@@ -282,10 +313,7 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
-
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				}
+				processNextQueueItem();
 			}
 		}).start();
 	}
@@ -308,10 +336,7 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
-
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				}
+				processNextQueueItem();
 			}
 		}).start();
 	}
@@ -326,10 +351,7 @@ public class Branch {
 			@Override
 			public void run() {
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
-				
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				}
+				processNextQueueItem();
 			}
 		}).start();
 	}
@@ -344,10 +366,7 @@ public class Branch {
 			@Override
 			public void run() {
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
-				
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				}
+				processNextQueueItem();
 			}
 		}).start();
 	}
@@ -399,10 +418,7 @@ public class Branch {
 						return;
 					}
 					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post));
-					
-					if (initFinished_ || !hasNetwork_) {
-						processNextQueueItem();
-					}
+					processNextQueueItem();
 				}
 			}
 		}).start();
@@ -445,10 +461,7 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
-				
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				}
+				processNextQueueItem();
 			}
 		}).start();
 	}
@@ -469,10 +482,7 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION, post));
-				
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				}
+				processNextQueueItem();
 			}
 		}).start();
 	}
@@ -502,38 +512,173 @@ public class Branch {
 	}
 	
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, null, null, null, stringifyParams(null), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
 	}
 	
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, null, null, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(params), callback);
 	}
 	
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(params), callback);
+	}
+	
+	public void getReferralCode(BranchReferralInitListener callback) {
+		getReferralCodeCallback_ = callback;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
+	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
+		this.getReferralCode(null, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+	}
+	
+	public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
+		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+	}
+	
+	public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
+		this.getReferralCode(null, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+	}
+	
+	public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
+		this.getReferralCode(prefix, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+	}
+	
+	public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
+		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
+	}
+	
+	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
+		getReferralCodeCallback_ = callback;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("calculation_type", calculationType);
+					post.put("location", location);
+					post.put("type", REFERRAL_CODE_TYPE);
+					post.put("creation_source", REFERRAL_CREATION_SOURCE_SDK);
+					post.put("amount", amount);
+					post.put("bucket", bucket != null ? bucket : REEFERRAL_BUCKET_DEFAULT);
+					if (prefix != null && prefix.length() > 0) {
+						post.put("prefix", prefix);
+					}
+					if (expiration != null) {
+						post.put("expiration", convertDate(expiration));
+					}
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
+	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
+		validateReferralCodeCallback_ = callback;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("referral_code", code);
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE, post));
+				processNextQueueItem();
+			}
+		}).start();
+	}
+	
+	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
+		applyReferralCodeCallback_ = callback;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("session_id", prefHelper_.getSessionID());
+					post.put("referral_code", code);
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post));
+				processNextQueueItem();
+			}
+		}).start();
 	}
 	
 	// PRIVATE FUNCTIONS
+	
+	private String convertDate(Date date) {
+		return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
+	}
 	
 	private String stringifyParams(JSONObject params) {
 		if (params == null) {
@@ -549,7 +694,7 @@ public class Branch {
 		return params.toString();
 	}
 
-	private void generateShortLink(final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
+	private void generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			new Thread(new Runnable() {
@@ -560,12 +705,21 @@ public class Branch {
 						linkPost.put("app_id", prefHelper_.getAppKey());
 						linkPost.put("identity_id", prefHelper_.getIdentityID());
 						
+						if (type != 0) {
+							linkPost.put("type", type);
+						}
+						
 						if (tags != null) {
 							JSONArray tagArray = new JSONArray();
 							for (String tag : tags) 
 								tagArray.put(tag);
 							linkPost.put("tags", tagArray);
 						}
+						
+						if (alias != null) {
+							linkPost.put("alias", alias);
+						}
+						
 						if (channel != null) {
 							linkPost.put("channel", channel);
 						}
@@ -581,10 +735,7 @@ public class Branch {
 						ex.printStackTrace();
 					}
 					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
-					
-					if (initFinished_ || !hasNetwork_) {
-						processNextQueueItem();
-					}
+					processNextQueueItem();
 				}
 			}).start();
 		}
@@ -613,7 +764,6 @@ public class Branch {
 			serverSema_.acquire();
 			if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
 				networkCount_ = 1;
-				serverSema_.release();
 				
 				ServerRequest req = requestQueue_.peek();
 				
@@ -643,6 +793,12 @@ public class Branch {
 					kRemoteInterface_.registerClose();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasUser() && hasSession()) {
 					kRemoteInterface_.logoutUser(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE) && hasUser() && hasSession()) {
+					kRemoteInterface_.getReferralCode(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE) && hasUser() && hasSession()) {
+					kRemoteInterface_.validateReferralCode(req.getPost());
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE) && hasUser() && hasSession()) {
+					kRemoteInterface_.applyReferralCode(req.getPost());
 				} else if (!hasUser()) {
 					if (!hasAppKey() && hasSession()) {
 						Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
@@ -686,7 +842,7 @@ public class Branch {
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					if (linkCreateCallback_ != null) {
-						linkCreateCallback_.onLinkCreate("Trouble reaching server. Please try again in a few minutes");
+						linkCreateCallback_.onLinkCreate(null);
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 					if (initIdentityFinishedCallback_ != null) {
@@ -697,6 +853,18 @@ public class Branch {
 							ex.printStackTrace();
 						}
 						initIdentityFinishedCallback_.onInitFinished(obj);
+					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
+					if (getReferralCodeCallback_ != null) {
+						getReferralCodeCallback_.onInitFinished(null);
+					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
+					if (validateReferralCodeCallback_ != null) {
+						validateReferralCodeCallback_.onInitFinished(null);
+					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
+					if (applyReferralCodeCallback_ != null) {
+						applyReferralCodeCallback_.onInitFinished(null);
 					}
 				}
 			}
@@ -791,6 +959,7 @@ public class Branch {
 		} else {
 			requestQueue_.moveInstallOrOpenToFront(tag, networkCount_);
 		}
+			
 		processNextQueueItem();
 	}
 	
@@ -875,6 +1044,78 @@ public class Branch {
 		});
 	}
 	
+	private void processReferralCodeGet(final ServerResponse resp) {
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (getReferralCodeCallback_ != null) {
+					try {
+						JSONObject json;
+						// check if a valid referral code json is returned
+				        if (!resp.getObject().has(REFERRAL_CODE)) {
+				        	json = new JSONObject();
+				        	json.put("error_message", "Failed to get referral code");
+				        } else {
+				        	json = resp.getObject();
+				        }
+				        getReferralCodeCallback_.onInitFinished(json);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
+	
+	private void processReferralCodeValidation(final ServerResponse resp) {
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (validateReferralCodeCallback_ != null) {
+					try {
+						JSONObject json;
+						// check if a valid referral code json is returned
+				        if (!resp.getObject().has(REFERRAL_CODE)) {
+				        	json = new JSONObject();
+				        	json.put("error_message", "Invalid referral code");
+				        } else {
+				        	json = resp.getObject();
+				        }
+				        validateReferralCodeCallback_.onInitFinished(json);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
+	
+	private void processReferralCodeApply(final ServerResponse resp) {
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (applyReferralCodeCallback_ != null) {
+					try {
+						JSONObject json;
+						// check if a valid referral code json is returned
+				        if (!resp.getObject().has(REFERRAL_CODE)) {
+				        	json = new JSONObject();
+				        	json.put("error_message", "Invalid referral code");
+				        } else {
+				        	json = resp.getObject();
+				        }
+				        applyReferralCodeCallback_.onInitFinished(json);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
+	
 	public class ReferralNetworkCallback implements NetworkCallback {
 		@Override
 		public void finished(ServerResponse serverResponse) {
@@ -883,9 +1124,26 @@ public class Branch {
 					int status = serverResponse.getStatusCode();
 					String requestTag = serverResponse.getTag();
 					
+					boolean needRecovery = !hasNetwork_;
 					hasNetwork_ = true;
 					
-					if (status >= 400 && status < 500) {
+					if (status == 409) {
+						if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
+							Handler mainHandler = new Handler(context_.getMainLooper());
+							mainHandler.post(new Runnable() {
+								@Override
+								public void run() {
+									if (linkCreateCallback_ != null) {
+										linkCreateCallback_.onLinkCreate(null);
+									}
+								}
+							});
+						} else {
+							Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+							handleFailure();
+						}
+						requestQueue_.dequeue();
+					} else if (status >= 400 && status < 500) {
 						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}
@@ -893,6 +1151,7 @@ public class Branch {
 					} else if (status != 200) {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
+							needRecovery = false;
 							handleFailure();
 							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 								requestQueue_.dequeue();
@@ -950,10 +1209,12 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
-						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+						if (serverResponse.getObject().has("identity_id")) {
+							prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
+						}
 						if (serverResponse.getObject().has("link_click_id")) {
 							prefHelper_.setLinkClickID(serverResponse.getObject().getString("link_click_id"));
 						} else {
@@ -982,7 +1243,6 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
-						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getObject().getString("url");
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -1030,15 +1290,25 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
+						processReferralCodeGet(serverResponse);
+						requestQueue_.dequeue();
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
+						processReferralCodeValidation(serverResponse);
+						requestQueue_.dequeue();
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
+						processReferralCodeApply(serverResponse);
+						requestQueue_.dequeue();
 					} else {
 						requestQueue_.dequeue();
 					}
 					
-					networkCount_ = 0;
-					
-					if (hasNetwork_) {
-						processNextQueueItem();
+					if (needRecovery) {
+						recoverFromQueue();
 					}
+					
+					networkCount_ = 0;
+					serverSema_.release();
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}

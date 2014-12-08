@@ -34,6 +34,9 @@
         <activity
             android:name="io.branch.testbed.CreditHistoryActivity">
         </activity>
+        <activity
+            android:name="io.branch.testbed.ReferralCodeActivity">
+        </activity>
     </application>
 
 </manifest>

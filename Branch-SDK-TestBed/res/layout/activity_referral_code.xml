@@ -1,0 +1,179 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android1="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <EditText
+        android:id="@+id/editReferralCode"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:hint="referral code"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/txtValid"
+        android:layout_width="50dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="13dp"
+        android:text="valid"
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/txtAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editReferralCode"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="25dp"
+        android:text="Amount:" />
+
+    <EditText
+        android:id="@+id/editAmount"
+        android:layout_width="120dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/editReferralCode"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="13dp"
+        android:gravity="center"
+        android:text="5"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/txtRewardType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtAmount"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:text="Reward Type" />
+    
+    <RadioGroup
+        android1:id="@+id/codeType"
+        android1:layout_width="wrap_content"
+        android1:layout_height="wrap_content"
+        android1:layout_toRightOf="@+id/txtRewardType"
+        android1:layout_alignTop="@+id/txtRewardType" >
+
+        <RadioButton
+            android1:id="@+id/type0"
+            android1:layout_width="wrap_content"
+            android1:layout_height="wrap_content"
+            android1:checked="true"
+            android1:text="Unlimited" />
+
+        <RadioButton
+            android1:id="@+id/type1"
+            android1:layout_width="wrap_content"
+            android1:layout_height="wrap_content"
+            android1:text="Unique" />
+
+    
+    </RadioGroup>
+    
+    <TextView
+        android:id="@+id/txtLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/codeType"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:text="Location" />
+    
+    <RadioGroup
+        android1:id="@+id/codeLocation"
+        android1:layout_width="wrap_content"
+        android1:layout_height="wrap_content"
+        android1:layout_toRightOf="@+id/txtLocation"
+        android1:layout_alignTop="@+id/txtLocation" >
+
+        <RadioButton
+            android1:id="@+id/location0"
+            android1:layout_width="wrap_content"
+            android1:layout_height="wrap_content"
+            android1:checked="true"
+            android1:text="Referree User" />
+
+        <RadioButton
+            android1:id="@+id/location2"
+            android1:layout_width="wrap_content"
+            android1:layout_height="wrap_content"
+            android1:text="Referrer (me)" />
+
+        <RadioButton
+            android1:id="@+id/location3"
+            android1:layout_width="wrap_content"
+            android1:layout_height="wrap_content"
+            android1:text="Both" />
+    </RadioGroup>
+    
+  	<TextView
+        android:id="@+id/txtOptional"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/codeLocation"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:text="Optional:" />
+
+    <EditText
+        android:id="@+id/editPrefix"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/txtOptional"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="5dp"
+        android:gravity="center"
+        android:hint="Code prefix"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/editExpiration"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/txtOptional"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="5dp"
+        android:gravity="center"
+        android:hint="Expiration (yyyy-mm-dd)"
+        android:textSize="13sp" />
+
+    <Button
+        android:id="@+id/cmdGetReferralCode"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/editPrefix"
+        android:layout_margin="20dp"
+        android:text="Get code"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/cmdValidateReferralCode"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/editPrefix"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="20dp"
+        android:text="Validate"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/cmdRedeemReferralCode"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/editPrefix"
+        android:layout_margin="20dp"
+        android:text="Redeem"
+        android:textSize="14sp" />
+
+    
+
+</RelativeLayout>

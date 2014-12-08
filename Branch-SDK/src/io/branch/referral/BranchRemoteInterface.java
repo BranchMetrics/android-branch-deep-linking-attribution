@@ -20,6 +20,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_GET_CUSTOM_URL = "t_get_custom_url";
 	public static final String REQ_TAG_IDENTIFY = "t_identify_user";
 	public static final String REQ_TAG_LOGOUT = "t_logout";
+	public static final String REQ_TAG_GET_REFERRAL_CODE = "t_get_referral_code";
+	public static final String REQ_TAG_VALIDATE_REFERRAL_CODE = "t_validate_referral_code";
+	public static final String REQ_TAG_APPLY_REFERRAL_CODE = "t_apply_referral_code";
 
 	private SystemObserver sysObserver_;
 	private PrefHelper prefHelper_;
@@ -100,6 +103,8 @@ public class BranchRemoteInterface extends RemoteInterface {
 				String uriScheme = sysObserver_.getURIScheme();
 				if (!uriScheme.equals(SystemObserver.BLANK)) 
 					openPost.put("uri_scheme", uriScheme);
+				if (!sysObserver_.getOS().equals(SystemObserver.BLANK))
+					openPost.put("os", sysObserver_.getOS());
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
@@ -179,6 +184,37 @@ public class BranchRemoteInterface extends RemoteInterface {
 		String urlExtend = "v1/logout";
 		if (callback_ != null) {
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_LOGOUT));
+		}
+	}
+	
+	public void getReferralCode(JSONObject post) {
+		String urlExtend = "v1/referralcode";
+		if (callback_ != null) {
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_CODE));
+		}
+	}
+	
+	public void validateReferralCode(JSONObject post) {
+		String urlExtend;
+		try {
+			urlExtend = "v1/referralcode/" + post.getString("referral_code");
+			if (callback_ != null) {
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_VALIDATE_REFERRAL_CODE));
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void applyReferralCode(JSONObject post) {
+		String urlExtend;
+		try {
+			urlExtend = "v1/applycode/" + post.getString("referral_code");
+			if (callback_ != null) {
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_APPLY_REFERRAL_CODE));
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 	}
 	
