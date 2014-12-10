@@ -216,6 +216,8 @@ You can customize the Facebook OG tags of each URL if you want to dynamically sh
 "$og_title"
 "$og_description"
 "$og_image_url"
+"$og_video"
+"$og_url"
 ```
 
 Also, you do custom redirection by inserting the following optional keys in the dictionary
