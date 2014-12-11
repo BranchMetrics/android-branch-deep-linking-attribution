@@ -53,7 +53,6 @@ public class SystemObserver {
 	    try {
 	        ApplicationInfo ai = pm.getApplicationInfo(context_.getPackageName(), 0);
 	        String sourceApk = ai.publicSourceDir;
-	        // Log.i("BranchUriSchemer", "source APK file " + sourceApk);
 	        try {
 	            JarFile jf = new JarFile(sourceApk);
 	            InputStream is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
