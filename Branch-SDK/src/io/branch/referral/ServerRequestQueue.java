@@ -92,10 +92,6 @@ public class ServerRequestQueue {
 		return queue.size();
 	}
 	
-	public boolean isEmpty() {
-		return queue.size() == 0;
-	}
-	
 	public void enqueue(ServerRequest request) {
 		if (request != null) {
 			queue.add(request);
@@ -165,25 +161,17 @@ public class ServerRequestQueue {
 		return false;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		synchronized(queue) {
-			Iterator<ServerRequest> iter = queue.iterator();
-			while (iter.hasNext()) {
-				ServerRequest req = iter.next();
-				sb.append(req.getTag() + "; ");
-			}
-		}
-		return sb.toString();
-	}
-	
 	public void moveInstallOrOpenToFront(String tag, int networkCount) {
 		synchronized(queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+					if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
+						tag = BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL;
+					} else {
+						tag = BranchRemoteInterface.REQ_TAG_REGISTER_OPEN;
+					}
 					iter.remove();
 					break;
 				}
