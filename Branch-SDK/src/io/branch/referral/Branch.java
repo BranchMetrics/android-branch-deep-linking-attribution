@@ -67,7 +67,8 @@ public class Branch {
 	private ServerRequestQueue requestQueue_;
 	private int networkCount_;
 	private int retryCount_;
-
+	
+	private boolean initFinished_;
 	private boolean hasNetwork_;
 
 	private boolean debug_;
@@ -78,8 +79,9 @@ public class Branch {
 		systemObserver_ = new SystemObserver(context);
 		kRemoteInterface_.setNetworkCallbackListener(new ReferralNetworkCallback());
 		requestQueue_ = ServerRequestQueue.getInstance(context);
-		serverSema_ = new Semaphore(0);
+		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
+		initFinished_ = false;
 		keepAlive_ = false;
 		isInit_ = false;
 		networkCount_ = 0;
@@ -117,11 +119,6 @@ public class Branch {
 		debug_ = true;
 	}
 
-	@Deprecated
-	public void initUserSession(BranchReferralInitListener callback) {
-		initSession(callback);
-	}
-
 	public void initSession(BranchReferralInitListener callback) {
 		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
@@ -129,11 +126,6 @@ public class Branch {
 			prefHelper_.clearIsReferrable();
 		}
 		initUserSessionInternal(callback);
-	}
-
-	@Deprecated
-	public void initUserSession(BranchReferralInitListener callback, Uri data) {
-		initSession(callback, data);
 	}
 
 	public void initSession(BranchReferralInitListener callback, Uri data) {
@@ -145,20 +137,10 @@ public class Branch {
 		initSession(callback);
 	}
 
-	@Deprecated
-	public void initUserSession() {
-		initSession();
-	}
-
 	public void initSession() {
 		initSession(null);
 	}
-
-	@Deprecated
-	public void initUserSessionWithData(Uri data) {
-		initSessionWithData(data);
-	}
-
+	
 	public void initSessionWithData(Uri data) {
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
@@ -168,19 +150,8 @@ public class Branch {
 		initSession(null);
 	}
 
-	@Deprecated
-	public void initUserSession(boolean isReferrable) {
-		initSession(isReferrable);
-	}
-
 	public void initSession(boolean isReferrable) {
 		initSession(null, isReferrable);
-	}
-
-	@Deprecated
-	public void initUserSession(BranchReferralInitListener callback,
-			boolean isReferrable, Uri data) {
-		initSession(callback, isReferrable, data);
 	}
 
 	public void initSession(BranchReferralInitListener callback,
@@ -190,12 +161,6 @@ public class Branch {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
-		initSession(callback, isReferrable);
-	}
-
-	@Deprecated
-	public void initUserSession(BranchReferralInitListener callback,
-			boolean isReferrable) {
 		initSession(callback, isReferrable);
 	}
 
@@ -217,7 +182,6 @@ public class Branch {
 				@Override
 				public void run() {
 					initializeSession();
-					recoverFromQueue();
 				}
 			}).start();
 		} else {
@@ -232,26 +196,13 @@ public class Branch {
 						@Override
 						public void run() {
 							initializeSession();
-							recoverFromQueue();
 						}
 					}).start();
 				} else {
-					processNextQueueItem(false);
-					recoverFromQueue();
+					requestQueue_.moveInstallOrOpenToFront(null, networkCount_);
+					processNextQueueItem();
 				}
 			}
-		}
-	}
-
-	private void recoverFromQueue() {
-		int queueSize = requestQueue_.getSize();
-		for (int i = 0; i < queueSize; i++) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					processNextQueueItem(false);
-				}
-			}).start();
 		}
 	}
 
@@ -274,7 +225,9 @@ public class Branch {
 				@Override
 				public void run() {
 					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null));
-					processNextQueueItem(false);
+					if (initFinished_ || !hasNetwork_) {
+						processNextQueueItem();
+					}
 				}
 			}).start();
 		}
@@ -313,7 +266,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -336,7 +291,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -351,7 +308,9 @@ public class Branch {
 			@Override
 			public void run() {
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -366,7 +325,9 @@ public class Branch {
 			@Override
 			public void run() {
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -418,7 +379,9 @@ public class Branch {
 						return;
 					}
 					requestQueue_.enqueue(new ServerRequest( BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post));
-					processNextQueueItem(false);
+					if (initFinished_ || !hasNetwork_) {
+						processNextQueueItem();
+					}
 				}
 			}
 		}).start();
@@ -461,8 +424,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest( BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
-				processNextQueueItem(false);
-			}
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}			}
 		}).start();
 	}
 
@@ -484,8 +448,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION, post));
-				processNextQueueItem(false);
-			}
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}			}
 		}).start();
 	}
 
@@ -576,7 +541,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -629,7 +596,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -650,7 +619,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE, post));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -672,7 +643,9 @@ public class Branch {
 					return;
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post));
-				processNextQueueItem(false);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				}
 			}
 		}).start();
 	}
@@ -735,7 +708,9 @@ public class Branch {
 						ex.printStackTrace();
 					}
 					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
-					processNextQueueItem(false);
+					if (initFinished_ || !hasNetwork_) {
+						processNextQueueItem();
+					}
 				}
 			}).start();
 		}
@@ -760,16 +735,14 @@ public class Branch {
 		}
 	}
 
-	private void processNextQueueItem(boolean bypass) {
+	private void processNextQueueItem() {
 		try {
 
-			if (!bypass) {
-				serverSema_.acquire();
-			}
+			serverSema_.acquire();
 			if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
 				networkCount_ = 1;
-
 				ServerRequest req = requestQueue_.peek();
+				serverSema_.release();
 
 				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 					keepAlive();
@@ -957,7 +930,7 @@ public class Branch {
 			requestQueue_.moveInstallOrOpenToFront(tag, networkCount_);
 		}
 
-		processNextQueueItem(true);
+		processNextQueueItem();
 	}
 
 	private void initializeSession() {
@@ -1121,7 +1094,6 @@ public class Branch {
 					int status = serverResponse.getStatusCode();
 					String requestTag = serverResponse.getTag();
 
-					boolean needRecovery = !hasNetwork_;
 					hasNetwork_ = true;
 
 					if (status == 409) {
@@ -1149,7 +1121,6 @@ public class Branch {
 					} else if (status != 200) {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
-							needRecovery = false;
 							handleFailure();
 							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 								requestQueue_.dequeue();
@@ -1207,6 +1178,7 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
+						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
@@ -1241,6 +1213,7 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
+						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getObject().getString("url");
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -1301,15 +1274,10 @@ public class Branch {
 						requestQueue_.dequeue();
 					}
 
-					if (needRecovery) {
-						recoverFromQueue();
-					}
-
 					networkCount_ = 0;
 					
-					if (!requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
-						serverSema_.release();
-					}
+					if (hasNetwork_)
+						processNextQueueItem();
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}
