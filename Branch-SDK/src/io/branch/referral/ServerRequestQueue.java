@@ -190,7 +190,7 @@ public class ServerRequestQueue {
 			}
 		}
 	    
-	    ServerRequest req = new ServerRequest(tag, null, true);
+	    ServerRequest req = new ServerRequest(tag);
 	    if (networkCount == 0) {
 	    	insert(req, 0);
 	    } else {
