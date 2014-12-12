@@ -70,6 +70,7 @@ public class Branch {
 	
 	private boolean initFinished_;
 	private boolean hasNetwork_;
+	private boolean lastRequestWasInit_;
 
 	private boolean debug_;
 
@@ -82,6 +83,7 @@ public class Branch {
 		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
 		initFinished_ = false;
+		lastRequestWasInit_ = true;
 		keepAlive_ = false;
 		isInit_ = false;
 		networkCount_ = 0;
@@ -175,7 +177,7 @@ public class Branch {
 
 	private void initUserSessionInternal(BranchReferralInitListener callback) {
 		initSessionFinishedCallback_ = callback;
-
+		lastRequestWasInit_ = true;
 		if (!isInit_) {
 			isInit_ = true;
 			new Thread(new Runnable() {
@@ -199,8 +201,13 @@ public class Branch {
 						}
 					}).start();
 				} else {
-					requestQueue_.moveInstallOrOpenToFront(null, networkCount_);
-					processNextQueueItem();
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							requestQueue_.moveInstallOrOpenToFront(null, networkCount_);
+							processNextQueueItem();
+						}
+					}).start();
 				}
 			}
 		}
@@ -213,7 +220,7 @@ public class Branch {
 
 		// else, real close
 		isInit_ = false;
-		
+		lastRequestWasInit_ = false;
 		if (!hasNetwork_) {
 			// if there's no network connectivity, purge the old install/open
 			ServerRequest req = requestQueue_.peek();
@@ -267,6 +274,7 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -292,6 +300,7 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -309,6 +318,7 @@ public class Branch {
 			public void run() {
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -326,6 +336,7 @@ public class Branch {
 			public void run() {
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -380,6 +391,7 @@ public class Branch {
 					}
 					requestQueue_.enqueue(new ServerRequest( BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post));
 					if (initFinished_ || !hasNetwork_) {
+						lastRequestWasInit_ = false;
 						processNextQueueItem();
 					}
 				}
@@ -425,8 +437,10 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest( BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				}			}
+				}			
+			}
 		}).start();
 	}
 
@@ -449,8 +463,10 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				}			}
+				}			
+			}
 		}).start();
 	}
 
@@ -542,6 +558,7 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -597,6 +614,7 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -620,6 +638,7 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -644,6 +663,7 @@ public class Branch {
 				}
 				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post));
 				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
 			}
@@ -709,6 +729,7 @@ public class Branch {
 					}
 					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
 					if (initFinished_ || !hasNetwork_) {
+						lastRequestWasInit_ = false;
 						processNextQueueItem();
 					}
 				}
@@ -723,8 +744,7 @@ public class Branch {
 			try {
 				return new JSONObject(paramString);
 			} catch (JSONException e) {
-				byte[] encodedArray = Base64.decode(paramString.getBytes(),
-						Base64.NO_WRAP);
+				byte[] encodedArray = Base64.decode(paramString.getBytes(), Base64.NO_WRAP);
 				try {
 					return new JSONObject(new String(encodedArray));
 				} catch (JSONException ex) {
@@ -779,6 +799,7 @@ public class Branch {
 				} else if (!hasUser()) {
 					networkCount_ = 0;
 					Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+					handleFailure(false);
 					initSession();					
 				}
 			} else {
@@ -790,8 +811,13 @@ public class Branch {
 
 	}
 
-	private void handleFailure() {
-		final ServerRequest req = requestQueue_.peek();
+	private void handleFailure(boolean first) {
+		final ServerRequest req;
+		if (first) {
+			req  = requestQueue_.peek();
+		} else {
+			req = requestQueue_.peekAt(requestQueue_.getSize()-1);
+		}
 		Handler mainHandler = new Handler(context_.getMainLooper());
 		mainHandler.post(new Runnable() {
 			@Override
@@ -848,7 +874,7 @@ public class Branch {
 	private void retryLastRequest() {
 		retryCount_ = retryCount_ + 1;
 		if (retryCount_ > MAX_RETRIES) {
-			handleFailure();
+			handleFailure(true);
 			requestQueue_.dequeue();
 			retryCount_ = 0;
 		} else {
@@ -1110,7 +1136,7 @@ public class Branch {
 							});
 						} else {
 							Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
-							handleFailure();
+							handleFailure(true);
 						}
 						requestQueue_.dequeue();
 					} else if (status >= 400 && status < 500) {
@@ -1121,7 +1147,7 @@ public class Branch {
 					} else if (status != 200) {
 						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							hasNetwork_ = false;
-							handleFailure();
+							handleFailure(lastRequestWasInit_);
 							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 								requestQueue_.dequeue();
 							}
