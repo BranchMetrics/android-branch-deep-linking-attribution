@@ -9,14 +9,20 @@ public class ServerRequest {
 	
 	private String tag_;
 	private JSONObject post_;
+	private boolean waiting_;
 	
 	public ServerRequest(String tag) {
 		this(tag, null);
 	}
 	
 	public ServerRequest(String tag, JSONObject post) {
+		this(tag, null, false);
+	}
+	
+	public ServerRequest(String tag, JSONObject post, boolean waiting) {
 		tag_ = tag;
 		post_ = post;
+		waiting_ = waiting;
 	}
 	
 	public String getTag() {
@@ -25,6 +31,14 @@ public class ServerRequest {
 	
 	public JSONObject getPost() {
 		return post_;
+	}
+	
+	public boolean getWaiting() {
+		return waiting_;
+	}
+	
+	public void setWaiting(boolean waiting) {
+		waiting_ = waiting;
 	}
 	
 	public JSONObject toJSON() {
@@ -59,8 +73,8 @@ public class ServerRequest {
 		} catch (JSONException e) {
 			// it's OK for post to be null
 		}
-		
-		if (tag != null && !tag.isEmpty()) {
+				
+		if (tag != null && tag.length() != 0) {
 			return new ServerRequest(tag, post);
 		}
 		

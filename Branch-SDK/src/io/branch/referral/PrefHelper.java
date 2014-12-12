@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 public class PrefHelper {
-	public static final boolean LOG = false;
+	public static final boolean LOG = true;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
