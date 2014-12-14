@@ -310,7 +310,9 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -328,7 +330,9 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -433,7 +437,9 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.enqueue(new ServerRequest( BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest( BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -444,8 +450,7 @@ public class Branch {
 		}).start();
 	}
 
-	public void userCompletedAction(final String action,
-			final JSONObject metadata) {
+	public void userCompletedAction(final String action, final JSONObject metadata) {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -548,7 +553,9 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -606,7 +613,9 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -632,7 +641,9 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE, post));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE, post));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -659,7 +670,9 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post));
+				if (!initFailed_) {
+					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post));
+				}
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
@@ -727,7 +740,9 @@ public class Branch {
 					} catch (JSONException ex) {
 						ex.printStackTrace();
 					}
-					requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
+					if (!initFailed_) {
+						requestQueue_.enqueue(new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost));
+					}
 					if (initFinished_ || !hasNetwork_) {
 						lastRequestWasInit_ = false;
 						processNextQueueItem();
@@ -1145,7 +1160,7 @@ public class Branch {
 						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}
-						if (lastRequestWasInit_) {
+						if (lastRequestWasInit_ && !initFailed_) {
 							initFailed_ = true;
 							for (int i = 0; i < requestQueue_.getSize()-1; i++) {
 								handleFailure(i);

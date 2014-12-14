@@ -97,7 +97,7 @@ public class ServerRequestQueue {
 		if (request != null) {
 			queue.add(request);
 			if (getSize() >= MAX_ITEMS) {
-				removeAt(1);				
+				queue.remove(1);				
 			}
 			persist();
 		}
