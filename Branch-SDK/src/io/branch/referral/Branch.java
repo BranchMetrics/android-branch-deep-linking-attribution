@@ -853,13 +853,13 @@ public class Branch {
 	}
 	
 	private void handleFailure(final ServerRequest req) {
+		if (req == null)
+			return;
 		Handler mainHandler = new Handler(context_.getMainLooper());
 		mainHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				if (req == null) {
-					return;
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 					if (initSessionFinishedCallback_ != null) {
 						JSONObject obj = new JSONObject();
 						try {
