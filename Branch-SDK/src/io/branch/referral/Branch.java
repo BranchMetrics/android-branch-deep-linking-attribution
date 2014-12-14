@@ -839,6 +839,10 @@ public class Branch {
 		mainHandler.post(new Runnable() {
 			@Override
 			public void run() {
+				if (req == null) {
+					return;
+				}
+				
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 					if (initSessionFinishedCallback_ != null) {
 						JSONObject obj = new JSONObject();
