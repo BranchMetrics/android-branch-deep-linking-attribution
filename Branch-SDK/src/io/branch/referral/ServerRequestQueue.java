@@ -17,6 +17,7 @@ import android.util.Log;
 
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
+	private static final int MAX_ITEMS = 25;
 	private static ServerRequestQueue SharedInstance;	
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
@@ -95,6 +96,9 @@ public class ServerRequestQueue {
 	public void enqueue(ServerRequest request) {
 		if (request != null) {
 			queue.add(request);
+			if (getSize() >= MAX_ITEMS) {
+				queue.remove(1);				
+			}
 			persist();
 		}
 	}
