@@ -193,7 +193,7 @@ public class Branch {
 			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
 				if (callback != null)
-					callback.onInitFinished(new JSONObject());
+					callback.onInitFinished(new JSONObject(), new BranchInitError());
 				keepAlive();
 			} else {
 				if (!installOrOpenInQueue) {
@@ -867,19 +867,23 @@ public class Branch {
 						} catch (JSONException ex) {
 							ex.printStackTrace();
 						}
-						initSessionFinishedCallback_.onInitFinished(obj);
+						initSessionFinishedCallback_.onInitFinished(obj, new BranchInitError());
 					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 					if (stateChangedCallback_ != null) {
-						stateChangedCallback_.onStateChanged(false);
+						stateChangedCallback_.onStateChanged(false, new BranchGetReferralsError());
+					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
+					if (stateChangedCallback_ != null) {
+						stateChangedCallback_.onStateChanged(false, new BranchGetCreditsError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
 					if (creditHistoryCallback_ != null) {
-						creditHistoryCallback_.onReceivingResponse(null);
+						creditHistoryCallback_.onReceivingResponse(null, new BranchGetCreditHistoryError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					if (linkCreateCallback_ != null) {
-						linkCreateCallback_.onLinkCreate(null);
+						linkCreateCallback_.onLinkCreate(null, new BranchCreateUrlError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 					if (initIdentityFinishedCallback_ != null) {
@@ -889,19 +893,19 @@ public class Branch {
 						} catch (JSONException ex) {
 							ex.printStackTrace();
 						}
-						initIdentityFinishedCallback_.onInitFinished(obj);
+						initIdentityFinishedCallback_.onInitFinished(obj, new BranchSetIdentityError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
 					if (getReferralCodeCallback_ != null) {
-						getReferralCodeCallback_.onInitFinished(null);
+						getReferralCodeCallback_.onInitFinished(null, new BranchGetReferralCodeError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
 					if (validateReferralCodeCallback_ != null) {
-						validateReferralCodeCallback_.onInitFinished(null);
+						validateReferralCodeCallback_.onInitFinished(null, new BranchValidateReferralCodeError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
 					if (applyReferralCodeCallback_ != null) {
-						applyReferralCodeCallback_.onInitFinished(null);
+						applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
 					}
 				}
 			}
@@ -1030,7 +1034,7 @@ public class Branch {
 			@Override
 			public void run() {
 				if (stateChangedCallback_ != null) {
-					stateChangedCallback_.onStateChanged(finUpdateListener);
+					stateChangedCallback_.onStateChanged(finUpdateListener, null);
 				}
 			}
 		});
@@ -1059,7 +1063,7 @@ public class Branch {
 			@Override
 			public void run() {
 				if (stateChangedCallback_ != null) {
-					stateChangedCallback_.onStateChanged(finUpdateListener);
+					stateChangedCallback_.onStateChanged(finUpdateListener, null);
 				}
 			}
 		});
@@ -1071,7 +1075,7 @@ public class Branch {
 			@Override
 			public void run() {
 				if (creditHistoryCallback_ != null) {
-					creditHistoryCallback_.onReceivingResponse(resp.getArray());
+					creditHistoryCallback_.onReceivingResponse(resp.getArray(), null);
 				}
 			}
 		});
@@ -1085,14 +1089,16 @@ public class Branch {
 				if (getReferralCodeCallback_ != null) {
 					try {
 						JSONObject json;
+						BranchDuplicateReferralCodeError error = null;
 						// check if a valid referral code json is returned
 						if (!resp.getObject().has(REFERRAL_CODE)) {
 							json = new JSONObject();
 							json.put("error_message", "Failed to get referral code");
+							error = new BranchDuplicateReferralCodeError();
 						} else {
 							json = resp.getObject();
 						}
-						getReferralCodeCallback_.onInitFinished(json);
+						getReferralCodeCallback_.onInitFinished(json, error);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -1109,14 +1115,16 @@ public class Branch {
 				if (validateReferralCodeCallback_ != null) {
 					try {
 						JSONObject json;
+						BranchInvalidReferralCodeError error = null;
 						// check if a valid referral code json is returned
 						if (!resp.getObject().has(REFERRAL_CODE)) {
 							json = new JSONObject();
 							json.put("error_message", "Invalid referral code");
+							error = new BranchInvalidReferralCodeError();
 						} else {
 							json = resp.getObject();
 						}
-						validateReferralCodeCallback_.onInitFinished(json);
+						validateReferralCodeCallback_.onInitFinished(json, error);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -1133,14 +1141,16 @@ public class Branch {
 				if (applyReferralCodeCallback_ != null) {
 					try {
 						JSONObject json;
+						BranchInvalidReferralCodeError error = null;
 						// check if a valid referral code json is returned
 						if (!resp.getObject().has(REFERRAL_CODE)) {
 							json = new JSONObject();
 							json.put("error_message", "Invalid referral code");
+							error = new BranchInvalidReferralCodeError();
 						} else {
 							json = resp.getObject();
 						}
-						applyReferralCodeCallback_.onInitFinished(json);
+						applyReferralCodeCallback_.onInitFinished(json, error);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -1160,14 +1170,13 @@ public class Branch {
 					hasNetwork_ = true;
 
 					if (status == 409) {
-						if (requestTag
-								.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
+						if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 							Handler mainHandler = new Handler(context_.getMainLooper());
 							mainHandler.post(new Runnable() {
 								@Override
 								public void run() {
 									if (linkCreateCallback_ != null) {
-										linkCreateCallback_.onLinkCreate(null);
+										linkCreateCallback_.onLinkCreate(null, new BranchDuplicateUrlError());
 									}
 								}
 							});
@@ -1243,7 +1252,7 @@ public class Branch {
 							@Override
 							public void run() {
 								if (initSessionFinishedCallback_ != null) {
-									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams());
+									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams(), null);
 								}
 							}
 						});
@@ -1278,7 +1287,7 @@ public class Branch {
 							@Override
 							public void run() {
 								if (initSessionFinishedCallback_ != null) {
-									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams());
+									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams(), null);
 								}
 							}
 						});
@@ -1291,7 +1300,7 @@ public class Branch {
 							@Override
 							public void run() {
 								if (linkCreateCallback_ != null) {
-									linkCreateCallback_.onLinkCreate(url);
+									linkCreateCallback_.onLinkCreate(url, null);
 								}
 							}
 						});
@@ -1326,7 +1335,7 @@ public class Branch {
 							@Override
 							public void run() {
 								if (initIdentityFinishedCallback_ != null) {
-									initIdentityFinishedCallback_.onInitFinished(getFirstReferringParams());
+									initIdentityFinishedCallback_.onInitFinished(getFirstReferringParams(), null);
 								}
 							}
 						});
@@ -1356,22 +1365,106 @@ public class Branch {
 	}
 
 	public interface BranchReferralInitListener {
-		public void onInitFinished(JSONObject referringParams);
+		public void onInitFinished(JSONObject referringParams, BranchError error);
 	}
 
 	public interface BranchReferralStateChangedListener {
-		public void onStateChanged(boolean changed);
+		public void onStateChanged(boolean changed, BranchError error);
 	}
 
 	public interface BranchLinkCreateListener {
-		public void onLinkCreate(String url);
+		public void onLinkCreate(String url, BranchError error);
 	}
 
 	public interface BranchListResponseListener {
-		public void onReceivingResponse(JSONArray list);
+		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
 
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
+	}
+	
+	public class BranchInitError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble initializing Branch. Check network connectivity or that your app key is valid";
+		}
+	}
+	
+	public class BranchGetReferralsError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble retrieving referral counts. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchGetCreditsError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble retrieving user credits. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchGetCreditHistoryError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble retrieving user credit history. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchCreateUrlError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble creating a URL. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchDuplicateUrlError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble creating a URL with that alias. If you want to reuse the alias, make sure to submit the same properties for all arguments and that the user is the same owner";
+		}
+	}
+	
+	public class BranchSetIdentityError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble setting the user alias. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchGetReferralCodeError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble retrieving the referral code. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchValidateReferralCodeError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble validating the referral code. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchInvalidReferralCodeError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "That Branch referral code was invalid";
+		}
+	}
+	
+	public class BranchDuplicateReferralCodeError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "That Branch referral code is already in use";
+		}
+	}
+	
+	public class BranchApplyReferralCodeError implements BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble applying the referral code. Check network connectivity and that you properly initialized";
+		}
 	}
 }
