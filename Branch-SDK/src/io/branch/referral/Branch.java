@@ -40,8 +40,6 @@ public class Branch {
 	public static int LINK_TYPE_ONE_TIME_USE = 1;
 
 	private static final int SESSION_KEEPALIVE = 3000;
-	private static final int INTERVAL_RETRY = 3000;
-	private static final int MAX_RETRIES = 5;
 
 	private static Branch branchReferral_;
 	private boolean isInit_;
@@ -116,6 +114,24 @@ public class Branch {
 
 	public void resetUserSession() {
 		isInit_ = false;
+	}
+	
+	public void setRetryCount(int retryCount) {
+		if (prefHelper_ != null) {
+			prefHelper_.setRetryCount(retryCount);
+		}
+	}
+	
+	public void setRetryInterval(int retryInterval) {
+		if (prefHelper_ != null) {
+			prefHelper_.setRetryInterval(retryInterval);
+		}
+	}
+	
+	public void setNetworkTimeout(int timeout) {
+		if (prefHelper_ != null) {
+			prefHelper_.setTimeout(timeout);
+		}
 	}
 
 	// if you want to flag debug, call this before initUserSession
@@ -252,7 +268,7 @@ public class Branch {
 	}
 
 	public void setIdentity(final String userId) {
-		if (userId == null || userId.length() == 0) {
+		if (userId == null || userId.length() == 0 || prefHelper_.getIdentity().equals(userId)) {
 			return;
 		}
 
@@ -396,7 +412,7 @@ public class Branch {
 						ex.printStackTrace();
 						return;
 					}
-					ServerRequest req = new ServerRequest( BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post);
+					ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post);
 					requestQueue_.enqueue(req);
 					if (initFinished_ || !hasNetwork_) {
 						lastRequestWasInit_ = false;
@@ -445,7 +461,7 @@ public class Branch {
 					ex.printStackTrace();
 					return;
 				}
-				ServerRequest req = new ServerRequest( BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post);
+				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post);
 				if (!initFailed_) {
 					requestQueue_.enqueue(req);
 				}
@@ -470,7 +486,7 @@ public class Branch {
 					post.put("session_id", prefHelper_.getSessionID());
 					post.put("event", action);
 					if (metadata != null)
-						post.put("metadata", metadata);
+						post.put("metadata", filterOutBadCharacters(metadata));
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -506,47 +522,47 @@ public class Branch {
 	}
 
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(params), callback);
+		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
 	}
 
 	public void getReferralCode(BranchReferralInitListener callback) {
@@ -768,6 +784,26 @@ public class Branch {
 			}).start();
 		}
 	}
+	
+	private JSONObject filterOutBadCharacters(JSONObject inputObj) {
+		JSONObject filteredObj = new JSONObject();
+		if (inputObj != null) {
+			Iterator<?> keys = inputObj.keys();
+			while (keys.hasNext()) {
+				String key = (String) keys.next();
+				try {
+					if (inputObj.has(key) && inputObj.get(key).getClass().equals(String.class)) {
+						filteredObj.put(key, inputObj.getString(key).replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\"").replace("Õ", "'"));
+					} else if (inputObj.has(key)) {
+						filteredObj.put(key, inputObj.get(key));
+					}
+				} catch(JSONException ex) {
+					
+				}	
+			}
+		}
+		return filteredObj;
+	}
 
 	private JSONObject convertParamsStringToDictionary(String paramString) {
 		if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
@@ -883,7 +919,11 @@ public class Branch {
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					if (linkCreateCallback_ != null) {
-						linkCreateCallback_.onLinkCreate(null, new BranchCreateUrlError());
+						String failedUrl = null;
+						if (!prefHelper_.getUserURL().equals(PrefHelper.NO_STRING_VALUE)) {
+							failedUrl = prefHelper_.getUserURL();
+						}
+						linkCreateCallback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 					if (initIdentityFinishedCallback_ != null) {
@@ -914,13 +954,13 @@ public class Branch {
 
 	private void retryLastRequest() {
 		retryCount_ = retryCount_ + 1;
-		if (retryCount_ > MAX_RETRIES) {
+		if (retryCount_ > prefHelper_.getRetryCount()) {
 			handleFailure(0);
 			requestQueue_.dequeue();
 			retryCount_ = 0;
 		} else {
 			try {
-				Thread.sleep(INTERVAL_RETRY);
+				Thread.sleep(prefHelper_.getRetryInterval());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

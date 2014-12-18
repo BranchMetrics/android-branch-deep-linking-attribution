@@ -11,6 +11,10 @@ public class PrefHelper {
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
+	private static final int INTERVAL_RETRY = 3000;
+	private static final int MAX_RETRIES = 5;
+	private static final int TIMEOUT = 3000;
+	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
 	private static final String KEY_APP_KEY = "bnc_app_key";
@@ -32,6 +36,10 @@ public class PrefHelper {
 	private static final String KEY_ACTIONS = "bnc_actions";
 	private static final String KEY_TOTAL_BASE = "bnc_total_base_";
 	private static final String KEY_UNIQUE_BASE = "bnc_balance_base_";
+	
+	private static final String KEY_RETRY_COUNT = "bnc_retry_count";
+	private static final String KEY_RETRY_INTERVAL = "bnc_retry_interval";
+	private static final String KEY_TIMEOUT = "bnc_timeout";
 	
 
 	private static PrefHelper prefHelper_;
@@ -55,6 +63,30 @@ public class PrefHelper {
 	
 	public String getAPIBaseUrl() {
 		return "https://api.branch.io/";
+	}
+	
+	public void setTimeout(int timeout) {
+		setInteger(KEY_TIMEOUT, timeout);
+	}
+	
+	public int getTimeout() {
+		return getInteger(KEY_TIMEOUT, TIMEOUT);
+	}
+
+	public void setRetryCount(int retry) {
+		setInteger(KEY_RETRY_COUNT, retry);
+	}
+	
+	public int getRetryCount() {
+		return getInteger(KEY_RETRY_COUNT, MAX_RETRIES);
+	}
+	
+	public void setRetryInterval(int retryInt) {
+		setInteger(KEY_RETRY_INTERVAL, retryInt);
+	}
+	
+	public int getRetryInterval() {
+		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
 	}
 
 	public void setAppKey(String key) {
@@ -265,7 +297,10 @@ public class PrefHelper {
 	}
 	
 	public int getInteger(String key) {
-		return prefHelper_.appSharedPrefs_.getInt(key, 0);
+		return getInteger(key, 0);
+	}
+	public int getInteger(String key, int defaultValue) {
+		return prefHelper_.appSharedPrefs_.getInt(key, defaultValue);
 	}
 	public long getLong(String key) {
 		return prefHelper_.appSharedPrefs_.getLong(key, 0);

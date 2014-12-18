@@ -84,7 +84,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(installPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_INSTALL));
+			callback_.finished(make_restful_post(installPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_INSTALL, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -112,7 +112,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(openPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_OPEN));
+			callback_.finished(make_restful_post(openPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_OPEN, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -126,35 +126,35 @@ public class BranchRemoteInterface extends RemoteInterface {
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(closePost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE));
+			callback_.finished(make_restful_post(closePost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void userCompletedAction(JSONObject post) {
 		String urlExtend = "v1/event";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_COMPLETE_ACTION));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_COMPLETE_ACTION, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void redeemRewards(JSONObject post) {
 		String urlExtend = "v1/redeem";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REDEEM_REWARDS));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REDEEM_REWARDS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getRewards() {
 		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getReferralCounts() {
 		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -162,35 +162,35 @@ public class BranchRemoteInterface extends RemoteInterface {
 		String params = this.convertJSONtoString(post);
 		String urlExtend = "v1/credithistory" + params;
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void identifyUser(JSONObject post) {
 		String urlExtend = "v1/profile";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_IDENTIFY));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_IDENTIFY, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void logoutUser(JSONObject post) {
 		String urlExtend = "v1/logout";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_LOGOUT));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_LOGOUT, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getReferralCode(JSONObject post) {
 		String urlExtend = "v1/referralcode";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_CODE));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_CODE, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -199,7 +199,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			urlExtend = "v1/referralcode/" + post.getString("referral_code");
 			if (callback_ != null) {
-				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_VALIDATE_REFERRAL_CODE));
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_VALIDATE_REFERRAL_CODE, prefHelper_.getTimeout()));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -211,7 +211,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			urlExtend = "v1/applycode/" + post.getString("referral_code");
 			if (callback_ != null) {
-				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_APPLY_REFERRAL_CODE));
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_APPLY_REFERRAL_CODE, prefHelper_.getTimeout()));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
