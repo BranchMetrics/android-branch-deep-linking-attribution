@@ -41,8 +41,8 @@ public class PrefHelper {
 	public static final String REQ_TAG_DEBUG_LOG = "t_debug_log";
 	public static final String REQ_TAG_DEBUG_SCREEN = "t_debug_screen";
 	public static final String REQ_TAG_DEBUG_DISCONNECT = "t_debug_disconnect";
-	public static final int DEBUG_TRIGGER_NUM_FINGERS = 2;
-	public static final int DEBUG_TRIGGER_PRESS_TIME = 1000;
+	public static final int DEBUG_TRIGGER_NUM_FINGERS = 4;
+	public static final int DEBUG_TRIGGER_PRESS_TIME = 3000;
 
 	private static PrefHelper prefHelper_;
 	private SharedPreferences appSharedPrefs_;
