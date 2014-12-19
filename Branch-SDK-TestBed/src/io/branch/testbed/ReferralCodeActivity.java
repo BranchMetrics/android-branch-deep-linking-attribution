@@ -184,7 +184,7 @@ public class ReferralCodeActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 		branch = Branch.getInstance(this.getApplicationContext());
-		branch.initSession();
+		branch.initSession(this);
 	}
 
 

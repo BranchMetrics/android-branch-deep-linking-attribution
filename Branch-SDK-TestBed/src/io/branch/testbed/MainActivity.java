@@ -210,7 +210,7 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 				}
 			}
-		}, this.getIntent().getData());
+		}, this.getIntent().getData(), this);
 	}
 
 
