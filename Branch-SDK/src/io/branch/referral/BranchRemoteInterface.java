@@ -7,7 +7,6 @@ import org.json.JSONObject;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.os.Build;
 import android.util.DisplayMetrics;
 
 public class BranchRemoteInterface extends RemoteInterface {
@@ -234,7 +233,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 			post.put("os", sysObserver_.getOS());
 		    post.put("os_version", sysObserver_.getOSVersion());
 		    post.put("model", sysObserver_.getPhoneModel());
-		    post.put("is_simulator", Build.FINGERPRINT.contains("generic"));
+		    post.put("is_simulator", sysObserver_.isSimulator());
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, false));
 		} catch (JSONException ex) {
 			ex.printStackTrace();

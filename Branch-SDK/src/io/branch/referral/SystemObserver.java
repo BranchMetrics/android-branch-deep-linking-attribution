@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import io.branch.referral.ApkParser;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.jar.JarFile;
@@ -145,6 +144,10 @@ public class SystemObserver {
 	
 	public int getOSVersion() {
 		return android.os.Build.VERSION.SDK_INT;
+	}
+	
+	public boolean isSimulator() {
+		return android.os.Build.FINGERPRINT.contains("generic");
 	}
 	
 	@SuppressLint("NewApi")

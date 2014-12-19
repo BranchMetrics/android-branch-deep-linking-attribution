@@ -274,6 +274,9 @@ public class Branch {
 					final int actionPeformed = ev.getAction();
 					switch (actionPeformed & MotionEvent.ACTION_MASK) {
 					case MotionEvent.ACTION_DOWN:
+						if (systemObserver_.isSimulator()) {
+							_handler.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+						}
 				        break;
 				    case MotionEvent.ACTION_MOVE:
 				        break;
