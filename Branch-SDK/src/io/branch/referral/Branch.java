@@ -252,6 +252,7 @@ public class Branch {
 					private Timer timer;
 					
 				    public void run() {
+				    	_handler.removeCallbacks(_longPressed);
 				        if (!started) {
 				        	Log.i("Branch Debug","======= Start Debug Session =======");
 				        	prefHelper_.setDebug();
