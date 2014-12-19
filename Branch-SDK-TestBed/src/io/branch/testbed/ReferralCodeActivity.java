@@ -75,7 +75,7 @@ public class ReferralCodeActivity extends Activity {
 				
 				branch.getReferralCode(prefix, amount, expiration, null, getCalculationType(), getLocation(), new BranchReferralInitListener() {
 					@Override
-					public void onInitFinished(JSONObject referralCode) {
+					public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 						try {
 							// Ugly! will add error code soon.
 							if (!referralCode.has("error_message")) {
@@ -100,7 +100,7 @@ public class ReferralCodeActivity extends Activity {
 				if (referral_code.length() > 0) {
 					branch.validateReferralCode(referral_code, new BranchReferralInitListener() {
 						@Override
-						public void onInitFinished(JSONObject referralCode) {
+						public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 							try {
 								txtValid.setVisibility(View.VISIBLE);
 								if (!referralCode.has("error_message")) {
@@ -132,7 +132,7 @@ public class ReferralCodeActivity extends Activity {
 				if (referral_code.length() > 0) {
 					branch.applyReferralCode(referral_code, new BranchReferralInitListener() {
 						@Override
-						public void onInitFinished(JSONObject referralCode) {
+						public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 							try {
 								txtValid.setVisibility(View.VISIBLE);
 								if (!referralCode.has("error_message")) {

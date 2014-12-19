@@ -47,7 +47,7 @@ public class CreditHistoryActivity extends Activity {
 		branch = Branch.getInstance(this.getApplicationContext());
 		branch.initSession();
 		branch.getCreditHistory(new BranchListResponseListener() {
-			@SuppressLint("NewApi") public void onReceivingResponse(JSONArray history) {
+			@SuppressLint("NewApi") public void onReceivingResponse(JSONArray history, Branch.BranchError error) {
 				ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
 				
 				if (history.length() > 0) {

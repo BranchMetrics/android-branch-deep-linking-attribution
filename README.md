@@ -76,7 +76,7 @@ public void onStart() {
 	Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 	branch.initSession(new BranchReferralInitListener(){
 		@Override
-		public void onInitFinished(JSONObject referringParams, BranchInitError error) {
+		public void onInitFinished(JSONObject referringParams, Branch.BranchError error) {
 			if (error == null) {
 				// params are the deep linked params associated with the link that the user clicked before showing up
 				// params will be empty if no data found
@@ -201,7 +201,7 @@ tags.put("trial6");
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
-	public void onLinkCreate(String url, BranchCreateUrlError error) {
+	public void onLinkCreate(String url, Branch.BranchError error) {
 		if (error == null) {
 			// show the link to the user or share it immediately
 		} else {
@@ -256,7 +256,7 @@ Reward balances change randomly on the backend when certain actions are taken (d
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.loadRewards(new BranchReferralStateChangedListener() {
 	@Override
-	public void onStateChanged(boolean changed) {
+	public void onStateChanged(boolean changed, Branch.BranchError error) {
 		// changed boolean will indicate if the balance changed from what is currently in memory
 
 		// will return the balance of the current user's credits
@@ -281,7 +281,7 @@ This call will retrieve the entire history of credits and redemptions from the i
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getCreditHistory(new BranchListResponseListener() {
-	public void onReceivingResponse(JSONArray list, BranchGetCreditHistoryError error) {
+	public void onReceivingResponse(JSONArray list, Branch.BranchError error) {
 		if (error == null) {
 			// show the list in your app
 		} else {
@@ -340,7 +340,7 @@ Retrieve the referral code created by current user
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode(new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchGetReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -366,7 +366,7 @@ The returned referral code is a 6 character long unique alpha-numeric string wra
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode(5, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchDuplicateReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -387,7 +387,7 @@ The resulting code will have your prefix, concatenated with a 4 character long u
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchDuplicateReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -408,7 +408,7 @@ The prefix parameter is optional here, i.e. it could be getReferralCode(5, expir
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchDuplicateReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -441,7 +441,7 @@ You can also tune the referral code to the finest granularity, with the followin
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchDuplicateReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -469,7 +469,7 @@ If valid, returns the referral code JSONObject in the call back.
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.validateReferralCode(code, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchValidateReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
 				String referral_code = referralCode.getString("referral_code");
@@ -500,7 +500,7 @@ If the code is valid, returns the referral code JSONObject in the call back.
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.applyReferralCode(code, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode, BranchApplyReferralCodeError error) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			if (!referralCode.has("error_message")) {
 				// applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.

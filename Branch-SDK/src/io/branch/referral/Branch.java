@@ -1419,9 +1419,15 @@ public class Branch {
 	public interface BranchListResponseListener {
 		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
+	
+	
 
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
+	}
+	
+	public interface BranchError {
+		public String getMessage();
 	}
 	
 	public class BranchInitError implements BranchError {
