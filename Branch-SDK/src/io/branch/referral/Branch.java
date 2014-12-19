@@ -273,7 +273,6 @@ public class Branch {
 					final int actionPeformed = ev.getAction();
 					switch (actionPeformed & MotionEvent.ACTION_MASK) {
 					case MotionEvent.ACTION_DOWN:
-						_handler.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);	//temp
 				        break;
 				    case MotionEvent.ACTION_MOVE:
 				        break;
@@ -285,7 +284,7 @@ public class Branch {
 				        break;
 					case MotionEvent.ACTION_POINTER_DOWN:
 						if (pointerCount == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
-//							_handler.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+							_handler.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
 						}
 						break;
 					}
