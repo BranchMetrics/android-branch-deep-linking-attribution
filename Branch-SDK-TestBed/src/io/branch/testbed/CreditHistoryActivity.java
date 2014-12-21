@@ -1,6 +1,7 @@
 package io.branch.testbed;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Branch.BranchListResponseListener;
 
 import java.text.ParseException;
@@ -47,7 +48,7 @@ public class CreditHistoryActivity extends Activity {
 		branch = Branch.getInstance(this.getApplicationContext());
 		branch.initSession();
 		branch.getCreditHistory(new BranchListResponseListener() {
-			@SuppressLint("NewApi") public void onReceivingResponse(JSONArray history) {
+			@SuppressLint("NewApi") public void onReceivingResponse(JSONArray history, BranchError error) {
 				ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
 				
 				if (history.length() > 0) {

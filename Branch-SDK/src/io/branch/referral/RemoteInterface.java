@@ -27,10 +27,12 @@ import android.util.Log;
 public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
-	private static final String SDK_VERSION = "1.2.1";
-
-	private HttpClient getGenericHttpClient() {
-		int timeout = 3000;
+	private static final String SDK_VERSION = "1.2.2";
+	private static final int DEFAULT_TIMEOUT = 3000;
+	
+	private HttpClient getGenericHttpClient(int timeout) {
+		if (timeout <= 0)
+			timeout = DEFAULT_TIMEOUT;
 		HttpParams httpParams = new BasicHttpParams();
 		HttpConnectionParams.setConnectionTimeout(httpParams, timeout);
 		HttpConnectionParams.setSoTimeout(httpParams, timeout);
@@ -68,7 +70,7 @@ public class RemoteInterface {
 		return result;
 	}
 	
-	public ServerResponse make_restful_get(String url, String tag) {
+	public ServerResponse make_restful_get(String url, String tag, int timeout) {
 		try {    	
 			if (url.indexOf('?') == -1) {
 				url += "?sdk=android" + SDK_VERSION;
@@ -77,7 +79,7 @@ public class RemoteInterface {
 			}
 			if (PrefHelper.LOG) Log.i("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
-		    HttpResponse response = getGenericHttpClient().execute(request);
+		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
 		} catch (ClientProtocolException ex) {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
@@ -94,7 +96,7 @@ public class RemoteInterface {
 		return null;
 	}
 
-	public ServerResponse make_restful_post(JSONObject body, String url, String tag) {
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
 		try {    	
 			body.put("sdk", "android" + SDK_VERSION);
 			if (PrefHelper.LOG) Log.i("BranchSDK", "posting to " + url);
@@ -102,7 +104,7 @@ public class RemoteInterface {
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
-		    HttpResponse response = getGenericHttpClient().execute(request);
+		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag);
 		} catch (SocketException ex) {
 			if (PrefHelper.LOG) Log.i(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
