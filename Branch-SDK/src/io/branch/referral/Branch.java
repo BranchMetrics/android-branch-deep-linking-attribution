@@ -239,7 +239,6 @@ public class Branch {
 		if (activity != null) {
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
 			final Handler _handler = new Handler(); 
-			
 			view.setOnTouchListener(new OnTouchListener() {
 				class KeepDebugConnectionTask extends TimerTask {
 			        public void run() {
@@ -284,6 +283,7 @@ public class Branch {
 				        _handler.removeCallbacks(_longPressed);
 				        break;
 				    case MotionEvent.ACTION_UP:
+				    	v.performClick();
 				        _handler.removeCallbacks(_longPressed);
 				        break;
 					case MotionEvent.ACTION_POINTER_DOWN:
