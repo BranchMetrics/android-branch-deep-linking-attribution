@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import android.util.Log;
 
 public class ApkParser {
 	// decompressXML -- Parse the 'compressed' binary form of Android XML docs 
@@ -83,7 +82,6 @@ public class ApkParser {
 		
 					String attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
 					String attrValue = attrValueSi!=-1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x"+Integer.toHexString(attrResId);
-					//if (PrefHelper.LOG) Log.i("BranchAPKParser", "name = " + attrName + ", value = " + attrValue);
 					if (attrName.equals("scheme")) {
 						return attrValue;
 					}
@@ -98,11 +96,10 @@ public class ApkParser {
 			} else if (tag0 == endDocTag) {  // END OF XML DOC TAG
 				break;
 			} else {
-				//if (PrefHelper.LOG) Log.i("BranchAPKParser", "  Unrecognized tag code '"+Integer.toHexString(tag0) +"' at offset "+off);
 				break;
 			}
 		} // end of while loop scanning tags and attributes of XML tree
-		if (PrefHelper.LOG) Log.i("BranchAPKParser", "    end at offset "+off);
+		PrefHelper.Debug("BranchAPKParser", "    end at offset "+off);
 		
 		return SystemObserver.BLANK;
 	} // end of decompressXML
@@ -117,7 +114,7 @@ public class ApkParser {
 
 	public static String spaces = "                                             ";
 	public void prtIndent(int indent, String str) {
-		if (PrefHelper.LOG) Log.i("BranchAPKParser", (spaces.substring(0, Math.min(indent*2, spaces.length()))+str));
+		PrefHelper.Debug("BranchAPKParser", (spaces.substring(0, Math.min(indent*2, spaces.length()))+str));
 	}
 
 

@@ -13,7 +13,6 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
@@ -57,7 +56,7 @@ public class ServerRequestQueue {
 					try {
 						editor.putString(PREF_KEY, jsonArr.toString()).commit();
 					} catch (ConcurrentModificationException ex) {
-						if (PrefHelper.LOG) Log.i("Persisting Queue: ", jsonArr.toString());
+						PrefHelper.Debug("Persisting Queue: ", jsonArr.toString());
 					} finally {
 						try {
 							editor.putString(PREF_KEY, jsonArr.toString()).commit();

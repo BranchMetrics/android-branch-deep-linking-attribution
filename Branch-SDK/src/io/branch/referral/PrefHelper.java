@@ -2,12 +2,16 @@ package io.branch.referral;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.util.Log;
 
 public class PrefHelper {
-	public static final boolean LOG = false;
+	private static boolean BNC_Debug = false;
+	private static boolean BNC_Remote_Debug = false;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
@@ -41,17 +45,26 @@ public class PrefHelper {
 	private static final String KEY_RETRY_INTERVAL = "bnc_retry_interval";
 	private static final String KEY_TIMEOUT = "bnc_timeout";
 	
+	public static final String REQ_TAG_DEBUG_CONNECT = "t_debug_connect";
+	public static final String REQ_TAG_DEBUG_LOG = "t_debug_log";
+	public static final String REQ_TAG_DEBUG_SCREEN = "t_debug_screen";
+	public static final String REQ_TAG_DEBUG_DISCONNECT = "t_debug_disconnect";
+	public static final int DEBUG_TRIGGER_NUM_FINGERS = 4;
+	public static final int DEBUG_TRIGGER_PRESS_TIME = 3000;
 
 	private static PrefHelper prefHelper_;
 	private SharedPreferences appSharedPrefs_;
 	private Editor prefsEditor_;	
+	
+	private BranchRemoteInterface remoteInterface_;
+	private Context context_;
 	
 	public PrefHelper() {}
 	
 	private PrefHelper(Context context) {
 		this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
 		this.prefsEditor_ = this.appSharedPrefs_.edit();
-		
+		this.context_ = context;
 	}
 	
 	public static PrefHelper getInstance(Context context) {
@@ -336,5 +349,112 @@ public class PrefHelper {
 		prefHelper_.prefsEditor_.commit();
 	}
 	
+	public void setDebug() {
+		BNC_Debug = true;
+		
+		if (!BNC_Remote_Debug) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					if (remoteInterface_ == null) {
+						remoteInterface_ = new BranchRemoteInterface(context_);
+						remoteInterface_.setNetworkCallbackListener(new DebugNetworkCallback());
+					}
+					remoteInterface_.connectToDebug();
+				}
+			}).start();
+		}
+	}
+	
+	public void clearDebug() {
+	    BNC_Debug = false;
+	    
+	    if (BNC_Remote_Debug) {
+	        BNC_Remote_Debug = false;
+	        
+	        if (remoteInterface_ != null) {
+		        new Thread(new Runnable() {
+					@Override
+					public void run() {
+						remoteInterface_.disconnectFromDebug();
+					}
+				}).start();
+	        }
+	    }
+	}
+
+	public boolean isDebug() {
+	    return BNC_Debug;
+	}
+	
+	public void log(final String tag, final String message) {
+	    if (BNC_Debug) {
+	    	Log.i(tag, message);
+	    	
+	        if (BNC_Remote_Debug && remoteInterface_ != null) {
+	        	new Thread(new Runnable() {
+					@Override
+					public void run() {
+						remoteInterface_.sendLog(tag + "\t" + message);
+					}
+				}).start();
+	        }
+	    }
+	}
+	
+	public static void Debug(String tag, String message) {
+		if (prefHelper_ != null) {
+			prefHelper_.log(tag, message);
+		} else {
+			if (BNC_Debug) {
+				Log.i(tag, message);
+			}
+		}
+	}
+	
+	public boolean keepDebugConnection() {
+		if (BNC_Remote_Debug && remoteInterface_ != null) {
+        	new Thread(new Runnable() {
+				@Override
+				public void run() {
+					remoteInterface_.sendLog("");
+				}
+			}).start();
+        	return true;
+        }
+		return false;
+	}
+	
+	public class DebugNetworkCallback implements NetworkCallback {
+		@Override
+		public void finished(ServerResponse serverResponse) {
+			if (serverResponse != null) {
+				try {
+					int status = serverResponse.getStatusCode();
+					String requestTag = serverResponse.getTag();
+
+					if (status == 465) {
+						BNC_Remote_Debug = false;
+			            Log.i("Branch Debug", "======= Server is not listening =======");
+					} else if (status >= 400 && status < 500) {
+						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
+							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
+						}
+					} else if (status != 200) {
+						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
+							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
+						} else {
+							Log.i("BranchSDK", "Trouble reaching server. Please try again in a few minutes.");
+						}
+					} else if (requestTag.equals(REQ_TAG_DEBUG_CONNECT)) {
+						BNC_Remote_Debug = true;
+			            Log.i("Branch Debug", "======= Connected to Branch Remote Debugger =======");
+					}
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+	}
 	
 }
