@@ -27,7 +27,7 @@ import android.util.Log;
 public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
-	private static final String SDK_VERSION = "1.2.1";
+	private static final String SDK_VERSION = "1.2.2";
 	private static final int DEFAULT_TIMEOUT = 3000;
 	
 	private HttpClient getGenericHttpClient(int timeout) {
