@@ -1,6 +1,7 @@
 package io.branch.testbed;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
@@ -66,7 +67,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				branch.setIdentity("my_great_user", new BranchReferralInitListener() {
 					@Override
-					public void onInitFinished(JSONObject referringParams, Branch.BranchError error) {
+					public void onInitFinished(JSONObject referringParams, BranchError error) {
 						Log.i("BranchTestBed", "install params = " + referringParams.toString());
 					}
 				});
@@ -107,7 +108,7 @@ public class MainActivity extends Activity {
 				tags.add("tag2");
 				branch.getShortUrl(tags, "channel1", "feature1", "1", obj, new BranchLinkCreateListener() {
 					@Override
-					public void onLinkCreate(String url, Branch.BranchError error) {
+					public void onLinkCreate(String url, BranchError error) {
 						txtShortUrl.setText(url);
 					}
 				});
@@ -119,7 +120,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				branch.loadActionCounts(new BranchReferralStateChangedListener() {
 					@Override
-					public void onStateChanged(boolean changed, Branch.BranchError error) {
+					public void onStateChanged(boolean changed, BranchError error) {
 						Log.i("BranchTestBed", "changed = " + changed);
 						txtInstallCount.setText("install total = " + branch.getTotalCountsForAction("install") + ", unique = " + branch.getUniqueCountsForAction("install"));
 						txtEventCount.setText("buy total = " + branch.getTotalCountsForAction("buy") + ", unique = " + branch.getUniqueCountsForAction("buy"));
@@ -133,7 +134,7 @@ public class MainActivity extends Activity {
 			public void onClick(View arg0) {
 				branch.loadRewards(new BranchReferralStateChangedListener() {
 					@Override
-					public void onStateChanged(boolean changed, Branch.BranchError error) {
+					public void onStateChanged(boolean changed, BranchError error) {
 						Log.i("BranchTestBed", "changed = " + changed);
 						txtRewardBalance.setText("rewards = " + branch.getCredits());
 					}
@@ -198,7 +199,7 @@ public class MainActivity extends Activity {
 		branch = Branch.getInstance(this.getApplicationContext(), "5680621892404085");
 		branch.initSession(new BranchReferralInitListener() {
 			@Override
-			public void onInitFinished(JSONObject referringParams, Branch.BranchError error) {
+			public void onInitFinished(JSONObject referringParams, BranchError error) {
 				Log.i("BranchTestBed", "branch init complete!");
 				try {
 					Iterator<?> keys = referringParams.keys();

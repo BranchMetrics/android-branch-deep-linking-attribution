@@ -117,19 +117,19 @@ public class Branch {
 	}
 	
 	public void setRetryCount(int retryCount) {
-		if (prefHelper_ != null) {
+		if (prefHelper_ != null && retryCount > 0) {
 			prefHelper_.setRetryCount(retryCount);
 		}
 	}
 	
 	public void setRetryInterval(int retryInterval) {
-		if (prefHelper_ != null) {
+		if (prefHelper_ != null && retryInterval > 0) {
 			prefHelper_.setRetryInterval(retryInterval);
 		}
 	}
 	
 	public void setNetworkTimeout(int timeout) {
-		if (prefHelper_ != null) {
+		if (prefHelper_ != null && timeout > 0) {
 			prefHelper_.setTimeout(timeout);
 		}
 	}
@@ -268,7 +268,7 @@ public class Branch {
 	}
 
 	public void setIdentity(final String userId) {
-		if (userId == null || userId.length() == 0 || prefHelper_.getIdentity().equals(userId)) {
+		if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
 			return;
 		}
 
@@ -1426,88 +1426,84 @@ public class Branch {
 		kMostRecentFirst, kLeastRecentFirst
 	}
 	
-	public interface BranchError {
-		public String getMessage();
-	}
-	
-	public class BranchInitError implements BranchError {
+	public class BranchInitError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble initializing Branch. Check network connectivity or that your app key is valid";
 		}
 	}
 	
-	public class BranchGetReferralsError implements BranchError {
+	public class BranchGetReferralsError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble retrieving referral counts. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchGetCreditsError implements BranchError {
+	public class BranchGetCreditsError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble retrieving user credits. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchGetCreditHistoryError implements BranchError {
+	public class BranchGetCreditHistoryError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble retrieving user credit history. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchCreateUrlError implements BranchError {
+	public class BranchCreateUrlError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble creating a URL. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchDuplicateUrlError implements BranchError {
+	public class BranchDuplicateUrlError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble creating a URL with that alias. If you want to reuse the alias, make sure to submit the same properties for all arguments and that the user is the same owner";
 		}
 	}
 	
-	public class BranchSetIdentityError implements BranchError {
+	public class BranchSetIdentityError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble setting the user alias. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchGetReferralCodeError implements BranchError {
+	public class BranchGetReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble retrieving the referral code. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchValidateReferralCodeError implements BranchError {
+	public class BranchValidateReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble validating the referral code. Check network connectivity and that you properly initialized";
 		}
 	}
 	
-	public class BranchInvalidReferralCodeError implements BranchError {
+	public class BranchInvalidReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "That Branch referral code was invalid";
 		}
 	}
 	
-	public class BranchDuplicateReferralCodeError implements BranchError {
+	public class BranchDuplicateReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "That Branch referral code is already in use";
 		}
 	}
 	
-	public class BranchApplyReferralCodeError implements BranchError {
+	public class BranchApplyReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
 			return "Trouble applying the referral code. Check network connectivity and that you properly initialized";
