@@ -377,7 +377,7 @@ public class PrefHelper {
 		}
 	}
 	
-	public void keepDebugConnection() {
+	public boolean keepDebugConnection() {
 		if (BNC_Remote_Debug && remoteInterface_ != null) {
         	new Thread(new Runnable() {
 				@Override
@@ -385,7 +385,9 @@ public class PrefHelper {
 					remoteInterface_.sendLog("");
 				}
 			}).start();
+        	return true;
         }
+		return false;
 	}
 	
 	public class DebugNetworkCallback implements NetworkCallback {

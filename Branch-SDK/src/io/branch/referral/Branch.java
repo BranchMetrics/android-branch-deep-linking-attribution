@@ -16,6 +16,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -76,6 +77,10 @@ public class Branch {
 	private boolean initFailed_;
 	private boolean hasNetwork_;
 	private boolean lastRequestWasInit_;
+	
+	private Handler debugHandler_;
+	private SparseArray<String> debugListenerInitHistory_;
+	private OnTouchListener debugOnTouchListener_;
 
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -92,6 +97,9 @@ public class Branch {
 		isInit_ = false;
 		networkCount_ = 0;
 		hasNetwork_ = true;
+		debugListenerInitHistory_ = new SparseArray<String>();
+		debugHandler_ = new Handler();
+		debugOnTouchListener_ = retrieveOnTouchListener();
 	}
 
 	public static Branch getInstance(Context context, String key) {
@@ -236,13 +244,24 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null) {
+		if (activity != null && activity instanceof Activity && debugListenerInitHistory_.get(Integer.valueOf(System.identityHashCode(activity))) == null) {
+			debugListenerInitHistory_.put(Integer.valueOf(System.identityHashCode(activity)), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			final Handler _handler = new Handler(); 
-			view.setOnTouchListener(new OnTouchListener() {
+			if (view != null) { 
+				view.setOnTouchListener(debugOnTouchListener_);
+			}
+		}
+	}
+	
+	private OnTouchListener retrieveOnTouchListener() {
+		if (debugOnTouchListener_ == null) {
+			debugOnTouchListener_ = new OnTouchListener() {
 				class KeepDebugConnectionTask extends TimerTask {
 			        public void run() {
-			            prefHelper_.keepDebugConnection();
+			        	Log.i("timer","timer running");
+			            if (!prefHelper_.keepDebugConnection()) {
+			            	debugHandler_.post(_longPressed);
+			            }
 			        }
 			    }
 				
@@ -251,7 +270,7 @@ public class Branch {
 					private Timer timer;
 					
 				    public void run() {
-				    	_handler.removeCallbacks(_longPressed);
+				    	debugHandler_.removeCallbacks(_longPressed);
 				        if (!started) {
 				        	Log.i("Branch Debug","======= Start Debug Session =======");
 				        	prefHelper_.setDebug();
@@ -274,28 +293,29 @@ public class Branch {
 					switch (actionPeformed & MotionEvent.ACTION_MASK) {
 					case MotionEvent.ACTION_DOWN:
 						if (systemObserver_.isSimulator()) {
-							_handler.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+							debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
 						}
 				        break;
 				    case MotionEvent.ACTION_MOVE:
 				        break;
 				    case MotionEvent.ACTION_CANCEL:
-				        _handler.removeCallbacks(_longPressed);
+				    	debugHandler_.removeCallbacks(_longPressed);
 				        break;
 				    case MotionEvent.ACTION_UP:
 				    	v.performClick();
-				        _handler.removeCallbacks(_longPressed);
+				    	debugHandler_.removeCallbacks(_longPressed);
 				        break;
 					case MotionEvent.ACTION_POINTER_DOWN:
 						if (pointerCount == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
-							_handler.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+							debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
 						}
 						break;
 					}
 					return true;
 				}
-			});
+			};
 		}
+		return debugOnTouchListener_;
 	}
 
 	public void closeSession() {
