@@ -218,7 +218,7 @@ branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", da
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
 **Note**
-You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following optional keys in the data dictionary:
+You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_:
 
 | Key | Value
 | --- | ---
@@ -229,7 +229,7 @@ You can customize the Facebook OG tags of each URL if you want to dynamically sh
 | "$og_url" | The URL you'd like to appear
 | "$og_app_id" | Your OG app ID. Optional and rarely used.
 
-Also, you do custom redirection by inserting the following optional keys in the dictionary:
+Also, you do custom redirection by inserting the following _optional keys in the dictionary_:
 
 | Key | Value
 | --- | ---
@@ -241,7 +241,7 @@ Also, you do custom redirection by inserting the following optional keys in the 
 | "$blackberry_url" | Same as above but for Blackberry Store
 | "$windows_phone_url" | Same as above but for Windows Store
 
-You have the ability to control the direct deep linking of each link as well:
+You have the ability to control the direct deep linking of each link by inserting the following _optional keys in the dictionary_:
 
 | Key | Value
 | --- | ---
