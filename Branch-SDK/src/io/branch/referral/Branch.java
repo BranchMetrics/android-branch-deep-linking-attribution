@@ -274,7 +274,6 @@ public class Branch {
 			debugOnTouchListener_ = new OnTouchListener() {
 				class KeepDebugConnectionTask extends TimerTask {
 			        public void run() {
-			        	Log.i("timer","timer running");
 			            if (!prefHelper_.keepDebugConnection()) {
 			            	debugHandler_.post(_longPressed);
 			            }
@@ -284,7 +283,7 @@ public class Branch {
 				Runnable _longPressed = new Runnable() {
 					private boolean started = false;
 					private Timer timer;
-					
+				
 				    public void run() {
 				    	debugHandler_.removeCallbacks(_longPressed);
 				        if (!started) {

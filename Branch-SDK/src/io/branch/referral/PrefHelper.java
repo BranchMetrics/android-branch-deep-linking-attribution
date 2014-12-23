@@ -11,6 +11,7 @@ import android.util.Log;
 
 public class PrefHelper {
 	private static boolean BNC_Debug = false;
+	private static boolean BNC_Debug_Connecting = false;
 	private static boolean BNC_Remote_Debug = false;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
@@ -351,6 +352,7 @@ public class PrefHelper {
 	
 	public void setDebug() {
 		BNC_Debug = true;
+		BNC_Debug_Connecting = true;
 		
 		if (!BNC_Remote_Debug) {
 			new Thread(new Runnable() {
@@ -368,6 +370,7 @@ public class PrefHelper {
 	
 	public void clearDebug() {
 	    BNC_Debug = false;
+	    BNC_Debug_Connecting = false;
 	    
 	    if (BNC_Remote_Debug) {
 	        BNC_Remote_Debug = false;
@@ -422,7 +425,11 @@ public class PrefHelper {
 			}).start();
         	return true;
         }
-		return false;
+		if (BNC_Debug_Connecting) {
+			return true;
+		} else {
+			return false;	
+		}
 	}
 	
 	public class DebugNetworkCallback implements NetworkCallback {
@@ -450,6 +457,8 @@ public class PrefHelper {
 						BNC_Remote_Debug = true;
 			            Log.i("Branch Debug", "======= Connected to Branch Remote Debugger =======");
 					}
+					
+					BNC_Debug_Connecting = false;
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}
