@@ -1102,18 +1102,20 @@ public class Branch {
 
 	private void keepAlive() {
 		keepAlive_ = true;
-		clearTimer();
-		closeTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						keepAlive_ = false;
-					}
-				}).start();
-			}
-		}, SESSION_KEEPALIVE);
+		synchronized(closeTimer) {
+			clearTimer();
+			closeTimer.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							keepAlive_ = false;
+						}
+					}).start();
+				}
+			}, SESSION_KEEPALIVE);
+		}
 	}
 
 	private boolean hasSession() {
