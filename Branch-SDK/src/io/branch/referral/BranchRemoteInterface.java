@@ -24,6 +24,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_GET_REFERRAL_CODE = "t_get_referral_code";
 	public static final String REQ_TAG_VALIDATE_REFERRAL_CODE = "t_validate_referral_code";
 	public static final String REQ_TAG_APPLY_REFERRAL_CODE = "t_apply_referral_code";
+	public static final String REQ_TAG_SEND_APP_LIST = "t_send_app_list";
 
 	private SystemObserver sysObserver_;
 	private PrefHelper prefHelper_;
@@ -101,14 +102,15 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
 					openPost.put("app_version", sysObserver_.getAppVersion());
 				openPost.put("os_version", sysObserver_.getOSVersion());
-				String uriScheme = sysObserver_.getURIScheme();
-				if (!uriScheme.equals(SystemObserver.BLANK)) 
-					openPost.put("uri_scheme", uriScheme);
 				if (!sysObserver_.getOS().equals(SystemObserver.BLANK))
 					openPost.put("os", sysObserver_.getOS());
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
+				String uriScheme = sysObserver_.getURIScheme();
+				if (!uriScheme.equals(SystemObserver.BLANK)) 
+					openPost.put("uri_scheme", uriScheme);
+
 				openPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();
@@ -128,6 +130,23 @@ public class BranchRemoteInterface extends RemoteInterface {
 				ex.printStackTrace();
 			}
 			callback_.finished(make_restful_post(closePost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE, prefHelper_.getTimeout()));
+		}
+	}
+	
+	public void registerListOfApps() {
+		String urlExtend = "v1/applist";
+		if (callback_ != null) {
+			JSONObject appPost = new JSONObject();
+			try {
+				appPost.put("app_id", prefHelper_.getAppKey());
+				if (!sysObserver_.getOS().equals(SystemObserver.BLANK))
+					appPost.put("os", sysObserver_.getOS());
+				appPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+				appPost.put("installed_apps", sysObserver_.getListOfApps());
+			} catch (JSONException ex) {
+				ex.printStackTrace();
+			}
+			callback_.finished(make_restful_post(appPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_SEND_APP_LIST, prefHelper_.getTimeout()));
 		}
 	}
 	

@@ -942,6 +942,8 @@ public class Branch {
 					kRemoteInterface_.registerOpen(prefHelper_.isDebug());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST) && hasUser() && hasSession()) {
+					kRemoteInterface_.registerListOfApps();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getRewards();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser() && hasSession()) {
@@ -1381,11 +1383,17 @@ public class Branch {
 						} else {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}
+						
 						if (serverResponse.getObject().has("data")) {
 							String params = serverResponse.getObject().getString("data");
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+						}
+						
+						if (prefHelper_.getSystemReadStatus()) {
+							ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, null);
+							requestQueue_.enqueue(req);
 						}
 
 						updateAllRequestsInQueue();
@@ -1419,12 +1427,19 @@ public class Branch {
 								prefHelper_.setInstallParams(params);
 							}
 						}
+						
 						if (serverResponse.getObject().has("data")) {
 							String params = serverResponse.getObject().getString("data");
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
+						
+						if (prefHelper_.getSystemReadStatus()) {
+							ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, null);
+							requestQueue_.enqueue(req);
+						}
+						
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override
@@ -1436,6 +1451,9 @@ public class Branch {
 						});
 						requestQueue_.dequeue();
 						initFinished_ = true;
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST)) {
+						prefHelper_.clearSystemReadStatus();
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getObject().getString("url");
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -1498,8 +1516,10 @@ public class Branch {
 
 					networkCount_ = 0;
 					
-					if (hasNetwork_ && !initFailed_)
+					if (hasNetwork_ && !initFailed_) {
+						lastRequestWasInit_ = false;
 						processNextQueueItem();
+					}
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}
