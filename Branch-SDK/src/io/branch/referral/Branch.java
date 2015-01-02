@@ -923,6 +923,34 @@ public class Branch {
 			}
 		}
 	}
+	
+	private void processListOfApps() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				SystemObserver sysObserver = new SystemObserver(context_);
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					if (!sysObserver.getOS().equals(SystemObserver.BLANK))
+						post.put("os", sysObserver.getOS());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("installed_apps", sysObserver.getListOfApps());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, post);
+				if (!initFailed_) {
+					requestQueue_.enqueue(req);
+				}
+				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
+					processNextQueueItem();
+				}
+			}
+		}).start();
+	}
 
 	private void processNextQueueItem() {
 		try {
@@ -943,7 +971,7 @@ public class Branch {
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST) && hasUser() && hasSession()) {
-					kRemoteInterface_.registerListOfApps();
+					kRemoteInterface_.registerListOfApps(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getRewards();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser() && hasSession()) {
@@ -1392,8 +1420,7 @@ public class Branch {
 						}
 						
 						if (prefHelper_.getSystemReadStatus()) {
-							ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, null);
-							requestQueue_.enqueue(req);
+							processListOfApps();
 						}
 
 						updateAllRequestsInQueue();
@@ -1436,8 +1463,7 @@ public class Branch {
 						}
 						
 						if (prefHelper_.getSystemReadStatus()) {
-							ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, null);
-							requestQueue_.enqueue(req);
+							processListOfApps();
 						}
 						
 						Handler mainHandler = new Handler(context_.getMainLooper());

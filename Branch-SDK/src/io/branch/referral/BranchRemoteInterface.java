@@ -133,20 +133,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	public void registerListOfApps() {
+	public void registerListOfApps(JSONObject post) {
 		String urlExtend = "v1/applist";
 		if (callback_ != null) {
-			JSONObject appPost = new JSONObject();
-			try {
-				appPost.put("app_id", prefHelper_.getAppKey());
-				if (!sysObserver_.getOS().equals(SystemObserver.BLANK))
-					appPost.put("os", sysObserver_.getOS());
-				appPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-				appPost.put("installed_apps", sysObserver_.getListOfApps());
-			} catch (JSONException ex) {
-				ex.printStackTrace();
-			}
-			callback_.finished(make_restful_post(appPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_SEND_APP_LIST, prefHelper_.getTimeout()));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_SEND_APP_LIST, prefHelper_.getTimeout()));
 		}
 	}
 	
