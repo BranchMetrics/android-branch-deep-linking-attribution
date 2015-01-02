@@ -148,78 +148,90 @@ public class Branch {
 		prefHelper_.setDebug();
 	}
 
-	public void initSession(BranchReferralInitListener callback) {
+	public boolean initSession(BranchReferralInitListener callback) {
 		initSession(callback, (Activity)null);
+		return false;
 	}
-	public void initSession(BranchReferralInitListener callback, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
 		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
 		} else {
 			prefHelper_.clearIsReferrable();
 		}
 		initUserSessionInternal(callback, activity);
+		return false;
 	}
 
-	public void initSession(BranchReferralInitListener callback, Uri data) {
-		initSession(callback, data, null);
+	public boolean initSession(BranchReferralInitListener callback, Uri data) {
+		return initSession(callback, data, null);
 	}
-	public void initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
+		boolean uriHandled = false;
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
+				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
 		initSession(callback, activity);
+		return uriHandled;
 	}
 
-	public void initSession() {
-		initSession((Activity)null);
+	public boolean initSession() {
+		return initSession((Activity)null);
 	}
-	public void initSession(Activity activity) {
-		initSession(null, activity);
+	public boolean initSession(Activity activity) {
+		return initSession(null, activity);
 	}
 	
-	public void initSessionWithData(Uri data) {
-		initSessionWithData(data, null);
+	public boolean initSessionWithData(Uri data) {
+		return initSessionWithData(data, null);
 	}
-	public void initSessionWithData(Uri data, Activity activity) {
+	public boolean initSessionWithData(Uri data, Activity activity) {
+		boolean uriHandled = false;
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
+				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
 		initSession(null, activity);
+		return uriHandled;
 	}
 
-	public void initSession(boolean isReferrable) {
-		initSession(null, isReferrable, (Activity)null);
+	public boolean initSession(boolean isReferrable) {
+		return initSession(null, isReferrable, (Activity)null);
 	}
-	public void initSession(boolean isReferrable, Activity activity) {
-		initSession(null, isReferrable, activity);
+	public boolean initSession(boolean isReferrable, Activity activity) {
+		return initSession(null, isReferrable, activity);
 	}
 
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
-		initSession(callback, isReferrable, data, null);
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
+		return initSession(callback, isReferrable, data, null);
 	}
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+		boolean uriHandled = false;
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
+				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
 		initSession(callback, isReferrable, activity);
+		return uriHandled;
 	}
 
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable) {
-		initSession(callback, isReferrable, (Activity)null);
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
+		return initSession(callback, isReferrable, (Activity)null);
 	}
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
 		if (isReferrable) {
 			this.prefHelper_.setIsReferrable();
 		} else {
 			this.prefHelper_.clearIsReferrable();
 		}
 		initUserSessionInternal(callback, activity);
+		return false;
 	}
 
 	private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
