@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.json.JSONException;
 
@@ -19,6 +20,7 @@ public class PrefHelper {
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
 	private static final int TIMEOUT = 3000;
+	private static final int SYSTEM_READ_TIMEOUT = 260000;
 	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
@@ -45,6 +47,8 @@ public class PrefHelper {
 	private static final String KEY_RETRY_COUNT = "bnc_retry_count";
 	private static final String KEY_RETRY_INTERVAL = "bnc_retry_interval";
 	private static final String KEY_TIMEOUT = "bnc_timeout";
+	
+	private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
 	
 	public static final String REQ_TAG_DEBUG_CONNECT = "t_debug_connect";
 	public static final String REQ_TAG_DEBUG_LOG = "t_debug_log";
@@ -193,6 +197,20 @@ public class PrefHelper {
 	
 	public void clearIsReferrable() {
 		setInteger(KEY_IS_REFERRABLE, 0);
+	}
+	
+	public boolean getSystemReadStatus() {
+  		Calendar c  = Calendar.getInstance();
+  		long prevDate = getLong(KEY_LAST_READ_SYSTEM);
+  		if ((c.getTimeInMillis()/1000 - prevDate) > SYSTEM_READ_TIMEOUT) {
+  			return true;
+  		}
+  		return false;
+  	}
+	
+	public void clearSystemReadStatus() {
+		Calendar c  = Calendar.getInstance();
+		setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis()/1000);	
 	}
 	
 	public void clearUserValues() {

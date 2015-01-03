@@ -99,7 +99,6 @@ public class ApkParser {
 				break;
 			}
 		} // end of while loop scanning tags and attributes of XML tree
-		PrefHelper.Debug("BranchAPKParser", "    end at offset "+off);
 		
 		return SystemObserver.BLANK;
 	} // end of decompressXML

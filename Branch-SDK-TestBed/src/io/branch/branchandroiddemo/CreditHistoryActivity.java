@@ -1,4 +1,4 @@
-package io.branch.testbed;
+package io.branch.branchandroiddemo;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;

@@ -26,7 +26,7 @@ public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
 
-	private static final String SDK_VERSION = "1.2.5";
+	private static final String SDK_VERSION = "1.2.6";
 	private static final int DEFAULT_TIMEOUT = 3000;
 	
 	private HttpClient getGenericHttpClient(int timeout) {

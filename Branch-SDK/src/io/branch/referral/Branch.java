@@ -148,78 +148,90 @@ public class Branch {
 		prefHelper_.setDebug();
 	}
 
-	public void initSession(BranchReferralInitListener callback) {
+	public boolean initSession(BranchReferralInitListener callback) {
 		initSession(callback, (Activity)null);
+		return false;
 	}
-	public void initSession(BranchReferralInitListener callback, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
 		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
 		} else {
 			prefHelper_.clearIsReferrable();
 		}
 		initUserSessionInternal(callback, activity);
+		return false;
 	}
 
-	public void initSession(BranchReferralInitListener callback, Uri data) {
-		initSession(callback, data, null);
+	public boolean initSession(BranchReferralInitListener callback, Uri data) {
+		return initSession(callback, data, null);
 	}
-	public void initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
+		boolean uriHandled = false;
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
+				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
 		initSession(callback, activity);
+		return uriHandled;
 	}
 
-	public void initSession() {
-		initSession((Activity)null);
+	public boolean initSession() {
+		return initSession((Activity)null);
 	}
-	public void initSession(Activity activity) {
-		initSession(null, activity);
+	public boolean initSession(Activity activity) {
+		return initSession(null, activity);
 	}
 	
-	public void initSessionWithData(Uri data) {
-		initSessionWithData(data, null);
+	public boolean initSessionWithData(Uri data) {
+		return initSessionWithData(data, null);
 	}
-	public void initSessionWithData(Uri data, Activity activity) {
+	public boolean initSessionWithData(Uri data, Activity activity) {
+		boolean uriHandled = false;
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
+				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
 		initSession(null, activity);
+		return uriHandled;
 	}
 
-	public void initSession(boolean isReferrable) {
-		initSession(null, isReferrable, (Activity)null);
+	public boolean initSession(boolean isReferrable) {
+		return initSession(null, isReferrable, (Activity)null);
 	}
-	public void initSession(boolean isReferrable, Activity activity) {
-		initSession(null, isReferrable, activity);
+	public boolean initSession(boolean isReferrable, Activity activity) {
+		return initSession(null, isReferrable, activity);
 	}
 
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
-		initSession(callback, isReferrable, data, null);
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
+		return initSession(callback, isReferrable, data, null);
 	}
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+		boolean uriHandled = false;
 		if (data != null) {
 			if (data.getQueryParameter("link_click_id") != null) {
+				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
 		}
 		initSession(callback, isReferrable, activity);
+		return uriHandled;
 	}
 
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable) {
-		initSession(callback, isReferrable, (Activity)null);
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
+		return initSession(callback, isReferrable, (Activity)null);
 	}
-	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
+	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
 		if (isReferrable) {
 			this.prefHelper_.setIsReferrable();
 		} else {
 			this.prefHelper_.clearIsReferrable();
 		}
 		initUserSessionInternal(callback, activity);
+		return false;
 	}
 
 	private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
@@ -923,6 +935,34 @@ public class Branch {
 			}
 		}
 	}
+	
+	private void processListOfApps() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				SystemObserver sysObserver = new SystemObserver(context_);
+				JSONObject post = new JSONObject();
+				try {
+					post.put("app_id", prefHelper_.getAppKey());
+					if (!sysObserver.getOS().equals(SystemObserver.BLANK))
+						post.put("os", sysObserver.getOS());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("installed_apps", sysObserver.getListOfApps());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+					return;
+				}
+				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, post);
+				if (!initFailed_) {
+					requestQueue_.enqueue(req);
+				}
+				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
+					processNextQueueItem();
+				}
+			}
+		}).start();
+	}
 
 	private void processNextQueueItem() {
 		try {
@@ -942,6 +982,8 @@ public class Branch {
 					kRemoteInterface_.registerOpen(prefHelper_.isDebug());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST) && hasUser() && hasSession()) {
+					kRemoteInterface_.registerListOfApps(req.getPost());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getRewards();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser() && hasSession()) {
@@ -1381,11 +1423,16 @@ public class Branch {
 						} else {
 							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
 						}
+						
 						if (serverResponse.getObject().has("data")) {
 							String params = serverResponse.getObject().getString("data");
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+						}
+						
+						if (prefHelper_.getSystemReadStatus()) {
+							processListOfApps();
 						}
 
 						updateAllRequestsInQueue();
@@ -1419,12 +1466,18 @@ public class Branch {
 								prefHelper_.setInstallParams(params);
 							}
 						}
+						
 						if (serverResponse.getObject().has("data")) {
 							String params = serverResponse.getObject().getString("data");
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
+						
+						if (prefHelper_.getSystemReadStatus()) {
+							processListOfApps();
+						}
+						
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override
@@ -1436,6 +1489,9 @@ public class Branch {
 						});
 						requestQueue_.dequeue();
 						initFinished_ = true;
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST)) {
+						prefHelper_.clearSystemReadStatus();
+						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getObject().getString("url");
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -1498,8 +1554,10 @@ public class Branch {
 
 					networkCount_ = 0;
 					
-					if (hasNetwork_ && !initFailed_)
+					if (hasNetwork_ && !initFailed_) {
+						lastRequestWasInit_ = false;
 						processNextQueueItem();
+					}
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}

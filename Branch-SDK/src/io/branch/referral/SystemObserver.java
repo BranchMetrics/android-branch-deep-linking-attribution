@@ -1,8 +1,13 @@
 package io.branch.referral;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 import java.util.jar.JarFile;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -48,9 +53,13 @@ public class SystemObserver {
 	}
 	
 	public String getURIScheme() {
+	    return getURIScheme(context_.getPackageName());
+	}
+	
+	public String getURIScheme(String packageName) {
 		PackageManager pm = context_.getPackageManager();
-	    try {
-	        ApplicationInfo ai = pm.getApplicationInfo(context_.getPackageName(), 0);
+		try {
+	        ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
 	        String sourceApk = ai.publicSourceDir;
 	        try {
 	            JarFile jf = new JarFile(sourceApk);
@@ -58,6 +67,7 @@ public class SystemObserver {
 	            byte[] xml = new byte[is.available()];
 	            is.read(xml);
 	            String scheme = new ApkParser().decompressXML(xml);
+	            xml = null;
 	            jf.close();
 	            is.close();
 	            return scheme;
@@ -67,6 +77,55 @@ public class SystemObserver {
 	    } catch (NameNotFoundException e) {
 	    }
 		return BLANK;
+	}
+	
+	@SuppressLint("NewApi")
+	public JSONArray getListOfApps() {
+		JSONArray arr = new JSONArray();
+		PackageManager pm = context_.getPackageManager();
+		
+		List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+		if (packages != null) {
+			for (ApplicationInfo appInfo : packages) {
+				if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
+					JSONObject packObj = new JSONObject();
+					try {
+						String label = appInfo.loadLabel(pm).toString();
+						if (label != null)
+							packObj.put("name", label);
+						String packName = appInfo.packageName;
+						if (packName != null) {
+							packObj.put("app_identifier", packName);
+							String uriScheme = getURIScheme(packName);
+							if (!uriScheme.equals(SystemObserver.BLANK))
+								packObj.put("uri_scheme", uriScheme);
+						}
+						String pSourceDir = appInfo.publicSourceDir;
+						if (pSourceDir != null)
+							packObj.put("public_source_dir", pSourceDir);
+						String sourceDir = appInfo.sourceDir;
+						if (sourceDir != null)
+							packObj.put("source_dir", sourceDir);
+						
+						PackageInfo packInfo = pm.getPackageInfo(appInfo.packageName, PackageManager.GET_PERMISSIONS);
+						if (packInfo != null) {
+							if (packInfo.versionCode >= 9) {
+								packObj.put("install_date", packInfo.firstInstallTime);
+								packObj.put("last_update_date", packInfo.lastUpdateTime);
+							}
+							packObj.put("version_code", packInfo.versionCode);
+							if (packInfo.versionName != null)
+								packObj.put("version_name", packInfo.versionName);
+						}
+						
+						arr.put(packObj);
+					} catch(JSONException ex) {
+					} catch (NameNotFoundException e) {			
+					}
+				}
+			}
+		}
+		return arr;
 	}
 	
 	public String getAppVersion() {
