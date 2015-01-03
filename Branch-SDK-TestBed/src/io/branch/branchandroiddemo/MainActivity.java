@@ -197,7 +197,7 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		branch = Branch.getInstance(this.getApplicationContext(), "76039613931586025");
+		branch = Branch.getInstance(this.getApplicationContext(), "5668720416392049");
 		branch.initSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams, BranchError error) {

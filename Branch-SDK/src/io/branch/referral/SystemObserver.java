@@ -85,30 +85,43 @@ public class SystemObserver {
 		PackageManager pm = context_.getPackageManager();
 		
 		List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-		for (ApplicationInfo appInfo : packages) {
-			if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
-				JSONObject packObj = new JSONObject();
-				try {
-					packObj.put("name", appInfo.loadLabel(pm).toString());
-					packObj.put("app_identifier", appInfo.packageName);
-					packObj.put("public_source_dir", appInfo.publicSourceDir);
-					packObj.put("source_dir", appInfo.sourceDir);
-					
-					PackageInfo packInfo = pm.getPackageInfo(appInfo.packageName, PackageManager.GET_PERMISSIONS);
-					if (packInfo.versionCode >= 9) {
-						packObj.put("install_date", packInfo.firstInstallTime);
-						packObj.put("last_update_date", packInfo.lastUpdateTime);
+		if (packages != null) {
+			for (ApplicationInfo appInfo : packages) {
+				if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
+					JSONObject packObj = new JSONObject();
+					try {
+						String label = appInfo.loadLabel(pm).toString();
+						if (label != null)
+							packObj.put("name", label);
+						String packName = appInfo.packageName;
+						if (packName != null) {
+							packObj.put("app_identifier", packName);
+							String uriScheme = getURIScheme(packName);
+							if (!uriScheme.equals(SystemObserver.BLANK))
+								packObj.put("uri_scheme", uriScheme);
+						}
+						String pSourceDir = appInfo.publicSourceDir;
+						if (pSourceDir != null)
+							packObj.put("public_source_dir", pSourceDir);
+						String sourceDir = appInfo.sourceDir;
+						if (sourceDir != null)
+							packObj.put("source_dir", sourceDir);
+						
+						PackageInfo packInfo = pm.getPackageInfo(appInfo.packageName, PackageManager.GET_PERMISSIONS);
+						if (packInfo != null) {
+							if (packInfo.versionCode >= 9) {
+								packObj.put("install_date", packInfo.firstInstallTime);
+								packObj.put("last_update_date", packInfo.lastUpdateTime);
+							}
+							packObj.put("version_code", packInfo.versionCode);
+							if (packInfo.versionName != null)
+								packObj.put("version_name", packInfo.versionName);
+						}
+						
+						arr.put(packObj);
+					} catch(JSONException ex) {
+					} catch (NameNotFoundException e) {			
 					}
-					packObj.put("version_code", packInfo.versionCode);
-					packObj.put("version_name", packInfo.versionName);
-					
-					String uriScheme = getURIScheme(appInfo.packageName);
-					if (!uriScheme.equals(SystemObserver.BLANK))
-						packObj.put("uri_scheme", uriScheme);
-					
-					arr.put(packObj);
-				} catch(JSONException ex) {
-				} catch (NameNotFoundException e) {			
 				}
 			}
 		}
