@@ -1038,7 +1038,7 @@ public class Branch {
 							failedUrl = prefHelper_.getUserURL();
 						}
 						if (initNotStarted_)
-							linkCreateCallback_.onLinkCreate(failedUrl, new BranchNotInitError());
+							linkCreateCallback_.onLinkCreate(null, new BranchNotInitError());
 						else
 							linkCreateCallback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
 					}
