@@ -71,6 +71,7 @@ public class Branch {
 	private int networkCount_;
 	private int retryCount_;
 	
+	private boolean initNotStarted_;
 	private boolean initFinished_;
 	private boolean initFailed_;
 	private boolean hasNetwork_;
@@ -93,6 +94,7 @@ public class Branch {
 		lastRequestWasInit_ = true;
 		keepAlive_ = false;
 		isInit_ = false;
+		initNotStarted_ = true;
 		networkCount_ = 0;
 		hasNetwork_ = true;
 		debugListenerInitHistory_ = new SparseArray<String>();
@@ -237,6 +239,7 @@ public class Branch {
 	private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
 		initSessionFinishedCallback_ = callback;
 		lastRequestWasInit_ = true;
+		initNotStarted_ = false;
 		initFailed_ = false;
 		if (!isInit_) {
 			isInit_ = true;
@@ -353,6 +356,7 @@ public class Branch {
 		// else, real close
 		isInit_ = false;
 		lastRequestWasInit_ = false;
+		initNotStarted_ = true;
 		if (!hasNetwork_) {
 			// if there's no network connectivity, purge the old install/open
 			ServerRequest req = requestQueue_.peek();
@@ -367,7 +371,7 @@ public class Branch {
 					requestQueue_.enqueue(req);
 					if (initFinished_ || !hasNetwork_) {
 						processNextQueueItem();
-					} else if (initFailed_) {
+					} else if (initFailed_ || initNotStarted_) {
 						handleFailure(req);
 					}
 				}
@@ -402,7 +406,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -426,7 +430,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -449,7 +453,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -472,7 +476,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -530,7 +534,7 @@ public class Branch {
 					if (initFinished_ || !hasNetwork_) {
 						lastRequestWasInit_ = false;
 						processNextQueueItem();
-					} else if (initFailed_) {
+					} else if (initFailed_ || initNotStarted_) {
 						handleFailure(req);
 					}
 				}
@@ -581,7 +585,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -609,7 +613,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}		
 			}
@@ -699,7 +703,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -760,7 +764,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -789,7 +793,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -819,7 +823,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
-				} else if (initFailed_) {
+				} else if (initFailed_ || initNotStarted_) {
 					handleFailure(req);
 				}
 			}
@@ -890,7 +894,7 @@ public class Branch {
 					if (initFinished_ || !hasNetwork_) {
 						lastRequestWasInit_ = false;
 						processNextQueueItem();
-					} else if (initFailed_) {
+					} else if (initFailed_ || initNotStarted_) {
 						handleFailure(req);
 					}
 				}
@@ -1050,15 +1054,24 @@ public class Branch {
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 					if (stateChangedCallback_ != null) {
-						stateChangedCallback_.onStateChanged(false, new BranchGetReferralsError());
+						if (initNotStarted_)
+							stateChangedCallback_.onStateChanged(false, new BranchNotInitError());
+						else
+							stateChangedCallback_.onStateChanged(false, new BranchGetReferralsError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
 					if (stateChangedCallback_ != null) {
-						stateChangedCallback_.onStateChanged(false, new BranchGetCreditsError());
+						if (initNotStarted_)
+							stateChangedCallback_.onStateChanged(false, new BranchNotInitError());
+						else
+							stateChangedCallback_.onStateChanged(false, new BranchGetCreditsError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
 					if (creditHistoryCallback_ != null) {
-						creditHistoryCallback_.onReceivingResponse(null, new BranchGetCreditHistoryError());
+						if (initNotStarted_)
+							creditHistoryCallback_.onReceivingResponse(null, new BranchNotInitError());
+						else
+							creditHistoryCallback_.onReceivingResponse(null, new BranchGetCreditHistoryError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					if (linkCreateCallback_ != null) {
@@ -1066,7 +1079,10 @@ public class Branch {
 						if (!prefHelper_.getUserURL().equals(PrefHelper.NO_STRING_VALUE)) {
 							failedUrl = prefHelper_.getUserURL();
 						}
-						linkCreateCallback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
+						if (initNotStarted_)
+							linkCreateCallback_.onLinkCreate(null, new BranchNotInitError());
+						else
+							linkCreateCallback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 					if (initIdentityFinishedCallback_ != null) {
@@ -1076,19 +1092,31 @@ public class Branch {
 						} catch (JSONException ex) {
 							ex.printStackTrace();
 						}
-						initIdentityFinishedCallback_.onInitFinished(obj, new BranchSetIdentityError());
+						if (initNotStarted_)
+							initIdentityFinishedCallback_.onInitFinished(obj, new BranchNotInitError());
+						else
+							initIdentityFinishedCallback_.onInitFinished(obj, new BranchSetIdentityError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
 					if (getReferralCodeCallback_ != null) {
-						getReferralCodeCallback_.onInitFinished(null, new BranchGetReferralCodeError());
+						if (initNotStarted_)
+							getReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
+						else
+							getReferralCodeCallback_.onInitFinished(null, new BranchGetReferralCodeError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
 					if (validateReferralCodeCallback_ != null) {
-						validateReferralCodeCallback_.onInitFinished(null, new BranchValidateReferralCodeError());
+						if (initNotStarted_)
+							validateReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
+						else
+							validateReferralCodeCallback_.onInitFinished(null, new BranchValidateReferralCodeError());
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
 					if (applyReferralCodeCallback_ != null) {
-						applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
+						if (initNotStarted_)
+							applyReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
+						else
+							applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
 					}
 				}
 			}
@@ -1668,6 +1696,13 @@ public class Branch {
 		@Override
 		public String getMessage() {
 			return "Trouble applying the referral code. Check network connectivity and that you properly initialized";
+		}
+	}
+	
+	public class BranchNotInitError extends BranchError {
+		@Override
+		public String getMessage() {
+			return "Did you forget to call init? Make sure you init the session before making Branch calls";
 		}
 	}
 }
