@@ -123,7 +123,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 			JSONObject closePost = new JSONObject();
 			try {
 				closePost.put("app_id", prefHelper_.getAppKey());
+				closePost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+				closePost.put("identity_id", prefHelper_.getIdentityID());
 				closePost.put("session_id", prefHelper_.getSessionID());
+				if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+					closePost.put("link_click_id", prefHelper_.getLinkClickID());
+				}
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}

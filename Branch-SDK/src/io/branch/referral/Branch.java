@@ -44,7 +44,8 @@ public class Branch {
 	public static int LINK_TYPE_UNLIMITED_USE = 0;
 	public static int LINK_TYPE_ONE_TIME_USE = 1;
 
-	private static final int SESSION_KEEPALIVE = 3000;
+	private static final int SESSION_KEEPALIVE = 2000;
+	private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
 	private static Branch branchReferral_;
 	private boolean isInit_;
@@ -64,6 +65,7 @@ public class Branch {
 	private Context context_;
 
 	private Timer closeTimer;
+	private Timer rotateCloseTimer;
 	private boolean keepAlive_;
 
 	private Semaphore serverSema_;
@@ -89,6 +91,7 @@ public class Branch {
 		requestQueue_ = ServerRequestQueue.getInstance(context);
 		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
+		rotateCloseTimer = new Timer();
 		initFinished_ = false;
 		initFailed_ = false;
 		lastRequestWasInit_ = true;
@@ -147,7 +150,7 @@ public class Branch {
 
 	// if you want to flag debug, call this before initUserSession
 	public void setDebug() {
-		prefHelper_.setDebug();
+		prefHelper_.setExternDebug();
 	}
 
 	public void initSession(BranchReferralInitListener callback) {
@@ -242,6 +245,7 @@ public class Branch {
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
 				if (callback != null)
 					callback.onInitFinished(new JSONObject(), new BranchInitError());
+				clearCloseTimer();
 				keepAlive();
 			} else {
 				if (!installOrOpenInQueue) {
@@ -336,12 +340,26 @@ public class Branch {
 		return debugOnTouchListener_;
 	}
 
+	
+	
 	public void closeSession() {
 		if (keepAlive_) {
 			return;
 		}
 
 		// else, real close
+		synchronized(rotateCloseTimer) {
+			clearCloseTimer();
+			rotateCloseTimer.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					executeClose();
+				}
+			}, PREVENT_CLOSE_TIMEOUT);
+		}
+	}
+	
+	private void executeClose() {
 		isInit_ = false;
 		lastRequestWasInit_ = false;
 		initNotStarted_ = true;
@@ -384,6 +402,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("identity", userId);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -408,7 +431,12 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -511,6 +539,11 @@ public class Branch {
 					try {
 						post.put("app_id", prefHelper_.getAppKey());
 						post.put("identity_id", prefHelper_.getIdentityID());
+						post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+						post.put("session_id", prefHelper_.getSessionID());
+						if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+							post.put("link_click_id", prefHelper_.getLinkClickID());
+						}
 						post.put("bucket", bucket);
 						post.put("amount", creditsToRedeem);
 					} catch (JSONException ex) {
@@ -552,6 +585,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("length", length);
 					post.put("direction", order.ordinal());
 
@@ -588,7 +626,12 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("event", action);
 					if (metadata != null)
 						post.put("metadata", filterOutBadCharacters(metadata));
@@ -680,6 +723,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -728,6 +776,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("calculation_type", calculationType);
 					post.put("location", location);
 					post.put("type", REFERRAL_CODE_TYPE);
@@ -769,6 +822,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("referral_code", code);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -798,7 +856,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("referral_code", code);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -848,6 +910,11 @@ public class Branch {
 					try {
 						linkPost.put("app_id", prefHelper_.getAppKey());
 						linkPost.put("identity_id", prefHelper_.getIdentityID());
+						linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+						linkPost.put("session_id", prefHelper_.getSessionID());
+						if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+							linkPost.put("link_click_id", prefHelper_.getLinkClickID());
+						}
 
 						if (type != 0) {
 							linkPost.put("type", type);
@@ -938,6 +1005,7 @@ public class Branch {
 
 				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
 					keepAlive();
+					clearCloseTimer();
 				}
 
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
@@ -1119,6 +1187,14 @@ public class Branch {
 		}
 	}
 
+	private void clearCloseTimer() {
+		if (rotateCloseTimer == null)
+			return;
+		rotateCloseTimer.cancel();
+		rotateCloseTimer.purge();
+		rotateCloseTimer = new Timer();
+	}
+	
 	private void clearTimer() {
 		if (closeTimer == null)
 			return;
@@ -1431,6 +1507,7 @@ public class Branch {
 						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
+						prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString("device_fingerprint_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 						if (serverResponse.getObject().has("identity_id")) {
 							prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));

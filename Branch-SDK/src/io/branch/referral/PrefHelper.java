@@ -10,6 +10,7 @@ import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
 public class PrefHelper {
+	private static boolean BNC_Dev_Debug = false;
 	private static boolean BNC_Debug = false;
 	private static boolean BNC_Debug_Connecting = false;
 	private static boolean BNC_Remote_Debug = false;
@@ -350,6 +351,10 @@ public class PrefHelper {
 		prefHelper_.prefsEditor_.commit();
 	}
 	
+	public void setExternDebug() {
+		BNC_Dev_Debug = true;
+	}
+	
 	public void setDebug() {
 		BNC_Debug = true;
 		BNC_Debug_Connecting = true;
@@ -391,7 +396,7 @@ public class PrefHelper {
 	}
 	
 	public void log(final String tag, final String message) {
-	    if (BNC_Debug) {
+	    if (BNC_Debug || BNC_Dev_Debug) {
 	    	Log.i(tag, message);
 	    	
 	        if (BNC_Remote_Debug && remoteInterface_ != null) {
@@ -409,7 +414,7 @@ public class PrefHelper {
 		if (prefHelper_ != null) {
 			prefHelper_.log(tag, message);
 		} else {
-			if (BNC_Debug) {
+			if (BNC_Debug || BNC_Dev_Debug) {
 				Log.i(tag, message);
 			}
 		}
@@ -444,7 +449,7 @@ public class PrefHelper {
 						BNC_Remote_Debug = false;
 			            Log.i("Branch Debug", "======= Server is not listening =======");
 					} else if (status >= 400 && status < 500) {
-						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
+						if (serverResponse.getObject() != null && serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}
 					} else if (status != 200) {
