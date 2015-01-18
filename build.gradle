@@ -7,3 +7,93 @@ buildscript {
         classpath 'com.android.tools.build:gradle:0.8.+'
     }
 }
+
+apply plugin: 'android'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+android {
+	lintOptions {
+    	abortOnError false
+    }
+
+    compileSdkVersion 19
+    buildToolsVersion "19.0.1"
+
+    defaultConfig {
+        minSdkVersion 7
+        targetSdkVersion 19
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'maven'
+        }
+        resources {
+            srcDir 'res'
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+group = "io.branch.sdk.android"
+archivesBaseName = "branch-android-sdk"
+version = "1.1.8"
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: nexusUsername, password:nexusPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: nexusUsername, password: nexusPassword)
+      }
+
+      pom.project {
+        name 'Branch Android SDK'
+        packaging 'jar'
+        description 'Use the Branch SDK (branch.io) to create and power the links that point back to your apps for all of these things and more. Branch makes it incredibly simple to create powerful deep links that can pass data across app install and open while handling all edge cases (using on desktop vs. mobile vs. already having the app installed, etc). Best of all, it is really simple to start using the links for your own app: only 2 lines of code to register the deep link router and one more line of code to create the links with custom data.'
+        url 'https://branch.io'
+
+        scm {
+          connection 'scm:git:git@github.com:BranchMetrics/Branch-Android-SDK.git'
+          developerConnection 'scm:git:git@github.com:BranchMetrics/Branch-Android-SDK.git'
+          url 'git@github.com:BranchMetrics/Branch-Android-SDK.git'
+        }
+
+        licenses {
+          license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+
+        developers {
+          developer {
+            id 'qinwei'
+            name 'Qinwei Gong'
+            email 'qinwei@branch.io'
+          }
+        }
+      }
+    }
+  }
+}

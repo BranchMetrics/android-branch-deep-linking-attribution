@@ -60,7 +60,7 @@ public class ServerRequest {
 			// it's OK for post to be null
 		}
 		
-		if (tag != null && !tag.isEmpty()) {
+		if (tag != null && tag.length() > 0) {
 			return new ServerRequest(tag, post);
 		}
 		
