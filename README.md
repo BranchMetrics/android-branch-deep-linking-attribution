@@ -8,9 +8,15 @@ clearUser() | logout()
 getInstallReferringParams() | getFirstReferringParams()
 getReferringParams() | getLatestReferringParams()
 
+## FAQ
+
+1. __What if you go down?! Or there is a poor connection?__
+
+At Branch, we live, breath uptime and performance. Just in case, we've got mechanisms internal to the SDK to deal with network issues. We always call the callbacks with the error parameter describing the issue. If the phone is in airplane mode and the connection is not available, the callbacks are called immediately. If there is a server latency, we timeout after 3 seconds and will retry 4 more times with a 3 second pause in between each. These timeouts are adjustable on the singleton instance by calling setNetworkTimeout (ms), setRetryCount and setRetryInterval (ms).
+
 ## Installation
 
-Current compiled SDK footprint is *25kb*
+Current compiled SDK footprint is *40kb*
 
 ### Install library project
 
@@ -24,7 +30,7 @@ Or just clone this project!
 
 ### Register you app
 
-You can sign up for your own app id at http://dashboard.branchmetrics.io
+You can sign up for your own app id at [https://dashboard.branch.io](https://dashboard.branch.io)
 
 ## Configuration (for tracking)
 
@@ -34,7 +40,7 @@ Ideally, you want to use our links any time you have an external link pointing t
 1. Our links are the highest possible converting channel to new downloads and users
 1. You can pass that shared data across install to give new users a custom welcome or show them the content they expect to see
 
-Our linking infrastructure will support anything you want to build. If it doesn't, we'll fix it so that it does: just reach out to alex@branchmetrics.io with requests.
+Our linking infrastructure will support anything you want to build. If it doesn't, we'll fix it so that it does: just reach out to alex@branch.io with requests.
 
 ### Register an activity for direct deep linking (optional but recommended)
 
@@ -72,21 +78,25 @@ This deep link routing callback is called 100% of the time on init, with your li
 public void onStart() {
 	super.onStart();
 
-	// sign up to get your key at http://branch.io
+	// Your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard
 	Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
 	branch.initSession(new BranchReferralInitListener(){
 		@Override
-		public void onInitFinished(JSONObject referringParams) {
-			// params are the deep linked params associated with the link that the user clicked before showing up
-			// params will be empty if no data found
+		public void onInitFinished(JSONObject referringParams, Branch.BranchError error) {
+			if (error == null) {
+				// params are the deep linked params associated with the link that the user clicked before showing up
+				// params will be empty if no data found
 
-			// here is the data from the example below if a new user clicked on Joe's link and installed the app
-			String name = referringParams.getString("user"); // returns Joe
-			String profileUrl = referringParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
-			String description = referringParams.getString("description"); // returns Joe likes long walks on the beach...
+				// here is the data from the example below if a new user clicked on Joe's link and installed the app
+				String name = referringParams.getString("user"); // returns Joe
+				String profileUrl = referringParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
+				String description = referringParams.getString("description"); // returns Joe likes long walks on the beach...
 
-			// route to a profile page in the app for Joe
-			// show a customer welcome
+				// route to a profile page in the app for Joe
+				// show a customer welcome
+			} else {
+				Log.i("MyApp", error.getMessage());
+			}
 		}
 	}, this.getIntent().getData());
 }
@@ -165,7 +175,9 @@ Some example events you might want to track:
 
 ### Shortened links
 
-There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that? You need to pass a callback for when you link is prepared (which should return very quickly, ~ 100 ms to process). If you don't want a callback, and can tolerate long links, check out the section right below.
+There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that? You need to pass a callback for when you link is prepared (which should return very quickly, ~ 50 ms to process).
+
+For more details on how to create links, see the [Branch link creation guide](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/url-creation-guide.md)
 
 ```java
 // associate data with a link
@@ -176,9 +188,7 @@ try {
 	dataToInclude.put("user", "Joe");
 	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
 	dataToInclude.put("description", "Joe likes long walks on the beach...")
-} catch (JSONException ex) {
-
-}
+} catch (JSONException ex) { }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
 // tags: null or example set of tags could be "version1", "trial6", etc
@@ -197,10 +207,14 @@ tags.put("trial6");
 // Be careful about aliases: these are immutable objects permanently associated with the data and associated paramters you pass into the link. When you create one in the SDK, it's tied to that user identity as well (automatically specified by the Branch internals). If you want to retrieve the same link again, you'll need to call getShortUrl with all of the same parameters from before.
 
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getShortUrl("AUSTIN34", tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
+branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
 	@Override
-	public void onLinkCreate(String url) {
-		// show the link to the user or share it immediately
+	public void onLinkCreate(String url, Branch.BranchError error) {
+		if (error == null) {
+			// show the link to the user or share it immediately
+		} else {
+			Log.i("MyApp", error.getMessage());
+		}
 	}
 });
 
@@ -210,21 +224,35 @@ branch.getShortUrl("AUSTIN34", tags, "text_message", Branch.FEATURE_TAG_SHARE, "
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
 **Note**
-You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following optional keys in the params JSONObject:
-```java
-"$og_app_id"
-"$og_title"
-"$og_description"
-"$og_image_url"
-```
+You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_:
 
-Also, you do custom redirection by inserting the following optional keys in the dictionary
-```java
-"$desktop_url"
-"$android_url"
-"$ios_url"
-"$ipad_url"
-```
+| Key | Value
+| --- | ---
+| "$og_title" | The title you'd like to appear for the link in social media
+| "$og_description" | The description you'd like to appear for the link in social media
+| "$og_image_url" | The URL for the image you'd like to appear for the link in social media
+| "$og_video" | The URL for the video 
+| "$og_url" | The URL you'd like to appear
+| "$og_app_id" | Your OG app ID. Optional and rarely used.
+
+Also, you do custom redirection by inserting the following _optional keys in the dictionary_:
+
+| Key | Value
+| --- | ---
+| "$desktop_url" | Where to send the user on a desktop or laptop. By default it is the Branch-hosted text-me service
+| "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
+| "$ios_url" | The replacement URL for the App Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
+| "$ipad_url" | Same as above but for iPad Store
+| "$fire_url" | Same as above but for Amazon Fire Store
+| "$blackberry_url" | Same as above but for Blackberry Store
+| "$windows_phone_url" | Same as above but for Windows Store
+
+You have the ability to control the direct deep linking of each link by inserting the following _optional keys in the dictionary_:
+
+| Key | Value
+| --- | ---
+| "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure. 
+| "$always_deeplink" | true or false. (default is not to deep link first) This key can be specified to have our linking service force try to open the app, even if we're not sure the user has the app installed. If the app is not installed, we fall back to the respective app store or $platform_url key. By default, we only open the app if we've seen a user initiate a session in your app from a Branch link (has been cookied and deep linked by Branch)
 
 ## Referral system rewarding functionality
 
@@ -248,7 +276,7 @@ Reward balances change randomly on the backend when certain actions are taken (d
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.loadRewards(new BranchReferralStateChangedListener() {
 	@Override
-	public void onStateChanged(boolean changed) {
+	public void onStateChanged(boolean changed, Branch.BranchError error) {
 		// changed boolean will indicate if the balance changed from what is currently in memory
 
 		// will return the balance of the current user's credits
@@ -266,6 +294,64 @@ Branch branch = Branch.getInstance(getApplicationContext());
 branch.redeemRewards(5);
 ```
 
+### Get credit history
+
+This call will retrieve the entire history of credits and redemptions from the individual user. To use this call, implement like so:
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.getCreditHistory(new BranchListResponseListener() {
+	public void onReceivingResponse(JSONArray list, Branch.BranchError error) {
+		if (error == null) {
+			// show the list in your app
+		} else {
+			Log.i("MyApp", error.getMessage());
+		}
+	}
+});
+```
+
+The response will return an array that has been parsed from the following JSON:
+```json
+[
+    {
+        "transaction": {
+                           "date": "2014-10-14T01:54:40.425Z",
+                           "id": "50388077461373184",
+                           "bucket": "default",
+                           "type": 0,
+                           "amount": 5
+                       },
+        "referrer": "12345678",
+        "referree": null
+    },
+    {
+        "transaction": {
+                           "date": "2014-10-14T01:55:09.474Z",
+                           "id": "50388199301710081",
+                           "bucket": "default",
+                           "type": 2,
+                           "amount": -3
+                       },
+        "referrer": null,
+        "referree": "12345678"
+    }
+]
+```
+**referrer**
+: The id of the referring user for this credit transaction. Returns null if no referrer is involved. Note this id is the user id in developer's own system that's previously passed to Branch's identify user API call.
+
+**referree**
+: The id of the user who was referred for this credit transaction. Returns null if no referree is involved. Note this id is the user id in developer's own system that's previously passed to Branch's identify user API call.
+
+**type**
+: This is the type of credit transaction
+
+1. _0_ - A reward that was added automatically by the user completing an action or referral
+1. _1_ - A reward that was added manually
+2. _2_ - A redemption of credits that occurred through our API or SDKs
+3. _3_ - This is a very unique case where we will subtract credits automatically when we detect fraud
+
 ### Get referral code
 
 Retrieve the referral code created by current user
@@ -274,7 +360,7 @@ Retrieve the referral code created by current user
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode(new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -300,7 +386,7 @@ The returned referral code is a 6 character long unique alpha-numeric string wra
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode(5, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -321,7 +407,7 @@ The resulting code will have your prefix, concatenated with a 4 character long u
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -342,7 +428,7 @@ The prefix parameter is optional here, i.e. it could be getReferralCode(5, expir
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -375,7 +461,7 @@ You can also tune the referral code to the finest granularity, with the followin
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			String code = referralCode.getString("referral_code");
 			// do whatever with code
@@ -403,7 +489,7 @@ If valid, returns the referral code JSONObject in the call back.
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.validateReferralCode(code, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
 				String referral_code = referralCode.getString("referral_code");
@@ -434,7 +520,7 @@ If the code is valid, returns the referral code JSONObject in the call back.
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.applyReferralCode(code, new BranchReferralInitListener() {
 	@Override
-	public void onInitFinished(JSONObject referralCode) {
+	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
 			if (!referralCode.has("error_message")) {
 				// applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.

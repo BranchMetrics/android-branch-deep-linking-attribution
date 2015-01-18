@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import io.branch.referral.ApkParser;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.jar.JarFile;
@@ -18,7 +17,6 @@ import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -54,7 +52,6 @@ public class SystemObserver {
 	    try {
 	        ApplicationInfo ai = pm.getApplicationInfo(context_.getPackageName(), 0);
 	        String sourceApk = ai.publicSourceDir;
-	        Log.i("BranchUriSchemer", "source APK file " + sourceApk);
 	        try {
 	            JarFile jf = new JarFile(sourceApk);
 	            InputStream is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
@@ -62,8 +59,10 @@ public class SystemObserver {
 	            is.read(xml);
 	            String scheme = new ApkParser().decompressXML(xml);
 	            jf.close();
+	            is.close();
 	            return scheme;
 	          } catch (Exception ex) {
+	        	  
 	          }
 	    } catch (NameNotFoundException e) {
 	    }
@@ -145,6 +144,10 @@ public class SystemObserver {
 	
 	public int getOSVersion() {
 		return android.os.Build.VERSION.SDK_INT;
+	}
+	
+	public boolean isSimulator() {
+		return android.os.Build.FINGERPRINT.contains("generic");
 	}
 	
 	@SuppressLint("NewApi")

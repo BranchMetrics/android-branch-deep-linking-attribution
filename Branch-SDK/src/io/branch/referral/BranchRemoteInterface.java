@@ -5,6 +5,7 @@ import java.util.Iterator;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.util.DisplayMetrics;
 
@@ -84,7 +85,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(installPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_INSTALL));
+			callback_.finished(make_restful_post(installPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_INSTALL, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -112,7 +113,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(openPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_OPEN));
+			callback_.finished(make_restful_post(openPost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_OPEN, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -122,39 +123,44 @@ public class BranchRemoteInterface extends RemoteInterface {
 			JSONObject closePost = new JSONObject();
 			try {
 				closePost.put("app_id", prefHelper_.getAppKey());
+				closePost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+				closePost.put("identity_id", prefHelper_.getIdentityID());
 				closePost.put("session_id", prefHelper_.getSessionID());
+				if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+					closePost.put("link_click_id", prefHelper_.getLinkClickID());
+				}
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
-			callback_.finished(make_restful_post(closePost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE));
+			callback_.finished(make_restful_post(closePost, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REGISTER_CLOSE, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void userCompletedAction(JSONObject post) {
 		String urlExtend = "v1/event";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_COMPLETE_ACTION));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_COMPLETE_ACTION, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void redeemRewards(JSONObject post) {
 		String urlExtend = "v1/redeem";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REDEEM_REWARDS));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_REDEEM_REWARDS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getRewards() {
 		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getReferralCounts() {
 		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -162,35 +168,35 @@ public class BranchRemoteInterface extends RemoteInterface {
 		String params = this.convertJSONtoString(post);
 		String urlExtend = "v1/credithistory" + params;
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY));
+			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void identifyUser(JSONObject post) {
 		String urlExtend = "v1/profile";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_IDENTIFY));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_IDENTIFY, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void logoutUser(JSONObject post) {
 		String urlExtend = "v1/logout";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_LOGOUT));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_LOGOUT, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getReferralCode(JSONObject post) {
 		String urlExtend = "v1/referralcode";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_CODE));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_CODE, prefHelper_.getTimeout()));
 		}
 	}
 	
@@ -199,7 +205,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			urlExtend = "v1/referralcode/" + post.getString("referral_code");
 			if (callback_ != null) {
-				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_VALIDATE_REFERRAL_CODE));
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_VALIDATE_REFERRAL_CODE, prefHelper_.getTimeout()));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -211,10 +217,56 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			urlExtend = "v1/applycode/" + post.getString("referral_code");
 			if (callback_ != null) {
-				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_APPLY_REFERRAL_CODE));
+				callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_APPLY_REFERRAL_CODE, prefHelper_.getTimeout()));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public void connectToDebug() {
+		try {
+			String urlExtend = "v1/debug/connect";
+			JSONObject post = new JSONObject();
+			post.put("app_id", prefHelper_.getAppKey());
+			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+			if (sysObserver_.getBluetoothPresent()) {
+				post.put("device_name", BluetoothAdapter.getDefaultAdapter().getName());
+			} else {
+				post.put("device_name", sysObserver_.getPhoneModel());
+			}
+			post.put("os", sysObserver_.getOS());
+		    post.put("os_version", sysObserver_.getOSVersion());
+		    post.put("model", sysObserver_.getPhoneModel());
+		    post.put("is_simulator", sysObserver_.isSimulator());
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), false));
+		} catch (JSONException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void disconnectFromDebug() {
+		try {
+			String urlExtend = "v1/debug/disconnect";
+			JSONObject post = new JSONObject();
+			post.put("app_id", prefHelper_.getAppKey());
+			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), false));
+		} catch (JSONException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void sendLog(String log) {
+		try {
+			String urlExtend = "v1/debug/log";
+			JSONObject post = new JSONObject();
+			post.put("app_id", prefHelper_.getAppKey());
+			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+			post.put("log", log);
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), false));
+		} catch (JSONException ex) {
+			ex.printStackTrace();
 		}
 	}
 	
