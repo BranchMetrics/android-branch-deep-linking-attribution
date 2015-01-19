@@ -169,7 +169,7 @@ public class Branch {
 		initSession(callback, data, null);
 	}
 	public void initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
-		if (data != null) {
+		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
@@ -188,7 +188,7 @@ public class Branch {
 		initSessionWithData(data, null);
 	}
 	public void initSessionWithData(Uri data, Activity activity) {
-		if (data != null) {
+		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
@@ -207,7 +207,7 @@ public class Branch {
 		initSession(callback, isReferrable, data, null);
 	}
 	public void initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
-		if (data != null) {
+		if (data != null&& data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
