@@ -64,6 +64,7 @@ public class Branch {
 	private SystemObserver systemObserver_;
 	private Context context_;
 
+	final Object lock;
 	private Timer closeTimer;
 	private Timer rotateCloseTimer;
 	private boolean keepAlive_;
@@ -92,6 +93,7 @@ public class Branch {
 		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
 		rotateCloseTimer = new Timer();
+		lock = new Object();
 		initFinished_ = false;
 		initFailed_ = false;
 		lastRequestWasInit_ = true;
@@ -244,7 +246,7 @@ public class Branch {
 			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
 				if (callback != null)
-					callback.onInitFinished(new JSONObject(), new BranchInitError());
+					callback.onInitFinished(new JSONObject(), null);
 				clearCloseTimer();
 				keepAlive();
 			} else {
@@ -267,8 +269,8 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null && activity instanceof Activity && debugListenerInitHistory_.get(Integer.valueOf(System.identityHashCode(activity))) == null) {
-			debugListenerInitHistory_.put(Integer.valueOf(System.identityHashCode(activity)), "init");
+		if (activity != null && activity instanceof Activity && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
 			if (view != null) { 
 				view.setOnTouchListener(debugOnTouchListener_);
@@ -348,7 +350,7 @@ public class Branch {
 		}
 
 		// else, real close
-		synchronized(rotateCloseTimer) {
+		synchronized(lock) {
 			clearCloseTimer();
 			rotateCloseTimer.schedule(new TimerTask() {
 				@Override
@@ -965,7 +967,7 @@ public class Branch {
 				String key = (String) keys.next();
 				try {
 					if (inputObj.has(key) && inputObj.get(key).getClass().equals(String.class)) {
-						filteredObj.put(key, inputObj.getString(key).replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\"").replace("Õ", "'"));
+						filteredObj.put(key, inputObj.getString(key).replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\""));
 					} else if (inputObj.has(key)) {
 						filteredObj.put(key, inputObj.get(key));
 					}
@@ -1205,7 +1207,7 @@ public class Branch {
 
 	private void keepAlive() {
 		keepAlive_ = true;
-		synchronized(closeTimer) {
+		synchronized(lock) {
 			clearTimer();
 			closeTimer.schedule(new TimerTask() {
 				@Override
