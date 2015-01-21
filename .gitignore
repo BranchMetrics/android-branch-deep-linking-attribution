@@ -11,6 +11,7 @@ Branch-SDK-TestBed/bin/
 .idea
 *.iml
 local.properties
+build/
 Branch-SDK/build/
 Branch-SDK-TestBed/build/
 
