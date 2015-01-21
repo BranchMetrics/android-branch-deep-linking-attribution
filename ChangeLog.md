@@ -1,31 +1,25 @@
 Branch Android SDK change log 
 
-- v0.3.97: Moved app key to plist
+- v1.2.9: Moved app key to strings.xml; Added constants for OG tags and redirect URLs
 
-- v0.3.96: Added adTrackingSafe
+- v1.2.8: Fixed close issue due to rotation
 
-- v0.3.95: Added BNCDebugging category to framework
+- v1.2.7: Check if URI is hierarchical
 
-- v0.3.91: Added getters/setters for API timeout, retryInterval and retryCount 
+- v1.2.6: Handle not init-ed case
 
-- v0.3.90: Added more info to debug connect
+- v1.2.5: Proper debug connection
 
-- v0.3.81: Fixed encoding exception in BNCServerRequestQueue
+- v1.2.4: Fixed rare race condition
 
-- v0.3.80: Better handling of incorrect keys; only queue requests if init succeeded
+- v1.2.3: Added BranchError to callbacks
 
-- v0.3.7: Added handleFailure for non init
+- v1.2.2: Added Branch remote debug feature
 
-- v0.3.6: Added Branch remote debug feature
+- v1.2.1: Proper network callbacks; Added query limit
 
-- v0.3.5: Fixed race condition
+- v1.2.0: Cleanup semaphore issue
 
-- v0.3.4: Added BranchLinkType to getShortURL
+- v1.1.9: Fixed request before init issue
 
-- v0.3.3: Reimplemented apply referral code
-
-- v0.3.2: Added API for referral code
-
-- v0.3.1: Fixed synchronization issue in queue persistence
-
-- v0.3.0: Added NSError to callbacks
+- v1.1.8: Added link alias
