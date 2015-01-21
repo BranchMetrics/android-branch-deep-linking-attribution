@@ -1,13 +1,12 @@
 package io.branch.referral;
 
-import java.util.Iterator;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.util.DisplayMetrics;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_REGISTER_INSTALL = "t_register_install";
@@ -165,8 +164,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void getCreditHistory(JSONObject post) {
-		String params = this.convertJSONtoString(post);
-		String urlExtend = "v1/credithistory" + params;
+        String params = null;
+        try {
+            params = this.convertJSONtoString(post);
+        } catch ( JSONException ignore ) {}
+        String urlExtend = "v1/credithistory" + params;
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
 		}
@@ -270,32 +272,35 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	private String convertJSONtoString(JSONObject json) {
+	private String convertJSONtoString(JSONObject json) throws JSONException {
 		StringBuilder result = new StringBuilder();
 		
 		if (json != null) {
-	        Iterator<String> iter = json.keys();
-	        if (iter.hasNext()) {
-	        	boolean first = true;
-	        	do {
+            JSONArray names = json.names();
+	        if ( names != null ) {
+                boolean first = true;
+                int size = names.length();
+                for( int i = 0; i < size; i++ ) {
+
+                    String key = names.getString( i );
+
 	        		if (first) {
 		        		result.append("?");
 		        		first = false;
 		        	} else {
 		        		result.append("&");
 		        	}
-	        		
-	        		String key = iter.next();
-	        		String value;
+
+                    String value;
 	        		try {
-						value = json.getString(key);
+						value = json.getString( key );
 					} catch (JSONException e) {
 						e.printStackTrace();
 						return null;
 					}
 	        		
-	        		result.append(key + "=" + value);
-	        	} while (iter.hasNext());
+	        		result.append( key ).append( "=" ).append( value );
+	        	}
 	        }
 	    }
 		
