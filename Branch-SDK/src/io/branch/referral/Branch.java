@@ -22,27 +22,45 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 
 public class Branch {
-	public static String FEATURE_TAG_SHARE = "share";
-	public static String FEATURE_TAG_REFERRAL = "referral";
-	public static String FEATURE_TAG_INVITE = "invite";
-	public static String FEATURE_TAG_DEAL = "deal";
-	public static String FEATURE_TAG_GIFT = "gift";
+	public static final String FEATURE_TAG_SHARE = "share";
+	public static final String FEATURE_TAG_REFERRAL = "referral";
+	public static final String FEATURE_TAG_INVITE = "invite";
+	public static final String FEATURE_TAG_DEAL = "deal";
+	public static final String FEATURE_TAG_GIFT = "gift";
 
-	public static String REDEEM_CODE = "$redeem_code";
-	public static String REEFERRAL_BUCKET_DEFAULT = "default";
-	public static String REFERRAL_CODE_TYPE = "credit";
-	public static int REFERRAL_CREATION_SOURCE_SDK = 2;
-	public static String REFERRAL_CODE = "referral_code";
+	public static final String REDEEM_CODE = "$redeem_code";
+	public static final String REEFERRAL_BUCKET_DEFAULT = "default";
+	public static final String REFERRAL_CODE_TYPE = "credit";
+	public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
+	public static final String REFERRAL_CODE = "referral_code";
+	
+	public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
+	public static final String REDIRECT_ANDROID_URL = "$android_url";
+	public static final String REDIRECT_IOS_URL = "$ios_url";
+	public static final String REDIRECT_IPAD_URL = "$ipad_url";
+	public static final String REDIRECT_FIRE_URL = "$fire_url";
+	public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
+	public static final String REDIRECT_WINDOWNS_PHONE_URL = "$windows_phone_url";
+	
+	public static final String OG_TITLE = "$og_title";
+	public static final String OG_DESC = "$og_description";
+	public static final String OG_IMAGE_URL = "$og_image_url";
+	public static final String OG_VIDEO = "$og_video";
+	public static final String OG_URL = "$og_url";
+	public static final String OG_APP_ID = "$og_app_id";
+	
+	public static final String DEEPLINK_PATH = "$deeplink_path";
+	public static final String ALWAYS_DEEPLINK = "$always_deeplink";
+	
+	public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
+	public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
+	public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
 
-	public static int REFERRAL_CODE_LOCATION_REFERREE = 0;
-	public static int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
-	public static int REFERRAL_CODE_LOCATION_BOTH = 3;
+	public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
+	public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
 
-	public static int REFERRAL_CODE_AWARD_UNLIMITED = 1;
-	public static int REFERRAL_CODE_AWARD_UNIQUE = 0;
-
-	public static int LINK_TYPE_UNLIMITED_USE = 0;
-	public static int LINK_TYPE_ONE_TIME_USE = 1;
+	public static final int LINK_TYPE_UNLIMITED_USE = 0;
+	public static final int LINK_TYPE_ONE_TIME_USE = 1;
 
 	private static final int SESSION_KEEPALIVE = 2000;
 	private static final int PREVENT_CLOSE_TIMEOUT = 500;
