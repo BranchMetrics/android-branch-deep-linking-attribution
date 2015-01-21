@@ -1,16 +1,5 @@
 package io.branch.referral;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Semaphore;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
@@ -21,6 +10,18 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Semaphore;
+
+@SuppressWarnings( "UnusedDeclaration" )
 public class Branch {
 	public static String FEATURE_TAG_SHARE = "share";
 	public static String FEATURE_TAG_REFERRAL = "referral";
@@ -29,7 +30,7 @@ public class Branch {
 	public static String FEATURE_TAG_GIFT = "gift";
 
 	public static String REDEEM_CODE = "$redeem_code";
-	public static String REEFERRAL_BUCKET_DEFAULT = "default";
+	public static String REFERRAL_BUCKET_DEFAULT = "default";
 	public static String REFERRAL_CODE_TYPE = "credit";
 	public static int REFERRAL_CREATION_SOURCE_SDK = 2;
 	public static String REFERRAL_CODE = "referral_code";
@@ -131,8 +132,8 @@ public class Branch {
 	public void resetUserSession() {
 		isInit_ = false;
 	}
-	
-	public void setRetryCount(int retryCount) {
+
+    public void setRetryCount(int retryCount) {
 		if (prefHelper_ != null && retryCount > 0) {
 			prefHelper_.setRetryCount(retryCount);
 		}
@@ -525,7 +526,7 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				int creditsToRedeem = 0;
+				int creditsToRedeem;
 				int credits = prefHelper_.getCreditCount(bucket);
 
 				if (count > credits) {
@@ -749,23 +750,23 @@ public class Branch {
 	}
 
 	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
-		this.getReferralCode(null, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
-		this.getReferralCode(null, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
+		this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
@@ -789,7 +790,7 @@ public class Branch {
 					post.put("creation_source", REFERRAL_CREATION_SOURCE_SDK);
 					post.put("amount", amount);
 					post.put("bucket", bucket != null ? bucket
-							: REEFERRAL_BUCKET_DEFAULT);
+							: REFERRAL_BUCKET_DEFAULT );
 					if (prefix != null && prefix.length() > 0) {
 						post.put("prefix", prefix);
 					}
@@ -971,7 +972,7 @@ public class Branch {
 					} else if (inputObj.has(key)) {
 						filteredObj.put(key, inputObj.get(key));
 					}
-				} catch(JSONException ex) {
+				} catch(JSONException ignore) {
 					
 				}	
 			}

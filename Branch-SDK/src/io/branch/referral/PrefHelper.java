@@ -1,13 +1,14 @@
 package io.branch.referral;
 
-import java.util.ArrayList;
-
-import org.json.JSONException;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.util.Log;
+
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class PrefHelper {
 	private static boolean BNC_Dev_Debug = false;
@@ -305,9 +306,7 @@ public class PrefHelper {
 	private ArrayList<String> deserializeString(String list) {
 		ArrayList<String> strings = new ArrayList<String>();
 		String[] stringArr = list.split(",");
-		for (int i = 0; i < stringArr.length; i++) {
-			strings.add(stringArr[i]);
-		}
+        Collections.addAll( strings, stringArr );
 		return strings;
 	}
 	
@@ -430,11 +429,8 @@ public class PrefHelper {
 			}).start();
         	return true;
         }
-		if (BNC_Debug_Connecting) {
-			return true;
-		} else {
-			return false;	
-		}
+
+        return BNC_Debug_Connecting;
 	}
 	
 	public class DebugNetworkCallback implements NetworkCallback {
