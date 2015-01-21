@@ -7,6 +7,8 @@ import org.json.JSONException;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.util.Log;
 
 public class PrefHelper {
@@ -104,12 +106,26 @@ public class PrefHelper {
 		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
 	}
 
+	@Deprecated
 	public void setAppKey(String key) {
 		setString(KEY_APP_KEY, key);
 	}
 	
 	public String getAppKey() {
-		return getString(KEY_APP_KEY);
+		String appKey = null;
+		try {
+	        final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
+	        if (ai.metaData != null) {
+	            appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
+	        }
+	    } catch (final PackageManager.NameNotFoundException e) {
+	    }
+		
+		if (appKey == null) {
+			appKey = getString(KEY_APP_KEY);
+		}
+		
+		return appKey;
 	}
 	
 	public void setDeviceFingerPrintID(String device_fingerprint_id) {

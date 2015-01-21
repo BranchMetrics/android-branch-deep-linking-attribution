@@ -36,6 +36,7 @@
         <activity
             android:name="io.branch.testbed.ReferralCodeActivity">
         </activity>
+        <meta-data android:name="io.branch.sdk.ApplicationId" android:value="@string/bnc_app_key" />
     </application>
 
 </manifest>
