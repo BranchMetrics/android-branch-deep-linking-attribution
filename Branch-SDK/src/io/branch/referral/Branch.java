@@ -269,7 +269,7 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null && activity instanceof Activity && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
 			if (view != null) { 
@@ -1005,7 +1005,7 @@ public class Branch {
 				ServerRequest req = requestQueue_.peek();
 				serverSema_.release();
 
-				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && !req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					keepAlive();
 					clearCloseTimer();
 				}
