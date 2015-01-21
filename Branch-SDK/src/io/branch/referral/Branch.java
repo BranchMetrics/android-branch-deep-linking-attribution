@@ -107,6 +107,7 @@ public class Branch {
 		debugOnTouchListener_ = retrieveOnTouchListener();
 	}
 
+	@Deprecated
 	public static Branch getInstance(Context context, String key) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
@@ -119,6 +120,11 @@ public class Branch {
 	public static Branch getInstance(Context context) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
+
+			String appKey = branchReferral_.prefHelper_.getAppKey();
+	        if (appKey == null || appKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+	        	Log.i("BranchSDK", "Branch Warning: Please enter your Branch App Key in your project's res/values/strings.xml!");
+	        }
 		}
 		branchReferral_.context_ = context;
 		return branchReferral_;
