@@ -277,12 +277,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 		
 		if (json != null) {
             JSONArray names = json.names();
-	        if ( names != null ) {
+	        if (names != null) {
                 boolean first = true;
                 int size = names.length();
-                for( int i = 0; i < size; i++ ) {
+                for(int i = 0; i < size; i++) {
 
-                    String key = names.getString( i );
+                    String key = names.getString(i);
 
 	        		if (first) {
 		        		result.append("?");
@@ -293,13 +293,13 @@ public class BranchRemoteInterface extends RemoteInterface {
 
                     String value;
 	        		try {
-						value = json.getString( key );
+						value = json.getString(key);
 					} catch (JSONException e) {
 						e.printStackTrace();
 						return null;
 					}
 	        		
-	        		result.append( key ).append( "=" ).append( value );
+	        		result.append(key).append("=").append(value);
 	        	}
 	        }
 	    }
