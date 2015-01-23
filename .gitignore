@@ -15,4 +15,5 @@ Branch-SDK/build/
 Branch-SDK-TestBed/build/
 
 # Gradle
+build/*
 .gradle/*
