@@ -49,9 +49,9 @@ public class ServerRequestQueue {
 			public void run() {
 				JSONArray jsonArr = new JSONArray();
 				synchronized(lock) {
-                    for ( ServerRequest aQueue : queue ) {
+                    for (ServerRequest aQueue : queue) {
                         JSONObject json = aQueue.toJSON();
-                        if ( json != null ) {
+                        if (json != null) {
                             jsonArr.put( json );
                         }
                     }
@@ -63,7 +63,7 @@ public class ServerRequestQueue {
 					} finally {
 						try {
 							editor.putString(PREF_KEY, jsonArr.toString()).commit();
-						} catch (ConcurrentModificationException ignored ) {}
+						} catch (ConcurrentModificationException ignored) {}
 					}
 				}
 			}
@@ -84,7 +84,7 @@ public class ServerRequestQueue {
     					result.add(req);
     				}
     			}
-    		} catch (JSONException ignored ) {
+    		} catch (JSONException ignored) {
     		}
     	}
     	
@@ -110,37 +110,34 @@ public class ServerRequestQueue {
 		try {
 			req = queue.remove(0);
 			persist();
-		} catch (IndexOutOfBoundsException ignored ) {
-		} catch (NoSuchElementException ignored ) {
+		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
 		}
-		return req;
+        return req;
 	}
 
 	public ServerRequest peek() {
 		ServerRequest req = null;
 		try {
 			req = queue.get(0);
-		} catch (IndexOutOfBoundsException ignored ) {
-		} catch (NoSuchElementException ignored ) {
+		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
 		}
-		return req;
+        return req;
 	}
 	
 	public ServerRequest peekAt(int index) {
 		ServerRequest req = null;
 		try {
 			req = queue.get(index);
-		} catch (IndexOutOfBoundsException ignored ) {
-		} catch (NoSuchElementException ignored ) {
+		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
 		}
-		return req;
+        return req;
 	}
 	
 	public void insert(ServerRequest request, int index) {
 		try {
 			queue.add(index, request);
 			persist();
-		} catch (IndexOutOfBoundsException ignored ) {
+		} catch (IndexOutOfBoundsException ignored) {
 		}
 	}
 	
@@ -149,15 +146,15 @@ public class ServerRequestQueue {
 		try {
 			req = queue.remove(index);
 			persist();
-		} catch (IndexOutOfBoundsException ignored ) {
+		} catch (IndexOutOfBoundsException ignored) {
 		}
 		return req;
 	}
 
 	public boolean containsInstallOrOpen() {
 		synchronized(lock) {
-            for ( ServerRequest req : queue ) {
-                if ( req.getTag().equals( BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL ) || req.getTag().equals( BranchRemoteInterface.REQ_TAG_REGISTER_OPEN ) ) {
+            for (ServerRequest req : queue) {
+                if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
                     return true;
                 }
             }
