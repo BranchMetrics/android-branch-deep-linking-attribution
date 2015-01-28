@@ -1,18 +1,19 @@
 package io.branch.referral;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.content.Context;
-import android.content.SharedPreferences;
 
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
@@ -21,6 +22,7 @@ public class ServerRequestQueue {
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
 	private List<ServerRequest> queue;
+    private final Object lock = new Object();
 
     public static ServerRequestQueue getInstance(Context c) {
     	if(SharedInstance == null) {
@@ -32,7 +34,9 @@ public class ServerRequestQueue {
     	}
     	return SharedInstance;
     }
-    
+
+
+    @SuppressLint( "CommitPrefEdits" )
     private ServerRequestQueue (Context c) {
     	sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
 		editor = sharedPref.edit();
@@ -44,14 +48,13 @@ public class ServerRequestQueue {
 			@Override
 			public void run() {
 				JSONArray jsonArr = new JSONArray();
-				synchronized(queue) {
-					Iterator<ServerRequest> iter = queue.iterator();
-					while (iter.hasNext()) {
-						JSONObject json = iter.next().toJSON();
-						if (json != null) {
-							jsonArr.put(json);
-						}
-					}
+				synchronized(lock) {
+                    for (ServerRequest aQueue : queue) {
+                        JSONObject json = aQueue.toJSON();
+                        if (json != null) {
+                            jsonArr.put( json );
+                        }
+                    }
 					
 					try {
 						editor.putString(PREF_KEY, jsonArr.toString()).commit();
@@ -60,7 +63,7 @@ public class ServerRequestQueue {
 					} finally {
 						try {
 							editor.putString(PREF_KEY, jsonArr.toString()).commit();
-						} catch (ConcurrentModificationException ex) {}
+						} catch (ConcurrentModificationException ignored) {}
 					}
 				}
 			}
@@ -81,7 +84,7 @@ public class ServerRequestQueue {
     					result.add(req);
     				}
     			}
-    		} catch (JSONException e) {
+    		} catch (JSONException ignored) {
     		}
     	}
     	
@@ -107,37 +110,34 @@ public class ServerRequestQueue {
 		try {
 			req = queue.remove(0);
 			persist();
-		} catch (IndexOutOfBoundsException ex) {
-		} catch (NoSuchElementException ex) {
+		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
 		}
-		return req;
+        return req;
 	}
 
 	public ServerRequest peek() {
 		ServerRequest req = null;
 		try {
 			req = queue.get(0);
-		} catch (IndexOutOfBoundsException ex) {
-		} catch (NoSuchElementException ex) {
+		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
 		}
-		return req;
+        return req;
 	}
 	
 	public ServerRequest peekAt(int index) {
 		ServerRequest req = null;
 		try {
 			req = queue.get(index);
-		} catch (IndexOutOfBoundsException ex) {
-		} catch (NoSuchElementException ex) {
+		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
 		}
-		return req;
+        return req;
 	}
 	
 	public void insert(ServerRequest request, int index) {
 		try {
 			queue.add(index, request);
 			persist();
-		} catch (IndexOutOfBoundsException ex) {
+		} catch (IndexOutOfBoundsException ignored) {
 		}
 	}
 	
@@ -146,26 +146,24 @@ public class ServerRequestQueue {
 		try {
 			req = queue.remove(index);
 			persist();
-		} catch (IndexOutOfBoundsException ex) {
+		} catch (IndexOutOfBoundsException ignored) {
 		}
 		return req;
 	}
 
 	public boolean containsInstallOrOpen() {
-		synchronized(queue) {
-			Iterator<ServerRequest> iter = queue.iterator();
-			while (iter.hasNext()) {
-				ServerRequest req = iter.next();
-				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					return true;
-				}
-			}
+		synchronized(lock) {
+            for (ServerRequest req : queue) {
+                if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+                    return true;
+                }
+            }
 		}
 		return false;
 	}
 	
 	public void moveInstallOrOpenToFront(String tag, int networkCount) {
-		synchronized(queue) {
+		synchronized(lock) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
