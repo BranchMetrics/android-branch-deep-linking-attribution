@@ -38,8 +38,8 @@ public class RemoteInterface {
 		return new DefaultHttpClient(httpParams);
 	}
 	
-	private ServerResponse processEntityForJSON (HttpEntity entity, int statusCode, String tag, boolean log) {
-		ServerResponse result = new ServerResponse(tag, statusCode);
+	private ServerResponse processEntityForJSON (HttpEntity entity, int statusCode, String tag, boolean log, BranchLinkData linkData) {
+		ServerResponse result = new ServerResponse(tag, statusCode, linkData);
 		try {
 			if (entity != null) {
 		    	InputStream instream = entity.getContent();
@@ -83,7 +83,7 @@ public class RemoteInterface {
 			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log);
+		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
 
 		} catch (ClientProtocolException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
@@ -101,10 +101,17 @@ public class RemoteInterface {
 	}
 
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
-		return make_restful_post(body, url, tag, timeout, true);
+		return make_restful_post(body, url, tag, timeout, true, null);
+	}
+	
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
+		return make_restful_post(body, url, tag, timeout, true, linkData);
 	}
 
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
+		return make_restful_post(body, url, tag, timeout, log, null);
+	}
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
 		try {    	
 			body.put("sdk", "android" + SDK_VERSION);
 			if (log) {
@@ -115,7 +122,7 @@ public class RemoteInterface {
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log);
+		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
 
 		} catch (SocketException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
