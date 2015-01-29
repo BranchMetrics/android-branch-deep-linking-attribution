@@ -1,19 +1,19 @@
 package io.branch.referral;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
@@ -110,7 +110,8 @@ public class ServerRequestQueue {
 		try {
 			req = queue.remove(0);
 			persist();
-		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+		} catch (IndexOutOfBoundsException ignored) {
+		} catch (NoSuchElementException ignored) {
 		}
         return req;
 	}
@@ -119,7 +120,8 @@ public class ServerRequestQueue {
 		ServerRequest req = null;
 		try {
 			req = queue.get(0);
-		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+		} catch (IndexOutOfBoundsException ignored) {
+		} catch (NoSuchElementException ignored) {
 		}
         return req;
 	}
@@ -128,7 +130,8 @@ public class ServerRequestQueue {
 		ServerRequest req = null;
 		try {
 			req = queue.get(index);
-		} catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+		} catch (IndexOutOfBoundsException ignored) {
+		} catch (NoSuchElementException ignored) {
 		}
         return req;
 	}

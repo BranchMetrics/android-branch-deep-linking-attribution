@@ -164,10 +164,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void getCreditHistory(JSONObject post) {
-        String params = null;
-        try {
-            params = this.convertJSONtoString(post);
-        } catch ( JSONException ignore ) {}
+        String params = this.convertJSONtoString(post);
         String urlExtend = "v1/credithistory" + params;
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
@@ -272,7 +269,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	private String convertJSONtoString(JSONObject json) throws JSONException {
+	private String convertJSONtoString(JSONObject json) {
 		StringBuilder result = new StringBuilder();
 		
 		if (json != null) {
@@ -281,25 +278,22 @@ public class BranchRemoteInterface extends RemoteInterface {
                 boolean first = true;
                 int size = names.length();
                 for(int i = 0; i < size; i++) {
-
-                    String key = names.getString(i);
-
-	        		if (first) {
-		        		result.append("?");
-		        		first = false;
-		        	} else {
-		        		result.append("&");
-		        	}
-
-                    String value;
-	        		try {
-						value = json.getString(key);
+                	try {
+	                    String key = names.getString(i);
+	
+		        		if (first) {
+			        		result.append("?");
+			        		first = false;
+			        	} else {
+			        		result.append("&");
+			        	}
+	
+	                    String value = json.getString(key);
+	                    result.append(key).append("=").append(value);
 					} catch (JSONException e) {
 						e.printStackTrace();
 						return null;
 					}
-	        		
-	        		result.append(key).append("=").append(value);
 	        	}
 	        }
 	    }
