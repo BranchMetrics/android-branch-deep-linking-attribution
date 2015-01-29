@@ -21,7 +21,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 
-@SuppressWarnings( "UnusedDeclaration" )
 public class Branch {
 	public static final String FEATURE_TAG_SHARE = "share";
 	public static final String FEATURE_TAG_REFERRAL = "referral";

@@ -1,5 +1,7 @@
 Branch Android SDK change log 
 
+- v1.3.0: Added setDebug call to enable logging and use a random hardware ID (helpful for referral testings)
+
 - v1.2.9: Moved app key to strings.xml; Added constants for OG tags and redirect URLs
 
 - v1.2.8: Fixed close issue due to rotation
