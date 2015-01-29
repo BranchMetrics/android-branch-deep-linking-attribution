@@ -1,5 +1,18 @@
 package io.branch.referral;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Semaphore;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
@@ -9,17 +22,6 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Semaphore;
 
 public class Branch {
 	public static final String FEATURE_TAG_SHARE = "share";
@@ -101,6 +103,8 @@ public class Branch {
 	private Handler debugHandler_;
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
+	
+	private Map<BranchLinkData, String> linkCache_;
 
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -123,6 +127,7 @@ public class Branch {
 		debugListenerInitHistory_ = new SparseArray<String>();
 		debugHandler_ = new Handler();
 		debugOnTouchListener_ = retrieveOnTouchListener();
+		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
 
 	@Deprecated
@@ -928,57 +933,48 @@ public class Branch {
 	private void generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					JSONObject linkPost = new JSONObject();
-					try {
-						linkPost.put("app_id", prefHelper_.getAppKey());
-						linkPost.put("identity_id", prefHelper_.getIdentityID());
-						linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-						linkPost.put("session_id", prefHelper_.getSessionID());
-						if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-							linkPost.put("link_click_id", prefHelper_.getLinkClickID());
-						}
-
-						if (type != 0) {
-							linkPost.put("type", type);
-						}
-						if (tags != null) {
-							JSONArray tagArray = new JSONArray();
-							for (String tag : tags)
-								tagArray.put(tag);
-							linkPost.put("tags", tagArray);
-						}
-						if (alias != null) {
-							linkPost.put("alias", alias);
-						}
-						if (channel != null) {
-							linkPost.put("channel", channel);
-						}
-						if (feature != null) {
-							linkPost.put("feature", feature);
-						}
-						if (stage != null) {
-							linkPost.put("stage", stage);
-						}
-						if (params != null)
-							linkPost.put("data", params);
-					} catch (JSONException ex) {
-						ex.printStackTrace();
-					}
-					ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
-					if (!initFailed_) {
-						requestQueue_.enqueue(req);
-					}
-					if (initFinished_ || !hasNetwork_) {
-						lastRequestWasInit_ = false;
-						processNextQueueItem();
-					} else if (initFailed_ || initNotStarted_) {
-						handleFailure(req);
-					}
+			final BranchLinkData linkPost = new BranchLinkData();
+			try {
+				linkPost.put("app_id", prefHelper_.getAppKey());
+				linkPost.put("identity_id", prefHelper_.getIdentityID());
+				linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+				linkPost.put("session_id", prefHelper_.getSessionID());
+				if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+					linkPost.put("link_click_id", prefHelper_.getLinkClickID());
 				}
-			}).start();
+
+				linkPost.putType(type);
+				linkPost.putTags(tags);
+				linkPost.putAlias(alias);
+				linkPost.putChannel(channel);
+				linkPost.putFeature(feature);
+				linkPost.putStage(stage);
+				linkPost.putParams(params);
+			} catch (JSONException ex) {
+				ex.printStackTrace();
+			}
+			
+			if (linkCache_.containsKey(linkPost)) {
+				if (linkCreateCallback_ != null) {
+					linkCreateCallback_.onLinkCreate(linkCache_.get(linkPost), null);
+				}
+			} else {
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
+						if (!initFailed_) {
+							requestQueue_.enqueue(req);
+						}
+						if (initFinished_ || !hasNetwork_) {
+							lastRequestWasInit_ = false;
+							processNextQueueItem();
+						} else if (initFailed_ || initNotStarted_) {
+							handleFailure(req);
+						}
+					}
+				}).start();
+			}
 		}
 	}
 	
@@ -1578,6 +1574,9 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
+						
+						// cache the link
+						linkCache_.put(serverResponse.getLinkData(), url);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));

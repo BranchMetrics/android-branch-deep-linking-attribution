@@ -7,10 +7,16 @@ public class ServerResponse {
 	private int statusCode_;
 	private String tag_;
 	private Object post_;
+	private BranchLinkData linkData_;
 	
 	public ServerResponse(String tag, int statusCode) {
+		this(tag, statusCode, null);
+	}
+	
+	public ServerResponse(String tag, int statusCode, BranchLinkData linkData) {
 		tag_ = tag;
 		statusCode_ = statusCode;
+		linkData_ = linkData;
 	}
 	
 	public String getTag() {
@@ -39,5 +45,9 @@ public class ServerResponse {
 		}
 		
 		return null;
+	}
+	
+	public BranchLinkData getLinkData() {
+		return linkData_;
 	}
 }
