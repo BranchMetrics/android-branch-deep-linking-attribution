@@ -370,6 +370,10 @@ public class PrefHelper {
 		BNC_Dev_Debug = true;
 	}
 	
+	public boolean getExternDebug() {
+		return BNC_Dev_Debug;
+	}
+	
 	public void setDebug() {
 		BNC_Debug = true;
 		BNC_Debug_Connecting = true;

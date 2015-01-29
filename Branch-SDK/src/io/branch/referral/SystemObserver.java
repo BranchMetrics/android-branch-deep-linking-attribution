@@ -31,9 +31,12 @@ public class SystemObserver {
 		isRealHardwareId = true;
 	}
 	
-	public String getUniqueID() {
+	public String getUniqueID(boolean debug) {
 		if (context_ != null) { 
-			String androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
+			String androidID = null;
+			if (!debug) {
+				androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
+			}
 			if (androidID == null) {
 				androidID = UUID.randomUUID().toString();
 				isRealHardwareId = false;
