@@ -173,7 +173,7 @@ Often, you might have your own user IDs, or want referral and event data to pers
 To identify a user, just call:
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.setIdentity(@"your user id");
+branch.setIdentity(@"your user id");	// your user id should not exceed 127 characters
 ```
 
 #### Logout
@@ -190,14 +190,14 @@ Branch.getInstance(getApplicationContext()).logout();
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.userCompletedAction("your_custom_event");
+branch.userCompletedAction("your_custom_event"); // your custom event name should not exceed 63 characters
 ```
 
 OR if you want to store some state with the event
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.userCompletedAction("your_custom_event", (JSONObject)appState);
+branch.userCompletedAction("your_custom_event", (JSONObject)appState); // same 63 characters max limit
 ```
 
 Some example events you might want to track:
@@ -227,10 +227,10 @@ try {
 } catch (JSONException ex) { }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
-// tags: null or example set of tags could be "version1", "trial6", etc
-// channel: null or examples: "facebook", "twitter", "text_message", etc
-// feature: null or examples: Branch.FEATURE_TAG_SHARE, Branch.FEATURE_TAG_REFERRAL, "unlock", etc
-// stage: null or examples: "past_customer", "logged_in", "level_6"
+// tags: null or example set of tags could be "version1", "trial6", etc; each tag should not exceed 64 characters
+// channel: null or examples: "facebook", "twitter", "text_message", etc; should not exceed 128 characters
+// feature: null or examples: Branch.FEATURE_TAG_SHARE, Branch.FEATURE_TAG_REFERRAL, "unlock", etc; should not exceed 128 characters
+// stage: null or examples: "past_customer", "logged_in", "level_6"; should not exceed 128 characters
 
 ArrayList<String> tags = new ArrayList<String>();
 tags.put("version1");
@@ -239,7 +239,7 @@ tags.put("trial6");
 // Link 'type' can be used for scenarios where you want the link to only deep link the first time. 
 // Use _null_, _LINK_TYPE_UNLIMITED_USE_ or _LINK_TYPE_ONE_TIME_USE_
 
-// Link 'alias' can be used to label the endpoint on the link. For example: http://bnc.lt/AUSTIN28. 
+// Link 'alias' can be used to label the endpoint on the link. For example: http://bnc.lt/AUSTIN28. Should not exceed 128 characters
 // Be careful about aliases: these are immutable objects permanently associated with the data and associated paramters you pass into the link. When you create one in the SDK, it's tied to that user identity as well (automatically specified by the Branch internals). If you want to retrieve the same link again, you'll need to call getShortUrl with all of the same parameters from before.
 
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -441,7 +441,7 @@ The resulting code will have your prefix, concatenated with a 4 character long u
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {
+branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {   // prefix should not exceed 48 characters
 	@Override
 	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
@@ -462,7 +462,7 @@ The prefix parameter is optional here, i.e. it could be getReferralCode(5, expir
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {
+branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {   // prefix should not exceed 48 characters
 	@Override
 	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
@@ -495,7 +495,7 @@ You can also tune the referral code to the finest granularity, with the followin
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() {
+branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() {   // prefix should not exceed 48 characters
 	@Override
 	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
@@ -527,7 +527,7 @@ branch.validateReferralCode(code, new BranchReferralInitListener() {
 	@Override
 	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
-			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
+			if (error == null) {
 				String referral_code = referralCode.getString("referral_code");
 				if (referral_code.equals(code)) {
 					// valid
@@ -558,7 +558,7 @@ branch.applyReferralCode(code, new BranchReferralInitListener() {
 	@Override
 	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
 		try {
-			if (!referralCode.has("error_message")) {
+			if (error == null) {
 				// applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.
 			} else {
 				// invalid code

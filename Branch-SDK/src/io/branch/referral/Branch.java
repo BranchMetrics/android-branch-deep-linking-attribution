@@ -957,6 +957,7 @@ public class Branch {
 			if (linkCache_.containsKey(linkPost)) {
 				if (linkCreateCallback_ != null) {
 					linkCreateCallback_.onLinkCreate(linkCache_.get(linkPost), null);
+					linkCreateCallback_ = null;
 				}
 			} else {
 				new Thread(new Runnable() {
@@ -1105,6 +1106,7 @@ public class Branch {
 							stateChangedCallback_.onStateChanged(false, new BranchNotInitError());
 						else
 							stateChangedCallback_.onStateChanged(false, new BranchGetReferralsError());
+						stateChangedCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
 					if (stateChangedCallback_ != null) {
@@ -1112,6 +1114,7 @@ public class Branch {
 							stateChangedCallback_.onStateChanged(false, new BranchNotInitError());
 						else
 							stateChangedCallback_.onStateChanged(false, new BranchGetCreditsError());
+						stateChangedCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
 					if (creditHistoryCallback_ != null) {
@@ -1119,6 +1122,7 @@ public class Branch {
 							creditHistoryCallback_.onReceivingResponse(null, new BranchNotInitError());
 						else
 							creditHistoryCallback_.onReceivingResponse(null, new BranchGetCreditHistoryError());
+						creditHistoryCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					if (linkCreateCallback_ != null) {
@@ -1130,6 +1134,7 @@ public class Branch {
 							linkCreateCallback_.onLinkCreate(null, new BranchNotInitError());
 						else
 							linkCreateCallback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
+						linkCreateCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
 					if (initIdentityFinishedCallback_ != null) {
@@ -1143,6 +1148,7 @@ public class Branch {
 							initIdentityFinishedCallback_.onInitFinished(obj, new BranchNotInitError());
 						else
 							initIdentityFinishedCallback_.onInitFinished(obj, new BranchSetIdentityError());
+						initIdentityFinishedCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
 					if (getReferralCodeCallback_ != null) {
@@ -1150,6 +1156,7 @@ public class Branch {
 							getReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
 						else
 							getReferralCodeCallback_.onInitFinished(null, new BranchGetReferralCodeError());
+						getReferralCodeCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
 					if (validateReferralCodeCallback_ != null) {
@@ -1157,6 +1164,7 @@ public class Branch {
 							validateReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
 						else
 							validateReferralCodeCallback_.onInitFinished(null, new BranchValidateReferralCodeError());
+						validateReferralCodeCallback_ = null;
 					}
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
 					if (applyReferralCodeCallback_ != null) {
@@ -1164,6 +1172,7 @@ public class Branch {
 							applyReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
 						else
 							applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
+						applyReferralCodeCallback_ = null;
 					}
 				}
 			}
@@ -1303,6 +1312,7 @@ public class Branch {
 			public void run() {
 				if (stateChangedCallback_ != null) {
 					stateChangedCallback_.onStateChanged(finUpdateListener, null);
+					stateChangedCallback_ = null;
 				}
 			}
 		});
@@ -1332,6 +1342,7 @@ public class Branch {
 			public void run() {
 				if (stateChangedCallback_ != null) {
 					stateChangedCallback_.onStateChanged(finUpdateListener, null);
+					stateChangedCallback_ = null;
 				}
 			}
 		});
@@ -1344,6 +1355,7 @@ public class Branch {
 			public void run() {
 				if (creditHistoryCallback_ != null) {
 					creditHistoryCallback_.onReceivingResponse(resp.getArray(), null);
+					creditHistoryCallback_ = null;
 				}
 			}
 		});
@@ -1370,6 +1382,7 @@ public class Branch {
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
+					getReferralCodeCallback_ = null;
 				}
 			}
 		});
@@ -1396,6 +1409,7 @@ public class Branch {
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
+					validateReferralCodeCallback_ = null;
 				}
 			}
 		});
@@ -1422,6 +1436,7 @@ public class Branch {
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
+					applyReferralCodeCallback_ = null;
 				}
 			}
 		});
@@ -1445,6 +1460,7 @@ public class Branch {
 								public void run() {
 									if (linkCreateCallback_ != null) {
 										linkCreateCallback_.onLinkCreate(null, new BranchDuplicateUrlError());
+										linkCreateCallback_ = null;
 									}
 								}
 							});
@@ -1570,6 +1586,7 @@ public class Branch {
 							public void run() {
 								if (linkCreateCallback_ != null) {
 									linkCreateCallback_.onLinkCreate(url, null);
+									linkCreateCallback_ = null;
 								}
 							}
 						});
@@ -1608,6 +1625,7 @@ public class Branch {
 							public void run() {
 								if (initIdentityFinishedCallback_ != null) {
 									initIdentityFinishedCallback_.onInitFinished(getFirstReferringParams(), null);
+									initIdentityFinishedCallback_ = null;
 								}
 							}
 						});
