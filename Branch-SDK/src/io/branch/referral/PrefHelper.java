@@ -18,6 +18,8 @@ public class PrefHelper {
 	private static boolean BNC_Debug_Connecting = false;
 	private static boolean BNC_Remote_Debug = false;
 	
+	private static boolean BNC_Smart_Session = true;
+	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
 	private static final int INTERVAL_RETRY = 3000;
@@ -372,6 +374,14 @@ public class PrefHelper {
 	
 	public boolean getExternDebug() {
 		return BNC_Dev_Debug;
+	}
+	
+	public void disableSmartSession() {
+		BNC_Smart_Session = false;
+	}
+	
+	public boolean getSmartSession() {
+		return BNC_Smart_Session;
 	}
 	
 	public void setDebug() {

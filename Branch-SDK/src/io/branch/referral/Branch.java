@@ -183,6 +183,14 @@ public class Branch {
 	public void setDebug() {
 		prefHelper_.setExternDebug();
 	}
+	
+	// Note: smart session - we keep session alive for two seconds
+	// if there's further Branch API call happening within the two seconds, we then don't close the session;
+	// otherwise, we close the session after two seconds
+	// Call this method if you don't want this smart session feature
+	public void disableSmartSession() {
+		prefHelper_.disableSmartSession();
+	}
 
 	public void initSession(BranchReferralInitListener callback) {
 		initSession(callback, (Activity)null);
@@ -374,19 +382,23 @@ public class Branch {
 	
 	
 	public void closeSession() {
-		if (keepAlive_) {
-			return;
-		}
-
-		// else, real close
-		synchronized(lock) {
-			clearCloseTimer();
-			rotateCloseTimer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					executeClose();
-				}
-			}, PREVENT_CLOSE_TIMEOUT);
+		if (prefHelper_.getSmartSession()) {
+			if (keepAlive_) {
+				return;
+			}
+	
+			// else, real close
+			synchronized(lock) {
+				clearCloseTimer();
+				rotateCloseTimer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						executeClose();
+					}
+				}, PREVENT_CLOSE_TIMEOUT);
+			}
+		} else {
+			executeClose();
 		}
 	}
 	
@@ -1473,6 +1485,9 @@ public class Branch {
 								requestQueue_.dequeue();
 							}
 							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
+						} else if (status == RemoteInterface.NO_API_KEY_STATUS) {
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
+							Log.i("BranchSDK", "Branch API Error: Please enter your Branch App Key in your project's res/values/strings.xml first!");
 						} else {
 							retryLastRequest();
 						}
