@@ -27,6 +27,7 @@ We do a lot of smart things to give you an accurate read on the number of instal
 4 - __For some reason Chrome takes me to Google Play all the time__
 
 Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
+
 1. Make sure the package name for the test build matches the package registered in the Branch settings and matches the package in Google play.
 2. Make sure the URI scheme of the test build matches the Branch settings
 3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
