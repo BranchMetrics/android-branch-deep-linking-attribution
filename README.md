@@ -268,7 +268,7 @@ branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", da
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
 **Note**
-You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_:
+You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_. Please use this [Facebook tool](https://developers.facebook.com/tools/debug/og/object) to debug your OG tags!
 
 | Key | Value
 | --- | ---
