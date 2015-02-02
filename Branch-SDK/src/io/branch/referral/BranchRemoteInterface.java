@@ -174,7 +174,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout(), (BranchLinkData)post));
+			BranchLinkData linkData = null;
+			if (post instanceof BranchLinkData) {
+				linkData = (BranchLinkData)post;
+			}
+			
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout(), linkData));
 		}
 	}
 	
