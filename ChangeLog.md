@@ -1,5 +1,7 @@
 Branch Android SDK change log 
 
+- v1.3.1: Enforce setting app key before any API call; Provided ability to turn off smart session
+
 - v1.3.0: Added setDebug call to enable logging and use a random hardware ID (helpful for referral testings). Also, cacheing of links to save on network requests
 
 - v1.2.9: Moved app key to strings.xml; Added constants for OG tags and redirect URLs
