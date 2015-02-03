@@ -130,8 +130,10 @@ public class BranchLinkData extends JSONObject {
 	    result = prime * result + ((stage == null) ? 0 : stage.toLowerCase().hashCode());
 	    result = prime * result + ((params == null) ? 0 : params.toLowerCase().hashCode());
 	    
-	    for (String tag : this.tags) {
-	        result = prime * result + tag.toLowerCase().hashCode();
+	    if (this.tags != null) {
+	    	for (String tag : this.tags) {
+	    		result = prime * result + tag.toLowerCase().hashCode();
+	    	}
 	    }
 	    
 	    return result;
