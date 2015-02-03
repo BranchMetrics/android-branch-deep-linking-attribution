@@ -1033,13 +1033,15 @@ public class Branch {
 	}
 	
 	private String generateShortLinkSync(ServerRequest req) {
-		if (!initFailed_ && (initFinished_ || !hasNetwork_)) {
+		if (!initFailed_ && (initFinished_ || hasNetwork_)) {
 			ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());
 			String url = prefHelper_.getUserURL();
 			if (response.getStatusCode() == 200) {
 				try {
 					url = response.getObject().getString("url");
-					linkCache_.put(response.getLinkData(), url);
+					if (response.getLinkData() != null) {
+						linkCache_.put(response.getLinkData(), url);
+					}
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
