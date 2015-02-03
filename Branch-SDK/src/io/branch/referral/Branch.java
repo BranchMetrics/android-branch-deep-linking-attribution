@@ -1033,7 +1033,7 @@ public class Branch {
 	}
 	
 	private String generateShortLinkSync(ServerRequest req) {
-		if (hasUser()) {
+		if (!initFailed_ && (initFinished_ || !hasNetwork_)) {
 			ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());
 			String url = prefHelper_.getUserURL();
 			if (response.getStatusCode() == 200) {
