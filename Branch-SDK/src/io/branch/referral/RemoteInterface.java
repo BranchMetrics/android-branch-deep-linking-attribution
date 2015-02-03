@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import android.os.NetworkOnMainThreadException;
+import android.util.Log;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -135,6 +137,9 @@ public class RemoteInterface {
 		} catch (UnknownHostException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+		} catch (NetworkOnMainThreadException ex) {
+			Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
+			return new ServerResponse(tag, 500);
 		} catch (Exception ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
 			return new ServerResponse(tag, 500);
