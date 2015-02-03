@@ -183,6 +183,16 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	public ServerResponse createCustomUrlSync(JSONObject post) {
+		String urlExtend = "v1/url";
+		BranchLinkData linkData = null;
+		if (post instanceof BranchLinkData) {
+			linkData = (BranchLinkData)post;
+		}
+		
+		return make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout(), linkData);
+	}
+	
 	public void identifyUser(JSONObject post) {
 		String urlExtend = "v1/profile";
 		if (callback_ != null) {

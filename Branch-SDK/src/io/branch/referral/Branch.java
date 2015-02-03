@@ -707,53 +707,101 @@ public class Branch {
 		String storedParam = prefHelper_.getSessionParams();
 		return convertParamsStringToDictionary(storedParam);
 	}
+	
+	public String getShortUrlSync() {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), null, false);
+	}
+
+	public String getShortUrlSync(JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getReferralUrlSync(String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getReferralUrlSync(Collection<String> tags, String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getContentUrlSync(String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getContentUrlSync(Collection<String> tags, String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
 
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback, true);
 	}
 
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getReferralCode(BranchReferralInitListener callback) {
@@ -941,8 +989,8 @@ public class Branch {
 
 		return params.toString();
 	}
-
-	private void generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
+	
+	private String generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
 			final BranchLinkData linkPost = new BranchLinkData();
@@ -967,27 +1015,57 @@ public class Branch {
 			}
 			
 			if (linkCache_.containsKey(linkPost)) {
+				String url = linkCache_.get(linkPost);
 				if (linkCreateCallback_ != null) {
-					linkCreateCallback_.onLinkCreate(linkCache_.get(linkPost), null);
+					linkCreateCallback_.onLinkCreate(url, null);
 				}
+				return url;
 			} else {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
-						if (!initFailed_) {
-							requestQueue_.enqueue(req);
-						}
-						if (initFinished_ || !hasNetwork_) {
-							lastRequestWasInit_ = false;
-							processNextQueueItem();
-						} else if (initFailed_ || initNotStarted_) {
-							handleFailure(req);
-						}
-					}
-				}).start();
+				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
+				if (async) {
+					generateShortLinkAsync(req);
+				} else {
+					return generateShortLinkSync(req);
+				}
 			}
 		}
+		return null;
+	}
+	
+	private String generateShortLinkSync(ServerRequest req) {
+		if (hasUser()) {
+			ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());
+			String url = prefHelper_.getUserURL();
+			if (response.getStatusCode() == 200) {
+				try {
+					url = response.getObject().getString("url");
+					linkCache_.put(response.getLinkData(), url);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+			return url;
+		} else {
+			Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+		}
+		return null;
+	}
+	
+	private void generateShortLinkAsync(final ServerRequest req) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				if (!initFailed_) {
+					requestQueue_.enqueue(req);
+				}
+				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
+					processNextQueueItem();
+				} else if (initFailed_ || initNotStarted_) {
+					handleFailure(req);
+				}
+			}
+		}).start();
 	}
 	
 	private JSONObject filterOutBadCharacters(JSONObject inputObj) {
