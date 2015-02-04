@@ -32,6 +32,16 @@ Chrome is very picky about opening up the app directly. Chrome utilizes the inte
 2. Make sure the URI scheme of the test build matches the Branch settings
 3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
+5 - __The most recent version of Chrome (40+) is showing me a page not found error__
+
+Basically Chrome decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue here: https://code.google.com/p/chromium/issues/detail?id=331571 The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
+
+We're working on a work around as well as campaigning the Chrome team to change this. If you work at Google, or know someone there, please help.
+
+6 - __My Note 3 or Samsung Galaxy S4 default browser always take me to the Play Store__
+
+Unfortunately, there is an unknown issue related to the default browser of those 2 devices which prevents us from opening up the app with some standard methods. We're working to resolve this.
+
 ## Installation
 
 Current compiled SDK footprint is *40kb*
