@@ -36,9 +36,12 @@ public class SystemObserver {
 		isRealHardwareId = true;
 	}
 	
-	public String getUniqueID() {
+	public String getUniqueID(boolean debug) {
 		if (context_ != null) { 
-			String androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
+			String androidID = null;
+			if (!debug) {
+				androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
+			}
 			if (androidID == null) {
 				androidID = UUID.randomUUID().toString();
 				isRealHardwareId = false;
@@ -65,16 +68,17 @@ public class SystemObserver {
 	            JarFile jf = new JarFile(sourceApk);
 	            InputStream is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
 	            byte[] xml = new byte[is.available()];
-	            is.read(xml);
+                //noinspection ResultOfMethodCallIgnored
+                is.read(xml);
 	            String scheme = new ApkParser().decompressXML(xml);
 	            xml = null;
 	            jf.close();
 	            is.close();
 	            return scheme;
-	          } catch (Exception ex) {
+	          } catch (Exception ignored ) {
 	        	  
 	          }
-	    } catch (NameNotFoundException e) {
+	    } catch (NameNotFoundException ignored ) {
 	    }
 		return BLANK;
 	}
@@ -135,7 +139,7 @@ public class SystemObserver {
 				 return packageInfo.versionName;
 			 else
 				 return BLANK;
-		 } catch (NameNotFoundException e) {
+		 } catch (NameNotFoundException ignored ) {
 		 }
 		 return BLANK;
 	}
@@ -156,7 +160,7 @@ public class SystemObserver {
             if (bluetoothAdapter != null) {
                 return bluetoothAdapter.isEnabled();
             }
-        } catch (SecurityException e) {
+        } catch (SecurityException ignored ) {
         }
         return false;
 	}
@@ -176,7 +180,7 @@ public class SystemObserver {
 	public boolean getNFCPresent() {
 		try {
 			return context_.getPackageManager().hasSystemFeature("android.hardware.nfc");
-		} catch (Exception e) {
+		} catch (Exception ignored ) {
 		}
 		return false;
 	}
@@ -184,7 +188,7 @@ public class SystemObserver {
 	public boolean getTelephonePresent() {
 		try {
 			return context_.getPackageManager().hasSystemFeature("android.hardware.telephony");
-		} catch (Exception e) {
+		} catch (Exception ignored ) {
 		}
 		return false;
 	}
@@ -219,7 +223,7 @@ public class SystemObserver {
 				} else {
 					return 0;
 				}
-			} catch (NameNotFoundException e) {
+			} catch (NameNotFoundException ignored ) {
 			}
 		}
 		return 0;

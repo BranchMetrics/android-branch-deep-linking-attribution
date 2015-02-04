@@ -2,7 +2,9 @@ package io.branch.referral;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
@@ -22,29 +24,48 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 
 public class Branch {
-	public static String FEATURE_TAG_SHARE = "share";
-	public static String FEATURE_TAG_REFERRAL = "referral";
-	public static String FEATURE_TAG_INVITE = "invite";
-	public static String FEATURE_TAG_DEAL = "deal";
-	public static String FEATURE_TAG_GIFT = "gift";
+	public static final String FEATURE_TAG_SHARE = "share";
+	public static final String FEATURE_TAG_REFERRAL = "referral";
+	public static final String FEATURE_TAG_INVITE = "invite";
+	public static final String FEATURE_TAG_DEAL = "deal";
+	public static final String FEATURE_TAG_GIFT = "gift";
 
-	public static String REDEEM_CODE = "$redeem_code";
-	public static String REEFERRAL_BUCKET_DEFAULT = "default";
-	public static String REFERRAL_CODE_TYPE = "credit";
-	public static int REFERRAL_CREATION_SOURCE_SDK = 2;
-	public static String REFERRAL_CODE = "referral_code";
+	public static final String REDEEM_CODE = "$redeem_code";
+	public static final String REFERRAL_BUCKET_DEFAULT = "default";
+	public static final String REFERRAL_CODE_TYPE = "credit";
+	public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
+	public static final String REFERRAL_CODE = "referral_code";
+	
+	public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
+	public static final String REDIRECT_ANDROID_URL = "$android_url";
+	public static final String REDIRECT_IOS_URL = "$ios_url";
+	public static final String REDIRECT_IPAD_URL = "$ipad_url";
+	public static final String REDIRECT_FIRE_URL = "$fire_url";
+	public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
+	public static final String REDIRECT_WINDOWNS_PHONE_URL = "$windows_phone_url";
+	
+	public static final String OG_TITLE = "$og_title";
+	public static final String OG_DESC = "$og_description";
+	public static final String OG_IMAGE_URL = "$og_image_url";
+	public static final String OG_VIDEO = "$og_video";
+	public static final String OG_URL = "$og_url";
+	public static final String OG_APP_ID = "$og_app_id";
+	
+	public static final String DEEPLINK_PATH = "$deeplink_path";
+	public static final String ALWAYS_DEEPLINK = "$always_deeplink";
+	
+	public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
+	public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
+	public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
 
-	public static int REFERRAL_CODE_LOCATION_REFERREE = 0;
-	public static int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
-	public static int REFERRAL_CODE_LOCATION_BOTH = 3;
+	public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
+	public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
 
-	public static int REFERRAL_CODE_AWARD_UNLIMITED = 1;
-	public static int REFERRAL_CODE_AWARD_UNIQUE = 0;
+	public static final int LINK_TYPE_UNLIMITED_USE = 0;
+	public static final int LINK_TYPE_ONE_TIME_USE = 1;
 
-	public static int LINK_TYPE_UNLIMITED_USE = 0;
-	public static int LINK_TYPE_ONE_TIME_USE = 1;
-
-	private static final int SESSION_KEEPALIVE = 3000;
+	private static final int SESSION_KEEPALIVE = 2000;
+	private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
 	private static Branch branchReferral_;
 	private boolean isInit_;
@@ -63,7 +84,9 @@ public class Branch {
 	private SystemObserver systemObserver_;
 	private Context context_;
 
+	final Object lock;
 	private Timer closeTimer;
+	private Timer rotateCloseTimer;
 	private boolean keepAlive_;
 
 	private Semaphore serverSema_;
@@ -80,6 +103,8 @@ public class Branch {
 	private Handler debugHandler_;
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
+	
+	private Map<BranchLinkData, String> linkCache_;
 
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -89,6 +114,8 @@ public class Branch {
 		requestQueue_ = ServerRequestQueue.getInstance(context);
 		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
+		rotateCloseTimer = new Timer();
+		lock = new Object();
 		initFinished_ = false;
 		initFailed_ = false;
 		lastRequestWasInit_ = true;
@@ -100,8 +127,10 @@ public class Branch {
 		debugListenerInitHistory_ = new SparseArray<String>();
 		debugHandler_ = new Handler();
 		debugOnTouchListener_ = retrieveOnTouchListener();
+		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
 
+	@Deprecated
 	public static Branch getInstance(Context context, String key) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
@@ -114,6 +143,11 @@ public class Branch {
 	public static Branch getInstance(Context context) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
+
+			String appKey = branchReferral_.prefHelper_.getAppKey();
+	        if (appKey == null || appKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+	        	Log.i("BranchSDK", "Branch Warning: Please enter your Branch App Key in your project's res/values/strings.xml!");
+	        }
 		}
 		branchReferral_.context_ = context;
 		return branchReferral_;
@@ -126,8 +160,8 @@ public class Branch {
 	public void resetUserSession() {
 		isInit_ = false;
 	}
-	
-	public void setRetryCount(int retryCount) {
+
+    public void setRetryCount(int retryCount) {
 		if (prefHelper_ != null && retryCount > 0) {
 			prefHelper_.setRetryCount(retryCount);
 		}
@@ -147,7 +181,15 @@ public class Branch {
 
 	// if you want to flag debug, call this before initUserSession
 	public void setDebug() {
-		prefHelper_.setDebug();
+		prefHelper_.setExternDebug();
+	}
+	
+	// Note: smart session - we keep session alive for two seconds
+	// if there's further Branch API call happening within the two seconds, we then don't close the session;
+	// otherwise, we close the session after two seconds
+	// Call this method if you don't want this smart session feature
+	public void disableSmartSession() {
+		prefHelper_.disableSmartSession();
 	}
 
 	public boolean initSession(BranchReferralInitListener callback) {
@@ -167,9 +209,10 @@ public class Branch {
 	public boolean initSession(BranchReferralInitListener callback, Uri data) {
 		return initSession(callback, data, null);
 	}
+
 	public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
 		boolean uriHandled = false;
-		if (data != null) {
+		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
@@ -189,9 +232,10 @@ public class Branch {
 	public boolean initSessionWithData(Uri data) {
 		return initSessionWithData(data, null);
 	}
+
 	public boolean initSessionWithData(Uri data, Activity activity) {
 		boolean uriHandled = false;
-		if (data != null) {
+		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
@@ -211,9 +255,10 @@ public class Branch {
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
 		return initSession(callback, isReferrable, data, null);
 	}
+
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
 		boolean uriHandled = false;
-		if (data != null) {
+		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				uriHandled = true;
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
@@ -253,7 +298,8 @@ public class Branch {
 			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
 				if (callback != null)
-					callback.onInitFinished(new JSONObject(), new BranchInitError());
+					callback.onInitFinished(new JSONObject(), null);
+				clearCloseTimer();
 				keepAlive();
 			} else {
 				if (!installOrOpenInQueue) {
@@ -275,8 +321,8 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null && activity instanceof Activity && debugListenerInitHistory_.get(Integer.valueOf(System.identityHashCode(activity))) == null) {
-			debugListenerInitHistory_.put(Integer.valueOf(System.identityHashCode(activity)), "init");
+		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
 			if (view != null) { 
 				view.setOnTouchListener(debugOnTouchListener_);
@@ -348,12 +394,30 @@ public class Branch {
 		return debugOnTouchListener_;
 	}
 
+	
+	
 	public void closeSession() {
-		if (keepAlive_) {
-			return;
+		if (prefHelper_.getSmartSession()) {
+			if (keepAlive_) {
+				return;
+			}
+	
+			// else, real close
+			synchronized(lock) {
+				clearCloseTimer();
+				rotateCloseTimer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						executeClose();
+					}
+				}, PREVENT_CLOSE_TIMEOUT);
+			}
+		} else {
+			executeClose();
 		}
-
-		// else, real close
+	}
+	
+	private void executeClose() {
 		isInit_ = false;
 		lastRequestWasInit_ = false;
 		initNotStarted_ = true;
@@ -396,6 +460,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("identity", userId);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -420,7 +489,12 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -507,7 +581,7 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				int creditsToRedeem = 0;
+				int creditsToRedeem;
 				int credits = prefHelper_.getCreditCount(bucket);
 
 				if (count > credits) {
@@ -523,6 +597,11 @@ public class Branch {
 					try {
 						post.put("app_id", prefHelper_.getAppKey());
 						post.put("identity_id", prefHelper_.getIdentityID());
+						post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+						post.put("session_id", prefHelper_.getSessionID());
+						if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+							post.put("link_click_id", prefHelper_.getLinkClickID());
+						}
 						post.put("bucket", bucket);
 						post.put("amount", creditsToRedeem);
 					} catch (JSONException ex) {
@@ -564,6 +643,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("length", length);
 					post.put("direction", order.ordinal());
 
@@ -600,7 +684,12 @@ public class Branch {
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
+					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("event", action);
 					if (metadata != null)
 						post.put("metadata", filterOutBadCharacters(metadata));
@@ -633,53 +722,101 @@ public class Branch {
 		String storedParam = prefHelper_.getSessionParams();
 		return convertParamsStringToDictionary(storedParam);
 	}
+	
+	public String getShortUrlSync() {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), null, false);
+	}
+
+	public String getShortUrlSync(JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getReferralUrlSync(String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getReferralUrlSync(Collection<String> tags, String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getContentUrlSync(String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getContentUrlSync(Collection<String> tags, String channel, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
+
+	public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+		return generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
+	}
 
 	public void getShortUrl(BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(null), callback, true);
 	}
 
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, type, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
-		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback);
+		generateShortLink(null, type, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
 	public void getReferralCode(BranchReferralInitListener callback) {
@@ -692,6 +829,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;
@@ -711,23 +853,23 @@ public class Branch {
 	}
 
 	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
-		this.getReferralCode(null, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
-		this.getReferralCode(null, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, expiration, REEFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
+		this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
-		this.getReferralCode(prefix, amount, null, REEFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
+		this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
 	}
 
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
@@ -740,13 +882,17 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("calculation_type", calculationType);
 					post.put("location", location);
 					post.put("type", REFERRAL_CODE_TYPE);
 					post.put("creation_source", REFERRAL_CREATION_SOURCE_SDK);
 					post.put("amount", amount);
-					post.put("bucket", bucket != null ? bucket
-							: REEFERRAL_BUCKET_DEFAULT);
+					post.put("bucket", bucket != null ? bucket : REFERRAL_BUCKET_DEFAULT);
 					if (prefix != null && prefix.length() > 0) {
 						post.put("prefix", prefix);
 					}
@@ -781,6 +927,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("referral_code", code);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -810,7 +961,11 @@ public class Branch {
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
+					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
+					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+						post.put("link_click_id", prefHelper_.getLinkClickID());
+					}
 					post.put("referral_code", code);
 				} catch (JSONException ex) {
 					ex.printStackTrace();
@@ -849,57 +1004,85 @@ public class Branch {
 
 		return params.toString();
 	}
-
-	private void generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback) {
+	
+	private String generateShortLink(final String alias, final int type, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
 		linkCreateCallback_ = callback;
 		if (hasUser()) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					JSONObject linkPost = new JSONObject();
-					try {
-						linkPost.put("app_id", prefHelper_.getAppKey());
-						linkPost.put("identity_id", prefHelper_.getIdentityID());
-
-						if (type != 0) {
-							linkPost.put("type", type);
-						}
-						if (tags != null) {
-							JSONArray tagArray = new JSONArray();
-							for (String tag : tags)
-								tagArray.put(tag);
-							linkPost.put("tags", tagArray);
-						}
-						if (alias != null) {
-							linkPost.put("alias", alias);
-						}
-						if (channel != null) {
-							linkPost.put("channel", channel);
-						}
-						if (feature != null) {
-							linkPost.put("feature", feature);
-						}
-						if (stage != null) {
-							linkPost.put("stage", stage);
-						}
-						if (params != null)
-							linkPost.put("data", params);
-					} catch (JSONException ex) {
-						ex.printStackTrace();
-					}
-					ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
-					if (!initFailed_) {
-						requestQueue_.enqueue(req);
-					}
-					if (initFinished_ || !hasNetwork_) {
-						lastRequestWasInit_ = false;
-						processNextQueueItem();
-					} else if (initFailed_ || initNotStarted_) {
-						handleFailure(req);
-					}
+			final BranchLinkData linkPost = new BranchLinkData();
+			try {
+				linkPost.put("app_id", prefHelper_.getAppKey());
+				linkPost.put("identity_id", prefHelper_.getIdentityID());
+				linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+				linkPost.put("session_id", prefHelper_.getSessionID());
+				if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+					linkPost.put("link_click_id", prefHelper_.getLinkClickID());
 				}
-			}).start();
+
+				linkPost.putType(type);
+				linkPost.putTags(tags);
+				linkPost.putAlias(alias);
+				linkPost.putChannel(channel);
+				linkPost.putFeature(feature);
+				linkPost.putStage(stage);
+				linkPost.putParams(params);
+			} catch (JSONException ex) {
+				ex.printStackTrace();
+			}
+			
+			if (linkCache_.containsKey(linkPost)) {
+				String url = linkCache_.get(linkPost);
+				if (linkCreateCallback_ != null) {
+					linkCreateCallback_.onLinkCreate(url, null);
+				}
+				return url;
+			} else {
+				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
+				if (async) {
+					generateShortLinkAsync(req);
+				} else {
+					return generateShortLinkSync(req);
+				}
+			}
 		}
+		return null;
+	}
+	
+	private String generateShortLinkSync(ServerRequest req) {
+		if (!initFailed_ && (initFinished_ || hasNetwork_)) {
+			ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());
+			String url = prefHelper_.getUserURL();
+			if (response.getStatusCode() == 200) {
+				try {
+					url = response.getObject().getString("url");
+					if (response.getLinkData() != null) {
+						linkCache_.put(response.getLinkData(), url);
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+			return url;
+		} else {
+			Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+		}
+		return null;
+	}
+	
+	private void generateShortLinkAsync(final ServerRequest req) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				if (!initFailed_) {
+					requestQueue_.enqueue(req);
+				}
+				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
+					processNextQueueItem();
+				} else if (initFailed_ || initNotStarted_) {
+					handleFailure(req);
+				}
+			}
+		}).start();
 	}
 	
 	private JSONObject filterOutBadCharacters(JSONObject inputObj) {
@@ -910,11 +1093,11 @@ public class Branch {
 				String key = (String) keys.next();
 				try {
 					if (inputObj.has(key) && inputObj.get(key).getClass().equals(String.class)) {
-						filteredObj.put(key, inputObj.getString(key).replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\"").replace("Õ", "'"));
+						filteredObj.put(key, inputObj.getString(key).replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\""));
 					} else if (inputObj.has(key)) {
 						filteredObj.put(key, inputObj.get(key));
 					}
-				} catch(JSONException ex) {
+				} catch(JSONException ignore) {
 					
 				}	
 			}
@@ -976,8 +1159,9 @@ public class Branch {
 				ServerRequest req = requestQueue_.peek();
 				serverSema_.release();
 
-				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && !req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					keepAlive();
+					clearCloseTimer();
 				}
 
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
@@ -1161,6 +1345,14 @@ public class Branch {
 		}
 	}
 
+	private void clearCloseTimer() {
+		if (rotateCloseTimer == null)
+			return;
+		rotateCloseTimer.cancel();
+		rotateCloseTimer.purge();
+		rotateCloseTimer = new Timer();
+	}
+	
 	private void clearTimer() {
 		if (closeTimer == null)
 			return;
@@ -1171,7 +1363,7 @@ public class Branch {
 
 	private void keepAlive() {
 		keepAlive_ = true;
-		synchronized(closeTimer) {
+		synchronized(lock) {
 			clearTimer();
 			closeTimer.schedule(new TimerTask() {
 				@Override
@@ -1418,6 +1610,9 @@ public class Branch {
 								requestQueue_.dequeue();
 							}
 							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
+						} else if (status == RemoteInterface.NO_API_KEY_STATUS) {
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
+							Log.i("BranchSDK", "Branch API Error: Please enter your Branch App Key in your project's res/values/strings.xml first!");
 						} else {
 							retryLastRequest();
 						}
@@ -1478,6 +1673,7 @@ public class Branch {
 						initFinished_ = true;
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
+						prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString("device_fingerprint_id"));
 						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 						if (serverResponse.getObject().has("identity_id")) {
 							prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
@@ -1532,6 +1728,9 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
+						
+						// cache the link
+						linkCache_.put(serverResponse.getLinkData(), url);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));

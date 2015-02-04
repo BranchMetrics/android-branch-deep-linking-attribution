@@ -8,9 +8,43 @@ clearUser() | logout()
 getInstallReferringParams() | getFirstReferringParams()
 getReferringParams() | getLatestReferringParams()
 
+## FAQ
+
+1 - __What if you go down?! Or there is a poor connection?__
+
+At Branch, we live, breath uptime and performance. Just in case, we've got mechanisms internal to the SDK to deal with network issues. We always call the callbacks with the error parameter describing the issue. If the phone is in airplane mode and the connection is not available, the callbacks are called immediately. If there is a server latency, we timeout after 3 seconds and will retry 4 more times with a 3 second pause in between each. These timeouts are adjustable on the singleton instance by calling setNetworkTimeout (ms), setRetryCount and setRetryInterval (ms).
+
+2 - __How can I debug/test the SDK__
+
+Just call setDebug() after you get a reference to the Branch singleton. We'll log all requests. Even more importantly, we won't reference the hardware ID of the phone so you can register installs after just uninstalling/reinstalling the app.
+
+**make sure to remove this line before releasing**
+
+3 - __Why do I not see any installs when I reinstall?__
+
+We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register and 'open' instead of an 'install'. To register an install on the same phone again, see FAQ #2 about debugging.
+
+4 - __For some reason Chrome takes me to Google Play all the time__
+
+Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
+
+1. Make sure the package name for the test build matches the package registered in the Branch settings and matches the package in Google play.
+2. Make sure the URI scheme of the test build matches the Branch settings
+3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
+
+5 - __The most recent version of Chrome (40+) is showing me a page not found error__
+
+Basically Chrome decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue here: https://code.google.com/p/chromium/issues/detail?id=331571 The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
+
+We're working on a work around as well as campaigning the Chrome team to change this. If you work at Google, or know someone there, please help.
+
+6 - __My Note 3 or Samsung Galaxy S4 default browser always take me to the Play Store__
+
+Unfortunately, there is an unknown issue related to the default browser of those 2 devices which prevents us from opening up the app with some standard methods. We're working to resolve this.
+
 ## Installation
 
-Current compiled SDK footprint is *25kb*
+Current compiled SDK footprint is *40kb*
 
 ### Install library project
 
@@ -61,6 +95,32 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 
+### Add your app key to your project
+
+After you register your app, your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it to your project.
+
+1. Open your res/values/strings.xml file
+1. Add a new string resource with the name "bnc_app_key" and value as your app key
+    ```xml
+    <resources>
+        <!-- Other existing resources -->
+
+        <!-- Add this string resource below, and change "your app key" to your app key -->
+        <string name="bnc_app_key">"your app key"</string>
+    </resources>
+    ```
+
+1. Open your AndroidManifest.xml file
+1. Add the following new meta-data
+    ```xml
+    <application>
+        <!-- Other existing entries -->
+
+        <!-- Add this meta-data below; DO NOT changing the android:value -->
+        <meta-data android:name="io.branch.sdk.ApplicationId" android:value="@string/bnc_app_key" />
+    </application>
+    ```
+
 ### Initialize SDK And Register Deep Link Routing Function
 
 Called in your splash activity where you handle. If you created a custom link with your own custom dictionary data, you probably want to know when the user session init finishes, so you can check that data. Think of this callback as your "deep link router". If your app opens with some data, you want to route the user depending on the data you passed in. Otherwise, send them to a generic install flow.
@@ -73,7 +133,7 @@ public void onStart() {
 	super.onStart();
 
 	// Your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard
-	Branch branch = Branch.getInstance(getApplicationContext(), "your app key");
+	Branch branch = Branch.getInstance(getApplicationContext());
 	branch.initSession(new BranchReferralInitListener(){
 		@Override
 		public void onInitFinished(JSONObject referringParams, Branch.BranchError error) {
@@ -218,7 +278,7 @@ branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", da
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
 **Note**
-You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_:
+You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_. Please use this [Facebook tool](https://developers.facebook.com/tools/debug/og/object) to debug your OG tags!
 
 | Key | Value
 | --- | ---

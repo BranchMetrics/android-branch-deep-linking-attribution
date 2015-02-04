@@ -1,10 +1,10 @@
 package io.branch.branchandroiddemo;
 
 import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
 import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
+import io.branch.referral.BranchError;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -196,7 +196,8 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		branch = Branch.getInstance(this.getApplicationContext(), "5680621892404085");
+		branch = Branch.getInstance(this.getApplicationContext());
+		branch.setDebug();
 		branch.initSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams, BranchError error) {

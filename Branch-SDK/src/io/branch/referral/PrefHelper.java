@@ -2,18 +2,24 @@ package io.branch.referral;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import org.json.JSONException;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.util.Log;
 
 public class PrefHelper {
+	private static boolean BNC_Dev_Debug = false;
 	private static boolean BNC_Debug = false;
 	private static boolean BNC_Debug_Connecting = false;
 	private static boolean BNC_Remote_Debug = false;
+	
+	private static boolean BNC_Smart_Session = true;
 	
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 	
@@ -107,12 +113,26 @@ public class PrefHelper {
 		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
 	}
 
+	@Deprecated
 	public void setAppKey(String key) {
 		setString(KEY_APP_KEY, key);
 	}
 	
 	public String getAppKey() {
-		return getString(KEY_APP_KEY);
+		String appKey = null;
+		try {
+	        final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
+	        if (ai.metaData != null) {
+	            appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
+	        }
+	    } catch (final PackageManager.NameNotFoundException e) {
+	    }
+		
+		if (appKey == null) {
+			appKey = getString(KEY_APP_KEY);
+		}
+		
+		return appKey;
 	}
 	
 	public void setDeviceFingerPrintID(String device_fingerprint_id) {
@@ -322,9 +342,7 @@ public class PrefHelper {
 	private ArrayList<String> deserializeString(String list) {
 		ArrayList<String> strings = new ArrayList<String>();
 		String[] stringArr = list.split(",");
-		for (int i = 0; i < stringArr.length; i++) {
-			strings.add(stringArr[i]);
-		}
+        Collections.addAll( strings, stringArr );
 		return strings;
 	}
 	
@@ -368,6 +386,22 @@ public class PrefHelper {
 		prefHelper_.prefsEditor_.commit();
 	}
 	
+	public void setExternDebug() {
+		BNC_Dev_Debug = true;
+	}
+	
+	public boolean getExternDebug() {
+		return BNC_Dev_Debug;
+	}
+	
+	public void disableSmartSession() {
+		BNC_Smart_Session = false;
+	}
+	
+	public boolean getSmartSession() {
+		return BNC_Smart_Session;
+	}
+	
 	public void setDebug() {
 		BNC_Debug = true;
 		BNC_Debug_Connecting = true;
@@ -409,7 +443,7 @@ public class PrefHelper {
 	}
 	
 	public void log(final String tag, final String message) {
-	    if (BNC_Debug) {
+	    if (BNC_Debug || BNC_Dev_Debug) {
 	    	Log.i(tag, message);
 	    	
 	        if (BNC_Remote_Debug && remoteInterface_ != null) {
@@ -427,7 +461,7 @@ public class PrefHelper {
 		if (prefHelper_ != null) {
 			prefHelper_.log(tag, message);
 		} else {
-			if (BNC_Debug) {
+			if (BNC_Debug || BNC_Dev_Debug) {
 				Log.i(tag, message);
 			}
 		}
@@ -443,11 +477,8 @@ public class PrefHelper {
 			}).start();
         	return true;
         }
-		if (BNC_Debug_Connecting) {
-			return true;
-		} else {
-			return false;	
-		}
+
+        return BNC_Debug_Connecting;
 	}
 	
 	public class DebugNetworkCallback implements NetworkCallback {
@@ -462,7 +493,7 @@ public class PrefHelper {
 						BNC_Remote_Debug = false;
 			            Log.i("Branch Debug", "======= Server is not listening =======");
 					} else if (status >= 400 && status < 500) {
-						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
+						if (serverResponse.getObject() != null && serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}
 					} else if (status != 200) {

@@ -1,13 +1,12 @@
 package io.branch.referral;
 
-import java.util.Iterator;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.util.DisplayMetrics;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_REGISTER_INSTALL = "t_register_install";
@@ -49,8 +48,8 @@ public class BranchRemoteInterface extends RemoteInterface {
 				installPost.put("app_id", prefHelper_.getAppKey());
 				if (!installID.equals(PrefHelper.NO_STRING_VALUE))
 					installPost.put("link_click_id", installID);
-				if (!sysObserver_.getUniqueID().equals(SystemObserver.BLANK)) {
-					installPost.put("hardware_id", sysObserver_.getUniqueID());
+				if (!sysObserver_.getUniqueID(prefHelper_.getExternDebug()).equals(SystemObserver.BLANK)) {
+					installPost.put("hardware_id", sysObserver_.getUniqueID(prefHelper_.getExternDebug()));
 					installPost.put("is_hardware_id_real", sysObserver_.hasRealHardwareId());
 				}
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
@@ -125,7 +124,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 			JSONObject closePost = new JSONObject();
 			try {
 				closePost.put("app_id", prefHelper_.getAppKey());
+				closePost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+				closePost.put("identity_id", prefHelper_.getIdentityID());
 				closePost.put("session_id", prefHelper_.getSessionID());
+				if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+					closePost.put("link_click_id", prefHelper_.getLinkClickID());
+				}
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
@@ -169,8 +173,8 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void getCreditHistory(JSONObject post) {
-		String params = this.convertJSONtoString(post);
-		String urlExtend = "v1/credithistory" + params;
+        String params = this.convertJSONtoString(post);
+        String urlExtend = "v1/credithistory" + params;
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
 		}
@@ -179,8 +183,23 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
-			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout()));
+			BranchLinkData linkData = null;
+			if (post instanceof BranchLinkData) {
+				linkData = (BranchLinkData)post;
+			}
+			
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout(), linkData));
 		}
+	}
+	
+	public ServerResponse createCustomUrlSync(JSONObject post) {
+		String urlExtend = "v1/url";
+		BranchLinkData linkData = null;
+		if (post instanceof BranchLinkData) {
+			linkData = (BranchLinkData)post;
+		}
+		
+		return make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout(), linkData);
 	}
 	
 	public void identifyUser(JSONObject post) {
@@ -278,28 +297,28 @@ public class BranchRemoteInterface extends RemoteInterface {
 		StringBuilder result = new StringBuilder();
 		
 		if (json != null) {
-	        Iterator<String> iter = json.keys();
-	        if (iter.hasNext()) {
-	        	boolean first = true;
-	        	do {
-	        		if (first) {
-		        		result.append("?");
-		        		first = false;
-		        	} else {
-		        		result.append("&");
-		        	}
-	        		
-	        		String key = iter.next();
-	        		String value;
-	        		try {
-						value = json.getString(key);
+            JSONArray names = json.names();
+	        if (names != null) {
+                boolean first = true;
+                int size = names.length();
+                for(int i = 0; i < size; i++) {
+                	try {
+	                    String key = names.getString(i);
+	
+		        		if (first) {
+			        		result.append("?");
+			        		first = false;
+			        	} else {
+			        		result.append("&");
+			        	}
+	
+	                    String value = json.getString(key);
+	                    result.append(key).append("=").append(value);
 					} catch (JSONException e) {
 						e.printStackTrace();
 						return null;
 					}
-	        		
-	        		result.append(key + "=" + value);
-	        	} while (iter.hasNext());
+	        	}
 	        }
 	    }
 		

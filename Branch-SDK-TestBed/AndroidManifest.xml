@@ -17,7 +17,6 @@
         <activity
             android:name="io.branch.branchandroiddemo.MainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,6 +36,7 @@
         <activity
             android:name="io.branch.branchandroiddemo.ReferralCodeActivity">
         </activity>
+        <meta-data android:name="io.branch.sdk.ApplicationId" android:value="@string/bnc_app_key" />
     </application>
 
 </manifest>

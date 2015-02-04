@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import android.os.NetworkOnMainThreadException;
+import android.util.Log;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -25,8 +27,9 @@ import org.json.JSONObject;
 public class RemoteInterface {
 	public static final String NO_TAG_VALUE = "no_tag";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
+	public static final int NO_API_KEY_STATUS = -1234;
 
-	private static final String SDK_VERSION = "1.2.6";
+	private static final String SDK_VERSION = "1.3.3";
 	private static final int DEFAULT_TIMEOUT = 3000;
 	
 	private HttpClient getGenericHttpClient(int timeout) {
@@ -38,8 +41,8 @@ public class RemoteInterface {
 		return new DefaultHttpClient(httpParams);
 	}
 	
-	private ServerResponse processEntityForJSON (HttpEntity entity, int statusCode, String tag, boolean log) {
-		ServerResponse result = new ServerResponse(tag, statusCode);
+	private ServerResponse processEntityForJSON (HttpEntity entity, int statusCode, String tag, boolean log, BranchLinkData linkData) {
+		ServerResponse result = new ServerResponse(tag, statusCode, linkData);
 		try {
 			if (entity != null) {
 		    	InputStream instream = entity.getContent();
@@ -83,7 +86,7 @@ public class RemoteInterface {
 			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log);
+		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
 
 		} catch (ClientProtocolException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
@@ -101,11 +104,22 @@ public class RemoteInterface {
 	}
 
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
-		return make_restful_post(body, url, tag, timeout, true);
+		return make_restful_post(body, url, tag, timeout, true, null);
+	}
+	
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
+		return make_restful_post(body, url, tag, timeout, true, linkData);
 	}
 
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
+		return make_restful_post(body, url, tag, timeout, log, null);
+	}
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
 		try {    	
+			if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
+				return new ServerResponse(tag, NO_API_KEY_STATUS);
+			}
+			
 			body.put("sdk", "android" + SDK_VERSION);
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
@@ -115,7 +129,7 @@ public class RemoteInterface {
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log);
+		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
 
 		} catch (SocketException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
@@ -123,6 +137,9 @@ public class RemoteInterface {
 		} catch (UnknownHostException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+		} catch (NetworkOnMainThreadException ex) {
+			Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
+			return new ServerResponse(tag, 500);
 		} catch (Exception ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
 			return new ServerResponse(tag, 500);
