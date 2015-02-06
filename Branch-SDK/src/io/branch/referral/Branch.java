@@ -1134,7 +1134,7 @@ public class Branch {
 					if (!sysObserver.getOS().equals(SystemObserver.BLANK))
 						post.put("os", sysObserver.getOS());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("installed_apps", sysObserver.getListOfApps());
+					post.put("apps_data", sysObserver.getListOfApps());
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 					return;

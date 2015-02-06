@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
@@ -60,27 +61,32 @@ public class SystemObserver {
 	}
 	
 	public String getURIScheme(String packageName) {
+		String scheme = BLANK;
 		PackageManager pm = context_.getPackageManager();
 		try {
 	        ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
 	        String sourceApk = ai.publicSourceDir;
+	        JarFile jf = null;
+	        InputStream is = null;
+	        byte[] xml = null;
 	        try {
-	            JarFile jf = new JarFile(sourceApk);
-	            InputStream is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-	            byte[] xml = new byte[is.available()];
+	            jf = new JarFile(sourceApk);
+	            is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+	            xml = new byte[is.available()];
                 //noinspection ResultOfMethodCallIgnored
                 is.read(xml);
-	            String scheme = new ApkParser().decompressXML(xml);
-	            xml = null;
-	            jf.close();
-	            is.close();
-	            return scheme;
-	          } catch (Exception ignored ) {
-	        	  
-	          }
-	    } catch (NameNotFoundException ignored ) {
+	            scheme = new ApkParser().decompressXML(xml);
+	        } catch (Exception ignored) {
+	        } finally {
+	        	xml = null;
+	        	try {
+	        		jf.close();
+	        		is.close();
+	        	} catch (IOException ignored) {}
+	        }
+	    } catch (NameNotFoundException ignored) {
 	    }
-		return BLANK;
+		return scheme;
 	}
 	
 	@SuppressLint("NewApi")
@@ -121,10 +127,11 @@ public class SystemObserver {
 							if (packInfo.versionName != null)
 								packObj.put("version_name", packInfo.versionName);
 						}
+						packObj.put("os", this.getOS());
 						
 						arr.put(packObj);
-					} catch(JSONException ex) {
-					} catch (NameNotFoundException e) {			
+					} catch(JSONException ignore) {
+					} catch(NameNotFoundException ignore) {			
 					}
 				}
 			}
