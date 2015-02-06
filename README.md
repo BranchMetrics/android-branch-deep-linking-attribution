@@ -20,7 +20,9 @@ Just call setDebug() after you get a reference to the Branch singleton. We'll lo
 
 **make sure to remove this line before releasing**
 
-3 - __
+3 - __Is there any way to start debugging dynamically?__
+
+Yes. Even if you don't call setDebug(), you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call initSession in the Activity's onStart().
 
 4 - __Why do I not see any installs when I reinstall?__
 
