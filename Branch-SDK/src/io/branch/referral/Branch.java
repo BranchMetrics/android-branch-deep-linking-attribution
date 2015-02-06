@@ -1159,6 +1159,13 @@ public class Branch {
 				ServerRequest req = requestQueue_.peek();
 				serverSema_.release();
 
+				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) && !hasUser()) {
+	                Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
+	                networkCount_ = 0;
+					handleFailure(requestQueue_.getSize()-1);
+	                return;
+	            }
+				
 				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && !req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 					keepAlive();
 					clearCloseTimer();
@@ -1168,37 +1175,32 @@ public class Branch {
 					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE, prefHelper_.isDebug());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
 					kRemoteInterface_.registerOpen(prefHelper_.isDebug());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST) && hasSession()) {
 					kRemoteInterface_.registerListOfApps(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasSession()) {
 					kRemoteInterface_.getRewards();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasSession()) {
 					kRemoteInterface_.redeemRewards(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY) && hasSession()) {
 					kRemoteInterface_.getCreditHistory(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasSession()) {
 					kRemoteInterface_.userCompletedAction(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasSession()) {
 					kRemoteInterface_.createCustomUrl(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasSession()) {
 					kRemoteInterface_.identifyUser(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && hasSession()) {
 					kRemoteInterface_.registerClose();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasSession()) {
 					kRemoteInterface_.logoutUser(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE) && hasSession()) {
 					kRemoteInterface_.getReferralCode(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE) && hasSession()) {
 					kRemoteInterface_.validateReferralCode(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE) && hasUser() && hasSession()) {
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE) && hasSession()) {
 					kRemoteInterface_.applyReferralCode(req.getPost());
-				} else if (!hasUser()) {
-					networkCount_ = 0;
-					Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
-					handleFailure(requestQueue_.getSize()-1);
-					initSession();					
 				}
 			} else {
 				serverSema_.release();
