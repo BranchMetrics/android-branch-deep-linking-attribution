@@ -81,7 +81,9 @@ public class SystemObserver {
 	        	xml = null;
 	        	try {
 	        		jf.close();
+	        		jf = null;
 	        		is.close();
+	        		is = null;
 	        	} catch (IOException ignored) {}
 	        }
 	    } catch (NameNotFoundException ignored) {
