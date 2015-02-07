@@ -75,7 +75,7 @@ public class SystemObserver {
 	            xml = new byte[is.available()];
                 //noinspection ResultOfMethodCallIgnored
                 is.read(xml);
-	            scheme = new ApkParser().decompressXML(xml);
+	            //scheme = new ApkParser().decompressXML(xml);
 	        } catch (Exception ignored) {
 	        } finally {
 	        	xml = null;

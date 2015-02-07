@@ -18,6 +18,7 @@ public class PrefHelper {
 	private static boolean BNC_Debug = false;
 	private static boolean BNC_Debug_Connecting = false;
 	private static boolean BNC_Remote_Debug = false;
+	private static boolean BNC_App_Listing = true;
 	
 	private static boolean BNC_Smart_Session = true;
 	
@@ -223,7 +224,7 @@ public class PrefHelper {
   		Calendar c  = Calendar.getInstance();
   		long prevDate = getLong(KEY_LAST_READ_SYSTEM);
   		if ((c.getTimeInMillis()/1000 - prevDate) > SYSTEM_READ_TIMEOUT) {
-  			return true;
+  			return true && BNC_App_Listing;
   		}
   		return false;
   	}
@@ -392,6 +393,10 @@ public class PrefHelper {
 	
 	public boolean getExternDebug() {
 		return BNC_Dev_Debug;
+	}
+	
+	public void disableExternAppListing() {
+		BNC_App_Listing = false;
 	}
 	
 	public void disableSmartSession() {

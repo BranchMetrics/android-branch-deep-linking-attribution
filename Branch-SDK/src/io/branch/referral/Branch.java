@@ -184,6 +184,10 @@ public class Branch {
 		prefHelper_.setExternDebug();
 	}
 	
+	public void disableAppList() {
+		prefHelper_.disableExternAppListing();
+	}
+	
 	// Note: smart session - we keep session alive for two seconds
 	// if there's further Branch API call happening within the two seconds, we then don't close the session;
 	// otherwise, we close the session after two seconds

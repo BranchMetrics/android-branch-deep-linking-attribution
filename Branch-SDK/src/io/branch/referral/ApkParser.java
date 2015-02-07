@@ -60,19 +60,14 @@ public class ApkParser {
 		//   4th word: str ind of attr value again, or ResourceId of value
 	
 		// Step through the XML tree element tags and attributes
+		String attrValue;
+		String attrName;
 		int off = xmlTagOff;
-		int indent = 0;
-		int startTagLineNo = -2;
 		while (off < xml.length) {
 			int tag0 = LEW(xml, off);
-			int lineNo = LEW(xml, off+2*4);
-			int nameSi = LEW(xml, off+5*4);
-		
 			if (tag0 == startTag) { // XML START TAG
 				int numbAttrs = LEW(xml, off+7*4);  // Number of Attributes to follow
-				off += 9*4;  // Skip over 6+3 words of startTag data
-				startTagLineNo = lineNo;
-		
+				off += 9*4;  // Skip over 6+3 words of startTag data		
 				// Look for the Attributes
 				for (int ii=0; ii<numbAttrs; ii++) {
 					int attrNameSi = LEW(xml, off+1*4);  // AttrName String Index
@@ -80,19 +75,16 @@ public class ApkParser {
 					int attrResId = LEW(xml, off+4*4);  // AttrValue ResourceId or dup AttrValue StrInd
 					off += 5*4;  // Skip over the 5 words of an attribute
 		
-					String attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
-					String attrValue = attrValueSi!=-1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x"+Integer.toHexString(attrResId);
+					attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
 					if (attrName.equals("scheme")) {
-						return attrValue;
+						attrValue = attrValueSi!=-1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x"+Integer.toHexString(attrResId);
+						if (validURI(attrValue))
+							return attrValue;
 					}
 				}
-				indent++;
 		
 			} else if (tag0 == endTag) { // XML END TAG
-				indent--;
 				off += 6*4;  // Skip over 6 words of endTag data
-				String name = compXmlString(xml, sitOff, stOff, nameSi);
-				prtIndent(indent, "</"+name+">  (line "+startTagLineNo+"-"+lineNo+")");		
 			} else if (tag0 == endDocTag) {  // END OF XML DOC TAG
 				break;
 			} else {
@@ -103,19 +95,33 @@ public class ApkParser {
 		return SystemObserver.BLANK;
 	} // end of decompressXML
 
-
+	private boolean validURI(String value) {
+		if (value != null) {
+			if (!value.equals("http") 
+					&& !value.equals("https") 
+					&& !value.equals("geo") 
+					&& !value.equals("*") 
+					&& !value.equals("package") 
+					&& !value.equals("sms") 
+					&& !value.equals("smsto")
+					&& !value.equals("mms") 
+					&& !value.equals("mmsto")
+					&& !value.equals("tel")
+					&& !value.equals("voicemail")
+					&& !value.equals("file")
+					&& !value.equals("content")
+					&& !value.equals("mailto")) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public String compXmlString(byte[] xml, int sitOff, int stOff, int strInd) {
 		if (strInd < 0) return null;
 		int strOff = stOff + LEW(xml, sitOff+strInd*4);
 		return compXmlStringAt(xml, strOff);
 	}
-
-
-	public static String spaces = "                                             ";
-	public void prtIndent(int indent, String str) {
-		PrefHelper.Debug("BranchAPKParser", (spaces.substring(0, Math.min(indent*2, spaces.length()))+str));
-	}
-
 
 	// compXmlStringAt -- Return the string stored in StringTable format at
 	// offset strOff.  This offset points to the 16 bit string length, which 
