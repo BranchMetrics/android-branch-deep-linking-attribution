@@ -156,7 +156,7 @@ public void onStart() {
 				Log.i("MyApp", error.getMessage());
 			}
 		}
-	}, this.getIntent().getData());
+	}, this.getIntent().getData(), this);
 }
 ```
 
