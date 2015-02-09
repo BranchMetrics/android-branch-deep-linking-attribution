@@ -1,5 +1,10 @@
 package io.branch.referral;
 
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.UUID;
+import java.util.jar.JarFile;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -15,10 +20,6 @@ import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
-
-import java.io.InputStream;
-import java.util.UUID;
-import java.util.jar.JarFile;
 
 public class SystemObserver {
 	public static final String BLANK = "bnc_no_value";
@@ -184,5 +185,22 @@ public class SystemObserver {
             return wifiInfo.isConnected();
         }
 		return false;
+	}
+	
+	public String getAdvertisingId() {
+		String advertisingId = null;
+		
+		try {
+		    Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+		    Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+		    Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
+		    Method getIdMethod = adInfoObj.getClass().getMethod("getId");
+		    advertisingId = (String) getIdMethod.invoke(adInfoObj);
+		} catch(IllegalStateException ex) {
+			ex.printStackTrace();
+		} catch(Exception ignore) {
+		}
+		
+		return advertisingId;
 	}
 }
