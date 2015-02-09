@@ -140,7 +140,7 @@ public void onStart() {
 	Branch branch = Branch.getInstance(getApplicationContext());
 	branch.initSession(new BranchReferralInitListener(){
 		@Override
-		public void onInitFinished(JSONObject referringParams, Branch.BranchError error) {
+		public void onInitFinished(JSONObject referringParams, BranchError error) {
 			if (error == null) {
 				// params are the deep linked params associated with the link that the user clicked before showing up
 				// params will be empty if no data found
@@ -195,7 +195,7 @@ Often, you might have your own user IDs, or want referral and event data to pers
 To identify a user, just call:
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.setIdentity(@"your user id"); // your user id should not exceed 127 characters
+branch.setIdentity("your user id"); // your user id should not exceed 127 characters
 ```
 
 #### Logout

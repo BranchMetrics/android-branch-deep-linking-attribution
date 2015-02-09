@@ -82,6 +82,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					installPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
+				String advertisingId = sysObserver_.getAdvertisingId();
+				if (advertisingId != null) {
+					installPost.put("advertising_id", sysObserver_.getAdvertisingId());
+				}
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();

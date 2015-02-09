@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 import java.util.jar.JarFile;
@@ -252,5 +253,22 @@ public class SystemObserver {
             return wifiInfo.isConnected();
         }
 		return false;
+	}
+	
+	public String getAdvertisingId() {
+		String advertisingId = null;
+		
+		try {
+		    Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+		    Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+		    Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
+		    Method getIdMethod = adInfoObj.getClass().getMethod("getId");
+		    advertisingId = (String) getIdMethod.invoke(adInfoObj);
+		} catch(IllegalStateException ex) {
+			ex.printStackTrace();
+		} catch(Exception ignore) {
+		}
+		
+		return advertisingId;
 	}
 }
