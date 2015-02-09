@@ -82,7 +82,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				}
 				String advertisingId = sysObserver_.getAdvertisingId();
 				if (advertisingId != null) {
-					installPost.put("advertisingId", sysObserver_.getAdvertisingId());
+					installPost.put("advertising_id", sysObserver_.getAdvertisingId());
 				}
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {

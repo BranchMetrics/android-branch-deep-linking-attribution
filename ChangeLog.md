@@ -1,5 +1,9 @@
 Branch Android SDK change log 
 
+- v1.3.4: Added optional advertising id to install params
+
+- v1.3.3: Fixed issue with null tags
+
 - v1.3.2: Added API's to getShortURL synchronously
 
 - v1.3.1: Enforce setting app key before any API call; Provided ability to turn off smart session
