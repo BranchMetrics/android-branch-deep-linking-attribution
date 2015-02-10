@@ -238,6 +238,14 @@ try {
 	dataToInclude.put("user", "Joe");
 	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
 	dataToInclude.put("description", "Joe likes long walks on the beach...")
+	
+	// customize the display of the Branch link
+	dataToInclude.put("$og_title", "Joe's My App Referral");
+	dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
+	dataToInclude.put("$og_description", "Join Joe in My App - it's awesome");
+
+	// customize the desktop redirect location
+	dataToInclude.put("$desktop_url", "http://myapp.com/desktop_splash");
 } catch (JSONException ex) { }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
