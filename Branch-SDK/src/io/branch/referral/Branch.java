@@ -212,6 +212,9 @@ public class Branch {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
+			if (data.getQueryParameter("idfa") != null) {
+				prefHelper_.setAdvertisingId(data.getQueryParameter("idfa"));
+			}
 		}
 		initSession(callback, activity);
 	}
@@ -231,6 +234,9 @@ public class Branch {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
+			if (data.getQueryParameter("idfa") != null) {
+				prefHelper_.setAdvertisingId(data.getQueryParameter("idfa"));
+			}
 		}
 		initSession(null, activity);
 	}
@@ -249,6 +255,9 @@ public class Branch {
 		if (data != null&& data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
+			}
+			if (data.getQueryParameter("idfa") != null) {
+				prefHelper_.setAdvertisingId(data.getQueryParameter("idfa"));
 			}
 		}
 		initSession(callback, isReferrable, activity);

@@ -36,6 +36,7 @@ public class PrefHelper {
 	private static final String KEY_IDENTITY = "bnc_identity";
 	private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";	
 	private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
+	private static final String KEY_ADVERTISING_ID = "bnc_advertising_id";
 	private static final String KEY_SESSION_PARAMS = "bnc_session_params";
 	private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
 	private static final String KEY_USER_URL = "bnc_user_url";
@@ -177,6 +178,30 @@ public class PrefHelper {
 	
 	public String getLinkClickIdentifier() {
 		return getString(KEY_LINK_CLICK_IDENTIFIER);
+	}
+	
+	public void setAdvertisingId(String idfa) {
+		setString(KEY_ADVERTISING_ID, idfa);
+	}
+	
+	public String getAdvertisingId() {
+		String IDFA = null;
+		SystemObserver sysObserver = new SystemObserver(context_);
+		String sysIDFA = sysObserver.getAdvertisingId();
+		String prefIDFA = getString(KEY_ADVERTISING_ID);
+		if (prefIDFA == null) {
+			if (sysIDFA != null) {
+				IDFA = sysIDFA;
+			}
+		} else {
+			if (sysIDFA != null && !sysIDFA.equals(prefIDFA)) {	//user has reset advertising id
+				IDFA = sysIDFA;
+				setAdvertisingId(sysIDFA);
+			} else {
+				IDFA = prefIDFA;
+			}
+		}
+		return IDFA;
 	}
 	
 	public String getSessionParams() {
