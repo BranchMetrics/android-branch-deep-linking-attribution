@@ -105,6 +105,8 @@ public class Branch {
 	private OnTouchListener debugOnTouchListener_;
 	
 	private Map<BranchLinkData, String> linkCache_;
+	
+	private String advertisingId_;
 
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -128,6 +130,7 @@ public class Branch {
 		debugHandler_ = new Handler();
 		debugOnTouchListener_ = retrieveOnTouchListener();
 		linkCache_ = new HashMap<BranchLinkData, String>();
+		advertisingId_ = null;
 	}
 
 	@Deprecated
@@ -212,8 +215,8 @@ public class Branch {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
-			if (data.getQueryParameter("idfa") != null) {
-				prefHelper_.setAdvertisingId(data.getQueryParameter("idfa"));
+			if (data.getQueryParameter("advertising_id") != null) {
+				advertisingId_ = data.getQueryParameter("advertising_id");
 			}
 		}
 		initSession(callback, activity);
@@ -234,8 +237,8 @@ public class Branch {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
-			if (data.getQueryParameter("idfa") != null) {
-				prefHelper_.setAdvertisingId(data.getQueryParameter("idfa"));
+			if (data.getQueryParameter("advertising_id") != null) {
+				advertisingId_ = data.getQueryParameter("advertising_id");
 			}
 		}
 		initSession(null, activity);
@@ -256,8 +259,8 @@ public class Branch {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
 			}
-			if (data.getQueryParameter("idfa") != null) {
-				prefHelper_.setAdvertisingId(data.getQueryParameter("idfa"));
+			if (data.getQueryParameter("advertising_id") != null) {
+				advertisingId_ = data.getQueryParameter("advertising_id");
 			}
 		}
 		initSession(callback, isReferrable, activity);
@@ -1131,9 +1134,9 @@ public class Branch {
 				}
 
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE, prefHelper_.isDebug());
+					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE, advertisingId_, prefHelper_.isDebug());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					kRemoteInterface_.registerOpen(prefHelper_.isDebug());
+					kRemoteInterface_.registerOpen(advertisingId_, prefHelper_.isDebug());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasUser() && hasSession()) {
 					kRemoteInterface_.getReferralCounts();
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasUser() && hasSession()) {

@@ -39,7 +39,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		callback_ = callback;
 	}
 	
-	public void registerInstall(String installID, boolean debug) {
+	public void registerInstall(String installID, String advertisingId, boolean debug) {
 		String urlExtend = "v1/install";
 		if (callback_ != null) {
 			JSONObject installPost = new JSONObject();
@@ -80,9 +80,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					installPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
-				String advertisingId = prefHelper_.getAdvertisingId();
-				if (advertisingId != null && !advertisingId.equals(PrefHelper.NO_STRING_VALUE)) {
-					installPost.put("idfa", advertisingId);
+				advertisingId = (advertisingId == null) ? sysObserver_.getAdvertisingId() : advertisingId;
+				if (advertisingId != null) {
+					installPost.put("google_advertising_id", advertisingId);
 				}
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {
@@ -92,7 +92,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	public void registerOpen(boolean debug) {
+	public void registerOpen(String advertisingId, boolean debug) {
 		String urlExtend = "v1/open";
 		if (callback_ != null) {
 			JSONObject openPost = new JSONObject();
@@ -112,9 +112,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
-				String advertisingId = prefHelper_.getAdvertisingId();
-				if (advertisingId != null && !advertisingId.equals(PrefHelper.NO_STRING_VALUE)) {
-					openPost.put("idfa", advertisingId);
+				advertisingId = (advertisingId == null) ? sysObserver_.getAdvertisingId() : advertisingId;
+				if (advertisingId != null) {
+					openPost.put("google_advertising_id", advertisingId);
 				}
 				openPost.put("debug", debug);
 			} catch (JSONException ex) {
