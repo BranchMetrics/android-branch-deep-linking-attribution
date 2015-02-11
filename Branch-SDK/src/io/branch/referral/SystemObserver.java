@@ -72,19 +72,25 @@ public class SystemObserver {
 	        byte[] xml = null;
 	        try {
 	            jf = new JarFile(sourceApk);
-	            is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-	            xml = new byte[is.available()];
-                //noinspection ResultOfMethodCallIgnored
-                is.read(xml);
-	            //scheme = new ApkParser().decompressXML(xml);
+//	            if (jf.getEntry("AndroidManifest.xml").getSize() < 20000) {		// uncomment of we want to limit on manifest size
+	            	is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+		            xml = new byte[is.available()];
+	                //noinspection ResultOfMethodCallIgnored
+	                is.read(xml);
+		            scheme = new ApkParser().decompressXML(xml);
+//	            }
 	        } catch (Exception ignored) {
 	        } finally {
 	        	xml = null;
 	        	try {
-	        		jf.close();
-	        		jf = null;
-	        		is.close();
-	        		is = null;
+	        		if (is != null) {
+	        			is.close();
+	        			is = null;
+	        		}
+	        		if (jf != null) {
+	        			jf.close();	
+	        			jf = null;
+	        		}
 	        	} catch (IOException ignored) {}
 	        }
 	    } catch (NameNotFoundException ignored) {

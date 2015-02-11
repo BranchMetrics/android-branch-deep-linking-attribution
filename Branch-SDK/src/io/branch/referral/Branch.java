@@ -1,13 +1,18 @@
 package io.branch.referral;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -1127,11 +1132,12 @@ public class Branch {
 		}
 	}
 	
-	private void processListOfApps() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				SystemObserver sysObserver = new SystemObserver(context_);
+	private void scheduleListOfApps() {
+		ScheduledThreadPoolExecutor scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
+		Runnable periodicTask = new Runnable(){
+            @Override
+            public void run() {
+            	SystemObserver sysObserver = new SystemObserver(context_);
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
@@ -1151,10 +1157,16 @@ public class Branch {
 					lastRequestWasInit_ = false;
 					processNextQueueItem();
 				}
-			}
-		}).start();
+            }
+        };
+        
+        Date date = new Date();
+        Calendar calendar = GregorianCalendar.getInstance();
+        calendar.setTime(date); 
+        
+        scheduler.scheduleAtFixedRate(periodicTask, (24 - calendar.get(Calendar.HOUR_OF_DAY)) * 60, (Calendar.SATURDAY - calendar.get(Calendar.DAY_OF_WEEK)) * 24 * 60, TimeUnit.MINUTES);
 	}
-
+	
 	private void processNextQueueItem() {
 		try {
 			serverSema_.acquire();
@@ -1660,10 +1672,10 @@ public class Branch {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
 						
-						if (prefHelper_.getSystemReadStatus()) {
-							processListOfApps();
+						if (prefHelper_.getExternAppListing()) {
+							scheduleListOfApps();
 						}
-
+						
 						updateAllRequestsInQueue();
 
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -1702,10 +1714,6 @@ public class Branch {
 							prefHelper_.setSessionParams(params);
 						} else {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
-						}
-						
-						if (prefHelper_.getSystemReadStatus()) {
-							processListOfApps();
 						}
 						
 						Handler mainHandler = new Handler(context_.getMainLooper());

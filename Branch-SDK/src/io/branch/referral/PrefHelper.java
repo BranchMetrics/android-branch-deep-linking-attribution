@@ -27,7 +27,6 @@ public class PrefHelper {
 	private static final int INTERVAL_RETRY = 3000;
 	private static final int MAX_RETRIES = 5;
 	private static final int TIMEOUT = 3000;
-	private static final int SYSTEM_READ_TIMEOUT = 260000;
 	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
@@ -220,15 +219,6 @@ public class PrefHelper {
 		setInteger(KEY_IS_REFERRABLE, 0);
 	}
 	
-	public boolean getSystemReadStatus() {
-  		Calendar c  = Calendar.getInstance();
-  		long prevDate = getLong(KEY_LAST_READ_SYSTEM);
-  		if ((c.getTimeInMillis()/1000 - prevDate) > SYSTEM_READ_TIMEOUT) {
-  			return true && BNC_App_Listing;
-  		}
-  		return false;
-  	}
-	
 	public void clearSystemReadStatus() {
 		Calendar c  = Calendar.getInstance();
 		setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis()/1000);	
@@ -397,6 +387,10 @@ public class PrefHelper {
 	
 	public void disableExternAppListing() {
 		BNC_App_Listing = false;
+	}
+	
+	public boolean getExternAppListing() {
+		return BNC_App_Listing;
 	}
 	
 	public void disableSmartSession() {
