@@ -82,7 +82,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				}
 				String advertisingId = sysObserver_.getAdvertisingId();
 				if (advertisingId != null) {
-					installPost.put("google_advertising_id", sysObserver_.getAdvertisingId());
+					installPost.put("google_advertising_id", advertisingId);
 				}
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {
@@ -114,7 +114,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				}
 				String advertisingId = sysObserver_.getAdvertisingId();
 				if (advertisingId != null) {
-					openPost.put("google_advertising_id", sysObserver_.getAdvertisingId());
+					openPost.put("google_advertising_id", advertisingId);
 				}
 				openPost.put("debug", debug);
 			} catch (JSONException ex) {
