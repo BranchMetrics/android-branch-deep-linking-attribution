@@ -38,10 +38,6 @@ Basically Chrome decided that it didn't want to try to open up the app if a user
 
 We're working on a work around as well as campaigning the Chrome team to change this. If you work at Google, or know someone there, please help.
 
-6 - __My Note 3 or Samsung Galaxy S4 default browser always take me to the Play Store__
-
-Unfortunately, there is an unknown issue related to the default browser of those 2 devices which prevents us from opening up the app with some standard methods. We're working to resolve this.
-
 ## Installation
 
 Current compiled SDK footprint is *40kb*
@@ -242,6 +238,14 @@ try {
 	dataToInclude.put("user", "Joe");
 	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
 	dataToInclude.put("description", "Joe likes long walks on the beach...")
+	
+	// customize the display of the Branch link
+	dataToInclude.put("$og_title", "Joe's My App Referral");
+	dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
+	dataToInclude.put("$og_description", "Join Joe in My App - it's awesome");
+
+	// customize the desktop redirect location
+	dataToInclude.put("$desktop_url", "http://myapp.com/desktop_splash");
 } catch (JSONException ex) { }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
@@ -294,7 +298,7 @@ Also, you do custom redirection by inserting the following _optional keys in the
 | Key | Value
 | --- | ---
 | "$desktop_url" | Where to send the user on a desktop or laptop. By default it is the Branch-hosted text-me service
-| "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
+| "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. Currently, Chrome does not support this override. _Only necessary if you want a mobile web splash_
 | "$ios_url" | The replacement URL for the App Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
 | "$ipad_url" | Same as above but for iPad Store
 | "$fire_url" | Same as above but for Amazon Fire Store
