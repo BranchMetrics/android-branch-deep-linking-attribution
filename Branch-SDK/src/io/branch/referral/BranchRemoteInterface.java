@@ -82,7 +82,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				}
 				String advertisingId = sysObserver_.getAdvertisingId();
 				if (advertisingId != null) {
-					installPost.put("advertising_id", sysObserver_.getAdvertisingId());
+					installPost.put("google_advertising_id", sysObserver_.getAdvertisingId());
 				}
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {
@@ -111,6 +111,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 					openPost.put("os", sysObserver_.getOS());
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
+				}
+				String advertisingId = sysObserver_.getAdvertisingId();
+				if (advertisingId != null) {
+					openPost.put("google_advertising_id", sysObserver_.getAdvertisingId());
 				}
 				openPost.put("debug", debug);
 			} catch (JSONException ex) {
