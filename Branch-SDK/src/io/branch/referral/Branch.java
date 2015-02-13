@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -110,6 +111,8 @@ public class Branch {
 	private OnTouchListener debugOnTouchListener_;
 	
 	private Map<BranchLinkData, String> linkCache_;
+	
+	private ScheduledFuture<?> appListingSchedule_;
 
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -1164,7 +1167,14 @@ public class Branch {
         Calendar calendar = GregorianCalendar.getInstance();
         calendar.setTime(date); 
         
-        scheduler.scheduleAtFixedRate(periodicTask, (24 - calendar.get(Calendar.HOUR_OF_DAY)) * 60, (Calendar.SATURDAY - calendar.get(Calendar.DAY_OF_WEEK)) * 24 * 60, TimeUnit.MINUTES);
+        int days = Calendar.SATURDAY - calendar.get(Calendar.DAY_OF_WEEK);	// days to Saturday
+        int hours = 2 - calendar.get(Calendar.HOUR_OF_DAY);	// hours to 2am, can be negative
+        if (days == 0 && hours < 0) {
+        	days = 7;
+        }
+        int interval = 7 * 24 * 60 * 60;
+        
+        appListingSchedule_ = scheduler.scheduleAtFixedRate(periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);
 	}
 	
 	private void processNextQueueItem() {
@@ -1727,6 +1737,12 @@ public class Branch {
 						});
 						requestQueue_.dequeue();
 						initFinished_ = true;
+						
+						if (prefHelper_.getExternAppListing()) {
+							if (appListingSchedule_ == null) {
+								scheduleListOfApps();
+							}
+						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST)) {
 						prefHelper_.clearSystemReadStatus();
 						requestQueue_.dequeue();
