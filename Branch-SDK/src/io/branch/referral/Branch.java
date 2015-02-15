@@ -427,6 +427,12 @@ public class Branch {
 		} else {
 			executeClose();
 		}
+		
+		if (prefHelper_.getExternAppListing()) {
+			if (appListingSchedule_ == null) {
+				scheduleListOfApps();
+			}
+		}
 	}
 	
 	private void executeClose() {
@@ -1682,10 +1688,6 @@ public class Branch {
 							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 						}
 						
-						if (prefHelper_.getExternAppListing()) {
-							scheduleListOfApps();
-						}
-						
 						updateAllRequestsInQueue();
 
 						Handler mainHandler = new Handler(context_.getMainLooper());
@@ -1737,12 +1739,6 @@ public class Branch {
 						});
 						requestQueue_.dequeue();
 						initFinished_ = true;
-						
-						if (prefHelper_.getExternAppListing()) {
-							if (appListingSchedule_ == null) {
-								scheduleListOfApps();
-							}
-						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST)) {
 						prefHelper_.clearSystemReadStatus();
 						requestQueue_.dequeue();
