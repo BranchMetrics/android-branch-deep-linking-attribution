@@ -44,7 +44,16 @@ Current compiled SDK footprint is *40kb*
 
 ### Install library project
 
-Download JAR file from here:
+Import the SDK as a Gradle dependency (for Android Studio):
+* Right click on the main module within your project (this is called 'app' by default).
+* Select **Open Module Settings**.
+* Within the **Dependencies** tab, click the **+** button at the bottom of the window and select **Library Dependency**.
+* Type *branch*, and hit the enter key to search Maven Central for the Branch SDK Library.
+* Select the latest *io.branch.sdk.android:library* item listed and accept the changes.
+
+See the [Android Quick Start Guide for more detail](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md) and a screencasted walkthrough.
+
+Or download the JAR file from here:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
 
 The testbed project:
