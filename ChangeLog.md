@@ -1,5 +1,7 @@
 Branch Android SDK change log 
 
+- v1.3.6: Fix pre Honeycomb (3.0) bug
+
 - v1.3.5: Added advertising id to init params (optional)
 
 - v1.3.4: Added optional advertising id to install params

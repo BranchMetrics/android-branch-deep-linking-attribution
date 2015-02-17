@@ -55,7 +55,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 					installPost.put("app_version", sysObserver_.getAppVersion());
 				if (!sysObserver_.getCarrier().equals(SystemObserver.BLANK))
 					installPost.put("carrier", sysObserver_.getCarrier());
-				installPost.put("bluetooth", sysObserver_.getBluetoothPresent());
+				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+					installPost.put("bluetooth", sysObserver_.getBluetoothPresent());
+				}
 				if (!sysObserver_.getBluetoothVersion().equals(SystemObserver.BLANK))
 					installPost.put("bluetooth_version", sysObserver_.getBluetoothVersion());
 				installPost.put("has_nfc", sysObserver_.getNFCPresent());

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
@@ -29,8 +30,10 @@ public class RemoteInterface {
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
 	public static final int NO_API_KEY_STATUS = -1234;
 
-	private static final String SDK_VERSION = "1.3.5";
+	private static final String SDK_VERSION = "1.3.6";
 	private static final int DEFAULT_TIMEOUT = 3000;
+	
+	public RemoteInterface() { }
 	
 	private HttpClient getGenericHttpClient(int timeout) {
 		if (timeout <= 0)
@@ -114,6 +117,7 @@ public class RemoteInterface {
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
 		return make_restful_post(body, url, tag, timeout, log, null);
 	}
+	
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
 		try {    	
 			if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
@@ -137,11 +141,12 @@ public class RemoteInterface {
 		} catch (UnknownHostException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
-		} catch (NetworkOnMainThreadException ex) {
-			Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
-			return new ServerResponse(tag, 500);
 		} catch (Exception ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+				if (ex instanceof NetworkOnMainThreadException)
+					Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
+			}
 			return new ServerResponse(tag, 500);
 		}
 	}
