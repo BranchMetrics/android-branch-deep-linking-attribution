@@ -57,7 +57,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 					installPost.put("app_version", sysObserver_.getAppVersion());
 				if (!sysObserver_.getCarrier().equals(SystemObserver.BLANK))
 					installPost.put("carrier", sysObserver_.getCarrier());
-				installPost.put("bluetooth", sysObserver_.getBluetoothPresent());
+				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+					installPost.put("bluetooth", sysObserver_.getBluetoothPresent());
+				}
 				if (!sysObserver_.getBluetoothVersion().equals(SystemObserver.BLANK))
 					installPost.put("bluetooth_version", sysObserver_.getBluetoothVersion());
 				installPost.put("has_nfc", sysObserver_.getNFCPresent());
@@ -84,7 +86,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				}
 				String advertisingId = sysObserver_.getAdvertisingId();
 				if (advertisingId != null) {
-					installPost.put("advertising_id", sysObserver_.getAdvertisingId());
+					installPost.put("google_advertising_id", advertisingId);
 				}
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {
@@ -106,15 +108,18 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
 					openPost.put("app_version", sysObserver_.getAppVersion());
 				openPost.put("os_version", sysObserver_.getOSVersion());
+				String uriScheme = sysObserver_.getURIScheme();
+				if (!uriScheme.equals(SystemObserver.BLANK)) 
+					openPost.put("uri_scheme", uriScheme);
 				if (!sysObserver_.getOS().equals(SystemObserver.BLANK))
 					openPost.put("os", sysObserver_.getOS());
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
-				String uriScheme = sysObserver_.getURIScheme();
-				if (!uriScheme.equals(SystemObserver.BLANK)) 
-					openPost.put("uri_scheme", uriScheme);
-
+				String advertisingId = sysObserver_.getAdvertisingId();
+				if (advertisingId != null) {
+					openPost.put("google_advertising_id", advertisingId);
+				}
 				openPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();

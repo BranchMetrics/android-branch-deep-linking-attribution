@@ -52,7 +52,16 @@ Current compiled SDK footprint is *40kb*
 
 ### Install library project
 
-Download JAR file from here:
+Import the SDK as a Gradle dependency (for Android Studio):
+* Right click on the main module within your project (this is called 'app' by default).
+* Select **Open Module Settings**.
+* Within the **Dependencies** tab, click the **+** button at the bottom of the window and select **Library Dependency**.
+* Type *branch*, and hit the enter key to search Maven Central for the Branch SDK Library.
+* Select the latest *io.branch.sdk.android:library* item listed and accept the changes.
+
+See the [Android Quick Start Guide for more detail](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md) and a screencasted walkthrough.
+
+Or download the JAR file from here:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
 
 The testbed project:
@@ -246,6 +255,14 @@ try {
 	dataToInclude.put("user", "Joe");
 	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
 	dataToInclude.put("description", "Joe likes long walks on the beach...")
+	
+	// customize the display of the Branch link
+	dataToInclude.put("$og_title", "Joe's My App Referral");
+	dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
+	dataToInclude.put("$og_description", "Join Joe in My App - it's awesome");
+
+	// customize the desktop redirect location
+	dataToInclude.put("$desktop_url", "http://myapp.com/desktop_splash");
 } catch (JSONException ex) { }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
@@ -298,7 +315,7 @@ Also, you do custom redirection by inserting the following _optional keys in the
 | Key | Value
 | --- | ---
 | "$desktop_url" | Where to send the user on a desktop or laptop. By default it is the Branch-hosted text-me service
-| "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
+| "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. Currently, Chrome does not support this override. _Only necessary if you want a mobile web splash_
 | "$ios_url" | The replacement URL for the App Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
 | "$ipad_url" | Same as above but for iPad Store
 | "$fire_url" | Same as above but for Amazon Fire Store
