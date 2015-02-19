@@ -1,4 +1,6 @@
-Branch Android SDK change log 
+Branch Android SDK change log
+
+- v1.3.7: Added app listing
 
 - v1.3.6: Fix pre Honeycomb (3.0) bug
 
