@@ -204,7 +204,7 @@ Often, you might have your own user IDs, or want referral and event data to pers
 To identify a user, just call:
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.setIdentity("your user id"); // your user id should not exceed 127 characters
+branch.setIdentity(your user id); // your user id should not exceed 127 characters
 ```
 
 #### Logout
