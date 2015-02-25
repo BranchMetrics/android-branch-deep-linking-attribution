@@ -13,6 +13,8 @@ import org.json.JSONObject;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.app.ActivityManager.MemoryInfo;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -63,37 +65,46 @@ public class SystemObserver {
 	
 	public String getURIScheme(String packageName) {
 		String scheme = BLANK;
-		PackageManager pm = context_.getPackageManager();
-		try {
-	        ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
-	        String sourceApk = ai.publicSourceDir;
-	        JarFile jf = null;
-	        InputStream is = null;
-	        byte[] xml = null;
-	        try {
-	            jf = new JarFile(sourceApk);
-            	is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-	            xml = new byte[is.available()];
-                //noinspection ResultOfMethodCallIgnored
-                is.read(xml);
-	            scheme = new ApkParser().decompressXML(xml);
-	        } catch (Exception ignored) {
-	        } finally {
-	        	xml = null;
-	        	try {
-	        		if (is != null) {
-	        			is.close();
-	        			is = null;
-	        		}
-	        		if (jf != null) {
-	        			jf.close();	
-	        			jf = null;
-	        		}
-	        	} catch (IOException ignored) {}
-	        }
-	    } catch (NameNotFoundException ignored) {
-	    }
+		if (!isLowOnMemory()) {
+			PackageManager pm = context_.getPackageManager();
+			try {
+		        ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
+		        String sourceApk = ai.publicSourceDir;
+		        JarFile jf = null;
+		        InputStream is = null;
+		        byte[] xml = null;
+		        try {
+		            jf = new JarFile(sourceApk);
+	            	is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+		            xml = new byte[is.available()];
+	                //noinspection ResultOfMethodCallIgnored
+	                is.read(xml);
+		            scheme = new ApkParser().decompressXML(xml);
+		        } catch (Exception ignored) {
+		        } finally {
+		        	xml = null;
+		        	try {
+		        		if (is != null) {
+		        			is.close();
+		        			is = null;
+		        		}
+		        		if (jf != null) {
+		        			jf.close();	
+		        			jf = null;
+		        		}
+		        	} catch (IOException ignored) {}
+		        }
+		    } catch (NameNotFoundException ignored) {
+		    }
+		}
 		return scheme;
+	}
+	
+	private boolean isLowOnMemory() {
+		ActivityManager activityManager = (ActivityManager) context_.getSystemService(Context.ACTIVITY_SERVICE);
+		MemoryInfo mi = new MemoryInfo();
+		activityManager.getMemoryInfo(mi);
+		return mi.lowMemory;
 	}
 	
 	@SuppressLint("NewApi")
