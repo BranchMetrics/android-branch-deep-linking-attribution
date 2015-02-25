@@ -42,10 +42,6 @@ Basically Chrome decided that it didn't want to try to open up the app if a user
 
 We're working on a work around as well as campaigning the Chrome team to change this. If you work at Google, or know someone there, please help.
 
-7 - __My Note 3 or Samsung Galaxy S4 default browser always take me to the Play Store__
-
-Unfortunately, there is an unknown issue related to the default browser of those 2 devices which prevents us from opening up the app with some standard methods. We're working to resolve this.
-
 ## Installation
 
 Current compiled SDK footprint is *40kb*
