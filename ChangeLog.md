@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.3.8: Check memory when getting URI Scheme
+
 - v1.3.7: Added app listing
 
 - v1.3.6: Fix pre Honeycomb (3.0) bug
