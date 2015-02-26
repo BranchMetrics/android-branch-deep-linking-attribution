@@ -169,14 +169,26 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void getRewards() {
-		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID() + "?app_id=" + prefHelper_.getAppKey();
+		JSONObject post = new JSONObject();
+		try {
+			post.put("app_id", prefHelper_.getAppKey());
+		} catch (JSONException ignore) {
+		}
+		String params = this.convertJSONtoString(post);
+		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID() + params;
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getReferralCounts() {
-		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID() + "?app_id=" + prefHelper_.getAppKey();
+		JSONObject post = new JSONObject();
+		try {
+			post.put("app_id", prefHelper_.getAppKey());
+		} catch (JSONException ignore) {
+		}
+		String params = this.convertJSONtoString(post);
+		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID() + params;
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS, prefHelper_.getTimeout()));
 		}
