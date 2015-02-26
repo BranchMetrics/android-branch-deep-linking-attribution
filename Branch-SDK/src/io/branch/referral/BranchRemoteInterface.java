@@ -1,12 +1,12 @@
 package io.branch.referral;
 
-import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
-import android.util.DisplayMetrics;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
+import android.util.DisplayMetrics;
 
 public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_REGISTER_INSTALL = "t_register_install";
@@ -169,24 +169,23 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	public void getRewards() {
-		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID();
+		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID() + "?app_id=" + prefHelper_.getAppKey();
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getReferralCounts() {
-		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID();
+		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID() + "?app_id=" + prefHelper_.getAppKey();
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS, prefHelper_.getTimeout()));
 		}
 	}
 	
 	public void getCreditHistory(JSONObject post) {
-        String params = this.convertJSONtoString(post);
-        String urlExtend = "v1/credithistory" + params;
+        String urlExtend = "v1/credithistory";
 		if (callback_ != null) {
-			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
+			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARD_HISTORY, prefHelper_.getTimeout()));
 		}
 	}
 	
