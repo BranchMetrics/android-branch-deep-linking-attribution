@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.3.9: Added API Key to GET
+
 - v1.3.8: Check memory when getting URI Scheme
 
 - v1.3.7: Added app listing
