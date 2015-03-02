@@ -22,7 +22,6 @@ public class ServerRequestQueue {
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
 	private List<ServerRequest> queue;
-    private final Object lock = new Object();
 
     public static ServerRequestQueue getInstance(Context c) {
     	if(SharedInstance == null) {
@@ -48,7 +47,7 @@ public class ServerRequestQueue {
 			@Override
 			public void run() {
 				JSONArray jsonArr = new JSONArray();
-				synchronized(lock) {
+				synchronized(queue) {
                     for (ServerRequest aQueue : queue) {
                         JSONObject json = aQueue.toJSON();
                         if (json != null) {
@@ -155,7 +154,7 @@ public class ServerRequestQueue {
 	}
 
 	public boolean containsInstallOrOpen() {
-		synchronized(lock) {
+		synchronized(queue) {
             for (ServerRequest req : queue) {
                 if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
                     return true;
@@ -166,7 +165,7 @@ public class ServerRequestQueue {
 	}
 	
 	public void moveInstallOrOpenToFront(String tag, int networkCount) {
-		synchronized(lock) {
+		synchronized(queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
