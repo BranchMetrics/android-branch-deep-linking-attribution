@@ -1,13 +1,3 @@
-## API renaming since v1.1.2
-
-Deprecated API | Renamed to
--------------- | -------------
-all of initUserSession(...) | initSession(...)
-all of identifyUser(...) | setIdentity(...)
-clearUser() | logout()
-getInstallReferringParams() | getFirstReferringParams()
-getReferringParams() | getLatestReferringParams()
-
 ## FAQ
 
 1 - __What if you go down?! Or there is a poor connection?__
