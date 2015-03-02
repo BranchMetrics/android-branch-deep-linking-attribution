@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.annotation.SuppressLint;
 import java.util.Collection;
 
 import org.json.JSONArray;
@@ -16,6 +17,7 @@ public class BranchLinkData extends JSONObject {
 	private String feature;
 	private String stage;
 	private String params;
+	private int duration;
 	
 	public BranchLinkData() {
 		super();
@@ -43,6 +45,13 @@ public class BranchLinkData extends JSONObject {
 	    if (type != 0) {
 	        this.type = type;
 	        this.put("type", type);
+	    }
+	}
+	
+	public void putDuration(int duration) throws JSONException {
+	    if (duration != 0) {
+	        this.duration = duration;
+	        this.put("duration", duration);
 	    }
 	}
 
@@ -108,6 +117,8 @@ public class BranchLinkData extends JSONObject {
 			return false;
 		if (type != other.type)
 			return false;
+		if (duration != other.duration)
+			return false;
 		
 		if (tags == null) {
 			if (other.tags != null)
@@ -118,6 +129,7 @@ public class BranchLinkData extends JSONObject {
 		return true;
 	}
 	
+	@SuppressLint("DefaultLocale")
 	@Override
     public int hashCode() {
 		int result = 1;
@@ -129,6 +141,7 @@ public class BranchLinkData extends JSONObject {
 	    result = prime * result + ((feature == null) ? 0 : feature.toLowerCase().hashCode());
 	    result = prime * result + ((stage == null) ? 0 : stage.toLowerCase().hashCode());
 	    result = prime * result + ((params == null) ? 0 : params.toLowerCase().hashCode());
+	    result = prime * result + this.duration;
 	    
 	    if (this.tags != null) {
 	    	for (String tag : this.tags) {
