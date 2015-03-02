@@ -49,7 +49,7 @@ public class BranchLinkData extends JSONObject {
 	}
 	
 	public void putDuration(int duration) throws JSONException {
-	    if (duration != 0) {
+	    if (duration > 0) {
 	        this.duration = duration;
 	        this.put("duration", duration);
 	    }
