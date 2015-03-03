@@ -78,7 +78,6 @@ public class ReferralCodeActivity extends Activity {
 					@Override
 					public void onInitFinished(JSONObject referralCode, BranchError error) {
 						try {
-							// Ugly! will add error code soon.
 							if (!referralCode.has("error_message")) {
 								txtReferralCode.setText(referralCode.getString("referral_code"));
 							} else {

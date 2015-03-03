@@ -26,6 +26,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
 	CountDownLatch signal;
 	Branch branch;
 	String urlFB, urlTT;
+	String referralCode;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -124,22 +125,67 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		signal.await(1, TimeUnit.SECONDS);
 	}
 	
-	public void testReferralCode1Get() {
-		branch.getReferralCode(prefix, amount, expiration, null, getCalculationType(), getLocation(), new BranchReferralInitListener() {
+	public void testReferralCode() throws InterruptedException {
+		// Get
+		branch.getReferralCode("test", 7, new BranchReferralInitListener() {
 			@Override
-			public void onInitFinished(JSONObject referralCode, BranchError error) {
+			public void onInitFinished(JSONObject referralCodeJson, BranchError error) {
+				assertNull(error);
 				try {
-					// Ugly! will add error code soon.
-					if (!referralCode.has("error_message")) {
-						txtReferralCode.setText(referralCode.getString("referral_code"));
-					} else {
-						txtReferralCode.setText(referralCode.getString("error_message"));
-					}
-				} catch (JSONException e) {
-					txtReferralCode.setText("Error parsing JSON");
+					referralCode = referralCodeJson.getString("referral_code");
+					assertTrue(referralCode.startsWith("test"));
+					assertEquals(referralCodeJson.getJSONObject("metadata").getInt("amount"), 7);
+					assertEquals(Integer.parseInt(referralCodeJson.getString("calculation_type")), Branch.REFERRAL_CODE_AWARD_UNLIMITED);
+					assertEquals(Integer.parseInt(referralCodeJson.getString("location")), Branch.REFERRAL_CODE_LOCATION_REFERRING_USER);
+				} catch (JSONException ignore) {
 				}
+				
+				signal.countDown();
+
 			}
 		});
+		signal.await(1, TimeUnit.SECONDS);
+		
+		// Validate
+		final CountDownLatch signalValidate = new CountDownLatch(1);
+		branch.validateReferralCode(referralCode, new BranchReferralInitListener() {
+			@Override
+			public void onInitFinished(JSONObject referralCodeJson, BranchError error) {
+				assertNull(error);
+				try {
+					assertTrue(referralCodeJson.getString("referral_code").equals(referralCode));
+					assertEquals(referralCodeJson.getJSONObject("metadata").getInt("amount"), 7);
+					assertEquals(Integer.parseInt(referralCodeJson.getString("calculation_type")), Branch.REFERRAL_CODE_AWARD_UNLIMITED);
+					assertEquals(Integer.parseInt(referralCodeJson.getString("location")), Branch.REFERRAL_CODE_LOCATION_REFERRING_USER);
+				} catch (JSONException ignore) {
+				}
+				
+				signalValidate.countDown();
+
+			}
+		});
+		signalValidate.await(1, TimeUnit.SECONDS);
+		
+		// Apply
+		final CountDownLatch signalApply = new CountDownLatch(1);
+		branch.applyReferralCode(referralCode, new BranchReferralInitListener() {
+			@Override
+			public void onInitFinished(JSONObject referralCodeJson, BranchError error) {
+				assertNull(error);
+				try {
+					assertTrue(referralCodeJson.getString("referral_code").equals(referralCode));
+					assertEquals(referralCodeJson.getJSONObject("metadata").getInt("amount"), 7);
+					assertEquals(Integer.parseInt(referralCodeJson.getString("calculation_type")), Branch.REFERRAL_CODE_AWARD_UNLIMITED);
+					assertEquals(Integer.parseInt(referralCodeJson.getString("location")), Branch.REFERRAL_CODE_LOCATION_REFERRING_USER);
+				} catch (JSONException ignore) {
+				}
+				
+				signalApply.countDown();
+
+			}
+		});
+		signalApply.await(1, TimeUnit.SECONDS);
+
 	}
 	
 }
