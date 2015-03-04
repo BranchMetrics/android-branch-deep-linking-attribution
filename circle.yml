@@ -17,7 +17,7 @@ test:
 
     - ./wait.sh:
         parallel: true
-        adb install Branch-SDK-TestBed/build/outputs/apk/Branch-SDK-TestBed-release-unsigned.apk
-        adb logcat &
-        adb wait-for-device
-        adb shell am instrument -w io.branch.branchandroiddemo.test/android.test.InstrumentationTestRunner
+    adb install Branch-SDK-TestBed/build/outputs/apk/Branch-SDK-TestBed-release-unsigned.apk
+    adb logcat &
+    adb wait-for-device
+    adb shell am instrument -w io.branch.branchandroiddemo.test/android.test.InstrumentationTestRunner
