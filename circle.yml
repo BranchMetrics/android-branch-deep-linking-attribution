@@ -20,4 +20,4 @@ test:
     - adb logcat:
         background: true
     - adb wait-for-device
-    - adb shell am instrument -w io.branch.branchandroiddemo.test/android.test.InstrumentationTestRunner
+    - adb shell am instrument -w io.branch.branchandroiddemo/android.test.InstrumentationTestRunner
