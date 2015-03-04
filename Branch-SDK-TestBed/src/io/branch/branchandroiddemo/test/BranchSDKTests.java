@@ -7,7 +7,6 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.PrefHelper;
 
-import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -19,7 +18,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 import android.test.InstrumentationTestCase;
-import android.util.Log;
 
 public class BranchSDKTests extends InstrumentationTestCase {
 	
@@ -39,6 +37,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
 	@Before
 	public void setUp() throws Exception {
 		super.setUp();
+		
 		signal = new CountDownLatch(1);
 		branch = Branch.getInstance(getInstrumentation().getContext());
 		PrefHelper.getInstance(getInstrumentation().getContext()).disableSmartSession();
@@ -55,16 +54,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		branch.initSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams, BranchError error) {
-				Log.i("Branch SDK Test", "branch init complete!");
-				try {
-					Iterator<?> keys = referringParams.keys();
-					while (keys.hasNext()) {
-						String key = (String) keys.next();
-						Log.i("BranchTestBed", key + ", " + referringParams.getString(key));
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+				assertNull(error);
 			}
 		});
 	}
@@ -187,5 +177,4 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		signalApply.await(1, TimeUnit.SECONDS);
 
 	}
-	
 }
