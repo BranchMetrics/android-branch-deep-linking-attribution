@@ -6,6 +6,5 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry exported="true" kind="lib" path="/Users/qinwei/Downloads/mockwebserver-2.2.0-jar-with-dependencies.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
