@@ -7,6 +7,7 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.PrefHelper;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -18,6 +19,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 import android.test.InstrumentationTestCase;
+
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 public class BranchSDKTests extends InstrumentationTestCase {
 	
@@ -64,11 +68,16 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		assertNull(url);
 	}
 	
-	public void testGetShortURL() throws InterruptedException {
+	public void testGetShortURL() throws InterruptedException, IOException {
+//		final MockWebServer server = new MockWebServer();
+//		server.play();
+//		final RecordedRequest request = server.takeRequest();
 		
 		branch.getShortUrl("facebook", null, null, null, new BranchLinkCreateListener() {
 			@Override
 			public void onLinkCreate(String url, BranchError error) {
+//				assertEquals("/v1/url", request.getPath());
+				  
 				assertNull(error);
 				assertTrue(url.startsWith("https://bnc.lt/l/"));
 				urlFB = url;
