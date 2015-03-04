@@ -20,9 +20,6 @@ import org.junit.BeforeClass;
 
 import android.test.InstrumentationTestCase;
 
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
-
 public class BranchSDKTests extends InstrumentationTestCase {
 	
 	CountDownLatch signal;
@@ -69,15 +66,9 @@ public class BranchSDKTests extends InstrumentationTestCase {
 	}
 	
 	public void testGetShortURL() throws InterruptedException, IOException {
-//		final MockWebServer server = new MockWebServer();
-//		server.play();
-//		final RecordedRequest request = server.takeRequest();
-		
 		branch.getShortUrl("facebook", null, null, null, new BranchLinkCreateListener() {
 			@Override
 			public void onLinkCreate(String url, BranchError error) {
-//				assertEquals("/v1/url", request.getPath());
-				  
 				assertNull(error);
 				assertTrue(url.startsWith("https://bnc.lt/l/"));
 				urlFB = url;
