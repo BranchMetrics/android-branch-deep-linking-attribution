@@ -21,7 +21,7 @@ public class ServerRequestQueue {
 	private static ServerRequestQueue SharedInstance;	
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
-	private List<ServerRequest> queue;
+	private final List<ServerRequest> queue;
 
     public static ServerRequestQueue getInstance(Context c) {
     	if(SharedInstance == null) {
