@@ -30,7 +30,7 @@ public class RemoteInterface {
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
 	public static final int NO_API_KEY_STATUS = -1234;
 
-	private static final String SDK_VERSION = "1.4.0";
+	private static final String SDK_VERSION = "1.4.1";
 	private static final int DEFAULT_TIMEOUT = 3000;
 	
 	public RemoteInterface() { }
