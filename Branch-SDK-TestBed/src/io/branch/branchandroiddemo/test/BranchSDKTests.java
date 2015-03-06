@@ -5,7 +5,9 @@ import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchRemoteInterface;
 import io.branch.referral.PrefHelper;
+import io.branch.referral.PrefHelper.DebugNetworkCallback;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -265,6 +267,14 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		signalApply.await(1, TimeUnit.SECONDS);
 	}
 	
+	public void testYDebuggerConnect() {
+		BranchRemoteInterface remoteInterface = new BranchRemoteInterface(getInstrumentation().getContext());
+		DebugNetworkCallback callback = new DebugNetworkCallback();
+		remoteInterface.setNetworkCallbackListener(callback);
+		remoteInterface.connectToDebug();
+		assertTrue(callback.getConnectionStatus() == 465 || callback.getConnectionStatus() == 200);
+	}
+	
 	public void testZLoad() throws InterruptedException {
 		initSession();
 		
@@ -282,9 +292,9 @@ public class BranchSDKTests extends InstrumentationTestCase {
 					}
 				}
 			});
-			Thread.sleep(100);
+			Thread.sleep(50);
 		}
-		signal.await(30, TimeUnit.SECONDS);
+		signal.await(10, TimeUnit.SECONDS);
 		
 		branch.getShortUrl(null, "loadTest", null, null, new BranchLinkCreateListener() {
 			@Override
