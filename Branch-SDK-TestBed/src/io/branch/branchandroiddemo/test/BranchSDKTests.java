@@ -15,10 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 
 import android.test.InstrumentationTestCase;
 
@@ -32,15 +28,12 @@ public class BranchSDKTests extends InstrumentationTestCase {
 	private static int referralCodeCalculationType;
 	private static int referralCodeLocation;
 	
-	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 	}
 
-	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 	}
 
-	@Before
 	public void setUp() throws Exception {
 		super.setUp();
 		
@@ -49,7 +42,6 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		prefHelper.disableSmartSession();
 	}
 
-	@After
 	public void tearDown() throws Exception {
 		branch.resetUserSession();
 		super.tearDown();
