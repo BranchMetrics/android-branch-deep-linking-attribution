@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.4.2: Added Unit tests
+
 - v1.4.1: Fixed synchronization issue in persistence queue
 
 - v1.4.0: Exposed duration in getShortUrl for tuning link click match duration
