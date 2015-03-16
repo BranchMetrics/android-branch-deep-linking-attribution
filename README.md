@@ -1,6 +1,6 @@
 ## FAQ
 
-1.) __What if you go down or there is a poor connection?__
+1.) __What if Branch goes down or there is a poor connection?__
 
 At Branch, we live and breath uptime &amp; performance. We've developed mechanisms internal to the SDK to deal with network issues. We always call the callbacks with the error parameter describing the issue. If the phone is in airplane mode and the connection is not available, the callbacks are called immediately. If there is a server latency, we timeout after 3 seconds and will retry 4 more times with a 3 second pause in between each. These timeouts are adjustable on the singleton instance by calling: ```setNetworkTimeout``` (ms), ```setRetryCount``` and ```setRetryInterval``` (ms).
 
@@ -16,17 +16,18 @@ Yes. Even if you don't call setDebug(), you can still start debugging dynamicall
 
 4.) __Why do I not see any installs after I reinstall?__
 
-We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install'. To register an install on the same phone again, see FAQ #2 about debugging.
+We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install.' To register an install on the same phone again, see FAQ #2 about debugging.
 
 5.) __Chrome seems to take me to Google Play all the time. Why?__
 
 Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
 
-	1. Make sure the package name for the test build matches the package registered in the Branch settings and matches the package in Google play.
+  1. Make sure the package name for the test build matches the package registered in the Branch settings and matches the package in Google play.
 
-	2. Make sure the URI scheme of the test build matches the Branch settings.
+  2. Make sure the URI scheme of the test build matches the Branch settings.
 
-	3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
+  3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
+
 
 6.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
 
