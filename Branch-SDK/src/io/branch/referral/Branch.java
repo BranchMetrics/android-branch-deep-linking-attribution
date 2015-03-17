@@ -449,12 +449,14 @@ public class Branch {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null);
-					requestQueue_.enqueue(req);
-					if (initFinished_ || !hasNetwork_) {
-						processNextQueueItem();
-					} else if (initFailed_ || initNotStarted_) {
-						handleFailure(req);
+					if (!requestQueue_.containsClose()) {
+						ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null);
+						requestQueue_.enqueue(req);
+						if (initFinished_ || !hasNetwork_) {
+							processNextQueueItem();
+						} else if (initFailed_ || initNotStarted_) {
+							handleFailure(req);
+						}
 					}
 				}
 			}).start();
