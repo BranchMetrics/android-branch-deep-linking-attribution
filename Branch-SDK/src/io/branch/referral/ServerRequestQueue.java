@@ -154,7 +154,7 @@ public class ServerRequestQueue {
 	}
 
 	public boolean containsClose() {
-		synchronized(lock) {
+		synchronized(queue) {
             for (ServerRequest req : queue) {
                 if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
                     return true;
