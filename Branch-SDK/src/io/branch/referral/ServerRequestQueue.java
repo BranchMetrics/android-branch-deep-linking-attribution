@@ -154,6 +154,17 @@ public class ServerRequestQueue {
 		return req;
 	}
 
+	public boolean containsClose() {
+		synchronized(lock) {
+            for (ServerRequest req : queue) {
+                if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+                    return true;
+                }
+            }
+		}
+		return false;
+	}
+	
 	public boolean containsInstallOrOpen() {
 		synchronized(lock) {
             for (ServerRequest req : queue) {
