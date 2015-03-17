@@ -480,23 +480,29 @@ public class PrefHelper {
         return BNC_Debug_Connecting;
 	}
 	
-	public class DebugNetworkCallback implements NetworkCallback {
+	public static class DebugNetworkCallback implements NetworkCallback {
+		private int connectionStatus;
+		
+		public int getConnectionStatus() {
+			return connectionStatus;
+		}
+		
 		@Override
 		public void finished(ServerResponse serverResponse) {
 			if (serverResponse != null) {
 				try {
-					int status = serverResponse.getStatusCode();
+					connectionStatus = serverResponse.getStatusCode();
 					String requestTag = serverResponse.getTag();
 
-					if (status == 465) {
+					if (connectionStatus == 465) {
 						BNC_Remote_Debug = false;
 			            Log.i("Branch Debug", "======= Server is not listening =======");
-					} else if (status >= 400 && status < 500) {
+					} else if (connectionStatus >= 400 && connectionStatus < 500) {
 						if (serverResponse.getObject() != null && serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
 							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
 						}
-					} else if (status != 200) {
-						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
+					} else if (connectionStatus != 200) {
+						if (connectionStatus == RemoteInterface.NO_CONNECTIVITY_STATUS) {
 							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
 						} else {
 							Log.i("BranchSDK", "Trouble reaching server. Please try again in a few minutes.");

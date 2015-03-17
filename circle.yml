@@ -1,0 +1,23 @@
+machine:
+  environment:
+    ANDROID_HOME: /home/ubuntu/android
+
+dependencies:
+  cache_directories:
+    - ~/.android
+    - ~/android
+  override:
+    - ./install-dependencies.sh
+
+test:
+  override:
+    - $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
+        background: true
+        parallel: true
+    - ./wait.sh:
+        parallel: true
+    - adb install Branch-SDK-TestBed/Branch-SDK-TestBed-release-unsigned.apk
+    - adb logcat:
+        background: true
+    - adb wait-for-device
+    - adb shell am instrument -w io.branch.branchandroiddemo/android.test.InstrumentationTestRunner

@@ -1764,6 +1764,10 @@ public class Branch {
 						requestQueue_.dequeue();
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
 						final String url = serverResponse.getObject().getString("url");
+						
+						// cache the link
+						linkCache_.put(serverResponse.getLinkData(), url);
+						
 						Handler mainHandler = new Handler(context_.getMainLooper());
 						mainHandler.post(new Runnable() {
 							@Override
@@ -1774,9 +1778,6 @@ public class Branch {
 							}
 						});
 						requestQueue_.dequeue();
-						
-						// cache the link
-						linkCache_.put(serverResponse.getLinkData(), url);
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
 						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
 						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));

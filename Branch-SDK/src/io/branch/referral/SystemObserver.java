@@ -81,6 +81,7 @@ public class SystemObserver {
 	                is.read(xml);
 		            scheme = new ApkParser().decompressXML(xml);
 		        } catch (Exception ignored) {
+                } catch (OutOfMemoryError ignored) {
 		        } finally {
 		        	xml = null;
 		        	try {
