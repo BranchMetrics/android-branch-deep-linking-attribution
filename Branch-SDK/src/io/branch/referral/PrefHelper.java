@@ -30,8 +30,6 @@ public class PrefHelper {
 	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
-	private static final String KEY_APP_KEY = "bnc_app_key";
-	
 	private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
 	private static final String KEY_SESSION_ID = "bnc_session_id";
 	private static final String KEY_IDENTITY_ID = "bnc_identity_id";
@@ -115,24 +113,24 @@ public class PrefHelper {
 
 	@Deprecated
 	public void setAppKey(String key) {
-		setString(KEY_APP_KEY, key);
+		setString(RemoteInterface.BRANCH_KEY, key);
 	}
 	
-	public String getAppKey() {
-		String appKey = null;
+	public String getBranchKey() {
+		String branchKey = null;
 		try {
 	        final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
 	        if (ai.metaData != null) {
-	            appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
+	            branchKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
 	        }
 	    } catch (final PackageManager.NameNotFoundException e) {
 	    }
 		
-		if (appKey == null) {
-			appKey = getString(KEY_APP_KEY);
+		if (branchKey == null) {
+			branchKey = getString(RemoteInterface.BRANCH_KEY);
 		}
 		
-		return appKey;
+		return branchKey;
 	}
 	
 	public void setDeviceFingerPrintID(String device_fingerprint_id) {

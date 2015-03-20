@@ -26,9 +26,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class RemoteInterface {
-	public static final String NO_TAG_VALUE = "no_tag";
+    public static final String BRANCH_KEY = "branch_key";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
-	public static final int NO_API_KEY_STATUS = -1234;
+	public static final int NO_BRANCH_KEY_STATUS = -1234;
 
 	private static final String SDK_VERSION = "1.4.2.2";
 	private static final int DEFAULT_TIMEOUT = 3000;
@@ -120,8 +120,8 @@ public class RemoteInterface {
 	
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
 		try {    	
-			if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
-				return new ServerResponse(tag, NO_API_KEY_STATUS);
+			if (body.has(BRANCH_KEY) && body.getString(BRANCH_KEY).equals(PrefHelper.NO_STRING_VALUE)) {
+				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 			}
 			
 			body.put("sdk", "android" + SDK_VERSION);
