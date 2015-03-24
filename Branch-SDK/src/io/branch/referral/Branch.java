@@ -138,21 +138,20 @@ public class Branch {
 		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
 
-	@Deprecated
 	public static Branch getInstance(Context context, String branchKey) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
 		}
 		branchReferral_.context_ = context;
-		branchReferral_.prefHelper_.setAppKey(branchKey);
+		branchReferral_.prefHelper_.setBranchKey(branchKey);
 		return branchReferral_;
 	}
 
-	public static Branch getInstance(Context context) {
+	private static Branch getBranchInstance(Context context, boolean isLive) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
 
-			String appKey = branchReferral_.prefHelper_.getBranchKey();
+			String appKey = branchReferral_.prefHelper_.getBranchKey(isLive);
 	        if (appKey == null || appKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
 	        	Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
 	        }
@@ -160,6 +159,14 @@ public class Branch {
 		branchReferral_.context_ = context;
 		return branchReferral_;
 	}
+
+    public static Branch getInstance(Context context) {
+        return getBranchInstance(context, true);
+    }
+
+    public static Branch getTestInstance(Context context) {
+        return getBranchInstance(context, false);
+    }
 
 	private static Branch initInstance(Context context) {
 		return new Branch(context.getApplicationContext());
@@ -1460,6 +1467,13 @@ public class Branch {
 	}
 
 	private void initializeSession() {
+        if (prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+            Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+            return;
+        } else if (prefHelper_.getBranchKey().startsWith("key_test_")) {
+            Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+        }
+
 		if (hasUser()) {
 			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN);
 		} else {

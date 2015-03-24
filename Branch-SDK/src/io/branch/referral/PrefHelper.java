@@ -61,13 +61,15 @@ public class PrefHelper {
 	public static final int DEBUG_TRIGGER_NUM_FINGERS = 4;
 	public static final int DEBUG_TRIGGER_PRESS_TIME = 3000;
 
-	private static PrefHelper prefHelper_;
+    private static String Branch_Key = null;
+
+    private static PrefHelper prefHelper_;
 	private SharedPreferences appSharedPrefs_;
 	private Editor prefsEditor_;	
 	
 	private BranchRemoteInterface remoteInterface_;
 	private Context context_;
-	
+
 	public PrefHelper() {}
 	
 	private PrefHelper(Context context) {
@@ -111,26 +113,35 @@ public class PrefHelper {
 		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
 	}
 
-	@Deprecated
-	public void setAppKey(String key) {
-		setString(RemoteInterface.BRANCH_KEY, key);
-	}
-	
+	public void setBranchKey(String key) {
+	    Branch_Key = key;
+    }
+
+    public String getBranchKey(boolean isLive) {
+        String branchKey = null;
+        String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
+        try {
+            final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null) {
+                branchKey = ai.metaData.getString(metaDataKey);
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+        }
+
+        if (branchKey == null) {
+            branchKey = NO_STRING_VALUE;
+        }
+
+        setBranchKey(branchKey);
+
+        return branchKey;
+    }
+
 	public String getBranchKey() {
-		String branchKey = null;
-		try {
-	        final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-	        if (ai.metaData != null) {
-	            branchKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
-	        }
-	    } catch (final PackageManager.NameNotFoundException e) {
-	    }
-		
-		if (branchKey == null) {
-			branchKey = getString(RemoteInterface.BRANCH_KEY);
-		}
-		
-		return branchKey;
+        if (Branch_Key == null) {
+            Branch_Key = getBranchKey(true);
+        }
+		return Branch_Key;
 	}
 	
 	public void setDeviceFingerPrintID(String device_fingerprint_id) {
