@@ -7,7 +7,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
+/**
+ * <p>The {@link BranchLinkData} object is based on {@link JSONObject} and expands the class to enable
+ * collections of tags.</p>
+ * 
+ * <p>Tags are returned from the server, and form the data dictionary that each deep link shared via the 
+ * Branch platform contains.</p>
+ * 
+ * <p></p>
+ * 
+ * @author Alex Austin
+ *
+ */
 public class BranchLinkData extends JSONObject {
 	
 	private Collection<String> tags;	
@@ -19,10 +30,23 @@ public class BranchLinkData extends JSONObject {
 	private String params;
 	private int duration;
 	
+	/**
+	 * BranchLinkData constructor requires no parameters, and is identical to that of its superclass 
+	 * {@link JSONObject}.
+	 */
 	public BranchLinkData() {
 		super();
 	}
 	
+	/**
+	 * Use this method to add tags to the data dictionary that will go along with the deep link that 
+	 * is being created.
+	 * 
+	 * @param tags A {@link Collection} of {@link String} objects, each element of which contains a tag and value to be added 
+	 * to the data dictionary of a link.
+	 * @throws JSONException Each item in the {@link Collection<String>} needs to be of valid JSON format. 
+	 * If it is not, a JSONException will be thrown.
+	 */
 	public void putTags(Collection<String> tags) throws JSONException {
 		if (tags != null) {
 			this.tags = tags;
@@ -34,6 +58,13 @@ public class BranchLinkData extends JSONObject {
 		}
 	}
 
+	/**
+	 * Adds an alias to the link.
+	 * 
+	 * @param alias A {@link String} value containing the desired alias name to add.
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putAlias(String alias) throws JSONException {
 	    if (alias != null) {
 	        this.alias = alias;
@@ -41,6 +72,20 @@ public class BranchLinkData extends JSONObject {
 	    }
 	}
 
+	/**
+	 * Adds a type to the link.
+	 * 
+	 * @param type 
+	 * <p>An {@link Integer} value of the type specified. Valid values are:</p>
+	 * 
+	 * <ul>
+	 * <li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
+	 * <li>{@link Branch#LINK_TYPE_ONE_TIME_USE}</li>
+	 * </ul>
+	 * 
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putType(int type) throws JSONException {
 	    if (type != 0) {
 	        this.type = type;
@@ -48,6 +93,16 @@ public class BranchLinkData extends JSONObject {
 	    }
 	}
 	
+	/**
+	 * [Optional] You can set the duration manually. This is the time that Branch allows a click to remain 
+	 * outstanding and be eligible to be matched with a new app session.
+	 * 
+	 * @param duration 
+	 * <p>An {@link Integer} value in seconds.</p>
+	 * 
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putDuration(int duration) throws JSONException {
 	    if (duration > 0) {
 	        this.duration = duration;
@@ -55,6 +110,14 @@ public class BranchLinkData extends JSONObject {
 	    }
 	}
 
+	/**
+	 * [Optional] The channel in which the link will be shared. eg: "facebook", "text_message".
+	 * 
+	 * @param channel A {@link String} value containing the channel which the link belongs to.
+	 * (max 128 characters) 
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putChannel(String channel) throws JSONException {
 	    if (channel != null) {
 	        this.channel = channel;
@@ -62,6 +125,14 @@ public class BranchLinkData extends JSONObject {
 	    }
 	}
 
+	/**
+	 * [Optional] The feature in which the link will be used. eg: "invite", "referral", "share", "gift", 
+	 * etc.
+	 * 
+	 * @param feature A {@link String} specifying the feature. (max 128 characters)
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putFeature(String feature) throws JSONException {
 	    if (feature != null) {
 	        this.feature = feature;
@@ -69,6 +140,13 @@ public class BranchLinkData extends JSONObject {
 	    }
 	}
 
+	/**
+	 * A string value that represents the stage of the user in the app. eg: "level1", "logged_in", etc.
+	 * 
+	 * @param stage A {@link String} value specifying the stage.
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putStage(String stage) throws JSONException {
 	    if (stage != null) {
 	        this.stage = stage;
@@ -76,11 +154,25 @@ public class BranchLinkData extends JSONObject {
 	    }
 	}
 
+	/**
+	 * Any other params to be added; you can define your own.
+	 * 
+	 * @param params A {@link String} containing other params in JSON format.
+	 * @throws JSONException The parameter value must be in valid JSON format, or a {@link JSONException} 
+	 * will be thrown.
+	 */
 	public void putParams(String params) throws JSONException {
 	    this.params = params;
 	    this.put("data", params);
 	}
 
+	/**
+	 * Compares a BranchLinkData object by instance ("is the object the exact same one in memory") and by 
+	 * associated attributes ("is this object identically configured?")
+	 * 
+	 * @param obj A {@link BranchLinkData} object to be compared to the one that this method belongs to.
+	 * @return Returns true if identical, false if different.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -129,6 +221,22 @@ public class BranchLinkData extends JSONObject {
 		return true;
 	}
 	
+	/**
+	 * <p>Calculates the hash for this object as currently configured and returns the resultant {@link int}.</p>
+	 * 
+	 * <p>The hash value is a combination of the hashCode of:</p>
+	 * 
+	 * <ul>
+	 * <li>alias</li>
+	 * <li>channel</li>
+	 * <li>feature</li>
+	 * <li>stage</li>
+	 * <li>params</li>
+	 * </ul>
+	 * 
+	 * <p>Changing any of these attributes will change the hashCode, making comparison straightforward.</p>
+	 * 
+	 */
 	@SuppressLint("DefaultLocale")
 	@Override
     public int hashCode() {
