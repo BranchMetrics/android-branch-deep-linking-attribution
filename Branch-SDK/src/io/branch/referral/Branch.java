@@ -29,6 +29,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
+/**
+ * The core object required when using Branch SDK. You should declare an object of this type at the
+ * class-level of each Activity or Fragment that you wish to use Branch functionality within.
+ *
+ *
+ */
 public class Branch {
 	public static final String FEATURE_TAG_SHARE = "share";
 	public static final String FEATURE_TAG_REFERRAL = "referral";
