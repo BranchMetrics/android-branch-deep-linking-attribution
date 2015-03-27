@@ -6,7 +6,6 @@ package io.branch.referral;
  * <P>Parses the 'compressed' binary form of Android XML docs, such as AndroidManifest.xml, that
  * are contained within an APK file.
  *
- * @author Alex Austin
  */
 public class ApkParser {
 	// decompressXML -- Parse the 'compressed' binary form of Android XML docs 
