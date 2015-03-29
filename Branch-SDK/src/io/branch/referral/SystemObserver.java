@@ -241,18 +241,25 @@ public class SystemObserver {
 	
 	@SuppressLint("NewApi")
 	public int getUpdateState() {
-		if (android.os.Build.VERSION.SDK_INT >= 9) {
-			try {
-				PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-				if (packageInfo.lastUpdateTime != packageInfo.firstInstallTime) {
-					return 1;
-				} else {
+		PrefHelper pHelper = PrefHelper.getInstance(context_);
+		String currAppVersion = getAppVersion();
+		if (pHelper.getAppVersion() == PrefHelper.NO_STRING_VALUE) {
+			if (android.os.Build.VERSION.SDK_INT >= 9) {
+				try {
+					PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+					if (packageInfo.lastUpdateTime != packageInfo.firstInstallTime) {
+						return 1;
+					}
 					return 0;
-				}
-			} catch (NameNotFoundException ignored ) {
+				} catch (NameNotFoundException ignored ) { }
 			}
+			return 0;
+		} else if (!pHelper.getAppVersion().equals(currAppVersion)) {
+			pHelper.setAppVersion(currAppVersion);
+			return 2;
+		} else {
+			return 1;
 		}
-		return 0;
 	}
 	
 	public DisplayMetrics getScreenDisplay() {
