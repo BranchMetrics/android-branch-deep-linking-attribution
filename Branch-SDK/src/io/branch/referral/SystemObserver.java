@@ -32,6 +32,10 @@ import android.view.WindowManager;
 public class SystemObserver {
 	public static final String BLANK = "bnc_no_value";
 
+	private static final int STATE_FRESH_INSTALL = 0;
+	private static final int STATE_UPDATE = 2;
+	private static final int STATE_NO_CHANGE = 1;
+	
 	private Context context_;
 	private boolean isRealHardwareId;
 	
@@ -242,24 +246,29 @@ public class SystemObserver {
 	@SuppressLint("NewApi")
 	public int getUpdateState() {
 		PrefHelper pHelper = PrefHelper.getInstance(context_);
-		String currAppVersion = getAppVersion();
+		String currAppVersion = getAppVersion(); 
 		if (pHelper.getAppVersion() == PrefHelper.NO_STRING_VALUE) {
+			// if no app version is in storage, this must be the first time Branch is here
+			pHelper.setAppVersion(currAppVersion);
 			if (android.os.Build.VERSION.SDK_INT >= 9) {
+				// if we can access update/install time, use that to check if it's a fresh install or update
 				try {
 					PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
 					if (packageInfo.lastUpdateTime != packageInfo.firstInstallTime) {
-						return 1;
+						return STATE_UPDATE;
 					}
-					return 0;
+					return STATE_FRESH_INSTALL;
 				} catch (NameNotFoundException ignored ) { }
 			}
-			return 0;
+			// otherwise, just register an install
+			return STATE_FRESH_INSTALL;
 		} else if (!pHelper.getAppVersion().equals(currAppVersion)) {
+			// if the current app version doesn't match the stored, it's an update
 			pHelper.setAppVersion(currAppVersion);
-			return 2;
-		} else {
-			return 1;
+			return STATE_UPDATE;
 		}
+		// otherwise it's an open
+		return STATE_NO_CHANGE;
 	}
 	
 	public DisplayMetrics getScreenDisplay() {

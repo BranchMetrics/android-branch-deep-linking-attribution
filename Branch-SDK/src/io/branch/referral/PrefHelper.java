@@ -32,7 +32,7 @@ public class PrefHelper {
 
 	private static final String KEY_APP_KEY = "bnc_app_key";
 	
-	private static final String KEY_PREV_APP_VERSION = "bnc_app_version";
+	private static final String KEY_APP_VERSION = "bnc_app_version";
 	
 	private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
 	private static final String KEY_SESSION_ID = "bnc_session_id";
@@ -116,11 +116,11 @@ public class PrefHelper {
 	}
 	
 	public void setAppVersion(String version) {
-		setString(KEY_PREV_APP_VERSION, version);
+		setString(KEY_APP_VERSION, version);
 	}
 	
 	public String getAppVersion() {
-		return getString(KEY_PREV_APP_VERSION);
+		return getString(KEY_APP_VERSION);
 	}
 
 	@Deprecated
