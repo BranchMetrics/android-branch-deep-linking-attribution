@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
+	
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
@@ -30,40 +30,158 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 
 /**
- * The core object required when using Branch SDK. You should declare an object of this type at the
- * class-level of each Activity or Fragment that you wish to use Branch functionality within.
- *
- *
+ * <p>
+ * The core object required when using Branch SDK. You should declare an object of this type at 
+ * the class-level of each Activity or Fragment that you wish to use Branch functionality within.
+ * </p>
+ * 
+ * <p>
+ * Normal instantiation of this object would look like this:
+ * </p>
+ * 
+ * <pre style="background:#fff;padding:10px;border:2px solid silver;">
+ * Branch.getInstance(this.getApplicationContext())		// from an Activity
+ * 
+ * Branch.getInstance(getActivity().getApplicationContext())	// from a Fragment</pre>
+ * 
  */
 public class Branch {
+	
+	/**
+	 * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that are shared with others 
+	 * directly as a user action, via social media for instance.
+	 */
 	public static final String FEATURE_TAG_SHARE = "share";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as referral 
+	 * actions from other services or sites.
+	 */
 	public static final String FEATURE_TAG_REFERRAL = "referral";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as referral 
+	 * actions by users of an app using an 'invite contacts' feature for instance. 
+	 */
 	public static final String FEATURE_TAG_INVITE = "invite";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a link that is part of a commercial 'deal' or offer.
+	 */
 	public static final String FEATURE_TAG_DEAL = "deal";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or product.
+	 */
 	public static final String FEATURE_TAG_GIFT = "gift";
 
+	/**
+	 * The code to be passed as part of a deal or gift; retrieved from the Branch object as a 
+	 * tag upon initialisation. Of {@link String} format.
+	 */
 	public static final String REDEEM_CODE = "$redeem_code";
+	
+	/**
+	 * Default value of referral bucket; referral buckets contain credits that are used when users 
+	 * are referred to your apps. These can be viewed in the Branch dashboard under Referrals.
+	 */
 	public static final String REFERRAL_BUCKET_DEFAULT = "default";
+	
+	/**
+	 * TODO - clarification
+	 */
 	public static final String REFERRAL_CODE_TYPE = "credit";
+	
+	/**
+	 * TODO - clarification
+	 */
 	public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
+	
+	/**
+	 * TODO - clarify if this is supposed to be $.. populated from Branch init.
+	 */
 	public static final String REFERRAL_CODE = "referral_code";
 	
+	/**
+	 * The redirect URL provided when the link is handled by a desktop client.
+	 */
 	public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by an Android device.
+	 */
 	public static final String REDIRECT_ANDROID_URL = "$android_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by an iOS device.
+	 */
 	public static final String REDIRECT_IOS_URL = "$ios_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by a large form-factor iOS device; i.e. 
+	 * and iPad.
+	 */
 	public static final String REDIRECT_IPAD_URL = "$ipad_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by an Amazon Fire device.
+	 */
 	public static final String REDIRECT_FIRE_URL = "$fire_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by a Blackberry device.
+	 */
 	public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by a Windows Phone device.
+	 */
 	public static final String REDIRECT_WINDOWNS_PHONE_URL = "$windows_phone_url";
 	
+	/**
+	 * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_TITLE = "$og_title";
+	
+	/**
+	 * The type of your object, e.g., "video.movie". Depending on the type you specify, other 
+	 * properties may also be required.
+	 */
 	public static final String OG_DESC = "$og_description";
+	
+	/**
+	 * An image URL which should represent your object within the graph.
+	 */
 	public static final String OG_IMAGE_URL = "$og_image_url";
+	
+	/**
+	 * A URL to a video file that complements this object.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_VIDEO = "$og_video";
+	
+	/**
+	 * The canonical URL of your object that will be used as its permanent ID in the graph.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_URL = "$og_url";
+	
+	/**
+	 * Unique identifier for the app in use.
+	 */
 	public static final String OG_APP_ID = "$og_app_id";
 	
+	/**
+	 * {@link String} value denoting the deep link path that an app can receive; for Android, this 
+	 * is handled by a custom {@link IntentFilter}.
+	 * @see <a href="http://developer.android.com/training/basics/intents/filters.html">Intent Filters</a>
+	 */
 	public static final String DEEPLINK_PATH = "$deeplink_path";
+	
+	/**
+	 * {@link String} value indicating whether the link should always initiate a deep link action.
+	 */
 	public static final String ALWAYS_DEEPLINK = "$always_deeplink";
 	
 	public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
@@ -80,6 +198,7 @@ public class Branch {
 	private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
 	private static Branch branchReferral_;
+	
 	private boolean isInit_;
 
 	private BranchReferralInitListener initSessionFinishedCallback_;
@@ -120,6 +239,14 @@ public class Branch {
 	
 	private ScheduledFuture<?> appListingSchedule_;
 
+	/**
+	 * <p>The main constructor of the Branch class is private because the class uses the Singleton 
+	 * pattern.</p>
+	 * 
+	 * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
+	 * 
+	 * @param context
+	 */
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
 		kRemoteInterface_ = new BranchRemoteInterface(context);
@@ -144,6 +271,14 @@ public class Branch {
 		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param context
+	 * @param key
+	 * @return
+	 * @deprecated
+	 */
 	@Deprecated
 	public static Branch getInstance(Context context, String key) {
 		if (branchReferral_ == null) {
