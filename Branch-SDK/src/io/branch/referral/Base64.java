@@ -738,5 +738,8 @@ public class Base64 {
         }
     }
 
+    /**
+     * Required default constructor, functionally inert; do not use.
+     */
     private Base64() { }   // don't instantiate
 }

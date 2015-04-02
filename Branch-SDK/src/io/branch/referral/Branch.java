@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-	
+
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
@@ -48,20 +48,20 @@ import android.view.View.OnTouchListener;
 public class Branch {
 	
 	/**
-	 * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that are shared with others 
-	 * directly as a user action, via social media for instance.
+	 * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that 
+	 * are shared with others directly as a user action, via social media for instance.
 	 */
 	public static final String FEATURE_TAG_SHARE = "share";
 	
 	/**
-	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as referral 
-	 * actions from other services or sites.
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as 
+	 * referral actions from other services or sites.
 	 */
 	public static final String FEATURE_TAG_REFERRAL = "referral";
 	
 	/**
-	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as referral 
-	 * actions by users of an app using an 'invite contacts' feature for instance. 
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as 
+	 * referral actions by users of an app using an 'invite contacts' feature for instance. 
 	 */
 	public static final String FEATURE_TAG_INVITE = "invite";
 	
@@ -71,7 +71,8 @@ public class Branch {
 	public static final String FEATURE_TAG_DEAL = "deal";
 	
 	/**
-	 * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or product.
+	 * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or 
+	 * product.
 	 */
 	public static final String FEATURE_TAG_GIFT = "gift";
 
@@ -175,7 +176,8 @@ public class Branch {
 	/**
 	 * {@link String} value denoting the deep link path that an app can receive; for Android, this 
 	 * is handled by a custom {@link IntentFilter}.
-	 * @see <a href="http://developer.android.com/training/basics/intents/filters.html">Intent Filters</a>
+	 * @see <a href="http://developer.android.com/training/basics/intents/filters.html">
+ * 																				Intent Filters</a>
 	 */
 	public static final String DEEPLINK_PATH = "$deeplink_path";
 	
@@ -184,54 +186,198 @@ public class Branch {
 	 */
 	public static final String ALWAYS_DEEPLINK = "$always_deeplink";
 	
+	/**
+	 * TODO
+	 */
 	public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
+	
+	/**
+	 * TODO
+	 */
 	public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
+	
+	/**
+	 * TODO
+	 */
 	public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
 
+	/**
+	 * TODO
+	 */
 	public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
+	
+	/**
+	 * TODO
+	 */
 	public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
 
+	/**
+	 * TODO
+	 */
 	public static final int LINK_TYPE_UNLIMITED_USE = 0;
+	
+	/**
+	 * TODO
+	 */
 	public static final int LINK_TYPE_ONE_TIME_USE = 1;
 
+	/**
+	 * TODO
+	 */
 	private static final int SESSION_KEEPALIVE = 2000;
+	
+	/**
+	 * TODO
+	 */
 	private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
+	/**
+	 * TODO
+	 */
 	private static Branch branchReferral_;
 	
+	/**
+	 * TODO
+	 */
 	private boolean isInit_;
 
+	/**
+	 * TODO
+	 */
 	private BranchReferralInitListener initSessionFinishedCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchReferralInitListener initIdentityFinishedCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchReferralStateChangedListener stateChangedCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchLinkCreateListener linkCreateCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchListResponseListener creditHistoryCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchReferralInitListener getReferralCodeCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchReferralInitListener validateReferralCodeCallback_;
+	
+	/**
+	 * TODO
+	 */
 	private BranchReferralInitListener applyReferralCodeCallback_;
 
+	/**
+	 * TODO
+	 */
 	private BranchRemoteInterface kRemoteInterface_;
+	
+	/**
+	 * TODO
+	 */
 	private PrefHelper prefHelper_;
+	
+	/**
+	 * TODO
+	 */
 	private SystemObserver systemObserver_;
+	
+	/**
+	 * TODO
+	 */
 	private Context context_;
 
+	
+	/**
+	 * TODO
+	 */
 	final Object lock;
+	
+	/**
+	 * TODO
+	 */
 	private Timer closeTimer;
+	
+	/**
+	 * TODO
+	 */
 	private Timer rotateCloseTimer;
+	
+	/**
+	 * TODO
+	 */
 	private boolean keepAlive_;
 
+	
+	/**
+	 * TODO
+	 */
 	private Semaphore serverSema_;
+	
+	/**
+	 * TODO
+	 */
 	private ServerRequestQueue requestQueue_;
+	
+	/**
+	 * TODO
+	 */
 	private int networkCount_;
+	
+	/**
+	 * TODO
+	 */
 	private int retryCount_;
 	
+	
+	/**
+	 * TODO
+	 */
 	private boolean initNotStarted_;
+	
+	/**
+	 * TODO
+	 */
 	private boolean initFinished_;
+	
+	/**
+	 * TODO
+	 */
 	private boolean initFailed_;
+	
+	/**
+	 * TODO
+	 */
 	private boolean hasNetwork_;
+	
+	/**
+	 * TODO
+	 */
 	private boolean lastRequestWasInit_;
 	
+	
+	/**
+	 * TODO
+	 */
 	private Handler debugHandler_;
+	
+	/**
+	 * TODO
+	 */
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
 	
@@ -272,7 +418,7 @@ public class Branch {
 	}
 
 	/**
-	 * 
+	 * TODO
 	 * 
 	 * @param context
 	 * @param key
@@ -333,6 +479,8 @@ public class Branch {
 		prefHelper_.setExternDebug();
 	}
 	
+	/** TODO - clarifcation
+	 */
 	public void disableAppList() {
 		prefHelper_.disableExternAppListing();
 	}
@@ -345,10 +493,24 @@ public class Branch {
 		prefHelper_.disableSmartSession();
 	}
 
+	/**
+	 * Inits a session "headlessly", without an {@link Activity}.
+	 * 
+	 * @param callback TODO - Add the callback functionality and links.
+	 * @return
+	 */
 	public boolean initSession(BranchReferralInitListener callback) {
 		initSession(callback, (Activity)null);
 		return false;
 	}
+	
+	/**
+	 * Initialises a Branch session.
+	 * 
+	 * @param callback TODO - Add the callback functionality and links.
+	 * @param activity
+	 * @return
+	 */
 	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
 		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
@@ -359,6 +521,13 @@ public class Branch {
 		return false;
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param callback
+	 * @param data
+	 * @return
+	 */
 	public boolean initSession(BranchReferralInitListener callback, Uri data) {
 		return initSession(callback, data, null);
 	}
@@ -378,6 +547,7 @@ public class Branch {
 	public boolean initSession() {
 		return initSession((Activity)null);
 	}
+	
 	public boolean initSession(Activity activity) {
 		return initSession(null, activity);
 	}
@@ -401,6 +571,7 @@ public class Branch {
 	public boolean initSession(boolean isReferrable) {
 		return initSession(null, isReferrable, (Activity)null);
 	}
+	
 	public boolean initSession(boolean isReferrable, Activity activity) {
 		return initSession(null, isReferrable, activity);
 	}
@@ -424,6 +595,7 @@ public class Branch {
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
 		return initSession(callback, isReferrable, (Activity)null);
 	}
+	
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
 		if (isReferrable) {
 			this.prefHelper_.setIsReferrable();
@@ -718,10 +890,22 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * Retrieve the number of credits available for bucket already defined in TODO - find where credit bucket is defined and link.
+	 * 
+	 * @return
+	 */
 	public int getCredits() {
 		return prefHelper_.getCreditCount();
 	}
 
+	/**
+	 * Returns an {@link Integer} of the number of credits available for use within the supplied 
+	 * bucket name.
+	 * 
+	 * @param bucket A {@link String} value indicating the name of the bucket to get credits for.
+	 * @return
+	 */
 	public int getCreditsForBucket(String bucket) {
 		return prefHelper_.getCreditCount(bucket);
 	}
@@ -1759,6 +1943,48 @@ public class Branch {
 		});
 	}
 
+	/**
+	 * <p>A class that implements {@link NetworkCallback} interface and provides the required state 
+	 * and response logic for the process of interacting with the Branch referral network service.</p>
+	 * 
+	 * <p>The class takes a {@link ServerResponse} instance as a parameter, and determines action 
+	 * taken based primarily upon the states code returned by the Branch server response.</p>
+	 * 
+	 * <p>Handled status codes are as follows:</p>
+	 * 
+	 * <ul>
+	 * <li><i>200</i> - OK</li>
+	 * <li><i>409</i> - Duplicate link error.</li>
+	 * <li><i>401 - 499</i> - Server-side error. API issue.</li>
+	 * </ul>
+	 * 
+	 * <p>Assuming then that an error has not occurred, and that code 200 is the status, the static 
+	 * values defined in the {@link BranchRemoteInterface} class are compared against the value of 
+	 * {@link ServerResponse#getTag} method call to determine the action to take.</p>
+	 * 
+	 * <p>Possible values are as follows:</p>
+	 * 
+	 * <ul>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_OPEN}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_CLOSE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_COMPLETE_ACTION}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REFERRAL_COUNTS}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REWARDS}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REDEEM_REWARDS}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REWARD_HISTORY}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_CUSTOM_URL}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_IDENTIFY}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_LOGOUT}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REFERRAL_CODE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_VALIDATE_REFERRAL_CODE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_APPLY_REFERRAL_CODE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_SEND_APP_LIST}</li>
+	 * </ul>
+	 * 
+	 * @see {@link BranchRemoteInteface}
+	 * @see {@link ServerRequest}
+	 */
 	public class ReferralNetworkCallback implements NetworkCallback {
 		@Override
 		public void finished(ServerResponse serverResponse) {
@@ -1980,28 +2206,82 @@ public class Branch {
 		}
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchReferralInitListener}, defining a single method that takes a list of params in 
+	 * {@link JSONObject} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see JSONObject
+	 * @see BranchError
+	 */
 	public interface BranchReferralInitListener {
 		public void onInitFinished(JSONObject referringParams, BranchError error);
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchReferralStateChangedListener}, defining a single method that takes a value of 
+	 * {@link Boolean} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see Boolean
+	 * @see BranchError
+	 */
 	public interface BranchReferralStateChangedListener {
 		public void onStateChanged(boolean changed, BranchError error);
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchLinkCreateListener}, defining a single method that takes a URL 
+	 * {@link String} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see String
+	 * @see BranchError
+	 */
 	public interface BranchLinkCreateListener {
 		public void onLinkCreate(String url, BranchError error);
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchListResponseListener}, defining a single method that takes a list of 
+	 * {@link JSONArray} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see JSONArray
+	 * @see BranchError
+	 */
 	public interface BranchListResponseListener {
 		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
 	
 	
-
+	/**
+	 * <p>{@link enum} class containing the sort options for return of credit history.</p>
+	 */
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the Branch 
+	 * initialisation process has failed due to poor connectivity, or because the App Key in use in 
+	 * the current application is misconfigured. This can occur when there are invalid characters in 
+	 * the App Key variable, where the variable itself is empty, or if the App Key in use does not 
+	 * belong to an application registered in the Branch dashboard.</p>
+	 * 
+	 * <p>To confirm that you are using the correct App Key for your project, visit the 
+	 * <a href="https://dashboard.branch.io/#/settings">
+	 * Branch Dashboard Settings</a> page, or refer to the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
+	 * Android Quick-Start Guide</a> to a walk through of the full process for getting your project 
+	 * up and running with Branch.</p>
+	 * 
+	 * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">Android Quick-Start Guide</a>
+	 * @see <a href="https://dashboard.branch.io/">Branch Dashboard</a>
+	 */
 	public class BranchInitError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2009,6 +2289,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
+	 * server to fetch the current referral count has failed due to poor connectivity or an internal 
+	 * system error.</p>
+	 */
 	public class BranchGetReferralsError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2016,6 +2301,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
+	 * server to fetch a user's current credit balance has failed due to poor connectivity or an internal 
+	 * system error.</p>
+	 */
 	public class BranchGetCreditsError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2023,6 +2313,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
+	 * server to fetch a user's credit history has failed due to poor connectivity or an internal 
+	 * system error.</p>
+	 */
 	public class BranchGetCreditHistoryError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2030,6 +2325,10 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs when a Branch referral 
+	 * URL could not be created. This is will usually be caused by a connectivity issue.</p>
+	 */
 	public class BranchCreateUrlError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2037,6 +2336,12 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where an alias request 
+	 * has been submitted that has different parameters attached. This indicates that either there 
+	 * is missing information from the alias request, or that the same alias has been requested 
+	 * before by a different owner.</p>
+	 */
 	public class BranchDuplicateUrlError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2044,6 +2349,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs in cases where the 
+	 * user alias cannot be set. This can occur where a poor quality 
+	 * connection is losing packets containing the alias setting request or response.</p>
+	 */
 	public class BranchSetIdentityError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2051,6 +2361,12 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the referral 
+	 * code has not been received properly by the server. This can occur where a poor quality 
+	 * connection is losing packets containing the full referral code submission request or 
+	 * response.</p>
+	 */
 	public class BranchGetReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2058,6 +2374,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the referral 
+	 * code cannot be validated due to a lack of communication, or valid response from, the Branch 
+	 * server.</p>
+	 */
 	public class BranchValidateReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2065,6 +2386,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the 
+	 * referral code is invalid, suggesting an implementation error in handling generated codes, or 
+	 * input validation failure where the code is input manually by the user.</p>
+	 */
 	public class BranchInvalidReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2072,6 +2398,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the same 
+	 * referral code has been applied already, potentially identifying an erroneously repeated 
+	 * code block or poorly implemented loop.</p>
+	 */
 	public class BranchDuplicateReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2079,6 +2410,31 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs when calls have been 
+	 * made to apply a referral code, but the Branch object has not been properly initialised or 
+	 * cannot contact the server due to a network connectivity issue.</p> 
+	 * 
+	 * <p>See the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md#step-4---create-a-branch-session">
+	 * Android Quick Start guide</a> for detailed instructions on integrating the SDK correctly.</p>
+	 * 
+	 * @see SystemObserver#getWifiConnected()
+	 * @see Branch#initSession(BranchReferralInitListener)
+	 * @see Branch#initSession(BranchReferralInitListener, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri, Activity)
+	 * @see Branch#initSession()
+	 * @see Branch#initSession(Activity)
+	 * @see Branch#initSessionWithData(Uri)
+	 * @see Branch#initSessionWithData(Uri, Activity)
+	 * @see Branch#initSession(boolean)
+	 * @see Branch#initSession(boolean, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Activity)
+	 * 
+	 */
 	public class BranchApplyReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -2086,6 +2442,35 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs for when calls have 
+	 * been made to a Branch object when a connection has not been established.</p>
+	 * 
+	 * <p>The first call required when a Branch object is instantiated is {@link #initSession()},
+	 * or one of its relatives (see below referenced methods). If this has not been done pending 
+	 * calls cannot be queued up, so this error is thrown in order to notify the developer/tester 
+	 * via debug logs that methods have been called out of sequence so that the implementation has 
+	 * been corrected.</p>
+	 * 
+	 * <p>See the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md#step-4---create-a-branch-session">
+	 * Android Quick Start guide</a> for detailed instructions on integrating the SDK correctly.</p>
+	 * 
+	 * @see Branch#initSession(BranchReferralInitListener)
+	 * @see Branch#initSession(BranchReferralInitListener, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri, Activity)
+	 * @see Branch#initSession()
+	 * @see Branch#initSession(Activity)
+	 * @see Branch#initSessionWithData(Uri)
+	 * @see Branch#initSessionWithData(Uri, Activity)
+	 * @see Branch#initSession(boolean)
+	 * @see Branch#initSession(boolean, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Activity)
+	 *
+	 */
 	public class BranchNotInitError extends BranchError {
 		@Override
 		public String getMessage() {

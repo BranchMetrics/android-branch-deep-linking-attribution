@@ -9,6 +9,14 @@ public class ServerResponse {
 	private Object post_;
 	private BranchLinkData linkData_;
 	
+	/**
+	 * <p>Constructor method for the {@link ServerResponse} class that allows for the instantiation 
+	 * of a server response object as a direct result of a server call. Omits {@link BranchLinkData}
+	 * , so is used where that value is null or unavailable.</p>
+	 * 
+	 * @param tag A {@link String} value of the <i>Tag</i> attribute of the current link.
+	 * @param statusCode {@link Integer} value of the HTTP status code.
+	 */
 	public ServerResponse(String tag, int statusCode) {
 		this(tag, statusCode, null);
 	}

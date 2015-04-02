@@ -268,6 +268,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * Connect to server debug endpoint.
+	 */
 	public void connectToDebug() {
 		try {
 			String urlExtend = "v1/debug/connect";
@@ -289,6 +292,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 
+	/**
+	 * Disconnect from the server debug interface.
+	 * 
+	 * @version 1
+	 */
 	public void disconnectFromDebug() {
 		try {
 			String urlExtend = "v1/debug/disconnect";
@@ -301,6 +309,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 
+	/**
+	 * Log messages to the server's debug interface.
+	 * 
+	 * @param log A {@link String} variable containing information to log.
+	 * @version 1
+	 */
 	public void sendLog(String log) {
 		try {
 			String urlExtend = "v1/debug/log";
@@ -314,6 +328,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * 
+	 * 
+	 * @param json A {@link JSONObject} that is to be converted into a flat readable {@link String}.
+	 * @return A {@link String} variable containing a readable representation  
+	 */
 	private String convertJSONtoString(JSONObject json) {
 		StringBuilder result = new StringBuilder();
 		
