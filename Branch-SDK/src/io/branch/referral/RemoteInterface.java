@@ -119,10 +119,12 @@ public class RemoteInterface {
 	}
 	
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
-		try {    	
+		try {
 			if (body.has(BRANCH_KEY) && body.getString(BRANCH_KEY).equals(PrefHelper.NO_STRING_VALUE)) {
 				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
-			}
+			} else if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
+                return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+            }
 			
 			body.put("sdk", "android" + SDK_VERSION);
 			if (log) {
