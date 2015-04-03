@@ -137,7 +137,7 @@ public class Branch {
 	/**
 	 * The redirect URL provided when the link is handled by a Windows Phone device.
 	 */
-	public static final String REDIRECT_WINDOWNS_PHONE_URL = "$windows_phone_url";
+	public static final String REDIRECT_WINDOWS_PHONE_URL = "$windows_phone_url";
 	
 	/**
 	 * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
