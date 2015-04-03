@@ -3,10 +3,42 @@ package io.branch.referral;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * Class providing the structure of a HTTP response as recieved from the Branch API.
+ * 
+ * Supports the following methods:
+ * <ul>
+ * <li>{@link ServerResponse#getTag()}</li>
+ * <li>{@link ServerResponse#getStatusCode()}</li>
+ * <li>{@link ServerResponse#setPost(Object)}</li>
+ * <li>{@link ServerResponse#getObject()}</li>
+ * <li>{@link ServerResponse#getArray()}</li>
+ * <li>{@link ServerResponse#getLinkData()}</li>
+ * </ul>
+ */
 public class ServerResponse {
+	
+	/**
+	 * Resultant HTTP status code of the corresponding {@link ServerRequest}.
+	 */
 	private int statusCode_;
+	
+	/**
+	 * Tag associated with the response, as supplied by the {@link ServerRequest} object.
+	 */
 	private String tag_;
+	
+	/**
+	 * Generic {@link Object} instance containing the data initially attached to a link. Must be 
+	 * cast to a type before use to allow the apropriate "get" methods to be used.
+	 */
 	private Object post_;
+	
+	/**
+	 * Data associated with the deep link that has been requested.
+	 * 
+	 * @see BranchLinkData
+	 */
 	private BranchLinkData linkData_;
 	
 	/**
