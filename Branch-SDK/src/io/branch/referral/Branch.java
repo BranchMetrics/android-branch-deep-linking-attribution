@@ -302,7 +302,7 @@ public class Branch {
 	 * 
 	 * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
 	 * 
-	 * @param context
+	 * @param context - A {@link Context} from which this call was made.
 	 */
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -338,9 +338,9 @@ public class Branch {
 	 * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
 	 * Adding your app key to your project</a>
 	 * 
-	 * @param context	A {@link Context} from which this call was made.
+	 * @param context	- A {@link Context} from which this call was made.
 	 * 
-	 * @param key	Your Branch app key as a {@link String}.
+	 * @param key	- Your Branch app key as a {@link String}.
 	 * 
 	 * @return	An initialised {@link Branch} object, either fetched from a pre-initialised instance 
 	 * 			within the singleton class, or a newly instantiated object where one was not already 
@@ -364,7 +364,7 @@ public class Branch {
 	 * 
 	 * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
 	 * 
-	 * @param context	A {@link Context} from which this call was made.
+	 * @param context	- A {@link Context} from which this call was made.
 	 * 
 	 * @return	An initialised {@link Branch} object, either fetched from a pre-initialised instance 
 	 * 			within the singleton class, or a newly instantiated object where one was not already 
@@ -386,7 +386,7 @@ public class Branch {
 	/**
 	 * <p>Initialises an instance of the Branch object.</p>
 	 * 
-	 * @param context	A {@link Context} from which this call was made.
+	 * @param context	- A {@link Context} from which this call was made.
 	 * 
 	 * @return	An initialised {@link Branch} object.
 	 */
@@ -406,7 +406,7 @@ public class Branch {
 	 * <p>Sets the number of times to re-attempt a timed-out request to the Branch API, before 
 	 * considering the request to have failed entirely.</p>
 	 * 
-	 * @param retryCount	An {@link Integer} specifying the number of times to retry before giving 
+	 * @param retryCount	- An {@link Integer} specifying the number of times to retry before giving 
 	 * 						up and declaring defeat.
 	 */
     public void setRetryCount(int retryCount) {
@@ -419,7 +419,7 @@ public class Branch {
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request 
      * to the Branch API.</p>
      * 
-     * @param retryInterval		An {@link Integer} value specifying the number of milliseconds to 
+     * @param retryInterval		- An {@link Integer} value specifying the number of milliseconds to 
      * 							wait before re-attempting a timed-out request.
      */
 	public void setRetryInterval(int retryInterval) {
@@ -435,7 +435,7 @@ public class Branch {
 	 * <p>Increase this to perform better in low network speed situations, but at the expense of 
 	 * responsiveness to error situation.</p>
 	 * 
-	 * @param timeout	An {@link Integer} value specifying the number of milliseconds to wait before 
+	 * @param timeout	- An {@link Integer} value specifying the number of milliseconds to wait before 
 	 * 					considering the request to have timed out.
 	 */
 	public void setNetworkTimeout(int timeout) {
@@ -476,7 +476,7 @@ public class Branch {
 	 * <p>Initialises a session with the Branch API, assigning a {@link BranchReferralInitListener} 
 	 * to perform an action upon successful initialisation.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
 	 * @return	A {@link Boolean} value, indicating <i>false</i> if initialisation is unsuccessful.
@@ -490,10 +490,10 @@ public class Branch {
 	 * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a 
 	 * {@link BranchReferralInitListener} to perform an action upon successful initialisation.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is unsuccessful.
 	 */
@@ -510,10 +510,10 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param data	A {@link  Uri} variable containing the details of the source link that led to this 
+	 * @param data	- A {@link  Uri} variable containing the details of the source link that led to this 
 	 * 				initialisation action.
 	 * 
 	 * @return 	A {@link Boolean} value that will return <i>false</i> if the supplied <i>data</i> 
@@ -526,13 +526,13 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param data	A {@link  Uri} variable containing the details of the source link that led to this 
+	 * @param data	- A {@link  Uri} variable containing the details of the source link that led to this 
 	 * 				initialisation action.
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return	A {@link Boolean} value that will return <i>false</i> if the supplied <i>data</i> 
 	 * 			parameter cannot be handled successfully - i.e. is not of a valid URI format.
@@ -561,7 +561,7 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -573,7 +573,7 @@ public class Branch {
 	 * <p>Initialises a session with the Branch API, with associated data from the supplied 
 	 * {@link Uri}.</p>
 	 * 
-	 * @param data	A {@link  Uri} variable containing the details of the source link that led to this 
+	 * @param data	- A {@link  Uri} variable containing the details of the source link that led to this 
 	 * 				initialisation action.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
@@ -586,10 +586,10 @@ public class Branch {
 	 * <p>Initialises a session with the Branch API, with associated data from the supplied 
 	 * {@link Uri}.</p>
 	 * 
-	 * @param data	A {@link  Uri} variable containing the details of the source link that led to this 
+	 * @param data	- A {@link  Uri} variable containing the details of the source link that led to this 
 	 * 				initialisation action.
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -609,7 +609,7 @@ public class Branch {
 	 * <p>Initialises a session with the Branch API, specifying whether the initialisation can count 
 	 * as a referrable action.</p>
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
+	 * @param isReferrable	- A {@link Boolean} value indicating whether this initialisation session 
 	 * 						should be considered as potentially referrable or not.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
@@ -622,11 +622,11 @@ public class Branch {
 	 * <p>Initialises a session with the Branch API, specifying whether the initialisation can count 
 	 * as a referrable action, and supplying the calling {@link Activity} for context.</p>
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
+	 * @param isReferrable	- A {@link Boolean} value indicating whether this initialisation session 
 	 * 						should be considered as potentially referrable or a non-referred, manual 
 	 * 						launch action.
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -637,14 +637,14 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
+	 * @param isReferrable	- A {@link Boolean} value indicating whether this initialisation session 
 	 * 						should be considered as potentially referrable or a non-referred, manual 
 	 * 						launch action.
 	 * 
-	 * @param data	A {@link  Uri} variable containing the details of the source link that led to this 
+	 * @param data	- A {@link  Uri} variable containing the details of the source link that led to this 
 	 * 				initialisation action.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
@@ -656,17 +656,17 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
+	 * @param isReferrable	- A {@link Boolean} value indicating whether this initialisation session 
 	 * 						should be considered as potentially referrable or a non-referred, manual 
 	 * 						launch action.
 	 * 
-	 * @param data	A {@link  Uri} variable containing the details of the source link that led to this 
+	 * @param data	- A {@link  Uri} variable containing the details of the source link that led to this 
 	 * 				initialisation action.
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -685,10 +685,10 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
+	 * @param isReferrable	- A {@link Boolean} value indicating whether this initialisation session 
 	 * 						should be considered as potentially referrable or a non-referred, manual 
 	 * 						launch action.
 	 * 
@@ -701,14 +701,14 @@ public class Branch {
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * @param callback	- A {@link BranchReferralInitListener} instance that will be called following 
 	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
+	 * @param isReferrable	- A {@link Boolean} value indicating whether this initialisation session 
 	 * 						should be considered as potentially referrable or a non-referred, manual 
 	 * 						launch action.
 	 * 
-	 * @param activity	The calling {@link Activity} for context.
+	 * @param activity	- The calling {@link Activity} for context.
 	 * 
 	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -905,9 +905,9 @@ public class Branch {
 	 * {@link String} value, with a callback specified to perform a defined action upon successful 
 	 * response to request.</p>
 	 * 
-	 * @param userId	A {@link String} value containing the unique identifier of the user.
+	 * @param userId	- A {@link String} value containing the unique identifier of the user.
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will 
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will 
 	 * 					trigger actions defined therein upon a referral state change.
 	 */
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
@@ -919,7 +919,7 @@ public class Branch {
 	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a 
 	 * {@link String} value. No callback.</p>
 	 * 
-	 * @param userId	A {@link String} value containing the unique identifier of the user.
+	 * @param userId	- A {@link String} value containing the unique identifier of the user.
 	 */
 	public void setIdentity(final String userId) {
 		if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
@@ -998,7 +998,7 @@ public class Branch {
 	 * <p>Gets the total action count, with a callback to perform a predefined 
 	 * action following successful report of state change.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralStateChangedListener} callback instance that will 
+	 * @param callback	- A {@link BranchReferralStateChangedListener} callback instance that will 
 	 * 					trigger actions defined therein upon a referral state change.
 	 */
 	public void loadActionCounts(BranchReferralStateChangedListener callback) {
@@ -1031,7 +1031,7 @@ public class Branch {
 	 * <p>Retrieves rewards for the current session, with a callback to perform a predefined 
 	 * action following successful report of state change.</p>
 	 * 
-	 * @param callback 	A {@link BranchReferralStateChangedListener} callback instance that will 
+	 * @param callback 	- A {@link BranchReferralStateChangedListener} callback instance that will 
 	 * 					trigger actions defined therein upon a referral state change.
 	 */
 	public void loadRewards(BranchReferralStateChangedListener callback) {
@@ -1066,7 +1066,7 @@ public class Branch {
 	 * Returns an {@link Integer} of the number of credits available for use within the supplied 
 	 * bucket name.
 	 * 
-	 * @param bucket A {@link String} value indicating the name of the bucket to get credits for.
+	 * @param bucket - A {@link String} value indicating the name of the bucket to get credits for.
 	 * 
 	 * @return An {@link Integer} value of the number credits available in the specified bucket.
 	 */
@@ -1077,7 +1077,7 @@ public class Branch {
 	/**
 	 * <p>Gets the total number of times that the specified action has been carried out.</p>
 	 * 
-	 * @param action	A {@link String} value containing the name of the action to count.
+	 * @param action	- A {@link String} value containing the name of the action to count.
 	 * 
 	 * @return An {@link Integer} value of the total number of times that an action has been executed.
 	 */
@@ -1088,7 +1088,7 @@ public class Branch {
 	/**
 	 * <p>Gets the number of unique times that the specified action has been carried out.</p>
 	 * 
-	 * @param action	A {@link String} value containing the name of the action to count.
+	 * @param action	- A {@link String} value containing the name of the action to count.
 	 * 
 	 * @return 	An {@link Integer} value of the number of unique times that the specified action has 
 	 * 			been carried out.
@@ -1102,7 +1102,7 @@ public class Branch {
 	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
 	 * the available credits will be redeemed instead.</p>
 	 * 
-	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
+	 * @param count		- A {@link Integer} specifying the number of credits to attempt to redeem from 
 	 * 					the bucket.
 	 */
 	public void redeemRewards(int count) {
@@ -1114,10 +1114,10 @@ public class Branch {
 	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
 	 * the available credits will be redeemed instead.</p>
 	 * 
-	 * @param bucket	A {@link String} value containing the name of the referral bucket to attempt 
+	 * @param bucket	- A {@link String} value containing the name of the referral bucket to attempt 
 	 * 					to redeem credits from.
 	 * 
-	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
+	 * @param count		- A {@link Integer} specifying the number of credits to attempt to redeem from 
 	 * 					the specified bucket.
 	 */
 	public void redeemRewards(final String bucket, final int count) {
@@ -1168,7 +1168,7 @@ public class Branch {
 	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
 	 * response.</p>
 	 * 
-	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchListResponseListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getCreditHistory(BranchListResponseListener callback) {
@@ -1179,10 +1179,10 @@ public class Branch {
 	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
 	 * response.</p>
 	 * 
-	 * @param bucket	A {@link String} value containing the name of the referral bucket that the 
+	 * @param bucket	- A {@link String} value containing the name of the referral bucket that the 
 	 * 					code will belong to.
 	 * 
-	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchListResponseListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getCreditHistory(final String bucket, BranchListResponseListener callback) {
@@ -1193,14 +1193,14 @@ public class Branch {
 	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
 	 * response.</p>
 	 * 
-	 * @param afterId	A {@link String} value containing the ID of the history record to begin after.
+	 * @param afterId	- A {@link String} value containing the ID of the history record to begin after.
 	 * 					This allows for a partial history to be retrieved, rather than the entire 
 	 * 					credit history of the bucket.
 	 * 
-	 * @param length	A {@link Integer} value containing the number of credit history records to 
+	 * @param length	- A {@link Integer} value containing the number of credit history records to 
 	 * 					return.
 	 * 
-	 * @param order		A {@link CreditHistoryOrder} object indicating which order the results should 
+	 * @param order		- A {@link CreditHistoryOrder} object indicating which order the results should 
 	 * 					be returned in.
 	 * 
 	 * 					<p>Valid choices:</p>
@@ -1210,7 +1210,7 @@ public class Branch {
 	 * 						<li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
 	 * 					</ul>
 	 * 
-	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchListResponseListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getCreditHistory(final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
@@ -1221,17 +1221,17 @@ public class Branch {
 	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
 	 * response.</p>
 	 * 
-	 * @param bucket	A {@link String} value containing the name of the referral bucket that the 
+	 * @param bucket	- A {@link String} value containing the name of the referral bucket that the 
 	 * 					code will belong to.
 	 * 
-	 * @param afterId	A {@link String} value containing the ID of the history record to begin after.
+	 * @param afterId	- A {@link String} value containing the ID of the history record to begin after.
 	 * 					This allows for a partial history to be retrieved, rather than the entire 
 	 * 					credit history of the bucket.
 	 * 
-	 * @param length	A {@link Integer} value containing the number of credit history records to 
+	 * @param length	- A {@link Integer} value containing the number of credit history records to 
 	 * 					return.
 	 * 
-	 * @param order		A {@link CreditHistoryOrder} object indicating which order the results should 
+	 * @param order		- A {@link CreditHistoryOrder} object indicating which order the results should 
 	 * 					be returned in.
 	 * 
 	 * 					<p>Valid choices:</p>
@@ -1241,7 +1241,7 @@ public class Branch {
 	 * 						<li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
 	 * 					</ul>
 	 * 
-	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchListResponseListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
@@ -1291,10 +1291,10 @@ public class Branch {
 	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
 	 * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
 	 * 
-	 * @param action	A {@link String} value to be passed as an action that the user has carried 
+	 * @param action	- A {@link String} value to be passed as an action that the user has carried 
 	 * 					out. For example "registered" or "logged in".
 	 * 
-	 * @param metadata	A {@link JSONObject} containing app-defined meta-data to be attached to a 
+	 * @param metadata	- A {@link JSONObject} containing app-defined meta-data to be attached to a 
 	 * 					user action that has just been completed.
 	 */
 	public void userCompletedAction(final String action, final JSONObject metadata) {
@@ -1334,7 +1334,7 @@ public class Branch {
 	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
 	 * reported to the Branch API.</p>
 	 * 
-	 * @param action	A {@link String} value to be passed as an action that the user has carried 
+	 * @param action	- A {@link String} value to be passed as an action that the user has carried 
 	 * 					out. For example "registered" or "logged in".
 	 */
 	public void userCompletedAction(final String action) {
@@ -1379,7 +1379,7 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1392,10 +1392,10 @@ public class Branch {
 	 * <p>Configures and requests a referral URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting referral URL.
@@ -1408,13 +1408,13 @@ public class Branch {
 	 * <p>Configures and requests a referral URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting referral URL.
@@ -1427,10 +1427,10 @@ public class Branch {
 	 * <p>Configures and requests a content URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting content URL.
@@ -1443,13 +1443,13 @@ public class Branch {
 	 * <p>Configures and requests a content URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting content URL.
@@ -1462,16 +1462,16 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1484,22 +1484,24 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
+	 * @param alias		- Link 'alias' can be used to label the endpoint on the link.
 	 * 					
+	 * 					<p>
 	 * 					For example: 
 	 * 						http://bnc.lt/AUSTIN28. 
 	 * 					Should not exceed 128 characters
+	 * 					</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL. 
@@ -1512,19 +1514,19 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * @param type		- An {@link int} that can be used for scenarios where you want the link to
 	 * 					only deep link the first time.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1537,19 +1539,19 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param duration	A {@link Integer} value specifying the time that Branch allows a click to remain 
+	 * @param duration	- A {@link Integer} value specifying the time that Branch allows a click to remain 
 	 * 					outstanding and be eligible to be matched with a new app session.
 	 * 
 	 * @return A {@link String} containing the resulting short URL. 
@@ -1562,19 +1564,19 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1587,25 +1589,27 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
+	 * @param alias		- Link 'alias' can be used to label the endpoint on the link.
 	 * 					
+	 * 					<p>
 	 * 					For example: 
 	 * 						http://bnc.lt/AUSTIN28. 
 	 * 					Should not exceed 128 characters
+	 * 					</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1618,22 +1622,22 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * @param type		- An {@link int} that can be used for scenarios where you want the link to
 	 * 					only deep link the first time.
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1646,22 +1650,22 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param duration	A {@link Integer} value specifying the time that Branch allows a click to remain 
+	 * @param duration	- A {@link Integer} value specifying the time that Branch allows a click to remain 
 	 * 					outstanding and be eligible to be matched with a new app session.
 	 * 
 	 * @return A {@link String} containing the resulting short URL.
@@ -1673,7 +1677,7 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getShortUrl(BranchLinkCreateListener callback) {
@@ -1683,10 +1687,10 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1700,13 +1704,13 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1721,16 +1725,16 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 	
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1746,13 +1750,13 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a content URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1767,16 +1771,16 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a content URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1792,19 +1796,19 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1821,25 +1825,27 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
+	 * @param alias		- Link 'alias' can be used to label the endpoint on the link.
 	 * 					
+	 * 					<p>
 	 * 					For example: 
 	 * 						http://bnc.lt/AUSTIN28. 
 	 * 					Should not exceed 128 characters
+	 * 					</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1857,22 +1863,22 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * @param type		- An {@link int} that can be used for scenarios where you want the link to
 	 * 					only deep link the first time.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1890,22 +1896,22 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param duration	An {@link int} the time that Branch allows a click to remain outstanding and be eligible to 
+	 * @param duration	- An {@link int} the time that Branch allows a click to remain outstanding and be eligible to 
 	 * 					be matched with a new app session.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1923,22 +1929,22 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1956,28 +1962,28 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
-	 * 					
+	 * @param alias		- Link 'alias' can be used to label the endpoint on the link. 
+	 * 					Should not exceed 128 characters.
+	 * 					<p style="margin-left:40px;">
 	 * 					For example: 
-	 * 						http://bnc.lt/AUSTIN28. 
-	 * 					Should not exceed 128 characters
+	 * 						http://bnc.lt/AUSTIN28.</p> 
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -1996,25 +2002,25 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * @param type		- An {@link int} that can be used for scenarios where you want the link to
 	 * 					only deep link the first time.
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -2033,25 +2039,25 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
-	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * @param tags		- An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
 	 * 
-	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * @param channel	- A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
-	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * @param feature	- A {@link String} value identifying the feature that the link makes use of. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * @param stage		- A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
+	 * @param params	- A {@link JSONObject} value containing the deep linked params associated with the 
 	 * 					link that the user is to follow.
 	 * 
-	 * @param duration	An {@link int} the time that Branch allows a click to remain outstanding and be eligible to 
+	 * @param duration	- An {@link int} the time that Branch allows a click to remain outstanding and be eligible to 
 	 * 					be matched with a new app session.
 	 * 
-	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
 	 * 
 	 * @see BranchLinkData
@@ -2070,7 +2076,7 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(BranchReferralInitListener callback) {
@@ -2109,8 +2115,8 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param amount	An {@link Integer} value of credits associated with this referral code.
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * @param amount	- An {@link Integer} value of credits associated with this referral code.
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
@@ -2120,11 +2126,11 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param prefix	A {@link String} containing the developer-specified prefix code to be applied 
+	 * @param prefix	- A {@link String} containing the developer-specified prefix code to be applied 
 	 * 					to the start of a referral code. e.g. for code OFFER4867, the prefix would 
 	 * 					be "OFFER".
-	 * @param amount	An {@link Integer} value of credits associated with this referral code.
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * @param amount	- An {@link Integer} value of credits associated with this referral code.
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
@@ -2134,9 +2140,9 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param amount	An {@link Integer} value of credits associated with this referral code.
-	 * @param expiration	Optional expiration {@link Date} of the offer code.
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * @param amount	- An {@link Integer} value of credits associated with this referral code.
+	 * @param expiration	- Optional expiration {@link Date} of the offer code.
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
@@ -2146,12 +2152,12 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param prefix	A {@link String} containing the developer-specified prefix code to be applied 
+	 * @param prefix	 -A {@link String} containing the developer-specified prefix code to be applied 
 	 * 					to the start of a referral code. e.g. for code OFFER4867, the prefix would 
 	 * 					be "OFFER".
-	 * @param amount	An {@link Integer} value of credits associated with this referral code.
-	 * @param expiration	Optional expiration {@link Date} of the offer code.
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * @param amount	 -An {@link Integer} value of credits associated with this referral code.
+	 * @param expiration	 -Optional expiration {@link Date} of the offer code.
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
@@ -2161,14 +2167,14 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param prefix	A {@link String} containing the developer-specified prefix code to be applied 
+	 * @param prefix	- A {@link String} containing the developer-specified prefix code to be applied 
 	 * 					to the start of a referral code. e.g. for code OFFER4867, the prefix would 
 	 * 					be "OFFER".
-	 * @param amount	An {@link Integer} value of credits associated with this referral code.
-	 * @param calculationType	The type of referral calculation. i.e. 
+	 * @param amount	- An {@link Integer} value of credits associated with this referral code.
+	 * @param calculationType	- The type of referral calculation. i.e. 
 	 * 							{@link #LINK_TYPE_UNLIMITED_USE} or 
 	 * 							{@link #LINK_TYPE_ONE_TIME_USE}
-	 * @param location	The user to reward for applying the referral code.<p>Valid options:</p>
+	 * @param location	- The user to reward for applying the referral code.<p>Valid options:</p>
 	 * <ul>
 	 * <li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
 	 * <li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
@@ -2184,23 +2190,23 @@ public class Branch {
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
 	 * 
-	 * @param prefix	A {@link String} containing the developer-specified prefix code to be applied 
+	 * @param prefix	- A {@link String} containing the developer-specified prefix code to be applied 
 	 * 					to the start of a referral code. e.g. for code OFFER4867, the prefix would 
 	 * 					be "OFFER".
-	 * @param amount	An {@link Integer} value of credits associated with this referral code.
-	 * @param expiration	Optional expiration {@link Date} of the offer code.
-	 * @param bucket	A {@link String} value containing the name of the referral bucket that the 
+	 * @param amount	- An {@link Integer} value of credits associated with this referral code.
+	 * @param expiration	- Optional expiration {@link Date} of the offer code.
+	 * @param bucket	- A {@link String} value containing the name of the referral bucket that the 
 	 * 					code will belong to.
-	 * @param calculationType	The type of referral calculation. i.e. 
+	 * @param calculationType	- The type of referral calculation. i.e. 
 	 * 							{@link #LINK_TYPE_UNLIMITED_USE} or 
 	 * 							{@link #LINK_TYPE_ONE_TIME_USE}
-	 * @param location	The user to reward for applying the referral code.<p>Valid options:</p>
+	 * @param location	- The user to reward for applying the referral code.<p>Valid options:</p>
 	 * <ul>
 	 * <li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
 	 * <li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
 	 * <li>{@link #REFERRAL_CODE_LOCATION_BOTH}</li>
 	 * </ul>
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * @param callback	- A {@link BranchReferralInitListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
@@ -2252,8 +2258,8 @@ public class Branch {
 	 * <p>Validates the supplied referral code on initialisation without applying it to the current 
 	 * session.</p>
 	 * 
-	 * @param code	A {@link String} object containing the referral code supplied.
-	 * @param callback	A {@link BranchReferralInitListener} callback to handle the server response of 
+	 * @param code	- A {@link String} object containing the referral code supplied.
+	 * @param callback	- A {@link BranchReferralInitListener} callback to handle the server response of 
 	 * 					the referral submission request.
 	 */
 	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
@@ -2293,8 +2299,8 @@ public class Branch {
 	/**
 	 * <p>Applies a supplied referral code to the current user session upon initialisation.</p>
 	 * 
-	 * @param code	A {@link String} object containing the referral code supplied.
-	 * @param callback	A {@link BranchReferralInitListener} callback to handle the server response of 
+	 * @param code - 	A {@link String} object containing the referral code supplied.
+	 * @param callback - 	A {@link BranchReferralInitListener} callback to handle the server response of 
 	 * 					the referral submission request.
 	 * 
 	 * @see BranchReferralInitListener

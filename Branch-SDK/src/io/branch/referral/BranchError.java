@@ -2,8 +2,6 @@ package io.branch.referral;
 
 /**
  * Returns a general error if the server back-end is down.
- * 
- * @author Alex Austin
  */
 public class BranchError {
 	
