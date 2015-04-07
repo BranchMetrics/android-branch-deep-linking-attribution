@@ -209,7 +209,7 @@ public class Branch {
 		return false;
 	}
 	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
+		if (systemObserver_.getUpdateState(false) == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
 		} else {
 			prefHelper_.clearIsReferrable();
