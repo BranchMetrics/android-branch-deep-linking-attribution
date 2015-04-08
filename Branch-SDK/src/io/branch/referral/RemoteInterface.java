@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import android.content.Context;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
@@ -33,7 +34,13 @@ public class RemoteInterface {
 	private static final String SDK_VERSION = "1.4.2.2";
 	private static final int DEFAULT_TIMEOUT = 3000;
 	
+	protected PrefHelper prefHelper_;
+	
 	public RemoteInterface() { }
+	
+	public RemoteInterface(Context context) {
+		prefHelper_ = PrefHelper.getInstance(context);
+	}
 	
 	private HttpClient getGenericHttpClient(int timeout) {
 		if (timeout <= 0)
@@ -79,13 +86,36 @@ public class RemoteInterface {
 		return make_restful_get(url, tag, timeout, true);
 	}
 	
-	public ServerResponse make_restful_get(String url, String tag, int timeout, boolean log) {
-		try {    	
-			if (url.indexOf('?') == -1) {
-				url += "?sdk=android" + SDK_VERSION;
-			} else {
-				url += "&sdk=android" + SDK_VERSION;
+	private boolean addCommonParams(JSONObject post) {
+		try {
+			String branch_key = prefHelper_.getBranchKey();
+			String app_key = prefHelper_.getAppKey();
+			if (branch_key.equals(PrefHelper.NO_STRING_VALUE) && app_key.equals(PrefHelper.NO_STRING_VALUE)) {
+				return false;
 			}
+			
+			if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
+				post.put(BRANCH_KEY, prefHelper_.getBranchKey());
+			}
+			if (!app_key.equals(PrefHelper.NO_STRING_VALUE)) {
+				post.put("app_id", prefHelper_.getAppKey());
+			}
+            post.put("sdk", "android" + SDK_VERSION);
+            
+		} catch (JSONException ignore) {
+		}
+		return true;
+	}
+	
+	public ServerResponse make_restful_get(String url, String tag, int timeout, boolean log) {
+		JSONObject post = new JSONObject();
+		if (addCommonParams(post)) {
+			url += this.convertJSONtoString(post);
+		} else {
+			return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+		}
+		
+		try {    	
 			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
@@ -120,13 +150,10 @@ public class RemoteInterface {
 	
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
 		try {
-			if (body.has(BRANCH_KEY) && body.getString(BRANCH_KEY).equals(PrefHelper.NO_STRING_VALUE)) {
+			if (!addCommonParams(body)) {
 				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
-			} else if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
-                return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
-            }
+			}
 			
-			body.put("sdk", "android" + SDK_VERSION);
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
 				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString());
@@ -151,5 +178,37 @@ public class RemoteInterface {
 			}
 			return new ServerResponse(tag, 500);
 		}
+	}
+	
+	private String convertJSONtoString(JSONObject json) {
+		StringBuilder result = new StringBuilder();
+		
+		if (json != null) {
+            JSONArray names = json.names();
+	        if (names != null) {
+                boolean first = true;
+                int size = names.length();
+                for(int i = 0; i < size; i++) {
+                	try {
+	                    String key = names.getString(i);
+	
+		        		if (first) {
+			        		result.append("?");
+			        		first = false;
+			        	} else {
+			        		result.append("&");
+			        	}
+	
+	                    String value = json.getString(key);
+	                    result.append(key).append("=").append(value);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						return null;
+					}
+	        	}
+	        }
+	    }
+		
+		return result.toString();
 	}
 }

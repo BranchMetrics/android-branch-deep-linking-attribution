@@ -489,8 +489,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -520,8 +518,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -628,8 +624,6 @@ public class Branch {
 					retryCount_ = 0;
 					JSONObject post = new JSONObject();
 					try {
-						post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                        post.put("app_id", prefHelper_.getAppKey());
 						post.put("identity_id", prefHelper_.getIdentityID());
 						post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 						post.put("session_id", prefHelper_.getSessionID());
@@ -675,8 +669,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -718,8 +710,6 @@ public class Branch {
 				retryCount_ = 0;
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -879,8 +869,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -933,8 +921,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -979,8 +965,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -1014,8 +998,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -1066,8 +1048,6 @@ public class Branch {
 		if (hasUser()) {
 			final BranchLinkData linkPost = new BranchLinkData();
 			try {
-				linkPost.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                linkPost.put("app_id", prefHelper_.getAppKey());
 				linkPost.put("identity_id", prefHelper_.getIdentityID());
 				linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 				linkPost.put("session_id", prefHelper_.getSessionID());
@@ -1190,8 +1170,6 @@ public class Branch {
             	SystemObserver sysObserver = new SystemObserver(context_);
 				JSONObject post = new JSONObject();
 				try {
-					post.put(RemoteInterface.BRANCH_KEY, prefHelper_.getBranchKey());
-                    post.put("app_id", prefHelper_.getAppKey());
 					if (!sysObserver.getOS().equals(SystemObserver.BLANK))
 						post.put("os", sysObserver.getOS());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
@@ -1406,11 +1384,7 @@ public class Branch {
 					Iterator<?> keys = req.getPost().keys();
 					while (keys.hasNext()) {
 						String key = (String) keys.next();
-                        if (key.equals("app_id")) {
-                            req.getPost().put(key, prefHelper_.getAppKey());
-                        } else if (key.equals(RemoteInterface.BRANCH_KEY)) {
-							req.getPost().put(key, prefHelper_.getBranchKey());
-						} else if (key.equals("session_id")) {
+						if (key.equals("session_id")) {
 							req.getPost().put(key, prefHelper_.getSessionID());
 						} else if (key.equals("identity_id")) {
 							req.getPost().put(key, prefHelper_.getIdentityID());
@@ -1484,8 +1458,8 @@ public class Branch {
 	}
 
 	private void initializeSession() {
-        if (prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)
-            && prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
+            && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
             return;
         } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
