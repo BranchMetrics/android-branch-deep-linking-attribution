@@ -30,8 +30,10 @@ public class PrefHelper {
 	
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
-    private static final String KEY_APP_KEY = "bnc_app_key";
-
+	private static final String KEY_APP_KEY = "bnc_app_key";
+	
+	private static final String KEY_APP_VERSION = "bnc_app_version";
+	
 	private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
 	private static final String KEY_SESSION_ID = "bnc_session_id";
 	private static final String KEY_IDENTITY_ID = "bnc_identity_id";
@@ -113,6 +115,14 @@ public class PrefHelper {
 	
 	public int getRetryInterval() {
 		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
+	}
+	
+	public void setAppVersion(String version) {
+		setString(KEY_APP_VERSION, version);
+	}
+	
+	public String getAppVersion() {
+		return getString(KEY_APP_VERSION);
 	}
 
     public void setAppKey(String key) {

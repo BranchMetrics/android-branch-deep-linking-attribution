@@ -100,6 +100,9 @@ public class MainActivity extends Activity {
 				try {
 					obj.put("name", "test name");
 					obj.put("message", "hello there with short url");
+					obj.put("$og_title", "this is a title");
+					obj.put("$og_description", "this is a description");
+					obj.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}

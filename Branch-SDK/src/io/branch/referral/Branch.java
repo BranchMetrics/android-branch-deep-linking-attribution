@@ -48,7 +48,7 @@ public class Branch {
 	public static final String REDIRECT_IPAD_URL = "$ipad_url";
 	public static final String REDIRECT_FIRE_URL = "$fire_url";
 	public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
-	public static final String REDIRECT_WINDOWNS_PHONE_URL = "$windows_phone_url";
+	public static final String REDIRECT_WINDOWS_PHONE_URL = "$windows_phone_url";
 	
 	public static final String OG_TITLE = "$og_title";
 	public static final String OG_DESC = "$og_description";
@@ -220,7 +220,7 @@ public class Branch {
 		return false;
 	}
 	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
+		if (systemObserver_.getUpdateState(false) == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
 		} else {
 			prefHelper_.clearIsReferrable();
