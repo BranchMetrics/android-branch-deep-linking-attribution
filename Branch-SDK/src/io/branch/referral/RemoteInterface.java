@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import android.content.Context;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
@@ -33,7 +34,13 @@ public class RemoteInterface {
     private static final String SDK_VERSION = "1.4.4";
     private static final int DEFAULT_TIMEOUT = 3000;
 
+    protected PrefHelper prefHelper_;
+
     public RemoteInterface() { }
+
+    public RemoteInterface(Context context) {
+        prefHelper_ = PrefHelper.getInstance(context);
+    }
 
     private HttpClient getGenericHttpClient(int timeout) {
         if (timeout <= 0) {
@@ -88,7 +95,7 @@ public class RemoteInterface {
         return make_restful_get(url, tag, timeout, 0, true);
     }
 
-    public ServerResponse make_restful_get(String url, String tag, int timeout, int retryCount, boolean log) {
+    public ServerResponse make_restful_get(String url, String tag, int timeout, int retryNumber, boolean log) {
         try {
             if (url.indexOf('?') == -1) {
                 url += "?sdk=android" + SDK_VERSION;
@@ -100,7 +107,18 @@ public class RemoteInterface {
             }
             HttpGet request = new HttpGet(url);
             HttpResponse response = getGenericHttpClient(timeout).execute(request);
-            return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
+
+            int statusCode = response.getStatusLine().getStatusCode();
+            boolean isRetryableStatusCode = statusCode >= 500;
+
+            // Retry request before processing
+            if ( (retryNumber < prefHelper_.getRetryCount()) && isRetryableStatusCode) {
+                retryNumber +=1;
+                make_restful_get(url, tag, timeout, retryNumber, log);
+            } else {
+                Log.d(BranchConfig.TAG, "k");
+                return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
+            }
 
         } catch (ClientProtocolException ex) {
             if (log) {
