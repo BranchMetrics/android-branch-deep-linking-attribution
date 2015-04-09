@@ -98,14 +98,13 @@ public class Branch {
 	private Semaphore serverSema_;
 	private ServerRequestQueue requestQueue_;
 	private int networkCount_;
-	private int retryCount_;
-	
+
 	private boolean initNotStarted_;
 	private boolean initFinished_;
 	private boolean initFailed_;
 	private boolean hasNetwork_;
 	private boolean lastRequestWasInit_;
-	
+
 	private Handler debugHandler_;
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
@@ -1361,21 +1360,6 @@ public class Branch {
 		});
 	}
 
-	private void retryLastRequest() {
-		retryCount_ = retryCount_ + 1;
-		if (retryCount_ > prefHelper_.getRetryCount()) {
-			handleFailure(0);
-			requestQueue_.dequeue();
-			retryCount_ = 0;
-		} else {
-			try {
-				Thread.sleep(prefHelper_.getRetryInterval());
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	private void updateAllRequestsInQueue() {
 		try {
 			for (int i = 0; i < requestQueue_.getSize(); i++) {
@@ -1667,8 +1651,6 @@ public class Branch {
 						} else if (status == RemoteInterface.NO_API_KEY_STATUS) {
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
 							Log.i("BranchSDK", "Branch API Error: Please enter your Branch App Key in your project's res/values/strings.xml first!");
-						} else {
-							retryLastRequest();
 						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 						processReferralCounts(serverResponse);

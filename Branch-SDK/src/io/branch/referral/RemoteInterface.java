@@ -116,8 +116,8 @@ public class RemoteInterface {
                 retryNumber +=1;
                 make_restful_get(url, tag, timeout, retryNumber, log);
             } else {
-                Log.d(BranchConfig.TAG, "k");
-                return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
+                return processEntityForJSON(response.getEntity(),
+                        response.getStatusLine().getStatusCode(), tag, log, null);
             }
 
         } catch (ClientProtocolException ex) {
@@ -146,18 +146,19 @@ public class RemoteInterface {
 
     //region POST requests
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
-        return make_restful_post(body, url, tag, timeout, true, null);
+        return make_restful_post(body, url, tag, timeout, 0, true, null);
     }
 
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
-        return make_restful_post(body, url, tag, timeout, true, linkData);
+        return make_restful_post(body, url, tag, timeout, 0, true, linkData);
     }
 
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
-        return make_restful_post(body, url, tag, timeout, log, null);
+        return make_restful_post(body, url, tag, timeout, 0, log, null);
     }
 
-    public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
+    public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
+                                            int retryNumber, boolean log, BranchLinkData linkData) {
         try {
             if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
                 return new ServerResponse(tag, NO_API_KEY_STATUS);
@@ -172,6 +173,15 @@ public class RemoteInterface {
             request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
             request.setHeader("Content-type", "application/json");
             HttpResponse response = getGenericHttpClient(timeout).execute(request);
+            int statusCode = response.getStatusLine().getStatusCode();
+            boolean isRetryableStatusCode = statusCode >= 500;
+
+            if ((retryNumber < prefHelper_.getRetryCount()) && isRetryableStatusCode) {
+                retryNumber +=1;
+                make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
+            } else {
+                return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
+            }
             return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
 
         } catch (SocketException ex) {
