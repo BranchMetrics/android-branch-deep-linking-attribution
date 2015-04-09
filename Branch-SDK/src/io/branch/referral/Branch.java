@@ -611,7 +611,6 @@ public class Branch {
 				}
 
 				if (creditsToRedeem > 0) {
-					retryCount_ = 0;
 					JSONObject post = new JSONObject();
 					try {
 						post.put("app_id", prefHelper_.getAppKey());
@@ -699,7 +698,6 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				retryCount_ = 0;
 				JSONObject post = new JSONObject();
 				try {
 					post.put("app_id", prefHelper_.getAppKey());
