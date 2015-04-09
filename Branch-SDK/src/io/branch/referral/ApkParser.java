@@ -8,10 +8,26 @@ package io.branch.referral;
  *
  */
 public class ApkParser {
+	
 	// decompressXML -- Parse the 'compressed' binary form of Android XML docs 
 	// such as for AndroidManifest.xml in .apk files
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify the <b>end</b> of a compressed 
+	 * <b>XML document</b>.
+	 */
 	public static int endDocTag = 0x00100101;
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify the <b>start</b> of a <b>XML tag</b> 
+	 * within a compressed XML document.
+	 */
 	public static int startTag =  0x00100102;
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify the <b>end</b> of a <b>XML tag</b> 
+	 * within a compressed XML document.
+	 */
 	public static int endTag =    0x00100103;
 
     /**

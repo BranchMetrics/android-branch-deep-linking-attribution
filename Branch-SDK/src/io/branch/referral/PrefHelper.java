@@ -188,10 +188,13 @@ public class PrefHelper {
 	}
 
 	/**
+	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
+	 * object of the type {@link PrefHelper}.</p>
 	 * 
-	 * 
-	 * @param context
-	 * @return
+	 * @param context	- The {@link Context} within which the object should be instantiated; this 
+	 * 					parameter is passed to the private {@link #PrefHelper(Context)} constructor 
+	 * 					method.
+	 * @return A {@link PrefHelper} object instance.
 	 */
 	public static PrefHelper getInstance(Context context) {
 		if (prefHelper_ == null) {
@@ -200,47 +203,142 @@ public class PrefHelper {
 		return prefHelper_;
 	}
 
+	/**
+	 * <p>Returns the base URL to use for all calls to the Branch API as a {@link String}.</p>
+	 * 
+	 * @return A {@link String} variable containing the hard-coded base URL that the Branch API uses.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getAPIBaseUrl() {
 		return "https://api.branch.io/";
 	}
 
+	/**
+	 * <p>Sets the duration in milliseconds to override the timeout value for calls to the Branch API.</p>
+	 * 
+	 * @param timeout	- The {@link Integer} value of the timeout setting in milliseconds.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setTimeout(int timeout) {
 		setInteger(KEY_TIMEOUT, timeout);
 	}
 
+	/**
+	 * <p>Returns the currently set timeout value for calls to the Branch API. This will be the default 
+	 * SDK setting unless it has been overridden manually between Branch object instantiation and 
+	 * this call.</p>
+	 * 
+	 * @return An {@link Integer} value containing the currently set timeout value in milliseconds.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public int getTimeout() {
 		return getInteger(KEY_TIMEOUT, TIMEOUT);
 	}
 
+	/**
+	 * <p>Sets the value specifying the number of times that a Branch API call has been re-attempted.</p>
+	 * 
+	 * <p>This overrides the default retry value.</p>
+	 * 
+	 * @param retry	-	An {@link Integer} value specifying the value to be specified in preferences 
+	 * 					that determines the number of times that a Branch API call has been re-
+	 * 					attempted. 
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setRetryCount(int retry) {
 		setInteger(KEY_RETRY_COUNT, retry);
 	}
 
+	/**
+	 * <p>Gets the current count of the number of times that a Branch API call has been re-attempted.</p>
+	 * 
+	 * @return	An {@link Integer} value containing the current count of the number of times that a 
+	 * 			Branch API call has been attempted.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public int getRetryCount() {
 		return getInteger(KEY_RETRY_COUNT, MAX_RETRIES);
 	}
 
+	/**
+	 * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request 
+     * to the Branch API.</p>
+	 * 
+	 * @param retryInt	- An {@link Integer} value specifying the number of milliseconds to 
+	 * 					wait before re-attempting a timed-out request.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setRetryInterval(int retryInt) {
 		setInteger(KEY_RETRY_INTERVAL, retryInt);
 	}
 
+	/**
+	 * <p>Gets the amount of time in milliseconds to wait before re-attempting a timed-out request 
+     * to the Branch API.</p>
+	 * 
+	 * @return	- An {@link Integer} value containing the currently set retry interval in milliseconds.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public int getRetryInterval() {
 		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
 	}
 	
+	/**
+	 * <p>Sets the value of {@link #KEY_APP_VERSION} in preferences.</p>
+	 * 
+	 * @param version	- A {@link String} value containing the current app version.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setAppVersion(String version) {
 		setString(KEY_APP_VERSION, version);
 	}
 	
+	/**
+	 * <p>Returns the current value of {@link #KEY_APP_VERSION} as stored in preferences.</p>
+	 * 
+	 * @return	- A {@link String} value containing the current app version.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getAppVersion() {
 		return getString(KEY_APP_VERSION);
 	}
 
+	/**
+	 * <p>Sets the Branch App Key in preferences programmatically.</p>
+	 * 
+	 * <p><b>Note: </b> This is a deprecated method, you should configure your <i>App Key</i> as an XML 
+	 * String value instead.</p>
+	 * 
+	 * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
+	 * Branch Quick-Start Guide for Android</a>
+	 * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/2cb4f05fd8f67bce1019456f26b7f384a39abb2c/README.md#add-your-app-key-to-your-project">
+	 * Adding your app key to your project</a>
+	 * 
+	 * @param key	- A {@link String} value containing the App Key for the current App.
+	 * 
+	 * @see {@link Branch}
+	 */
 	@Deprecated
 	public void setAppKey(String key) {
 		setString(KEY_APP_KEY, key);
 	}
 
+	/**
+	 * <p>Gets the Branch App Key in preferences programmatically.</p>
+	 * 
+	 * @return	A {@link String} value containing the current App Key as configured.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getAppKey() {
 		String appKey = null;
 		try {
@@ -260,95 +358,286 @@ public class PrefHelper {
 		return appKey;
 	}
 
+	/**
+	 * <p>Sets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
+	 * as a {@link String} in preferences.</p>
+	 * 
+	 * @see {@link android.os.Build#FINGERPRINT}
+	 * 
+	 * @param device_fingerprint_id 	- A {@link String} that uniquely identifies this build.
+	 */
 	public void setDeviceFingerPrintID(String device_fingerprint_id) {
 		setString(KEY_DEVICE_FINGERPRINT_ID, device_fingerprint_id);
 	}
 
+	/**
+	 * <p>Gets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
+	 * as a {@link String} from preferences.</p>
+	 * 
+	 * @return	A {@link String} that uniquely identifies this build.
+	 */
 	public String getDeviceFingerPrintID() {
 		return getString(KEY_DEVICE_FINGERPRINT_ID);
 	}
 
+	/**
+	 * <p>Sets the ID of the {@link KEY_SESSION_ID} {@link String} value in preferences.</p>
+	 * 
+	 * @param session_id	- A {@link String} value containing the session ID as returned by the 
+	 * 						Branch API upon successful initialisation.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setSessionID(String session_id) {
 		setString(KEY_SESSION_ID, session_id);
 	}
 
+	/**
+	 * <p>Gets the ID of the {@link KEY_SESSION_ID} {@link String} value from preferences.</p>
+	 * 
+	 * @return	A {@link String} value containing the session ID as returned by the Branch API upon 
+	 * 			successful initialisation.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getSessionID() {
 		return getString(KEY_SESSION_ID);
 	}
 
+	/**
+	 * <p>Sets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both 
+	 * for analytics and debugging purposes.</p>
+	 * 
+	 * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
+	 * 
+	 * @param identity_id	- A {@link String} value containing the currently configured identity 
+	 * 						within preferences.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setIdentityID(String identity_id) {
 		setString(KEY_IDENTITY_ID, identity_id);
 	}
 
+	/**
+	 * <p>Gets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * @return	A {@link String} value containing the currently configured user id 
+	 * 			within preferences.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getIdentityID() {
 		return getString(KEY_IDENTITY_ID);
 	}
 
+	/**
+	 * <p>Sets the {@link KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both 
+	 * for analytics and debugging purposes.</p>
+	 * 
+	 * <p><b>Note: </b> Not to be confused with {@link #setIdentityID(String)} - the UID reference of the user</p>
+	 * 
+	 * @param identity	A {@link String} value containing the currently configured identity 
+	 * 					within preferences.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setIdentity(String identity) {
 		setString(KEY_IDENTITY, identity);
 	}
 
+	/**
+	 * <p>Gets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both 
+	 * for analytics and debugging purposes.</p>
+	 * 
+	 * <p><b>Note: </b> Not to be confused with {@link #getIdentityID(String)} - the UID reference of the user</p>
+	 * 
+	 * @return	A {@link String} value containing the username assigned to the currentuser ID.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getIdentity() {
 		return getString(KEY_IDENTITY);
 	}
 
+	/**
+	 * <p>Sets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * @param link_click_id		- A {@link String} value containing the identifier of the associated 
+	 * 							link.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setLinkClickID(String link_click_id) {
 		setString(KEY_LINK_CLICK_ID, link_click_id);
 	}
 
+	/**
+	 * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * @return	A {@link String} value containing the identifier of the associated 
+	 * 							link.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getLinkClickID() {
 		return getString(KEY_LINK_CLICK_ID);
 	}
 
+	/**
+	 * <p>Sets the {@link #KEY_LINK_CLICK_IDENTIFIER} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * @param identifer		- A {@link String} value containing the identifier of the associated 
+	 * 						link.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setLinkClickIdentifier(String identifer) {
 		setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
 	}
 
+	/**
+	 * <p>Gets the {@link #KEY_LINK_CLICK_IDENTIFER} {@link String} value that has been set via the Branch API.</p>
+	 * 
+	 * @return	A {@link String} value containing the identifier of the associated 
+	 * 							link.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getLinkClickIdentifier() {
 		return getString(KEY_LINK_CLICK_IDENTIFIER);
 	}
 
+	/**
+	 * <p>Gets the session parameters as currently set in preferences.</p>
+	 * 
+	 * <p>Paremeters are stored in JSON format, and must be parsed prior to access.</p>
+	 * 
+	 * @return	A {@link String} value containing the JSON-encoded structure of parameters for the 
+	 * 			current session.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getSessionParams() {
 		return getString(KEY_SESSION_PARAMS);
 	}
 
+	/**
+	 * <p>Sets the session parameters as currently set in preferences.</p>
+	 * 
+	 * @param params	- A {@link String} value containing the JSON-encoded structure of parameters for the 
+	 * 					current session.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setSessionParams(String params) {
 		setString(KEY_SESSION_PARAMS, params);
 	}
 
+	/**
+	 * <p>Gets the session parameters as originally set at time of app installation, in preferences.</p>
+	 * 
+	 * @return	A {@link String} value containing the JSON-encoded structure of parameters as they 
+	 * 			were at the time of installation.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getInstallParams() {
 		return getString(KEY_INSTALL_PARAMS);
 	}
 
+	/**
+	 * <p>Sets the session parameters as originally set at time of app installation, in preferences.</p>
+	 * 
+	 * @param params	- A {@link String} value containing the JSON-encoded structure of parameters as they 
+	 * 					should be at the time of installation.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setInstallParams(String params) {
 		setString(KEY_INSTALL_PARAMS, params);
 	}
 
+	/**
+	 * <p>Sets the user URL from preferences.</p>
+	 * 
+	 * @param user_url	- A {@link String} value containing the current user URL.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public void setUserURL(String user_url) {
 		setString(KEY_USER_URL, user_url);
 	}
 
+	/**
+	 * <p>Sets the user URL from preferences.</p>
+	 * 
+	 * @return	A {@link String} value containing the current user URL. 
+	 * 
+	 * @see {@link Branch}
+	 */
 	public String getUserURL() {
 		return getString(KEY_USER_URL);
 	}
 
+	/**
+	 * <p>Gets the {@link Integer} value of the preference setting {@link #KEY_IS_REFERRABLE}, which 
+	 * indicates whether or not the current session should be considered referrable.</p>
+	 * 
+	 * @return	A {@link Integer} value indicating whether or not the session should be considered 
+	 * 			referrable.
+	 * 
+	 * @see {@link Branch}
+	 */
 	public int getIsReferrable() {
 		return getInteger(KEY_IS_REFERRABLE);
 	}
 
+	/**
+	 * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 1, or <i>true</i> if parsed as a {@link Boolean}. 
+	 * This value is used by the {@link Branch} object.</p>
+	 * 
+	 * <ul>
+	 * 	<li>Sets {@link #KEY_IS_REFERRABLE} to 1 - <i>true</i> - This session <b><u>is</u></b> referrable.</li>
+	 * </ul>
+	 * 
+	 */
 	public void setIsReferrable() {
 		setInteger(KEY_IS_REFERRABLE, 1);
 	}
 
+	/**
+	 * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}. 
+	 * This value is used by the {@link Branch} object.</p>
+	 * 
+	 * <ul>
+	 * 	<li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
+	 * </ul>
+	 * 
+	 */
 	public void clearIsReferrable() {
 		setInteger(KEY_IS_REFERRABLE, 0);
 	}
 
+	/**
+	 * <p>Resets the time that the system was last read. This is used to calculate how "stale" the 
+	 * values are that are in use in preferences.</p>
+	 */
 	public void clearSystemReadStatus() {
 		Calendar c = Calendar.getInstance();
 		setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis() / 1000);
 	}
 
+	/**
+	 * <p>Resets the user-related values that have been stored in preferences. This will cause a 
+	 * sync to occur whenever a method reads any of the values and finds the value to be 0 or unset.</p>
+	 */
 	public void clearUserValues() {
 		ArrayList<String> buckets = getBuckets();
 		for (String bucket : buckets) {
@@ -383,10 +672,33 @@ public class PrefHelper {
 		}
 	}
 
+	/**
+	 * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
+	 * 
+	 * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server, 
+	 * but only the cached value as stored in preferences for the current app. The age of that value 
+	 * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see 
+	 * when the last system sync occurred.
+	 * </p>
+	 * 
+	 * @param count		- A {@link Integer} value that the default bucket credit count will be set to.
+	 */
 	public void setCreditCount(int count) {
 		setCreditCount("default", count);
 	}
 
+	/**
+	 * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
+	 * 
+	 * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server, 
+	 * but only the cached value as stored in preferences for the current app. The age of that value 
+	 * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see 
+	 * when the last system sync occurred.
+	 * </p>
+	 * 
+	 * @param bucket	- A {@link String} value containing the value of the bucket being referenced.
+	 * @param count		- A {@link Integer} value that the default bucket credit count will be set to.
+	 */
 	public void setCreditCount(String bucket, int count) {
 		ArrayList<String> buckets = getBuckets();
 		if (!buckets.contains(bucket)) {
@@ -396,10 +708,26 @@ public class PrefHelper {
 		setInteger(KEY_CREDIT_BASE + bucket, count);
 	}
 
+	/**
+	 * <p>Get the current cached credit count for the default bucket, as currently stored in 
+	 * preferences for the current app.</p>
+	 * 
+	 * @return	A {@link Integer} value specifying the current number of credits in the bucket, as 
+	 * 			currently stored in preferences.
+	 */
 	public int getCreditCount() {
 		return getCreditCount("default");
 	}
 
+	/**
+	 * <p>Get the current cached credit count for the default bucket, as currently stored in 
+	 * preferences for the current app.</p>
+	 * 
+	 * @param bucket	- A {@link String} value containing the value of the bucket being referenced.
+	 * 
+	 * @return	A {@link Integer} value specifying the current number of credits in the bucket, as 
+	 * 			currently stored in preferences.
+	 */
 	public int getCreditCount(String bucket) {
 		return getInteger(KEY_CREDIT_BASE + bucket);
 	}
@@ -423,6 +751,15 @@ public class PrefHelper {
 		}
 	}
 
+	/**
+	 * <p>Sets the count of total number of times that the specified action has been carried out 
+	 * during the current session, as defined in preferences.</p>
+	 * 
+	 * @param action	- A {@link String} value containing the name of the action to return the 
+	 * 					count for.
+	 * @param count		- An {@link Integer} value containing the total number of times that the 
+	 * 					specified action has been carried out during the current session. 
+	 */
 	public void setActionTotalCount(String action, int count) {
 		ArrayList<String> actions = getActions();
 		if (!actions.contains(action)) {
@@ -432,14 +769,43 @@ public class PrefHelper {
 		setInteger(KEY_TOTAL_BASE + action, count);
 	}
 
+	/**
+	 * <p>Sets the count of the unique number of times that the specified action has been carried 
+	 * out during the current session, as defined in preferences.</p>
+	 * 
+	 * @param action	- A {@link String} value containing the name of the action to return the 
+	 * 					count for.
+	 * @param count		- An {@link Integer} value containing the total number of times that the 
+	 * 					specified action has been carried out during the current session. 
+	 */
 	public void setActionUniqueCount(String action, int count) {
 		setInteger(KEY_UNIQUE_BASE + action, count);
 	}
 
+	/**
+	 * <p>Gets the count of total number of times that the specified action has been carried 
+	 * out during the current session, as defined in preferences.</p>
+	 * 
+	 * @param action	A {@link String} value containing the name of the action to return the 
+	 * 					count for.
+	 * 
+	 * @return 			An {@link Integer} value containing the total number of times that the 
+	 * 					specified action has been carried out during the current session.
+	 */
 	public int getActionTotalCount(String action) {
 		return getInteger(KEY_TOTAL_BASE + action);
 	}
 
+	/**
+	 * <p>Gets the count of the unique number of times that the specified action has been carried 
+	 * out during the current session, as defined in preferences.</p>
+	 * 
+	 * @param action	A {@link String} value containing the name of the action to return the 
+	 * 					count for.
+	 * 
+	 * @return 			An {@link Integer} value containing the total number of times that the 
+	 * 					specified action has been carried out during the current session.
+	 */
 	public int getActionUniqueCount(String action) {
 		return getInteger(KEY_UNIQUE_BASE + action);
 	}
@@ -462,79 +828,186 @@ public class PrefHelper {
 		return strings;
 	}
 
+	/**
+	 * <p>A basic method that returns an integer value from a specified preferences Key.</p>
+	 * 
+	 * @param key	- A {@link String} value containing the key to reference.
+	 * 
+	 * @return	An {@link Integer} value of the specified key as stored in preferences.
+	 */
 	public int getInteger(String key) {
 		return getInteger(key, 0);
 	}
 
+	/**
+	 * <p>A basic method that returns an {@link Integer} value from a specified preferences Key, with a 
+	 * default value supplied in case the value is null.</p>
+	 * 
+	 * @param key	- A {@link String} value containing the key to reference.
+	 * 
+	 * @param defaultValue	- An {@link Integer} specifying the value to use if the preferences value 
+	 * 						is null.
+	 * 
+	 * @return	An {@link Integer} value containing the value of the specified key, or the supplied 
+	 * 			default value if null.
+	 */
 	public int getInteger(String key, int defaultValue) {
 		return prefHelper_.appSharedPrefs_.getInt(key, defaultValue);
 	}
 
+	/**
+	 * <p>A basic method that returns a {@link Long} value from a specified preferences Key.</p>
+	 * 
+	 * @param key	- A {@link String} value containing the key to reference.
+	 * 
+	 * @return	A {@link Long} value of the specified key as stored in preferences.
+	 */
 	public long getLong(String key) {
 		return prefHelper_.appSharedPrefs_.getLong(key, 0);
 	}
 
+	/**
+	 * <p>A basic method that returns a {@link Float} value from a specified preferences Key.</p>
+	 * 
+	 * @param key	- A {@link String} value containing the key to reference.
+	 * 
+	 * @return	A {@link Float} value of the specified key as stored in preferences.
+	 */
 	public float getFloat(String key) {
 		return prefHelper_.appSharedPrefs_.getFloat(key, 0);
 	}
 
+	/**
+	 * <p>A basic method that returns a {@link String} value from a specified preferences Key.</p>
+	 * 
+	 * @param key	- A {@link String} value containing the key to reference.
+	 * 
+	 * @return	A {@link String} value of the specified key as stored in preferences.
+	 */
 	public String getString(String key) {
 		return prefHelper_.appSharedPrefs_.getString(key, NO_STRING_VALUE);
 	}
 
+	/**
+	 * <p>A basic method that returns a {@link Bool} value from a specified preferences Key.</p>
+	 * 
+	 * @param key	- A {@link String} value containing the key to reference.
+	 * 
+	 * @return	An {@link Boolean} value of the specified key as stored in preferences.
+	 */
 	public boolean getBool(String key) {
 		return prefHelper_.appSharedPrefs_.getBoolean(key, false);
 	}
 
+	/**
+	 * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
+	 * 
+	 * @param key		- A {@link String} value containing the key to reference.
+	 * @param value		- An {@link Integer} value to set the preference record to.
+	 */
 	public void setInteger(String key, int value) {
 		prefHelper_.prefsEditor_.putInt(key, value);
 		prefHelper_.prefsEditor_.commit();
 	}
 
+	/**
+	 * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
+	 * 
+	 * @param key		- A {@link String} value containing the key to reference.
+	 * @param value		- A {@link Long} value to set the preference record to.
+	 */
 	public void setLong(String key, long value) {
 		prefHelper_.prefsEditor_.putLong(key, value);
 		prefHelper_.prefsEditor_.commit();
 	}
 
+	/**
+	 * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
+	 * 
+	 * @param key		- A {@link String} value containing the key to reference.
+	 * @param value		- A {@link Float} value to set the preference record to.
+	 */
 	public void setFloat(String key, float value) {
 		prefHelper_.prefsEditor_.putFloat(key, value);
 		prefHelper_.prefsEditor_.commit();
 	}
 
+	/**
+	 * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
+	 * 
+	 * @param key		- A {@link String} value containing the key to reference.
+	 * @param value		- A {@link String} value to set the preference record to.
+	 */
 	public void setString(String key, String value) {
 		prefHelper_.prefsEditor_.putString(key, value);
 		prefHelper_.prefsEditor_.commit();
 	}
 
+	/**
+	 * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
+	 * 
+	 * @param key		- A {@link String} value containing the key to reference.
+	 * @param value		- A {@link Boolean} value to set the preference record to.
+	 */
 	public void setBool(String key, Boolean value) {
 		prefHelper_.prefsEditor_.putBoolean(key, value);
 		prefHelper_.prefsEditor_.commit();
 	}
 
+	/**
+	 * <p>Switches external debugging on.</p>
+	 */
 	public void setExternDebug() {
 		BNC_Dev_Debug = true;
 	}
 
+	/**
+	 * <p>Gets the value of the debug status {@link Boolean} value.</p>
+	 * 
+	 * @return	A {@link Boolean} value indicating the current state of external debugging.
+	 */
 	public boolean getExternDebug() {
 		return BNC_Dev_Debug;
 	}
 
+	/**
+	 * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps to 
+	 * <i>false</i>.</p>
+	 * 
+	 */
 	public void disableExternAppListing() {
 		BNC_App_Listing = false;
 	}
-
+	
+	/**
+	 * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps.</p>
+	 * 
+	 * @return	A {@link Boolean} value containing the current value of the 
+	 * {@link #BNC_App_Listing} boolean.
+	 */
 	public boolean getExternAppListing() {
 		return BNC_App_Listing;
 	}
 
+	/**
+	 * @see {@link Branch#disableSmartSession()}
+	 */
 	public void disableSmartSession() {
 		BNC_Smart_Session = false;
 	}
 
+	/**
+	 * <p>Gets the state of the {@link Boolean} value indicating whether or not the <i>Smart Session</i>
+	 * feature is enabled or not.</p>
+	 */
 	public boolean getSmartSession() {
 		return BNC_Smart_Session;
 	}
 
+	/**
+	 * <p>Enable debugging, by setting the {@link Boolean} debug flags {@link #BNC_Debug} and 
+	 * {@link #BNC_Debug_Connecting} to true.</p>
+	 */
 	public void setDebug() {
 		BNC_Debug = true;
 		BNC_Debug_Connecting = true;
@@ -554,6 +1027,10 @@ public class PrefHelper {
 		}
 	}
 
+	/**
+	 * <p>Disable debugging, by setting the {@link Boolean} debug flags {@link #BNC_Debug} and 
+	 * {@link #BNC_Debug_Connecting} to false.</p>
+	 */
 	public void clearDebug() {
 		BNC_Debug = false;
 		BNC_Debug_Connecting = false;
@@ -572,10 +1049,27 @@ public class PrefHelper {
 		}
 	}
 
+	/**
+	 * <p>Gets the {@link Boolean} value of {@link #BNC_Debug}, which indicates whether or not 
+	 * debugging is enabled.</p>
+	 * 
+	 * @return	A {@link Boolean} value indicating current debug state:
+	 * 
+	 * <ul>
+	 * 	<li><i>true</i> - Debugging is enabled.</li>
+	 *  <li><i>false</i> - Debugging is disabled.</li>
+	 * </ul>
+	 */
 	public boolean isDebug() {
 		return BNC_Debug;
 	}
 
+	/**
+	 * <p>Creates a <b>Log</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
+	 * 
+	 * @param tag		- A {@link String} value specifying the logging tag to use for the message.
+	 * @param message	- A {@link String} value containing the logging message to record.
+	 */
 	public void log(final String tag, final String message) {
 		if (BNC_Debug || BNC_Dev_Debug) {
 			Log.i(tag, message);
@@ -591,6 +1085,12 @@ public class PrefHelper {
 		}
 	}
 
+	/**
+	 * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
+	 * 
+	 * @param tag		- A {@link String} value specifying the logging tag to use for the message.
+	 * @param message	- A {@link String} value containing the debug message to record.
+	 */
 	public static void Debug(String tag, String message) {
 		if (prefHelper_ != null) {
 			prefHelper_.log(tag, message);
@@ -602,8 +1102,15 @@ public class PrefHelper {
 	}
 
 	/**
+	 * <p>Sends an empty logging message to keep the debugger connection alive.</p>
 	 * 
-	 * @return 
+	 * @return	A {@link Boolean} value indicating the debug connection state:
+	 * 
+	 * <ul>
+	 * 	<li><i>true</i> - If the debug connection has been kept alive.</li>
+	 * <li><i>false</i> - If the debug connection has not been kept alive, if 
+	 * {@link #BNC_Remote_Debug} is false, or if there is no current remote connection.</li>
+	 * </ul>
 	 */
 	public boolean keepDebugConnection() {
 		if (BNC_Remote_Debug && remoteInterface_ != null) {
@@ -620,8 +1127,8 @@ public class PrefHelper {
 	}
 
 	/**
-	 * Debug connection callback that implements {@link NetworkCallback} to react to server calls 
-	 * to debug API end-points.
+	 * <p>Debug connection callback that implements {@link NetworkCallback} to react to server calls 
+	 * to debug API end-points.</p>
 	 * 
 	 * @see {@link NetworkCallback}
 	 *

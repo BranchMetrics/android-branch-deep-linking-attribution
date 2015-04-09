@@ -15,6 +15,13 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+/**
+ *<p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
+ *complete. This allows you to start sending requests to the Branch API as soon as your app is 
+ *opened.</p>
+ *
+ *<p>The {@link }</p>
+ */
 public class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
 	private static final int MAX_ITEMS = 25;
