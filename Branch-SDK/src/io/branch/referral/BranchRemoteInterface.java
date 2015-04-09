@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.bluetooth.BluetoothAdapter;
