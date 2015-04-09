@@ -97,29 +97,33 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 
-### Add your app key to your project
+### Add your branch key to your project
 
-After you register your app, your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it to your project.
+After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project.
 
-1. Open your res/values/strings.xml file
-1. Add a new string resource with the name "bnc_app_key" and value as your app key
+1. Edit your res/values/strings.xml file by adding a new string resource with "branch_key" as the name and your live branch key as the value
     ```xml
     <resources>
         <!-- Other existing resources -->
 
-        <!-- Add this string resource below, and change "your app key" to your app key -->
-        <string name="bnc_app_key">"your app key"</string>
+        <!-- Add this string resource below, and change "key_live_xxxxxxx" to your actual live branch key -->
+        <string name="branch_key">key_live_xxxxxxx</string>
+
+        <!-- For your test app, if you have one; Again, use your actual test branch key -->
+        <string name="branch_key_test">key_test_yyyyyyy</string>
     </resources>
     ```
 
-1. Open your AndroidManifest.xml file
-1. Add the following new meta-data
+1. Edit your manifest file by adding the following new meta-data
     ```xml
     <application>
         <!-- Other existing entries -->
 
         <!-- Add this meta-data below; DO NOT changing the android:value -->
-        <meta-data android:name="io.branch.sdk.ApplicationId" android:value="@string/bnc_app_key" />
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="@string/branch_key" />
+
+        <!-- For your test app, if you have one -->
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="@string/branch_key_test" />
     </application>
     ```
 
@@ -134,7 +138,6 @@ This deep link routing callback is called 100% of the time on init, with your li
 public void onStart() {
 	super.onStart();
 
-	// Your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard
 	Branch branch = Branch.getInstance(getApplicationContext());
 	branch.initSession(new BranchReferralInitListener(){
 		@Override
@@ -157,6 +160,21 @@ public void onStart() {
 	}, this.getIntent().getData(), this);
 }
 ```
+
+If you want to use your test app during development, you can get the Branch object like this:
+
+```java
+Branch branch = Branch.getTestInstance(getApplicationContext());
+```
+
+Or
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext(), "your test branch key"); // replace with your actual branch key
+```
+
+Either way, we recommend you put a //TODO to remind you to change back to live app during deployment later. 
+Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
 #### Close session
 
