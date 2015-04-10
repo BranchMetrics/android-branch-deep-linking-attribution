@@ -25,17 +25,16 @@ public class BranchRemoteInterface extends RemoteInterface {
 	public static final String REQ_TAG_APPLY_REFERRAL_CODE = "t_apply_referral_code";
 	public static final String REQ_TAG_SEND_APP_LIST = "t_send_app_list";
 
-	private SystemObserver sysObserver_;
-	private PrefHelper prefHelper_;
-	private NetworkCallback callback_;
-	
-	public BranchRemoteInterface() {}
-	
-	public BranchRemoteInterface(Context context) {
-		prefHelper_ = PrefHelper.getInstance(context);
-		sysObserver_ = new SystemObserver(context);
-	}
-	
+    private SystemObserver sysObserver_;
+    private NetworkCallback callback_;
+
+    public BranchRemoteInterface() {}
+
+    public BranchRemoteInterface(Context context) {
+        super(context);
+        sysObserver_ = new SystemObserver(context);
+    }
+
 	public void setNetworkCallbackListener(NetworkCallback callback) {
 		callback_ = callback;
 	}
