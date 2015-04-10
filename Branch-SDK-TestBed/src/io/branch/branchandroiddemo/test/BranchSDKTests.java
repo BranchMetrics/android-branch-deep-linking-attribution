@@ -131,12 +131,12 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		
 		final CountDownLatch signal = new CountDownLatch(1);
 		prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
-		branch.setIdentity("my_great_user", new BranchReferralInitListener() {
+		branch.setIdentity("test_user_1", new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams, BranchError error) {
 				assertNull(error);
 				assertNotNull(referringParams);
-		        assertTrue(prefHelper.getIdentityID().equals("10406190693483182"));
+		        assertTrue(prefHelper.getIdentityID().equals("85338557421453831"));
 		        
 		        JSONObject installParams = branch.getFirstReferringParams();
 		        try {
