@@ -90,21 +90,18 @@ public class RemoteInterface {
 		try {
 			String branch_key = prefHelper_.getBranchKey();
 			String app_key = prefHelper_.getAppKey();
-			if (branch_key.equals(PrefHelper.NO_STRING_VALUE) && app_key.equals(PrefHelper.NO_STRING_VALUE)) {
-				return false;
-			}
-			
+
+			post.put("sdk", "android" + SDK_VERSION);
 			if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
 				post.put(BRANCH_KEY, prefHelper_.getBranchKey());
-			}
-			if (!app_key.equals(PrefHelper.NO_STRING_VALUE)) {
+				return true;
+			} else if (!app_key.equals(PrefHelper.NO_STRING_VALUE)) {
 				post.put("app_id", prefHelper_.getAppKey());
+				return true;
 			}
-            post.put("sdk", "android" + SDK_VERSION);
-            
 		} catch (JSONException ignore) {
 		}
-		return true;
+		return false;
 	}
 	
 	public ServerResponse make_restful_get(String url, String tag, int timeout, boolean log) {
