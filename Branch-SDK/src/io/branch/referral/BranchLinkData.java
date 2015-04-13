@@ -44,7 +44,7 @@ public class BranchLinkData extends JSONObject {
 	 * 
 	 * @param tags A {@link Collection} of {@link String} objects, each element of which contains a tag and value to be added 
 	 * to the data dictionary of a link.
-	 * @throws JSONException Each item in the {@link Collection<String>} needs to be of valid JSON format. 
+	 * @throws JSONException Each item in the {@link Collection} of {@link String} needs to be of valid JSON format. 
 	 * If it is not, a JSONException will be thrown.
 	 */
 	public void putTags(Collection<String> tags) throws JSONException {
