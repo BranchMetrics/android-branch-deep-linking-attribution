@@ -122,7 +122,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		String url = branch.getShortUrlSync("facebook", null, null, null);
 		assertSame(url, urlFB);
 		
-		url = branch.getShortUrlSync("facebook", "feature1", null, null);
+		url = branch.getShortUrlSync("linkedin", null, null, null);
 		assertFalse(url.equals(urlFB));
 	}
 	
