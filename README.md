@@ -192,7 +192,7 @@ public void onNewIntent(Intent intent) {
 }
 ```
 
-If you want to use your test app during development, you can get the Branch object like this:
+If you want to use your test app during development, in onStart() you can initialize the Branch object like this:
 
 ```java
 Branch branch = Branch.getTestInstance(getApplicationContext());
@@ -204,7 +204,7 @@ Or
 Branch branch = Branch.getInstance(getApplicationContext(), "your test branch key"); // replace with your actual branch key
 ```
 
-Either way, we recommend you put a //TODO to remind you to change back to live app during deployment later. 
+Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later. 
 Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
 #### Close session
