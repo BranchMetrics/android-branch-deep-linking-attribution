@@ -527,6 +527,9 @@ public class SystemObserver {
 	 * <li><i>1</i> - App not updated since install.</li>
 	 * <li><i>0</i> - App has been updated since initial install.</li>
 	 * </ul>
+	 * 
+	 * @param updatePrefs		A {@link Boolean} value indicating whether or not current App version 
+	 * 							number should be updated in preferences.
 	 */
 	@SuppressLint("NewApi")
 	public int getUpdateState(boolean updatePrefs) {

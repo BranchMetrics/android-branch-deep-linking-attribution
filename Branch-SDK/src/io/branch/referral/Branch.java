@@ -896,6 +896,25 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>Reads and (if successful) removes the parameter from the data {@link Uri}.</p>
+	 * 
+	 * <p><i>link_click_id</i> = the Link Click Identifier; a way for Branch to know 100% that a 
+	 * user was deep linked from a particular link click.</p>
+	 * 
+	 * @param data			A {@link Uri} containing the supplied link, with associated parameters.	
+	 * 
+	 * @param activity		A {@link Activity} object, from which this method was called.
+	 * 
+	 * @return				A {@link Boolean} value indicating whether the action was successful;
+	 * 						<ul>
+	 * 							<li><i>True</i> - The action was successful, <b>link_click_id</b> was 
+	 * 							read from the data {@link Uri}, and removed.</li>
+	 * 							<li><i>False</i> - The action could not be completed. The data {@link Uri}
+	 * 							was not altered. Either the supplied {@link Uri} was null, the 
+	 * 							supplied data was not hierarchical, or <i>link_click_id</i> was null.</li>
+	 * 						</ul>
+	 */
 	public boolean readAndStripParam(Uri data, Activity activity) {
 		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
