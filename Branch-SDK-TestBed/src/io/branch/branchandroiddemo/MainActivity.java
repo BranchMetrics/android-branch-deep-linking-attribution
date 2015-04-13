@@ -45,7 +45,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		
 		txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
 		cmdRefreshShortUrl = (Button) findViewById(R.id.cmdRefreshShortURL);
 		txtInstallCount = (TextView) findViewById(R.id.txtInstallCount);
@@ -195,7 +195,7 @@ public class MainActivity extends Activity {
 			}
 		});
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -218,6 +218,10 @@ public class MainActivity extends Activity {
 		}, this.getIntent().getData(), this);
 	}
 
+	@Override
+	public void onNewIntent(Intent intent) {
+		this.setIntent(intent);
+	}
 
 	@Override
 	protected void onStop() {
