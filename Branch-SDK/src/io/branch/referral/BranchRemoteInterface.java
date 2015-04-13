@@ -205,7 +205,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				installPost.put("screen_width", dMetrics.widthPixels);
 				installPost.put("wifi", sysObserver_.getWifiConnected());
 				installPost.put("is_referrable", prefHelper_.getIsReferrable());
-				installPost.put("update", sysObserver_.getUpdateState());
+				installPost.put("update", sysObserver_.getUpdateState(true));
 				if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
 					installPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
 				}
@@ -240,7 +240,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (!sysObserver_.getAppVersion().equals(SystemObserver.BLANK))
 					openPost.put("app_version", sysObserver_.getAppVersion());
 				openPost.put("os_version", sysObserver_.getOSVersion());
-				openPost.put("update", sysObserver_.getUpdateState());
+				openPost.put("update", sysObserver_.getUpdateState(true));
 				String uriScheme = sysObserver_.getURIScheme();
 				if (!uriScheme.equals(SystemObserver.BLANK)) 
 					openPost.put("uri_scheme", uriScheme);

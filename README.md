@@ -1,3 +1,23 @@
+## Important migration to v1.4.5
+
+Branch uses Facebook's App Links metatags automatically to provide the best linking from the Facebook platform. Unfortunately, Facebook changed the way they handle App Links routing in the latest update on April 8ish.
+
+Two important things to do in order to properly handle deep links from Facebook
+
+1. Make sure to update the Manifest so that the Activity with the intent filter for your URI scheme has *launchMode:singleTask*. See example [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
+
+2. Make sure to add this snippet of code to the Activity registered as singleTask.
+	```java
+	@Override
+	public void onNewIntent(Intent intent) {
+		// Android makes you do this yourself for some reason, so make sure
+		// this snippet is in the Activity registered for the intent filter
+		this.setIntent(intent);
+	}
+	```
+
+3. Update the SDK to v1.4.5 or higher
+
 ## FAQ
 
 1.) __What if Branch goes down or there is a poor connection?__
@@ -76,12 +96,17 @@ Our linking infrastructure will support anything you want to build. If it doesn'
 
 In your project's manifest file, you can register your app to respond to direct deep links (yourapp:// in a mobile browser) by adding the second intent filter block. Also, make sure to change **yourapp** to a unique string that represents your app name.
 
+Secondly, make sure that this activity is launched as a singleTask. This is important to handle proper deep linking from other apps like Facebook.
+
 Typically, you would register some sort of splash activitiy that handles routing for your app.
 
 ```xml
 <activity
 	android:name="com.yourapp.SplashActivity"
-	android:label="@string/app_name" >
+	android:label="@string/app_name"
+	<!-- Make sure the activity is launched as "singleTask" -->
+	android:launchMode="singleTask"
+	 >
 	<intent-filter>
 		<action android:name="android.intent.action.MAIN" />
 		<category android:name="android.intent.category.LAUNCHER" />
@@ -155,6 +180,12 @@ public void onStart() {
 			}
 		}
 	}, this.getIntent().getData(), this);
+}
+
+@Override
+public void onNewIntent(Intent intent) {
+	// Android makes you do this yourself for some reason, so make sure this snippet is in the Activity registered for the intent filter
+	this.setIntent(intent);
 }
 ```
 
@@ -297,7 +328,7 @@ You can customize the Facebook OG tags of each URL if you want to dynamically sh
 | "$og_image_url" | The URL for the image you'd like to appear for the link in social media
 | "$og_video" | The URL for the video 
 | "$og_url" | The URL you'd like to appear
-| "$og_app_id" | Your OG app ID. Optional and rarely used.
+| "$og_redirect" | If you want to bypass our OG tags and use your own, use this key with the URL that contains your site's metadata.
 
 Also, you do custom redirection by inserting the following _optional keys in the dictionary_:
 
@@ -305,6 +336,7 @@ Also, you do custom redirection by inserting the following _optional keys in the
 | --- | ---
 | "$desktop_url" | Where to send the user on a desktop or laptop. By default it is the Branch-hosted text-me service
 | "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. Currently, Chrome does not support this override. _Only necessary if you want a mobile web splash_
+| "$android_bypass_chrome_intent" | Pass in this key, with the value 1 or true to override the Chrome intent, and redirect 100% of the time to $android_url. Otherwise, on Chrome, it will either open the app or fall back to the Play Store
 | "$ios_url" | The replacement URL for the App Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
 | "$ipad_url" | Same as above but for iPad Store
 | "$fire_url" | Same as above but for Amazon Fire Store

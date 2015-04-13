@@ -503,7 +503,7 @@ public class Branch {
 	 * 						unsuccessful.
 	 */
 	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-		if (systemObserver_.getUpdateState() == 0 && !hasUser()) {
+		if (systemObserver_.getUpdateState(false) == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
 		} else {
 			prefHelper_.clearIsReferrable();
@@ -547,13 +547,7 @@ public class Branch {
 	 * 						valid URI format.
 	 */
 	public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
-		boolean uriHandled = false;
-		if (data != null && data.isHierarchical()) {
-			if (data.getQueryParameter("link_click_id") != null) {
-				uriHandled = true;
-				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
-			}
-		}
+		boolean uriHandled = readAndStripParam(data, activity);
 		initSession(callback, activity);
 		return uriHandled;
 	}
@@ -604,13 +598,7 @@ public class Branch {
 	 * @return			A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
 	public boolean initSessionWithData(Uri data, Activity activity) {
-		boolean uriHandled = false;
-		if (data != null && data.isHierarchical()) {
-			if (data.getQueryParameter("link_click_id") != null) {
-				uriHandled = true;
-				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
-			}
-		}
+		boolean uriHandled = readAndStripParam(data, activity);
 		initSession(null, activity);
 		return uriHandled;
 	}
@@ -683,13 +671,7 @@ public class Branch {
 	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
-		boolean uriHandled = false;
-		if (data != null && data.isHierarchical()) {
-			if (data.getQueryParameter("link_click_id") != null) {
-				uriHandled = true;
-				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
-			}
-		}
+		boolean uriHandled = readAndStripParam(data, activity);
 		initSession(callback, isReferrable, activity);
 		return uriHandled;
 	}
@@ -912,6 +894,28 @@ public class Branch {
 				}
 			}).start();
 		}
+	}
+	
+	public boolean readAndStripParam(Uri data, Activity activity) {
+		if (data != null && data.isHierarchical()) {
+			if (data.getQueryParameter("link_click_id") != null) {
+				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
+				
+				String paramString = "link_click_id=" + data.getQueryParameter("link_click_id");
+				String uriString = activity.getIntent().getDataString();
+				if (data.getQuery().length() == paramString.length()) {
+					paramString = "\\?" + paramString;
+				} else if ((uriString.length()-paramString.length()) == uriString.indexOf(paramString)) {
+					paramString = "&" + paramString;
+				} else {
+					paramString = paramString + "&";
+				}
+				Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
+				activity.getIntent().setData(newData);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

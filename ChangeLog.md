@@ -1,5 +1,9 @@
 Branch Android SDK change log
 
+- v1.4.5: Better handling of intent data for state transitions from Facebook's AppLinks
+
+- v1.4.4: Fixed potential issue where update state was improperly set if no isReferrable specified
+
 - v1.4.3: Added new update state to differentiate between update and open
 
 - v1.4.2.2: Bullet proof prevention of duplicate callClose (reported StackOverflow error)
