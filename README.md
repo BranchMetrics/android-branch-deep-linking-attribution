@@ -11,7 +11,8 @@ Two important things to do in order to properly handle deep links from Facebook
 ```java
 @Override
 public void onNewIntent(Intent intent) {
-	// Android makes you do this yourself for some reason, so make sure this snippet is in the Activity registered for the intent filter
+	// Android makes you do this yourself for some reason, so make sure
+	// this snippet is in the Activity registered for the intent filter
 	this.setIntent(intent);
 }
 ```
