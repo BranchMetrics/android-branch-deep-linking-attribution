@@ -30,7 +30,7 @@ public class ServerResponse {
 	
 	/**
 	 * Generic {@link Object} instance containing the data initially attached to a link. Must be 
-	 * cast to a type before use to allow the apropriate "get" methods to be used.
+	 * cast to a type before use to allow the appropriate "get" methods to be used.
 	 */
 	private Object post_;
 	

@@ -43,10 +43,11 @@ public class BranchLinkData extends JSONObject {
 	 * </p>
 	 * 
 	 * <b>Values:</b>
+	 * 
 	 * <ul>
-	 * <li>{@link null}</li>
-	 * <li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
-	 * <li>{@link Branch#LINK_TYPE_ONE_TIME_USE}</li>
+	 * 		<li>{@link null}</li>
+	 * 		<li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
+	 * 		<li>{@link Branch#LINK_TYPE_ONE_TIME_USE}</li>
 	 * </ul>
 	 * 
 	 * @see {@link #putType} - to set this value.
@@ -58,11 +59,12 @@ public class BranchLinkData extends JSONObject {
 	 * characters.</p>
 	 * 
 	 * <b>Example values:</b>
+	 * 
 	 * <ul>
-	 * 	<li><i>null</i></li>	
-	 * 	<li>"facebook"</li>
-	 * 	<li>"twitter"</li>
-	 * 	<li>"text_message"</li> 
+	 * 		<li><i>null</i></li>	
+	 * 		<li>"facebook"</li>
+	 * 		<li>"twitter"</li>
+	 * 		<li>"text_message"</li> 
 	 * </ul>
 	 * 
 	 * @see {@link #putChannel} - to set this value.
@@ -74,11 +76,12 @@ public class BranchLinkData extends JSONObject {
 	 * Should not exceed 128 characters.</p>
 	 * 
 	 * <b>Example values:</b>
+	 * 
 	 * <ul>
-	 * 	<li><i>null</i></li>
-	 * 	<li>Branch.FEATURE_TAG_SHARE</li>
-	 *  <li>Branch.FEATURE_TAG_REFERRAL</li>
-	 *  <li>"unlock"</li>
+	 * 		<li><i>null</i></li>
+	 * 		<li>Branch.FEATURE_TAG_SHARE</li>
+	 *  	<li>Branch.FEATURE_TAG_REFERRAL</li>
+	 *  	<li>"unlock"</li>
 	 * </ul>
 	 * 
 	 * @see {@link #putChannel} - to set this value.
@@ -86,13 +89,15 @@ public class BranchLinkData extends JSONObject {
 	private String feature;
 	
 	/**
-	 * <p>A {@link String} value identifying the stage in an application or user flow process. Should not exceed 128 characters</p>
+	 * <p>A {@link String} value identifying the stage in an application or user flow process. 
+	 * Should not exceed 128 characters</p>
 	 * 
 	 * <b>Example values:</b>
+	 * 
 	 * <ul>
-	 * 	<li>null</li>
-	 * 	<li>"level_6"</li>
-	 * 	<li>"past_customer"</li>
+	 * 		<li>null</li>
+	 * 		<li>"level_6"</li>
+	 * 		<li>"past_customer"</li>
 	 * </ul>
 	 * 
 	 * @see {@link #putStage} - to set this value.
@@ -108,30 +113,30 @@ public class BranchLinkData extends JSONObject {
 	private String params;
 	
 	/**
-	 * <p>An {@link int} the time that Branch allows a click to remain outstanding and be eligible to 
-	 * be matched with a new app session.</p>
+	 * <p>An {@link int} the time that Branch allows a click to remain outstanding and be eligible 
+	 * to be matched with a new app session.</p>
 	 * 
 	 * @see {@link #putDuration} to set this variable.
 	 */
 	private int duration;
 
 	/**
-	 * BranchLinkData constructor requires no parameters, and is identical to
-	 * that of its superclass {@link JSONObject}.
+	 * <p>BranchLinkData constructor requires no parameters, and is identical to
+	 * that of its superclass {@link JSONObject}.</p>
 	 */
 	public BranchLinkData() {
 		super();
 	}
 
 	/**
-	 * Use this method to add tags to the data dictionary that will go along
-	 * with the deep link that is being created.
+	 * <b>Use this method to add tags to the data dictionary that will go along
+	 * with the deep link that is being created.</b>
 	 * 
-	 * @param tags	- A {@link Collection} of {@link String} objects, each element
-	 *            	of which contains a tag and value to be added to the data
-	 *            	dictionary of a link.
+	 * @param tags				A {@link Collection} of {@link String} objects, each element
+	 *            				of which contains a tag and value to be added to the data
+	 *            				dictionary of a link.
 	 *            
-	 * @throws JSONException	- Each item in the {@link Collection<String>} needs to be of
+	 * @throws JSONException	Each item in the {@link Collection<String>} needs to be of
 	 *             				valid JSON format. If it is not, a JSONException will be
 	 *             				thrown.
 	 *             
@@ -149,11 +154,11 @@ public class BranchLinkData extends JSONObject {
 	}
 
 	/**
-	 * Adds an alias to the link.
+	 * <b>Adds an alias to the link.</b>
 	 * 
-	 * @param alias	- A {@link String} value containing the desired alias name to add.
+	 * @param alias				A {@link String} value containing the desired alias name to add.
 	 * 
-	 * @throws JSONException	- The parameter value must be in valid JSON format, or a 
+	 * @throws JSONException	The parameter value must be in valid JSON format, or a 
 	 * 							{@link JSONException} will be thrown.
 	 *             
 	 *@see {@link #alias} - the variable set by this method.            
@@ -166,14 +171,14 @@ public class BranchLinkData extends JSONObject {
 	}
 
 	/**
-	 * Adds a type to the link.
+	 * <b>Adds a type to the link.</b>
 	 * 
-	 * @param type	- An {@link Integer} value of the type specified. Valid values are:
+	 * @param type		An {@link Integer} value of the type specified. Valid values are:
 	 * 
-	 *            <ul>
-	 *            <li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
-	 *            <li>{@link Branch#LINK_TYPE_ONE_TIME_USE}</li>
-	 *            </ul>
+	 *            		<ul>
+	 *            			<li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
+	 *            			<li>{@link Branch#LINK_TYPE_ONE_TIME_USE}</li>
+	 *            		</ul>
 	 * 
 	 * @throws JSONException
 	 *             The parameter value must be in valid JSON format, or a
@@ -191,9 +196,9 @@ public class BranchLinkData extends JSONObject {
 	 * Branch allows a click to remain outstanding and be eligible to be matched
 	 * with a new app session.</p>
 	 * 
-	 * @param duration	- An {@link Integer} value in seconds.
+	 * @param duration			An {@link Integer} value in seconds.
 	 * 
-	 * @throws JSONException	- The parameter value must be in valid JSON format, or a
+	 * @throws JSONException	The parameter value must be in valid JSON format, or a
 	 *             				{@link JSONException} will be thrown.
 	 */
 	public void putDuration(int duration) throws JSONException {
@@ -204,13 +209,13 @@ public class BranchLinkData extends JSONObject {
 	}
 
 	/**
-	 * [Optional] The channel in which the link will be shared. eg: "facebook",
-	 * "text_message".
+	 * <b>[Optional] The channel in which the link will be shared. eg: "facebook",
+	 * "text_message".</b>
 	 * 
-	 * @param channel	- A {@link String} value containing the channel which the link
-	 *            		belongs to. (max 128 characters).
+	 * @param channel			A {@link String} value containing the channel which the link
+	 *            				belongs to. (max 128 characters).
 	 *            
-	 * @throws JSONException	- The parameter value must be in valid JSON format, or a
+	 * @throws JSONException	The parameter value must be in valid JSON format, or a
 	 *             				{@link JSONException} will be thrown.
 	 */
 	public void putChannel(String channel) throws JSONException {
@@ -221,12 +226,12 @@ public class BranchLinkData extends JSONObject {
 	}
 
 	/**
-	 * [Optional] The feature in which the link will be used. eg: "invite",
-	 * "referral", "share", "gift", etc.
+	 * <b>[Optional] The feature in which the link will be used. eg: "invite",
+	 * "referral", "share", "gift", etc.</b>
 	 * 
-	 * @param feature	- A {@link String} specifying the feature. (max 128 characters).
+	 * @param feature			A {@link String} specifying the feature. (max 128 characters).
 	 *            
-	 * @throws JSONException	- The parameter value must be in valid JSON format, or a
+	 * @throws JSONException	The parameter value must be in valid JSON format, or a
 	 *             				{@link JSONException} will be thrown.
 	 */
 	public void putFeature(String feature) throws JSONException {
@@ -237,12 +242,12 @@ public class BranchLinkData extends JSONObject {
 	}
 
 	/**
-	 * A string value that represents the stage of the user in the app. eg:
-	 * "level1", "logged_in", etc.
+	 * <b>A string value that represents the stage of the user in the app. eg:
+	 * "level1", "logged_in", etc.</b>
 	 * 
-	 * @param stage	- A {@link String} value specifying the stage.
+	 * @param stage				A {@link String} value specifying the stage.
 	 * 
-	 * @throws JSONException	- The parameter value must be in valid JSON format, or a 
+	 * @throws JSONException	The parameter value must be in valid JSON format, or a 
 	 * 							{@link JSONException} will be thrown.
 	 */
 	public void putStage(String stage) throws JSONException {
@@ -255,7 +260,7 @@ public class BranchLinkData extends JSONObject {
 	/**
 	 * <p>Any other params to be added; you can define your own.</p>
 	 * 
-	 * @param params	- A {@link String} containing other params in JSON format.
+	 * @param params			A {@link String} containing other params in JSON format.
 	 *            
 	 * @throws JSONException
 	 *             The parameter value must be in valid JSON format, or a
@@ -271,10 +276,10 @@ public class BranchLinkData extends JSONObject {
 	 * ("is the object the exact same one in memory") and by associated
 	 * attributes ("is this object identically configured?")</p>
 	 * 
-	 * @param obj	- A {@link BranchLinkData} object to be compared to the one that
-	 * 				this method belongs to.
+	 * @param obj		A {@link BranchLinkData} object to be compared to the one that
+	 * 					this method belongs to.
 	 *            
-	 * @return Returns true if identical, false if different.
+	 * @return 			Returns true if identical, false if different.
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -335,11 +340,11 @@ public class BranchLinkData extends JSONObject {
 	 * </p>
 	 * 
 	 * <ul>
-	 * <li>alias</li>
-	 * <li>channel</li>
-	 * <li>feature</li>
-	 * <li>stage</li>
-	 * <li>params</li>
+	 * 		<li>alias</li>
+	 * 		<li>channel</li>
+	 * 		<li>feature</li>
+	 * 		<li>stage</li>
+	 * 		<li>params</li>
 	 * </ul>
 	 * 
 	 * <p>

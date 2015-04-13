@@ -43,8 +43,9 @@ public class ApkParser {
      * 
      * String manifestStr = decompressXML(systemObserver.getURIScheme());</pre>
      * 
-     * @param xml A {@link Byte[]} containing the XML to be decompressed.
-     * @return A {@link String} containing the result of the decompression action.
+     * @param xml 	A {@link Byte[]} containing the XML to be decompressed.
+     * 
+     * @return 		A {@link String} containing the result of the decompression action.
      */
 	public String decompressXML(byte[] xml) {
 		// Compressed XML file/bytes starts with 24x bytes of data,
@@ -157,8 +158,9 @@ public class ApkParser {
      *
      * </p>
      *
-     * @param value The {@link String} value to be assessed.
-     * @return A {@link Boolean} value; if valid returns true, else false.
+     * @param value 	The {@link String} value to be assessed.
+     * 
+     * @return 			A {@link Boolean} value; if valid returns true, else false.
      */
 	private boolean validURI(String value) {
 		if (value != null) {
@@ -184,8 +186,7 @@ public class ApkParser {
 
     /**
      * <p>Get a {@link String} of the value stored in StringTable format at offset strOff, as 
-     * calculated from an initial starting point and a number of words. The output of the 
-     * calculation of the initial offset and 
+     * calculated from an initial starting point and a number of words to traverse.
      * </p>
      *
      * @param xml The {@link Byte} array to be processed.
@@ -223,11 +224,13 @@ public class ApkParser {
      * Gets the LEW (Little-Endian Word) from a {@link Byte} array, at the position defined by the 
      * offset {@link Integer} provided.
      *
-     * @param arr The {@link Byte} array to process.
-     * @param off An {@link int} value indicating the offset from which the return value should be
-     *            taken.
-     * @return The {@link Integer} Little Endian 32 bit word taken from the input {@link Byte} array 
-     * at the offset supplied as a parameter.
+     * @param arr 	The {@link Byte} array to process.
+     * 
+     * @param off 	An {@link int} value indicating the offset from which the return value should be
+     *            	taken.
+     *            
+     * @return 		The {@link Integer} Little Endian 32 bit word taken from the input {@link Byte} array 
+     * 				at the offset supplied as a parameter.
      */
 	public int LEW(byte[] arr, int off) {
 		return arr[off+3]<<24&0xff000000 | arr[off+2]<<16&0xff0000 | arr[off+1]<<8&0xff00 | arr[off]&0xFF;

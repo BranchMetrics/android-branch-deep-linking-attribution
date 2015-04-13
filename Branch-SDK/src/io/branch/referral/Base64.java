@@ -78,12 +78,12 @@ public class Base64 {
          * the coded data.  On exit, this.opwill be set to the length
          * of the coded data.
          *
-         * @param finish true if this is the final call to process for
-         *        this object.  Will finalize the coder state and
-         *        include any final bytes in the output.
+         * @param finish 	True if this is the final call to process for
+         *        			this object.  Will finalize the coder state and
+         *        			include any final bytes in the output.
          *
-         * @return true if the input so far is good; false if some
-         *         error has been detected in the input stream..
+         * @return 			<i>True</i> if the input so far is good; <i>false</i> if some
+         *         			error has been detected in the input stream.
          */
         public abstract boolean process(byte[] input, int offset, int len, boolean finish);
 

@@ -126,6 +126,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	
 	/**
 	 * <p>Required, but empty constructor method.</p>
+	 * 
 	 * <p>Use {@link #BranchRemoteInterface(Context)} instead, as it instantiates the class 
 	 * {@link PrefHelper} and {@link SystemObserver} handles for the class.</p>
 	 * 
@@ -137,7 +138,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>The main constructor of the BranchRemoteInterface class.</p>
 	 * 
-	 * @param context	- A {@link Context} from which this call was made.
+	 * @param context		A {@link Context} from which this call was made.
 	 */
 	public BranchRemoteInterface(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
@@ -147,8 +148,8 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Sets a callback listener to handle network events received during this app session.</p>
 	 * 
-	 * @param callback	- A {@link NetworkCallback} object instance that will be triggered for each 
-	 * 					network event that occurs during this app session.
+	 * @param callback		A {@link NetworkCallback} object instance that will be triggered for 
+	 * 						each network event that occurs during this app session.
 	 */
 	public void setNetworkCallbackListener(NetworkCallback callback) {
 		callback_ = callback;
@@ -157,12 +158,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Register an install event with the Branch API.</p>
 	 * 
-	 * @param installID	- A {@link String} value containing the indentifier used to denote this 
-	 * 					install instance; if none exists, uses the link ID used to open the app.
+	 * @param installID		A {@link String} value containing the identifier used to denote this 
+	 * 						install instance; if none exists, uses the link ID used to open the app.
 	 * 
-	 * @param debug		- A {@link Boolean} value that determines whether or not to open the connection 
-	 * 					in debug mode or not. If <i>true</i>, the operations carried out for this 
-	 * 					session will not be counted in analytics.
+	 * @param debug			A {@link Boolean} value that determines whether or not to open the 
+	 * 						connection in debug mode or not. If <i>true</i>, the operations carried 
+	 * 						out for this session will not be counted in analytics.
 	 */
 	public void registerInstall(String installID, boolean debug) {
 		String urlExtend = "v1/install";
@@ -223,7 +224,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Register an open application event with the Branch API.</p>
 	 * 
-	 * @param debug 	- A {@link Boolean} value that determines whether or not to open the connection 
+	 * @param debug 	A {@link Boolean} value that determines whether or not to open the connection 
 	 * 					in debug mode or not. If <i>true</i>, the operations carried out for this 
 	 * 					session will not be counted in analytics.
 	 */
@@ -285,7 +286,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Registers a list of apps currently installed on the device.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void registerListOfApps(JSONObject post) {
 		String urlExtend = "v1/applist";
@@ -298,7 +299,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
 	 * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void userCompletedAction(JSONObject post) {
 		String urlExtend = "v1/event";
@@ -310,7 +311,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Get the rewards for the App ID specified in the post {@link JSONObject}.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void redeemRewards(JSONObject post) {
 		String urlExtend = "v1/redeem";
@@ -368,7 +369,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * <p>Create custom URL, for use elsewhere within the app, without returning the value of the 
 	 * created link itself.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
@@ -385,9 +386,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Create custom URL, and return the server response for use elsewhere within the app.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 * 
-	 * @return A {@link ServerResponse} object containing the Branch API response to the request.
+	 * @return			A {@link ServerResponse} object containing the Branch API response to the 
+	 * 					request.
 	 */
 	public ServerResponse createCustomUrlSync(JSONObject post) {
 		String urlExtend = "v1/url";
@@ -402,7 +404,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Identify the user logged in to the current session.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void identifyUser(JSONObject post) {
 		String urlExtend = "v1/profile";
@@ -414,7 +416,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Logs out the user from the current session.<p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void logoutUser(JSONObject post) {
 		String urlExtend = "v1/logout";
@@ -427,7 +429,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * <p>Get the applied referral code, and store in currently instantiated {@link PrefHelper} object 
 	 * if one exists.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
 	 */
 	public void getReferralCode(JSONObject post) {
 		String urlExtend = "v1/referralcode";
@@ -439,8 +441,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Submits a referral code to be validated by the Branch API.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs, including one called 
-	 * 				"referral_code", that is required for a successful code validation attempt.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs, including one 
+	 * 					called "referral_code", that is required for a successful code validation 
+	 * 					attempt.
 	 */
 	public void validateReferralCode(JSONObject post) {
 		String urlExtend;
@@ -457,8 +460,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 	/**
 	 * <p>Submits a referral code to be applied to the current Branch session.</p>
 	 * 
-	 * @param post	- A {@link JSONObject} containing post data key-value-pairs, including one called 
-	 * 				"referral_code", that is required for a successful code validation attempt.
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs, including one 
+	 * 					called "referral_code", that is required for a successful code validation 
+	 * 					attempt.
 	 */
 	public void applyReferralCode(JSONObject post) {
 		String urlExtend;
@@ -473,7 +477,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 	
 	/**
-	 * Connect to server debug endpoint.
+	 * <p>Connect to server debug endpoint.</p>
 	 */
 	public void connectToDebug() {
 		try {
@@ -497,7 +501,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 
 	/**
-	 * Disconnect from the server debug interface.
+	 * <p>Disconnect from the server debug interface.</p>
 	 */
 	public void disconnectFromDebug() {
 		try {
@@ -512,9 +516,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 	}
 
 	/**
-	 * Log messages to the server's debug interface.
+	 * <p>Log messages to the server's debug interface.</p>
 	 * 
-	 * @param log	- A {@link String} variable containing information to log.
+	 * @param log		A {@link String} variable containing information to log.
 	 */
 	public void sendLog(String log) {
 		try {
@@ -529,12 +533,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
-	/**
-	 * 
-	 * 
-	 * @param json A {@link JSONObject} that is to be converted into a flat readable {@link String}.
-	 * @return A {@link String} variable containing a readable representation  
-	 */
 	private String convertJSONtoString(JSONObject json) {
 		StringBuilder result = new StringBuilder();
 		
