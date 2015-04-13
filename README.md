@@ -7,7 +7,6 @@ Two important things to do in order to properly handle deep links from Facebook
 1. Make sure to update the Manifest so that the Activity with the intent filter for your URI scheme has *launchMode:singleTask*. See example [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
 2. Make sure to add this snippet of code to the Activity registered as singleTask.
-
 ```java
 @Override
 public void onNewIntent(Intent intent) {
@@ -16,7 +15,6 @@ public void onNewIntent(Intent intent) {
 	this.setIntent(intent);
 }
 ```
-
 3. Update the SDK to v1.4.5 or higher
 
 ## FAQ
