@@ -34,11 +34,15 @@ Just call ```setDebug()``` after you get a reference to the Branch singleton. We
 
 Yes. Even if you don't call setDebug(), you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
 
-4.) __Why do I not see any installs after I reinstall?__
+4.) __Facebook deep links seem to not work?__
+
+Branch uses the Facebook App Links protocol to pass the deep links through to your app from Facebook. Funny enough, if you also have a Facebook app configured in the developer portal and you choose 'Deep link from feed', Facebook ignores it's own protocol. Make sure to *uncheck* this option in your Facebook app.
+
+5.) __Why do I not see any installs after I reinstall?__
 
 We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install.' To register an install on the same phone again, see FAQ #2 about debugging.
 
-5.) __Chrome seems to take me to Google Play all the time. Why?__
+6.) __Chrome seems to take me to Google Play all the time. Why?__
 
 Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
 
@@ -49,7 +53,7 @@ Chrome is very picky about opening up the app directly. Chrome utilizes the inte
   3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
 
-6.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
+7.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
 
 The Google Chrome team decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue [here](https://code.google.com/p/chromium/issues/detail?id=331571). The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
 
