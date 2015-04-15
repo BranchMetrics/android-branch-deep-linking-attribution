@@ -1,3 +1,7 @@
+## Important migration to v1.5.0
+
+We have deprecated the bnc_app_key and replacing that with the new branch_key. Please see [add branch key](#add-your-branch-key-to-your-project) for details.
+
 ## Important migration to v1.4.5
 
 Branch uses Facebook's App Links metatags automatically to provide the best linking from the Facebook platform. Unfortunately, Facebook changed the way they handle App Links routing in the latest update on April 8ish.
