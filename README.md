@@ -202,6 +202,8 @@ If you want to use your test app during development, in onStart() you can initia
 Branch branch = Branch.getTestInstance(getApplicationContext());
 ```
 
+_Please note that you need SDK version >= 1.5.0 to use getTestInstance()_
+
 Or
 
 ```java
