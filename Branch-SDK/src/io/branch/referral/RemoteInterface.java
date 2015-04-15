@@ -33,6 +33,7 @@ public class RemoteInterface {
 
 	private static final String SDK_VERSION = "1.5.0";
 	private static final int DEFAULT_TIMEOUT = 3000;
+	private static int retryCount = 0;
 	
 	protected PrefHelper prefHelper_;
 	
@@ -81,17 +82,18 @@ public class RemoteInterface {
 		
 		return result;
 	}
-	
+	// region GET requests
 	public ServerResponse make_restful_get(String url, String tag, int timeout) {
-		return make_restful_get(url, tag, timeout, true);
+		return make_restful_get(url, tag, timeout, 0, true);
 	}
 	
-	private boolean addCommonParams(JSONObject post) {
+	private boolean addCommonParams(JSONObject post, int retryNumber) {
 		try {
 			String branch_key = prefHelper_.getBranchKey();
 			String app_key = prefHelper_.getAppKey();
 
 			post.put("sdk", "android" + SDK_VERSION);
+			post.put("retryNumber", retryNumber);
 			if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
 				post.put(BRANCH_KEY, prefHelper_.getBranchKey());
 				return true;
@@ -104,18 +106,24 @@ public class RemoteInterface {
 		return false;
 	}
 	
-	public ServerResponse make_restful_get(String url, String tag, int timeout, boolean log) {
-		JSONObject post = new JSONObject();
-		if (addCommonParams(post)) {
-			url += this.convertJSONtoString(post);
+	public ServerResponse make_restful_get(String url, String tag, int timeout, int retryNumber, boolean log) {
+		final String originalUrl = url;
+		JSONObject getParameters = new JSONObject();
+		if (addCommonParams(getParameters, retryNumber)) {
+			url += this.convertJSONtoString(getParameters);
 		} else {
 			return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 		}
 		
-		try {    	
+		try {
 			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
+			if (response.getStatusLine().getStatusCode() >= 500 &&
+				retryNumber < prefHelper_.getRetryCount()) {
+				retryNumber++;
+				make_restful_get(originalUrl, tag, timeout, retryNumber, log);
+			}
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
 
 		} catch (ClientProtocolException ex) {
@@ -132,33 +140,41 @@ public class RemoteInterface {
 		}
 		return null;
 	}
+    //endregion
 
+    //region POST requests
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
-		return make_restful_post(body, url, tag, timeout, true, null);
+		return make_restful_post(body, url, tag, timeout, 0, true, null);
 	}
 	
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
-		return make_restful_post(body, url, tag, timeout, true, linkData);
+		return make_restful_post(body, url, tag, timeout, 0, true, linkData);
 	}
 
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
-		return make_restful_post(body, url, tag, timeout, log, null);
+		return make_restful_post(body, url, tag, timeout, 0, log, null);
 	}
 	
-	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
+	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
+                                            int retryNumber, boolean log, BranchLinkData linkData) {
 		try {
-			if (!addCommonParams(body)) {
+			if (!addCommonParams(body, retryNumber)) {
 				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 			}
 			
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
-				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString());
+				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString(4));
 			}
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
+            if (response.getStatusLine().getStatusCode() >= 500
+                    && retryNumber < prefHelper_.getRetryCount()) {
+                retryNumber++;
+                make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
+            }
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
 
 		} catch (SocketException ex) {
@@ -176,6 +192,7 @@ public class RemoteInterface {
 			return new ServerResponse(tag, 500);
 		}
 	}
+    //endregion
 	
 	private String convertJSONtoString(JSONObject json) {
 		StringBuilder result = new StringBuilder();
