@@ -1,6 +1,6 @@
 ## Important migration to v1.5.0
 
-We have deprecated the bnc_app_key and replacing that with the new branch_key. Please see [add branch key](#add-your-branch-key-to-your-project) for details.
+We have deprecated the bnc_app_key and replaced that with the new branch_key. Please see [add branch key](#add-your-branch-key-to-your-project) for details.
 
 ## Important migration to v1.4.5
 
