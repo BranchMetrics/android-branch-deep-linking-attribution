@@ -33,8 +33,7 @@ public class RemoteInterface {
 
 	private static final String SDK_VERSION = "1.5.0";
 	private static final int DEFAULT_TIMEOUT = 3000;
-	private static int retryCount = 0;
-	
+
 	protected PrefHelper prefHelper_;
 	
 	public RemoteInterface() { }
