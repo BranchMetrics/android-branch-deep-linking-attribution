@@ -105,23 +105,23 @@ public class RemoteInterface {
 		return false;
 	}
 	
-	public ServerResponse make_restful_get(String url, String tag, int timeout, int retryNumber, boolean log) {
-		final String originalUrl = url;
+	private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
+		String modifiedUrl = baseUrl;
 		JSONObject getParameters = new JSONObject();
 		if (addCommonParams(getParameters, retryNumber)) {
-			url += this.convertJSONtoString(getParameters);
+			modifiedUrl += this.convertJSONtoString(getParameters);
 		} else {
 			return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 		}
 		
 		try {
-			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
-		    HttpGet request = new HttpGet(url);
+			if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
+		    HttpGet request = new HttpGet(modifiedUrl);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
 			if (response.getStatusLine().getStatusCode() >= 500 &&
 				retryNumber < prefHelper_.getRetryCount()) {
 				retryNumber++;
-				make_restful_get(originalUrl, tag, timeout, retryNumber, log);
+				make_restful_get(baseUrl, tag, timeout, retryNumber, log);
 			}
 		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
 
@@ -154,7 +154,7 @@ public class RemoteInterface {
 		return make_restful_post(body, url, tag, timeout, 0, log, null);
 	}
 	
-	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
+	private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
                                             int retryNumber, boolean log, BranchLinkData linkData) {
 		try {
 			if (!addCommonParams(body, retryNumber)) {
