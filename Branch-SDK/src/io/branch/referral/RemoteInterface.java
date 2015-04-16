@@ -78,7 +78,6 @@ public class RemoteInterface {
 	   	} catch (IOException ex) { 
 	   		if (log) PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
 		}
-		
 		return result;
 	}
 	// region GET requests
@@ -121,9 +120,11 @@ public class RemoteInterface {
 			if (response.getStatusLine().getStatusCode() >= 500 &&
 				retryNumber < prefHelper_.getRetryCount()) {
 				retryNumber++;
-				make_restful_get(baseUrl, tag, timeout, retryNumber, log);
-			}
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
+				return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
+			} else {
+				return processEntityForJSON(response.getEntity(),
+					response.getStatusLine().getStatusCode(), tag, log, null);
+            }
 
 		} catch (ClientProtocolException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
@@ -171,11 +172,12 @@ public class RemoteInterface {
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
             if (response.getStatusLine().getStatusCode() >= 500
                     && retryNumber < prefHelper_.getRetryCount()) {
-                retryNumber++;
-                make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
+				retryNumber++;
+				return make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
+			} else {
+				return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(),
+					tag, log, linkData);
             }
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
-
 		} catch (SocketException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
