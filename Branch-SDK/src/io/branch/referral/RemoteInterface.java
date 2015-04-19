@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import android.content.Context;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
@@ -31,17 +32,23 @@ import org.json.JSONObject;
  * methods.</p>
  */
 public class RemoteInterface {
-	public static final String NO_TAG_VALUE = "no_tag";
+    public static final String BRANCH_KEY = "branch_key";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
-	public static final int NO_API_KEY_STATUS = -1234;
+	public static final int NO_BRANCH_KEY_STATUS = -1234;
 
-	private static final String SDK_VERSION = "1.4.5";
+	private static final String SDK_VERSION = "1.5.0";
 	private static final int DEFAULT_TIMEOUT = 3000;
 	
 	/**
 	 * Required, default constructor for the class.
 	 */
 	public RemoteInterface() { }
+	
+	protected PrefHelper prefHelper_;
+		
+	public RemoteInterface(Context context) {
+		prefHelper_ = PrefHelper.getInstance(context);
+	}
 	
 	/**
 	 * <p>Creates an instance of {@link HttpClient}, with a defined timeout, to be used for all of 
@@ -133,6 +140,24 @@ public class RemoteInterface {
 	public ServerResponse make_restful_get(String url, String tag, int timeout) {
 		return make_restful_get(url, tag, timeout, true);
 	}
+
+	private boolean addCommonParams(JSONObject post) {
+		try {
+			String branch_key = prefHelper_.getBranchKey();
+			String app_key = prefHelper_.getAppKey();
+
+			post.put("sdk", "android" + SDK_VERSION);
+			if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
+				post.put(BRANCH_KEY, prefHelper_.getBranchKey());
+				return true;
+			} else if (!app_key.equals(PrefHelper.NO_STRING_VALUE)) {
+				post.put("app_id", prefHelper_.getAppKey());
+				return true;
+			}
+		} catch (JSONException ignore) {
+		}
+		return false;
+	}
 	
 	/**
 	 * <p>The main RESTful GET method; the other one ({@link #make_restful_get(String, String, int)}) calls this one 
@@ -151,12 +176,14 @@ public class RemoteInterface {
 	 * @return			A {@link ServerResponse} object containing the result of the RESTful request.
 	 */
 	public ServerResponse make_restful_get(String url, String tag, int timeout, boolean log) {
+		JSONObject post = new JSONObject();
+		if (addCommonParams(post)) {
+			url += this.convertJSONtoString(post);
+		} else {
+			return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+		}
+		
 		try {    	
-			if (url.indexOf('?') == -1) {
-				url += "?sdk=android" + SDK_VERSION;
-			} else {
-				url += "&sdk=android" + SDK_VERSION;
-			}
 			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
 		    HttpGet request = new HttpGet(url);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
@@ -263,12 +290,11 @@ public class RemoteInterface {
 	 * 						response in Branch SDK terms.
 	 */
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
-		try {    	
-			if (body.has("app_id") && body.getString("app_id").equals(PrefHelper.NO_STRING_VALUE)) {
-				return new ServerResponse(tag, NO_API_KEY_STATUS);
+		try {
+			if (!addCommonParams(body)) {
+				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 			}
 			
-			body.put("sdk", "android" + SDK_VERSION);
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
 				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString());
@@ -293,5 +319,37 @@ public class RemoteInterface {
 			}
 			return new ServerResponse(tag, 500);
 		}
+	}
+	
+	private String convertJSONtoString(JSONObject json) {
+		StringBuilder result = new StringBuilder();
+		
+		if (json != null) {
+            JSONArray names = json.names();
+	        if (names != null) {
+                boolean first = true;
+                int size = names.length();
+                for(int i = 0; i < size; i++) {
+                	try {
+	                    String key = names.getString(i);
+	
+		        		if (first) {
+			        		result.append("?");
+			        		first = false;
+			        	} else {
+			        		result.append("&");
+			        	}
+	
+	                    String value = json.getString(key);
+	                    result.append(key).append("=").append(value);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						return null;
+					}
+	        	}
+	        }
+	    }
+		
+		return result.toString();
 	}
 }

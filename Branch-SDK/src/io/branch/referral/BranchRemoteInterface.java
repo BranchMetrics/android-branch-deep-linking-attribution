@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -108,7 +107,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * @see SystemObserver
 	 */
 	private SystemObserver sysObserver_;
-	
+
 	/**
 	 * <p>A {@link PrefHelper} object that is used throughout the class to allow access to read and 
 	 * write preferences related to the SDK.</p>
@@ -141,7 +140,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * @param context		A {@link Context} from which this call was made.
 	 */
 	public BranchRemoteInterface(Context context) {
-		prefHelper_ = PrefHelper.getInstance(context);
+		super(context);
 		sysObserver_ = new SystemObserver(context);
 	}
 	
@@ -170,7 +169,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 		if (callback_ != null) {
 			JSONObject installPost = new JSONObject();
 			try {
-				installPost.put("app_id", prefHelper_.getAppKey());
 				if (!installID.equals(PrefHelper.NO_STRING_VALUE))
 					installPost.put("link_click_id", installID);
 				String uniqId = sysObserver_.getUniqueID(prefHelper_.getExternDebug());
@@ -233,7 +231,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 		if (callback_ != null) {
 			JSONObject openPost = new JSONObject();
 			try {
-				openPost.put("app_id", prefHelper_.getAppKey());
 				openPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 				openPost.put("identity_id", prefHelper_.getIdentityID());
 				openPost.put("is_referrable", prefHelper_.getIsReferrable());
@@ -269,7 +266,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 		if (callback_ != null) {
 			JSONObject closePost = new JSONObject();
 			try {
-				closePost.put("app_id", prefHelper_.getAppKey());
 				closePost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 				closePost.put("identity_id", prefHelper_.getIdentityID());
 				closePost.put("session_id", prefHelper_.getSessionID());
@@ -324,13 +320,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * <p>Get the rewards for the App ID specified in the current {@link PrefHelper} object.</p>
 	 */
 	public void getRewards() {
-		JSONObject post = new JSONObject();
-		try {
-			post.put("app_id", prefHelper_.getAppKey());
-		} catch (JSONException ignore) {
-		}
-		String params = this.convertJSONtoString(post);
-		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID() + params;
+		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REWARDS, prefHelper_.getTimeout()));
 		}
@@ -341,13 +331,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * object.</p>
 	 */
 	public void getReferralCounts() {
-		JSONObject post = new JSONObject();
-		try {
-			post.put("app_id", prefHelper_.getAppKey());
-		} catch (JSONException ignore) {
-		}
-		String params = this.convertJSONtoString(post);
-		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID() + params;
+		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
 			callback_.finished(make_restful_get(prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_REFERRAL_COUNTS, prefHelper_.getTimeout()));
 		}
@@ -483,7 +467,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			String urlExtend = "v1/debug/connect";
 			JSONObject post = new JSONObject();
-			post.put("app_id", prefHelper_.getAppKey());
 			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 			if (sysObserver_.getBluetoothPresent()) {
 				post.put("device_name", BluetoothAdapter.getDefaultAdapter().getName());
@@ -507,7 +490,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			String urlExtend = "v1/debug/disconnect";
 			JSONObject post = new JSONObject();
-			post.put("app_id", prefHelper_.getAppKey());
 			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), false));
 		} catch (JSONException ex) {
@@ -524,44 +506,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			String urlExtend = "v1/debug/log";
 			JSONObject post = new JSONObject();
-			post.put("app_id", prefHelper_.getAppKey());
 			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 			post.put("log", log);
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), false));
 		} catch (JSONException ex) {
 			ex.printStackTrace();
 		}
-	}
-	
-	private String convertJSONtoString(JSONObject json) {
-		StringBuilder result = new StringBuilder();
-		
-		if (json != null) {
-            JSONArray names = json.names();
-	        if (names != null) {
-                boolean first = true;
-                int size = names.length();
-                for(int i = 0; i < size; i++) {
-                	try {
-	                    String key = names.getString(i);
-	
-		        		if (first) {
-			        		result.append("?");
-			        		first = false;
-			        	} else {
-			        		result.append("&");
-			        	}
-	
-	                    String value = json.getString(key);
-	                    result.append(key).append("=").append(value);
-					} catch (JSONException e) {
-						e.printStackTrace();
-						return null;
-					}
-	        	}
-	        }
-	    }
-		
-		return result.toString();
 	}
 }

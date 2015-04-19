@@ -240,7 +240,8 @@ public class ServerRequestQueue {
 	public boolean containsClose() {
 		synchronized(queue) {
             for (ServerRequest req : queue) {
-                if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
+                if (req != null &&
+                        req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
                     return true;
                 }
             }
@@ -258,7 +259,9 @@ public class ServerRequestQueue {
 	public boolean containsInstallOrOpen() {
 		synchronized(queue) {
             for (ServerRequest req : queue) {
-                if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
+                if (req != null &&
+                        (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)
+                                || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
                     return true;
                 }
             }
@@ -280,8 +283,10 @@ public class ServerRequestQueue {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
-				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
+                if (req != null
+                && (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)
+                        || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
+                    if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 						tag = BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL;
 					} else {
 						tag = BranchRemoteInterface.REQ_TAG_REGISTER_OPEN;

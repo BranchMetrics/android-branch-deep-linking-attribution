@@ -132,6 +132,7 @@ public class PrefHelper {
 	 */
 	public static final int DEBUG_TRIGGER_PRESS_TIME = 3000;
 
+    private static String Branch_Key = null;
 	/**
 	 * Internal static variable of own type {@link PrefHelper}. This variable holds the single 
 	 * instance used when the class is instantiated via the Singleton pattern.
@@ -325,35 +326,62 @@ public class PrefHelper {
 	 * 
 	 * @see {@link Branch}
 	 */
-	@Deprecated
-	public void setAppKey(String key) {
-		setString(KEY_APP_KEY, key);
-	}
-
-	/**
+    public void setAppKey(String key) {
+        setString(KEY_APP_KEY, key);
+    }
+    /**
 	 * <p>Gets the Branch App Key in preferences programmatically.</p>
 	 * 
 	 * @return		A {@link String} value containing the current App Key as configured.
 	 * 
 	 * @see {@link Branch}
 	 */
-	public String getAppKey() {
-		String appKey = null;
-		try {
-			final ApplicationInfo ai = context_.getPackageManager()
-					.getApplicationInfo(context_.getPackageName(),
-							PackageManager.GET_META_DATA);
-			if (ai.metaData != null) {
-				appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
-			}
-		} catch (final PackageManager.NameNotFoundException e) {
-		}
+    public String getAppKey() {
+        String appKey = null;
+        try {
+            final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null) {
+                appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+        }
 
-		if (appKey == null) {
-			appKey = getString(KEY_APP_KEY);
-		}
+        if (appKey == null) {
+            appKey = getString(KEY_APP_KEY);
+        }
 
-		return appKey;
+        return appKey;
+    }
+
+	public void setBranchKey(String key) {
+	    Branch_Key = key;
+    }
+
+    public String getBranchKey(boolean isLive) {
+        String branchKey = null;
+        String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
+        try {
+            final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null) {
+                branchKey = ai.metaData.getString(metaDataKey);
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+        }
+
+        if (branchKey == null) {
+            branchKey = NO_STRING_VALUE;
+        }
+
+        setBranchKey(branchKey);
+
+        return branchKey;
+    }
+
+	public String getBranchKey() {
+        if (Branch_Key == null) {
+            Branch_Key = getBranchKey(true);
+        }
+		return Branch_Key;
 	}
 
 	/**

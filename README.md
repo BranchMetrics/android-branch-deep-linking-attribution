@@ -1,3 +1,7 @@
+## Important migration to v1.5.0
+
+We have deprecated the bnc_app_key and replaced that with the new branch_key. Please see [add branch key](#add-your-branch-key-to-your-project) for details.
+
 ## Important migration to v1.4.5
 
 Branch uses Facebook's App Links metatags automatically to provide the best linking from the Facebook platform. Unfortunately, Facebook changed the way they handle App Links routing in the latest update on April 8ish.
@@ -34,11 +38,15 @@ Just call ```setDebug()``` after you get a reference to the Branch singleton. We
 
 Yes. Even if you don't call setDebug(), you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
 
-4.) __Why do I not see any installs after I reinstall?__
+4.) __Facebook deep links seem to not work?__
+
+Branch uses the Facebook App Links protocol to pass the deep links through to your app from Facebook. Funny enough, if you also have a Facebook app configured in the developer portal and you choose 'Deep link from feed', Facebook ignores it's own protocol. Make sure to *uncheck* this option in your Facebook app.
+
+5.) __Why do I not see any installs after I reinstall?__
 
 We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install.' To register an install on the same phone again, see FAQ #2 about debugging.
 
-5.) __Chrome seems to take me to Google Play all the time. Why?__
+6.) __Chrome seems to take me to Google Play all the time. Why?__
 
 Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
 
@@ -49,7 +57,7 @@ Chrome is very picky about opening up the app directly. Chrome utilizes the inte
   3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
 
-6.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
+7.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
 
 The Google Chrome team decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue [here](https://code.google.com/p/chromium/issues/detail?id=331571). The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
 
@@ -122,29 +130,33 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 
-### Add your app key to your project
+### Add your branch key to your project
 
-After you register your app, your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it to your project.
+After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project.
 
-1. Open your res/values/strings.xml file
-1. Add a new string resource with the name "bnc_app_key" and value as your app key
+1. Edit your res/values/strings.xml file by adding a new string resource with "branch_key" as the name and your live branch key as the value
     ```xml
     <resources>
         <!-- Other existing resources -->
 
-        <!-- Add this string resource below, and change "your app key" to your app key -->
-        <string name="bnc_app_key">"your app key"</string>
+        <!-- Add this string resource below, and change "key_live_xxxxxxx" to your actual live branch key -->
+        <string name="branch_key">key_live_xxxxxxx</string>
+
+        <!-- For your test app, if you have one; Again, use your actual test branch key -->
+        <string name="branch_key_test">key_test_yyyyyyy</string>
     </resources>
     ```
 
-1. Open your AndroidManifest.xml file
-1. Add the following new meta-data
+1. Edit your manifest file by adding the following new meta-data
     ```xml
     <application>
         <!-- Other existing entries -->
 
         <!-- Add this meta-data below; DO NOT changing the android:value -->
-        <meta-data android:name="io.branch.sdk.ApplicationId" android:value="@string/bnc_app_key" />
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="@string/branch_key" />
+
+        <!-- For your test app, if you have one -->
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="@string/branch_key_test" />
     </application>
     ```
 
@@ -159,7 +171,6 @@ This deep link routing callback is called 100% of the time on init, with your li
 public void onStart() {
 	super.onStart();
 
-	// Your app key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard
 	Branch branch = Branch.getInstance(getApplicationContext());
 	branch.initSession(new BranchReferralInitListener(){
 		@Override
@@ -188,6 +199,23 @@ public void onNewIntent(Intent intent) {
 	this.setIntent(intent);
 }
 ```
+
+If you want to use your test app during development, in onStart() you can initialize the Branch object like this:
+
+```java
+Branch branch = Branch.getTestInstance(getApplicationContext());
+```
+
+_Please note that you need SDK version >= 1.5.0 to use getTestInstance()_
+
+Or
+
+```java
+Branch branch = Branch.getInstance(getApplicationContext(), "your test branch key"); // replace with your actual branch key
+```
+
+Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later. 
+Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
 #### Close session
 

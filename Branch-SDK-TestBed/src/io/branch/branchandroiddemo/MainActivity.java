@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
 		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.setIdentity("my_great_user", new BranchReferralInitListener() {
+				branch.setIdentity("test_user_10", new BranchReferralInitListener() {
 					@Override
 					public void onInitFinished(JSONObject referringParams, BranchError error) {
 						Log.i("BranchTestBed", "install params = " + referringParams.toString());

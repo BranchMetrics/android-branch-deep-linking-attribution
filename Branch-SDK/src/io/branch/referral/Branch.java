@@ -354,13 +354,29 @@ public class Branch {
 	 * 
 	 * @deprecated
 	 */
-	@Deprecated
-	public static Branch getInstance(Context context, String key) {
+	public static Branch getInstance(Context context, String branchKey) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
 		}
 		branchReferral_.context_ = context;
-		branchReferral_.prefHelper_.setAppKey(key);
+        if (branchKey.startsWith("key_")) {
+            branchReferral_.prefHelper_.setBranchKey(branchKey);
+        } else {
+            branchReferral_.prefHelper_.setAppKey(branchKey);
+        }
+		return branchReferral_;
+	}
+
+	private static Branch getBranchInstance(Context context, boolean isLive) {
+		if (branchReferral_ == null) {
+			branchReferral_ = Branch.initInstance(context);
+
+			String branchKey = branchReferral_.prefHelper_.getBranchKey(isLive);
+	        if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+	        	Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+	        }
+		}
+		branchReferral_.context_ = context;
 		return branchReferral_;
 	}
 
@@ -376,20 +392,23 @@ public class Branch {
 	 * 					instance within the singleton class, or a newly instantiated object where 
 	 * 					one was not already requested during the current app lifecycle.
 	 */
-	public static Branch getInstance(Context context) {
-		if (branchReferral_ == null) {
-			branchReferral_ = Branch.initInstance(context);
+    public static Branch getInstance(Context context) {
+        return getBranchInstance(context, true);
+    }
 
-			String appKey = branchReferral_.prefHelper_.getAppKey();
-	        if (appKey == null || appKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-	        	Log.i("BranchSDK", "Branch Warning: Please enter your Branch App Key in your project's res/values/strings.xml!");
-	        }
-		}
-		branchReferral_.context_ = context;
-		return branchReferral_;
-	}
+    /**
+	 * <p>If you configured the your Strings file according to the guide, you'll be able to use
+	 * the test version of your app by just calling this static method before calling initSession.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object.
+	 */
+    public static Branch getTestInstance(Context context) {
+        return getBranchInstance(context, false);
+    }
 
-	/**
+    /**
 	 * <p>Initialises an instance of the Branch object.</p>
 	 * 
 	 * @param context	A {@link Context} from which this call was made.
@@ -964,7 +983,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -999,7 +1017,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -1178,7 +1195,6 @@ public class Branch {
 					retryCount_ = 0;
 					JSONObject post = new JSONObject();
 					try {
-						post.put("app_id", prefHelper_.getAppKey());
 						post.put("identity_id", prefHelper_.getIdentityID());
 						post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 						post.put("session_id", prefHelper_.getSessionID());
@@ -1292,7 +1308,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -1344,7 +1359,6 @@ public class Branch {
 				retryCount_ = 0;
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -2133,7 +2147,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -2291,7 +2304,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -2345,7 +2357,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -2389,7 +2400,6 @@ public class Branch {
 			public void run() {
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					post.put("identity_id", prefHelper_.getIdentityID());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 					post.put("session_id", prefHelper_.getSessionID());
@@ -2440,7 +2450,6 @@ public class Branch {
 		if (hasUser()) {
 			final BranchLinkData linkPost = new BranchLinkData();
 			try {
-				linkPost.put("app_id", prefHelper_.getAppKey());
 				linkPost.put("identity_id", prefHelper_.getIdentityID());
 				linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
 				linkPost.put("session_id", prefHelper_.getSessionID());
@@ -2582,7 +2591,6 @@ public class Branch {
             	SystemObserver sysObserver = new SystemObserver(context_);
 				JSONObject post = new JSONObject();
 				try {
-					post.put("app_id", prefHelper_.getAppKey());
 					if (!sysObserver.getOS().equals(SystemObserver.BLANK))
 						post.put("os", sysObserver.getOS());
 					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
@@ -2797,9 +2805,7 @@ public class Branch {
 					Iterator<?> keys = req.getPost().keys();
 					while (keys.hasNext()) {
 						String key = (String) keys.next();
-						if (key.equals("app_id")) {
-							req.getPost().put(key, prefHelper_.getAppKey());
-						} else if (key.equals("session_id")) {
+						if (key.equals("session_id")) {
 							req.getPost().put(key, prefHelper_.getSessionID());
 						} else if (key.equals("identity_id")) {
 							req.getPost().put(key, prefHelper_.getIdentityID());
@@ -2873,6 +2879,14 @@ public class Branch {
 	}
 
 	private void initializeSession() {
+        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
+            && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
+            Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+            return;
+        } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
+            Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+        }
+
 		if (hasUser()) {
 			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN);
 		} else {
@@ -3119,9 +3133,9 @@ public class Branch {
 								requestQueue_.dequeue();
 							}
 							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
-						} else if (status == RemoteInterface.NO_API_KEY_STATUS) {
+						} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
-							Log.i("BranchSDK", "Branch API Error: Please enter your Branch App Key in your project's res/values/strings.xml first!");
+							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
 						} else {
 							retryLastRequest();
 						}
@@ -3373,7 +3387,7 @@ public class Branch {
 	public class BranchInitError extends BranchError {
 		@Override
 		public String getMessage() {
-			return "Trouble initializing Branch. Check network connectivity or that your app key is valid";
+			return "Trouble initializing Branch. Check network connectivity or that your branch key is valid";
 		}
 	}
 	
