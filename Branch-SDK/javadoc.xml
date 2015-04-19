@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="public" author="true" classpath="." destdir="doc" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="io.branch.referral" source="1.6" sourcepath="gen:src" splitindex="true" use="true" version="true">
+            <link href="http://developer.android.com/reference/"/>
+            <link href="./Branch-SDK/doc/"/>
+        </javadoc>
+    </target>
+</project>
