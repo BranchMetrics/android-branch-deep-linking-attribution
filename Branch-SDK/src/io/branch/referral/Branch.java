@@ -54,8 +54,8 @@ public class Branch {
 	public static final String FEATURE_TAG_SHARE = "share";
 	
 	/**
-	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as 
-	 * referral actions from other services or sites.
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are associated
+	 * with a referral program, incentivized or not.
 	 */
 	public static final String FEATURE_TAG_REFERRAL = "referral";
 	
@@ -147,13 +147,16 @@ public class Branch {
 	public static final String OG_TITLE = "$og_title";
 	
 	/**
-	 * The type of your object, e.g., "video.movie". Depending on the type you specify, other 
-	 * properties may also be required.
+	 * The description of the object to appear in social media feeds that use 
+	 * Facebook's Open Graph specification.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
 	 */
 	public static final String OG_DESC = "$og_description";
 	
 	/**
-	 * An image URL which should represent your object within the graph.
+	 * An image URL which should represent your object to appear in social media feeds that use 
+	 * Facebook's Open Graph specification.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
 	 */
 	public static final String OG_IMAGE_URL = "$og_image_url";
 	
@@ -175,16 +178,17 @@ public class Branch {
 	public static final String OG_APP_ID = "$og_app_id";
 	
 	/**
-	 * {@link String} value denoting the deep link path that an app can receive; for Android, this 
-	 * is handled by a custom {@link IntentFilter}.
-	 * 
-	 * @see 	<a href="http://developer.android.com/training/basics/intents/filters.html">
-	 * 			Intent Filters</a>
+	 * {@link String} value denoting the deep link path to override Branch's default one. By 
+	 * default, Branch will use yourapp://open?link_click_id=12345. If you specify this key/value,
+	 * Branch will use yourapp://'$deeplink_path'?link_click_id=12345
 	 */
 	public static final String DEEPLINK_PATH = "$deeplink_path";
 	
 	/**
 	 * {@link String} value indicating whether the link should always initiate a deep link action.
+	 * By default, unless overridden on the dashboard, Branch will only open the app if they are
+	 * 100% sure the app is installed. This setting will cause the link to always open the app.
+	 * Possible values are "true" or "false"
 	 */
 	public static final String ALWAYS_DEEPLINK = "$always_deeplink";
 	
@@ -406,7 +410,7 @@ public class Branch {
 
 	/**
 	 * <p>Sets the number of times to re-attempt a timed-out request to the Branch API, before 
-	 * considering the request to have failed entirely.</p>
+	 * considering the request to have failed entirely. Default 5.</p>
 	 * 
 	 * @param retryCount	An {@link Integer} specifying the number of times to retry before giving 
 	 * 						up and declaring defeat.
@@ -419,7 +423,7 @@ public class Branch {
 	
     /**
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request 
-     * to the Branch API.</p>
+     * to the Branch API. Default 3000 ms.</p>
      * 
      * @param retryInterval		An {@link Integer} value specifying the number of milliseconds to 
      * 							wait before re-attempting a timed-out request.
@@ -432,7 +436,7 @@ public class Branch {
 	
 	/**
 	 * <p>Sets the duration in milliseconds that the system should wait for a response before considering 
-	 * any Branch API call to have timed out.</p>
+	 * any Branch API call to have timed out. Default 3000 ms.</p>
 	 * 
 	 * <p>Increase this to perform better in low network speed situations, but at the expense of 
 	 * responsiveness to error situation.</p>
@@ -447,7 +451,7 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Sets the library to function in debug mode.</p>
+	 * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
 	 * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
 	 */
 	public void setDebug() {
@@ -456,7 +460,7 @@ public class Branch {
 	
 	/** 
 	 * <p>Calls the {@link PrefHelper# disableExternAppListing()} on the local instance to prevent 
-	 * a list of installed Apps from being returned to the Branch API.</p>
+	 * a list of installed apps from being returned to the Branch API.</p>
 	 */
 	public void disableAppList() {
 		prefHelper_.disableExternAppListing();
@@ -466,7 +470,8 @@ public class Branch {
 	 * <p>If there's further Branch API call happening within the two seconds, we then don't close 
 	 * the session; otherwise, we close the session after two seconds.</p>
 	 * 
-	 * <p>Call this method if you don't want this smart session feature.</p>
+	 * <p>Call this method if you don't want this smart session feature and would rather manage
+	 * the session yourself.</p>
 	 * 
 	 * <p><b>Note:</b>  smart session - we keep session alive for two seconds</p>
 	 */
@@ -609,6 +614,8 @@ public class Branch {
 	 * 
 	 * @param isReferrable		A {@link Boolean} value indicating whether this initialisation 
 	 * 							session should be considered as potentially referrable or not.
+	 * 							By default, a user is only referrable if initSession results in a
+	 * 							fresh install. Overriding this gives you control of who is referrable.
 	 * 
 	 * @return					A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -621,8 +628,9 @@ public class Branch {
 	 * as a referrable action, and supplying the calling {@link Activity} for context.</p>
 	 * 
 	 * @param isReferrable		A {@link Boolean} value indicating whether this initialisation 
-	 * 							session should be considered as potentially referrable or a 
-	 * 							non-referred, manual launch action.
+	 * 							session should be considered as potentially referrable or not.
+	 * 							By default, a user is only referrable if initSession results in a
+	 * 							fresh install. Overriding this gives you control of who is referrable.
 	 * 
 	 * @param activity			The calling {@link Activity} for context.
 	 * 
@@ -639,9 +647,10 @@ public class Branch {
 	 * 						following successful (or unsuccessful) initialisation of the session 
 	 * 						with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
-	 * 						should be considered as potentially referrable or a non-referred, manual 
-	 * 						launch action.
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
 	 * 
 	 * @param data			A {@link  Uri} variable containing the details of the source link that 
 	 * 						led to this initialisation action.
@@ -659,9 +668,10 @@ public class Branch {
 	 * 						following successful (or unsuccessful) initialisation of the session 
 	 * 						with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
-	 * 						should be considered as potentially referrable or a non-referred, manual 
-	 * 						launch action.
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
 	 * 
 	 * @param data			A {@link  Uri} variable containing the details of the source link that 
 	 * 						led to this initialisation action.
@@ -683,9 +693,10 @@ public class Branch {
 	 * 						following successful (or unsuccessful) initialisation of the session 
 	 * 						with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
-	 * 						should be considered as potentially referrable or a non-referred, manual 
-	 * 						launch action.
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
 	 * 
 	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
@@ -700,9 +711,10 @@ public class Branch {
 	 * 						following successful (or unsuccessful) initialisation of the session 
 	 * 						with the Branch API.
 	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation session 
-	 * 						should be considered as potentially referrable or a non-referred, manual 
-	 * 						launch action.
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
 	 * 
 	 * @param activity		The calling {@link Activity} for context.
 	 * 
@@ -836,6 +848,9 @@ public class Branch {
 	 * <p>Closes the current session, dependent on the state of the 
 	 * {@link PrefHelper#getSmartSession()} {@link Boolean} value. If <i>true</i>, take no action. 
 	 * If false, close the sesion via the {@link #executeClose()} method.</p>
+	 * <p>Note that if smartSession is enabled, closeSession cannot be called within
+	 * a 2 second time span of another Branch action. This has to do with the method that
+	 * Branch uses to keep a session alive during Activity transitions</p>
 	 */
 	public void closeSession() {
 		if (prefHelper_.getSmartSession()) {
@@ -896,26 +911,7 @@ public class Branch {
 		}
 	}
 	
-	/**
-	 * <p>Reads and (if successful) removes the parameter from the data {@link Uri}.</p>
-	 * 
-	 * <p><i>link_click_id</i> = the Link Click Identifier; a way for Branch to know 100% that a 
-	 * user was deep linked from a particular link click.</p>
-	 * 
-	 * @param data			A {@link Uri} containing the supplied link, with associated parameters.	
-	 * 
-	 * @param activity		A {@link Activity} object, from which this method was called.
-	 * 
-	 * @return				A {@link Boolean} value indicating whether the action was successful;
-	 * 						<ul>
-	 * 							<li><i>True</i> - The action was successful, <b>link_click_id</b> was 
-	 * 							read from the data {@link Uri}, and removed.</li>
-	 * 							<li><i>False</i> - The action could not be completed. The data {@link Uri}
-	 * 							was not altered. Either the supplied {@link Uri} was null, the 
-	 * 							supplied data was not hierarchical, or <i>link_click_id</i> was null.</li>
-	 * 						</ul>
-	 */
-	public boolean readAndStripParam(Uri data, Activity activity) {
+	private boolean readAndStripParam(Uri data, Activity activity) {
 		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
@@ -944,8 +940,8 @@ public class Branch {
 	 * 
 	 * @param userId	A {@link String} value containing the unique identifier of the user.
 	 * 
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will 
-	 * 					trigger actions defined therein upon a referral state change.
+	 * @param callback	A {@link BranchReferralInitListener} callback instance that will return
+	 * 					the data associated with the user id being assigned, if available.
 	 */
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
 		initIdentityFinishedCallback_ = callback;
@@ -993,7 +989,9 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Closes the current session asynchronously.</p>
+	 * <p>This method should be called if you know that a different person is about to use the app. For example,
+	 * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+	 * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
 	 */
 	public void logout() {
 		new Thread(new Runnable() {
@@ -1033,7 +1031,9 @@ public class Branch {
 
 	/**
 	 * <p>Gets the total action count, with a callback to perform a predefined 
-	 * action following successful report of state change.</p>
+	 * action following successful report of state change. You'll then need to
+	 * call getUniqueActions or getTotalActions in the callback to update the
+	 * totals in your UX.</p>
 	 * 
 	 * @param callback		A {@link BranchReferralStateChangedListener} callback instance that will 
 	 * 						trigger actions defined therein upon a referral state change.
@@ -1066,7 +1066,8 @@ public class Branch {
 
 	/**
 	 * <p>Retrieves rewards for the current session, with a callback to perform a predefined 
-	 * action following successful report of state change.</p>
+	 * action following successful report of state change. You'll then need to call getCredits
+	 * in the callback to update the credit totals in your UX.</p>
 	 * 
 	 * @param callback 		A {@link BranchReferralStateChangedListener} callback instance that will 
 	 * 						trigger actions defined therein upon a referral state change.
@@ -1381,9 +1382,11 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Queries the local {@link PrefHelper} instance to get the initial assigned install parameters 
-	 * as a String, then converts the string into a {@link JSONObject} for server sync or to be 
-	 * passed to another class.</p>
+	 * <p>Returns the parameters associated with the link that referred the user. This is only set once,
+	 * the first time the user is referred by a link. Think of this as the user referral parameters.
+	 * It is also only set if isReferrable is equal to true, which by default is only true 
+	 * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the 
+	 * user already exists from a previous device) and logout.</p>
 	 * 
 	 * @return 			A {@link JSONObject} containing the install-time parameters as configured 
 	 * 					locally.
@@ -1394,9 +1397,11 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Queries the local {@link PrefHelper} instance to get the current assigned session parameters 
-	 * as a String, then converts the string into a {@link JSONObject} for server sync or to be 
-	 * passed to another class.</p>
+	 * <p>Returns the parameters associated with the link that referred the session. If a user
+	 * clicks a link, and then opens the app, initSession will return the paramters of the link
+	 * and then set them in as the latest parameters to be retrieved by this method. By default,
+	 * sessions persist for the duration of time that the app is in focus. For example, if you
+	 * minimize the app, these parameters will be cleared when closeSession is called.</p>
 	 * 
 	 * @return 			A {@link JSONObject} containing the latest referring parameters as 
 	 * 					configured locally.
@@ -1420,8 +1425,8 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
 	 * call; with a duration specified within which an app session should be matched to the link.</p>
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
-	 * 					link that the user is to follow.
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL.
 	 */
@@ -1437,7 +1442,7 @@ public class Branch {
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting referral URL.
 	 */
@@ -1456,7 +1461,7 @@ public class Branch {
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting referral URL.
 	 */
@@ -1465,14 +1470,14 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Configures and requests a content URL to be generated by the Branch servers, via a synchronous 
-	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers, via a synchronous 
+	 * call</p>
 	 * 
 	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting content URL.
 	 */
@@ -1481,8 +1486,8 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Configures and requests a content URL to be generated by the Branch servers, via a synchronous 
-	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers, via a synchronous 
+	 * call</p>
 	 * 
 	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
@@ -1491,7 +1496,7 @@ public class Branch {
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting content URL.
 	 */
@@ -1512,8 +1517,8 @@ public class Branch {
 	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
-	 * 					link that the user is to follow.
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL.
 	 */
@@ -1543,7 +1548,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL. 
 	 */
@@ -1568,7 +1573,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL.
 	 */
@@ -1590,7 +1595,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param duration	A {@link Integer} value specifying the time that Branch allows a click to 
 	 * 					remain outstanding and be eligible to be matched with a new app session.
@@ -1618,7 +1623,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL.
 	 */
@@ -1651,7 +1656,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL.
 	 */
@@ -1679,7 +1684,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @return 			A {@link String} containing the resulting short URL.
 	 */
@@ -1704,7 +1709,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param duration	A {@link Integer} value specifying the time that Branch allows a click to 
 	 * 					remain outstanding and be eligible to be matched with a new app session.
@@ -1729,7 +1734,7 @@ public class Branch {
 	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1743,13 +1748,13 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Configures and requests a referral URL to be generated by the Branch servers.</p>
+	 * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
 	 * 
 	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1764,7 +1769,7 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Configures and requests a referral URL to be generated by the Branch servers.</p>
+	 * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
 	 * 
 	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
@@ -1773,7 +1778,7 @@ public class Branch {
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 	
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1789,13 +1794,13 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Configures and requests a content URL to be generated by the Branch servers.</p>
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
 	 * 
 	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1810,7 +1815,7 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Configures and requests a content URL to be generated by the Branch servers.</p>
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
 	 * 
 	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
 	 * 					link.
@@ -1819,7 +1824,7 @@ public class Branch {
 	 * 					exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1847,7 +1852,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1883,8 +1888,8 @@ public class Branch {
 	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
-	 * 					link that the user is to follow.
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1916,8 +1921,8 @@ public class Branch {
 	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
 	 * 					Should not exceed 128 characters.
 	 * 
-	 * @param params	A {@link JSONObject} value containing the deep linked params associated with the 
-	 * 					link that the user is to follow.
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -1947,7 +1952,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param duration	An {@link int} the time that Branch allows a click to remain outstanding and 
 	 * 					be eligible to be matched with a new app session.
@@ -1983,7 +1988,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -2022,7 +2027,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -2059,7 +2064,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
 	 * 					actions defined therein upon receipt of a response to a create link request.
@@ -2093,7 +2098,7 @@ public class Branch {
 	 * 					process. Should not exceed 128 characters.
 	 * 
 	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
-	 * 					the link that the user is to follow.
+	 * 					the link that will be passed into a new app session when clicked
 	 * 
 	 * @param duration	An {@link int} the time that Branch allows a click to remain outstanding 
 	 * 					and be eligible to be matched with a new app session.

@@ -1,7 +1,5 @@
 package io.branch.referral;
 
-import io.branch.referral.PrefHelper.DebugNetworkCallback;
-
 /**
  *	<p>High-level interface for all network callback classes.</p>
  */
