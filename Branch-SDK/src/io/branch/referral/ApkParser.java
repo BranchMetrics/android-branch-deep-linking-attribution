@@ -6,19 +6,46 @@ package io.branch.referral;
  * <P>Parses the 'compressed' binary form of Android XML docs, such as AndroidManifest.xml, that
  * are contained within an APK file.
  *
- * @author Alex Austin
  */
 public class ApkParser {
+	
 	// decompressXML -- Parse the 'compressed' binary form of Android XML docs 
 	// such as for AndroidManifest.xml in .apk files
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify the <b>end</b> of a compressed 
+	 * <b>XML document</b>.
+	 */
 	public static int endDocTag = 0x00100101;
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify the <b>start</b> of a <b>XML tag</b> 
+	 * within a compressed XML document.
+	 */
 	public static int startTag =  0x00100102;
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify the <b>end</b> of a <b>XML tag</b> 
+	 * within a compressed XML document.
+	 */
 	public static int endTag =    0x00100103;
 
     /**
-     * Returns the result of decompression of XML as a {@link String}.
-     * @param xml A {@link Byte[]} containing the XML to be decompressed.
-     * @return A {@link String} containing the result of the decompression action.
+     * <p>Gets the result of decompression of AndroidManifest.xml from within an APK, as a 
+     * {@link String}, based on an input {@link byte} array parameter.</p>
+     * 
+     * <p>The {@link SystemObserver#getURIScheme()} method outputs the required {@link Byte} array, 
+     * so can be used as a parameter for this method, for instance by using the following code in an 
+     * {@link Activity} {@link Context}:</p>
+     * 
+     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
+     * SystemObserver systemObserver = new SystemObserver(this); 	// "this" being an Activity in this case
+     * 
+     * String manifestStr = decompressXML(systemObserver.getURIScheme());</pre>
+     * 
+     * @param xml 	A {@link Byte[]} containing the XML to be decompressed.
+     * 
+     * @return 		A {@link String} containing the result of the decompression action.
      */
 	public String decompressXML(byte[] xml) {
 		// Compressed XML file/bytes starts with 24x bytes of data,
@@ -108,9 +135,9 @@ public class ApkParser {
 	} // end of decompressXML
 
     /**
-     * <P>Checks whether the supplied {@link String} is of a valid/known URI protocol type.</P>
+     * <p>Checks whether the supplied {@link String} is of a valid/known URI protocol type.</p>
      *
-     * <P>
+     * <p>
      *     Valid protocol types:
      * <ul>
      *     <li>http</li>
@@ -129,10 +156,11 @@ public class ApkParser {
      *     <li>mailto</li>
      * </ul>
      *
-     * </P>
+     * </p>
      *
-     * @param value The {@link String} value to be assessed.
-     * @return A {@link Boolean} value; if valid returns true, else false.
+     * @param value 	The {@link String} value to be assessed.
+     * 
+     * @return 			A {@link Boolean} value; if valid returns true, else false.
      */
 	private boolean validURI(String value) {
 		if (value != null) {
@@ -157,13 +185,17 @@ public class ApkParser {
 	}
 
     /**
+     * <p>Get a {@link String} of the value stored in StringTable format at offset strOff, as 
+     * calculated from an initial starting point and a number of words to traverse.
+     * </p>
      *
-     *
-     * @param xml
-     * @param sitOff
-     * @param stOff
-     * @param strInd
-     * @return
+     * @param xml The {@link Byte} array to be processed.
+     * @param sitOff An {@link Integer} value indicating the initial offset within the supplied 
+     * {@link Byte} array.
+     * @param stOff An {@link Integer} value indicating the initial offset of the supplied array.
+     * @param strInd An {@link Integer} value indicating the string index to use in the LEW calculation.
+     * @return A call to {@link #compXmlStringAt(byte[],int)}, with the result of the offset calculation 
+     * of this method as the {@link Integer} parameter.
      */
 	public String compXmlString(byte[] xml, int sitOff, int stOff, int strInd) {
 		if (strInd < 0) return null;
@@ -171,9 +203,14 @@ public class ApkParser {
 		return compXmlStringAt(xml, strOff);
 	}
 
-	// compXmlStringAt -- Return the string stored in StringTable format at
-	// offset strOff.  This offset points to the 16 bit string length, which 
-	// is followed by that number of 16 bit (Unicode) chars.
+	/** <p>Get a {@link String} of the value stored in StringTable format at offset strOff. This 
+	 * offset points to the 16 bit string length, which is followed by that number of 16 bit 
+	 * (Unicode) chars.</p>
+	 * 
+	 * @param arr The {@link Byte} array to be processed.
+	 * @param strOff An {@link Integer} denoting the offset within the array to fetch result from.
+	 * @return A {@link String} value at the offset specified in parameter <i>strOff</i>.
+	 */
 	public String compXmlStringAt(byte[] arr, int strOff) {
 		int strLen = arr[strOff+1]<<8&0xff00 | arr[strOff]&0xff;
 		byte[] chars = new byte[strLen];
@@ -184,13 +221,16 @@ public class ApkParser {
 	} // end of compXmlStringAt
 
     /**
-     * LEW (Little-Endian Word)
+     * Gets the LEW (Little-Endian Word) from a {@link Byte} array, at the position defined by the 
+     * offset {@link Integer} provided.
      *
-     * @param arr The {@link Byte[]} to process.
-     * @param off An {@link int} value indicating the offset from which the return value should be
-     *            taken.
-     * @return The {@link int} Little Endian 32 bit word taken from the input {@link Byte[]} at the
-     * {@link int} offset provided.
+     * @param arr 	The {@link Byte} array to process.
+     * 
+     * @param off 	An {@link int} value indicating the offset from which the return value should be
+     *            	taken.
+     *            
+     * @return 		The {@link Integer} Little Endian 32 bit word taken from the input {@link Byte} array 
+     * 				at the offset supplied as a parameter.
      */
 	public int LEW(byte[] arr, int off) {
 		return arr[off+3]<<24&0xff000000 | arr[off+2]<<16&0xff0000 | arr[off+1]<<8&0xff00 | arr[off]&0xFF;

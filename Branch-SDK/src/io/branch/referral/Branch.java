@@ -29,53 +29,238 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
+/**
+ * <p>
+ * The core object required when using Branch SDK. You should declare an object of this type at 
+ * the class-level of each Activity or Fragment that you wish to use Branch functionality within.
+ * </p>
+ * 
+ * <p>
+ * Normal instantiation of this object would look like this:
+ * </p>
+ * 
+ * <pre style="background:#fff;padding:10px;border:2px solid silver;">
+ * Branch.getInstance(this.getApplicationContext())		// from an Activity
+ * 
+ * Branch.getInstance(getActivity().getApplicationContext())	// from a Fragment</pre>
+ * 
+ */
 public class Branch {
+	
+	/**
+	 * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that 
+	 * are shared with others directly as a user action, via social media for instance.
+	 */
 	public static final String FEATURE_TAG_SHARE = "share";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are associated
+	 * with a referral program, incentivized or not.
+	 */
 	public static final String FEATURE_TAG_REFERRAL = "referral";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as 
+	 * referral actions by users of an app using an 'invite contacts' feature for instance. 
+	 */
 	public static final String FEATURE_TAG_INVITE = "invite";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a link that is part of a commercial 'deal' or offer.
+	 */
 	public static final String FEATURE_TAG_DEAL = "deal";
+	
+	/**
+	 * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or 
+	 * product.
+	 */
 	public static final String FEATURE_TAG_GIFT = "gift";
 
+	/**
+	 * The code to be passed as part of a deal or gift; retrieved from the Branch object as a 
+	 * tag upon initialisation. Of {@link String} format.
+	 */
 	public static final String REDEEM_CODE = "$redeem_code";
+	
+	/**
+	 * <p>Default value of referral bucket; referral buckets contain credits that are used when users 
+	 * are referred to your apps. These can be viewed in the Branch dashboard under Referrals.</p>
+	 */
 	public static final String REFERRAL_BUCKET_DEFAULT = "default";
+	
+	/**
+	 * <p>Hard-coded value for referral code type. Referral codes will always result on "credit" actions.
+	 * Even if they are of 0 value.</p>
+	 */
 	public static final String REFERRAL_CODE_TYPE = "credit";
+	
+	/**
+	 * Branch SDK version for the current release of the Branch SDK.
+	 */
 	public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
+	
+	/**
+	 * Key value for referral code as a parameter.
+	 */
 	public static final String REFERRAL_CODE = "referral_code";
 	
+	/**
+	 * The redirect URL provided when the link is handled by a desktop client.
+	 */
 	public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by an Android device.
+	 */
 	public static final String REDIRECT_ANDROID_URL = "$android_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by an iOS device.
+	 */
 	public static final String REDIRECT_IOS_URL = "$ios_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by a large form-factor iOS device such as 
+	 * an iPad.
+	 */
 	public static final String REDIRECT_IPAD_URL = "$ipad_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by an Amazon Fire device.
+	 */
 	public static final String REDIRECT_FIRE_URL = "$fire_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by a Blackberry device.
+	 */
 	public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
+	
+	/**
+	 * The redirect URL provided when the link is handled by a Windows Phone device.
+	 */
 	public static final String REDIRECT_WINDOWS_PHONE_URL = "$windows_phone_url";
 	
+	/**
+	 * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_TITLE = "$og_title";
+	
+	/**
+	 * The description of the object to appear in social media feeds that use 
+	 * Facebook's Open Graph specification.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_DESC = "$og_description";
+	
+	/**
+	 * An image URL which should represent your object to appear in social media feeds that use 
+	 * Facebook's Open Graph specification.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_IMAGE_URL = "$og_image_url";
+	
+	/**
+	 * A URL to a video file that complements this object.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_VIDEO = "$og_video";
+	
+	/**
+	 * The canonical URL of your object that will be used as its permanent ID in the graph.
+	 * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
+	 */
 	public static final String OG_URL = "$og_url";
+	
+	/**
+	 * Unique identifier for the app in use.
+	 */
 	public static final String OG_APP_ID = "$og_app_id";
 	
+	/**
+	 * {@link String} value denoting the deep link path to override Branch's default one. By 
+	 * default, Branch will use yourapp://open?link_click_id=12345. If you specify this key/value,
+	 * Branch will use yourapp://'$deeplink_path'?link_click_id=12345
+	 */
 	public static final String DEEPLINK_PATH = "$deeplink_path";
+	
+	/**
+	 * {@link String} value indicating whether the link should always initiate a deep link action.
+	 * By default, unless overridden on the dashboard, Branch will only open the app if they are
+	 * 100% sure the app is installed. This setting will cause the link to always open the app.
+	 * Possible values are "true" or "false"
+	 */
 	public static final String ALWAYS_DEEPLINK = "$always_deeplink";
 	
+	/**
+	 * An {@link Integer} value indicating the user to reward for applying a referral code. In this 
+	 * case, the user applying the referral code receives credit.
+	 */
 	public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
+	
+	/**
+	 * An {@link Integer} value indicating the user to reward for applying a referral code. In this 
+	 * case, the user who created the referral code receives credit.
+	 */
 	public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
+	
+	/**
+	 * An {@link Integer} value indicating the user to reward for applying a referral code. In this 
+	 * case, both the creator and applicant receive credit
+	 */
 	public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
 
+	/**
+	 * An {@link Integer} value indicating the calculation type of the referral code. In this case, 
+	 * the referral code can be applied continually.
+	 */
 	public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
+	
+	/**
+	 * An {@link Integer} value indicating the calculation type of the referral code. In this case, 
+	 * a user can only apply a specific referral code once.
+	 */
 	public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
 
+	/**
+	 * An {@link Integer} value indicating the link type. In this case, the link can be used an 
+	 * unlimited number of times.
+	 */
 	public static final int LINK_TYPE_UNLIMITED_USE = 0;
+	
+	/**
+	 * An {@link Integer} value indicating the link type. In this case, the link can be used only 
+	 * once. After initial use, subsequent attempts will not validate.
+	 */
 	public static final int LINK_TYPE_ONE_TIME_USE = 1;
 
+	/**
+	 * <p>An {@link Integer} variable specifying the amount of time in milliseconds to keep a 
+	 * connection alive before assuming a timeout condition.</p>
+	 * 
+	 * @see 	<a href="http://developer.android.com/reference/java/util/Timer.html#schedule(java.util.TimerTask, long)">
+	 * 			Timer.schedule (TimerTask task, long delay)</a>
+	 */
 	private static final int SESSION_KEEPALIVE = 2000;
+	
+	/**
+	 * <p>An {@link Integer} value defining the timeout period in milliseconds to wait during a 
+	 * looping task before triggering an actual connection close during a session close action.</p>
+	 */
 	private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
+	/**
+	 * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of 
+	 * the class during application runtime.</p>
+	 */
 	private static Branch branchReferral_;
+	
+	/**
+	 * <p>A {@link Boolean} value used internally by the class when determining whether a singleton 
+	 * instance has already been instantiated and a session initialised with the Branch servers.</p>
+	 */
 	private boolean isInit_;
-
+	
 	private BranchReferralInitListener initSessionFinishedCallback_;
 	private BranchReferralInitListener initIdentityFinishedCallback_;
 	private BranchReferralStateChangedListener stateChangedCallback_;
@@ -84,36 +269,47 @@ public class Branch {
 	private BranchReferralInitListener getReferralCodeCallback_;
 	private BranchReferralInitListener validateReferralCodeCallback_;
 	private BranchReferralInitListener applyReferralCodeCallback_;
-
 	private BranchRemoteInterface kRemoteInterface_;
+	
 	private PrefHelper prefHelper_;
 	private SystemObserver systemObserver_;
 	private Context context_;
-
+	
 	final Object lock;
+
 	private Timer closeTimer;
 	private Timer rotateCloseTimer;
 	private boolean keepAlive_;
 
 	private Semaphore serverSema_;
+	
 	private ServerRequestQueue requestQueue_;
+
 	private int networkCount_;
 	private int retryCount_;
-	
+
 	private boolean initNotStarted_;
 	private boolean initFinished_;
 	private boolean initFailed_;
+	
 	private boolean hasNetwork_;
 	private boolean lastRequestWasInit_;
-	
 	private Handler debugHandler_;
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
-	
+
 	private Map<BranchLinkData, String> linkCache_;
-	
+
 	private ScheduledFuture<?> appListingSchedule_;
 
+	/**
+	 * <p>The main constructor of the Branch class is private because the class uses the Singleton 
+	 * pattern.</p>
+	 * 
+	 * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
+	 * 
+	 * @param context 	A {@link Context} from which this call was made.
+	 */
 	private Branch(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
 		kRemoteInterface_ = new BranchRemoteInterface(context);
@@ -138,6 +334,26 @@ public class Branch {
 		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
 
+	/**
+	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
+	 * object of the type {@link Branch}.</p>
+	 * 
+	 * <p><b>Deprecated</b> - use {@link #getInstance(Context)} instead; the Branch key should be 
+	 * declared in XML rather than hard-coded into your Java code going forward.</p>
+	 * 
+	 * @see 			<a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
+	 * 					Adding your app key to your project</a>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @param key		Your Branch app key as a {@link String}.
+	 * 
+	 * @return			An initialised {@link Branch} object, either fetched from a pre-initialised 
+	 * 					instance within the singleton class, or a newly instantiated object where 
+	 * 					one was not already requested during the current app lifecycle.
+	 * 
+	 * @deprecated
+	 */
 	public static Branch getInstance(Context context, String branchKey) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
@@ -164,61 +380,152 @@ public class Branch {
 		return branchReferral_;
 	}
 
+	/**
+	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
+	 * object of the type {@link Branch}.</p>
+	 * 
+	 * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object, either fetched from a pre-initialised 
+	 * 					instance within the singleton class, or a newly instantiated object where 
+	 * 					one was not already requested during the current app lifecycle.
+	 */
     public static Branch getInstance(Context context) {
         return getBranchInstance(context, true);
     }
 
+    /**
+	 * <p>If you configured the your Strings file according to the guide, you'll be able to use
+	 * the test version of your app by just calling this static method before calling initSession.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object.
+	 */
     public static Branch getTestInstance(Context context) {
         return getBranchInstance(context, false);
     }
 
+    /**
+	 * <p>Initialises an instance of the Branch object.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object.
+	 */
 	private static Branch initInstance(Context context) {
 		return new Branch(context.getApplicationContext());
 	}
 
+	/**
+	 * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has 
+	 * been initialised, to false - forcing re-initialisation.</p>
+	 */
 	public void resetUserSession() {
 		isInit_ = false;
 	}
 
+	/**
+	 * <p>Sets the number of times to re-attempt a timed-out request to the Branch API, before 
+	 * considering the request to have failed entirely. Default 5.</p>
+	 * 
+	 * @param retryCount	An {@link Integer} specifying the number of times to retry before giving 
+	 * 						up and declaring defeat.
+	 */
     public void setRetryCount(int retryCount) {
 		if (prefHelper_ != null && retryCount > 0) {
 			prefHelper_.setRetryCount(retryCount);
 		}
 	}
 	
+    /**
+     * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request 
+     * to the Branch API. Default 3000 ms.</p>
+     * 
+     * @param retryInterval		An {@link Integer} value specifying the number of milliseconds to 
+     * 							wait before re-attempting a timed-out request.
+     */
 	public void setRetryInterval(int retryInterval) {
 		if (prefHelper_ != null && retryInterval > 0) {
 			prefHelper_.setRetryInterval(retryInterval);
 		}
 	}
 	
+	/**
+	 * <p>Sets the duration in milliseconds that the system should wait for a response before considering 
+	 * any Branch API call to have timed out. Default 3000 ms.</p>
+	 * 
+	 * <p>Increase this to perform better in low network speed situations, but at the expense of 
+	 * responsiveness to error situation.</p>
+	 * 
+	 * @param timeout	An {@link Integer} value specifying the number of milliseconds to wait before 
+	 * 					considering the request to have timed out.
+	 */
 	public void setNetworkTimeout(int timeout) {
 		if (prefHelper_ != null && timeout > 0) {
 			prefHelper_.setTimeout(timeout);
 		}
 	}
 
-	// if you want to flag debug, call this before initUserSession
+	/**
+	 * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
+	 * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
+	 */
 	public void setDebug() {
 		prefHelper_.setExternDebug();
 	}
 	
+	/** 
+	 * <p>Calls the {@link PrefHelper# disableExternAppListing()} on the local instance to prevent 
+	 * a list of installed apps from being returned to the Branch API.</p>
+	 */
 	public void disableAppList() {
 		prefHelper_.disableExternAppListing();
 	}
 	
-	// Note: smart session - we keep session alive for two seconds
-	// if there's further Branch API call happening within the two seconds, we then don't close the session;
-	// otherwise, we close the session after two seconds
-	// Call this method if you don't want this smart session feature
+	/**
+	 * <p>If there's further Branch API call happening within the two seconds, we then don't close 
+	 * the session; otherwise, we close the session after two seconds.</p>
+	 * 
+	 * <p>Call this method if you don't want this smart session feature and would rather manage
+	 * the session yourself.</p>
+	 * 
+	 * <p><b>Note:</b>  smart session - we keep session alive for two seconds</p>
+	 */
 	public void disableSmartSession() {
 		prefHelper_.disableSmartSession();
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API, assigning a {@link BranchReferralInitListener} 
+	 * to perform an action upon successful initialisation.</p>
+	 * 
+	 * @param callback	A {@link BranchReferralInitListener} instance that will be called following 
+	 * 					successful (or unsuccessful) initialisation of the session with the Branch API.
+	 * 
+	 * @return			A {@link Boolean} value, indicating <i>false</i> if initialisation is 
+	 * 					unsuccessful.
+	 */
 	public boolean initSession(BranchReferralInitListener callback) {
 		initSession(callback, (Activity)null);
 		return false;
 	}
+	
+	/**
+	 * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a 
+	 * {@link BranchReferralInitListener} to perform an action upon successful initialisation.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param activity		The calling {@link Activity} for context.
+	 * 
+	 * @return 				A {@link Boolean} value, indicating <i>false</i> if initialisation is 
+	 * 						unsuccessful.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, Activity activity) {
 		if (systemObserver_.getUpdateState(false) == 0 && !hasUser()) {
 			prefHelper_.setIsReferrable();
@@ -229,53 +536,209 @@ public class Branch {
 		return false;
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param data			A {@link  Uri} variable containing the details of the source link that 
+	 * 						led to this initialisation action.
+	 * 
+	 * @return 				A {@link Boolean} value that will return <i>false</i> if the supplied 
+	 * 						<i>data</i> parameter cannot be handled successfully - i.e. is not of a 
+	 * 						valid URI format.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, Uri data) {
 		return initSession(callback, data, null);
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param data			A {@link  Uri} variable containing the details of the source link that 
+	 * 						led to this initialisation action.
+	 * 
+	 * @param activity		The calling {@link Activity} for context.
+	 * 
+	 * @return				A {@link Boolean} value that will return <i>false</i> if the supplied 
+	 * 						<i>data</i> parameter cannot be handled successfully - i.e. is not of a 
+	 * 						valid URI format.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
 		boolean uriHandled = readAndStripParam(data, activity);
 		initSession(callback, activity);
 		return uriHandled;
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
+	 * 
+	 * @return		A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession() {
 		return initSession((Activity)null);
 	}
+	
+	/**
+	 * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
+	 * 
+	 * @param activity		The calling {@link Activity} for context.
+	 * 
+	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(Activity activity) {
 		return initSession(null, activity);
 	}
 	
+	/**
+	 * <p>Initialises a session with the Branch API, with associated data from the supplied 
+	 * {@link Uri}.</p>
+	 * 
+	 * @param data		A {@link  Uri} variable containing the details of the source link that 
+	 * 					led to this 
+	 * 					initialisation action.
+	 * 
+	 * @return			A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSessionWithData(Uri data) {
 		return initSessionWithData(data, null);
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API, with associated data from the supplied 
+	 * {@link Uri}.</p>
+	 * 
+	 * @param data		A {@link  Uri} variable containing the details of the source link that led to this 
+	 * 					initialisation action.
+	 * 
+	 * @param activity	The calling {@link Activity} for context.
+	 * 
+	 * @return			A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSessionWithData(Uri data, Activity activity) {
 		boolean uriHandled = readAndStripParam(data, activity);
 		initSession(null, activity);
 		return uriHandled;
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API, specifying whether the initialisation can count 
+	 * as a referrable action.</p>
+	 * 
+	 * @param isReferrable		A {@link Boolean} value indicating whether this initialisation 
+	 * 							session should be considered as potentially referrable or not.
+	 * 							By default, a user is only referrable if initSession results in a
+	 * 							fresh install. Overriding this gives you control of who is referrable.
+	 * 
+	 * @return					A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(boolean isReferrable) {
 		return initSession(null, isReferrable, (Activity)null);
 	}
+	
+	/**
+	 * <p>Initialises a session with the Branch API, specifying whether the initialisation can count 
+	 * as a referrable action, and supplying the calling {@link Activity} for context.</p>
+	 * 
+	 * @param isReferrable		A {@link Boolean} value indicating whether this initialisation 
+	 * 							session should be considered as potentially referrable or not.
+	 * 							By default, a user is only referrable if initSession results in a
+	 * 							fresh install. Overriding this gives you control of who is referrable.
+	 * 
+	 * @param activity			The calling {@link Activity} for context.
+	 * 
+	 * @return	A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(boolean isReferrable, Activity activity) {
 		return initSession(null, isReferrable, activity);
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
+	 * 
+	 * @param data			A {@link  Uri} variable containing the details of the source link that 
+	 * 						led to this initialisation action.
+	 * 
+	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
 		return initSession(callback, isReferrable, data, null);
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
+	 * 
+	 * @param data			A {@link  Uri} variable containing the details of the source link that 
+	 * 						led to this initialisation action.
+	 * 
+	 * @param activity		The calling {@link Activity} for context.
+	 * 
+	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
 		boolean uriHandled = readAndStripParam(data, activity);
 		initSession(callback, isReferrable, activity);
 		return uriHandled;
 	}
 
+	/**
+	 * <p>Initialises a session with the Branch API.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
+	 * 
+	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
 		return initSession(callback, isReferrable, (Activity)null);
 	}
+	
+	/**
+	 * <p>Initialises a session with the Branch API.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
+	 * 						following successful (or unsuccessful) initialisation of the session 
+	 * 						with the Branch API.
+	 * 
+	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
+	 * 						session should be considered as potentially referrable or not.
+	 * 						By default, a user is only referrable if initSession results in a	
+	 * 						fresh install. Overriding this gives you control of who is referrable.
+	 * 
+	 * @param activity		The calling {@link Activity} for context.
+	 * 
+	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 */
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
 		if (isReferrable) {
 			this.prefHelper_.setIsReferrable();
@@ -400,7 +863,14 @@ public class Branch {
 	}
 
 	
-	
+	/**
+	 * <p>Closes the current session, dependent on the state of the 
+	 * {@link PrefHelper#getSmartSession()} {@link Boolean} value. If <i>true</i>, take no action. 
+	 * If false, close the sesion via the {@link #executeClose()} method.</p>
+	 * <p>Note that if smartSession is enabled, closeSession cannot be called within
+	 * a 2 second time span of another Branch action. This has to do with the method that
+	 * Branch uses to keep a session alive during Activity transitions</p>
+	 */
 	public void closeSession() {
 		if (prefHelper_.getSmartSession()) {
 			if (keepAlive_) {
@@ -428,6 +898,10 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>Perform the state-safe actions required to terminate any open session, and report the 
+	 * closed application event to the Branch API.</p>
+	 */
 	private void executeClose() {
 		isInit_ = false;
 		lastRequestWasInit_ = false;
@@ -456,7 +930,7 @@ public class Branch {
 		}
 	}
 	
-	public boolean readAndStripParam(Uri data, Activity activity) {
+	private boolean readAndStripParam(Uri data, Activity activity) {
 		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter("link_click_id") != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
@@ -478,11 +952,27 @@ public class Branch {
 		return false;
 	}
 
+	/**
+	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a 
+	 * {@link String} value, with a callback specified to perform a defined action upon successful 
+	 * response to request.</p>
+	 * 
+	 * @param userId	A {@link String} value containing the unique identifier of the user.
+	 * 
+	 * @param callback	A {@link BranchReferralInitListener} callback instance that will return
+	 * 					the data associated with the user id being assigned, if available.
+	 */
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
 		initIdentityFinishedCallback_ = callback;
 		setIdentity(userId);
 	}
 
+	/**
+	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a 
+	 * {@link String} value. No callback.</p>
+	 * 
+	 * @param userId	A {@link String} value containing the unique identifier of the user.
+	 */
 	public void setIdentity(final String userId) {
 		if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
 			return;
@@ -516,6 +1006,11 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>This method should be called if you know that a different person is about to use the app. For example,
+	 * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+	 * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
+	 */
 	public void logout() {
 		new Thread(new Runnable() {
 			@Override
@@ -544,10 +1039,22 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Fire-and-forget retrieval of action count for the current session. Without a callback.</p>
+	 */
 	public void loadActionCounts() {
 		loadActionCounts(null);
 	}
 
+	/**
+	 * <p>Gets the total action count, with a callback to perform a predefined 
+	 * action following successful report of state change. You'll then need to
+	 * call getUniqueActions or getTotalActions in the callback to update the
+	 * totals in your UX.</p>
+	 * 
+	 * @param callback		A {@link BranchReferralStateChangedListener} callback instance that will 
+	 * 						trigger actions defined therein upon a referral state change.
+	 */
 	public void loadActionCounts(BranchReferralStateChangedListener callback) {
 		stateChangedCallback_ = callback;
 		new Thread(new Runnable() {
@@ -567,10 +1074,21 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Fire-and-forget retrieval of rewards for the current session. Without a callback.</p>
+	 */
 	public void loadRewards() {
 		loadRewards(null);
 	}
 
+	/**
+	 * <p>Retrieves rewards for the current session, with a callback to perform a predefined 
+	 * action following successful report of state change. You'll then need to call getCredits
+	 * in the callback to update the credit totals in your UX.</p>
+	 * 
+	 * @param callback 		A {@link BranchReferralStateChangedListener} callback instance that will 
+	 * 						trigger actions defined therein upon a referral state change.
+	 */
 	public void loadRewards(BranchReferralStateChangedListener callback) {
 		stateChangedCallback_ = callback;
 		new Thread(new Runnable() {
@@ -590,26 +1108,75 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Retrieve the number of credits available for the "default" bucket.</p>
+	 * 
+	 * @return		An {@link Integer} value of the number credits available in the "default" bucket.
+	 */
 	public int getCredits() {
 		return prefHelper_.getCreditCount();
 	}
 
+	/**
+	 * Returns an {@link Integer} of the number of credits available for use within the supplied 
+	 * bucket name.
+	 * 
+	 * @param bucket	A {@link String} value indicating the name of the bucket to get credits for.
+	 * 
+	 * @return 			An {@link Integer} value of the number credits available in the specified 
+	 * 					bucket.
+	 */
 	public int getCreditsForBucket(String bucket) {
 		return prefHelper_.getCreditCount(bucket);
 	}
 
+	/**
+	 * <p>Gets the total number of times that the specified action has been carried out.</p>
+	 * 
+	 * @param action		A {@link String} value containing the name of the action to count.
+	 * 
+	 * @return 				An {@link Integer} value of the total number of times that an action has 
+	 * 						been executed.
+	 */
 	public int getTotalCountsForAction(String action) {
 		return prefHelper_.getActionTotalCount(action);
 	}
 
+	/**
+	 * <p>Gets the number of unique times that the specified action has been carried out.</p>
+	 * 
+	 * @param action		A {@link String} value containing the name of the action to count.
+	 * 
+	 * @return 				An {@link Integer} value of the number of unique times that the 
+	 * 						specified action has been carried out.
+	 */
 	public int getUniqueCountsForAction(String action) {
 		return prefHelper_.getActionUniqueCount(action);
 	}
 
+	/**
+	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient 
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
+	 * the available credits will be redeemed instead.</p>
+	 * 
+	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
+	 * 					the bucket.
+	 */
 	public void redeemRewards(int count) {
 		redeemRewards("default", count);
 	}
 
+	/**
+	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient 
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
+	 * the available credits will be redeemed instead.</p>
+	 * 
+	 * @param bucket	A {@link String} value containing the name of the referral bucket to attempt 
+	 * 					to redeem credits from.
+	 * 
+	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
+	 * 					the specified bucket.
+	 */
 	public void redeemRewards(final String bucket, final int count) {
 		new Thread(new Runnable() {
 			@Override
@@ -653,18 +1220,86 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
+	 * response.</p>
+	 * 
+	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 */
 	public void getCreditHistory(BranchListResponseListener callback) {
 		getCreditHistory(null, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
 	}
 
+	/**
+	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
+	 * response.</p>
+	 * 
+	 * @param bucket	A {@link String} value containing the name of the referral bucket that the 
+	 * 					code will belong to.
+	 * 
+	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 */
 	public void getCreditHistory(final String bucket, BranchListResponseListener callback) {
 		getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
 	}
 
+	/**
+	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
+	 * response.</p>
+	 * 
+	 * @param afterId	A {@link String} value containing the ID of the history record to begin after.
+	 * 					This allows for a partial history to be retrieved, rather than the entire 
+	 * 					credit history of the bucket.
+	 * 
+	 * @param length	A {@link Integer} value containing the number of credit history records to 
+	 * 					return.
+	 * 
+	 * @param order		A {@link CreditHistoryOrder} object indicating which order the results should 
+	 * 					be returned in.
+	 * 
+	 * 					<p>Valid choices:</p>
+	 * 					
+	 * 					<ul>
+	 * 						<li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
+	 * 						<li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
+	 * 					</ul>
+	 * 
+	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 */
 	public void getCreditHistory(final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
 		getCreditHistory(null, afterId, length, order, callback);
 	}
 
+	/**
+	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
+	 * response.</p>
+	 * 
+	 * @param bucket	A {@link String} value containing the name of the referral bucket that the 
+	 * 					code will belong to.
+	 * 
+	 * @param afterId	A {@link String} value containing the ID of the history record to begin after.
+	 * 					This allows for a partial history to be retrieved, rather than the entire 
+	 * 					credit history of the bucket.
+	 * 
+	 * @param length	A {@link Integer} value containing the number of credit history records to 
+	 * 					return.
+	 * 
+	 * @param order		A {@link CreditHistoryOrder} object indicating which order the results should 
+	 * 					be returned in.
+	 * 
+	 * 					<p>Valid choices:</p>
+	 * 					
+	 * 					<ul>
+	 * 						<li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
+	 * 						<li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
+	 * 					</ul>
+	 * 
+	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 */
 	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
 		creditHistoryCallback_ = callback;
 
@@ -707,6 +1342,16 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
+	 * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
+	 * 
+	 * @param action	A {@link String} value to be passed as an action that the user has carried 
+	 * 					out. For example "registered" or "logged in".
+	 * 
+	 * @param metadata	A {@link JSONObject} containing app-defined meta-data to be attached to a 
+	 * 					user action that has just been completed.
+	 */
 	public void userCompletedAction(final String action, final JSONObject metadata) {
 		new Thread(new Runnable() {
 			@Override
@@ -739,132 +1384,761 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
+	 * reported to the Branch API.</p>
+	 * 
+	 * @param action	A {@link String} value to be passed as an action that the user has carried 
+	 * 					out. For example "registered" or "logged in".
+	 */
 	public void userCompletedAction(final String action) {
 		userCompletedAction(action, null);
 	}
 
+	/**
+	 * <p>Returns the parameters associated with the link that referred the user. This is only set once,
+	 * the first time the user is referred by a link. Think of this as the user referral parameters.
+	 * It is also only set if isReferrable is equal to true, which by default is only true 
+	 * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the 
+	 * user already exists from a previous device) and logout.</p>
+	 * 
+	 * @return 			A {@link JSONObject} containing the install-time parameters as configured 
+	 * 					locally.
+	 */
 	public JSONObject getFirstReferringParams() {
 		String storedParam = prefHelper_.getInstallParams();
 		return convertParamsStringToDictionary(storedParam);
 	}
 
+	/**
+	 * <p>Returns the parameters associated with the link that referred the session. If a user
+	 * clicks a link, and then opens the app, initSession will return the paramters of the link
+	 * and then set them in as the latest parameters to be retrieved by this method. By default,
+	 * sessions persist for the duration of time that the app is in focus. For example, if you
+	 * minimize the app, these parameters will be cleared when closeSession is called.</p>
+	 * 
+	 * @return 			A {@link JSONObject} containing the latest referring parameters as 
+	 * 					configured locally.
+	 */
 	public JSONObject getLatestReferringParams() {
 		String storedParam = prefHelper_.getSessionParams();
 		return convertParamsStringToDictionary(storedParam);
 	}
 	
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync() {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, stringifyParams(null), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a referral URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting referral URL.
+	 */
 	public String getReferralUrlSync(String channel, JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a referral URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting referral URL.
+	 */
 	public String getReferralUrlSync(Collection<String> tags, String channel, JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers, via a synchronous 
+	 * call</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting content URL.
+	 */
 	public String getContentUrlSync(String channel, JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers, via a synchronous 
+	 * call</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting content URL.
+	 */
 	public String getContentUrlSync(Collection<String> tags, String channel, JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
+	 * 					
+	 * 					<p>
+	 * 					For example: 
+	 * 						http://bnc.lt/AUSTIN28. 
+	 * 					Should not exceed 128 characters
+	 * 					</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL. 
+	 */
 	public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
 		return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * 					only deep link the first time.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
 		return generateShortLink(null, type, 0, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 	
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param duration	A {@link Integer} value specifying the time that Branch allows a click to 
+	 * 					remain outstanding and be eligible to be matched with a new app session.
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL. 
+	 */
 	public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep 
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
+	 * 					
+	 * 					<p>
+	 * 					For example: 
+	 * 						http://bnc.lt/AUSTIN28. 
+	 * 					Should not exceed 128 characters
+	 * 					</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
 		return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * 					only deep link the first time.
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
 		return generateShortLink(null, type, 0, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous 
+	 * call; with a duration specified within which an app session should be matched to the link.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param duration	A {@link Integer} value specifying the time that Branch allows a click to 
+	 * 					remain outstanding and be eligible to be matched with a new app session.
+	 * 
+	 * @return 			A {@link String} containing the resulting short URL.
+	 */
 	public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
 		return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), null, false);
 	}
 	
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 */
 	public void getShortUrl(BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, stringifyParams(null), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 	
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param alias		Link 'alias' can be used to label the endpoint on the link.
+	 * 					
+	 * 					<p>
+	 * 					For example: 
+	 * 						http://bnc.lt/AUSTIN28. 
+	 * 					Should not exceed 128 characters
+	 * 					</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putAlias(String)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * 					only deep link the first time.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow process. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putType(int)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, type, 0, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 	
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param duration	An {@link int} the time that Branch allows a click to remain outstanding and 
+	 * 					be eligible to be matched with a new app session.
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param alias		Link 'alias' can be used to label the endpoint on the link. 
+	 * 					Should not exceed 128 characters.
+	 * 					<p style="margin-left:40px;">
+	 * 					For example: 
+	 * 						http://bnc.lt/AUSTIN28.</p> 
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putAlias(String)
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param type		An {@link int} that can be used for scenarios where you want the link to
+	 * 					only deep link the first time.
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putType(int)
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
 		generateShortLink(null, type, 0, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 	
+	/**
+	 * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
+	 * 
+	 * @param tags		An iterable {@link Collection} of {@link String} tags associated with a deep
+	 * 					link.
+	 * 
+	 * @param channel	A {@link String} denoting the channel that the link belongs to. Should not 
+	 * 					exceed 128 characters.
+	 * 
+	 * @param feature	A {@link String} value identifying the feature that the link makes use of. 
+	 * 					Should not exceed 128 characters.
+	 * 
+	 * @param stage		A {@link String} value identifying the stage in an application or user flow 
+	 * 					process. Should not exceed 128 characters.
+	 * 
+	 * @param params	A {@link JSONObject} value containing the deep linked params associated with 
+	 * 					the link that will be passed into a new app session when clicked
+	 * 
+	 * @param duration	An {@link int} the time that Branch allows a click to remain outstanding 
+	 * 					and be eligible to be matched with a new app session.
+	 * 
+	 * @param callback	A {@link BranchLinkCreateListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a create link request.
+	 * 
+	 * @see BranchLinkData
+	 * @see BranchLinkData#putTags(Collection)
+	 * @see BranchLinkData#putChannel(String)
+	 * @see BranchLinkData#putFeature(String)
+	 * @see BranchLinkData#putStage(String)
+	 * @see BranchLinkData#putParams(String)
+	 * @see BranchLinkData#putDuration(int)
+	 * @see BranchLinkCreateListener
+	 */
 	public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
 		generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, stringifyParams(filterOutBadCharacters(params)), callback, true);
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a referral code request.
+	 */
 	public void getReferralCode(BranchReferralInitListener callback) {
 		getReferralCodeCallback_ = callback;
 
@@ -897,26 +2171,131 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param amount	An {@link Integer} value of credits associated with this referral code.
+	 * 
+	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a referral code request.
+	 */
 	public void getReferralCode(final int amount, BranchReferralInitListener callback) {
 		this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param prefix	A {@link String} containing the developer-specified prefix code to be applied 
+	 * 					to the start of a referral code. e.g. for code OFFER4867, the prefix would 
+	 * 					be "OFFER".
+	 * 
+	 * @param amount	An {@link Integer} value of credits associated with this referral code.
+	 * 
+	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * 					actions defined therein upon receipt of a response to a referral code request.
+	 */
 	public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
 		this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param amount		An {@link Integer} value of credits associated with this referral code.
+	 * 
+	 * @param expiration	Optional expiration {@link Date} of the offer code.
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * 						actions defined therein upon receipt of a response to a referral code 
+	 * 						request.
+	 */
 	public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
 		this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param prefix		A {@link String} containing the developer-specified prefix code to be  
+	 * 						applied to the start of a referral code. e.g. for code OFFER4867, the 
+	 * 						prefix would be "OFFER".
+	 * 
+	 * @param amount		An {@link Integer} value of credits associated with this referral code.
+	 * 
+	 * @param expiration	Optional expiration {@link Date} of the offer code.
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} callback instance that will trigger 
+	 * 						actions defined therein upon receipt of a response to a referral code 
+	 * 						request.
+	 */
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
 		this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param prefix			A {@link String} containing the developer-specified prefix code to be 
+	 * 							applied to the start of a referral code. e.g. for code OFFER4867, the 
+	 * 							prefix would be "OFFER".
+	 * 
+	 * @param amount			An {@link Integer} value of credits associated with this referral code.
+	 * 
+	 * @param calculationType	The type of referral calculation. i.e. 
+	 * 							{@link #LINK_TYPE_UNLIMITED_USE} or 
+	 * 							{@link #LINK_TYPE_ONE_TIME_USE}
+	 * 
+	 * @param location			The user to reward for applying the referral code.
+	 * 
+	 * 							<p>Valid options:</p>
+	 * 							
+	 * 							<ul>
+	 * 								<li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
+	 * 								<li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
+	 * 								<li>{@link #REFERRAL_CODE_LOCATION_BOTH}</li>
+	 * 							</ul>
+	 * 
+	 * @param callback			A {@link BranchReferralInitListener} callback instance that will 
+	 * 							trigger actions defined therein upon receipt of a response to a 
+	 * 							referral code request.
+	 */
 	public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
 		this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
 	}
 
+	/**
+	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
+	 * 
+	 * @param prefix			A {@link String} containing the developer-specified prefix code to 
+	 * 							be applied to the start of a referral code. e.g. for code OFFER4867, 
+	 * 							the prefix would be "OFFER".
+	 * 
+	 * @param amount			An {@link Integer} value of credits associated with this referral code.
+	 * 
+	 * @param expiration		Optional expiration {@link Date} of the offer code.
+	 * 
+	 * @param bucket			A {@link String} value containing the name of the referral bucket 
+	 * 							that the code will belong to.
+	 * 
+	 * @param calculationType	The type of referral calculation. i.e. 
+	 * 							{@link #LINK_TYPE_UNLIMITED_USE} or 
+	 * 							{@link #LINK_TYPE_ONE_TIME_USE}
+	 * 
+	 * @param location			The user to reward for applying the referral code.
+	 * 
+	 * 							<p>Valid options:</p>
+	 * 
+	 * 							<ul>
+	 * 								<li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
+	 * 								<li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
+	 * 								<li>{@link #REFERRAL_CODE_LOCATION_BOTH}</li>
+	 * 							</ul>
+	 * 
+	 * @param callback			A {@link BranchReferralInitListener} callback instance that will 
+	 * 							trigger actions defined therein upon receipt of a response to a 
+	 * 							referral code request.
+	 */
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
 		getReferralCodeCallback_ = callback;
 
@@ -961,6 +2340,15 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Validates the supplied referral code on initialisation without applying it to the current 
+	 * session.</p>
+	 * 
+	 * @param code		A {@link String} object containing the referral code supplied.
+	 * 
+	 * @param callback	A {@link BranchReferralInitListener} callback to handle the server response 
+	 * 					of the referral submission request.
+	 */
 	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
 		validateReferralCodeCallback_ = callback;
 
@@ -994,6 +2382,16 @@ public class Branch {
 		}).start();
 	}
 
+	/**
+	 * <p>Applies a supplied referral code to the current user session upon initialisation.</p>
+	 * 
+	 * @param code			A {@link String} object containing the referral code supplied.
+	 * 
+	 * @param callback		A {@link BranchReferralInitListener} callback to handle the server 
+	 * 						response of the referral submission request.
+	 * 
+	 * @see BranchReferralInitListener
+	 */
 	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
 		applyReferralCodeCallback_ = callback;
 
@@ -1166,6 +2564,25 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>Schedules a repeating threaded task to get the following details and report them to the 
+	 * Branch API <b>once a week</b>:</p>
+	 * 
+	 * <pre style="background:#fff;padding:10px;border:2px solid silver;">
+	 * int interval = 7 * 24 * 60 * 60;
+	 * appListingSchedule_ = scheduler.scheduleAtFixedRate(
+	 * 				periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
+	 * 
+	 * <ul>
+	 * <li>{@link SystemObserver#getAppKey()}</li>
+	 * <li>{@link SystemObserver#getOS()}</li>
+	 * <li>{@link SystemObserver#getDeviceFingerPrintID()}</li>
+	 * <li>{@link SystemObserver#getListOfApps()}</li>
+	 * </ul>
+	 * 
+	 * @see {@link SystemObserver}
+	 * @see {@link PrefHelper}
+	 */
 	private void scheduleListOfApps() {
 		ScheduledThreadPoolExecutor scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
 		Runnable periodicTask = new Runnable(){
@@ -1628,6 +3045,48 @@ public class Branch {
 		});
 	}
 
+	/**
+	 * <p>A class that implements {@link NetworkCallback} interface and provides the required state 
+	 * and response logic for the process of interacting with the Branch referral network service.</p>
+	 * 
+	 * <p>The class takes a {@link ServerResponse} instance as a parameter, and determines action 
+	 * taken based primarily upon the states code returned by the Branch server response.</p>
+	 * 
+	 * <p>Handled status codes are as follows:</p>
+	 * 
+	 * <ul>
+	 * 		<li><i>200</i> - OK</li>
+	 * 		<li><i>409</i> - Duplicate link error.</li>
+	 * 		<li><i>401 - 499</i> - Server-side error. API issue.</li>
+	 * </ul>
+	 * 
+	 * <p>Assuming then that an error has not occurred, and that code 200 is the status, the static 
+	 * values defined in the {@link BranchRemoteInterface} class are compared against the value of 
+	 * {@link ServerResponse#getTag} method call to determine the action to take.</p>
+	 * 
+	 * <p>Possible values are as follows:</p>
+	 * 
+	 * <ul>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_OPEN}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_CLOSE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_COMPLETE_ACTION}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REFERRAL_COUNTS}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REWARDS}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_REDEEM_REWARDS}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REWARD_HISTORY}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_CUSTOM_URL}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_IDENTIFY}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_LOGOUT}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REFERRAL_CODE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_VALIDATE_REFERRAL_CODE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_APPLY_REFERRAL_CODE}</li>
+	 * <li>{@link BranchRemoteInterface#REQ_TAG_SEND_APP_LIST}</li>
+	 * </ul>
+	 * 
+	 * @see {@link BranchRemoteInteface}
+	 * @see {@link ServerRequest}
+	 */
 	public class ReferralNetworkCallback implements NetworkCallback {
 		@Override
 		public void finished(ServerResponse serverResponse) {
@@ -1849,28 +3308,82 @@ public class Branch {
 		}
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchReferralInitListener}, defining a single method that takes a list of params in 
+	 * {@link JSONObject} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see JSONObject
+	 * @see BranchError
+	 */
 	public interface BranchReferralInitListener {
 		public void onInitFinished(JSONObject referringParams, BranchError error);
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchReferralStateChangedListener}, defining a single method that takes a value of 
+	 * {@link Boolean} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see Boolean
+	 * @see BranchError
+	 */
 	public interface BranchReferralStateChangedListener {
 		public void onStateChanged(boolean changed, BranchError error);
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchLinkCreateListener}, defining a single method that takes a URL 
+	 * {@link String} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see String
+	 * @see BranchError
+	 */
 	public interface BranchLinkCreateListener {
 		public void onLinkCreate(String url, BranchError error);
 	}
 
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of 
+	 * {@link BranchListResponseListener}, defining a single method that takes a list of 
+	 * {@link JSONArray} format, and an error message of {@link BranchError} format that will be 
+	 * returned on failure of the request response.</p>
+	 * 
+	 * @see JSONArray 	
+	 * @see BranchError	
+	 */
 	public interface BranchListResponseListener {
 		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
 	
 	
-
+	/**
+	 * <p>{@link enum} class containing the sort options for return of credit history.</p>
+	 */
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the Branch 
+	 * initialisation process has failed due to poor connectivity, or because the App Key in use in 
+	 * the current application is misconfigured. This can occur when there are invalid characters in 
+	 * the App Key variable, where the variable itself is empty, or if the App Key in use does not 
+	 * belong to an application registered in the Branch dashboard.</p>
+	 * 
+	 * <p>To confirm that you are using the correct App Key for your project, visit the 
+	 * <a href="https://dashboard.branch.io/#/settings">
+	 * Branch Dashboard Settings</a> page, or refer to the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
+	 * Android Quick-Start Guide</a> to a walk through of the full process for getting your project 
+	 * up and running with Branch.</p>
+	 * 
+	 * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">Android Quick-Start Guide</a>
+	 * @see <a href="https://dashboard.branch.io/">Branch Dashboard</a>
+	 */
 	public class BranchInitError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1878,6 +3391,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
+	 * server to fetch the current referral count has failed due to poor connectivity or an internal 
+	 * system error.</p>
+	 */
 	public class BranchGetReferralsError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1885,6 +3403,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
+	 * server to fetch a user's current credit balance has failed due to poor connectivity or an internal 
+	 * system error.</p>
+	 */
 	public class BranchGetCreditsError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1892,6 +3415,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
+	 * server to fetch a user's credit history has failed due to poor connectivity or an internal 
+	 * system error.</p>
+	 */
 	public class BranchGetCreditHistoryError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1899,6 +3427,10 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs when a Branch referral 
+	 * URL could not be created. This is will usually be caused by a connectivity issue.</p>
+	 */
 	public class BranchCreateUrlError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1906,6 +3438,12 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where an alias request 
+	 * has been submitted that has different parameters attached. This indicates that either there 
+	 * is missing information from the alias request, or that the same alias has been requested 
+	 * before by a different owner.</p>
+	 */
 	public class BranchDuplicateUrlError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1913,6 +3451,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs in cases where the 
+	 * user alias cannot be set. This can occur where a poor quality 
+	 * connection is losing packets containing the alias setting request or response.</p>
+	 */
 	public class BranchSetIdentityError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1920,6 +3463,12 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the referral 
+	 * code has not been received properly by the server. This can occur where a poor quality 
+	 * connection is losing packets containing the full referral code submission request or 
+	 * response.</p>
+	 */
 	public class BranchGetReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1927,6 +3476,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the referral 
+	 * code cannot be validated due to a lack of communication, or valid response from, the Branch 
+	 * server.</p>
+	 */
 	public class BranchValidateReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1934,6 +3488,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the 
+	 * referral code is invalid, suggesting an implementation error in handling generated codes, or 
+	 * input validation failure where the code is input manually by the user.</p>
+	 */
 	public class BranchInvalidReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1941,6 +3500,11 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where the same 
+	 * referral code has been applied already, potentially identifying an erroneously repeated 
+	 * code block or poorly implemented loop.</p>
+	 */
 	public class BranchDuplicateReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1948,6 +3512,31 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs when calls have been 
+	 * made to apply a referral code, but the Branch object has not been properly initialised or 
+	 * cannot contact the server due to a network connectivity issue.</p> 
+	 * 
+	 * <p>See the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md#step-4---create-a-branch-session">
+	 * Android Quick Start guide</a> for detailed instructions on integrating the SDK correctly.</p>
+	 * 
+	 * @see SystemObserver#getWifiConnected()
+	 * @see Branch#initSession(BranchReferralInitListener)
+	 * @see Branch#initSession(BranchReferralInitListener, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri, Activity)
+	 * @see Branch#initSession()
+	 * @see Branch#initSession(Activity)
+	 * @see Branch#initSessionWithData(Uri)
+	 * @see Branch#initSessionWithData(Uri, Activity)
+	 * @see Branch#initSession(boolean)
+	 * @see Branch#initSession(boolean, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Activity)
+	 * 
+	 */
 	public class BranchApplyReferralCodeError extends BranchError {
 		@Override
 		public String getMessage() {
@@ -1955,6 +3544,35 @@ public class Branch {
 		}
 	}
 	
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs for when calls have 
+	 * been made to a Branch object when a connection has not been established.</p>
+	 * 
+	 * <p>The first call required when a Branch object is instantiated is {@link #initSession()},
+	 * or one of its relatives (see below referenced methods). If this has not been done pending 
+	 * calls cannot be queued up, so this error is thrown in order to notify the developer/tester 
+	 * via debug logs that methods have been called out of sequence so that the implementation has 
+	 * been corrected.</p>
+	 * 
+	 * <p>See the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md#step-4---create-a-branch-session">
+	 * Android Quick Start guide</a> for detailed instructions on integrating the SDK correctly.</p>
+	 * 
+	 * @see Branch#initSession(BranchReferralInitListener)
+	 * @see Branch#initSession(BranchReferralInitListener, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, Uri, Activity)
+	 * @see Branch#initSession()
+	 * @see Branch#initSession(Activity)
+	 * @see Branch#initSessionWithData(Uri)
+	 * @see Branch#initSessionWithData(Uri, Activity)
+	 * @see Branch#initSession(boolean)
+	 * @see Branch#initSession(boolean, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri, Activity)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean)
+	 * @see Branch#initSession(BranchReferralInitListener, boolean, Activity)
+	 *
+	 */
 	public class BranchNotInitError extends BranchError {
 		@Override
 		public String getMessage() {

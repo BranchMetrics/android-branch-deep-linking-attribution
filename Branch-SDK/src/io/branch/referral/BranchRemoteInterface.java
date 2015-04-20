@@ -8,36 +8,154 @@ import android.content.Context;
 import android.util.DisplayMetrics;
 
 public class BranchRemoteInterface extends RemoteInterface {
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>register/install</b> action.
+	 */
 	public static final String REQ_TAG_REGISTER_INSTALL = "t_register_install";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>register/app opened</b> action.
+	 */
 	public static final String REQ_TAG_REGISTER_OPEN = "t_register_open";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>register/app closed</b> action.
+	 */
 	public static final String REQ_TAG_REGISTER_CLOSE = "t_register_close";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>complete</b> action.
+	 */
 	public static final String REQ_TAG_COMPLETE_ACTION = "t_complete_action";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>register/install</b> action.
+	 */
 	public static final String REQ_TAG_GET_REFERRAL_COUNTS = "t_get_referral_counts";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>get rewards</b> action.
+	 */
 	public static final String REQ_TAG_GET_REWARDS = "t_get_rewards";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>redeem rewards</b> action.
+	 */
 	public static final String REQ_TAG_REDEEM_REWARDS = "t_redeem_rewards";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>get rewards history</b> action.
+	 */
 	public static final String REQ_TAG_GET_REWARD_HISTORY = "t_get_reward_history";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>get custom URL</b> action.
+	 */
 	public static final String REQ_TAG_GET_CUSTOM_URL = "t_get_custom_url";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>identify user</b> action.
+	 */
 	public static final String REQ_TAG_IDENTIFY = "t_identify_user";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>logout</b> action.
+	 */
 	public static final String REQ_TAG_LOGOUT = "t_logout";
+	
+	/**
+	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>get referral code</b> action.
+	 */
 	public static final String REQ_TAG_GET_REFERRAL_CODE = "t_get_referral_code";
+	
+	/**
+	 * <p>A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>validate referral code</b> action.</p>
+	 */
 	public static final String REQ_TAG_VALIDATE_REFERRAL_CODE = "t_validate_referral_code";
+	
+	/**
+	 * <p>A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>apply referral code</b> action.</p>
+	 */
 	public static final String REQ_TAG_APPLY_REFERRAL_CODE = "t_apply_referral_code";
+	
+	/**
+	 * <p>A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <b>send app list to server</b> action.</p>
+	 */
 	public static final String REQ_TAG_SEND_APP_LIST = "t_send_app_list";
 
+	/**
+	 * <p>A {@link SystemObserver} object that is used throughout the class to report on the current 
+	 * system (in the case of this SDK, an Android Device - phone, phablet, tablet, wearable?) 
+	 * state and changeable attributes.</p> 
+	 * 
+	 * @see SystemObserver
+	 */
 	private SystemObserver sysObserver_;
+
+	/**
+	 * <p>A class-level {@link NetworkCallback} instance.</p>
+	 * 
+	 * @see NetworkCallback
+	 */
 	private NetworkCallback callback_;
 	
+	/**
+	 * <p>Required, but empty constructor method.</p>
+	 * 
+	 * <p>Use {@link #BranchRemoteInterface(Context)} instead, as it instantiates the class 
+	 * {@link PrefHelper} and {@link SystemObserver} handles for the class.</p>
+	 * 
+	 * @see {@link BranchRemoteInterface#prefHelper_}
+	 * @see {@link BranchRemoteInterface#sysObserver_}
+	 */
 	public BranchRemoteInterface() {}
 	
+	/**
+	 * <p>The main constructor of the BranchRemoteInterface class.</p>
+	 * 
+	 * @param context		A {@link Context} from which this call was made.
+	 */
 	public BranchRemoteInterface(Context context) {
 		super(context);
 		sysObserver_ = new SystemObserver(context);
 	}
 	
+	/**
+	 * <p>Sets a callback listener to handle network events received during this app session.</p>
+	 * 
+	 * @param callback		A {@link NetworkCallback} object instance that will be triggered for 
+	 * 						each network event that occurs during this app session.
+	 */
 	public void setNetworkCallbackListener(NetworkCallback callback) {
 		callback_ = callback;
 	}
 	
+	/**
+	 * <p>Register an install event with the Branch API.</p>
+	 * 
+	 * @param installID		A {@link String} value containing the identifier used to denote this 
+	 * 						install instance; if none exists, uses the link ID used to open the app.
+	 * 
+	 * @param debug			A {@link Boolean} value that determines whether or not to open the 
+	 * 						connection in debug mode or not. If <i>true</i>, the operations carried 
+	 * 						out for this session will not be counted in analytics.
+	 */
 	public void registerInstall(String installID, boolean debug) {
 		String urlExtend = "v1/install";
 		if (callback_ != null) {
@@ -93,6 +211,13 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Register an open application event with the Branch API.</p>
+	 * 
+	 * @param debug 	A {@link Boolean} value that determines whether or not to open the connection 
+	 * 					in debug mode or not. If <i>true</i>, the operations carried out for this 
+	 * 					session will not be counted in analytics.
+	 */
 	public void registerOpen(boolean debug) {
 		String urlExtend = "v1/open";
 		if (callback_ != null) {
@@ -125,6 +250,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Calls the command to close the connection on the Branch API.</p>
+	 */
 	public void registerClose() {
 		String urlExtend = "v1/close";
 		if (callback_ != null) {
@@ -143,6 +271,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Registers a list of apps currently installed on the device.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void registerListOfApps(JSONObject post) {
 		String urlExtend = "v1/applist";
 		if (callback_ != null) {
@@ -150,6 +283,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
+	 * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void userCompletedAction(JSONObject post) {
 		String urlExtend = "v1/event";
 		if (callback_ != null) {
@@ -157,6 +296,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Get the rewards for the App ID specified in the post {@link JSONObject}.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void redeemRewards(JSONObject post) {
 		String urlExtend = "v1/redeem";
 		if (callback_ != null) {
@@ -164,6 +308,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Get the rewards for the App ID specified in the current {@link PrefHelper} object.</p>
+	 */
 	public void getRewards() {
 		String urlExtend = "v1/credits/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
@@ -171,6 +318,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Get the number of referrals for the App ID specified in the current {@link PrefHelper} 
+	 * object.</p>
+	 */
 	public void getReferralCounts() {
 		String urlExtend = "v1/referrals/" + prefHelper_.getIdentityID();
 		if (callback_ != null) {
@@ -178,6 +329,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Gets the credit history of the bucket specified in the post request.</p>
+	 * 
+	 * @param post	- A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void getCreditHistory(JSONObject post) {
         String urlExtend = "v1/credithistory";
 		if (callback_ != null) {
@@ -185,6 +341,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Create custom URL, for use elsewhere within the app, without returning the value of the 
+	 * created link itself.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void createCustomUrl(JSONObject post) {
 		String urlExtend = "v1/url";
 		if (callback_ != null) {
@@ -197,6 +359,14 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Create custom URL, and return the server response for use elsewhere within the app.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 * 
+	 * @return			A {@link ServerResponse} object containing the Branch API response to the 
+	 * 					request.
+	 */
 	public ServerResponse createCustomUrlSync(JSONObject post) {
 		String urlExtend = "v1/url";
 		BranchLinkData linkData = null;
@@ -207,6 +377,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		return make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, REQ_TAG_GET_CUSTOM_URL, prefHelper_.getTimeout(), linkData);
 	}
 	
+	/**
+	 * <p>Identify the user logged in to the current session.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void identifyUser(JSONObject post) {
 		String urlExtend = "v1/profile";
 		if (callback_ != null) {
@@ -214,6 +389,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Logs out the user from the current session.<p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void logoutUser(JSONObject post) {
 		String urlExtend = "v1/logout";
 		if (callback_ != null) {
@@ -221,6 +401,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Get the applied referral code, and store in currently instantiated {@link PrefHelper} object 
+	 * if one exists.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs.
+	 */
 	public void getReferralCode(JSONObject post) {
 		String urlExtend = "v1/referralcode";
 		if (callback_ != null) {
@@ -228,6 +414,13 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Submits a referral code to be validated by the Branch API.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs, including one 
+	 * 					called "referral_code", that is required for a successful code validation 
+	 * 					attempt.
+	 */
 	public void validateReferralCode(JSONObject post) {
 		String urlExtend;
 		try {
@@ -240,6 +433,13 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Submits a referral code to be applied to the current Branch session.</p>
+	 * 
+	 * @param post		A {@link JSONObject} containing post data key-value-pairs, including one 
+	 * 					called "referral_code", that is required for a successful code validation 
+	 * 					attempt.
+	 */
 	public void applyReferralCode(JSONObject post) {
 		String urlExtend;
 		try {
@@ -252,6 +452,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 	
+	/**
+	 * <p>Connect to server debug endpoint.</p>
+	 */
 	public void connectToDebug() {
 		try {
 			String urlExtend = "v1/debug/connect";
@@ -272,6 +475,9 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 
+	/**
+	 * <p>Disconnect from the server debug interface.</p>
+	 */
 	public void disconnectFromDebug() {
 		try {
 			String urlExtend = "v1/debug/disconnect";
@@ -283,6 +489,11 @@ public class BranchRemoteInterface extends RemoteInterface {
 		}
 	}
 
+	/**
+	 * <p>Log messages to the server's debug interface.</p>
+	 * 
+	 * @param log		A {@link String} variable containing information to log.
+	 */
 	public void sendLog(String log) {
 		try {
 			String urlExtend = "v1/debug/log";
