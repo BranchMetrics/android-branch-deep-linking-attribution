@@ -109,14 +109,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 	private SystemObserver sysObserver_;
 
 	/**
-	 * <p>A {@link PrefHelper} object that is used throughout the class to allow access to read and 
-	 * write preferences related to the SDK.</p>
-	 * 
-	 * @see PrefHelper
-	 */
-	private PrefHelper prefHelper_;
-	
-	/**
 	 * <p>A class-level {@link NetworkCallback} instance.</p>
 	 * 
 	 * @see NetworkCallback
