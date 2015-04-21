@@ -346,13 +346,12 @@ public class Branch {
 	 * 
 	 * @param context	A {@link Context} from which this call was made.
 	 * 
-	 * @param key		Your Branch app key as a {@link String}.
+	 * @param branchKey	Your Branch key as a {@link String}.
 	 * 
 	 * @return			An initialised {@link Branch} object, either fetched from a pre-initialised 
 	 * 					instance within the singleton class, or a newly instantiated object where 
 	 * 					one was not already requested during the current app lifecycle.
 	 * 
-	 * @deprecated
 	 */
 	public static Branch getInstance(Context context, String branchKey) {
 		if (branchReferral_ == null) {
@@ -478,7 +477,7 @@ public class Branch {
 	}
 	
 	/** 
-	 * <p>Calls the {@link PrefHelper# disableExternAppListing()} on the local instance to prevent 
+	 * <p>Calls the {@link PrefHelper#disableExternAppListing()} on the local instance to prevent 
 	 * a list of installed apps from being returned to the Branch API.</p>
 	 */
 	public void disableAppList() {
@@ -3083,9 +3082,6 @@ public class Branch {
 	 * <li>{@link BranchRemoteInterface#REQ_TAG_APPLY_REFERRAL_CODE}</li>
 	 * <li>{@link BranchRemoteInterface#REQ_TAG_SEND_APP_LIST}</li>
 	 * </ul>
-	 * 
-	 * @see {@link BranchRemoteInteface}
-	 * @see {@link ServerRequest}
 	 */
 	public class ReferralNetworkCallback implements NetworkCallback {
 		@Override
@@ -3362,7 +3358,7 @@ public class Branch {
 	
 	
 	/**
-	 * <p>{@link enum} class containing the sort options for return of credit history.</p>
+	 * <p>enum containing the sort options for return of credit history.</p>
 	 */
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst

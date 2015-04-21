@@ -132,22 +132,13 @@ public class BranchLinkData extends JSONObject {
 	 * <b>Use this method to add tags to the data dictionary that will go along
 	 * with the deep link that is being created.</b>
 	 * 
-<<<<<<< HEAD
 	 * @param tags				A {@link Collection} of {@link String} objects, each element
 	 *            				of which contains a tag and value to be added to the data
 	 *            				dictionary of a link.
 	 *            
-	 * @throws JSONException	Each item in the {@link Collection<String>} needs to be of
+	 * @throws JSONException	Each item in the tags needs to be of
 	 *             				valid JSON format. If it is not, a JSONException will be
 	 *             				thrown.
-	 *             
-	 * @see {@link #tags} - the variable set by this method.
-=======
-	 * @param tags A {@link Collection} of {@link String} objects, each element of which contains a tag and value to be added 
-	 * to the data dictionary of a link.
-	 * @throws JSONException Each item in the {@link Collection} of {@link String} needs to be of valid JSON format. 
-	 * If it is not, a JSONException will be thrown.
->>>>>>> master
 	 */
 	public void putTags(Collection<String> tags) throws JSONException {
 		if (tags != null) {
@@ -167,8 +158,6 @@ public class BranchLinkData extends JSONObject {
 	 * 
 	 * @throws JSONException	The parameter value must be in valid JSON format, or a 
 	 * 							{@link JSONException} will be thrown.
-	 *             
-	 *@see {@link #alias} - the variable set by this method.            
 	 */
 	public void putAlias(String alias) throws JSONException {
 		if (alias != null) {

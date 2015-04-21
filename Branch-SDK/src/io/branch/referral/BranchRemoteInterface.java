@@ -10,91 +10,91 @@ import android.util.DisplayMetrics;
 public class BranchRemoteInterface extends RemoteInterface {
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>register/install</b> action.
 	 */
 	public static final String REQ_TAG_REGISTER_INSTALL = "t_register_install";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>register/app opened</b> action.
 	 */
 	public static final String REQ_TAG_REGISTER_OPEN = "t_register_open";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>register/app closed</b> action.
 	 */
 	public static final String REQ_TAG_REGISTER_CLOSE = "t_register_close";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>complete</b> action.
 	 */
 	public static final String REQ_TAG_COMPLETE_ACTION = "t_complete_action";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>register/install</b> action.
 	 */
 	public static final String REQ_TAG_GET_REFERRAL_COUNTS = "t_get_referral_counts";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>get rewards</b> action.
 	 */
 	public static final String REQ_TAG_GET_REWARDS = "t_get_rewards";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>redeem rewards</b> action.
 	 */
 	public static final String REQ_TAG_REDEEM_REWARDS = "t_redeem_rewards";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>get rewards history</b> action.
 	 */
 	public static final String REQ_TAG_GET_REWARD_HISTORY = "t_get_reward_history";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>get custom URL</b> action.
 	 */
 	public static final String REQ_TAG_GET_CUSTOM_URL = "t_get_custom_url";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>identify user</b> action.
 	 */
 	public static final String REQ_TAG_IDENTIFY = "t_identify_user";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>logout</b> action.
 	 */
 	public static final String REQ_TAG_LOGOUT = "t_logout";
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * A static Integer that is used to identify a tag that indicates a 
 	 * <b>get referral code</b> action.
 	 */
 	public static final String REQ_TAG_GET_REFERRAL_CODE = "t_get_referral_code";
 	
 	/**
-	 * <p>A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <p>A static Integer that is used to identify a tag that indicates a 
 	 * <b>validate referral code</b> action.</p>
 	 */
 	public static final String REQ_TAG_VALIDATE_REFERRAL_CODE = "t_validate_referral_code";
 	
 	/**
-	 * <p>A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <p>A static Integer that is used to identify a tag that indicates a 
 	 * <b>apply referral code</b> action.</p>
 	 */
 	public static final String REQ_TAG_APPLY_REFERRAL_CODE = "t_apply_referral_code";
 	
 	/**
-	 * <p>A {@link static} {@link Integer} that is used to identify a tag that indicates a 
+	 * <p>A static Integer that is used to identify a tag that indicates a 
 	 * <b>send app list to server</b> action.</p>
 	 */
 	public static final String REQ_TAG_SEND_APP_LIST = "t_send_app_list";
@@ -120,9 +120,6 @@ public class BranchRemoteInterface extends RemoteInterface {
 	 * 
 	 * <p>Use {@link #BranchRemoteInterface(Context)} instead, as it instantiates the class 
 	 * {@link PrefHelper} and {@link SystemObserver} handles for the class.</p>
-	 * 
-	 * @see {@link BranchRemoteInterface#prefHelper_}
-	 * @see {@link BranchRemoteInterface#sysObserver_}
 	 */
 	public BranchRemoteInterface() {}
 	

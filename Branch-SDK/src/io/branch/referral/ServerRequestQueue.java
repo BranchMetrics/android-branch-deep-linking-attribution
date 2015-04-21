@@ -234,8 +234,6 @@ public class ServerRequestQueue {
 	 * @return		A {@link Boolean} value indicating whether or not the queue contains a
 	 * 				session close request. <i>True</i> if the queue contains a close request,
 	 * 				<i>False</i> if not.
-	 * 
-	 * @see {@link BranchRemoteInterface#REQ_TAG_REGISTER_CLOSE}
 	 */
 	public boolean containsClose() {
 		synchronized(queue) {
