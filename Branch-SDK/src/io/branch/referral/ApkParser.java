@@ -13,19 +13,19 @@ public class ApkParser {
 	// such as for AndroidManifest.xml in .apk files
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify the <b>end</b> of a compressed 
+	 * A static Integer that is used to identify the <b>end</b> of a compressed 
 	 * <b>XML document</b>.
 	 */
 	public static int endDocTag = 0x00100101;
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify the <b>start</b> of a <b>XML tag</b> 
+	 * A static Integer that is used to identify the <b>start</b> of a <b>XML tag</b> 
 	 * within a compressed XML document.
 	 */
 	public static int startTag =  0x00100102;
 	
 	/**
-	 * A {@link static} {@link Integer} that is used to identify the <b>end</b> of a <b>XML tag</b> 
+	 * A static Integer that is used to identify the <b>end</b> of a <b>XML tag</b> 
 	 * within a compressed XML document.
 	 */
 	public static int endTag =    0x00100103;
@@ -36,7 +36,7 @@ public class ApkParser {
      * 
      * <p>The {@link SystemObserver#getURIScheme()} method outputs the required {@link Byte} array, 
      * so can be used as a parameter for this method, for instance by using the following code in an 
-     * {@link Activity} {@link Context}:</p>
+     * Activity Context:</p>
      * 
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * SystemObserver systemObserver = new SystemObserver(this); 	// "this" being an Activity in this case

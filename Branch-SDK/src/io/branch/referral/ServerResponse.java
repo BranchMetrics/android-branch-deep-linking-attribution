@@ -59,7 +59,7 @@ public class ServerResponse {
 	 * 
 	 * @param tag A {@link String} value of the <i>Tag</i> attribute of the current link.
 	 * @param statusCode {@link Integer} value of the HTTP status code.
-	 * @param linkData A {@link BranckLinkData} object containing data attributes associated with a Branch link.
+	 * @param linkData A {@link BranchLinkData} object containing data attributes associated with a Branch link.
 	 */
 	public ServerResponse(String tag, int statusCode, BranchLinkData linkData) {
 		tag_ = tag;
@@ -77,10 +77,7 @@ public class ServerResponse {
 	}
 	
 	/**
-	 * <p>Gets the {@link HttpStatus} code of the current response.</p>
-	 * 
-	 * @see {@link #getObject}
-	 * @see {@link #getArray} 
+	 * <p>Gets the HttpStatus code of the current response.</p>
 	 * 
 	 * @return {@link Integer} value of the HTTP status code.
 	 */
@@ -91,9 +88,6 @@ public class ServerResponse {
 	/**
 	 * <p>Sets the post data attached to the current server request, as a generic {@link Object} 
 	 * instance. This object can be type-cast by other methods within this class:</p>
-	 * 
-	 * @see {@link #getObject}
-	 * @see {@link #getArray}
 	 * 
 	 * @param post Generic {@link Object} instance containing post data associated with current 
 	 * response.  
@@ -136,7 +130,7 @@ public class ServerResponse {
 	 * <p>Gets a {@link BranchLinkData} object containing the data associated with the current Branch 
 	 * link.</p>
 	 * 
-	 * @return A {@link BranckLinkData} object containing data attributes associated with a Branch link.
+	 * @return a {@link BranchLinkData} object containing data attributes associated with a Branch link.
 	 */
 	public BranchLinkData getLinkData() {
 		return linkData_;

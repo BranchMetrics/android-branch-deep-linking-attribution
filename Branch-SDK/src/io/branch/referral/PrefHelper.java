@@ -204,8 +204,6 @@ public class PrefHelper {
 	 * 
 	 * @return 			A {@link String} variable containing the hard-coded base URL that the Branch 
 	 * 					API uses.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getAPIBaseUrl() {
 		return "https://api.branch.io/";
@@ -215,8 +213,6 @@ public class PrefHelper {
 	 * <p>Sets the duration in milliseconds to override the timeout value for calls to the Branch API.</p>
 	 * 
 	 * @param timeout	The {@link Integer} value of the timeout setting in milliseconds.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setTimeout(int timeout) {
 		setInteger(KEY_TIMEOUT, timeout);
@@ -229,8 +225,6 @@ public class PrefHelper {
 	 * 
 	 * @return 		An {@link Integer} value containing the currently set timeout value in 
 	 * 				milliseconds.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public int getTimeout() {
 		return getInteger(KEY_TIMEOUT, TIMEOUT);
@@ -244,8 +238,6 @@ public class PrefHelper {
 	 * @param retry		An {@link Integer} value specifying the value to be specified in preferences 
 	 * 					that determines the number of times that a Branch API call has been re-
 	 * 					attempted. 
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setRetryCount(int retry) {
 		setInteger(KEY_RETRY_COUNT, retry);
@@ -256,8 +248,6 @@ public class PrefHelper {
 	 * 
 	 * @return			An {@link Integer} value containing the current count of the number of times 
 	 * 					that a Branch API call has been attempted.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public int getRetryCount() {
 		return getInteger(KEY_RETRY_COUNT, MAX_RETRIES);
@@ -269,8 +259,6 @@ public class PrefHelper {
 	 * 
 	 * @param retryInt		An {@link Integer} value specifying the number of milliseconds to wait 
 	 * 						before re-attempting a timed-out request.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setRetryInterval(int retryInt) {
 		setInteger(KEY_RETRY_INTERVAL, retryInt);
@@ -282,8 +270,6 @@ public class PrefHelper {
 	 * 
 	 * @return		An {@link Integer} value containing the currently set retry interval in 
 	 * 				milliseconds.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public int getRetryInterval() {
 		return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
@@ -293,8 +279,6 @@ public class PrefHelper {
 	 * <p>Sets the value of {@link #KEY_APP_VERSION} in preferences.</p>
 	 * 
 	 * @param version		A {@link String} value containing the current app version.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setAppVersion(String version) {
 		setString(KEY_APP_VERSION, version);
@@ -304,8 +288,6 @@ public class PrefHelper {
 	 * <p>Returns the current value of {@link #KEY_APP_VERSION} as stored in preferences.</p>
 	 * 
 	 * @return		A {@link String} value containing the current app version.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getAppVersion() {
 		return getString(KEY_APP_VERSION);
@@ -323,8 +305,6 @@ public class PrefHelper {
 	 * Adding your app key to your project</a>
 	 * 
 	 * @param key		A {@link String} value containing the App Key for the current App.
-	 * 
-	 * @see {@link Branch}
 	 */
     public void setAppKey(String key) {
         setString(KEY_APP_KEY, key);
@@ -333,8 +313,6 @@ public class PrefHelper {
 	 * <p>Gets the Branch App Key in preferences programmatically.</p>
 	 * 
 	 * @return		A {@link String} value containing the current App Key as configured.
-	 * 
-	 * @see {@link Branch}
 	 */
     public String getAppKey() {
         String appKey = null;
@@ -388,8 +366,6 @@ public class PrefHelper {
 	 * <p>Sets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
 	 * as a {@link String} in preferences.</p>
 	 * 
-	 * @see {@link android.os.Build#FINGERPRINT}
-	 * 
 	 * @param device_fingerprint_id 		A {@link String} that uniquely identifies this build.
 	 */
 	public void setDeviceFingerPrintID(String device_fingerprint_id) {
@@ -411,8 +387,6 @@ public class PrefHelper {
 	 * 
 	 * @param session_id		A {@link String} value containing the session ID as returned by the 
 	 * 							Branch API upon successful initialisation.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setSessionID(String session_id) {
 		setString(KEY_SESSION_ID, session_id);
@@ -423,8 +397,6 @@ public class PrefHelper {
 	 * 
 	 * @return			A {@link String} value containing the session ID as returned by the Branch 
 	 * 					API upon successful initialisation.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getSessionID() {
 		return getString(KEY_SESSION_ID);
@@ -440,8 +412,6 @@ public class PrefHelper {
 	 * 
 	 * @param identity_id		A {@link String} value containing the currently configured identity 
 	 * 							within preferences.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setIdentityID(String identity_id) {
 		setString(KEY_IDENTITY_ID, identity_id);
@@ -452,8 +422,6 @@ public class PrefHelper {
 	 * 
 	 * @return		A {@link String} value containing the currently configured user id within 
 	 * 				preferences.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getIdentityID() {
 		return getString(KEY_IDENTITY_ID);
@@ -469,8 +437,6 @@ public class PrefHelper {
 	 * 
 	 * @param identity		A {@link String} value containing the currently configured identity 
 	 * 						within preferences.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setIdentity(String identity) {
 		setString(KEY_IDENTITY, identity);
@@ -482,11 +448,7 @@ public class PrefHelper {
 	 * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both 
 	 * for analytics and debugging purposes.</p>
 	 * 
-	 * <p><b>Note: </b> Not to be confused with {@link #getIdentityID(String)} - the UID reference of the user</p>
-	 * 
 	 * @return		A {@link String} value containing the username assigned to the currentuser ID.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getIdentity() {
 		return getString(KEY_IDENTITY);
@@ -497,8 +459,6 @@ public class PrefHelper {
 	 * 
 	 * @param link_click_id			A {@link String} value containing the identifier of the 
 	 * 								associated link.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setLinkClickID(String link_click_id) {
 		setString(KEY_LINK_CLICK_ID, link_click_id);
@@ -508,31 +468,25 @@ public class PrefHelper {
 	 * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * @return		A {@link String} value containing the identifier of the associated link.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getLinkClickID() {
 		return getString(KEY_LINK_CLICK_ID);
 	}
 
 	/**
-	 * <p>Sets the {@link #KEY_LINK_CLICK_IDENTIFIER} {@link String} value that has been set via the Branch API.</p>
+	 * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * @param identifer			A {@link String} value containing the identifier of the associated 
 	 * 							link.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setLinkClickIdentifier(String identifer) {
 		setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
 	}
 
 	/**
-	 * <p>Gets the {@link #KEY_LINK_CLICK_IDENTIFER} {@link String} value that has been set via the Branch API.</p>
+	 * <p>Gets the KEY_LINK_CLICK_IDENTIFER {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * @return		A {@link String} value containing the identifier of the associated link.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getLinkClickIdentifier() {
 		return getString(KEY_LINK_CLICK_IDENTIFIER);
@@ -545,8 +499,6 @@ public class PrefHelper {
 	 * 
 	 * @return		A {@link String} value containing the JSON-encoded structure of parameters for 
 	 * 				the current session.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getSessionParams() {
 		return getString(KEY_SESSION_PARAMS);
@@ -557,8 +509,6 @@ public class PrefHelper {
 	 * 
 	 * @param params		A {@link String} value containing the JSON-encoded structure of 
 	 * 						parameters for the current session.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setSessionParams(String params) {
 		setString(KEY_SESSION_PARAMS, params);
@@ -569,8 +519,6 @@ public class PrefHelper {
 	 * 
 	 * @return		A {@link String} value containing the JSON-encoded structure of parameters as 
 	 * 				they were at the time of installation.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getInstallParams() {
 		return getString(KEY_INSTALL_PARAMS);
@@ -581,8 +529,6 @@ public class PrefHelper {
 	 * 
 	 * @param params		A {@link String} value containing the JSON-encoded structure of 
 	 * 						parameters as they should be at the time of installation.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setInstallParams(String params) {
 		setString(KEY_INSTALL_PARAMS, params);
@@ -592,8 +538,6 @@ public class PrefHelper {
 	 * <p>Sets the user URL from preferences.</p>
 	 * 
 	 * @param user_url		A {@link String} value containing the current user URL.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public void setUserURL(String user_url) {
 		setString(KEY_USER_URL, user_url);
@@ -603,8 +547,6 @@ public class PrefHelper {
 	 * <p>Sets the user URL from preferences.</p>
 	 * 
 	 * @return		A {@link String} value containing the current user URL. 
-	 * 
-	 * @see {@link Branch}
 	 */
 	public String getUserURL() {
 		return getString(KEY_USER_URL);
@@ -616,8 +558,6 @@ public class PrefHelper {
 	 * 
 	 * @return		A {@link Integer} value indicating whether or not the session should be 
 	 * 				considered referrable.
-	 * 
-	 * @see {@link Branch}
 	 */
 	public int getIsReferrable() {
 		return getInteger(KEY_IS_REFERRABLE);
@@ -912,7 +852,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * <p>A basic method that returns a {@link Bool} value from a specified preferences Key.</p>
+	 * <p>A basic method that returns a {@link Boolean} value from a specified preferences Key.</p>
 	 * 
 	 * @param key	- A {@link String} value containing the key to reference.
 	 * 
@@ -1013,7 +953,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * @see {@link Branch#disableSmartSession()}
+	 * {@link Branch#disableSmartSession()}
 	 */
 	public void disableSmartSession() {
 		BNC_Smart_Session = false;
@@ -1154,8 +1094,6 @@ public class PrefHelper {
 	/**
 	 * <p>Debug connection callback that implements {@link NetworkCallback} to react to server calls 
 	 * to debug API end-points.</p>
-	 * 
-	 * @see {@link NetworkCallback}
 	 */
 	public static class DebugNetworkCallback implements NetworkCallback {
 		private int connectionStatus;

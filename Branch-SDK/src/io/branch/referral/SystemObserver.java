@@ -130,7 +130,7 @@ public class SystemObserver {
 	 * 
 	 * @param packageName A {@link String} containing the full package name of the app to check.
 	 * @return
-	 * <p>A {@link String} containing the output of {@link ApkParser#decompressXML(String)}.</p>
+	 * <p>A {@link String} containing the output of {@link ApkParser#decompressXML(byte[])}.</p>
 	 */
 	public String getURIScheme(String packageName) {
 		String scheme = BLANK;
@@ -477,16 +477,14 @@ public class SystemObserver {
 	 * used <b>generic</b> as the first segment of the virtual device fingerprint.</p>
 	 * 
 	 * <p>
-	 * Example of a <u>real device</u> (Google Nexus 5, Android 5.1):<br/>
+	 * Example of a <u>real device</u> (Google Nexus 5, Android 5.1):
 	 * <pre style="background:#fff;padding:10px;border:2px solid silver;">
 	 * <b>google</b>/hammerhead/hammerhead:5.1/LMY47D/1743759:user/release-keys</pre>
-	 * </p>
 	 * 
 	 * <p>
-	 * Example of an <u>emulator</u> (Genymotion Nexus 6 AVD, Android 5.0):<br/>
+	 * Example of an <u>emulator</u> (Genymotion Nexus 6 AVD, Android 5.0):
 	 * <pre style="background:#fff;padding:10px;border:2px solid silver;">
 	 * <b>generic</b>/vbox86p/vbox86p:5.0/LRX21M/buildbot12160004:userdebug/test-keys</pre>
-	 * </p>
 	 * 
 	 * @return
 	 * <p>A {@link Boolean} value indicating whether the device upon which the app is being run is 
@@ -517,7 +515,7 @@ public class SystemObserver {
 	 * a condition upon which a consistency check or migration validation operation can be carried 
 	 * out.</p>
 	 * 
-	 * <p>This will not work on Android SDK versions < 9, as the {@link PackageInfo#firstInstallTime} 
+	 * <p>This will not work on Android SDK versions lower than 9, as the {@link PackageInfo#firstInstallTime} 
 	 * and {@link PackageInfo#lastUpdateTime} values did not exist in older versions of the 
 	 * {@link PackageInfo} class.</p>
 	 * 
@@ -590,7 +588,7 @@ public class SystemObserver {
 	 * 
 	 * This applies only to WiFi connections, and does not indicate whether there is 
 	 * a viable Internet connection available; if connected to an offline WiFi router for instance, 
-	 * the boolean will still return <i>true</i>.</p>
+	 * the boolean will still return <i>true</i>.
 	 * 
 	 * @return 
 	 * <p>
