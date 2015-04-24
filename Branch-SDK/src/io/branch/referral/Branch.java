@@ -286,7 +286,6 @@ public class Branch {
 	private ServerRequestQueue requestQueue_;
 
 	private int networkCount_;
-	private int retryCount_;
 
 	private boolean initNotStarted_;
 	private boolean initFinished_;
@@ -1191,7 +1190,6 @@ public class Branch {
 				}
 
 				if (creditsToRedeem > 0) {
-					retryCount_ = 0;
 					JSONObject post = new JSONObject();
 					try {
 						post.put("identity_id", prefHelper_.getIdentityID());
@@ -1355,7 +1353,6 @@ public class Branch {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				retryCount_ = 0;
 				JSONObject post = new JSONObject();
 				try {
 					post.put("identity_id", prefHelper_.getIdentityID());
@@ -2781,21 +2778,6 @@ public class Branch {
 		});
 	}
 
-	private void retryLastRequest() {
-		retryCount_ = retryCount_ + 1;
-		if (retryCount_ > prefHelper_.getRetryCount()) {
-			handleFailure(0);
-			requestQueue_.dequeue();
-			retryCount_ = 0;
-		} else {
-			try {
-				Thread.sleep(prefHelper_.getRetryInterval());
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	private void updateAllRequestsInQueue() {
 		try {
 			for (int i = 0; i < requestQueue_.getSize(); i++) {
@@ -3133,7 +3115,9 @@ public class Branch {
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
 							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
 						} else {
-							retryLastRequest();
+							hasNetwork_ = false;
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
+							requestQueue_.dequeue();
 						}
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
 						processReferralCounts(serverResponse);

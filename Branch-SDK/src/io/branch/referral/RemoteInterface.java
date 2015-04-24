@@ -38,7 +38,7 @@ public class RemoteInterface {
 
 	private static final String SDK_VERSION = "1.5.1";
 	private static final int DEFAULT_TIMEOUT = 3000;
-	
+
 	/**
 	 * Required, default constructor for the class.
 	 */
@@ -126,12 +126,11 @@ public class RemoteInterface {
 	   	} catch (IOException ex) { 
 	   		if (log) PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
 		}
-		
 		return result;
 	}
-	
+
 	/**
-	 * <p>Make a RESTful GET request, by calling {@link #make_restful_get(String, String, int, boolean)} 
+	 * <p>Make a RESTful GET request, by calling {@link #make_restful_get(String, String, int, int, boolean)}
 	 * with the logging {@link Boolean} parameter pre-populated.</p>
 	 * 
 	 * @param url		A {@link String} URL to request from.
@@ -144,15 +143,16 @@ public class RemoteInterface {
 	 * @return			A {@link ServerResponse} object containing the result of the RESTful request.
 	 */
 	public ServerResponse make_restful_get(String url, String tag, int timeout) {
-		return make_restful_get(url, tag, timeout, true);
+		return make_restful_get(url, tag, timeout, 0, true);
 	}
 
-	private boolean addCommonParams(JSONObject post) {
+	private boolean addCommonParams(JSONObject post, int retryNumber) {
 		try {
 			String branch_key = prefHelper_.getBranchKey();
 			String app_key = prefHelper_.getAppKey();
 
 			post.put("sdk", "android" + SDK_VERSION);
+			post.put("retryNumber", retryNumber);
 			if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
 				post.put(BRANCH_KEY, prefHelper_.getBranchKey());
 				return true;
@@ -164,36 +164,49 @@ public class RemoteInterface {
 		}
 		return false;
 	}
-	
-	/**
-	 * <p>The main RESTful GET method; the other one ({@link #make_restful_get(String, String, int)}) calls this one 
-	 * with a pre-populated logging parameter.</p>
-	 * 
-	 * @param url		A {@link String} URL to request from.
-	 *  
-	 * @param tag		A {@link String} tag for logging/analytics purposes.
-	 * 		
-	 * @param timeout	An {@link Integer} value containing the number of milliseconds to wait 
-	 * 					before considering a server request to have timed out.
-	 *  
-	 * @param log		A {@link Boolean} value that specifies whether debug logging should be 
-	 * 					enabled for this request or not.
-	 * 
-	 * @return			A {@link ServerResponse} object containing the result of the RESTful request.
-	 */
-	public ServerResponse make_restful_get(String url, String tag, int timeout, boolean log) {
-		JSONObject post = new JSONObject();
-		if (addCommonParams(post)) {
-			url += this.convertJSONtoString(post);
-		} else {
+
+    /**
+     * <p>The main RESTful GET method; the other one ({@link #make_restful_get(String, String, int)}) calls this one
+     * with a pre-populated logging parameter.</p>
+     *
+     * @param baseUrl		A {@link String} URL to request from.
+     *
+     * @param tag		A {@link String} tag for logging/analytics purposes.
+     *
+     * @param timeout	An {@link Integer} value containing the number of milliseconds to wait
+     * 					before considering a server request to have timed out.
+     *
+     * @param log		A {@link Boolean} value that specifies whether debug logging should be
+     * 					enabled for this request or not.
+     *
+     * @return			A {@link ServerResponse} object containing the result of the RESTful request.
+     */
+	private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
+		String modifiedUrl = baseUrl;
+		JSONObject getParameters = new JSONObject();
+		if (addCommonParams(getParameters, retryNumber)) {
+            modifiedUrl += this.convertJSONtoString(getParameters);
+        } else {
 			return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 		}
 		
-		try {    	
-			if (log) PrefHelper.Debug("BranchSDK", "getting " + url);
-		    HttpGet request = new HttpGet(url);
+		try {
+			if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
+		    HttpGet request = new HttpGet(modifiedUrl);
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, null);
+			if (response.getStatusLine().getStatusCode() >= 500 &&
+				retryNumber < prefHelper_.getRetryCount()) {
+				try {
+					Thread.sleep(prefHelper_.getRetryInterval());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				retryNumber++;
+				return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
+			} else {
+				return processEntityForJSON(response.getEntity(),
+					response.getStatusLine().getStatusCode(), tag, log, null);
+            }
 
 		} catch (ClientProtocolException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
@@ -209,6 +222,7 @@ public class RemoteInterface {
 		}
 		return null;
 	}
+    //endregion
 
 	/**
 	 * <p>Makes a RESTful POST call with logging enabled, without an associated data dictionary; 
@@ -227,7 +241,7 @@ public class RemoteInterface {
 	 * 						response in Branch SDK terms.
 	 */
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
-		return make_restful_post(body, url, tag, timeout, true, null);
+		return make_restful_post(body, url, tag, timeout, 0, true, null);
 	}
 	
 	/**
@@ -249,7 +263,7 @@ public class RemoteInterface {
 	 * 						response in Branch SDK terms.
 	 */
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
-		return make_restful_post(body, url, tag, timeout, true, linkData);
+		return make_restful_post(body, url, tag, timeout, 0, true, linkData);
 	}
 
 	/**
@@ -271,9 +285,10 @@ public class RemoteInterface {
 	 * 						response in Branch SDK terms.
 	 */
 	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
-		return make_restful_post(body, url, tag, timeout, log, null);
+		return make_restful_post(body, url, tag, timeout, 0, log, null);
 	}
 	
+
 	/**
 	 * <p>The main RESTful POST method. The others call this one with pre-populated parameters.</p>
 	 * 
@@ -295,22 +310,33 @@ public class RemoteInterface {
 	 * @return				A {@link ServerResponse} object representing the {@link HttpEntity} 
 	 * 						response in Branch SDK terms.
 	 */
-	public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log, BranchLinkData linkData) {
+    private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
+											int retryNumber, boolean log, BranchLinkData linkData) {
 		try {
-			if (!addCommonParams(body)) {
+			if (!addCommonParams(body, retryNumber)) {
 				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
 			}
 			
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
-				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString());
+				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString(4));
 			}
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
-		    return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
-
+            if (response.getStatusLine().getStatusCode() >= 500
+                    && retryNumber < prefHelper_.getRetryCount()) {
+            	try {
+					Thread.sleep(prefHelper_.getRetryInterval());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				retryNumber++;
+				return make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
+			} else {
+				return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
+            }
 		} catch (SocketException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
@@ -326,6 +352,7 @@ public class RemoteInterface {
 			return new ServerResponse(tag, 500);
 		}
 	}
+    //endregion
 	
 	private String convertJSONtoString(JSONObject json) {
 		StringBuilder result = new StringBuilder();
