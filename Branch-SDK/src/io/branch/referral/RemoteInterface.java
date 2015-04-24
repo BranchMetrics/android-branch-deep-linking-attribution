@@ -196,6 +196,11 @@ public class RemoteInterface {
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
 			if (response.getStatusLine().getStatusCode() >= 500 &&
 				retryNumber < prefHelper_.getRetryCount()) {
+				try {
+					Thread.sleep(prefHelper_.getRetryInterval());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				retryNumber++;
 				return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
 			} else {
@@ -322,11 +327,15 @@ public class RemoteInterface {
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
             if (response.getStatusLine().getStatusCode() >= 500
                     && retryNumber < prefHelper_.getRetryCount()) {
+            	try {
+					Thread.sleep(prefHelper_.getRetryInterval());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				retryNumber++;
 				return make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
 			} else {
-				return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(),
-					tag, log, linkData);
+				return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
             }
 		} catch (SocketException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
