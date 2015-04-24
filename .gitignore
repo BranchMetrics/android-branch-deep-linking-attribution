@@ -18,3 +18,4 @@ Branch-SDK-TestBed/build/
 # Gradle
 build/*
 .gradle/*
+*.properties
