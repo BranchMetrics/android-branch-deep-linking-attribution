@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.2: Added retry count to all queries + a little better handling of retries
+
 - v1.5.1: Added Javadocs for easy explanation of all methods
 
 - v1.5.0: We have deprecated the use of `bnc_app_key` and are now using `branch_key`, which can be obtained in the settings page of your Dashboard. The replacement in the SDK should happen in the manifest and strings.xml (see README for details), as well as in `public static Branch getInstance(Context context, String branchKey)` if necessary.
