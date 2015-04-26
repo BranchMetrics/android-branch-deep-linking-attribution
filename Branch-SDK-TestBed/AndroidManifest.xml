@@ -36,8 +36,8 @@
         <activity
             android:name="io.branch.branchandroiddemo.ReferralCodeActivity">
         </activity>
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="@string/branch_key" />
-        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="@string/branch_key_test" />
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_jbgnjxvlhSb6PGH23BhO4hiflcp3y8kx" />
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_jkptOCZtmtxhOMZ11ynbXecdDCd93cbr" />
         <uses-library android:name="android.test.runner" />
     </application>
 

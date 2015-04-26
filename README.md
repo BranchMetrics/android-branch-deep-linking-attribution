@@ -134,29 +134,16 @@ Typically, you would register some sort of splash activitiy that handles routing
 
 After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project.
 
-1. Edit your res/values/strings.xml file by adding a new string resource with "branch_key" as the name and your live branch key as the value
-    ```xml
-    <resources>
-        <!-- Other existing resources -->
-
-        <!-- Add this string resource below, and change "key_live_xxxxxxx" to your actual live branch key -->
-        <string name="branch_key">key_live_xxxxxxx</string>
-
-        <!-- For your test app, if you have one; Again, use your actual test branch key -->
-        <string name="branch_key_test">key_test_yyyyyyy</string>
-    </resources>
-    ```
-
 1. Edit your manifest file by adding the following new meta-data
     ```xml
     <application>
         <!-- Other existing entries -->
 
-        <!-- Add this meta-data below; DO NOT changing the android:value -->
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="@string/branch_key" />
+        <!-- Add this meta-data below, and change "key_live_xxxxxxx" to your actual live branch key -->
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_xxxxxxx" />
 
-        <!-- For your test app, if you have one -->
-        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="@string/branch_key_test" />
+        <!-- For your test app, if you have one; Again, use your actual test branch key -->
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_yyyyyyy" />
     </application>
     ```
 

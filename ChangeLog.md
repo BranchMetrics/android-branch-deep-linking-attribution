@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.3: Simplified branch_key setup by directly specifying it in Manifest.xml
+
 - v1.5.2: Added retry count to all queries + a little better handling of retries
 
 - v1.5.1: Added Javadocs for easy explanation of all methods
