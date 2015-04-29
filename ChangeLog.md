@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.4: Fix concurrent modification bug in ServerRequestQueue. Some code was added where there was rare possibility of modifying the ServerRequest body at the same time we were iterating through it.
+
 - v1.5.3: Simplified branch_key setup by directly specifying it in Manifest.xml
 
 - v1.5.2: Added retry count to all queries + a little better handling of retries
