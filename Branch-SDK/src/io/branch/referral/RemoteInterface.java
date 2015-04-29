@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 
 import android.content.Context;
 import android.os.NetworkOnMainThreadException;
@@ -36,7 +37,7 @@ public class RemoteInterface {
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
 	public static final int NO_BRANCH_KEY_STATUS = -1234;
 
-	private static final String SDK_VERSION = "1.5.3";
+	private static final String SDK_VERSION = "1.5.4";
 	private static final int DEFAULT_TIMEOUT = 3000;
 
 	/**
@@ -51,7 +52,8 @@ public class RemoteInterface {
 	 * @see PrefHelper
 	 */
 	protected PrefHelper prefHelper_;
-		
+
+	
 	public RemoteInterface(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
 	}
@@ -313,16 +315,26 @@ public class RemoteInterface {
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
 											int retryNumber, boolean log, BranchLinkData linkData) {
 		try {
-			if (!addCommonParams(body, retryNumber)) {
-				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+			JSONObject bodyCopy = new JSONObject();
+			Iterator<?> keys = body.keys();
+			while (keys.hasNext()) {
+				String key = (String) keys.next();
+				try {
+					bodyCopy.put(key, body.get(key));
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 			}
 			
+			if (!addCommonParams(bodyCopy, retryNumber)) {
+				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+			}			
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
-				PrefHelper.Debug("BranchSDK", "Post value = " + body.toString(4));
+				PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
 			}
 		    HttpPost request = new HttpPost(url);
-		    request.setEntity(new ByteArrayEntity(body.toString().getBytes("UTF8")));
+		    request.setEntity(new ByteArrayEntity(bodyCopy.toString().getBytes("UTF8")));
 		    request.setHeader("Content-type", "application/json");
 		    HttpResponse response = getGenericHttpClient(timeout).execute(request);
             if (response.getStatusLine().getStatusCode() >= 500
@@ -333,7 +345,7 @@ public class RemoteInterface {
 					e.printStackTrace();
 				}
 				retryNumber++;
-				return make_restful_post(body, url, tag, timeout, retryNumber, log, linkData);
+				return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
 			} else {
 				return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
             }
