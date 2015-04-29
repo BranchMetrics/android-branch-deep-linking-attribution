@@ -51,9 +51,19 @@ public class RemoteInterface {
 	 * @see PrefHelper
 	 */
 	protected PrefHelper prefHelper_;
-		
+	
+	/**
+	 * <p>A {@link PrefHelper} object that is used throughout the class to allow access to read and 
+	 * write preferences related to the SDK.</p>
+	 * 
+	 * @see PrefHelper
+	 */
+	protected ServerRequestQueue requestQueue_;
+	
+	
 	public RemoteInterface(Context context) {
 		prefHelper_ = PrefHelper.getInstance(context);
+		requestQueue_ = ServerRequestQueue.getInstance(context);
 	}
 	
 	/**
@@ -313,8 +323,10 @@ public class RemoteInterface {
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
 											int retryNumber, boolean log, BranchLinkData linkData) {
 		try {
-			if (!addCommonParams(body, retryNumber)) {
-				return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+			synchronized(requestQueue_.queue) {
+				if (!addCommonParams(body, retryNumber)) {
+					return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
+				}
 			}
 			
 			if (log) {
