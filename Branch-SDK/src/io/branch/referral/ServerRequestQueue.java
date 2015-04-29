@@ -26,7 +26,7 @@ public class ServerRequestQueue {
 	private static ServerRequestQueue SharedInstance;	
 	private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
-	public final List<ServerRequest> queue;
+	private final List<ServerRequest> queue;
 
 	/**
 	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
