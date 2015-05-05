@@ -61,7 +61,7 @@ Chrome is very picky about opening up the app directly. Chrome utilizes the inte
 
 The Google Chrome team decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue [here](https://code.google.com/p/chromium/issues/detail?id=331571). The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
 
-We're exploring a work around as well as campaigning the Chrome team to change this. If you work at Google, or know someone there, [help us get this resolved](https://branch.io/contact/) :)
+We've filed an issue plus documented how you can file your own with the Chrome team to get this changed. Please see [this document](https://github.com/BranchMetrics/Branch-Android-SDK/blob/master/ChromeHelp.md) for more ways you can help!
 
 ## Installation
 
