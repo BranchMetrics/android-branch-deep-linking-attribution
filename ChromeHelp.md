@@ -1,3 +1,9 @@
+### Please *star* our outstanding issue
+
+The star button is in the top left corner of the issue:
+
+https://code.google.com/p/chromium/issues/detail?id=484815
+
 ### How to file a Chrome issue for typed-in links issue
 
 1. Visit https://code.google.com/p/chromium/issues/list and click **New issue** at the top left
