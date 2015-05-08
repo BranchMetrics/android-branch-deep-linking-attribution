@@ -779,7 +779,7 @@ public class Branch {
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							requestQueue_.moveInstallOrOpenToFront(null, networkCount_);
+							requestQueue_.moveInstallOrOpenToFront(hasUser() ? BranchRemoteInterface.REQ_TAG_REGISTER_OPEN : BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, networkCount_);
 							processNextQueueItem();
 						}
 					}).start();
