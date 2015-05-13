@@ -1,4 +1,6 @@
-## [New documentation portal](https://dev.branch.io)!
+## [New documentation portal](https://dev.branch.io)
+
+Check it out!
 
 ## Important migration to v1.5.0
 
