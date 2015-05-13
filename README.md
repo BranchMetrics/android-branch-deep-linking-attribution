@@ -1,3 +1,7 @@
+# Branch Metrics Android SDK
+
+This is the repository of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
+
 ## [New documentation portal](https://dev.branch.io)
 
 Check it out!
