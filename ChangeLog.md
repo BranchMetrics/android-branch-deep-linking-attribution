@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.6: Add limit to queue retrieval to prevent legacy stack overflow ghosts.
+
 - v1.5.5: Fix null server request tag bug.
 
 - v1.5.4: Fix concurrent modification bug in ServerRequestQueue. Some code was added where there was rare possibility of modifying the ServerRequest body at the same time we were iterating through it.
