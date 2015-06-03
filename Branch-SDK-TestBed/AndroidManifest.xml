@@ -37,8 +37,11 @@
         <activity
             android:name="io.branch.branchandroiddemo.ReferralCodeActivity">
         </activity>
+
+        <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
         <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_jbgnjxvlhSb6PGH23BhO4hiflcp3y8kx" />
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_jkptOCZtmtxhOMZ11ynbXecdDCd93cbr" />
+
         <uses-library android:name="android.test.runner" />
     </application>
 

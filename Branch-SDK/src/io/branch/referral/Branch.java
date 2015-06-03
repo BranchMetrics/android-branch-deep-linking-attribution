@@ -310,7 +310,7 @@ public class Branch {
 	/* BranchActivityLifeCycleObserver instance.Should be initialised on creating Instance with Application object. */
 	private BranchActivityLifeCycleObserver activityLifeCycleObserver_;
 
-	/* Set to true when application is instantiating {@BranchLinkedApp} by extending or adding manifest entry. */
+	/* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
 	private static boolean isAutoSessionMode = false;
 
 
@@ -349,61 +349,26 @@ public class Branch {
 
 	/**
 	 * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-	 * Make sure your app is  instantiating {@link BranchLinkedApp} before calling this method</p>
+	 * Make sure your app is  instantiating {@link BranchApp} before calling this method</p>
 	 *
 	 * @return An initialised singleton {@link Branch} object
 	 *
 	 * @throws BranchException Exception</br>
-	 *          1)If your {@link Application}  is not instance of {@link BranchLinkedApp} </br>
+	 *          1)If your {@link Application}  is not instance of {@link BranchApp} </br>
 	 *          2)If the minimum API level is below 14
 	 */
 	public static Branch getInstance() throws BranchException {
-		// Check if BranchLinkedApp is instantiated.
-		if(branchReferral_ == null || isAutoSessionMode == false )
+		// Check if BranchApp is instantiated.
+		if(branchReferral_ == null || isAutoSessionMode == false ) {
 			throw BranchException.getInstatiationException();
+		}
 
 			// Check if Activity life cycle callbacks are set.
-		else {
-			if (branchReferral_.isActivityObserverInitialised() == false) {
+		else if (branchReferral_.isActivityObserverInitialised() == false) {
 				throw BranchException.getAPILevelException();
-			}
-
-			else {
-				// Set branch Key with  the Live key.
-				String branchKey = branchReferral_.prefHelper_.getBranchKey(true);
-				return branchReferral_;
-			}
 		}
-	}
 
-
-	/**
-	 * <p>If you configured the your Manifest file according to the guide, you'll be able to use
-	 * the test version of your app by just calling this static method</p>
-	 *
-	 * @return An initialised singleton {@link Branch} object with Test configuration
-	 *
-	 * @throws BranchException Exception</br>
-	 *          1)If your app is not instance of {@link BranchLinkedApp} </br>
-	 *          2)If the minimum API level is below 14
-	 */
-	public static Branch getTestInstance() throws BranchException {
-		// Check if BranchLinkedApp is instantiated.
-		if(branchReferral_ == null || isAutoSessionMode == false )
-			throw BranchException.getInstatiationException();
-
-			// Check if Activity life cycle callbacks are set.
-		else {
-			if (branchReferral_.isActivityObserverInitialised() == false) {
-				throw BranchException.getAPILevelException();
-			}
-
-			else {
-				// Set branch Key with  the Test key
-				String branchKey = branchReferral_.prefHelper_.getBranchKey(false);
-				return branchReferral_;
-			}
-		}
+		return branchReferral_;
 	}
 
 
