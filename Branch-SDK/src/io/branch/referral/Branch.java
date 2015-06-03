@@ -307,11 +307,11 @@ public class Branch {
 
 	private ScheduledFuture<?> appListingSchedule_;
 
-	/*BranchActivityLifeCycleObserver instance.Should be initialised on creating Instance with Application object*/
+	/* BranchActivityLifeCycleObserver instance.Should be initialised on creating Instance with Application object. */
 	private BranchActivityLifeCycleObserver activityLifeCycleObserver_;
 
-	/* Set to true when application is instantiating {@BranchLinkedApp} by extending or adding manifest entry */
-	private static boolean isBranchAppInstantiated;
+	/* Set to true when application is instantiating {@BranchLinkedApp} by extending or adding manifest entry. */
+	private static boolean isAutoSessionMode = false;
 
 
 	/**
@@ -358,18 +358,18 @@ public class Branch {
 	 *          2)If the minimum API level is below 14
 	 */
 	public static Branch getInstance() throws BranchException {
-		//Check if BranchLinkedApp is instantiated
-		if(branchReferral_ == null || isBranchAppInstantiated == false )
+		// Check if BranchLinkedApp is instantiated.
+		if(branchReferral_ == null || isAutoSessionMode == false )
 			throw BranchException.getInstatiationException();
 
-			//Check if Activity life cycle callbacks are set
+			// Check if Activity life cycle callbacks are set.
 		else {
 			if (branchReferral_.isActivityObserverInitialised() == false) {
 				throw BranchException.getAPILevelException();
 			}
 
 			else {
-				//Set branch Key with  the Live key
+				// Set branch Key with  the Live key.
 				String branchKey = branchReferral_.prefHelper_.getBranchKey(true);
 				return branchReferral_;
 			}
@@ -388,18 +388,18 @@ public class Branch {
 	 *          2)If the minimum API level is below 14
 	 */
 	public static Branch getTestInstance() throws BranchException {
-		//Check if BranchLinkedApp is instantiated
-		if(branchReferral_ == null || isBranchAppInstantiated == false )
+		// Check if BranchLinkedApp is instantiated.
+		if(branchReferral_ == null || isAutoSessionMode == false )
 			throw BranchException.getInstatiationException();
 
-			//Check if Activity life cycle callbacks are set
+			// Check if Activity life cycle callbacks are set.
 		else {
 			if (branchReferral_.isActivityObserverInitialised() == false) {
 				throw BranchException.getAPILevelException();
 			}
 
 			else {
-				//Set branch Key with  the Test key
+				// Set branch Key with  the Test key
 				String branchKey = branchReferral_.prefHelper_.getBranchKey(false);
 				return branchReferral_;
 			}
@@ -446,14 +446,14 @@ public class Branch {
 
 			String branchKey = branchReferral_.prefHelper_.getBranchKey(isLive);
 	        if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-	        	Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+	        	Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
 	        }
 		}
 		branchReferral_.context_ = context;
 
 		/* If {@link BranchApp} is instantiated register for activity life cycle events. */
-		isBranchAppInstantiated = context instanceof BranchApp;
-		if(isBranchAppInstantiated) {
+		isAutoSessionMode = context instanceof BranchApp;
+		if(isAutoSessionMode) {
 			try {
          		/* Set an observer for activity life cycle events. */
 				branchReferral_.setActivityLifeCycleObserver((BranchApp) context);
@@ -975,7 +975,7 @@ public class Branch {
 	 */
 	public void closeSession() {
 		if (prefHelper_.getSmartSession()) {
-			if (keepAlive_ && !isBranchAppInstantiated) { //No need to check for keepAlive_ for auto session management
+			if (keepAlive_ && !isAutoSessionMode) { // No need to check for keepAlive_ for auto session management.
 				return;
 			}
 	
