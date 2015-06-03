@@ -3160,8 +3160,8 @@ public class Branch {
 
 		@Override
 		public void onActivityStarted(Activity activity) {
-			if(m_ActivityCnt < 1){ //Check if this is the first Activity.If so start a session
-				onSessionStarted();
+			if(m_ActivityCnt < 1){ // Check if this is the first Activity.If so start a session.
+				initSession();// indicate  starting of session.
 			}
 			m_ActivityCnt++;
 
@@ -3177,9 +3177,9 @@ public class Branch {
 
 		@Override
 		public void onActivityStopped(Activity activity) {
-			m_ActivityCnt--;      //Check if this is the last activity.If so stop session
+			m_ActivityCnt--;      // Check if this is the last activity.If so stop session.
 			if(m_ActivityCnt < 1){
-				onSessionEnded();
+				closeSession(); //Indicate end of a  session.
 			}
 		}
 
@@ -3189,20 +3189,6 @@ public class Branch {
 		@Override
 		public void onActivityDestroyed(Activity activity) {}
 
-		/**
-		 * Should be called to indicate  starting of session.
-		 *
-		 */
-		private void onSessionStarted(){
-			initSession();
-		}
-
-		/**
-		 * Should be called to indicate end of a  session
-		 */
-		private void onSessionEnded(){
-			closeSession();
-		}
 	}
 
 
