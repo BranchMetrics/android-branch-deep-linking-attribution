@@ -27,9 +27,9 @@ public class MainActivity extends Activity {
 	Branch branch;
 
     public enum SESSION_MANAGEMENT_MODE {
-        AUTO     /*Branch SDK Manages the session for you.For this mode minimum API level should
-                   be 14 or above.Make sure to instantiate BranchLinkApp class to use this mode.*/
-        ,MANUAL  /* You are responsible for managing the session.Need to initialise the session on
+		AUTO,    /*Branch SDK Manages the session for you.For this mode minimum API level should
+				   be 14 or above.Make sure to instantiate {@link BranchApp} class to use this mode.*/
+		MANUAL  /* You are responsible for managing the session.Need to initialise the session on
                need to call initialiseSession() and closeSession() on activity onStart() and
                onStop() respectively. */
     }

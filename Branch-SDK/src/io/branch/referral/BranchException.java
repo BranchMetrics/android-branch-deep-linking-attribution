@@ -13,7 +13,7 @@ public class BranchException extends Exception {
     /*
      *  Message for  Instance not available error.Should be thrown when user trying to access
      *   {@link Branch} instance when the instance is not yet created.This is applicable only in
-     *   case of calling getInstance() without instantiating {@link BranchLinkApp}
+     *   case of calling getInstance() without instantiating {@link BranchApp}
      */
     private static final String BRANCH_INSTANTIATION_ERR_MSG = "Branch instance is not created." +
             "Make  sure your Application class is an instance of BranchLikedApp.";
@@ -22,9 +22,9 @@ public class BranchException extends Exception {
     /*
     *  Message for  API level support e not available error.Should be thrown when user trying to access
     *   {@link Branch} instance when the instance is not yet created.This is applicable only in
-    *   case of calling getInstance() without instantiating {@link BranchLinkApp}
+    *   case of calling getInstance() without instantiating {@link BranchApp}
     */
-    public static final String BRANCH_API_LVL_ERR_MSG = "BranchLinkApp class can be used only " +
+    public static final String BRANCH_API_LVL_ERR_MSG = "BranchApp class can be used only " +
             "with API level 14 or above.Please make sure your minimum API level supported is 14." +
             "If you wish to use API level below 14 consider calling getInstance(Context) instead";
 

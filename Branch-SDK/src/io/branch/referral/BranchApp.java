@@ -16,9 +16,9 @@ import android.app.Application;
  * <pre style="background:#fff;padding:10px;border:2px solid silver;">
  * <application
  * -----
- * android:name="io.branch.referal.BranchLinkApp">
+ * android:name="io.branch.referal.BranchApp">
  */
-public class BranchLinkApp extends Application {
+public class BranchApp extends Application {
 
 
     @Override

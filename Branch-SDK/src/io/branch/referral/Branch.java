@@ -362,7 +362,7 @@ public class Branch {
 	 */
 
 	public static void createInstance(Application application) {
-		isBranchAppInstantiated = application instanceof  BranchLinkApp;
+		isBranchAppInstantiated = application instanceof BranchApp;
       /* Create and initialise a new instance of Branch. */
 		Branch createdInstance = getBranchInstance(application,true);
 
