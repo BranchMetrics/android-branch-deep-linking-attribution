@@ -5,6 +5,7 @@ import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,6 +25,17 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	Branch branch;
+
+    public enum SESSION_MANAGEMENT_MODE {
+        AUTO     /*Branch SDK Manages the session for you.For this mode minimum API level should
+                   be 14 or above.Make sure to instantiate BranchLinkApp class to use this mode.*/
+        ,MANUAL  /* You are responsible for managing the session.Need to initialise the session on
+               need to call initialiseSession() and closeSession() on activity onStart() and
+               onStop() respectively. */
+    }
+
+    /* Current mode for the Session Management */
+    public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.AUTO;
 	
 	EditText txtShortUrl;
 	Button cmdRefreshShortUrl;
@@ -199,23 +211,33 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		branch = Branch.getInstance(this.getApplicationContext());
-		branch.setDebug();
-		branch.initSession(new BranchReferralInitListener() {
-			@Override
-			public void onInitFinished(JSONObject referringParams, BranchError error) {
-				Log.i("BranchTestBed", "branch init complete!");
-				try {
-					Iterator<?> keys = referringParams.keys();
-					while (keys.hasNext()) {
-						String key = (String) keys.next();
-						Log.i("BranchTestBed", key + ", " + referringParams.getString(key));
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
-		}, this.getIntent().getData(), this);
+        try {
+            if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
+                branch = Branch.getInstance(this.getApplicationContext());
+            } else {
+                branch = Branch.getInstance();
+            }
+
+            branch.setDebug();
+            branch.initSession(new BranchReferralInitListener() {
+                @Override
+                public void onInitFinished(JSONObject referringParams, BranchError error) {
+                    Log.i("BranchTestBed", "branch init complete!");
+                    try {
+                        Iterator<?> keys = referringParams.keys();
+                        while (keys.hasNext()) {
+                            String key = (String) keys.next();
+                            Log.i("BranchTestBed", key + ", " + referringParams.getString(key));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, this.getIntent().getData(), this);
+        } catch (BranchException ex) {
+            ex.printStackTrace();
+            Log.d("BranchTestBed", ex.getMessage());
+        }
 	}
 
 	@Override
@@ -226,7 +248,9 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		branch.closeSession();
+		if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
+			branch.closeSession();
+		}
 	}
 
 }

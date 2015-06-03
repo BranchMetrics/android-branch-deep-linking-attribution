@@ -19,9 +19,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
@@ -46,6 +50,8 @@ import android.view.View.OnTouchListener;
  * 
  */
 public class Branch {
+
+	private static final String TAG = "BranchSDK";
 	
 	/**
 	 * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that 
@@ -301,6 +307,13 @@ public class Branch {
 
 	private ScheduledFuture<?> appListingSchedule_;
 
+	/*BranchActivityLifeCycleObserver instance.Should be initialised on creating Instance with Application object*/
+	private BranchActivityLifeCycleObserver activityLifeCycleObserver_;
+
+	/* Set to true when application is instantiating {@BranchLinkedApp} by extending or adding manifest entry */
+	private static boolean isBranchAppInstantiated;
+
+
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton 
 	 * pattern.</p>
@@ -332,6 +345,97 @@ public class Branch {
 		debugOnTouchListener_ = retrieveOnTouchListener();
 		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
+
+	/**
+	 *
+	 * <p>Creates and initialises a new  singleton instance of object of type {@link Branch} if
+	 * not existing.Application developers should not call this method directly.Instead extend
+	 * your Application class with {@link BranchLinkedApp} or use {@link BranchLinkedApp} as the
+	 * Application class in your manifest.
+	 * You need to set Branch key in your manifest</p>
+	 *
+	 * @see          <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
+	 *                 Adding your app key to your project</a>
+	 *
+	 * @param application  Your {@link Application} instance.
+	 *
+	 */
+
+	public static void createInstance(Application application) {
+		isBranchAppInstantiated = application instanceof  BranchLinkApp;
+      /* Create and initialise a new instance of Branch. */
+		Branch createdInstance = getBranchInstance(application,true);
+
+		try {
+         /*Set an observer for ativity life cycle events*/
+			createdInstance.setActivityLifeCycleObserver(application);
+
+		}catch (NoSuchMethodError Ex){
+			//LifeCycleEvents are  available only from API level 14.
+			Log.w(TAG,BranchException.BRANCH_API_LVL_ERR_MSG);
+		}
+	}
+
+	/**
+	 * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
+	 * Make sure your app is  instantiating {@link BranchLinkedApp} before calling this method</p>
+	 *
+	 * @return An initialised singleton {@link Branch} object
+	 *
+	 * @throws BranchException Exception</br>
+	 *          1)If your {@link Application}  is not instance of {@link BranchLinkedApp} </br>
+	 *          2)If the minimum API level is below 14
+	 */
+	public static Branch getInstance() throws BranchException {
+		//Check if BranchLinkedApp is instantiated
+		if(branchReferral_ == null || isBranchAppInstantiated == false )
+			throw BranchException.getInstatiationException();
+
+			//Check if Activity life cycle callbacks are set
+		else {
+			if (branchReferral_.isActivityObserverInitialised() == false) {
+				throw BranchException.getAPILevelException();
+			}
+
+			else {
+				//Set branch Key with  the Live key
+				String branchKey = branchReferral_.prefHelper_.getBranchKey(true);
+				return branchReferral_;
+			}
+		}
+	}
+
+
+	/**
+	 * <p>If you configured the your Manifest file according to the guide, you'll be able to use
+	 * the test version of your app by just calling this static method</p>
+	 *
+	 * @return An initialised singleton {@link Branch} object with Test configuration
+	 *
+	 * @throws BranchException Exception</br>
+	 *          1)If your app is not instance of {@link BranchLinkedApp} </br>
+	 *          2)If the minimum API level is below 14
+	 */
+	public static Branch getTestInstance() throws BranchException {
+		//Check if BranchLinkedApp is instantiated
+		if(branchReferral_ == null || isBranchAppInstantiated == false )
+			throw BranchException.getInstatiationException();
+
+			//Check if Activity life cycle callbacks are set
+		else {
+			if (branchReferral_.isActivityObserverInitialised() == false) {
+				throw BranchException.getAPILevelException();
+			}
+
+			else {
+				//Set branch Key with  the Test key
+				String branchKey = branchReferral_.prefHelper_.getBranchKey(false);
+				return branchReferral_;
+			}
+		}
+	}
+
+
 
 	/**
 	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
@@ -795,6 +899,21 @@ public class Branch {
 			}
 		}
 	}
+
+	/**
+	 * <p>Set the current activity window for the debug touch events.Only for internal usage</p>
+	 *
+	 * @param activity The current activity
+	 */
+	private void setTouchDebugInternal(Activity activity){
+		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
+			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
+			if (view != null) {
+				view.setOnTouchListener(debugOnTouchListener_);
+			}
+		}
+	}
 	
 	private OnTouchListener retrieveOnTouchListener() {
 		if (debugOnTouchListener_ == null) {
@@ -871,7 +990,7 @@ public class Branch {
 	 */
 	public void closeSession() {
 		if (prefHelper_.getSmartSession()) {
-			if (keepAlive_) {
+			if (keepAlive_ && !isBranchAppInstantiated) { //No need to check for keepAlive_ for auto session management
 				return;
 			}
 	
@@ -3025,6 +3144,82 @@ public class Branch {
 			}
 		});
 	}
+
+	/*
+    * Checks if the BranchActivityLifeCycleObserver is initialised
+    * @return true if BranchActivityLifeCycleObserver initialised else false
+    */
+	public boolean isActivityObserverInitialised(){
+		return activityLifeCycleObserver_ != null;
+	}
+
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	private void setActivityLifeCycleObserver(Application application){
+		application.registerActivityLifecycleCallbacks(new BranchActivityLifeCycleObserver());
+	}
+
+	/**
+	 * <p>Class that observes activity life cycle events and determines when to start and stop
+	 * session.</p>
+	 */
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks{
+		int m_ActivityCnt = 0; //Keep the count of live  activities
+
+		public BranchActivityLifeCycleObserver(){
+			activityLifeCycleObserver_ = this;
+		}
+
+		@Override
+		public void onActivityCreated(Activity activity, Bundle bundle) {}
+
+		@Override
+		public void onActivityStarted(Activity activity) {
+			if(m_ActivityCnt < 1){ //Check if this is the first Activity.If so start a session
+				onSessionStarted();
+			}
+			m_ActivityCnt++;
+
+			//Set the activity for touch debug
+			setTouchDebugInternal(activity);
+		}
+
+		@Override
+		public void onActivityResumed(Activity activity) {}
+
+		@Override
+		public void onActivityPaused(Activity activity) {}
+
+		@Override
+		public void onActivityStopped(Activity activity) {
+			m_ActivityCnt--;      //Check if this is the last activity.If so stop session
+			if(m_ActivityCnt < 1){
+				onSessionEnded();
+			}
+		}
+
+		@Override
+		public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {}
+
+		@Override
+		public void onActivityDestroyed(Activity activity) {}
+
+		/**
+		 * Should be called to indicate  starting of session.
+		 *
+		 */
+		private void onSessionStarted(){
+			initSession();
+		}
+
+		/**
+		 * Should be called to indicate end of a  session
+		 */
+		private void onSessionEnded(){
+			closeSession();
+		}
+	}
+
 
 	/**
 	 * <p>A class that implements {@link NetworkCallback} interface and provides the required state 

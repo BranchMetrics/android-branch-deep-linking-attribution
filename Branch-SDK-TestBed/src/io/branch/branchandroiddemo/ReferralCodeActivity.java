@@ -3,6 +3,7 @@ package io.branch.branchandroiddemo;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.BranchException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,6 +14,7 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -183,15 +185,26 @@ public class ReferralCodeActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		branch = Branch.getInstance(this.getApplicationContext());
-		branch.initSession(this);
+        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
+            branch = Branch.getInstance(this.getApplicationContext());
+            branch.initSession(this);
+        } else {
+            try {
+                branch = branch.getInstance();
+            } catch (BranchException e) {
+                e.printStackTrace();
+                Log.d("BranchTestBed", e.getMessage());
+            }
+        }
 	}
 
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		branch.closeSession();
+        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
+            branch.closeSession();
+        }
 	}
 
 }

@@ -332,6 +332,9 @@ public class RemoteInterface {
 			if (log) {
 				PrefHelper.Debug("BranchSDK", "posting to " + url);
 				PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
+
+				if (bodyCopy.has("session_id")) //TODO: For verify new session management.Need to remove before merging
+					PrefHelper.Debug("BranchSDK", "SessionIDTest " + bodyCopy.getString("session_id"));
 			}
 		    HttpPost request = new HttpPost(url);
 		    request.setEntity(new ByteArrayEntity(bodyCopy.toString().getBytes("UTF8")));
