@@ -24,6 +24,6 @@ public class BranchApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Branch.createInstance(this);
+        Branch.getInstance(this);
     }
 }

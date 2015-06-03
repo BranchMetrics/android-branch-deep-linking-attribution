@@ -346,35 +346,6 @@ public class Branch {
 		linkCache_ = new HashMap<BranchLinkData, String>();
 	}
 
-	/**
-	 *
-	 * <p>Creates and initialises a new  singleton instance of object of type {@link Branch} if
-	 * not existing.Application developers should not call this method directly.Instead extend
-	 * your Application class with {@link BranchLinkedApp} or use {@link BranchLinkedApp} as the
-	 * Application class in your manifest.
-	 * You need to set Branch key in your manifest</p>
-	 *
-	 * @see          <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
-	 *                 Adding your app key to your project</a>
-	 *
-	 * @param application  Your {@link Application} instance.
-	 *
-	 */
-
-	public static void createInstance(Application application) {
-		isBranchAppInstantiated = application instanceof BranchApp;
-      /* Create and initialise a new instance of Branch. */
-		Branch createdInstance = getBranchInstance(application,true);
-
-		try {
-         /*Set an observer for ativity life cycle events*/
-			createdInstance.setActivityLifeCycleObserver(application);
-
-		}catch (NoSuchMethodError Ex){
-			//LifeCycleEvents are  available only from API level 14.
-			Log.w(TAG,BranchException.BRANCH_API_LVL_ERR_MSG);
-		}
-	}
 
 	/**
 	 * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
@@ -479,6 +450,20 @@ public class Branch {
 	        }
 		}
 		branchReferral_.context_ = context;
+
+		/* If {@link BranchApp} is instantiated register for activity life cycle events. */
+		isBranchAppInstantiated = context instanceof BranchApp;
+		if(isBranchAppInstantiated) {
+			try {
+         		/* Set an observer for activity life cycle events. */
+				branchReferral_.setActivityLifeCycleObserver((BranchApp) context);
+
+			} catch (NoSuchMethodError Ex) {
+				/* LifeCycleEvents are  available only from API level 14. */
+				Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+			}
+		}
+
 		return branchReferral_;
 	}
 
