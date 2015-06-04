@@ -200,6 +200,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (advertisingId != null) {
 					installPost.put("google_advertising_id", advertisingId);
 				}
+
+				int latVal = sysObserver_.getLATValue();
+				installPost.put("lat_val", latVal);
+
 				installPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();
@@ -239,6 +243,10 @@ public class BranchRemoteInterface extends RemoteInterface {
 				if (advertisingId != null) {
 					openPost.put("google_advertising_id", advertisingId);
 				}
+
+				int latVal = sysObserver_.getLATValue();
+				openPost.put("lat_val", latVal);
+
 				openPost.put("debug", debug);
 			} catch (JSONException ex) {
 				ex.printStackTrace();

@@ -638,4 +638,32 @@ public class SystemObserver {
 		
 		return advertisingId;
 	}
+
+	/**
+	 * <p>Get the limit-ad-tracking status of the advertising identifier.</p>
+	 * <p>Check the Google Play services to for LAT enabled or disabled and return the LAT value as an integer.</p>
+	 *
+	 * @return
+	 * <p> 0 if LAT is disabled else 1.</p>
+	 *
+	 * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
+	 * Android Developers - Limit Ad Tracking</a>
+	 *
+	 */
+	public int getLATValue(){
+		int latVal = 0;
+		try {
+			Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+			Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+			Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
+			Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
+
+			latVal = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 :0;
+		} catch(IllegalStateException ex) {
+			ex.printStackTrace();
+		} catch(Exception ignore) {
+		}
+
+		return latVal;
+	}
 }
