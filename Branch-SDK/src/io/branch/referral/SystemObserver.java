@@ -352,15 +352,15 @@ public class SystemObserver {
 	 * </ul>
 	 */
 	public String getBluetoothVersion() {
-        if (android.os.Build.VERSION.SDK_INT >= 8) {
-            if(android.os.Build.VERSION.SDK_INT >= 18 &&
-                    context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                return "ble";
-            } else if(context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
-                return "classic";
-            }
-        }
-        return BLANK;
+		if (android.os.Build.VERSION.SDK_INT >= 8) {
+			if (android.os.Build.VERSION.SDK_INT >= 18 &&
+					context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+				return "ble";
+			} else if (context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
+				return "classic";
+			}
+		}
+		return BLANK;
 	}
 	
 	/**
@@ -650,7 +650,7 @@ public class SystemObserver {
 	 * Android Developers - Limit Ad Tracking</a>
 	 *
 	 */
-	public int getLATValue(){
+	public int getLATValue() {
 		int latVal = 0;
 		try {
 			Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
@@ -658,11 +658,10 @@ public class SystemObserver {
 			Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
 			Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
 
-			latVal = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 :0;
-		} catch(IllegalStateException ex) {
+			latVal = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
+		} catch (IllegalStateException ex) {
 			ex.printStackTrace();
-		} catch(Exception ignore) {
-		}
+		} catch (Exception ignore) {}
 
 		return latVal;
 	}

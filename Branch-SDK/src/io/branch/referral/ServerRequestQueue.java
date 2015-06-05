@@ -39,14 +39,14 @@ public class ServerRequestQueue {
 	 * 				object where one was not already requested during the current app lifecycle.
 	 */
     public static ServerRequestQueue getInstance(Context c) {
-    	if(SharedInstance == null) {
-    		synchronized(ServerRequestQueue.class) {
-    			if(SharedInstance == null) {
-    				SharedInstance = new ServerRequestQueue(c);
-    			}
-    		}
-    	}
-    	return SharedInstance;
+		if (SharedInstance == null) {
+			synchronized (ServerRequestQueue.class) {
+				if (SharedInstance == null) {
+					SharedInstance = new ServerRequestQueue(c);
+				}
+			}
+		}
+		return SharedInstance;
     }
 
     /**

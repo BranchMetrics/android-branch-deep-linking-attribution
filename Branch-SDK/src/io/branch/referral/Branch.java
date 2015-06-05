@@ -307,11 +307,11 @@ public class Branch {
 
 	private ScheduledFuture<?> appListingSchedule_;
 
-	/* BranchActivityLifeCycleObserver instance.Should be initialised on creating Instance with Application object. */
+	/* BranchActivityLifeCycleObserver instance. Should be initialised on creating Instance with Application object. */
 	private BranchActivityLifeCycleObserver activityLifeCycleObserver_;
 
 	/* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
-	private static boolean isAutoSessionMode = false;
+	private static boolean isAutoSessionMode_ = false;
 
 
 	/**
@@ -349,23 +349,23 @@ public class Branch {
 
 	/**
 	 * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-	 * Make sure your app is  instantiating {@link BranchApp} before calling this method</p>
+	 * Make sure your app is instantiating {@link BranchApp} before calling this method.</p>
 	 *
 	 * @return An initialised singleton {@link Branch} object
 	 *
 	 * @throws BranchException Exception</br>
-	 *          1)If your {@link Application}  is not instance of {@link BranchApp} </br>
-	 *          2)If the minimum API level is below 14
+	 *          1) If your {@link Application} is not instance of {@link BranchApp}.</br>
+	 *          2) If the minimum API level is below 14.
 	 */
 	public static Branch getInstance() throws BranchException {
-		// Check if BranchApp is instantiated.
-		if(branchReferral_ == null || isAutoSessionMode == false ) {
-			throw BranchException.getInstatiationException();
+		/* Check if BranchApp is instantiated. */
+		if (branchReferral_ == null || isAutoSessionMode_ == false) {
+			throw BranchException.getInstantiationException();
 		}
 
-			// Check if Activity life cycle callbacks are set.
+		/* Check if Activity life cycle callbacks are set. */
 		else if (branchReferral_.isActivityObserverInitialised() == false) {
-				throw BranchException.getAPILevelException();
+			throw BranchException.getAPILevelException();
 		}
 
 		return branchReferral_;
@@ -397,11 +397,11 @@ public class Branch {
 			branchReferral_ = Branch.initInstance(context);
 		}
 		branchReferral_.context_ = context;
-        if (branchKey.startsWith("key_")) {
-            branchReferral_.prefHelper_.setBranchKey(branchKey);
-        } else {
-            branchReferral_.prefHelper_.setAppKey(branchKey);
-        }
+		if (branchKey.startsWith("key_")) {
+			branchReferral_.prefHelper_.setBranchKey(branchKey);
+		} else {
+			branchReferral_.prefHelper_.setAppKey(branchKey);
+		}
 		return branchReferral_;
 	}
 
@@ -417,10 +417,10 @@ public class Branch {
 		branchReferral_.context_ = context;
 
 		/* If {@link BranchApp} is instantiated register for activity life cycle events. */
-		isAutoSessionMode = context instanceof BranchApp;
-		if(isAutoSessionMode) {
+		isAutoSessionMode_ = context instanceof BranchApp;
+		if (isAutoSessionMode_) {
 			try {
-         		/* Set an observer for activity life cycle events. */
+		 		/* Set an observer for activity life cycle events. */
 				branchReferral_.setActivityLifeCycleObserver((BranchApp) context);
 
 			} catch (NoSuchMethodError Ex) {
@@ -851,9 +851,9 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Set the current activity window for the debug touch events.Only for internal usage</p>
+	 * <p>Set the current activity window for the debug touch events. Only for internal usage.</p>
 	 *
-	 * @param activity The current activity
+	 * @param activity The current activity.
 	 */
 	private void setTouchDebugInternal(Activity activity){
 		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
@@ -940,7 +940,7 @@ public class Branch {
 	 */
 	public void closeSession() {
 		if (prefHelper_.getSmartSession()) {
-			if (keepAlive_ && !isAutoSessionMode) { // No need to check for keepAlive_ for auto session management.
+			if (keepAlive_ && !isAutoSessionMode_) { // No need to check for keepAlive_ for auto session management.
 				return;
 			}
 	
@@ -3096,15 +3096,15 @@ public class Branch {
 	}
 
 	/*
-    * Checks if the BranchActivityLifeCycleObserver is initialised
-    * @return true if BranchActivityLifeCycleObserver initialised else false
-    */
-	public boolean isActivityObserverInitialised(){
+	 * Checks if the BranchActivityLifeCycleObserver is initialised.
+     * @return true if BranchActivityLifeCycleObserver initialised else false.
+     */
+	private boolean isActivityObserverInitialised() {
 		return activityLifeCycleObserver_ != null;
 	}
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-	private void setActivityLifeCycleObserver(Application application){
+	private void setActivityLifeCycleObserver(Application application) {
 		application.registerActivityLifecycleCallbacks(new BranchActivityLifeCycleObserver());
 	}
 
@@ -3114,7 +3114,7 @@ public class Branch {
 	 */
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks{
-		int m_ActivityCnt = 0; //Keep the count of live  activities
+		private int activityCnt_ = 0; //Keep the count of live  activities.
 
 		public BranchActivityLifeCycleObserver(){
 			activityLifeCycleObserver_ = this;
@@ -3125,10 +3125,10 @@ public class Branch {
 
 		@Override
 		public void onActivityStarted(Activity activity) {
-			if(m_ActivityCnt < 1){ // Check if this is the first Activity.If so start a session.
+			if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
 				initSession();// indicate  starting of session.
 			}
-			m_ActivityCnt++;
+			activityCnt_++;
 
 			//Set the activity for touch debug
 			setTouchDebugInternal(activity);
@@ -3142,8 +3142,8 @@ public class Branch {
 
 		@Override
 		public void onActivityStopped(Activity activity) {
-			m_ActivityCnt--;      // Check if this is the last activity.If so stop session.
-			if(m_ActivityCnt < 1){
+			activityCnt_--;      // Check if this is the last activity.If so stop session.
+			if (activityCnt_ < 1) {
 				closeSession(); //Indicate end of a  session.
 			}
 		}

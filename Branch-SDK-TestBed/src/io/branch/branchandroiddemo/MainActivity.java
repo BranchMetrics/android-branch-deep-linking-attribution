@@ -26,13 +26,13 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 	Branch branch;
 
-    public enum SESSION_MANAGEMENT_MODE {
-		AUTO,    /*Branch SDK Manages the session for you.For this mode minimum API level should
-				   be 14 or above.Make sure to instantiate {@link BranchApp} class to use this mode.*/
-		MANUAL  /* You are responsible for managing the session.Need to initialise the session on
-               need to call initialiseSession() and closeSession() on activity onStart() and
-               onStop() respectively. */
-    }
+	public enum SESSION_MANAGEMENT_MODE {
+		AUTO,    /* Branch SDK Manages the session for you. For this mode minimum API level should
+				 be 14 or above. Make sure to instantiate {@link BranchApp} class to use this mode. */
+
+		MANUAL  /* You are responsible for managing the session. Need to call initialiseSession() and
+				closeSession() on activity onStart() and onStop() respectively. */
+	}
 
     /* Current mode for the Session Management */
     public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.AUTO;
@@ -212,11 +212,11 @@ public class MainActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
         try {
-            if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
-                branch = Branch.getInstance(this.getApplicationContext());
-            } else {
-                branch = Branch.getInstance();
-            }
+			if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
+				branch = Branch.getInstance(this.getApplicationContext());
+			} else {
+				branch = Branch.getInstance();
+			}
 
             branch.setDebug();
             branch.initSession(new BranchReferralInitListener() {

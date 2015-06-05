@@ -7,7 +7,7 @@ import android.content.pm.PackageManager;
 /**
  * <p>
  * Default Android Application class for  Branch SDK. You should use this as your application class
- * in your manifest if you are not creating an Application class.If you already have an Application
+ * in your manifest if you are not creating an Application class. If you already have an Application
  * class then extend your Application class with this.
  * </p>
  * <p/>
@@ -31,35 +31,35 @@ import android.content.pm.PackageManager;
  */
 public class BranchApp extends Application {
 
-
     @Override
     public void onCreate() {
         super.onCreate();
-        if(isTestModeEnabled() ==false) {
+        if (isTestModeEnabled() == false) {
             Branch.getInstance(this);
-        }else{
+        } else {
             Branch.getTestInstance(this);
         }
     }
 
     /**
-     * Get the value of "io.branch.sdk.TestMode" entry  in application manifest.
+     * Get the value of "io.branch.sdk.TestMode" entry in application manifest.
      *
-     * @return   value of "io.branch.sdk.TestMode" entry  in application manifest.
+     * @return   value of "io.branch.sdk.TestMode" entry in application manifest.
      *          false if "io.branch.sdk.TestMode" is not added in the manifest.
      */
 
     private boolean isTestModeEnabled() {
-        boolean isTestMode = false;
+        boolean isTestMode_ = false;
         String testModeKey = "io.branch.sdk.TestMode";
         try {
             final ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
-                isTestMode = ai.metaData.getBoolean(testModeKey, false);
+                isTestMode_ = ai.metaData.getBoolean(testModeKey, false);
             }
         } catch (final PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
         }
 
-        return isTestMode;
+        return isTestMode_;
     }
 }
