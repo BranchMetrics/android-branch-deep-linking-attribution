@@ -211,33 +211,39 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-        try {
-			if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
-				branch = Branch.getInstance(this.getApplicationContext());
-			} else {
+       
+		if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
+			branch = Branch.getInstance(this.getApplicationContext());
+		} else {
+			try {
 				branch = Branch.getInstance();
+			} catch (BranchException ex) {
+				ex.printStackTrace();
+				/* On API Level Error fall back to Manual session handling.*/
+				sessionMode = SESSION_MANAGEMENT_MODE.MANUAL;
+				branch = Branch.getInstance(this.getApplicationContext());
 			}
+		}
 
-            branch.setDebug();
-            branch.initSession(new BranchReferralInitListener() {
-                @Override
-                public void onInitFinished(JSONObject referringParams, BranchError error) {
-                    Log.i("BranchTestBed", "branch init complete!");
-                    try {
-                        Iterator<?> keys = referringParams.keys();
-                        while (keys.hasNext()) {
-                            String key = (String) keys.next();
-                            Log.i("BranchTestBed", key + ", " + referringParams.getString(key));
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, this.getIntent().getData(), this);
-        } catch (BranchException ex) {
-            ex.printStackTrace();
-            Log.d("BranchTestBed", ex.getMessage());
-        }
+		branch.setDebug();
+		branch.initSession(new BranchReferralInitListener() {
+			@Override
+			public void onInitFinished(JSONObject referringParams,
+					BranchError error) {
+				Log.i("BranchTestBed", "branch init complete!");
+				try {
+					Iterator<?> keys = referringParams.keys();
+					while (keys.hasNext()) {
+						String key = (String) keys.next();
+						Log.i("BranchTestBed",
+								key + ", " + referringParams.getString(key));
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		}, this.getIntent().getData(), this);
+       
 	}
 
 	@Override
