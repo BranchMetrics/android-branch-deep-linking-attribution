@@ -8,7 +8,12 @@ package io.branch.referral;
  */
 public class BranchException extends Exception {
 
-    private String branchErrorMsg = ""; /* Branch Specific message for this error. */
+    /*
+	 * Generated Serial ID for BranchException.
+	 */
+	private static final long serialVersionUID = 158893884667629597L;
+
+	private String branchErrorMsg = ""; /* Branch Specific message for this error. */
 
     /*
      *  Message for Instance not available error. Should be thrown when user trying to access

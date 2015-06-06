@@ -190,7 +190,7 @@ public class ReferralCodeActivity extends Activity {
 			branch.initSession(this);
 		} else {
 			try {
-				branch = branch.getInstance();
+				branch = Branch.getInstance();
 			} catch (BranchException e) {
 				e.printStackTrace();
 				Log.d("BranchTestBed", e.getMessage());
