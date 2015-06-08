@@ -939,8 +939,17 @@ public class Branch {
 	 * Branch uses to keep a session alive during Activity transitions</p>
 	 */
 	public void closeSession() {
+		if (isAutoSessionMode_) {
+			/*
+			 * Ignore any session close request from user if session is managed
+			 * automatically.This is handle situation of closeSession() in
+			 * closed by developer by error while running in auto session mode.
+			 */
+			return;
+		}
+
 		if (prefHelper_.getSmartSession()) {
-			if (keepAlive_ && !isAutoSessionMode_) { // No need to check for keepAlive_ for auto session management.
+			if (keepAlive_) { 
 				return;
 			}
 	
@@ -958,6 +967,19 @@ public class Branch {
 			executeClose();
 		}
 		
+		if (prefHelper_.getExternAppListing()) {
+			if (appListingSchedule_ == null) {
+				scheduleListOfApps();
+			}
+		}
+	}
+	
+	/*
+	 * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
+	 * </p>
+	 */
+	private void closeSessionInternal(){
+		executeClose();
 		if (prefHelper_.getExternAppListing()) {
 			if (appListingSchedule_ == null) {
 				scheduleListOfApps();
@@ -2702,13 +2724,8 @@ public class Branch {
 	                networkCount_ = 0;
 					handleFailure(requestQueue_.getSize()-1);
 	                return;
-	            }
+	            }				
 				
-				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && !req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-					keepAlive();
-					clearCloseTimer();
-				}
-
 				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE, prefHelper_.isDebug());
 				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
@@ -3142,9 +3159,10 @@ public class Branch {
 
 		@Override
 		public void onActivityStopped(Activity activity) {
-			activityCnt_--;      // Check if this is the last activity.If so stop session.
+			activityCnt_--; // Check if this is the last activity.If so stop
+							// session.
 			if (activityCnt_ < 1) {
-				closeSession(); //Indicate end of a  session.
+				closeSessionInternal();
 			}
 		}
 
