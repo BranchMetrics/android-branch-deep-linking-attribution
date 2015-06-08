@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.7: Added automated session management. Getting rid of session handling with each Activity's life cycle methods.
+
 - v1.5.6: Add limit to queue retrieval to prevent legacy stack overflow ghosts.
 
 - v1.5.5: Fix null server request tag bug.
