@@ -8,6 +8,8 @@ dependencies:
     - ~/android
   override:
     - ./install-dependencies.sh
+    - VERSION=`perl -ne '/VERSION_NAME=(.*)/ && print "$1\n"' <  gradle.properties`.jar && cd Branch-SDK && jar -cf $VERSION src/
+    
 
 test:
   override:
@@ -21,3 +23,16 @@ test:
         background: true
     - adb wait-for-device
     - adb shell am instrument -w io.branch.branchandroiddemo/android.test.InstrumentationTestRunner
+    
+
+deployment:
+  production:
+    branch: master
+    commands:
+      - echo "test deploy"
+      - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
+      - cp gradle.properties ~/.gradle/
+      - perl -i -ne 's/<password>/$GPG_KEY/' ~/.gradle/gradle.properties
+      #- gradle uploadArchives
+      #- upload to s3d
+
