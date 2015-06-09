@@ -237,6 +237,10 @@ public class MainActivity extends Activity {
 						String key = (String) keys.next();
 						Log.i("BranchTestBed",
 								key + ", " + referringParams.getString(key));
+						
+						Log.i("BranchTestBed",
+								"isUserIdentified "+ branch.isUserIdentified());
+						
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();

@@ -561,7 +561,7 @@ public class Branch {
 	 * 					unsuccessful.
 	 */
 	public boolean initSession(BranchReferralInitListener callback) {
-		initSession(callback, (Activity)null);
+		initSession(callback, (Activity) null);
 		return false;
 	}
 	
@@ -1093,6 +1093,18 @@ public class Branch {
 				}
 			}
 		}).start();
+	}
+
+	/**
+	 * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
+	 * If you call setIdentity, this device will have that identity associated with this user until logout is called.
+	 * This includes persisting through uninstalls, as we track device id.
+	 *
+	 * @return 				A {@link Boolean} value that will return <i>true</i> only if user already has an identity.
+	 *
+	 */
+	public boolean isUserIdentified() {
+		return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
 	}
 
 	/**
