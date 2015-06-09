@@ -1,6 +1,7 @@
 machine:
   environment:
-    ANDROID_HOME: /home/ubuntu/android
+    PATH: /home/ubuntu/gradle-2.4/bin:$PATH
+    #ANDROID_HOME: /home/ubuntu/android
 
 dependencies:
   cache_directories:
