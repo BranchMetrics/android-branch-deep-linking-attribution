@@ -15,11 +15,8 @@ dependencies:
 
 test:
   pre:
-    - ~/gradle-2.4/bin/gradle
+    #- ~/gradle-2.4/bin/gradle
     - sudo easy_install awscli
-    - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
-    - cp gradle.properties ~/.gradle/
-    - perl -i -pne "s/<password>/$GPG_KEY/" ~/.gradle/gradle.properties
   override:
     - $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
         background: true
@@ -38,6 +35,9 @@ deployment:
     branch: master
     commands:
       #- ~/gradle-2.4/bin/gradle uploadArchives
+      # - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
+      # - cp gradle.properties ~/.gradle/
+      # - perl -i -pne "s/<password>/$GPG_KEY/" ~/.gradle/gradle.properties
       - zip Branch-Android-SDK.zip Branch-SDK Branch-$VERSION.jar
       - zip Branch-Android-TestBed.zip Branch-SDK-TestBed Branch-$VERSION.jar
       #- upload to s3d
