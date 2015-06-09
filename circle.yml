@@ -14,7 +14,6 @@ dependencies:
 
 test:
   override:
-    - ~/gradle-2.4/bin/gradle
     - $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
         background: true
         parallel: true
@@ -31,7 +30,7 @@ deployment:
   production:
     branch: master
     commands:
-      - echo "test deploy"
+      - ~/gradle-2.4/bin/gradle
       - sudo easy_install awscli
       - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
       - cp gradle.properties ~/.gradle/
