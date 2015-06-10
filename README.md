@@ -213,18 +213,27 @@ Either way, we recommend you put a `//TODO` to remind you to change back to live
 Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
 #### Automatic Session Management
-Starting from 1.5.7, there is no need for initialising and closing session with the new Automatic Session Management. Automatic Session Management can work only with API level 14 and above.
-So make sure that your `minSdkVersion` is 14 or above.
 
+Starting from Branch SDK version 1.5.7, there is no need for initialising and closing session with the new _automatic session management_. Automatic session management can work only with API level 14 and above, so make sure that your `minSdkVersion` is 14 or above.
+
+**Requirement**
 ```xml
 <uses-sdk
 	android:minSdkVersion="14"
 	   ------------        />
 ```
 
-Branch SDK can do session management for you if you do one of the following.
+Once you do any of the below, there is no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
 
-1) If you are not creating an Application class, declare `BranchApp` as your application class in your manifest.
+```java
+  Branch branch = Branch.getInstance();
+```
+
+Branch SDK can do session management for you if you do one of the following:
+
+##### Common: you do not use Application class
+
+If you are not creating or using an Application class throughout your project, all you need to do is declare `BranchApp` as your application class in your manifest.
 
 ```xml
  <application
@@ -232,13 +241,18 @@ Branch SDK can do session management for you if you do one of the following.
 android:name="io.branch.referal.BranchApp">
 ```
 
-2) If you already have an Application class then extend your application class with `BranchApp`.
+##### Rarer: you already use the Application class
+
+If you already have an Application class then extend your application class with `BranchApp`.
 
 ```java
 public class YourApplication extends BranchApp
 ```
 
-3) If you already have an Application class and don't want to extend it from `BranchApp` then create a Branch instance in your Application's `onCreate()` method.
+##### Very rare: you already use and extend the Application class
+
+If you already have an Application class and don't want to extend it from `BranchApp` then create a Branch instance in your Application's `onCreate()` method.
+
 ```java
 public void onCreate() {
 	super.onCreate();
@@ -250,16 +264,9 @@ public void onCreate() {
 }
 ```
 
-Once you do any of the above, no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
+#### Close session (session tracking to support for minSdkVersion < 14)
 
-```java
-  Branch branch = Branch.getInstance();
-```
-
-
-#### Close session
-Note:Skip this if you are implementing Automatic Session Management as described above
-
+Note: There is no need to use this method if you use _automatic session management_ as described above and only support minSdkVersion >= 14
 
 Required: this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened.
 
