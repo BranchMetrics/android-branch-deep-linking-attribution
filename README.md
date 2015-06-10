@@ -209,13 +209,22 @@ Or
 Branch branch = Branch.getInstance(getApplicationContext(), "your test branch key"); // replace with your actual branch key
 ```
 
-Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later. 
+Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later.
 Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
 #### Automatic Session Management
-Starting from 1.5.7, there is no need for intialising and closing session. Branch SDK can do it for you if you do one of the following options.
+Starting from 1.5.7, there is no need for initialising and closing session with the new Automatic Session Management. Automatic Session Management can work only with API level 14 and above.
+So make sure that your `minSdkVersion` is 14 or above.
 
-1) If you are not creating an Application class, declare ```BranchApp``` as your application class in your manifest.
+```xml
+<uses-sdk
+	android:minSdkVersion="14"
+	   ------------        />
+```
+
+Branch SDK can do session management for you if you do one of the following.
+
+1) If you are not creating an Application class, declare `BranchApp` as your application class in your manifest.
 
 ```xml
  <application
@@ -223,13 +232,13 @@ Starting from 1.5.7, there is no need for intialising and closing session. Branc
 android:name="io.branch.referal.BranchApp">
 ```
 
-2) If you already have an Application class then extend your application class with ```BranchApp```.
+2) If you already have an Application class then extend your application class with `BranchApp`.
 
 ```java
 public class YourApplication extends BranchApp
 ```
 
-3) If you already have an Application class and don't want to extend it from ```BranchApp``` then create an Branch instance in your Application's ```onCreate()``` method.
+3) If you already have an Application class and don't want to extend it from `BranchApp` then create a Branch instance in your Application's `onCreate()` method.
 ```java
 public void onCreate() {
 	super.onCreate();
@@ -246,13 +255,7 @@ Once you do any of the above, no need to close or init sessions in your Activiti
 ```java
   Branch branch = Branch.getInstance();
 ```
-Automatic Session Management can work only with API level 14 and above. So make sure that your minSdkVersion is 14 or above.
 
-```xml
- <uses-sdk
- 	android:minSdkVersion="14"
-        ------------        />
-```
 
 #### Close session
 Note:Skip this if you are implementing Automatic Session Management as described above
@@ -342,7 +345,7 @@ try {
 	dataToInclude.put("user", "Joe");
 	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
 	dataToInclude.put("description", "Joe likes long walks on the beach...")
-	
+
 	// customize the display of the Branch link
 	dataToInclude.put("$og_title", "Joe's My App Referral");
 	dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
@@ -362,7 +365,7 @@ ArrayList<String> tags = new ArrayList<String>();
 tags.put("version1");
 tags.put("trial6");
 
-// Link 'type' can be used for scenarios where you want the link to only deep link the first time. 
+// Link 'type' can be used for scenarios where you want the link to only deep link the first time.
 // Use _null_, _LINK_TYPE_UNLIMITED_USE_ or _LINK_TYPE_ONE_TIME_USE_
 
 // Link 'alias' can be used to label the endpoint on the link. For example: http://bnc.lt/AUSTIN28. Should not exceed 128 characters
@@ -393,7 +396,7 @@ You can customize the Facebook OG tags of each URL if you want to dynamically sh
 | "$og_title" | The title you'd like to appear for the link in social media
 | "$og_description" | The description you'd like to appear for the link in social media
 | "$og_image_url" | The URL for the image you'd like to appear for the link in social media
-| "$og_video" | The URL for the video 
+| "$og_video" | The URL for the video
 | "$og_url" | The URL you'd like to appear
 | "$og_redirect" | If you want to bypass our OG tags and use your own, use this key with the URL that contains your site's metadata.
 
@@ -413,7 +416,7 @@ You have the ability to control the direct deep linking of each link by insertin
 
 | Key | Value
 | --- | ---
-| "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure. 
+| "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure.
 | "$always_deeplink" | true or false. (default is not to deep link first) This key can be specified to have our linking service force try to open the app, even if we're not sure the user has the app installed. If the app is not installed, we fall back to the respective app store or $platform_url key. By default, we only open the app if we've seen a user initiate a session in your app from a Branch link (has been cookied and deep linked by Branch)
 
 ## Referral system rewarding functionality
