@@ -212,7 +212,51 @@ Branch branch = Branch.getInstance(getApplicationContext(), "your test branch ke
 Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later. 
 Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
+#### Automatic Session Management
+Starting from 1.5.7, there is no need for intialising and closing session. Branch SDK can do it for you if you do one of the following options.
+
+1) If you are not creating an Application class, declare ```BranchApp``` as your application class in your manifest.
+
+```xml
+ <application
+-----
+android:name="io.branch.referal.BranchApp">
+```
+
+2) If you already have an Application class then extend your application class with ```BranchApp```.
+
+```java
+public class YourApplication extends BranchApp
+```
+
+3) If you already have an Application class and don't want to extend it from ```BranchApp``` then create an Branch instance in your Application's ```onCreate()``` method.
+```java
+public void onCreate() {
+	super.onCreate();
+	if (!isDebug) {
+		Branch.getInstance(this);
+	} else {
+		Branch.getTestInstance(this);
+	}
+}
+```
+
+Once you do any of the above, no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
+
+```java
+  Branch branch = Branch.getInstance();
+```
+Automatic Session Management can work only with API level 14 and above. So make sure that your minSdkVersion is 14 or above.
+
+```xml
+ <uses-sdk
+ 	android:minSdkVersion="14"
+        ------------        />
+```
+
 #### Close session
+Note:Skip this if you are implementing Automatic Session Management as described above
+
 
 Required: this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened.
 
