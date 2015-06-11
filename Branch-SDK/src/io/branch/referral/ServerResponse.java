@@ -40,6 +40,11 @@ public class ServerResponse {
 	 * @see BranchLinkData
 	 */
 	private BranchLinkData linkData_;
+
+	/**
+	 *  The {@link Object} used in corresponding post get this response.
+	 */
+	private Object requestObject_;
 	
 	/**
 	 * <p>Constructor method for the {@link ServerResponse} class that allows for the instantiation 
@@ -134,5 +139,29 @@ public class ServerResponse {
 	 */
 	public BranchLinkData getLinkData() {
 		return linkData_;
+	}
+
+	/**
+	 * <p>Sets the request object caused this response, as a generic {@link Object}
+	 * instance. This object can be type-cast by other methods within this class:</p>
+	 *
+	 * @param request Generic {@link Object} instance containing the request data caused this response.
+	 */
+	public void setRequestObject(Object request) {
+		this.requestObject_ = request;
+	}
+
+	/**
+	 * <p>Checks whether the request params cause this response is an instance of a
+	 * {@link JSONObject} object, and if so type-casts it to the corresponding class type.</p>
+	 *
+	 * @return A {@link JSONObject} containing the post params sent with corresponding  server request, or a null
+	 * value if the post params is not of the {@link JSONObject} type.
+	 */
+	public JSONObject getRequestObject() {
+		if (requestObject_ instanceof JSONObject)
+			return (JSONObject) requestObject_;
+		else
+			return null;
 	}
 }

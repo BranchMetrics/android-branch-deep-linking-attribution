@@ -275,6 +275,7 @@ public class Branch {
 	private BranchReferralInitListener getReferralCodeCallback_;
 	private BranchReferralInitListener validateReferralCodeCallback_;
 	private BranchReferralInitListener applyReferralCodeCallback_;
+	private BranchReferralStateChangedListener redeemStateChangedCallback_;
 	private BranchRemoteInterface kRemoteInterface_;
 	
 	private PrefHelper prefHelper_;
@@ -1256,29 +1257,63 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient 
-	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
+	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
 	 * the available credits will be redeemed instead.</p>
-	 * 
-	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
-	 * 					the bucket.
+	 *
+	 * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
+	 *                 the bucket.
 	 */
 	public void redeemRewards(int count) {
-		redeemRewards("default", count);
+		redeemRewards("default", count, null);
 	}
 
 	/**
-	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient 
-	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
+	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
 	 * the available credits will be redeemed instead.</p>
-	 * 
-	 * @param bucket	A {@link String} value containing the name of the referral bucket to attempt 
-	 * 					to redeem credits from.
-	 * 
-	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
-	 * 					the specified bucket.
+	 *
+	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from
+	 * 					the bucket.
+	 *
+	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
+	 *                 trigger actions defined therein upon a executing redeem rewards.
+	 */
+	public void redeemRewards(int count, BranchReferralStateChangedListener callback) {
+		redeemRewards("default", count, callback);
+	}
+
+	/**
+	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
+	 * the available credits will be redeemed instead.</p>
+	 *
+	 * @param bucket A {@link String} value containing the name of the referral bucket to attempt
+	 *               to redeem credits from.
+	 *
+	 * @param count  A {@link Integer} specifying the number of credits to attempt to redeem from
+	 *               the specified bucket.
 	 */
 	public void redeemRewards(final String bucket, final int count) {
+		redeemRewards(bucket, count, null);
+	}
+
+	/**
+	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
+	 * the available credits will be redeemed instead.</p>
+	 *
+	 * @param bucket   A {@link String} value containing the name of the referral bucket to attempt
+	 *                 to redeem credits from.
+	 *
+	 * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
+	 *                 the specified bucket.
+	 *
+	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
+	 *                 trigger actions defined therein upon a executing redeem rewards.
+	 */
+	public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
+		redeemStateChangedCallback_ = callback;
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -1315,6 +1350,8 @@ public class Branch {
 					} else if (initFailed_ || initNotStarted_) {
 						handleFailure(req);
 					}
+				} else {
+					handleFailure(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS));
 				}
 			}
 		}).start();
@@ -2871,6 +2908,13 @@ public class Branch {
 						else
 							applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
 					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
+					if (redeemStateChangedCallback_ != null) {
+						if (initNotStarted_)
+							redeemStateChangedCallback_.onStateChanged(false, new BranchNotInitError());
+						else
+							redeemStateChangedCallback_.onStateChanged(false, new BranchRedeemRewardsError());
+					}
 				}
 			}
 		});
@@ -3119,6 +3163,39 @@ public class Branch {
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
+				}
+			}
+		});
+	}
+
+	private void processRedeemRewardsResponse(final ServerResponse resp) {
+		boolean updateListener = false;
+		JSONObject requestObject = resp.getRequestObject();
+		if (requestObject != null) {
+			if (requestObject.has("bucket") && requestObject.has("amount")) {
+				try {
+					int redeemedCredits = requestObject.getInt("amount");
+					String creditBucket = requestObject.getString("bucket");
+					updateListener = redeemedCredits > 0;
+
+					int updatedCreditCount = prefHelper_.getCreditCount(creditBucket) - redeemedCredits;
+					updatedCreditCount = updatedCreditCount > 0 ? updatedCreditCount : 0;
+					prefHelper_.setCreditCount(creditBucket, updatedCreditCount);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		final boolean finUpdateListener = updateListener;
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (redeemStateChangedCallback_ != null) {
+					if (finUpdateListener)
+						redeemStateChangedCallback_.onStateChanged(finUpdateListener, null);
+					else
+						redeemStateChangedCallback_.onStateChanged(finUpdateListener, new BranchRedeemRewardsError());
 				}
 			}
 		});
@@ -3432,7 +3509,11 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
 						processReferralCodeApply(serverResponse);
 						requestQueue_.dequeue();
-					} else {
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
+						processRedeemRewardsResponse(serverResponse);
+						requestQueue_.dequeue();
+					}
+					else {
 						requestQueue_.dequeue();
 					}
 
@@ -3718,6 +3799,18 @@ public class Branch {
 		@Override
 		public String getMessage() {
 			return "Did you forget to call init? Make sure you init the session before making Branch calls";
+		}
+	}
+
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the
+	 * server to redeem user's reward has failed since user doesn't have credits available to redeem.
+	 * </p>
+	 */
+	public class BranchRedeemRewardsError extends BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble redeeming rewards. Please make sure you have credits available to redeem";
 		}
 	}
 }
