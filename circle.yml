@@ -14,16 +14,18 @@ dependencies:
     
 
 test:
-  pre:
-    - ~/gradle-2.4/bin/gradle
-    - sudo easy_install awscli
+
   override:
     - gradle
-    - $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
+    - emulator -avd circleci-android22 -no-audio -no-window:
         background: true
         parallel: true
-    - ./wait.sh:
-        parallel: true
+    - circle-android wait-for-boot
+    #- $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
+        #background: true
+        #parallel: true
+    #- ./wait.sh:
+        #parallel: true
     - adb install Branch-SDK-TestBed/Branch-SDK-TestBed-release-unsigned.apk
     - adb logcat:
         background: true
@@ -35,6 +37,7 @@ deployment:
   production:
     branch: master
     commands:
+      # - sudo easy_install awscli
       #- ~/gradle-2.4/bin/gradle uploadArchives
       # - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
       # - cp gradle.properties ~/.gradle/
