@@ -3169,33 +3169,30 @@ public class Branch {
 	}
 
 	private void processRedeemRewardsResponse(final ServerResponse resp) {
-		boolean updateListener = false;
+		boolean isRedemptionSucceeded = false;
 		JSONObject requestObject = resp.getRequestObject();
 		if (requestObject != null) {
 			if (requestObject.has("bucket") && requestObject.has("amount")) {
 				try {
 					int redeemedCredits = requestObject.getInt("amount");
 					String creditBucket = requestObject.getString("bucket");
-					updateListener = redeemedCredits > 0;
+					isRedemptionSucceeded = redeemedCredits > 0;
 
 					int updatedCreditCount = prefHelper_.getCreditCount(creditBucket) - redeemedCredits;
-					updatedCreditCount = updatedCreditCount > 0 ? updatedCreditCount : 0;
 					prefHelper_.setCreditCount(creditBucket, updatedCreditCount);
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
 			}
 		}
-		final boolean finUpdateListener = updateListener;
+		final boolean finIsRedemptionSucceeded = isRedemptionSucceeded;
 		Handler mainHandler = new Handler(context_.getMainLooper());
 		mainHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				if (redeemStateChangedCallback_ != null) {
-					if (finUpdateListener)
-						redeemStateChangedCallback_.onStateChanged(finUpdateListener, null);
-					else
-						redeemStateChangedCallback_.onStateChanged(finUpdateListener, new BranchRedeemRewardsError());
+					BranchError branchError = finIsRedemptionSucceeded ? null : new BranchRedeemRewardsError();
+					redeemStateChangedCallback_.onStateChanged(finIsRedemptionSucceeded, branchError);
 				}
 			}
 		});
