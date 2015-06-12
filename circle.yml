@@ -37,7 +37,7 @@ deployment:
   production:
     branch: master
     commands:
-      # - sudo easy_install awscli
+       - sudo easy_install awscli
       #- ~/gradle-2.4/bin/gradle uploadArchives
       # - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
       # - cp gradle.properties ~/.gradle/
