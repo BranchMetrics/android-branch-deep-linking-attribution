@@ -38,12 +38,13 @@ deployment:
     branch: master
     commands:
       - sudo easy_install awscli
-      #- ~/gradle-2.4/bin/gradle uploadArchives
-      # - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
-      # - cp gradle.properties ~/.gradle/
-      # - perl -i -pne "s/<password>/$GPG_KEY/" ~/.gradle/gradle.properties
+      - aws s3 cp s3://branch-builds/keys/android-deploy-secring.pgp ~/.gnupg/secring.pgp
+      - cp gradle.properties ~/.gradle/
+      - perl -i -pne "s/<password>/$GPG_KEY/" ~/.gradle/gradle.properties
       - zip Branch-Android-SDK.zip Branch-SDK Branch-$VERSION.jar
       - zip Branch-Android-TestBed.zip Branch-SDK-TestBed Branch-$VERSION.jar
+      - sleep 600
+      #- ~/gradle-2.4/bin/gradle uploadArchives
       #- upload to s3d
 
 
