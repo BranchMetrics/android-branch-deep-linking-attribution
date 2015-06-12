@@ -15,7 +15,7 @@ dependencies:
 
 test:
   pre:
-    #- ~/gradle-2.4/bin/gradle
+    - ~/gradle-2.4/bin/gradle
     - sudo easy_install awscli
   override:
     - $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
