@@ -1,23 +1,24 @@
 machine:
   environment:
-    PATH: /home/ubuntu/gradle-2.4/bin:$PATH
-    ANDROID_HOME: /home/ubuntu/android
+    #PATH: /home/ubuntu/gradle-2.4/bin:$PATH
+    #ANDROID_HOME: /home/ubuntu/android
 
 dependencies:
-  cache_directories:
+  #cache_directories:
     #- ~/.android
     #- ~/android
   override:
-    - ./install-dependencies.sh
+    #- ./install-dependencies.sh
     - VERSION=`perl -ne '/VERSION_NAME=(.*)/ && print "$1\n"' <  gradle.properties`.jar && cd Branch-SDK && jar -cf $VERSION src/
-    - cd && wget https://services.gradle.org/distributions/gradle-2.4-bin.zip && unzip gradle-2.4-bin.zip
+    #- cd && wget https://services.gradle.org/distributions/gradle-2.4-bin.zip && unzip gradle-2.4-bin.zip
     
 
 test:
   pre:
-    - ~/gradle-2.4/bin/gradle
+    #- ~/gradle-2.4/bin/gradle
     - sudo easy_install awscli
   override:
+    - gradle
     - $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
         background: true
         parallel: true
