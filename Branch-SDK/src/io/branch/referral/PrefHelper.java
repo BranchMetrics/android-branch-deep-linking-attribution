@@ -68,6 +68,7 @@ public class PrefHelper {
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
 	private static final String KEY_APP_KEY = "bnc_app_key";
+	private static final String KEY_BRANCH_KEY = "bnc_branch_key";
 	private static final String KEY_APP_VERSION = "bnc_app_version";
 	private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
 	private static final String KEY_SESSION_ID = "bnc_session_id";
@@ -332,10 +333,22 @@ public class PrefHelper {
     }
 
 	public void setBranchKey(String key) {
-	    Branch_Key = key;
-    }
+		Branch_Key = key;
+		String currentBranchKey = getString(KEY_BRANCH_KEY);
+		if (key == null || currentBranchKey == null || !currentBranchKey.equals(key)) {
+			clearPrefOnBranchKeyChange();
+			setString(KEY_BRANCH_KEY, key);
+		}
+	}
 
-    public String getBranchKey(boolean isLive) {
+	public String getBranchKey() {
+		if (Branch_Key == null) {
+			Branch_Key = getString(KEY_BRANCH_KEY);
+		}
+		return Branch_Key;
+	}
+
+    public String readBranchKey(boolean isLive) {
         String branchKey = null;
         String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
         try {
@@ -350,17 +363,8 @@ public class PrefHelper {
             branchKey = NO_STRING_VALUE;
         }
 
-        setBranchKey(branchKey);
-
         return branchKey;
     }
-
-	public String getBranchKey() {
-        if (Branch_Key == null) {
-            Branch_Key = getBranchKey(true);
-        }
-		return Branch_Key;
-	}
 
 	/**
 	 * <p>Sets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
@@ -914,6 +918,22 @@ public class PrefHelper {
 	 */
 	public void setBool(String key, Boolean value) {
 		prefHelper_.prefsEditor_.putBoolean(key, value);
+		prefHelper_.prefsEditor_.commit();
+	}
+
+	/**
+	 * <p>Clears all the Branch referral shared preferences related to the current key.
+	 * Should be called before setting an new Branch-Key. </p>
+	 */
+	private void clearPrefOnBranchKeyChange() {
+		// If stored key isn't the same as the current key, we need to clean up
+		// Note: Link Click Identifier is not cleared because of the potential for that to mess up a deep link
+		String linkClickID = getLinkClickID();
+		String linkClickIdentifier = getLinkClickIdentifier();
+		prefsEditor_.clear();
+
+		setLinkClickID(linkClickID);
+		setLinkClickIdentifier(linkClickIdentifier);
 		prefHelper_.prefsEditor_.commit();
 	}
 

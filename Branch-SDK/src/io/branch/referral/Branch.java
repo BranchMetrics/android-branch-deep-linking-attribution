@@ -410,10 +410,13 @@ public class Branch {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
 
-			String branchKey = branchReferral_.prefHelper_.getBranchKey(isLive);
-	        if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-	        	Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
-	        }
+			String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
+			if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+				Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
+				branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+			} else {
+				branchReferral_.prefHelper_.setBranchKey(branchKey);
+			}
 		}
 		branchReferral_.context_ = context;
 
