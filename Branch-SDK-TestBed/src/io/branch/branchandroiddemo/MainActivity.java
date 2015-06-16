@@ -156,11 +156,21 @@ public class MainActivity extends Activity {
 				});
 			}
 		});
-		
+
 		cmdRedeemFive.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				branch.redeemRewards(5);
+				branch.redeemRewards(5, new BranchReferralStateChangedListener() {
+					@Override
+					public void onStateChanged(boolean changed, BranchError error) {
+						if (changed) {
+							Log.i("BranchTestBed", "redeemed Rewards = " + changed);
+							txtRewardBalance.setText("rewards = " + branch.getCredits());
+						} else {
+							Log.i("BranchTestBed", "redeem Rewards error : " + error);
+						}
+					}
+				});
 			}
 		});
 
@@ -237,6 +247,10 @@ public class MainActivity extends Activity {
 						String key = (String) keys.next();
 						Log.i("BranchTestBed",
 								key + ", " + referringParams.getString(key));
+						
+						Log.i("BranchTestBed",
+								"isUserIdentified "+ branch.isUserIdentified());
+						
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();

@@ -275,6 +275,7 @@ public class Branch {
 	private BranchReferralInitListener getReferralCodeCallback_;
 	private BranchReferralInitListener validateReferralCodeCallback_;
 	private BranchReferralInitListener applyReferralCodeCallback_;
+	private BranchReferralStateChangedListener redeemStateChangedCallback_;
 	private BranchRemoteInterface kRemoteInterface_;
 	
 	private PrefHelper prefHelper_;
@@ -313,6 +314,9 @@ public class Branch {
 	/* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
 	private static boolean isAutoSessionMode_ = false;
 
+	/* Set to true when {@link Activity} life cycle callbacks are registered. */
+	private static boolean isActivityLifeCycleCallbackRegistered_ = false;
+
 
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton 
@@ -344,6 +348,7 @@ public class Branch {
 		debugHandler_ = new Handler();
 		debugOnTouchListener_ = retrieveOnTouchListener();
 		linkCache_ = new HashMap<BranchLinkData, String>();
+		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	}
 
 
@@ -364,7 +369,7 @@ public class Branch {
 		}
 
 		/* Check if Activity life cycle callbacks are set. */
-		else if (branchReferral_.isActivityObserverInitialised() == false) {
+		else if (isActivityLifeCycleCallbackRegistered_ == false) {
 			throw BranchException.getAPILevelException();
 		}
 
@@ -409,21 +414,26 @@ public class Branch {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
 
-			String branchKey = branchReferral_.prefHelper_.getBranchKey(isLive);
-	        if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-	        	Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
-	        }
+			String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
+			if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+				Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
+				branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+			} else {
+				branchReferral_.prefHelper_.setBranchKey(branchKey);
+			}
 		}
 		branchReferral_.context_ = context;
 
-		/* If {@link BranchApp} is instantiated register for activity life cycle events. */
-		isAutoSessionMode_ = context instanceof BranchApp;
+		/* If {@link Application} is instantiated register for activity life cycle events. */
+		isAutoSessionMode_ = context instanceof Application;
 		if (isAutoSessionMode_) {
 			try {
 		 		/* Set an observer for activity life cycle events. */
-				branchReferral_.setActivityLifeCycleObserver((BranchApp) context);
+				branchReferral_.setActivityLifeCycleObserver((Application) context);
+				isActivityLifeCycleCallbackRegistered_ = true;
 
 			} catch (NoSuchMethodError Ex) {
+				isActivityLifeCycleCallbackRegistered_ = false;
 				/* LifeCycleEvents are  available only from API level 14. */
 				Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
 			}
@@ -561,7 +571,7 @@ public class Branch {
 	 * 					unsuccessful.
 	 */
 	public boolean initSession(BranchReferralInitListener callback) {
-		initSession(callback, (Activity)null);
+		initSession(callback, (Activity) null);
 		return false;
 	}
 	
@@ -1096,6 +1106,18 @@ public class Branch {
 	}
 
 	/**
+	 * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
+	 * If you call setIdentity, this device will have that identity associated with this user until logout is called.
+	 * This includes persisting through uninstalls, as we track device id.
+	 *
+	 * @return 				A {@link Boolean} value that will return <i>true</i> only if user already has an identity.
+	 *
+	 */
+	public boolean isUserIdentified() {
+		return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
+	}
+
+	/**
 	 * <p>This method should be called if you know that a different person is about to use the app. For example,
 	 * if you allow users to log out and let their friend use the app, you should call this to notify Branch
 	 * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
@@ -1244,29 +1266,63 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient 
-	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
+	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
 	 * the available credits will be redeemed instead.</p>
-	 * 
-	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
-	 * 					the bucket.
+	 *
+	 * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
+	 *                 the bucket.
 	 */
 	public void redeemRewards(int count) {
-		redeemRewards("default", count);
+		redeemRewards("default", count, null);
 	}
 
 	/**
-	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient 
-	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of 
+	 * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
 	 * the available credits will be redeemed instead.</p>
-	 * 
-	 * @param bucket	A {@link String} value containing the name of the referral bucket to attempt 
-	 * 					to redeem credits from.
-	 * 
-	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from 
-	 * 					the specified bucket.
+	 *
+	 * @param count		A {@link Integer} specifying the number of credits to attempt to redeem from
+	 * 					the bucket.
+	 *
+	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
+	 *                 trigger actions defined therein upon a executing redeem rewards.
+	 */
+	public void redeemRewards(int count, BranchReferralStateChangedListener callback) {
+		redeemRewards("default", count, callback);
+	}
+
+	/**
+	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
+	 * the available credits will be redeemed instead.</p>
+	 *
+	 * @param bucket A {@link String} value containing the name of the referral bucket to attempt
+	 *               to redeem credits from.
+	 *
+	 * @param count  A {@link Integer} specifying the number of credits to attempt to redeem from
+	 *               the specified bucket.
 	 */
 	public void redeemRewards(final String bucket, final int count) {
+		redeemRewards(bucket, count, null);
+	}
+
+	/**
+	 * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
+	 * credits within it. If the number to redeem exceeds the number available in the bucket, all of
+	 * the available credits will be redeemed instead.</p>
+	 *
+	 * @param bucket   A {@link String} value containing the name of the referral bucket to attempt
+	 *                 to redeem credits from.
+	 *
+	 * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
+	 *                 the specified bucket.
+	 *
+	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
+	 *                 trigger actions defined therein upon a executing redeem rewards.
+	 */
+	public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
+		redeemStateChangedCallback_ = callback;
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -1303,6 +1359,8 @@ public class Branch {
 					} else if (initFailed_ || initNotStarted_) {
 						handleFailure(req);
 					}
+				} else {
+					handleFailure(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS));
 				}
 			}
 		}).start();
@@ -2859,6 +2917,13 @@ public class Branch {
 						else
 							applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
 					}
+				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
+					if (redeemStateChangedCallback_ != null) {
+						if (initNotStarted_)
+							redeemStateChangedCallback_.onStateChanged(false, new BranchNotInitError());
+						else
+							redeemStateChangedCallback_.onStateChanged(false, new BranchRedeemRewardsError());
+					}
 				}
 			}
 		});
@@ -3112,17 +3177,41 @@ public class Branch {
 		});
 	}
 
-	/*
-	 * Checks if the BranchActivityLifeCycleObserver is initialised.
-     * @return true if BranchActivityLifeCycleObserver initialised else false.
-     */
-	private boolean isActivityObserverInitialised() {
-		return activityLifeCycleObserver_ != null;
+	private void processRedeemRewardsResponse(final ServerResponse resp) {
+		boolean isRedemptionSucceeded = false;
+		JSONObject requestObject = resp.getRequestObject();
+		if (requestObject != null) {
+			if (requestObject.has("bucket") && requestObject.has("amount")) {
+				try {
+					int redeemedCredits = requestObject.getInt("amount");
+					String creditBucket = requestObject.getString("bucket");
+					isRedemptionSucceeded = redeemedCredits > 0;
+
+					int updatedCreditCount = prefHelper_.getCreditCount(creditBucket) - redeemedCredits;
+					prefHelper_.setCreditCount(creditBucket, updatedCreditCount);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		final boolean finIsRedemptionSucceeded = isRedemptionSucceeded;
+		Handler mainHandler = new Handler(context_.getMainLooper());
+		mainHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (redeemStateChangedCallback_ != null) {
+					BranchError branchError = finIsRedemptionSucceeded ? null : new BranchRedeemRewardsError();
+					redeemStateChangedCallback_.onStateChanged(finIsRedemptionSucceeded, branchError);
+				}
+			}
+		});
 	}
+
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
-		application.registerActivityLifecycleCallbacks(new BranchActivityLifeCycleObserver());
+		application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
+		application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
 	}
 
 	/**
@@ -3133,9 +3222,6 @@ public class Branch {
 	private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks{
 		private int activityCnt_ = 0; //Keep the count of live  activities.
 
-		public BranchActivityLifeCycleObserver(){
-			activityLifeCycleObserver_ = this;
-		}
 
 		@Override
 		public void onActivityCreated(Activity activity, Bundle bundle) {}
@@ -3263,6 +3349,7 @@ public class Branch {
 						} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
 							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
+							requestQueue_.dequeue();
 						} else {
 							hasNetwork_ = false;
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
@@ -3420,7 +3507,11 @@ public class Branch {
 					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
 						processReferralCodeApply(serverResponse);
 						requestQueue_.dequeue();
-					} else {
+					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
+						processRedeemRewardsResponse(serverResponse);
+						requestQueue_.dequeue();
+					}
+					else {
 						requestQueue_.dequeue();
 					}
 
@@ -3706,6 +3797,18 @@ public class Branch {
 		@Override
 		public String getMessage() {
 			return "Did you forget to call init? Make sure you init the session before making Branch calls";
+		}
+	}
+
+	/**
+	 * <p>{@link BranchError} class containing the message to display in logs where a request to the
+	 * server to redeem user's reward has failed since user doesn't have credits available to redeem.
+	 * </p>
+	 */
+	public class BranchRedeemRewardsError extends BranchError {
+		@Override
+		public String getMessage() {
+			return "Trouble redeeming rewards. Please make sure you have credits available to redeem";
 		}
 	}
 }

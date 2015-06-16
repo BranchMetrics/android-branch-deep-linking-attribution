@@ -347,8 +347,10 @@ public class RemoteInterface {
 				retryNumber++;
 				return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
 			} else {
-				return processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
-            }
+				ServerResponse serverResponse = processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
+				serverResponse.setRequestObject(body);
+				return serverResponse;
+			}
 		} catch (SocketException ex) {
 			if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
 			return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
