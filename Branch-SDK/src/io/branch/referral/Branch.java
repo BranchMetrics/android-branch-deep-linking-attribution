@@ -314,6 +314,9 @@ public class Branch {
 	/* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
 	private static boolean isAutoSessionMode_ = false;
 
+	/* Set to true when {@link Activity} life cycle callbacks are registered. */
+	private static boolean isActivityLifeCycleCallbackRegistered_ = false;
+
 
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton 
@@ -345,6 +348,7 @@ public class Branch {
 		debugHandler_ = new Handler();
 		debugOnTouchListener_ = retrieveOnTouchListener();
 		linkCache_ = new HashMap<BranchLinkData, String>();
+		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	}
 
 
@@ -365,7 +369,7 @@ public class Branch {
 		}
 
 		/* Check if Activity life cycle callbacks are set. */
-		else if (branchReferral_.isActivityObserverInitialised() == false) {
+		else if (isActivityLifeCycleCallbackRegistered_ == false) {
 			throw BranchException.getAPILevelException();
 		}
 
@@ -420,14 +424,16 @@ public class Branch {
 		}
 		branchReferral_.context_ = context;
 
-		/* If {@link BranchApp} is instantiated register for activity life cycle events. */
-		isAutoSessionMode_ = context instanceof BranchApp;
+		/* If {@link Application} is instantiated register for activity life cycle events. */
+		isAutoSessionMode_ = context instanceof Application;
 		if (isAutoSessionMode_) {
 			try {
 		 		/* Set an observer for activity life cycle events. */
-				branchReferral_.setActivityLifeCycleObserver((BranchApp) context);
+				branchReferral_.setActivityLifeCycleObserver((Application) context);
+				isActivityLifeCycleCallbackRegistered_ = true;
 
 			} catch (NoSuchMethodError Ex) {
+				isActivityLifeCycleCallbackRegistered_ = false;
 				/* LifeCycleEvents are  available only from API level 14. */
 				Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
 			}
@@ -3201,17 +3207,11 @@ public class Branch {
 		});
 	}
 
-	/*
-	 * Checks if the BranchActivityLifeCycleObserver is initialised.
-     * @return true if BranchActivityLifeCycleObserver initialised else false.
-     */
-	private boolean isActivityObserverInitialised() {
-		return activityLifeCycleObserver_ != null;
-	}
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
-		application.registerActivityLifecycleCallbacks(new BranchActivityLifeCycleObserver());
+		application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
+		application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
 	}
 
 	/**
@@ -3222,9 +3222,6 @@ public class Branch {
 	private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks{
 		private int activityCnt_ = 0; //Keep the count of live  activities.
 
-		public BranchActivityLifeCycleObserver(){
-			activityLifeCycleObserver_ = this;
-		}
 
 		@Override
 		public void onActivityCreated(Activity activity, Bundle bundle) {}
