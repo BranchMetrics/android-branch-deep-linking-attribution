@@ -3352,6 +3352,7 @@ public class Branch {
 						} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
 							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
+							requestQueue_.dequeue();
 						} else {
 							hasNetwork_ = false;
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
