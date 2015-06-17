@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
@@ -29,9 +30,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.ActionMode;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
 
 /**
  * <p>
@@ -300,9 +307,11 @@ public class Branch {
 	
 	private boolean hasNetwork_;
 	private boolean lastRequestWasInit_;
-	private Handler debugHandler_;
+	
 	private SparseArray<String> debugListenerInitHistory_;
-	private OnTouchListener debugOnTouchListener_;
+	private Handler debugHandler_;
+	private Runnable longPressed_;
+	private boolean debugStarted_;
 
 	private Map<BranchLinkData, String> linkCache_;
 
@@ -346,7 +355,7 @@ public class Branch {
 		hasNetwork_ = true;
 		debugListenerInitHistory_ = new SparseArray<String>();
 		debugHandler_ = new Handler();
-		debugOnTouchListener_ = retrieveOnTouchListener();
+		debugStarted_ = false;
 		linkCache_ = new HashMap<BranchLinkData, String>();
 		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	}
@@ -851,13 +860,7 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
-			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) { 
-				view.setOnTouchListener(debugOnTouchListener_);
-			}
-		}
+		setTouchDebugInternal(activity);
 	}
 
 	/**
@@ -868,77 +871,10 @@ public class Branch {
 	private void setTouchDebugInternal(Activity activity){
 		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) {
-				view.setOnTouchListener(debugOnTouchListener_);
-			}
+			
+			activity.getWindow().setCallback(new BranchWindowCallback(activity.getWindow().getCallback()));
 		}
 	}
-	
-	private OnTouchListener retrieveOnTouchListener() {
-		if (debugOnTouchListener_ == null) {
-			debugOnTouchListener_ = new OnTouchListener() {
-				class KeepDebugConnectionTask extends TimerTask {
-			        public void run() {
-			            if (!prefHelper_.keepDebugConnection()) {
-			            	debugHandler_.post(_longPressed);
-			            }
-			        }
-			    }
-				
-				Runnable _longPressed = new Runnable() {
-					private boolean started = false;
-					private Timer timer;
-				
-				    public void run() {
-				    	debugHandler_.removeCallbacks(_longPressed);
-				        if (!started) {
-				        	Log.i("Branch Debug","======= Start Debug Session =======");
-				        	prefHelper_.setDebug();
-				        	timer = new Timer();
-				        	timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
-				        } else {
-				        	Log.i("Branch Debug","======= End Debug Session =======");
-				        	prefHelper_.clearDebug();
-				        	timer.cancel();
-				        	timer = null;
-				        }
-				        this.started = !this.started;
-				    }   
-				};
-				
-				@Override
-				public boolean onTouch(View v, MotionEvent ev) {
-					int pointerCount = ev.getPointerCount();
-					final int actionPeformed = ev.getAction();
-					switch (actionPeformed & MotionEvent.ACTION_MASK) {
-					case MotionEvent.ACTION_DOWN:
-						if (systemObserver_.isSimulator()) {
-							debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-						}
-				        break;
-				    case MotionEvent.ACTION_MOVE:
-				        break;
-				    case MotionEvent.ACTION_CANCEL:
-				    	debugHandler_.removeCallbacks(_longPressed);
-				        break;
-				    case MotionEvent.ACTION_UP:
-				    	v.performClick();
-				    	debugHandler_.removeCallbacks(_longPressed);
-				        break;
-					case MotionEvent.ACTION_POINTER_DOWN:
-						if (pointerCount == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
-							debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-						}
-						break;
-					}
-					return true;
-				}
-			};
-		}
-		return debugOnTouchListener_;
-	}
-
 	
 	/**
 	 * <p>Closes the current session, dependent on the state of the 
@@ -3809,6 +3745,175 @@ public class Branch {
 		@Override
 		public String getMessage() {
 			return "Trouble redeeming rewards. Please make sure you have credits available to redeem";
+		}
+	}
+	
+	public class BranchWindowCallback implements Window.Callback {
+		private Window.Callback callback_;
+		
+		public BranchWindowCallback(Window.Callback callback) {
+			callback_ = callback;
+		}
+		
+		class KeepDebugConnectionTask extends TimerTask {
+	        public void run() {
+	            if (debugStarted_ && !prefHelper_.keepDebugConnection() && longPressed_ != null) {
+	            	debugHandler_.post(longPressed_);
+	            }
+	        }
+	    }
+
+		@Override
+		public boolean dispatchGenericMotionEvent(MotionEvent event) {
+			return callback_.dispatchGenericMotionEvent(event);
+		}
+
+		@Override
+		public boolean dispatchKeyEvent(KeyEvent event) {
+			return callback_.dispatchKeyEvent(event);
+		}
+
+		@Override
+		public boolean dispatchKeyShortcutEvent(KeyEvent event) {
+			return callback_.dispatchKeyShortcutEvent(event);
+		}
+
+		@Override
+		public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent event) {
+			return callback_.dispatchPopulateAccessibilityEvent(event);
+		}
+
+		@Override
+		public boolean dispatchTouchEvent(MotionEvent event) {
+			longPressed_ = new Runnable() {
+				private Timer timer;
+			
+			    public void run() {
+			    	debugHandler_.removeCallbacks(longPressed_);
+			        if (!debugStarted_) {
+			        	Log.i("Branch Debug","======= Start Debug Session =======");
+			        	prefHelper_.setDebug();
+			        	timer = new Timer();
+			        	timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
+			        } else {
+			        	Log.i("Branch Debug","======= End Debug Session =======");
+			        	prefHelper_.clearDebug();
+			        	if (timer != null) {
+			        		timer.cancel();
+			        		timer = null;
+			        	}
+			        }
+			        debugStarted_ = !debugStarted_;
+			    }   
+			};
+			
+			switch (event.getAction() & MotionEvent.ACTION_MASK) {
+				case MotionEvent.ACTION_DOWN:
+					if (systemObserver_.isSimulator()) {
+						debugHandler_.postDelayed(longPressed_, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+						return true;
+					}
+			        break;
+			    case MotionEvent.ACTION_MOVE:
+			    	break;
+			    case MotionEvent.ACTION_CANCEL:
+			    	debugHandler_.removeCallbacks(longPressed_);
+			    	break;
+			    case MotionEvent.ACTION_UP:
+			    	debugHandler_.removeCallbacks(longPressed_);
+			    	break;
+				case MotionEvent.ACTION_POINTER_DOWN:
+					if (event.getPointerCount() == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
+						debugHandler_.postDelayed(longPressed_, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+						return true;
+					}
+					break;
+				default:
+					break;
+			}
+			
+			return callback_.dispatchTouchEvent(event);
+		}
+
+		@Override
+		public boolean dispatchTrackballEvent(MotionEvent event) {
+			return callback_.dispatchTrackballEvent(event);
+		}
+
+		@Override
+		public void onActionModeFinished(ActionMode mode) {
+			callback_.onActionModeFinished(mode);
+		}
+
+		@Override
+		public void onActionModeStarted(ActionMode mode) {
+			callback_.onActionModeStarted(mode);
+		}
+
+		@Override
+		public void onAttachedToWindow() {
+			callback_.onAttachedToWindow();
+		}
+
+		@Override
+		public void onContentChanged() {
+			callback_.onContentChanged();
+		}
+
+		@Override
+		public boolean onCreatePanelMenu(int featureId, Menu menu) {
+			return callback_.onCreatePanelMenu(featureId, menu);
+		}
+
+		@Override
+		public View onCreatePanelView(int featureId) {
+			return callback_.onCreatePanelView(featureId);
+		}
+
+		@SuppressLint("MissingSuperCall")
+		@Override
+		public void onDetachedFromWindow() {
+			callback_.onDetachedFromWindow();
+		}
+
+		@Override
+		public boolean onMenuItemSelected(int featureId, MenuItem item) {
+			return callback_.onMenuItemSelected(featureId, item);
+		}
+
+		@Override
+		public boolean onMenuOpened(int featureId, Menu menu) {
+			return callback_.onMenuOpened(featureId, menu);
+		}
+
+		@Override
+		public void onPanelClosed(int featureId, Menu menu) {
+			callback_.onPanelClosed(featureId, menu);
+		}
+
+		@Override
+		public boolean onPreparePanel(int featureId, View view, Menu menu) {
+			return callback_.onPreparePanel(featureId, view, menu);
+		}
+
+		@Override
+		public boolean onSearchRequested() {
+			return callback_.onSearchRequested();
+		}
+
+		@Override
+		public void onWindowAttributesChanged(WindowManager.LayoutParams attrs) {
+			callback_.onWindowAttributesChanged(attrs);
+		}
+
+		@Override
+		public void onWindowFocusChanged(boolean hasFocus) {
+			callback_.onWindowFocusChanged(hasFocus);
+		}
+
+		@Override
+		public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
+			return callback_.onWindowStartingActionMode(callback);
 		}
 	}
 }
