@@ -437,18 +437,9 @@ public class Branch {
 		branchReferral_.context_ = context;
 
 		/* If {@link Application} is instantiated register for activity life cycle events. */
-		isAutoSessionMode_ = context instanceof Application;
-		if (isAutoSessionMode_) {
-			try {
-		 		/* Set an observer for activity life cycle events. */
-				branchReferral_.setActivityLifeCycleObserver((Application) context);
-				isActivityLifeCycleCallbackRegistered_ = true;
-
-			} catch (NoSuchMethodError Ex) {
-				isActivityLifeCycleCallbackRegistered_ = false;
-				/* LifeCycleEvents are  available only from API level 14. */
-				Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
-			}
+		if (context instanceof BranchApp) {
+			isAutoSessionMode_ = true;
+			branchReferral_.setActivityLifeCycleObserver((Application) context);
 		}
 
 		return branchReferral_;
@@ -480,6 +471,40 @@ public class Branch {
 	 */
     public static Branch getTestInstance(Context context) {
         return getBranchInstance(context, false);
+    }
+    
+    /**
+	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
+	 * object of the type {@link Branch}.</p>
+	 * 
+	 * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object, either fetched from a pre-initialised 
+	 * 					instance within the singleton class, or a newly instantiated object where 
+	 * 					one was not already requested during the current app lifecycle.
+	 */
+    public static Branch getAutoInstance(Context context) {
+    	isAutoSessionMode_ = true;
+        getBranchInstance(context, true);
+        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        return branchReferral_;
+    }
+
+    /**
+	 * <p>If you configured the your Strings file according to the guide, you'll be able to use
+	 * the test version of your app by just calling this static method before calling initSession.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object.
+	 */
+    public static Branch getAutoTestInstance(Context context) {
+    	isAutoSessionMode_ = true;
+    	getBranchInstance(context, false);
+        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        return branchReferral_;
     }
 
     /**
@@ -941,7 +966,7 @@ public class Branch {
 						}
 						break;
 					}
-					return false;
+					return true;
 				}
 			};
  		}
@@ -3218,8 +3243,17 @@ public class Branch {
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
-		application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
-		application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
+		try {
+	 		/* Set an observer for activity life cycle events. */
+			application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
+			application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
+			isActivityLifeCycleCallbackRegistered_ = true;
+
+		} catch (NoSuchMethodError Ex) {
+			isActivityLifeCycleCallbackRegistered_ = false;
+			/* LifeCycleEvents are  available only from API level 14. */
+			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+		}
 	}
 
 	/**
