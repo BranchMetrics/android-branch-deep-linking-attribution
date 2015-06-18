@@ -941,7 +941,7 @@ public class Branch {
 						}
 						break;
 					}
-					return true;
+					return false;
 				}
 			};
  		}
