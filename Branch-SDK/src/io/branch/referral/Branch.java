@@ -311,7 +311,6 @@ public class Branch {
 	
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
-	private BranchWindowCallback windowCallback_;
 	private Handler debugHandler_;
 	private Runnable longPressed_;
 	private boolean debugStarted_;
@@ -358,7 +357,6 @@ public class Branch {
 		hasNetwork_ = true;
 		debugListenerInitHistory_ = new SparseArray<String>();
 		debugOnTouchListener_ = retrieveOnTouchListener();
-		windowCallback_ = new BranchWindowCallback();
 		debugHandler_ = new Handler();
 		debugStarted_ = false;
 		linkCache_ = new HashMap<BranchLinkData, String>();
@@ -865,12 +863,12 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+		if (!isAutoSessionMode_ && activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) { 
+			if (view != null) {
+				view.setOnTouchListener(debugOnTouchListener_);
 			}
-			view.setOnTouchListener(debugOnTouchListener_);
 		}
 	}
 
@@ -882,8 +880,7 @@ public class Branch {
 	private void setTouchDebugInternal(Activity activity){
 		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-			windowCallback_.setWindowCallback(activity.getWindow().getCallback());
-			activity.getWindow().setCallback(windowCallback_);
+			activity.getWindow().setCallback(new BranchWindowCallback(activity.getWindow().getCallback()));
 		}
 	}
 	
@@ -3826,32 +3823,32 @@ public class Branch {
 	public class BranchWindowCallback implements Window.Callback {
 		private Window.Callback callback_;
 		
-		public BranchWindowCallback() {
-			longPressed_ = new Runnable() {
-				private Timer timer;
-			
-			    public void run() {
-			    	debugHandler_.removeCallbacks(longPressed_);
-			        if (!debugStarted_) {
-			        	Log.i("Branch Debug","======= Start Debug Session =======");
-			        	prefHelper_.setDebug();
-			        	timer = new Timer();
-			        	timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
-			        } else {
-			        	Log.i("Branch Debug","======= End Debug Session =======");
-			        	prefHelper_.clearDebug();
-			        	if (timer != null) {
-			        		timer.cancel();
-			        		timer = null;
-			        	}
-			        }
-			        debugStarted_ = !debugStarted_;
-			    }   
-			};
-		}
-		
-		public void setWindowCallback(Window.Callback callback) {
+		public BranchWindowCallback(Window.Callback callback) {
 			callback_ = callback;
+			
+			if (longPressed_ == null) {
+				longPressed_ = new Runnable() {
+					private Timer timer;
+				
+				    public void run() {
+				    	debugHandler_.removeCallbacks(longPressed_);
+				        if (!debugStarted_) {
+				        	Log.i("Branch Debug","======= Start Debug Session =======");
+				        	prefHelper_.setDebug();
+				        	timer = new Timer();
+				        	timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
+				        } else {
+				        	Log.i("Branch Debug","======= End Debug Session =======");
+				        	prefHelper_.clearDebug();
+				        	if (timer != null) {
+				        		timer.cancel();
+				        		timer = null;
+				        	}
+				        }
+				        debugStarted_ = !debugStarted_;
+				    }   
+				};
+			}
 		}
 		
 		class KeepDebugConnectionTask extends TimerTask {
