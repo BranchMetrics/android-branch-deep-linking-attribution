@@ -257,9 +257,9 @@ If you already have an Application class and don't want to extend it from `Branc
 public void onCreate() {
 	super.onCreate();
 	if (!isDebug) {
-		Branch.getInstance(this);
+		Branch.getAutoInstance(this);
 	} else {
-		Branch.getTestInstance(this);
+		Branch.getAutoTestInstance(this);
 	}
 }
 ```
