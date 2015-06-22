@@ -1,24 +1,63 @@
-# Branch Metrics Android SDK
+# Branch Metrics Android SDK 
 
-This is the repository of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
+This is a repository of our open source Android SDK. See the table of contents below for a complete list of the content featured in this document.
 
-## [New documentation portal](https://dev.branch.io)
+**Note:** The content presented here is intented to be only a reference manual for our Android SDK. Go to our new [**Documentation Portal**] (https://dev.branch.io) where you can find all of our latest documentation and future documentation updates. 
 
-Check it out!
+Table of Contents| 
+------------- | 
+[Get the Demo App](#get-the-demo-app)| 
+|[Class Reference Table](#class-reference)|
+|[Important Migrations] (#important-migration-to-v078)|  
+[Troubleshooting FAQ](#faq)|
+[Installation](#installation)|
+[Configuration (for Tracking)](#configuration-for-tracking)|
+[Register an activity for direct deep linking (optional but recommended)](#register-an-activity-for-direct-deep-linking-optional-but-recommended)|
+[Add Your Branch Key to Your Project](#add-your-branch-key-to-your-project)|
 
-## Important migration to v1.5.0
+## Get the Demo App
 
-We have deprecated the bnc_app_key and replaced that with the new branch_key. Please see [add branch key](#add-your-branch-key-to-your-project) for details.
+There's a full demo app embedded in this repository, but you can also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you're ready to dig in.
 
-## Important migration to v1.4.5
+
+##Class Reference
+For your reference, see the methods and parameters table below.   
+  
+**Class Reference Table**  
+      
+| Tasks          | Methods          | Parameters     |
+|:------------- |:---------------:| -------------:|   
+[Initialize SDK and Register Deep Link Routing Function](#initialize-sdk-and-register-deep-link-routing-function)|[Method](#methods)|[Parameter](#parameters)
+|[Close session (session tracking to support for minSdkVersion < 14)](#close-session-session-tracking-to-support-for-minSdkVersion-< 14)|[Method](#methods-1)|[Parameter](#parameters-1)|
+|[Retrieve Session (Install or Open) Parameters](#retrieve-session-install-or-open-parameters)|[Method](#methods-2)|[Parameter](#parameters-2)| 
+|[Retrieve Install (Install Only) Parameters](#retrieve-install-install-only-parameters)|[Method](#methods-3)|[Parameter](#parameters-3)|
+[Persistent Identities](#persistent-identities)|[Method](#methods-4)|[Parameter](#parameters-4)|
+[Logout](#logout)|[Method](#methods-5)|[Parameter](#parameters-5)|
+[Register Custom Events](#register-custom-events)|[Method](#methods-6)| [Parameter](#parameters-6)|
+[Generate Tracked, Deep Linking URLs (Pass Data Across Install and Open)](#generate-tracked-deep-linking-urls-pass-data-across-install-and-open)|[Method](#methods-7)|[Parameter](#parameters-7)|
+[Referral System Rewarding Functionality](#get-reward-balance)|[Method](#methods-8)|[Parameter](#parameters-8)| 
+|[Get Reward Balance](#get-reward-balance)|[Method](#methods-9)|[Parameters] (#parameters-9)| 
+[Redeem All or Some of the Reward Balance (Store State)](#redeem-all-or-some-of-the-reward-balance-store-state)|[Method](#methods-10)|[Parameter](#parameters-10)|
+[Get Credit History](#get-credit-history)|[Method](#methods-11)|[Parameters] (#parameters-11)|
+[Get Referral Code](#get-referral-code)|[Method](#methods-12)|[Parameter] (#parameters-12)|
+[Create Referral Code](#create-referral-code)|[Method](#methods-13)|[Parameter] (#parameters-13)|
+[Validate Referral Code](#validate-referral-code)|[Method](#methods-17)|[Parameter](#parameters-17)|
+[Apply Referral Code](#apply-referral-code)|[Method](#methods-18)|[Parameter] (#parameters-18)|
+
+
+## Important Migration to v1.5.0
+
+We have deprecated the bnc\_appkey and replaced that with the new branch\_key. See [add branch key](#add-your-branch-key-to-your-project) for details.
+
+## Important Migration to v1.4.5
 
 Branch uses Facebook's App Links metatags automatically to provide the best linking from the Facebook platform. Unfortunately, Facebook changed the way they handle App Links routing in the latest update on April 8ish.
 
-Two important things to do in order to properly handle deep links from Facebook
+To properly handle deep links from Facebook, you must perform the following: 
 
-1. Make sure to update the Manifest so that the Activity with the intent filter for your URI scheme has *launchMode:singleTask*. See example [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
+* Make sure to update the Manifest so that the Activity with the intent filter for your URI scheme has *launchMode:singleTask*. See example [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
-2. Make sure to add this snippet of code to the Activity registered as singleTask.
+* Make sure to add this snippet of code to the Activity registered as singleTask.
 	```java
 	@Override
 	public void onNewIntent(Intent intent) {
@@ -28,54 +67,16 @@ Two important things to do in order to properly handle deep links from Facebook
 	}
 	```
 
-3. Update the SDK to v1.4.5 or higher
+* Update the SDK to v1.4.5 or higher.
 
 ## FAQ
-
-1.) __What if Branch goes down or there is a poor connection?__
-
-At Branch, we live and breath uptime &amp; performance. We've developed mechanisms internal to the SDK to deal with network issues. We always call the callbacks with the error parameter describing the issue. If the phone is in airplane mode and the connection is not available, the callbacks are called immediately. If there is a server latency, we timeout after 3 seconds and will retry 4 more times with a 3 second pause in between each. These timeouts are adjustable on the singleton instance by calling: ```setNetworkTimeout``` (ms), ```setRetryCount``` and ```setRetryInterval``` (ms).
-
-2.) __How can I debug or test the SDK?__
-
-Just call ```setDebug()``` after you get a reference to the Branch singleton. We'll log all requests. More importantly, we won't reference the hardware ID of the phone so you can register installs after uninstalling and reinstalling the app.
-
-*Note: Make sure to remove this line before releasing!*
-
-3.) __Is there any way to start debugging dynamically?__
-
-Yes. Even if you don't call setDebug(), you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
-
-4.) __Facebook deep links seem to not work?__
-
-Branch uses the Facebook App Links protocol to pass the deep links through to your app from Facebook. Funny enough, if you also have a Facebook app configured in the developer portal and you choose 'Deep link from feed', Facebook ignores it's own protocol. Make sure to *uncheck* this option in your Facebook app.
-
-5.) __Why do I not see any installs after I reinstall?__
-
-We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install.' To register an install on the same phone again, see FAQ #2 about debugging.
-
-6.) __Chrome seems to take me to Google Play all the time. Why?__
-
-Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
-
-  1. Make sure the package name for the test build matches the package registered in the Branch settings and matches the package in Google play.
-
-  2. Make sure the URI scheme of the test build matches the Branch settings.
-
-  3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
-
-
-7.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
-
-The Google Chrome team decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue [here](https://code.google.com/p/chromium/issues/detail?id=331571). The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
-
-We've filed an issue plus documented how you can file your own with the Chrome team to get this changed. Please see [this document](https://github.com/BranchMetrics/Branch-Android-SDK/blob/master/ChromeHelp.md) for more ways you can help!
+Have questions? Need troubleshooting assistance? See our [FAQs](https://dev.branch.io/references/android_sdk/#faq) for in depth answers.
 
 ## Installation
 
-Current compiled SDK footprint is *40kb*
+The current compiled SDK footprint is *40kb*. You can clone this repository to keep up with the latest version, you can install the library project, or you can download the raw files.
 
-### Install library project
+### Install Library Project
 
 Import the SDK as a Gradle dependency (for Android Studio):
 * Right click on the main module within your project (this is called 'app' by default).
@@ -84,35 +85,33 @@ Import the SDK as a Gradle dependency (for Android Studio):
 * Type *branch*, and hit the enter key to search Maven Central for the Branch SDK Library.
 * Select the latest *io.branch.sdk.android:library* item listed and accept the changes.
 
-See the [Android Quick Start Guide for more detail](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md) and a screencasted walkthrough.
+**Note:** See the [Android Quick Start Guide for more details](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md) and a screencasted walkthrough.
 
-Or download the JAR file from here:
+### Download Files
+
+You can also install by downloading the raw files below.
+
+* download the JAR file from here:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
 
-The testbed project:
+* The testbed project:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-TestBed.zip
 
-Or just clone this project!
+Or can just clone this project!
 
 ### Register Your App
 
-You can sign up for your own app id at [https://dashboard.branch.io](https://dashboard.branch.io)
+You can sign up for your own app id at [https://dashboard.branch.io](https://dashboard.branch.io).
 
-## Configuration (for tracking)
+## Configuration (for Tracking)
 
-Ideally, you want to use our links any time you have an external link pointing to your app (share, invite, referral, etc) because:
+You can use our links any time you have an external link pointing to your app (share, invite, referral, etc.). For more information about configuration, see the [Configuration (for tracking)](https://dev.branch.io/references/android_sdk/#configuration-for-tracking) section in our new [documentation portal](https://dev.branch.io/references/android_sdk/#configuration-for-tracking).
 
-1. Our dashboard can tell you where your installs are coming from
-1. Our links are the highest possible converting channel to new downloads and users
-1. You can pass that shared data across install to give new users a custom welcome or show them the content they expect to see
-
-Our linking infrastructure will support anything you want to build. If it doesn't, we'll fix it so that it does: just reach out to alex@branch.io with requests.
-
-### Register an activity for direct deep linking (optional but recommended)
+### Register an Activity for Direct Deep Linking (Optional but Recommended)
 
 In your project's manifest file, you can register your app to respond to direct deep links (yourapp:// in a mobile browser) by adding the second intent filter block. Also, make sure to change **yourapp** to a unique string that represents your app name.
 
-Secondly, make sure that this activity is launched as a singleTask. This is important to handle proper deep linking from other apps like Facebook.
+Next, make sure that this activity is launched as a singleTask. This is important to handle proper deep linking from other apps like Facebook.
 
 Typically, you would register some sort of splash activitiy that handles routing for your app.
 
@@ -138,11 +137,11 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 
-### Add your branch key to your project
+### Add a Branch Key to Your Project
 
-After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project.
+After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (or them if you want to do it for both your live and test apps) to your project.
 
-1. Edit your manifest file by adding the following new meta-data
+Edit your manifest file by adding the following new meta-data:
     ```xml
     <application>
         <!-- Other existing entries -->
@@ -155,11 +154,13 @@ After you register your app, your branch key can be retrieved on the [Settings](
     </application>
     ```
 
-### Initialize SDK And Register Deep Link Routing Function
+### Initialize SDK and Register Deep Link Routing Function
 
 Called in your splash activity where you handle. If you created a custom link with your own custom dictionary data, you probably want to know when the user session init finishes, so you can check that data. Think of this callback as your "deep link router". If your app opens with some data, you want to route the user depending on the data you passed in. Otherwise, send them to a generic install flow.
 
 This deep link routing callback is called 100% of the time on init, with your link params or an empty dictionary if none present.
+
+####Method
 
 ```java
 @Override
@@ -212,6 +213,10 @@ Branch branch = Branch.getInstance(getApplicationContext(), "your test branch ke
 Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later.
 Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
 
+####Parameters
+
+None
+
 #### Automatic Session Management
 
 Starting from Branch SDK version 1.5.7, there is no need for initialising and closing session with the new _automatic session management_. Automatic session management can work only with API level 14 and above, so make sure that your `minSdkVersion` is 14 or above.
@@ -243,7 +248,7 @@ android:name="io.branch.referal.BranchApp">
 
 ##### Rarer: you already use the Application class
 
-If you already have an Application class then extend your application class with `BranchApp`.
+If you already have an Application class, then extend your application class with `BranchApp`.
 
 ```java
 public class YourApplication extends BranchApp
@@ -264,11 +269,13 @@ public void onCreate() {
 }
 ```
 
-#### Close session (session tracking to support for minSdkVersion < 14)
+###Close session (session tracking to support for minSdkVersion < 14)
 
-Note: There is no need to use this method if you use _automatic session management_ as described above and only support minSdkVersion >= 14
+**Note:** There is no need to use this method if you use _automatic session management_ as described above and only support minSdkVersion >= 14.
 
-Required: this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened.
+**Required:** this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened.
+
+####Method
 
 ```java
 @Override
@@ -277,8 +284,11 @@ public void onStop() {
 	Branch.getInstance(getApplicationContext()).closeSession();
 }
 ```
+####Parameters
 
-#### Retrieve session (install or open) parameters
+None
+
+###Retrieve Session (Install or Open) Parameters
 
 These session parameters will be available at any point later on with this command. If no params, the dictionary will be empty. This refreshes with every new session (app installs AND app opens)
 ```java
@@ -286,7 +296,7 @@ Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject sessionParams = branch.getLatestReferringParams();
 ```
 
-#### Retrieve install (install only) parameters
+###Retrieve Install (Install Only) Parameters
 
 If you ever want to access the original session params (the parameters passed in for the first install event only), you can use this line. This is useful if you only want to reward users who newly installed the app from a referral link or something.
 ```java
@@ -294,34 +304,48 @@ Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject installParams = branch.getFirstReferringParams();
 ```
 
-### Persistent identities
+### Persistent Identities
 
 Often, you might have your own user IDs, or want referral and event data to persist across platforms or uninstall/reinstall. It's helpful if you know your users access your service from different devices. This where we introduce the concept of an 'identity'.
 
+####Method
+
 To identify a user, just call:
+
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.setIdentity(your user id); // your user id should not exceed 127 characters
 ```
+####Parameters
 
-#### Logout
+None
+
+### Logout
 
 If you provide a logout function in your app, be sure to clear the user when the logout completes. This will ensure that all the stored parameters get cleared and all events are properly attributed to the right identity.
 
 **Warning** this call will clear the referral credits and attribution on the device.
 
+####Method
+
 ```java
 Branch.getInstance(getApplicationContext()).logout();
 ```
 
-### Register custom events
+####Parameters
+
+None
+
+### Register Custom Events
+
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.userCompletedAction("your_custom_event"); // your custom event name should not exceed 63 characters
 ```
 
-OR if you want to store some state with the event
+OR if you want to store some state with the event:
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -335,13 +359,15 @@ Some example events you might want to track:
 "finished_level_ten"
 ```
 
-## Generate Tracked, Deep Linking URLs (pass data across install and open)
+## Generate Tracked, Deep Linking URLs (Pass Data Across Install and Open)
 
-### Shortened links
+### Shortened Links
 
 There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that? You need to pass a callback for when you link is prepared (which should return very quickly, ~ 50 ms to process).
 
-For more details on how to create links, see the [Branch link creation guide](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/url-creation-guide.md)
+For more details on how to create links, see the [Branch link creation guide](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/url-creation-guide.md).
+
+####Method
 
 ```java
 // associate data with a link
@@ -395,7 +421,23 @@ branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", da
 
 There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
 
-**Note**
+####Parameters
+
+**alias**: The alias for a link.
+
+**callback**: The callback that is called with the referral code object on success, or an error if it’s invalid.
+
+**channel**: The channel for the link. Examples could be Facebook, Twitter, SMS, etc., depending on where it will be shared. 
+
+**feature**: The feature the generated link will be associated with.
+
+**params**: A dictionary to use while building up the Branch link.
+
+**stage**: The stage used for the generated link, indicating what part of a funnel the user is in.
+
+**tags**: An array of tag strings to be associated with the link.
+
+**Note:**
 You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_. Please use this [Facebook tool](https://developers.facebook.com/tools/debug/og/object) to debug your OG tags!
 
 | Key | Value
@@ -426,24 +468,25 @@ You have the ability to control the direct deep linking of each link by insertin
 | "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure.
 | "$always_deeplink" | true or false. (default is not to deep link first) This key can be specified to have our linking service force try to open the app, even if we're not sure the user has the app installed. If the app is not installed, we fall back to the respective app store or $platform_url key. By default, we only open the app if we've seen a user initiate a session in your app from a Branch link (has been cookied and deep linked by Branch)
 
-## Referral system rewarding functionality
+## Referral System Rewarding Functionality
 
-In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:
+In a standard referral system, you have two parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are some example scenarios:
 
-1) Reward the original user for taking action (eg. inviting, purchasing, etc)
+* Reward the original user for taking action (eg. inviting, purchasing, etc.).
 
-2) Reward the invitee for installing the app from the original user's referral link
+* Reward the invitee for installing the app from the original user's referral link.
 
-3) Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something)
+* Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something).
 
 These reward definitions are created on the dashboard, under the 'Reward Rules' section in the 'Referrals' tab on the dashboard.
 
-Warning: For a referral program, you should not use unique awards for custom events and redeem pre-identify call. This can allow users to cheat the system.
+***Warning:*** For a referral program, you should not use unique awards for custom events and redeem pre-identify call. This can allow users to cheat the system.
 
-### Get reward balance
+### Get Reward Balance
 
 Reward balances change randomly on the backend when certain actions are taken (defined by your rules), so you'll need to make an asynchronous call to retrieve the balance. Here is the syntax:
 
+####Method
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.loadRewards(new BranchReferralStateChangedListener() {
@@ -456,19 +499,28 @@ branch.loadRewards(new BranchReferralStateChangedListener() {
 	}
 });
 ```
+####Parameters
 
-### Redeem all or some of the reward balance (store state)
+None
+
+### Redeem All or Some of the Reward Balance (Store State)
 
 We will store how many of the rewards have been deployed so that you don't have to track it on your end. In order to save that you gave the credits to the user, you can call redeem. Redemptions will reduce the balance of outstanding credits permanently.
+
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.redeemRewards(5);
 ```
+####Parameters
+None
 
-### Get credit history
+### Get Credit History
 
 This call will retrieve the entire history of credits and redemptions from the individual user. To use this call, implement like so:
+
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -518,6 +570,9 @@ The response will return an array that has been parsed from the following JSON:
     }
 ]
 ```
+
+####Parameters
+
 **referrer**
 : The id of the referring user for this credit transaction. Returns null if no referrer is involved. Note this id is the user id in developer's own system that's previously passed to Branch's identify user API call.
 
@@ -525,16 +580,18 @@ The response will return an array that has been parsed from the following JSON:
 : The id of the user who was referred for this credit transaction. Returns null if no referree is involved. Note this id is the user id in developer's own system that's previously passed to Branch's identify user API call.
 
 **type**
-: This is the type of credit transaction
+: This is the type of credit transaction.
 
-1. _0_ - A reward that was added automatically by the user completing an action or referral
-1. _1_ - A reward that was added manually
-2. _2_ - A redemption of credits that occurred through our API or SDKs
-3. _3_ - This is a very unique case where we will subtract credits automatically when we detect fraud
+1. _0_ - A reward that was added automatically by the user completing an action or referral.
+1. _1_ - A reward that was added manually.
+2. _2_ - A redemption of credits that occurred through our API or SDKs.
+3. _3_ - This is a very unique case where we will subtract credits automatically when we detect fraud.
 
-### Get referral code
+### Get Referral Code
 
-Retrieve the referral code created by current user
+Retrieve the referral code created by current user.
+
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -550,16 +607,19 @@ branch.getReferralCode(new BranchReferralInitListener() {
 	}
 });
 ```
+####Parameters
 
-### Create referral code
+FILL IN
+
+
+### Create Referral Code
 
 Create a new referral code for the current user, only if this user doesn't have any existing non-expired referral code.
 
 In the simplest form, just specify an amount for the referral code.
 The returned referral code is a 6 character long unique alpha-numeric string wrapped inside the params dictionary with key @"referral_code".
 
-**amount** _int_
-: The amount of credit to redeem when user applies the referral code
+####Method
 
 ```java
 // Create a referral code of 5 credits
@@ -577,11 +637,14 @@ branch.getReferralCode(5, new BranchReferralInitListener() {
 });
 ```
 
-Alternatively, you can specify a prefix for the referral code.
-The resulting code will have your prefix, concatenated with a 2 character long unique alpha-numeric string wrapped in the same data structure.
+####Parameters
+**amount** _int_
+: The amount of credit to redeem when user applies the referral code.
 
-**prefix** _String_
-: The prefix to the referral code that you desire
+Alternatively, you can specify a prefix for the referral code.
+The resulting code will have your prefix, concatenated with a two character long unique alpha-numeric string wrapped in the same data structure.
+
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -597,12 +660,16 @@ branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {  // prefi
 	}
 });
 ```
+####Parameters
+
+**prefix** _String_
+: The prefix to the referral code that you desire.
 
 If you want to specify an expiration date for the referral code, you can add an expiration parameter.
+
 The prefix parameter is optional here, i.e. it could be getReferralCode(5, expirationDate, new BranchReferralInitListener()...
 
-**expiration** _Date_
-: The expiration date of the referral code
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -618,24 +685,12 @@ branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListen
 	}
 });
 ```
+####Parameters
 
-You can also tune the referral code to the finest granularity, with the following additional parameters:
+**expiration** _Date_
+: The expiration date of the referral code.
 
-**bucket** _String_ (max 63 characters)
-: The name of the bucket to use. If none is specified, defaults to 'default'
-
-**calculation_type**  _int_
-: This defines whether the referral code can be applied indefinitely, or only once per user
-
-1. _REFERRAL_CODE_AWARD_UNLIMITED_ - referral code can be applied continually
-1. _REFERRAL_CODE_AWARD_UNIQUE_ - a user can only apply a specific referral code once
-
-**location** _int_
-: The user to reward for applying the referral code
-
-1. _REFERRAL_CODE_LOCATION_REFERREE_ - the user applying the referral code receives credit
-1. _REFERRAL_CODE_LOCATION_REFERRING_USER_ - the user who created the referral code receives credit
-1. _REFERRAL_CODE_LOCATION_BOTH_ - both the creator and applicant receive credit
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -651,19 +706,37 @@ branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWA
 	}
 });
 ```
+####Parameters
 
-### Validate referral code
+You can also tune the referral code to the finest granularity, with the following additional parameters:
+
+**bucket** _String_ (max 63 characters)
+: The name of the bucket to use. If none is specified, defaults to 'default.'
+
+**calculation_type**  _int_
+: This defines whether the referral code can be applied indefinitely, or only once per user.
+
+1. _REFERRAL_CODE_AWARD_UNLIMITED_ - referral code can be applied continually
+1. _REFERRAL_CODE_AWARD_UNIQUE_ - a user can only apply a specific referral code once
+
+**location** _int_
+: The user to reward for applying the referral code.
+
+1. _REFERRAL_CODE_LOCATION_REFERREE_ - the user applying the referral code receives credit
+1. _REFERRAL_CODE_LOCATION_REFERRING_USER_ - the user who created the referral code receives credit
+1. _REFERRAL_CODE_LOCATION_BOTH_ - both the creator and applicant receive credit
+
+### Validate Referral Code
 
 Validate if a referral code exists in Branch system and is still valid.
 A code is vaild if:
 
-1. It hasn't expired.
-1. If its calculation type is uniqe, it hasn't been applied by current user.
+* It hasn't expired.
+* If its calculation type is unique, it hasn't been applied by current user.
 
 If valid, returns the referral code JSONObject in the call back.
 
-**code** _String_
-: The referral code to validate
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -688,13 +761,17 @@ branch.validateReferralCode(code, new BranchReferralInitListener() {
 });
 ```
 
-### Apply referral code
+####Parameters
+
+**code** _String_
+: The referral code to validate.
+
+### Apply Referral Code
 
 Apply a referral code if it exists in Branch system and is still valid (see above).
 If the code is valid, returns the referral code JSONObject in the call back.
 
-**code** _String_
-: The referral code to apply
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -713,3 +790,7 @@ branch.applyReferralCode(code, new BranchReferralInitListener() {
 	}
 });
 ```
+####Parameters
+
+**code** _String_
+: The referral code to apply.
