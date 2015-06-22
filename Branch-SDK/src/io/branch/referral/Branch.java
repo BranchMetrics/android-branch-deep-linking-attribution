@@ -3893,7 +3893,8 @@ public class Branch {
 	        }
 	    }
 
-		@TargetApi( Build.VERSION_CODES.HONEYCOMB_MR1 ) @Override
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB_MR1 )
+		@Override
 		public boolean dispatchGenericMotionEvent(MotionEvent event) {
 			return callback_.dispatchGenericMotionEvent(event);
 		}
@@ -3903,7 +3904,8 @@ public class Branch {
 			return callback_.dispatchKeyEvent(event);
 		}
 
-		@TargetApi( Build.VERSION_CODES.HONEYCOMB ) @Override
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
+		@Override
 		public boolean dispatchKeyShortcutEvent(KeyEvent event) {
 			return callback_.dispatchKeyShortcutEvent(event);
 		}
@@ -3946,11 +3948,13 @@ public class Branch {
 			return callback_.dispatchTrackballEvent(event);
 		}
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
 		@Override
 		public void onActionModeFinished(ActionMode mode) {
 			callback_.onActionModeFinished(mode);
 		}
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
 		@Override
 		public void onActionModeStarted(ActionMode mode) {
 			callback_.onActionModeStarted(mode);
@@ -4017,7 +4021,8 @@ public class Branch {
 			callback_.onWindowFocusChanged(hasFocus);
 		}
 
-		@TargetApi( Build.VERSION_CODES.HONEYCOMB ) @Override
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
+		@Override
 		public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
 			return callback_.onWindowStartingActionMode(callback);
 		}
