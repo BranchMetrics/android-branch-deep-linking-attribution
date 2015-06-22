@@ -1,16 +1,5 @@
 package io.branch.referral;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.UUID;
-import java.util.jar.JarFile;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -28,6 +17,17 @@ import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.UUID;
+import java.util.jar.JarFile;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide 
@@ -98,7 +98,7 @@ public class SystemObserver {
 	
 	/**
 	 * <p>Checks the value of the <i>isRealHardWareId</i> {@link Boolean} value within the current 
-	 * instance of the class. If not set by the {@link SystemObserver#hasRealHardwareId()} 
+	 * instance of the class. If not set by the {@link SystemObserver#isRealHardwareId}
 	 * or will default to true upon class instantiation.</p>
 	 * 
 	 * @return
@@ -324,7 +324,8 @@ public class SystemObserver {
         try {
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (bluetoothAdapter != null) {
-                return bluetoothAdapter.isEnabled();
+				//noinspection ResourceType
+				return bluetoothAdapter.isEnabled();
             }
         } catch (SecurityException ignored ) {
         }
