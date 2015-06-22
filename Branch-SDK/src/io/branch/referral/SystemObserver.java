@@ -227,7 +227,8 @@ public class SystemObserver {
 				if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
 					JSONObject packObj = new JSONObject();
 					try {
-						String label = appInfo.loadLabel(pm).toString();
+						CharSequence labelCs = appInfo.loadLabel(pm);
+						String label = labelCs == null ? null : labelCs.toString();
 						if (label != null)
 							packObj.put("name", label);
 						String packName = appInfo.packageName;
