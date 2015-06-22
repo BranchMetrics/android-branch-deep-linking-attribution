@@ -11,5 +11,5 @@ public interface NetworkCallback {
 	 * @param serverResponse	A {@link ServerResponse} object containing the result of the 
 	 * 							{@link NetworkCallback} action.
 	 */
-	public void finished(ServerResponse serverResponse);
+	void finished(ServerResponse serverResponse);
 }
