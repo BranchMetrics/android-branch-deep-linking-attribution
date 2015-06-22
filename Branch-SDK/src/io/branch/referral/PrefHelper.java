@@ -171,7 +171,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * <p>Constructor with context passed from calling {@link Activity}.</p>
+	 * <p>Constructor with context passed from calling {@link android.app.Activity}.</p>
 	 * 
 	 * @param context 		A reference to the {@link Context} that the application is operating 
 	 * 						within. This is normally the base context of the application.
@@ -397,7 +397,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * <p>Gets the ID of the {@link KEY_SESSION_ID} {@link String} value from preferences.</p>
+	 * <p>Gets the ID of the {@link #KEY_SESSION_ID} {@link String} value from preferences.</p>
 	 * 
 	 * @return			A {@link String} value containing the session ID as returned by the Branch 
 	 * 					API upon successful initialisation.
@@ -407,7 +407,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * <p>Sets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+	 * <p>Sets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both 
 	 * for analytics and debugging purposes.</p>
@@ -422,7 +422,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * <p>Gets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+	 * <p>Gets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * @return		A {@link String} value containing the currently configured user id within 
 	 * 				preferences.
@@ -432,7 +432,7 @@ public class PrefHelper {
 	}
 
 	/**
-	 * <p>Sets the {@link KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
+	 * <p>Sets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both 
 	 * for analytics and debugging purposes.</p>
@@ -480,15 +480,15 @@ public class PrefHelper {
 	/**
 	 * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
 	 * 
-	 * @param identifer			A {@link String} value containing the identifier of the associated 
+	 * @param identifier			A {@link String} value containing the identifier of the associated
 	 * 							link.
 	 */
-	public void setLinkClickIdentifier(String identifer) {
-		setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
+	public void setLinkClickIdentifier(String identifier) {
+		setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
 	}
 
 	/**
-	 * <p>Gets the KEY_LINK_CLICK_IDENTIFER {@link String} value that has been set via the Branch API.</p>
+	 * <p>Gets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
 	 * 
 	 * @return		A {@link String} value containing the identifier of the associated link.
 	 */
