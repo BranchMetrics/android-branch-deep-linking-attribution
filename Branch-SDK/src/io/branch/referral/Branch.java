@@ -407,8 +407,10 @@ public class Branch {
 	 * @return			An initialised {@link Branch} object, either fetched from a pre-initialised 
 	 * 					instance within the singleton class, or a newly instantiated object where 
 	 * 					one was not already requested during the current app lifecycle.
-	 * 
+	 *
+	 * @deprecated 		Use deprecated {@link #getInstance(Context)}
 	 */
+	@Deprecated
 	public static Branch getInstance(Context context, String branchKey) {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
