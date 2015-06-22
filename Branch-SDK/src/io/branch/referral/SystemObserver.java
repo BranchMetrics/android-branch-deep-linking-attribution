@@ -533,7 +533,7 @@ public class SystemObserver {
 	public int getUpdateState(boolean updatePrefs) {
 		PrefHelper pHelper = PrefHelper.getInstance(context_);
 		String currAppVersion = getAppVersion(); 
-		if (pHelper.getAppVersion() == PrefHelper.NO_STRING_VALUE) {
+		if (PrefHelper.NO_STRING_VALUE.equals(pHelper.getAppVersion())) {
 			// if no app version is in storage, this must be the first time Branch is here
 			if (updatePrefs) {
 				pHelper.setAppVersion(currAppVersion);
