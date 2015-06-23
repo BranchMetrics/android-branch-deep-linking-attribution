@@ -393,10 +393,7 @@ public class Branch {
 	/**
 	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
 	 * object of the type {@link Branch}.</p>
-	 * 
-	 * <p><b>Deprecated</b> - use {@link #getInstance(Context)} instead; the Branch key should be 
-	 * declared in XML rather than hard-coded into your Java code going forward.</p>
-	 * 
+	 *
 	 * @see 			<a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
 	 * 					Adding your app key to your project</a>
 	 * 
