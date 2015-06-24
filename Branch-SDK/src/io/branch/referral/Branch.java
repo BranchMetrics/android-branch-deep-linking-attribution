@@ -1043,6 +1043,15 @@ public class Branch {
 
 	/**
 	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
+	 * {@link String} value. No callback.</p>
+	 *
+	 * @param userId A {@link String} value containing the unique identifier of the user.
+	 */
+	public void setIdentity(String userId) {
+		setIdentity(userId, null);
+	}
+	/**
+	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
 	 * {@link String} value, with a callback specified to perform a defined action upon successful
 	 * response to request.</p>
 	 *
@@ -1051,9 +1060,6 @@ public class Branch {
 	 *                 the data associated with the user id being assigned, if available.
 	 */
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
-		if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
-			return;
-		}
 		ServerRequest req = new IdentifyUserRequest(context_, callback, userId);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			requestQueue_.enqueue(req);
@@ -1062,6 +1068,11 @@ public class Branch {
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
 				handleFailure(req);
+			}
+		}
+		else{
+			if(((IdentifyUserRequest)req).isExistingID()){
+				((IdentifyUserRequest)req).handleUserExist(branchReferral_);
 			}
 		}
 	}
@@ -2845,16 +2856,8 @@ public class Branch {
 							// cache the link
 							linkCache_.put(serverResponse.getLinkData(), url);
 						}
-						if (thisReq_ instanceof IdentifyUserRequest) {
-							if (requestQueue_.getSize() > 0) {
-								ServerRequest req = requestQueue_.peek();
-								if (req.getPost() != null && req.getPost().has("identity")) {
-									prefHelper_.setIdentity(req.getPost().getString("identity"));
-								}
-							}
-						}
-						//Publish success to listeners
 
+						//Publish success to listeners
 						thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
 						if (thisReq_ instanceof RegisterInstallRequest) {

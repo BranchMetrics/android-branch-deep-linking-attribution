@@ -2,6 +2,7 @@ package io.branch.referral.serverrequest;
 
 import android.app.Application;
 import android.content.Context;
+import android.nfc.tech.IsoDep;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +23,7 @@ import io.branch.referral.errors.BranchSetIdentityError;
  */
 public class IdentifyUserRequest extends ServerRequest {
     Branch.BranchReferralInitListener callback_;
-
+    String userId_ = null;
     /**
      * <p>Create an instance of {@link IdentifyUserRequest} to Identify the current user to the Branch API
      * by supplying a unique identifier as a {@link String} value, with a callback specified to perform a
@@ -37,6 +38,8 @@ public class IdentifyUserRequest extends ServerRequest {
         super(context, Defines.RequestPath.IdentifyUser.getPath());
 
         callback_ = callback;
+        userId_ = userId;
+
         JSONObject post = new JSONObject();
         try {
             post.put("identity_id", prefHelper_.getIdentityID());
@@ -60,6 +63,10 @@ public class IdentifyUserRequest extends ServerRequest {
 
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
+            if (getPost() != null && getPost().has("identity")) {
+                prefHelper_.setIdentity(getPost().getString("identity"));
+            }
+
             prefHelper_.setIdentityID(resp.getObject().getString("identity_id"));
             prefHelper_.setUserURL(resp.getObject().getString("link"));
 
@@ -98,11 +105,35 @@ public class IdentifyUserRequest extends ServerRequest {
             callback_.onInitFinished(null, new BranchInternetPermissionError());
             return true;
         }
+        else{
+            if (userId_ == null || userId_.length() == 0 || userId_.equals(prefHelper_.getIdentity())) {
+                return true;
+            }
+        }
         return false;
     }
 
     @Override
     public boolean isGetRequest() {
         return false;
+    }
+
+    /**
+     * Return true if the user id provided for user identification is the same as existing id
+     * @return
+     */
+    public boolean isExistingID(){
+        return (userId_ != null && userId_.equals(prefHelper_.getIdentity()));
+    }
+
+    /*
+     * Callback with existing first referral params.
+     *
+     * @param branch {@link Branch} instance.
+     */
+    public void handleUserExist(Branch branch){
+        if (callback_ != null) {
+            callback_.onInitFinished(branch.getFirstReferringParams(), null);
+        }
     }
 }
