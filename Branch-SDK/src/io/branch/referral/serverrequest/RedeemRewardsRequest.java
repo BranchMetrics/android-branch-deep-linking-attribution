@@ -13,6 +13,7 @@ import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
+import io.branch.referral.errors.BranchInternetPermissionError;
 import io.branch.referral.errors.BranchNotInitError;
 import io.branch.referral.errors.BranchRedeemRewardsError;
 
@@ -77,10 +78,17 @@ public class RedeemRewardsRequest extends ServerRequest {
     }
 
     @Override
-    public boolean hasErrors() {
-        return actualNumOfCreditsToRedeem_ <= 0;
+    public boolean handleErrors(Context context) {
+        if (!super.doesAppHasInternetPermission(context)) {
+            callback_.onStateChanged(false, new BranchInternetPermissionError());
+            return true;
+        }
+        if (actualNumOfCreditsToRedeem_ <= 0) {
+            callback_.onStateChanged(false, new BranchRedeemRewardsError());
+            return true;
+        }
+        return false;
     }
-
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {

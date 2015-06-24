@@ -2,6 +2,7 @@ package io.branch.referral.serverrequest;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,6 +13,7 @@ import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
 import io.branch.referral.errors.BranchApplyReferralCodeError;
+import io.branch.referral.errors.BranchInternetPermissionError;
 import io.branch.referral.errors.BranchInvalidReferralCodeError;
 import io.branch.referral.errors.BranchNotInitError;
 
@@ -104,7 +106,11 @@ public class ApplyReferralCodeRequest extends ServerRequest {
     }
 
     @Override
-    public boolean hasErrors() {
+    public boolean handleErrors(Context context) {
+        if (!super.doesAppHasInternetPermission(context)) {
+            callback_.onInitFinished(null, new BranchInternetPermissionError());
+            return true;
+        }
         return false;
     }
 

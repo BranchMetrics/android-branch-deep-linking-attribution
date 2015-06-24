@@ -14,6 +14,7 @@ import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
 import io.branch.referral.SystemObserver;
 import io.branch.referral.errors.BranchInitError;
+import io.branch.referral.errors.BranchInternetPermissionError;
 
 /**
  * * <p>
@@ -159,7 +160,11 @@ public class RegisterInstallRequest extends ServerRequest {
     }
 
     @Override
-    public boolean hasErrors() {
+    public boolean handleErrors(Context context) {
+        if (!super.doesAppHasInternetPermission(context)) {
+            callback_.onInitFinished(null, new BranchInternetPermissionError());
+            return true;
+        }
         return false;
     }
 

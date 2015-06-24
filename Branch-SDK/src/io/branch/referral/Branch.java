@@ -838,8 +838,10 @@ public class Branch {
 					} else {
 						request = new RegisterInstallRequest(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE);
 					}
-					requestQueue_.moveInstallOrOpenToFront(request, networkCount_, callback);
-					processNextQueueItem();
+					if(!request.constructError_ && !request.handleErrors(context_)) {
+						requestQueue_.moveInstallOrOpenToFront(request, networkCount_, callback);
+						processNextQueueItem();
+					}
 				}
 			}
 		}
@@ -1053,7 +1055,7 @@ public class Branch {
 			return;
 		}
 		ServerRequest req = new IdentifyUserRequest(context_, callback, userId);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			requestQueue_.enqueue(req);
 			if (initFinished_ || !hasNetwork_) {
 				lastRequestWasInit_ = false;
@@ -1085,7 +1087,7 @@ public class Branch {
 	 */
 	public void logout() {
 		ServerRequest req = new LogoutRequest(context_);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			requestQueue_.enqueue(req);
 			if (initFinished_ || !hasNetwork_) {
 				lastRequestWasInit_ = false;
@@ -1114,7 +1116,7 @@ public class Branch {
 	 */
 	public void loadActionCounts(BranchReferralStateChangedListener callback) {
 		ServerRequest req = new GetReferralCountRequest(context_, callback);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -1144,7 +1146,7 @@ public class Branch {
 	 */
 	public void loadRewards(BranchReferralStateChangedListener callback) {
 		ServerRequest req = new GetRewardsRequest(context_, callback);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -1259,17 +1261,13 @@ public class Branch {
 	 */
 	public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
 		RedeemRewardsRequest req = new RedeemRewardsRequest(context_, bucket, count, callback);
-		if (!req.constructError_) {
-			if (req.hasErrors()) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
+			requestQueue_.enqueue(req);
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
 				handleFailure(req);
-			} else {
-				requestQueue_.enqueue(req);
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
 			}
 		}
 	}
@@ -1352,7 +1350,7 @@ public class Branch {
 	 */
 	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
 		ServerRequest req = new GetRewardHistoryRequest(context_, bucket, afterId, length, order, callback);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -1379,7 +1377,7 @@ public class Branch {
 			metadata = filterOutBadCharacters(metadata);
 
 		ServerRequest req = new ActionCompletedRequest(context_, action, metadata);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			requestQueue_.enqueue(req);
 			if (initFinished_ || !hasNetwork_) {
 				lastRequestWasInit_ = false;
@@ -2147,7 +2145,7 @@ public class Branch {
 	 */
 	public void getReferralCode(BranchReferralInitListener callback) {
 		ServerRequest req = new GetReferralCodeRequest(context_, callback);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -2286,7 +2284,7 @@ public class Branch {
 			date = convertDate(expiration);
 		ServerRequest req = new GetReferralCodeRequest(context_, prefix, amount, date, bucket,
 				calculationType, location, callback);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -2309,7 +2307,7 @@ public class Branch {
 	 */
 	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
 		ServerRequest req = new ValidateReferralCodeRequest(context_, callback, code);
-		if (!req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -2332,7 +2330,7 @@ public class Branch {
 	 */
 	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
 		ServerRequest req = new ApplyReferralCodeRequest(context_, callback, code);
-		if (req.constructError_) {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (!initFailed_) {
 				requestQueue_.enqueue(req);
 			}
@@ -2370,9 +2368,7 @@ public class Branch {
 				channel, feature, stage,
 				params, callback, async);
 
-		if (req.hasErrors()) {
-			return null;
-		} else {
+		if (!req.constructError_ && !req.handleErrors(context_)) {
 			if (linkCache_.containsKey(req.getLinkPost())) {
 				String url = linkCache_.get(req.getLinkPost());
 				if (callback != null) {
@@ -2488,7 +2484,7 @@ public class Branch {
 			@Override
 			public void run() {
 				ServerRequest req = new SendAppListRequest(context_);
-				if (!req.constructError_) {
+				if (!req.constructError_ && !req.handleErrors(context_)) {
 					if (!initFailed_) {
 						requestQueue_.enqueue(req);
 					}
@@ -2766,6 +2762,10 @@ public class Branch {
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
 	}
+
+
+
+
 
 
 	public class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {

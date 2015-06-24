@@ -1,6 +1,8 @@
 package io.branch.referral;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,10 +68,12 @@ public abstract class ServerRequest {
 	 * <p>Should be implemented by the child class.Specifies any error associated with request.
 	 * If there are errors request will not be executed.</p>
 	 *
-	 * @return	A {@link Boolean} which is set to true if there are errors with this request.
-	 * 			Child class is responsible for implementing its own logic for error check.
+	 * @return			A {@link Boolean} which is set to true if there are errors with this request.
+	 * 					Child class is responsible for implementing its own logic for error check and reporting.
+	 *
+	 * @param context   Application context.
 	 */
-	public abstract boolean hasErrors();
+	public abstract boolean handleErrors(Context context);
 
 
 	/**
@@ -251,6 +255,18 @@ public abstract class ServerRequest {
 		}
 
 		return extendedReq;
+	}
+
+	/*
+	 * Checks if this Application has internet permissions.
+	 *
+	 * @param context	Application context.
+	 *
+	 * @return			True if application has internet permission.
+	 */
+	protected boolean doesAppHasInternetPermission(Context context){
+		int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
+		return result == PackageManager.PERMISSION_GRANTED;
 	}
 
 

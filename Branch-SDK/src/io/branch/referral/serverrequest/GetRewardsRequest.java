@@ -13,6 +13,7 @@ import io.branch.referral.Defines;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
 import io.branch.referral.errors.BranchGetCreditsError;
+import io.branch.referral.errors.BranchInternetPermissionError;
 import io.branch.referral.errors.BranchNotInitError;
 
 /**
@@ -84,7 +85,11 @@ public class GetRewardsRequest extends ServerRequest {
     }
 
     @Override
-    public boolean hasErrors() {
+    public boolean handleErrors(Context context) {
+        if (!super.doesAppHasInternetPermission(context)) {
+            callback_.onStateChanged(false, new BranchInternetPermissionError());
+            return true;
+        }
         return false;
     }
 

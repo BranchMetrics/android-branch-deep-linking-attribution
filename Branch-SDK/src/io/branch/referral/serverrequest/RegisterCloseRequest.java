@@ -2,6 +2,7 @@ package io.branch.referral.serverrequest;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,6 +12,7 @@ import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
+import io.branch.referral.errors.BranchInternetPermissionError;
 
 /**
  * * <p>
@@ -47,7 +49,11 @@ public class RegisterCloseRequest extends ServerRequest {
     }
 
     @Override
-    public boolean hasErrors() {
+    public boolean handleErrors(Context context) {
+        if (!super.doesAppHasInternetPermission(context)) {
+            Log.i("BranchSDK", "Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
+            return true;
+        }
         return false;
     }
 

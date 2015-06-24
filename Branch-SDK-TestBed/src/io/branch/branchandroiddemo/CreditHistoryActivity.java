@@ -56,39 +56,41 @@ public class CreditHistoryActivity extends Activity {
 			branch.getCreditHistory(new BranchListResponseListener() {
 				@SuppressLint("NewApi") public void onReceivingResponse(JSONArray history, BranchError error) {
 					ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
-
-					if (history.length() > 0) {
-						Log.i("BranchTestBed", history.toString());
-
-						try {
-							for(int i = 0; i < history.length(); i++) {
-								JSONObject transaction = history.getJSONObject(i);
-								JSONObject xact = transaction.getJSONObject("transaction");
-								String bucket = xact.getString("bucket");
-								int amount = xact.getInt("amount");
-								String date = xact.getString("date");
-								Date xactDate = null;
-								try {
-									xactDate = DateParseFormat.parse(date);
-								} catch (ParseException e) {
-									e.printStackTrace();
-								}
-								list.add(new CreditTransaction(bucket + " : " + amount,
-																transaction.isNull("referrer") ? null : transaction.getString("referrer"),
-																transaction.isNull("referree") ? null : transaction.getString("referree"),
-																xactDate));
-							}
-
-
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
+					if (error != null) {
+						Log.i("BranchTestBed", "branch load credit history failed. Caused by -" + error.getMessage());
 					} else {
-						list.add(new CreditTransaction("None found"));
-					}
+						if (history.length() > 0) {
+							Log.i("BranchTestBed", history.toString());
 
-					CreditHistoryArrayAdaptor adapter = new CreditHistoryArrayAdaptor(self, list);
-					listview.setAdapter(adapter);
+							try {
+								for (int i = 0; i < history.length(); i++) {
+									JSONObject transaction = history.getJSONObject(i);
+									JSONObject xact = transaction.getJSONObject("transaction");
+									String bucket = xact.getString("bucket");
+									int amount = xact.getInt("amount");
+									String date = xact.getString("date");
+									Date xactDate = null;
+									try {
+										xactDate = DateParseFormat.parse(date);
+									} catch (ParseException e) {
+										e.printStackTrace();
+									}
+									list.add(new CreditTransaction(bucket + " : " + amount,
+											transaction.isNull("referrer") ? null : transaction.getString("referrer"),
+											transaction.isNull("referree") ? null : transaction.getString("referree"),
+											xactDate));
+								}
+
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						} else {
+							list.add(new CreditTransaction("None found"));
+						}
+						CreditHistoryArrayAdaptor adapter = new CreditHistoryArrayAdaptor(self, list);
+						listview.setAdapter(adapter);
+					}
 				}
 			});
 		}catch (BranchException ex) {

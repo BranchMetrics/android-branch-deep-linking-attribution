@@ -15,6 +15,7 @@ import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
 import io.branch.referral.errors.BranchDuplicateReferralCodeError;
 import io.branch.referral.errors.BranchGetReferralCodeError;
+import io.branch.referral.errors.BranchInternetPermissionError;
 import io.branch.referral.errors.BranchNotInitError;
 
 /**
@@ -139,7 +140,11 @@ public class GetReferralCodeRequest extends ServerRequest {
     }
 
     @Override
-    public boolean hasErrors() {
+    public boolean handleErrors(Context context) {
+        if (!super.doesAppHasInternetPermission(context)) {
+            callback_.onInitFinished(null, new BranchInternetPermissionError());
+            return true;
+        }
         return false;
     }
 

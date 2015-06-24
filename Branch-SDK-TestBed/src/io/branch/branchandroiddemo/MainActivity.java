@@ -73,14 +73,18 @@ public class MainActivity extends Activity {
 		cmdCommitBuyMetadata = (Button) findViewById(R.id.cmdCommitBuyMetadataAction);
 		cmdGetCreditHistory = (Button) findViewById(R.id.cmdGetCreditHistory);
 		cmdReferralCode = (Button) findViewById(R.id.cmdReferralCode);
-		
+
 		cmdIdentifyUser.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				branch.setIdentity("test_user_10", new BranchReferralInitListener() {
 					@Override
 					public void onInitFinished(JSONObject referringParams, BranchError error) {
-						Log.i("BranchTestBed", "install params = " + referringParams.toString());
+						if (error != null) {
+							Log.i("BranchTestBed", "branch set Identity failed. Caused by -" + error.getMessage());
+						} else {
+							Log.i("BranchTestBed", "install params = " + referringParams.toString());
+						}
 					}
 				});
 			}
@@ -124,34 +128,46 @@ public class MainActivity extends Activity {
 				branch.getShortUrl(tags, "channel1", "feature1", "1", obj, new BranchLinkCreateListener() {
 					@Override
 					public void onLinkCreate(String url, BranchError error) {
-						txtShortUrl.setText(url);
+						if (error != null) {
+							Log.i("BranchTestBed", "branch create short url failed. Caused by -" + error.getMessage());
+						} else {
+							txtShortUrl.setText(url);
+						}
 					}
 				});
 			}
 		});
-		
+
 		cmdRefreshCounts.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				branch.loadActionCounts(new BranchReferralStateChangedListener() {
 					@Override
 					public void onStateChanged(boolean changed, BranchError error) {
-						Log.i("BranchTestBed", "changed = " + changed);
-						txtInstallCount.setText("install total = " + branch.getTotalCountsForAction("install") + ", unique = " + branch.getUniqueCountsForAction("install"));
-						txtEventCount.setText("buy total = " + branch.getTotalCountsForAction("buy") + ", unique = " + branch.getUniqueCountsForAction("buy"));
+						if (error != null) {
+							Log.i("BranchTestBed", "branch load action count failed. Caused by -" + error.getMessage());
+						} else {
+							Log.i("BranchTestBed", "changed = " + changed);
+							txtInstallCount.setText("install total = " + branch.getTotalCountsForAction("install") + ", unique = " + branch.getUniqueCountsForAction("install"));
+							txtEventCount.setText("buy total = " + branch.getTotalCountsForAction("buy") + ", unique = " + branch.getUniqueCountsForAction("buy"));
+						}
 					}
 				});
 			}
 		});
-		
+
 		cmdRefreshReward.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				branch.loadRewards(new BranchReferralStateChangedListener() {
 					@Override
 					public void onStateChanged(boolean changed, BranchError error) {
-						Log.i("BranchTestBed", "changed = " + changed);
-						txtRewardBalance.setText("rewards = " + branch.getCredits());
+						if (error != null) {
+							Log.i("BranchTestBed", "branch load rewards failed. Caused by -" + error.getMessage());
+						} else {
+							Log.i("BranchTestBed", "changed = " + changed);
+							txtRewardBalance.setText("rewards = " + branch.getCredits());
+						}
 					}
 				});
 			}
@@ -163,11 +179,15 @@ public class MainActivity extends Activity {
 				branch.redeemRewards(5, new BranchReferralStateChangedListener() {
 					@Override
 					public void onStateChanged(boolean changed, BranchError error) {
-						if (changed) {
-							Log.i("BranchTestBed", "redeemed Rewards = " + changed);
-							txtRewardBalance.setText("rewards = " + branch.getCredits());
+						if (error != null) {
+							Log.i("BranchTestBed", "branch redeem rewards failed. Caused by -" + error.getMessage());
 						} else {
-							Log.i("BranchTestBed", "redeem Rewards error : " + error);
+							if (changed) {
+								Log.i("BranchTestBed", "redeemed rewards = " + changed);
+								txtRewardBalance.setText("rewards = " + branch.getCredits());
+							} else {
+								Log.i("BranchTestBed", "redeem rewards error : " + error);
+							}
 						}
 					}
 				});
@@ -239,25 +259,29 @@ public class MainActivity extends Activity {
 		branch.initSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams,
-					BranchError error) {
-				Log.i("BranchTestBed", "branch init complete!");
-				try {
-					Iterator<?> keys = referringParams.keys();
-					while (keys.hasNext()) {
-						String key = (String) keys.next();
-						Log.i("BranchTestBed",
-								key + ", " + referringParams.getString(key));
-						
-						Log.i("BranchTestBed",
-								"isUserIdentified "+ branch.isUserIdentified());
-						
+									   BranchError error) {
+				if (error != null) {
+					Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
+				} else {
+					Log.i("BranchTestBed", "branch init complete!");
+					try {
+						Iterator<?> keys = referringParams.keys();
+						while (keys.hasNext()) {
+							String key = (String) keys.next();
+							Log.i("BranchTestBed",
+									key + ", " + referringParams.getString(key));
+
+							Log.i("BranchTestBed",
+									"isUserIdentified " + branch.isUserIdentified());
+
+						}
+					} catch (JSONException e) {
+						e.printStackTrace();
 					}
-				} catch (JSONException e) {
-					e.printStackTrace();
 				}
 			}
 		}, this.getIntent().getData(), this);
-       
+
 	}
 
 	@Override
