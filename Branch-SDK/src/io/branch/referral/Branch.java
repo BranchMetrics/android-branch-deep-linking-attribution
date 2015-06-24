@@ -1,5 +1,24 @@
 package io.branch.referral;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.Application;
+import android.content.Context;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.util.SparseArray;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -15,23 +34,21 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
-import android.util.SparseArray;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnTouchListener;
+import io.branch.referral.serverrequest.ActionCompletedRequest;
+import io.branch.referral.serverrequest.ApplyReferralCodeRequest;
+import io.branch.referral.serverrequest.CreateUrlRequest;
+import io.branch.referral.serverrequest.GetReferralCodeRequest;
+import io.branch.referral.serverrequest.GetReferralCountRequest;
+import io.branch.referral.serverrequest.GetRewardHistoryRequest;
+import io.branch.referral.serverrequest.GetRewardsRequest;
+import io.branch.referral.serverrequest.IdentifyUserRequest;
+import io.branch.referral.serverrequest.LogoutRequest;
+import io.branch.referral.serverrequest.RedeemRewardsRequest;
+import io.branch.referral.serverrequest.RegisterCloseRequest;
+import io.branch.referral.serverrequest.RegisterInstallRequest;
+import io.branch.referral.serverrequest.RegisterOpenRequest;
+import io.branch.referral.serverrequest.SendAppListRequest;
+import io.branch.referral.serverrequest.ValidateReferralCodeRequest;
 
 /**
  * <p>
@@ -266,16 +283,6 @@ public class Branch {
 	 * instance has already been instantiated and a session initialised with the Branch servers.</p>
 	 */
 	private boolean isInit_;
-	
-	private BranchReferralInitListener initSessionFinishedCallback_;
-	private BranchReferralInitListener initIdentityFinishedCallback_;
-	private BranchReferralStateChangedListener stateChangedCallback_;
-	private BranchLinkCreateListener linkCreateCallback_;
-	private BranchListResponseListener creditHistoryCallback_;
-	private BranchReferralInitListener getReferralCodeCallback_;
-	private BranchReferralInitListener validateReferralCodeCallback_;
-	private BranchReferralInitListener applyReferralCodeCallback_;
-	private BranchReferralStateChangedListener redeemStateChangedCallback_;
 	private BranchRemoteInterface kRemoteInterface_;
 	
 	private PrefHelper prefHelper_;
@@ -330,7 +337,6 @@ public class Branch {
 		prefHelper_ = PrefHelper.getInstance(context);
 		kRemoteInterface_ = new BranchRemoteInterface(context);
 		systemObserver_ = new SystemObserver(context);
-		kRemoteInterface_.setNetworkCallbackListener(new ReferralNetworkCallback());
 		requestQueue_ = ServerRequestQueue.getInstance(context);
 		serverSema_ = new Semaphore(1);
 		closeTimer = new Timer();
@@ -644,7 +650,7 @@ public class Branch {
 	 * @return		A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
 	public boolean initSession() {
-		return initSession((Activity)null);
+		return initSession((Activity) null);
 	}
 	
 	/**
@@ -784,22 +790,19 @@ public class Branch {
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
 		return initSession(callback, isReferrable, (Activity)null);
 	}
-	
+
 	/**
 	 * <p>Initialises a session with the Branch API.</p>
-	 * 
-	 * @param callback		A {@link BranchReferralInitListener} instance that will be called 
-	 * 						following successful (or unsuccessful) initialisation of the session 
-	 * 						with the Branch API.
-	 * 
-	 * @param isReferrable	A {@link Boolean} value indicating whether this initialisation 
-	 * 						session should be considered as potentially referrable or not.
-	 * 						By default, a user is only referrable if initSession results in a	
-	 * 						fresh install. Overriding this gives you control of who is referrable.
-	 * 
-	 * @param activity		The calling {@link Activity} for context.
-	 * 
-	 * @return				A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+	 *
+	 * @param callback     A {@link BranchReferralInitListener} instance that will be called
+	 *                     following successful (or unsuccessful) initialisation of the session
+	 *                     with the Branch API.
+	 * @param isReferrable A {@link Boolean} value indicating whether this initialisation
+	 *                     session should be considered as potentially referrable or not.
+	 *                     By default, a user is only referrable if initSession results in a
+	 *                     fresh install. Overriding this gives you control of who is referrable.
+	 * @param activity     The calling {@link Activity} for context.
+	 * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
 	 */
 	public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
 		if (isReferrable) {
@@ -812,18 +815,12 @@ public class Branch {
 	}
 
 	private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
-		initSessionFinishedCallback_ = callback;
 		lastRequestWasInit_ = true;
 		initNotStarted_ = false;
 		initFailed_ = false;
 		if (!isInit_) {
 			isInit_ = true;
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					initializeSession();
-				}
-			}).start();
+			initializeSession(callback);
 		} else {
 			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
 			if (hasUser() && hasSession() && !installOrOpenInQueue) {
@@ -833,28 +830,24 @@ public class Branch {
 				keepAlive();
 			} else {
 				if (!installOrOpenInQueue) {
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							initializeSession();
-						}
-					}).start();
+					initializeSession(callback);
 				} else {
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							requestQueue_.moveInstallOrOpenToFront(hasUser() ? BranchRemoteInterface.REQ_TAG_REGISTER_OPEN : BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL, networkCount_);
-							processNextQueueItem();
-						}
-					}).start();
+					ServerRequest request;
+					if (hasUser()) {
+						request = new RegisterOpenRequest(context_, callback, kRemoteInterface_.getSystemObserver());
+					} else {
+						request = new RegisterInstallRequest(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE);
+					}
+					requestQueue_.moveInstallOrOpenToFront(request, networkCount_, callback);
+					processNextQueueItem();
 				}
 			}
 		}
-		
+
 		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) { 
+			if (view != null) {
 				view.setOnTouchListener(debugOnTouchListener_);
 			}
 		}
@@ -996,9 +989,9 @@ public class Branch {
 			}
 		}
 	}
-	
+
 	/**
-	 * <p>Perform the state-safe actions required to terminate any open session, and report the 
+	 * <p>Perform the state-safe actions required to terminate any open session, and report the
 	 * closed application event to the Branch API.</p>
 	 */
 	private void executeClose() {
@@ -1008,24 +1001,19 @@ public class Branch {
 		if (!hasNetwork_) {
 			// if there's no network connectivity, purge the old install/open
 			ServerRequest req = requestQueue_.peek();
-			if (req != null && (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
+			if (req != null && (req instanceof RegisterInstallRequest) || (req instanceof RegisterOpenRequest)) {
 				requestQueue_.dequeue();
 			}
 		} else {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					if (!requestQueue_.containsClose()) {
-						ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE, null);
-						requestQueue_.enqueue(req);
-						if (initFinished_ || !hasNetwork_) {
-							processNextQueueItem();
-						} else if (initFailed_ || initNotStarted_) {
-							handleFailure(req);
-						}
-					}
+			if (!requestQueue_.containsClose()) {
+				ServerRequest req = new RegisterCloseRequest(context_);
+				requestQueue_.enqueue(req);
+				if (initFinished_ || !hasNetwork_) {
+					processNextQueueItem();
+				} else if (initFailed_ || initNotStarted_) {
+					handleFailure(req);
 				}
-			}).start();
+			}
 		}
 	}
 	
@@ -1052,58 +1040,31 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a 
-	 * {@link String} value, with a callback specified to perform a defined action upon successful 
+	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
+	 * {@link String} value, with a callback specified to perform a defined action upon successful
 	 * response to request.</p>
-	 * 
-	 * @param userId	A {@link String} value containing the unique identifier of the user.
-	 * 
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will return
-	 * 					the data associated with the user id being assigned, if available.
+	 *
+	 * @param userId   A {@link String} value containing the unique identifier of the user.
+	 * @param callback A {@link BranchReferralInitListener} callback instance that will return
+	 *                 the data associated with the user id being assigned, if available.
 	 */
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
-		initIdentityFinishedCallback_ = callback;
-		setIdentity(userId);
-	}
-
-	/**
-	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a 
-	 * {@link String} value. No callback.</p>
-	 * 
-	 * @param userId	A {@link String} value containing the unique identifier of the user.
-	 */
-	public void setIdentity(final String userId) {
 		if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
 			return;
 		}
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-					post.put("identity", userId);
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_IDENTIFY, post);
-				requestQueue_.enqueue(req);
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new IdentifyUserRequest(context_, callback, userId);
+		if (!req.constructError_) {
+			requestQueue_.enqueue(req);
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
 			}
-		}).start();
+		}
 	}
+
+
 
 	/**
 	 * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
@@ -1123,31 +1084,16 @@ public class Branch {
 	 * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
 	 */
 	public void logout() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_LOGOUT, post);
-				requestQueue_.enqueue(req);
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new LogoutRequest(context_);
+		if (!req.constructError_) {
+			requestQueue_.enqueue(req);
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
 			}
-		}).start();
+		}
 	}
 
 	/**
@@ -1158,31 +1104,27 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Gets the total action count, with a callback to perform a predefined 
+	 * <p>Gets the total action count, with a callback to perform a predefined
 	 * action following successful report of state change. You'll then need to
 	 * call getUniqueActions or getTotalActions in the callback to update the
 	 * totals in your UX.</p>
-	 * 
-	 * @param callback		A {@link BranchReferralStateChangedListener} callback instance that will 
-	 * 						trigger actions defined therein upon a referral state change.
+	 *
+	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
+	 *                 trigger actions defined therein upon a referral state change.
 	 */
 	public void loadActionCounts(BranchReferralStateChangedListener callback) {
-		stateChangedCallback_ = callback;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS, null);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new GetReferralCountRequest(context_, callback);
+		if (!req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
 	}
 
 	/**
@@ -1193,30 +1135,26 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Retrieves rewards for the current session, with a callback to perform a predefined 
+	 * <p>Retrieves rewards for the current session, with a callback to perform a predefined
 	 * action following successful report of state change. You'll then need to call getCredits
 	 * in the callback to update the credit totals in your UX.</p>
-	 * 
-	 * @param callback 		A {@link BranchReferralStateChangedListener} callback instance that will 
-	 * 						trigger actions defined therein upon a referral state change.
+	 *
+	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
+	 *                 trigger actions defined therein upon a referral state change.
 	 */
 	public void loadRewards(BranchReferralStateChangedListener callback) {
-		stateChangedCallback_ = callback;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARDS, null);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new GetRewardsRequest(context_, callback);
+		if (!req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
 	}
 
 	/**
@@ -1314,56 +1252,26 @@ public class Branch {
 	 *
 	 * @param bucket   A {@link String} value containing the name of the referral bucket to attempt
 	 *                 to redeem credits from.
-	 *
 	 * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
 	 *                 the specified bucket.
-	 *
 	 * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
 	 *                 trigger actions defined therein upon a executing redeem rewards.
 	 */
 	public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
-		redeemStateChangedCallback_ = callback;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				int creditsToRedeem;
-				int credits = prefHelper_.getCreditCount(bucket);
-
-				if (count > credits) {
-					creditsToRedeem = credits;
-					Log.i("BranchSDK", "Branch Warning: You're trying to redeem more credits than are available. Have you updated loaded rewards");
-				} else {
-					creditsToRedeem = count;
-				}
-
-				if (creditsToRedeem > 0) {
-					JSONObject post = new JSONObject();
-					try {
-						post.put("identity_id", prefHelper_.getIdentityID());
-						post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-						post.put("session_id", prefHelper_.getSessionID());
-						if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-							post.put("link_click_id", prefHelper_.getLinkClickID());
-						}
-						post.put("bucket", bucket);
-						post.put("amount", creditsToRedeem);
-					} catch (JSONException ex) {
-						ex.printStackTrace();
-						return;
-					}
-					ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS, post);
-					requestQueue_.enqueue(req);
-					if (initFinished_ || !hasNetwork_) {
-						lastRequestWasInit_ = false;
-						processNextQueueItem();
-					} else if (initFailed_ || initNotStarted_) {
-						handleFailure(req);
-					}
-				} else {
-					handleFailure(new ServerRequest(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS));
+		RedeemRewardsRequest req = new RedeemRewardsRequest(context_, bucket, count, callback);
+		if (!req.constructError_) {
+			if (req.hasErrors()) {
+				handleFailure(req);
+			} else {
+				requestQueue_.enqueue(req);
+				if (initFinished_ || !hasNetwork_) {
+					lastRequestWasInit_ = false;
+					processNextQueueItem();
+				} else if (initFailed_ || initNotStarted_) {
+					handleFailure(req);
 				}
 			}
-		}).start();
+		}
 	}
 
 	/**
@@ -1420,113 +1328,66 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the 
+	 * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
 	 * response.</p>
-	 * 
-	 * @param bucket	A {@link String} value containing the name of the referral bucket that the 
-	 * 					code will belong to.
-	 * 
-	 * @param afterId	A {@link String} value containing the ID of the history record to begin after.
-	 * 					This allows for a partial history to be retrieved, rather than the entire 
-	 * 					credit history of the bucket.
-	 * 
-	 * @param length	A {@link Integer} value containing the number of credit history records to 
-	 * 					return.
-	 * 
-	 * @param order		A {@link CreditHistoryOrder} object indicating which order the results should 
-	 * 					be returned in.
-	 * 
-	 * 					<p>Valid choices:</p>
-	 * 					
-	 * 					<ul>
-	 * 						<li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
-	 * 						<li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
-	 * 					</ul>
-	 * 
-	 * @param callback	A {@link BranchListResponseListener} callback instance that will trigger 
-	 * 					actions defined therein upon receipt of a response to a create link request.
+	 *
+	 * @param bucket   A {@link String} value containing the name of the referral bucket that the
+	 *                 code will belong to.
+	 * @param afterId  A {@link String} value containing the ID of the history record to begin after.
+	 *                 This allows for a partial history to be retrieved, rather than the entire
+	 *                 credit history of the bucket.
+	 * @param length   A {@link Integer} value containing the number of credit history records to
+	 *                 return.
+	 * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
+	 *                 be returned in.
+	 *                 <p/>
+	 *                 <p>Valid choices:</p>
+	 *                 <p/>
+	 *                 <ul>
+	 *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
+	 *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
+	 *                 </ul>
+	 * @param callback A {@link BranchListResponseListener} callback instance that will trigger
+	 *                 actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
-		creditHistoryCallback_ = callback;
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-					post.put("length", length);
-					post.put("direction", order.ordinal());
-
-					if (bucket != null) {
-						post.put("bucket", bucket);
-					}
-
-					if (afterId != null) {
-						post.put("begin_after_id", afterId);
-					}
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY, post);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new GetRewardHistoryRequest(context_, bucket, afterId, length, order, callback);
+		if (!req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
 	}
 
 	/**
-	 * <p>A void call to indicate that the user has performed a specific action and for that to be 
+	 * <p>A void call to indicate that the user has performed a specific action and for that to be
 	 * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
-	 * 
-	 * @param action	A {@link String} value to be passed as an action that the user has carried 
-	 * 					out. For example "registered" or "logged in".
-	 * 
-	 * @param metadata	A {@link JSONObject} containing app-defined meta-data to be attached to a 
-	 * 					user action that has just been completed.
+	 *
+	 * @param action   A {@link String} value to be passed as an action that the user has carried
+	 *                 out. For example "registered" or "logged in".
+	 * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
+	 *                 user action that has just been completed.
 	 */
-	public void userCompletedAction(final String action, final JSONObject metadata) {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-					post.put("event", action);
-					if (metadata != null)
-						post.put("metadata", filterOutBadCharacters(metadata));
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION, post);
-				requestQueue_.enqueue(req);
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}		
+	public void userCompletedAction(final String action, JSONObject metadata) {
+		if (metadata != null)
+			metadata = filterOutBadCharacters(metadata);
+
+		ServerRequest req = new ActionCompletedRequest(context_, action, metadata);
+		if (!req.constructError_) {
+			requestQueue_.enqueue(req);
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
 			}
-		}).start();
+		}
 	}
 
 	/**
@@ -2280,40 +2141,24 @@ public class Branch {
 
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
-	 * 
-	 * @param callback	A {@link BranchReferralInitListener} callback instance that will trigger 
-	 * 					actions defined therein upon receipt of a response to a referral code request.
+	 *
+	 * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
+	 *                 actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(BranchReferralInitListener callback) {
-		getReferralCodeCallback_ = callback;
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new GetReferralCodeRequest(context_, callback);
+		if (!req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
+
 	}
 
 	/**
@@ -2411,163 +2256,93 @@ public class Branch {
 
 	/**
 	 * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
-	 * 
-	 * @param prefix			A {@link String} containing the developer-specified prefix code to 
-	 * 							be applied to the start of a referral code. e.g. for code OFFER4867, 
-	 * 							the prefix would be "OFFER".
-	 * 
-	 * @param amount			An {@link Integer} value of credits associated with this referral code.
-	 * 
-	 * @param expiration		Optional expiration {@link Date} of the offer code.
-	 * 
-	 * @param bucket			A {@link String} value containing the name of the referral bucket 
-	 * 							that the code will belong to.
-	 * 
-	 * @param calculationType	The type of referral calculation. i.e. 
-	 * 							{@link #LINK_TYPE_UNLIMITED_USE} or 
-	 * 							{@link #LINK_TYPE_ONE_TIME_USE}
-	 * 
-	 * @param location			The user to reward for applying the referral code.
-	 * 
-	 * 							<p>Valid options:</p>
-	 * 
-	 * 							<ul>
-	 * 								<li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
-	 * 								<li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
-	 * 								<li>{@link #REFERRAL_CODE_LOCATION_BOTH}</li>
-	 * 							</ul>
-	 * 
-	 * @param callback			A {@link BranchReferralInitListener} callback instance that will 
-	 * 							trigger actions defined therein upon receipt of a response to a 
-	 * 							referral code request.
+	 *
+	 * @param prefix          A {@link String} containing the developer-specified prefix code to
+	 *                        be applied to the start of a referral code. e.g. for code OFFER4867,
+	 *                        the prefix would be "OFFER".
+	 * @param amount          An {@link Integer} value of credits associated with this referral code.
+	 * @param expiration      Optional expiration {@link Date} of the offer code.
+	 * @param bucket          A {@link String} value containing the name of the referral bucket
+	 *                        that the code will belong to.
+	 * @param calculationType The type of referral calculation. i.e.
+	 *                        {@link #LINK_TYPE_UNLIMITED_USE} or
+	 *                        {@link #LINK_TYPE_ONE_TIME_USE}
+	 * @param location        The user to reward for applying the referral code.
+	 *                        <p/>
+	 *                        <p>Valid options:</p>
+	 *                        <p/>
+	 *                        <ul>
+	 *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
+	 *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
+	 *                        <li>{@link #REFERRAL_CODE_LOCATION_BOTH}</li>
+	 *                        </ul>
+	 * @param callback        A {@link BranchReferralInitListener} callback instance that will
+	 *                        trigger actions defined therein upon receipt of a response to a
+	 *                        referral code request.
 	 */
 	public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
-		getReferralCodeCallback_ = callback;
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-					post.put("calculation_type", calculationType);
-					post.put("location", location);
-					post.put("type", REFERRAL_CODE_TYPE);
-					post.put("creation_source", REFERRAL_CREATION_SOURCE_SDK);
-					post.put("amount", amount);
-					post.put("bucket", bucket != null ? bucket : REFERRAL_BUCKET_DEFAULT);
-					if (prefix != null && prefix.length() > 0) {
-						post.put("prefix", prefix);
-					}
-					if (expiration != null) {
-						post.put("expiration", convertDate(expiration));
-					}
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE, post);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		String date = null;
+		if (expiration != null)
+			date = convertDate(expiration);
+		ServerRequest req = new GetReferralCodeRequest(context_, prefix, amount, date, bucket,
+				calculationType, location, callback);
+		if (!req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
 	}
 
 	/**
-	 * <p>Validates the supplied referral code on initialisation without applying it to the current 
+	 * <p>Validates the supplied referral code on initialisation without applying it to the current
 	 * session.</p>
-	 * 
-	 * @param code		A {@link String} object containing the referral code supplied.
-	 * 
-	 * @param callback	A {@link BranchReferralInitListener} callback to handle the server response 
-	 * 					of the referral submission request.
+	 *
+	 * @param code     A {@link String} object containing the referral code supplied.
+	 * @param callback A {@link BranchReferralInitListener} callback to handle the server response
+	 *                 of the referral submission request.
 	 */
 	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
-		validateReferralCodeCallback_ = callback;
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-					post.put("referral_code", code);
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE, post);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new ValidateReferralCodeRequest(context_, callback, code);
+		if (!req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
 	}
 
 	/**
 	 * <p>Applies a supplied referral code to the current user session upon initialisation.</p>
-	 * 
-	 * @param code			A {@link String} object containing the referral code supplied.
-	 * 
-	 * @param callback		A {@link BranchReferralInitListener} callback to handle the server 
-	 * 						response of the referral submission request.
-	 * 
+	 *
+	 * @param code     A {@link String} object containing the referral code supplied.
+	 * @param callback A {@link BranchReferralInitListener} callback to handle the server
+	 *                 response of the referral submission request.
 	 * @see BranchReferralInitListener
 	 */
 	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
-		applyReferralCodeCallback_ = callback;
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JSONObject post = new JSONObject();
-				try {
-					post.put("identity_id", prefHelper_.getIdentityID());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("session_id", prefHelper_.getSessionID());
-					if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-						post.put("link_click_id", prefHelper_.getLinkClickID());
-					}
-					post.put("referral_code", code);
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
-				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE, post);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
+		ServerRequest req = new ApplyReferralCodeRequest(context_, callback, code);
+		if (req.constructError_) {
+			if (!initFailed_) {
+				requestQueue_.enqueue(req);
 			}
-		}).start();
+			if (initFinished_ || !hasNetwork_) {
+				lastRequestWasInit_ = false;
+				processNextQueueItem();
+			} else if (initFailed_ || initNotStarted_) {
+				handleFailure(req);
+			}
+		}
 	}
 
 	// PRIVATE FUNCTIONS
@@ -2589,40 +2364,22 @@ public class Branch {
 
 		return params.toString();
 	}
-	
-	private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
-		linkCreateCallback_ = callback;
-		if (hasUser()) {
-			final BranchLinkData linkPost = new BranchLinkData();
-			try {
-				linkPost.put("identity_id", prefHelper_.getIdentityID());
-				linkPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-				linkPost.put("session_id", prefHelper_.getSessionID());
-				if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-					linkPost.put("link_click_id", prefHelper_.getLinkClickID());
-				}
 
-				linkPost.putType(type);
-				linkPost.putDuration(duration);
-				linkPost.putTags(tags);
-				linkPost.putAlias(alias);
-				linkPost.putChannel(channel);
-				linkPost.putFeature(feature);
-				linkPost.putStage(stage);
-				linkPost.putParams(params);
-				
-			} catch (JSONException ex) {
-				ex.printStackTrace();
-			}
-			
-			if (linkCache_.containsKey(linkPost)) {
-				String url = linkCache_.get(linkPost);
-				if (linkCreateCallback_ != null) {
-					linkCreateCallback_.onLinkCreate(url, null);
+	private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
+		CreateUrlRequest req = new CreateUrlRequest(context_, alias, type, duration, tags,
+				channel, feature, stage,
+				params, callback, async);
+
+		if (req.hasErrors()) {
+			return null;
+		} else {
+			if (linkCache_.containsKey(req.getLinkPost())) {
+				String url = linkCache_.get(req.getLinkPost());
+				if (callback != null) {
+					callback.onLinkCreate(url, null);
 				}
 				return url;
 			} else {
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL, linkPost);
 				if (async) {
 					generateShortLinkAsync(req);
 				} else {
@@ -2630,7 +2387,9 @@ public class Branch {
 				}
 			}
 		}
+
 		return null;
+
 	}
 	
 	private String generateShortLinkSync(ServerRequest req) {
@@ -2653,22 +2412,17 @@ public class Branch {
 		}
 		return null;
 	}
-	
+
 	private void generateShortLinkAsync(final ServerRequest req) {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
-				}
-			}
-		}).start();
+		if (!initFailed_) {
+			requestQueue_.enqueue(req);
+		}
+		if (initFinished_ || !hasNetwork_) {
+			lastRequestWasInit_ = false;
+			processNextQueueItem();
+		} else if (initFailed_ || initNotStarted_) {
+			handleFailure(req);
+		}
 	}
 	
 	private JSONObject filterOutBadCharacters(JSONObject inputObj) {
@@ -2708,112 +2462,74 @@ public class Branch {
 			}
 		}
 	}
-	
+
 	/**
-	 * <p>Schedules a repeating threaded task to get the following details and report them to the 
+	 * <p>Schedules a repeating threaded task to get the following details and report them to the
 	 * Branch API <b>once a week</b>:</p>
-	 * 
+	 * <p/>
 	 * <pre style="background:#fff;padding:10px;border:2px solid silver;">
 	 * int interval = 7 * 24 * 60 * 60;
 	 * appListingSchedule_ = scheduler.scheduleAtFixedRate(
-	 * 				periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
-	 * 
+	 * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
+	 * <p/>
 	 * <ul>
 	 * <li>{@link SystemObserver#getAppKey()}</li>
 	 * <li>{@link SystemObserver#getOS()}</li>
 	 * <li>{@link SystemObserver#getDeviceFingerPrintID()}</li>
 	 * <li>{@link SystemObserver#getListOfApps()}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @see {@link SystemObserver}
 	 * @see {@link PrefHelper}
 	 */
 	private void scheduleListOfApps() {
 		ScheduledThreadPoolExecutor scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
-		Runnable periodicTask = new Runnable(){
-            @Override
-            public void run() {
-            	SystemObserver sysObserver = new SystemObserver(context_);
-				JSONObject post = new JSONObject();
-				try {
-					if (!sysObserver.getOS().equals(SystemObserver.BLANK))
-						post.put("os", sysObserver.getOS());
-					post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-					post.put("apps_data", sysObserver.getListOfApps());
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-					return;
+		Runnable periodicTask = new Runnable() {
+			@Override
+			public void run() {
+				ServerRequest req = new SendAppListRequest(context_);
+				if (!req.constructError_) {
+					if (!initFailed_) {
+						requestQueue_.enqueue(req);
+					}
+					if (initFinished_ || !hasNetwork_) {
+						lastRequestWasInit_ = false;
+						processNextQueueItem();
+					}
 				}
-				ServerRequest req = new ServerRequest(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST, post);
-				if (!initFailed_) {
-					requestQueue_.enqueue(req);
-				}
-				if (initFinished_ || !hasNetwork_) {
-					lastRequestWasInit_ = false;
-					processNextQueueItem();
-				}
-            }
-        };
-        
-        Date date = new Date();
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(date); 
-        
-        int days = Calendar.SATURDAY - calendar.get(Calendar.DAY_OF_WEEK);	// days to Saturday
-        int hours = 2 - calendar.get(Calendar.HOUR_OF_DAY);	// hours to 2am, can be negative
-        if (days == 0 && hours < 0) {
-        	days = 7;
-        }
-        int interval = 7 * 24 * 60 * 60;
-        
-        appListingSchedule_ = scheduler.scheduleAtFixedRate(periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);
+			}
+		};
+
+		Date date = new Date();
+		Calendar calendar = GregorianCalendar.getInstance();
+		calendar.setTime(date);
+
+		int days = Calendar.SATURDAY - calendar.get(Calendar.DAY_OF_WEEK);    // days to Saturday
+		int hours = 2 - calendar.get(Calendar.HOUR_OF_DAY);    // hours to 2am, can be negative
+		if (days == 0 && hours < 0) {
+			days = 7;
+		}
+		int interval = 7 * 24 * 60 * 60;
+
+		appListingSchedule_ = scheduler.scheduleAtFixedRate(periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);
 	}
-	
+
 	private void processNextQueueItem() {
 		try {
 			serverSema_.acquire();
 			if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
 				networkCount_ = 1;
 				ServerRequest req = requestQueue_.peek();
-				serverSema_.release();
 
-				if (!req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) && !hasUser()) {
-	                Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
-	                networkCount_ = 0;
-					handleFailure(requestQueue_.getSize()-1);
-	                return;
-	            }				
-				
-				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-					kRemoteInterface_.registerInstall(PrefHelper.NO_STRING_VALUE, prefHelper_.isDebug());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					kRemoteInterface_.registerOpen(prefHelper_.isDebug());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS) && hasSession()) {
-					kRemoteInterface_.getReferralCounts();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST) && hasSession()) {
-					kRemoteInterface_.registerListOfApps(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS) && hasSession()) {
-					kRemoteInterface_.getRewards();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS) && hasSession()) {
-					kRemoteInterface_.redeemRewards(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY) && hasSession()) {
-					kRemoteInterface_.getCreditHistory(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_COMPLETE_ACTION) && hasSession()) {
-					kRemoteInterface_.userCompletedAction(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL) && hasSession()) {
-					kRemoteInterface_.createCustomUrl(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY) && hasSession()) {
-					kRemoteInterface_.identifyUser(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE) && hasSession()) {
-					kRemoteInterface_.registerClose();
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_LOGOUT) && hasSession()) {
-					kRemoteInterface_.logoutUser(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE) && hasSession()) {
-					kRemoteInterface_.getReferralCode(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE) && hasSession()) {
-					kRemoteInterface_.validateReferralCode(req.getPost());
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE) && hasSession()) {
-					kRemoteInterface_.applyReferralCode(req.getPost());
+				serverSema_.release();
+				if (!(req instanceof RegisterInstallRequest) && !hasUser()) {
+					Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
+					networkCount_ = 0;
+					handleFailure(requestQueue_.getSize() - 1);
+					return;
+				} else {
+					BranchPostTask postTask = new BranchPostTask(req);
+					postTask.execute();
 				}
 			} else {
 				serverSema_.release();
@@ -2827,106 +2543,17 @@ public class Branch {
 	private void handleFailure(int index) {
 		ServerRequest req;
 		if (index >= requestQueue_.getSize()) {
-			req = requestQueue_.peekAt(requestQueue_.getSize()-1);
+			req = requestQueue_.peekAt(requestQueue_.getSize() - 1);
 		} else {
 			req = requestQueue_.peekAt(index);
 		}
 		handleFailure(req);
 	}
-	
+
 	private void handleFailure(final ServerRequest req) {
 		if (req == null)
 			return;
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL) || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-					if (initSessionFinishedCallback_ != null) {
-						JSONObject obj = new JSONObject();
-						try {
-							obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
-						} catch (JSONException ex) {
-							ex.printStackTrace();
-						}
-						initSessionFinishedCallback_.onInitFinished(obj, new BranchInitError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
-					if (stateChangedCallback_ != null) {
-						if (initNotStarted_)
-							stateChangedCallback_.onStateChanged(false, new BranchNotInitError());
-						else
-							stateChangedCallback_.onStateChanged(false, new BranchGetReferralsError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
-					if (stateChangedCallback_ != null) {
-						if (initNotStarted_)
-							stateChangedCallback_.onStateChanged(false, new BranchNotInitError());
-						else
-							stateChangedCallback_.onStateChanged(false, new BranchGetCreditsError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
-					if (creditHistoryCallback_ != null) {
-						if (initNotStarted_)
-							creditHistoryCallback_.onReceivingResponse(null, new BranchNotInitError());
-						else
-							creditHistoryCallback_.onReceivingResponse(null, new BranchGetCreditHistoryError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-					if (linkCreateCallback_ != null) {
-						String failedUrl = null;
-						if (!prefHelper_.getUserURL().equals(PrefHelper.NO_STRING_VALUE)) {
-							failedUrl = prefHelper_.getUserURL();
-						}
-						if (initNotStarted_)
-							linkCreateCallback_.onLinkCreate(null, new BranchNotInitError());
-						else
-							linkCreateCallback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
-					if (initIdentityFinishedCallback_ != null) {
-						JSONObject obj = new JSONObject();
-						try {
-							obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
-						} catch (JSONException ex) {
-							ex.printStackTrace();
-						}
-						if (initNotStarted_)
-							initIdentityFinishedCallback_.onInitFinished(obj, new BranchNotInitError());
-						else
-							initIdentityFinishedCallback_.onInitFinished(obj, new BranchSetIdentityError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
-					if (getReferralCodeCallback_ != null) {
-						if (initNotStarted_)
-							getReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
-						else
-							getReferralCodeCallback_.onInitFinished(null, new BranchGetReferralCodeError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
-					if (validateReferralCodeCallback_ != null) {
-						if (initNotStarted_)
-							validateReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
-						else
-							validateReferralCodeCallback_.onInitFinished(null, new BranchValidateReferralCodeError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
-					if (applyReferralCodeCallback_ != null) {
-						if (initNotStarted_)
-							applyReferralCodeCallback_.onInitFinished(null, new BranchNotInitError());
-						else
-							applyReferralCodeCallback_.onInitFinished(null, new BranchApplyReferralCodeError());
-					}
-				} else if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
-					if (redeemStateChangedCallback_ != null) {
-						if (initNotStarted_)
-							redeemStateChangedCallback_.onStateChanged(false, new BranchNotInitError());
-						else
-							redeemStateChangedCallback_.onStateChanged(false, new BranchRedeemRewardsError());
-					}
-				}
-			}
-		});
+		req.handleFailure(initNotStarted_);
 	}
 
 	private void updateAllRequestsInQueue() {
@@ -3000,17 +2627,19 @@ public class Branch {
 		}
 	}
 
-	private void registerInstallOrOpen(String tag) {
+	private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
 		if (!requestQueue_.containsInstallOrOpen()) {
-			insertRequestAtFront(new ServerRequest(tag));
+			insertRequestAtFront(req);
+
 		} else {
-			requestQueue_.moveInstallOrOpenToFront(tag, networkCount_);
+			requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
 		}
 
 		processNextQueueItem();
 	}
 
-	private void initializeSession() {
+
+	private void initializeSession(BranchReferralInitListener callback) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
             && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
@@ -3020,193 +2649,11 @@ public class Branch {
         }
 
 		if (hasUser()) {
-			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN);
+			registerInstallOrOpen(new RegisterOpenRequest(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
 		} else {
-			registerInstallOrOpen(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL);
+			registerInstallOrOpen(new RegisterInstallRequest(context_,callback ,kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE ),callback);
 		}
 	}
-
-	private void processReferralCounts(ServerResponse resp) {
-		boolean updateListener = false;
-		Iterator<?> keys = resp.getObject().keys();
-		while (keys.hasNext()) {
-			String key = (String) keys.next();
-
-			try {
-				JSONObject counts = resp.getObject().getJSONObject(key);
-				int total = counts.getInt("total");
-				int unique = counts.getInt("unique");
-
-				if (total != prefHelper_.getActionTotalCount(key) || unique != prefHelper_.getActionUniqueCount(key)) {
-					updateListener = true;
-				}
-				prefHelper_.setActionTotalCount(key, total);
-				prefHelper_.setActionUniqueCount(key, unique);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-		}
-		final boolean finUpdateListener = updateListener;
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (stateChangedCallback_ != null) {
-					stateChangedCallback_.onStateChanged(finUpdateListener, null);
-				}
-			}
-		});
-	}
-
-	private void processRewardCounts(ServerResponse resp) {
-		boolean updateListener = false;
-		Iterator<?> keys = resp.getObject().keys();
-		while (keys.hasNext()) {
-			String key = (String) keys.next();
-
-			try {
-				int credits = resp.getObject().getInt(key);
-
-				if (credits != prefHelper_.getCreditCount(key)) {
-					updateListener = true;
-				}
-				prefHelper_.setCreditCount(key, credits);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-		}
-		final boolean finUpdateListener = updateListener;
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (stateChangedCallback_ != null) {
-					stateChangedCallback_.onStateChanged(finUpdateListener, null);
-				}
-			}
-		});
-	}
-
-	private void processCreditHistory(final ServerResponse resp) {
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (creditHistoryCallback_ != null) {
-					creditHistoryCallback_.onReceivingResponse(resp.getArray(), null);
-				}
-			}
-		});
-	}
-
-	private void processReferralCodeGet(final ServerResponse resp) {
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (getReferralCodeCallback_ != null) {
-					try {
-						JSONObject json;
-						BranchDuplicateReferralCodeError error = null;
-						// check if a valid referral code json is returned
-						if (!resp.getObject().has(REFERRAL_CODE)) {
-							json = new JSONObject();
-							json.put("error_message", "Failed to get referral code");
-							error = new BranchDuplicateReferralCodeError();
-						} else {
-							json = resp.getObject();
-						}
-						getReferralCodeCallback_.onInitFinished(json, error);
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-	}
-
-	private void processReferralCodeValidation(final ServerResponse resp) {
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (validateReferralCodeCallback_ != null) {
-					try {
-						JSONObject json;
-						BranchInvalidReferralCodeError error = null;
-						// check if a valid referral code json is returned
-						if (!resp.getObject().has(REFERRAL_CODE)) {
-							json = new JSONObject();
-							json.put("error_message", "Invalid referral code");
-							error = new BranchInvalidReferralCodeError();
-						} else {
-							json = resp.getObject();
-						}
-						validateReferralCodeCallback_.onInitFinished(json, error);
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-	}
-
-	private void processReferralCodeApply(final ServerResponse resp) {
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (applyReferralCodeCallback_ != null) {
-					try {
-						JSONObject json;
-						BranchInvalidReferralCodeError error = null;
-						// check if a valid referral code json is returned
-						if (!resp.getObject().has(REFERRAL_CODE)) {
-							json = new JSONObject();
-							json.put("error_message", "Invalid referral code");
-							error = new BranchInvalidReferralCodeError();
-						} else {
-							json = resp.getObject();
-						}
-						applyReferralCodeCallback_.onInitFinished(json, error);
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-	}
-
-	private void processRedeemRewardsResponse(final ServerResponse resp) {
-		boolean isRedemptionSucceeded = false;
-		JSONObject requestObject = resp.getRequestObject();
-		if (requestObject != null) {
-			if (requestObject.has("bucket") && requestObject.has("amount")) {
-				try {
-					int redeemedCredits = requestObject.getInt("amount");
-					String creditBucket = requestObject.getString("bucket");
-					isRedemptionSucceeded = redeemedCredits > 0;
-
-					int updatedCreditCount = prefHelper_.getCreditCount(creditBucket) - redeemedCredits;
-					prefHelper_.setCreditCount(creditBucket, updatedCreditCount);
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		final boolean finIsRedemptionSucceeded = isRedemptionSucceeded;
-		Handler mainHandler = new Handler(context_.getMainLooper());
-		mainHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (redeemStateChangedCallback_ != null) {
-					BranchError branchError = finIsRedemptionSucceeded ? null : new BranchRedeemRewardsError();
-					redeemStateChangedCallback_.onStateChanged(finIsRedemptionSucceeded, branchError);
-				}
-			}
-		});
-	}
-
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
@@ -3262,273 +2709,6 @@ public class Branch {
 
 
 	/**
-	 * <p>A class that implements {@link NetworkCallback} interface and provides the required state 
-	 * and response logic for the process of interacting with the Branch referral network service.</p>
-	 * 
-	 * <p>The class takes a {@link ServerResponse} instance as a parameter, and determines action 
-	 * taken based primarily upon the states code returned by the Branch server response.</p>
-	 * 
-	 * <p>Handled status codes are as follows:</p>
-	 * 
-	 * <ul>
-	 * 		<li><i>200</i> - OK</li>
-	 * 		<li><i>409</i> - Duplicate link error.</li>
-	 * 		<li><i>401 - 499</i> - Server-side error. API issue.</li>
-	 * </ul>
-	 * 
-	 * <p>Assuming then that an error has not occurred, and that code 200 is the status, the static 
-	 * values defined in the {@link BranchRemoteInterface} class are compared against the value of 
-	 * {@link ServerResponse#getTag} method call to determine the action to take.</p>
-	 * 
-	 * <p>Possible values are as follows:</p>
-	 * 
-	 * <ul>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_OPEN}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_REGISTER_CLOSE}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_COMPLETE_ACTION}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REFERRAL_COUNTS}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REWARDS}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_REDEEM_REWARDS}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REWARD_HISTORY}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_CUSTOM_URL}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_IDENTIFY}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_LOGOUT}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_GET_REFERRAL_CODE}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_VALIDATE_REFERRAL_CODE}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_APPLY_REFERRAL_CODE}</li>
-	 * <li>{@link BranchRemoteInterface#REQ_TAG_SEND_APP_LIST}</li>
-	 * </ul>
-	 */
-	public class ReferralNetworkCallback implements NetworkCallback {
-		@Override
-		public void finished(ServerResponse serverResponse) {
-			if (serverResponse != null) {
-				try {
-					int status = serverResponse.getStatusCode();
-					String requestTag = serverResponse.getTag();
-
-					hasNetwork_ = true;
-
-					if (status == 409) {
-						if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-							Handler mainHandler = new Handler(context_.getMainLooper());
-							mainHandler.post(new Runnable() {
-								@Override
-								public void run() {
-									if (linkCreateCallback_ != null) {
-										linkCreateCallback_.onLinkCreate(null, new BranchDuplicateUrlError());
-									}
-								}
-							});
-						} else {
-							Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
-							handleFailure(0);
-						}
-						requestQueue_.dequeue();
-					} else if (status >= 400 && status < 500) {
-						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
-							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("error").getString("message"));
-						}
-						if (lastRequestWasInit_ && !initFailed_) {
-							initFailed_ = true;
-							for (int i = 0; i < requestQueue_.getSize()-1; i++) {
-								handleFailure(i);
-							}
-						}
-						handleFailure(requestQueue_.getSize()-1);
-						requestQueue_.dequeue();
-					} else if (status != 200) {
-						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
-							hasNetwork_ = false;
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
-							if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
-								requestQueue_.dequeue();
-							}
-							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
-						} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
-							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
-							requestQueue_.dequeue();
-						} else {
-							hasNetwork_ = false;
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize()-1);
-							requestQueue_.dequeue();
-						}
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_COUNTS)) {
-						processReferralCounts(serverResponse);
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARDS)) {
-						processRewardCounts(serverResponse);
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REWARD_HISTORY)) {
-						processCreditHistory(serverResponse);
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-						prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString("device_fingerprint_id"));
-						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
-						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
-						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
-						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-
-						if (prefHelper_.getIsReferrable() == 1) {
-							if (serverResponse.getObject().has("data")) {
-								String params = serverResponse.getObject().getString("data");
-								prefHelper_.setInstallParams(params);
-							} else {
-								prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
-							}
-						}
-
-						if (serverResponse.getObject().has("link_click_id")) {
-							prefHelper_.setLinkClickID(serverResponse.getObject().getString("link_click_id"));
-						} else {
-							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
-						}
-						
-						if (serverResponse.getObject().has("data")) {
-							String params = serverResponse.getObject().getString("data");
-							prefHelper_.setSessionParams(params);
-						} else {
-							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
-						}
-						
-						updateAllRequestsInQueue();
-
-						Handler mainHandler = new Handler(context_.getMainLooper());
-						mainHandler.post(new Runnable() {
-							@Override
-							public void run() {
-								if (initSessionFinishedCallback_ != null) {
-									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams(), null);
-								}
-							}
-						});
-						requestQueue_.dequeue();
-						initFinished_ = true;
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN)) {
-						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
-						prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString("device_fingerprint_id"));
-						prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-						if (serverResponse.getObject().has("identity_id")) {
-							prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
-						}
-						if (serverResponse.getObject().has("link_click_id")) {
-							prefHelper_.setLinkClickID(serverResponse.getObject().getString("link_click_id"));
-						} else {
-							prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
-						}
-
-						if (prefHelper_.getIsReferrable() == 1) {
-							if (serverResponse.getObject().has("data")) {
-								String params = serverResponse.getObject().getString("data");
-								prefHelper_.setInstallParams(params);
-							}
-						}
-						
-						if (serverResponse.getObject().has("data")) {
-							String params = serverResponse.getObject().getString("data");
-							prefHelper_.setSessionParams(params);
-						} else {
-							prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
-						}
-						
-						Handler mainHandler = new Handler(context_.getMainLooper());
-						mainHandler.post(new Runnable() {
-							@Override
-							public void run() {
-								if (initSessionFinishedCallback_ != null) {
-									initSessionFinishedCallback_.onInitFinished(getLatestReferringParams(), null);
-								}
-							}
-						});
-						requestQueue_.dequeue();
-						initFinished_ = true;
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_SEND_APP_LIST)) {
-						prefHelper_.clearSystemReadStatus();
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_CUSTOM_URL)) {
-						final String url = serverResponse.getObject().getString("url");
-						
-						// cache the link
-						linkCache_.put(serverResponse.getLinkData(), url);
-						
-						Handler mainHandler = new Handler(context_.getMainLooper());
-						mainHandler.post(new Runnable() {
-							@Override
-							public void run() {
-								if (linkCreateCallback_ != null) {
-									linkCreateCallback_.onLinkCreate(url, null);
-								}
-							}
-						});
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_LOGOUT)) {
-						prefHelper_.setSessionID(serverResponse.getObject().getString("session_id"));
-						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
-						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
-
-						prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
-						prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
-						prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
-						prefHelper_.clearUserValues();
-
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_IDENTIFY)) {
-						prefHelper_.setIdentityID(serverResponse.getObject().getString("identity_id"));
-						prefHelper_.setUserURL(serverResponse.getObject().getString("link"));
-
-						if (serverResponse.getObject().has("referring_data")) {
-							String params = serverResponse.getObject().getString("referring_data");
-							prefHelper_.setInstallParams(params);
-						}
-						if (requestQueue_.getSize() > 0) {
-							ServerRequest req = requestQueue_.peek();
-							if (req.getPost() != null && req.getPost().has("identity")) {
-								prefHelper_.setIdentity(req.getPost().getString("identity"));
-							}
-						}
-						Handler mainHandler = new Handler(context_.getMainLooper());
-						mainHandler.post(new Runnable() {
-							@Override
-							public void run() {
-								if (initIdentityFinishedCallback_ != null) {
-									initIdentityFinishedCallback_.onInitFinished(getFirstReferringParams(), null);
-								}
-							}
-						});
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_GET_REFERRAL_CODE)) {
-						processReferralCodeGet(serverResponse);
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_VALIDATE_REFERRAL_CODE)) {
-						processReferralCodeValidation(serverResponse);
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_APPLY_REFERRAL_CODE)) {
-						processReferralCodeApply(serverResponse);
-						requestQueue_.dequeue();
-					} else if (requestTag.equals(BranchRemoteInterface.REQ_TAG_REDEEM_REWARDS)) {
-						processRedeemRewardsResponse(serverResponse);
-						requestQueue_.dequeue();
-					}
-					else {
-						requestQueue_.dequeue();
-					}
-
-					networkCount_ = 0;
-					
-					if (hasNetwork_ && !initFailed_) {
-						lastRequestWasInit_ = false;
-						processNextQueueItem();
-					}
-				} catch (JSONException ex) {
-					ex.printStackTrace();
-				}
-			}
-		}
-	}
-
-	/**
 	 * <p>An Interface class that is implemented by all classes that make use of 
 	 * {@link BranchReferralInitListener}, defining a single method that takes a list of params in 
 	 * {@link JSONObject} format, and an error message of {@link BranchError} format that will be 
@@ -3580,235 +2760,127 @@ public class Branch {
 		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
 	
-	
 	/**
 	 * <p>enum containing the sort options for return of credit history.</p>
 	 */
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
 	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where the Branch 
-	 * initialisation process has failed due to poor connectivity, or because the App Key in use in 
-	 * the current application is misconfigured. This can occur when there are invalid characters in 
-	 * the App Key variable, where the variable itself is empty, or if the App Key in use does not 
-	 * belong to an application registered in the Branch dashboard.</p>
-	 * 
-	 * <p>To confirm that you are using the correct App Key for your project, visit the 
-	 * <a href="https://dashboard.branch.io/#/settings">
-	 * Branch Dashboard Settings</a> page, or refer to the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
-	 * Android Quick-Start Guide</a> to a walk through of the full process for getting your project 
-	 * up and running with Branch.</p>
-	 * 
-	 * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">Android Quick-Start Guide</a>
-	 * @see <a href="https://dashboard.branch.io/">Branch Dashboard</a>
-	 */
-	public class BranchInitError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble initializing Branch. Check network connectivity or that your branch key is valid";
+
+
+	public class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
+
+		String apiBaseUrl_ = "";
+		int timeOut_ = 0;
+		ServerRequest thisReq_;
+
+		public BranchPostTask(ServerRequest request) {
+			thisReq_ = request;
+			apiBaseUrl_ = prefHelper_.getAPIBaseUrl();
+			timeOut_ = prefHelper_.getTimeout();
+
 		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
-	 * server to fetch the current referral count has failed due to poor connectivity or an internal 
-	 * system error.</p>
-	 */
-	public class BranchGetReferralsError extends BranchError {
+
 		@Override
-		public String getMessage() {
-			return "Trouble retrieving referral counts. Check network connectivity and that you properly initialized";
+		protected ServerResponse doInBackground(Void... voids) {
+			Log.d("TASK_TEST1","- executing "+thisReq_.getRequestUrl() );
+			if(thisReq_.isGetRequest()){
+				return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+			}else {
+				return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+			}
 		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
-	 * server to fetch a user's current credit balance has failed due to poor connectivity or an internal 
-	 * system error.</p>
-	 */
-	public class BranchGetCreditsError extends BranchError {
+
 		@Override
-		public String getMessage() {
-			return "Trouble retrieving user credits. Check network connectivity and that you properly initialized";
+		protected void onPostExecute(ServerResponse serverResponse) {
+			super.onPostExecute(serverResponse);
+
+			Log.d("TASK_TEST1", "---- response for  " + thisReq_.getRequestUrl() + "  " + serverResponse.getStatusCode());
+			if (serverResponse != null) {
+				try {
+					int status = serverResponse.getStatusCode();
+					hasNetwork_ = true;
+
+					if (status == 409) {
+						if (thisReq_ instanceof  CreateUrlRequest) {
+							((CreateUrlRequest)thisReq_).handleDuplicateURLError();
+						} else {
+							Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+							handleFailure(0);
+						}
+						requestQueue_.dequeue();
+					} else if (status >= 400 && status < 500) {
+						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
+							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("err or").getString("message"));
+						}
+						if (lastRequestWasInit_ && !initFailed_) {
+							initFailed_ = true;
+							for (int i = 0; i < requestQueue_.getSize() - 1; i++) {
+								handleFailure(i);
+							}
+						}
+						handleFailure(requestQueue_.getSize() - 1);
+						requestQueue_.dequeue();
+					} else if (status != 200) {
+						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
+							hasNetwork_ = false;
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
+							if (thisReq_ instanceof RegisterCloseRequest) {
+								requestQueue_.dequeue();
+							}
+							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
+						} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
+							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
+							requestQueue_.dequeue();
+						} else {
+							hasNetwork_ = false;
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
+							requestQueue_.dequeue();
+						}
+					} else {//Request is succeeded,Handle success here
+
+						if (thisReq_ instanceof CreateUrlRequest) {
+							final String url = serverResponse.getObject().getString("url");
+							// cache the link
+							linkCache_.put(serverResponse.getLinkData(), url);
+						}
+						if (thisReq_ instanceof IdentifyUserRequest) {
+							if (requestQueue_.getSize() > 0) {
+								ServerRequest req = requestQueue_.peek();
+								if (req.getPost() != null && req.getPost().has("identity")) {
+									prefHelper_.setIdentity(req.getPost().getString("identity"));
+								}
+							}
+						}
+						//Publish success to listeners
+
+						thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+
+						if (thisReq_ instanceof RegisterInstallRequest) {
+							updateAllRequestsInQueue();
+							initFinished_ = true;
+						}
+						if (thisReq_ instanceof RegisterOpenRequest) {
+							initFinished_ = true;
+						}
+						requestQueue_.dequeue();
+					}
+
+
+					networkCount_ = 0;
+
+					if (hasNetwork_ && !initFailed_) {
+						lastRequestWasInit_ = false;
+						processNextQueueItem();
+					}
+
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+			}
 		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where a request to the 
-	 * server to fetch a user's credit history has failed due to poor connectivity or an internal 
-	 * system error.</p>
-	 */
-	public class BranchGetCreditHistoryError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble retrieving user credit history. Check network connectivity and that you properly initialized";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs when a Branch referral 
-	 * URL could not be created. This is will usually be caused by a connectivity issue.</p>
-	 */
-	public class BranchCreateUrlError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble creating a URL. Check network connectivity and that you properly initialized";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where an alias request 
-	 * has been submitted that has different parameters attached. This indicates that either there 
-	 * is missing information from the alias request, or that the same alias has been requested 
-	 * before by a different owner.</p>
-	 */
-	public class BranchDuplicateUrlError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble creating a URL with that alias. If you want to reuse the alias, make sure to submit the same properties for all arguments and that the user is the same owner";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs in cases where the 
-	 * user alias cannot be set. This can occur where a poor quality 
-	 * connection is losing packets containing the alias setting request or response.</p>
-	 */
-	public class BranchSetIdentityError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble setting the user alias. Check network connectivity and that you properly initialized";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where the referral 
-	 * code has not been received properly by the server. This can occur where a poor quality 
-	 * connection is losing packets containing the full referral code submission request or 
-	 * response.</p>
-	 */
-	public class BranchGetReferralCodeError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble retrieving the referral code. Check network connectivity and that you properly initialized";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where the referral 
-	 * code cannot be validated due to a lack of communication, or valid response from, the Branch 
-	 * server.</p>
-	 */
-	public class BranchValidateReferralCodeError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble validating the referral code. Check network connectivity and that you properly initialized";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where the 
-	 * referral code is invalid, suggesting an implementation error in handling generated codes, or 
-	 * input validation failure where the code is input manually by the user.</p>
-	 */
-	public class BranchInvalidReferralCodeError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "That Branch referral code was invalid";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where the same 
-	 * referral code has been applied already, potentially identifying an erroneously repeated 
-	 * code block or poorly implemented loop.</p>
-	 */
-	public class BranchDuplicateReferralCodeError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "That Branch referral code is already in use";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs when calls have been 
-	 * made to apply a referral code, but the Branch object has not been properly initialised or 
-	 * cannot contact the server due to a network connectivity issue.</p> 
-	 * 
-	 * <p>See the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md#step-4---create-a-branch-session">
-	 * Android Quick Start guide</a> for detailed instructions on integrating the SDK correctly.</p>
-	 * 
-	 * @see SystemObserver#getWifiConnected()
-	 * @see Branch#initSession(BranchReferralInitListener)
-	 * @see Branch#initSession(BranchReferralInitListener, Activity)
-	 * @see Branch#initSession(BranchReferralInitListener, Uri)
-	 * @see Branch#initSession(BranchReferralInitListener, Uri, Activity)
-	 * @see Branch#initSession()
-	 * @see Branch#initSession(Activity)
-	 * @see Branch#initSessionWithData(Uri)
-	 * @see Branch#initSessionWithData(Uri, Activity)
-	 * @see Branch#initSession(boolean)
-	 * @see Branch#initSession(boolean, Activity)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri, Activity)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean, Activity)
-	 * 
-	 */
-	public class BranchApplyReferralCodeError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble applying the referral code. Check network connectivity and that you properly initialized";
-		}
-	}
-	
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs for when calls have 
-	 * been made to a Branch object when a connection has not been established.</p>
-	 * 
-	 * <p>The first call required when a Branch object is instantiated is {@link #initSession()},
-	 * or one of its relatives (see below referenced methods). If this has not been done pending 
-	 * calls cannot be queued up, so this error is thrown in order to notify the developer/tester 
-	 * via debug logs that methods have been called out of sequence so that the implementation has 
-	 * been corrected.</p>
-	 * 
-	 * <p>See the <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md#step-4---create-a-branch-session">
-	 * Android Quick Start guide</a> for detailed instructions on integrating the SDK correctly.</p>
-	 * 
-	 * @see Branch#initSession(BranchReferralInitListener)
-	 * @see Branch#initSession(BranchReferralInitListener, Activity)
-	 * @see Branch#initSession(BranchReferralInitListener, Uri)
-	 * @see Branch#initSession(BranchReferralInitListener, Uri, Activity)
-	 * @see Branch#initSession()
-	 * @see Branch#initSession(Activity)
-	 * @see Branch#initSessionWithData(Uri)
-	 * @see Branch#initSessionWithData(Uri, Activity)
-	 * @see Branch#initSession(boolean)
-	 * @see Branch#initSession(boolean, Activity)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean, Uri, Activity)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean)
-	 * @see Branch#initSession(BranchReferralInitListener, boolean, Activity)
-	 *
-	 */
-	public class BranchNotInitError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Did you forget to call init? Make sure you init the session before making Branch calls";
-		}
+
 	}
 
-	/**
-	 * <p>{@link BranchError} class containing the message to display in logs where a request to the
-	 * server to redeem user's reward has failed since user doesn't have credits available to redeem.
-	 * </p>
-	 */
-	public class BranchRedeemRewardsError extends BranchError {
-		@Override
-		public String getMessage() {
-			return "Trouble redeeming rewards. Please make sure you have credits available to redeem";
-		}
-	}
 }

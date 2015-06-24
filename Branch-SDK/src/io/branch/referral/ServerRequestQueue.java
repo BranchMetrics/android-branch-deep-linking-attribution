@@ -1,5 +1,13 @@
 package io.branch.referral;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -7,13 +15,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
+import io.branch.referral.serverrequest.RegisterInstallRequest;
+import io.branch.referral.serverrequest.RegisterOpenRequest;
 
 /**
  *<p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
@@ -56,11 +59,11 @@ public class ServerRequestQueue {
      * @param c		A {@link Context} from which this call was made.
      */
     @SuppressLint( "CommitPrefEdits" )
-    private ServerRequestQueue (Context c) {
-    	sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
+	private ServerRequestQueue(Context c) {
+		sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
 		editor = sharedPref.edit();
-		queue = retrieve();
-    }
+		queue = retrieve(c);
+	}
 
     private void persist() {
     	new Thread(new Runnable() {
@@ -88,29 +91,29 @@ public class ServerRequestQueue {
 			}
 		}).start();
     }
-    
-    private List<ServerRequest> retrieve() {
-    	List<ServerRequest> result = Collections.synchronizedList(new LinkedList<ServerRequest>());
-    	String jsonStr = sharedPref.getString(PREF_KEY, null);
-    	
-    	if (jsonStr != null) {
-    		try {
-    			JSONArray jsonArr = new JSONArray(jsonStr);
-    			for (int i = 0; i < Math.min(jsonArr.length(), MAX_ITEMS) ; i++) {
-    				JSONObject json = jsonArr.getJSONObject(i);
-    				ServerRequest req = ServerRequest.fromJSON(json);
-    				if (req != null) {
-    					result.add(req);
-    				}
-    			}
-    		} catch (JSONException ignored) {
-    		}
-    	}
-    	
-    	return result;
-    }
-    
-    /**
+
+	private List<ServerRequest> retrieve(Context context) {
+		List<ServerRequest> result = Collections.synchronizedList(new LinkedList<ServerRequest>());
+		String jsonStr = sharedPref.getString(PREF_KEY, null);
+
+		if (jsonStr != null) {
+			try {
+				JSONArray jsonArr = new JSONArray(jsonStr);
+				for (int i = 0; i < Math.min(jsonArr.length(), MAX_ITEMS); i++) {
+					JSONObject json = jsonArr.getJSONObject(i);
+					ServerRequest req = ServerRequest.fromJSON(json, context);
+					if (req != null) {
+						result.add(req);
+					}
+				}
+			} catch (JSONException ignored) {
+			}
+		}
+
+		return result;
+	}
+
+	/**
      * <p>Gets the number of {@link ServerRequest} objects currently queued up for submission to 
      * the Branch API.</p>
      * 
@@ -230,76 +233,78 @@ public class ServerRequestQueue {
 
 	/**
 	 * <p>Determines whether the queue contains a session/app close request.</p>
-	 * 
-	 * @return		A {@link Boolean} value indicating whether or not the queue contains a
-	 * 				session close request. <i>True</i> if the queue contains a close request,
-	 * 				<i>False</i> if not.
+	 *
+	 * @return A {@link Boolean} value indicating whether or not the queue contains a
+	 * session close request. <i>True</i> if the queue contains a close request,
+	 * <i>False</i> if not.
 	 */
 	public boolean containsClose() {
-		synchronized(queue) {
-            for (ServerRequest req : queue) {
-                if (req != null &&
-                        req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_CLOSE)) {
-                    return true;
-                }
-            }
+		synchronized (queue) {
+			for (ServerRequest req : queue) {
+				if (req != null &&
+						req.getRequestPath().equals(Defines.RequestPath.RegisterClose.getPath())) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}
-	
+
 	/**
 	 * <p>Determines whether the queue contains an install/register request.</p>
-	 * 
-	 * @return		A {@link Boolean} value indicating whether or not the queue contains an
-	 * 				install/register request. <i>True</i> if the queue contains a close request,
-	 * 				<i>False</i> if not.
+	 *
+	 * @return A {@link Boolean} value indicating whether or not the queue contains an
+	 * install/register request. <i>True</i> if the queue contains a close request,
+	 * <i>False</i> if not.
 	 */
 	public boolean containsInstallOrOpen() {
-		synchronized(queue) {
-            for (ServerRequest req : queue) {
-                if (req != null &&
-                        (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)
-                                || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
-                    return true;
-                }
-            }
+		synchronized (queue) {
+			for (ServerRequest req : queue) {
+				if (req != null &&
+						(req.getRequestPath().equals(Defines.RequestPath.RegisterInstall.getPath())
+								|| req.getRequestPath().equals(Defines.RequestPath.RegisterOpen.getPath()))) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}
-	
+
 	/**
-	 * <p>Moves any {@link ServerRequest} that is tagged with {@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL} 
+	 * <p>Moves any {@link ServerRequest} that is tagged with {@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL}
 	 * or {@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL} to the front of the queue.</p>
-	 * 
-	 * @param tag				A {@link String} value.
-	 * 
-	 * @param networkCount		An {@link Integer} value that indicates whether or not to insert the 
-	 * 							request at the front of the queue or not.
+	 *
+	 * @param tag          A {@link String} value.
+	 * @param networkCount An {@link Integer} value that indicates whether or not to insert the
+	 *                     request at the front of the queue or not.
 	 */
-	public void moveInstallOrOpenToFront(String tag, int networkCount) {
-		synchronized(queue) {
+	public void moveInstallOrOpenToFront(ServerRequest request, int networkCount, Branch.BranchReferralInitListener callback) {
+
+		synchronized (queue) {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
-                if (req != null
-                && (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)
-                        || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
-                    if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
-						tag = BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL;
+				if (req != null
+						&& (req.getRequestPath().equals(Defines.RequestPath.RegisterInstall.getPath())
+						|| req.getRequestPath().equals(Defines.RequestPath.RegisterOpen.getPath()))) {
+					if (req instanceof RegisterInstallRequest) {
+						((RegisterInstallRequest) req).setInitFinishedCallback(callback);
 					} else {
-						tag = BranchRemoteInterface.REQ_TAG_REGISTER_OPEN;
+						((RegisterOpenRequest) req).setInitFinishedCallback(callback);
 					}
+					request = req;
+
 					iter.remove();
 					break;
 				}
 			}
 		}
-	    
-	    ServerRequest req = new ServerRequest(tag);
-	    if (networkCount == 0) {
-	    	insert(req, 0);
-	    } else {
-	    	insert(req, 1);
-	    }
+
+		//ServerRequest req = new ServerRequest(tag);
+		if (networkCount == 0) {
+			insert(request, 0);
+		} else {
+			insert(request, 1);
+		}
 	}
 }
