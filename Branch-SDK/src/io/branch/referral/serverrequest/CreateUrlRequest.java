@@ -27,6 +27,7 @@ import io.branch.referral.errors.BranchNotInitError;
 public class CreateUrlRequest extends ServerRequest {
 
     BranchLinkData linkPost_;
+    boolean isAsync_ = true;
     Branch.BranchLinkCreateListener callback_;
 
     /**
@@ -68,33 +69,32 @@ public class CreateUrlRequest extends ServerRequest {
         super(context, Defines.RequestPath.GetURL.getPath());
 
         callback_ = callback;
+        isAsync_ = async;
 
-        if (hasUser()) {
-            linkPost_ = new BranchLinkData();
-            try {
-                linkPost_.put("identity_id", prefHelper_.getIdentityID());
-                linkPost_.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-                linkPost_.put("session_id", prefHelper_.getSessionID());
-                if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                    linkPost_.put("link_click_id", prefHelper_.getLinkClickID());
-                }
-
-                linkPost_.putType(type);
-                linkPost_.putDuration(duration);
-                linkPost_.putTags(tags);
-                linkPost_.putAlias(alias);
-                linkPost_.putChannel(channel);
-                linkPost_.putFeature(feature);
-                linkPost_.putStage(stage);
-                linkPost_.putParams(params);
-                setPost(linkPost_);
-
-            } catch (JSONException ex) {
-                ex.printStackTrace();
-                constructError_ = true;
+        linkPost_ = new BranchLinkData();
+        try {
+            linkPost_.put("identity_id", prefHelper_.getIdentityID());
+            linkPost_.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+            linkPost_.put("session_id", prefHelper_.getSessionID());
+            if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
+                linkPost_.put("link_click_id", prefHelper_.getLinkClickID());
             }
 
+            linkPost_.putType(type);
+            linkPost_.putDuration(duration);
+            linkPost_.putTags(tags);
+            linkPost_.putAlias(alias);
+            linkPost_.putChannel(channel);
+            linkPost_.putFeature(feature);
+            linkPost_.putStage(stage);
+            linkPost_.putParams(params);
+            setPost(linkPost_);
+
+        } catch (JSONException ex) {
+            ex.printStackTrace();
+            constructError_ = true;
         }
+
     }
 
     public CreateUrlRequest(String requestPath, JSONObject post, Context context) {
@@ -112,7 +112,10 @@ public class CreateUrlRequest extends ServerRequest {
             callback_.onLinkCreate(null, new BranchInternetPermissionError());
             return true;
         }
-        return !hasUser();
+        if(!isAsync_ && !hasUser()){
+            return true;
+        }
+        return false;
     }
 
     @Override

@@ -348,7 +348,6 @@ public class RemoteInterface {
 				return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
 			} else {
 				ServerResponse serverResponse = processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
-				serverResponse.setRequestObject(body);
 				return serverResponse;
 			}
 		} catch (SocketException ex) {
