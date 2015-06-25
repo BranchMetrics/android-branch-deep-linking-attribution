@@ -101,6 +101,21 @@ public abstract class ServerRequest {
 	public abstract boolean isGetRequest();
 
 	/**
+	 * Clears the callbacks associated to this request.
+	 */
+	public abstract void clearCallbacks();
+
+	/**
+	 * Specifies whether to retry this request on failure. By default request is not retried on fail.
+	 * Those request which need to retry on failure should override and handle accordingly
+	 *
+	 * @return	A {@link Boolean} whose values is true if request needed to retry on failure.
+	 */
+	public boolean shouldRetryOnFail(){
+		return false;
+	}
+
+	/**
 	 * <p>Provides the path to server for this request.
 	 * see {@link Defines.RequestPath} <p>
 	 *

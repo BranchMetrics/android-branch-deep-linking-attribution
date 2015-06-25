@@ -152,4 +152,9 @@ public class GetReferralCodeRequest extends ServerRequest {
     public boolean isGetRequest() {
         return false;
     }
+
+    @Override
+    public void clearCallbacks() {
+        callback_ = null;
+    }
 }

@@ -79,4 +79,14 @@ public class ActionCompletedRequest extends ServerRequest {
     public boolean isGetRequest() {
         return false;
     }
+
+    @Override
+    public void clearCallbacks() {
+        //No implementation on purpose
+    }
+
+    @Override
+    public boolean shouldRetryOnFail() {
+        return true;   //Action completed request need to retry on failure.
+    }
 }

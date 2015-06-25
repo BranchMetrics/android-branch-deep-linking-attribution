@@ -33,6 +33,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.branch.referral.serverrequest.ActionCompletedRequest;
 import io.branch.referral.serverrequest.ApplyReferralCodeRequest;
@@ -2774,11 +2775,12 @@ public class Branch {
 		kMostRecentFirst, kLeastRecentFirst
 	}
 
-
-
-
-
-
+	/**
+	 * Asynchronous task handling execution of server requests. Execute the network task on background
+	 * thread and request are  executed in sequential manner. Handles the request execution in
+	 * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
+	 * published in the main thread.
+	 */
 	public class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
 
 		String apiBaseUrl_ = "";
@@ -2794,10 +2796,9 @@ public class Branch {
 
 		@Override
 		protected ServerResponse doInBackground(Void... voids) {
-			Log.d("TASK_TEST1","- executing "+thisReq_.getRequestUrl() );
-			if(thisReq_.isGetRequest()){
+			if (thisReq_.isGetRequest()) {
 				return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
-			}else {
+			} else {
 				return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
 			}
 		}
@@ -2805,50 +2806,54 @@ public class Branch {
 		@Override
 		protected void onPostExecute(ServerResponse serverResponse) {
 			super.onPostExecute(serverResponse);
-
-			Log.d("TASK_TEST1", "---- response for  " + thisReq_.getRequestUrl() + "  " + serverResponse.getStatusCode());
 			if (serverResponse != null) {
 				try {
 					int status = serverResponse.getStatusCode();
 					hasNetwork_ = true;
+					boolean hasKeyError = false;
 
-					if (status == 409) {
-						if (thisReq_ instanceof  CreateUrlRequest) {
-							((CreateUrlRequest)thisReq_).handleDuplicateURLError();
-						} else {
-							Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
-							handleFailure(0);
-						}
-						requestQueue_.dequeue();
-					} else if (status >= 400 && status < 500) {
-						if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
-							Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("err or").getString("message"));
-						}
-						if (lastRequestWasInit_ && !initFailed_) {
-							initFailed_ = true;
-							for (int i = 0; i < requestQueue_.getSize() - 1; i++) {
-								handleFailure(i);
+					if (status != 200) {
+						if (status >= 400 && status < 500) {
+							if (status == 409) {
+								if (thisReq_ instanceof CreateUrlRequest) {
+									((CreateUrlRequest) thisReq_).handleDuplicateURLError();
+								} else {
+									Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+									handleFailure(0);
+								}
+							} else {
+								if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
+									Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("err or").getString("message"));
+								}
+								if (lastRequestWasInit_ && !initFailed_) {
+									initFailed_ = true;
+									for (int i = 0; i < requestQueue_.getSize() - 1; i++) {
+										handleFailure(i);
+									}
+								}
+								handleFailure(requestQueue_.getSize() - 1);
 							}
-						}
-						handleFailure(requestQueue_.getSize() - 1);
-						requestQueue_.dequeue();
-					} else if (status != 200) {
-						if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
-							hasNetwork_ = false;
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
-							if (thisReq_ instanceof RegisterCloseRequest) {
-								requestQueue_.dequeue();
-							}
-							Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
-						} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
-							Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's res/values/strings.xml first!");
-							requestQueue_.dequeue();
 						} else {
-							hasNetwork_ = false;
+
+							if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
+								hasNetwork_ = false;
+								Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
+							} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
+								hasKeyError = true;
+								Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's manifest file first!");
+							} else {
+								hasNetwork_ = false;
+							}
 							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
+						}
+						/*	At this point Always remove the request from the queue.
+							Exceptions are ActionCompletedRequest} and IdentifyUserRequest.On Branch key error request should be removed to prevent any SOF error */
+						if (thisReq_.shouldRetryOnFail() && !hasKeyError) {
+							thisReq_.clearCallbacks();/* Failure already notified. So no need for callback for further actions */
+						} else {
 							requestQueue_.dequeue();
 						}
+
 					} else {//Request is succeeded,Handle success here
 
 						if (thisReq_ instanceof CreateUrlRequest) {
@@ -2870,7 +2875,6 @@ public class Branch {
 						requestQueue_.dequeue();
 					}
 
-
 					networkCount_ = 0;
 
 					if (hasNetwork_ && !initFailed_) {
@@ -2883,7 +2887,5 @@ public class Branch {
 				}
 			}
 		}
-
 	}
-
 }

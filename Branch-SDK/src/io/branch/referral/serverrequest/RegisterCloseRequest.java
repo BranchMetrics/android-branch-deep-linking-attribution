@@ -71,4 +71,9 @@ public class RegisterCloseRequest extends ServerRequest {
     public boolean isGetRequest() {
         return false;
     }
+
+    @Override
+    public void clearCallbacks() {
+        //No implementation on purpose
+    }
 }

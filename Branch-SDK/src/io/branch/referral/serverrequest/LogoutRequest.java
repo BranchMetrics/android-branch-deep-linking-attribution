@@ -83,4 +83,9 @@ public class LogoutRequest extends ServerRequest {
     public boolean isGetRequest() {
         return false;
     }
+
+    @Override
+    public void clearCallbacks() {
+        //No Implementation on purpose
+    }
 }

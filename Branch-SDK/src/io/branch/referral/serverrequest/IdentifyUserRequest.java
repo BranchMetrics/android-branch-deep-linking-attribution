@@ -136,4 +136,14 @@ public class IdentifyUserRequest extends ServerRequest {
             callback_.onInitFinished(branch.getFirstReferringParams(), null);
         }
     }
+
+    @Override
+    public void clearCallbacks() {
+        callback_ = null;
+    }
+
+    @Override
+    public boolean shouldRetryOnFail() {
+        return true;   //Identify user request need to retry on failure.
+    }
 }

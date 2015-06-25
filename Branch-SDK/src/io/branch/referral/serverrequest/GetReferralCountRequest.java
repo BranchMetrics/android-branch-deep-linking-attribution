@@ -97,4 +97,9 @@ public class GetReferralCountRequest extends ServerRequest {
         return true;
     }
 
+    @Override
+    public void clearCallbacks() {
+        callback_ = null;
+    }
+
 }

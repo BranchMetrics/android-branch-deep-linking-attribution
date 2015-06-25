@@ -116,4 +116,9 @@ public class GetRewardHistoryRequest extends ServerRequest {
     public boolean isGetRequest() {
         return false;
     }
+
+    @Override
+    public void clearCallbacks() {
+        callback_ = null;
+    }
 }
