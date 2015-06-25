@@ -55,15 +55,15 @@ public class PrefHelper {
 	 */
 	public static final String NO_STRING_VALUE = "bnc_no_value";
 
-	private static final int INTERVAL_RETRY = 3000;
+	private static final int INTERVAL_RETRY = 0;
 	
 	/**
 	 * Number of times to reattempt connection to the Branch server before giving up and throwing an 
 	 * exception.
 	 */
-	private static final int MAX_RETRIES = 5;
+	private static final int MAX_RETRIES = 1;
 	
-	private static final int TIMEOUT = 3000;
+	private static final int TIMEOUT = 5000;
 
 	private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
