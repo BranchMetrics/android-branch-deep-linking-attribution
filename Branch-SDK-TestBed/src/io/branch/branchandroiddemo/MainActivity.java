@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
 	}
 
     /* Current mode for the Session Management */
-    public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.AUTO;
+    public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.MANUAL;
 	
 	EditText txtShortUrl;
 	Button cmdRefreshShortUrl;
@@ -243,7 +243,7 @@ public class MainActivity extends Activity {
 		super.onStart();
        
 		if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
-			branch = Branch.getInstance(this.getApplicationContext());
+			branch = Branch.getInstance(this);
 		} else {
 			try {
 				branch = Branch.getInstance();
@@ -251,7 +251,7 @@ public class MainActivity extends Activity {
 				ex.printStackTrace();
 				/* On API Level Error fall back to Manual session handling.*/
 				sessionMode = SESSION_MANAGEMENT_MODE.MANUAL;
-				branch = Branch.getInstance(this.getApplicationContext());
+				branch = Branch.getInstance(this);
 			}
 		}
 

@@ -197,17 +197,18 @@ public class ReferralCodeActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-			branch = Branch.getInstance(this.getApplicationContext());
-			branch.initSession(this);
-		} else {
-			try {
+		try {
+			if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
 				branch = Branch.getInstance();
-			} catch (BranchException e) {
-				e.printStackTrace();
-				Log.d("BranchTestBed", e.getMessage());
+				branch.initSession(this);
+			} else {
+				branch = Branch.getInstance();
 			}
+		} catch (BranchException e) {
+			e.printStackTrace();
+			Log.d("BranchTestBed", e.getMessage());
 		}
+
 	}
 
 

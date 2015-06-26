@@ -14,11 +14,15 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -371,15 +375,15 @@ public class Branch {
 	 */
 	public static Branch getInstance() throws BranchException {
 		/* Check if BranchApp is instantiated. */
-		if (branchReferral_ == null || isAutoSessionMode_ == false) {
+		if (branchReferral_ == null ) {
 			throw BranchException.getInstantiationException();
 		}
-
-		/* Check if Activity life cycle callbacks are set. */
-		else if (isActivityLifeCycleCallbackRegistered_ == false) {
-			throw BranchException.getAPILevelException();
+		else if(isAutoSessionMode_ == true){
+			/* Check if Activity life cycle callbacks are set if in auto sesssion mode. */
+			if (isActivityLifeCycleCallbackRegistered_ == false) {
+				throw BranchException.getAPILevelException();
+			}
 		}
-
 		return branchReferral_;
 	}
 
@@ -408,7 +412,7 @@ public class Branch {
 		if (branchReferral_ == null) {
 			branchReferral_ = Branch.initInstance(context);
 		}
-		branchReferral_.context_ = context;
+		branchReferral_.context_ = context.getApplicationContext();
 		if (branchKey.startsWith("key_")) {
 			branchReferral_.prefHelper_.setBranchKey(branchKey);
 		} else {
@@ -429,7 +433,7 @@ public class Branch {
 				branchReferral_.prefHelper_.setBranchKey(branchKey);
 			}
 		}
-		branchReferral_.context_ = context;
+		branchReferral_.context_ = context.getApplicationContext();
 
 		/* If {@link Application} is instantiated register for activity life cycle events. */
 		isAutoSessionMode_ = context instanceof Application;

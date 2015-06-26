@@ -48,7 +48,7 @@ public class CreditHistoryActivity extends Activity {
 		final CreditHistoryActivity self = this;
 		try {
 			if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-				branch = Branch.getInstance(this.getApplicationContext());
+				branch = Branch.getInstance();
 				branch.initSession(this);
 			} else {
 				branch = Branch.getInstance();
