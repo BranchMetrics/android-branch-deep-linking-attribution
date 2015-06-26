@@ -137,13 +137,24 @@ Typically, you would register some sort of splash activitiy that handles routing
 	</intent-filter>
 </activity>
 ```
+### Configure your AndroidManifest.xml
+**1. Provide interenet permission. Branch SDK need internet access to talk to Branch APIs.**
 
-### Add your branch key to your project
+**2. Specify a versionName attribute in the manifest for Branch to identify the application version.**
 
-After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project.
+**3. Add your branch key to your project.**
 
-1. Edit your manifest file by adding the following new meta-data
-    ```xml
+After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project. Add brach key as a meta data in your mainifest.
+
+ Edit your manifest file to have the above items
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.branch.sample"
+    android:versionCode="1"
+    android:versionName="1.0" >
+    
+    <uses-permission android:name="android.permission.INTERNET" />
+    
     <application>
         <!-- Other existing entries -->
 
@@ -153,7 +164,8 @@ After you register your app, your branch key can be retrieved on the [Settings](
         <!-- For your test app, if you have one; Again, use your actual test branch key -->
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_yyyyyyy" />
     </application>
-    ```
+</manifest>
+```
 
 ### Initialize SDK And Register Deep Link Routing Function
 
