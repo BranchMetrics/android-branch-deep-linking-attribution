@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
@@ -29,9 +30,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.ActionMode;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
 
 /**
  * <p>
@@ -300,9 +308,12 @@ public class Branch {
 	
 	private boolean hasNetwork_;
 	private boolean lastRequestWasInit_;
-	private Handler debugHandler_;
+	
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
+	private Handler debugHandler_;
+	private Runnable longPressed_;
+	private boolean debugStarted_;
 
 	private Map<BranchLinkData, String> linkCache_;
 
@@ -345,8 +356,9 @@ public class Branch {
 		networkCount_ = 0;
 		hasNetwork_ = true;
 		debugListenerInitHistory_ = new SparseArray<String>();
-		debugHandler_ = new Handler();
 		debugOnTouchListener_ = retrieveOnTouchListener();
+		debugHandler_ = new Handler();
+		debugStarted_ = false;
 		linkCache_ = new HashMap<BranchLinkData, String>();
 		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	}
@@ -381,10 +393,7 @@ public class Branch {
 	/**
 	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
 	 * object of the type {@link Branch}.</p>
-	 * 
-	 * <p><b>Deprecated</b> - use {@link #getInstance(Context)} instead; the Branch key should be 
-	 * declared in XML rather than hard-coded into your Java code going forward.</p>
-	 * 
+	 *
 	 * @see 			<a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
 	 * 					Adding your app key to your project</a>
 	 * 
@@ -425,18 +434,9 @@ public class Branch {
 		branchReferral_.context_ = context;
 
 		/* If {@link Application} is instantiated register for activity life cycle events. */
-		isAutoSessionMode_ = context instanceof Application;
-		if (isAutoSessionMode_) {
-			try {
-		 		/* Set an observer for activity life cycle events. */
-				branchReferral_.setActivityLifeCycleObserver((Application) context);
-				isActivityLifeCycleCallbackRegistered_ = true;
-
-			} catch (NoSuchMethodError Ex) {
-				isActivityLifeCycleCallbackRegistered_ = false;
-				/* LifeCycleEvents are  available only from API level 14. */
-				Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
-			}
+		if (context instanceof BranchApp) {
+			isAutoSessionMode_ = true;
+			branchReferral_.setActivityLifeCycleObserver((Application) context);
 		}
 
 		return branchReferral_;
@@ -468,6 +468,40 @@ public class Branch {
 	 */
     public static Branch getTestInstance(Context context) {
         return getBranchInstance(context, false);
+    }
+    
+    /**
+	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
+	 * object of the type {@link Branch}.</p>
+	 * 
+	 * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object, either fetched from a pre-initialised 
+	 * 					instance within the singleton class, or a newly instantiated object where 
+	 * 					one was not already requested during the current app lifecycle.
+	 */
+    public static Branch getAutoInstance(Context context) {
+    	isAutoSessionMode_ = true;
+        getBranchInstance(context, true);
+        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        return branchReferral_;
+    }
+
+    /**
+	 * <p>If you configured the your Strings file according to the guide, you'll be able to use
+	 * the test version of your app by just calling this static method before calling initSession.</p>
+	 * 
+	 * @param context	A {@link Context} from which this call was made.
+	 * 
+	 * @return			An initialised {@link Branch} object.
+	 */
+    public static Branch getAutoTestInstance(Context context) {
+    	isAutoSessionMode_ = true;
+    	getBranchInstance(context, false);
+        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        return branchReferral_;
     }
 
     /**
@@ -851,10 +885,10 @@ public class Branch {
 			}
 		}
 		
-		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+		if (!isAutoSessionMode_ && activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
 			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) { 
+			if (view != null) {
 				view.setOnTouchListener(debugOnTouchListener_);
 			}
 		}
@@ -868,10 +902,7 @@ public class Branch {
 	private void setTouchDebugInternal(Activity activity){
 		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
 			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) {
-				view.setOnTouchListener(debugOnTouchListener_);
-			}
+			activity.getWindow().setCallback(new BranchWindowCallback(activity.getWindow().getCallback()));
 		}
 	}
 	
@@ -935,10 +966,9 @@ public class Branch {
 					return true;
 				}
 			};
-		}
+ 		}
 		return debugOnTouchListener_;
-	}
-
+ 	}
 	
 	/**
 	 * <p>Closes the current session, dependent on the state of the 
@@ -3210,8 +3240,17 @@ public class Branch {
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
-		application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
-		application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
+		try {
+	 		/* Set an observer for activity life cycle events. */
+			application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
+			application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
+			isActivityLifeCycleCallbackRegistered_ = true;
+
+		} catch (NoSuchMethodError Ex) {
+			isActivityLifeCycleCallbackRegistered_ = false;
+			/* LifeCycleEvents are  available only from API level 14. */
+			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+		}
 	}
 
 	/**
@@ -3232,13 +3271,13 @@ public class Branch {
 				initSession();// indicate  starting of session.
 			}
 			activityCnt_++;
-
-			//Set the activity for touch debug
-			setTouchDebugInternal(activity);
 		}
 
 		@Override
-		public void onActivityResumed(Activity activity) {}
+		public void onActivityResumed(Activity activity) {
+			//Set the activity for touch debug
+			setTouchDebugInternal(activity);
+		}
 
 		@Override
 		public void onActivityPaused(Activity activity) {}
@@ -3809,6 +3848,175 @@ public class Branch {
 		@Override
 		public String getMessage() {
 			return "Trouble redeeming rewards. Please make sure you have credits available to redeem";
+		}
+	}
+	
+	public class BranchWindowCallback implements Window.Callback {
+		private Window.Callback callback_;
+		
+		public BranchWindowCallback(Window.Callback callback) {
+			callback_ = callback;
+			
+			if (longPressed_ == null) {
+				longPressed_ = new Runnable() {
+					private Timer timer;
+				
+				    public void run() {
+				    	debugHandler_.removeCallbacks(longPressed_);
+				        if (!debugStarted_) {
+				        	Log.i("Branch Debug","======= Start Debug Session =======");
+				        	prefHelper_.setDebug();
+				        	timer = new Timer();
+				        	timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
+				        } else {
+				        	Log.i("Branch Debug","======= End Debug Session =======");
+				        	prefHelper_.clearDebug();
+				        	if (timer != null) {
+				        		timer.cancel();
+				        		timer = null;
+				        	}
+				        }
+				        debugStarted_ = !debugStarted_;
+				    }   
+				};
+			}
+		}
+		
+		class KeepDebugConnectionTask extends TimerTask {
+	        public void run() {
+	            if (debugStarted_ && !prefHelper_.keepDebugConnection() && longPressed_ != null) {
+	            	debugHandler_.post(longPressed_);
+	            }
+	        }
+	    }
+
+		@Override
+		public boolean dispatchGenericMotionEvent(MotionEvent event) {
+			return callback_.dispatchGenericMotionEvent(event);
+		}
+
+		@Override
+		public boolean dispatchKeyEvent(KeyEvent event) {
+			return callback_.dispatchKeyEvent(event);
+		}
+
+		@Override
+		public boolean dispatchKeyShortcutEvent(KeyEvent event) {
+			return callback_.dispatchKeyShortcutEvent(event);
+		}
+
+		@Override
+		public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent event) {
+			return callback_.dispatchPopulateAccessibilityEvent(event);
+		}
+
+		@Override
+		public boolean dispatchTouchEvent(MotionEvent event) {
+			switch (event.getAction() & MotionEvent.ACTION_MASK) {
+				case MotionEvent.ACTION_DOWN:
+					if (systemObserver_.isSimulator()) {
+						debugHandler_.postDelayed(longPressed_, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+					}
+			        break;
+			    case MotionEvent.ACTION_MOVE:
+			    	break;
+			    case MotionEvent.ACTION_CANCEL:
+			    	debugHandler_.removeCallbacks(longPressed_);
+			    	break;
+			    case MotionEvent.ACTION_UP:
+			    	debugHandler_.removeCallbacks(longPressed_);
+			    	break;
+				case MotionEvent.ACTION_POINTER_DOWN:
+					if (event.getPointerCount() == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
+						debugHandler_.postDelayed(longPressed_, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+					}
+					break;
+				default:
+					break;
+			}
+			
+			return callback_.dispatchTouchEvent(event);
+		}
+
+		@Override
+		public boolean dispatchTrackballEvent(MotionEvent event) {
+			return callback_.dispatchTrackballEvent(event);
+		}
+
+		@Override
+		public void onActionModeFinished(ActionMode mode) {
+			callback_.onActionModeFinished(mode);
+		}
+
+		@Override
+		public void onActionModeStarted(ActionMode mode) {
+			callback_.onActionModeStarted(mode);
+		}
+
+		@Override
+		public void onAttachedToWindow() {
+			callback_.onAttachedToWindow();
+		}
+
+		@Override
+		public void onContentChanged() {
+			callback_.onContentChanged();
+		}
+
+		@Override
+		public boolean onCreatePanelMenu(int featureId, Menu menu) {
+			return callback_.onCreatePanelMenu(featureId, menu);
+		}
+
+		@Override
+		public View onCreatePanelView(int featureId) {
+			return callback_.onCreatePanelView(featureId);
+		}
+
+		@SuppressLint("MissingSuperCall")
+		@Override
+		public void onDetachedFromWindow() {
+			callback_.onDetachedFromWindow();
+		}
+
+		@Override
+		public boolean onMenuItemSelected(int featureId, MenuItem item) {
+			return callback_.onMenuItemSelected(featureId, item);
+		}
+
+		@Override
+		public boolean onMenuOpened(int featureId, Menu menu) {
+			return callback_.onMenuOpened(featureId, menu);
+		}
+
+		@Override
+		public void onPanelClosed(int featureId, Menu menu) {
+			callback_.onPanelClosed(featureId, menu);
+		}
+
+		@Override
+		public boolean onPreparePanel(int featureId, View view, Menu menu) {
+			return callback_.onPreparePanel(featureId, view, menu);
+		}
+
+		@Override
+		public boolean onSearchRequested() {
+			return callback_.onSearchRequested();
+		}
+
+		@Override
+		public void onWindowAttributesChanged(WindowManager.LayoutParams attrs) {
+			callback_.onWindowAttributesChanged(attrs);
+		}
+
+		@Override
+		public void onWindowFocusChanged(boolean hasFocus) {
+			callback_.onWindowFocusChanged(hasFocus);
+		}
+
+		@Override
+		public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
+			return callback_.onWindowStartingActionMode(callback);
 		}
 	}
 }

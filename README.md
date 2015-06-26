@@ -61,8 +61,9 @@ To properly handle deep links from Facebook, you must perform the following:
 	```java
 	@Override
 	public void onNewIntent(Intent intent) {
-		// Android makes you do this yourself for some reason, so make sure
-		// this snippet is in the Activity registered for the intent filter
+		// Because the activity is a singleTask activity, the new intent won't be
+		// launched but enters here, making handling it optional. For branch to work
+		// the intent must be updated by calling the following:
 		this.setIntent(intent);
 	}
 	```
@@ -261,10 +262,11 @@ If you already have an Application class and don't want to extend it from `Branc
 ```java
 public void onCreate() {
 	super.onCreate();
-	if (!isDebug) {
-		Branch.getInstance(this);
+	//noinspection ConstantConditions
+	if (!BuildConfig.DEBUG) {
+		Branch.getAutoInstance(this);
 	} else {
-		Branch.getTestInstance(this);
+		Branch.getAutoTestInstance(this);
 	}
 }
 ```

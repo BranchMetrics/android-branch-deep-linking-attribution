@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.9: Enhanced debugger triggering with the new session management. Also, fixed a bug in the new session management when the app already has a class extending from BranchApp.
+
 - v1.5.8: Fix automated session management. Changes added to block multiple Activity life cycle listeners getting registered.
 
 - v1.5.7: Added automated session management. Getting rid of session handling with each Activity's life cycle methods.
