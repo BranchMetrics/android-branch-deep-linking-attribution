@@ -9,15 +9,12 @@ import org.json.JSONObject;
 import java.util.Collection;
 
 import io.branch.referral.Branch;
-import io.branch.referral.Defines;
+import io.branch.referral.BranchError;
 import io.branch.referral.BranchLinkData;
+import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchCreateUrlError;
-import io.branch.referral.errors.BranchDuplicateUrlError;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchNotInitError;
 
 /**
  * * <p>
@@ -109,10 +106,10 @@ public class CreateUrlRequest extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onLinkCreate(null, new BranchInternetPermissionError());
+            callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
-        if(!isAsync_ && !hasUser()){
+        if (!isAsync_ && !hasUser()) {
             return true;
         }
         return false;
@@ -131,22 +128,23 @@ public class CreateUrlRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
             String failedUrl = null;
             if (!prefHelper_.getUserURL().equals(PrefHelper.NO_STRING_VALUE)) {
                 failedUrl = prefHelper_.getUserURL();
             }
-            if (isInitNotStarted)
-                callback_.onLinkCreate(null, new BranchNotInitError());
+
+            if (statusCode == BranchError.ERR_NO_SESSION)
+                callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", statusCode));
             else
-                callback_.onLinkCreate(failedUrl, new BranchCreateUrlError());
+                callback_.onLinkCreate(failedUrl, new BranchError("Trouble creating a URL.", statusCode));
         }
     }
 
     public void handleDuplicateURLError() {
         if (callback_ != null) {
-            callback_.onLinkCreate(null, new BranchDuplicateUrlError());
+            callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_BRANCH_DUPLICATE_URL));
         }
     }
 

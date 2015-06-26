@@ -62,7 +62,7 @@ public class ActionCompletedRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         //No implementation on purpose
     }
 

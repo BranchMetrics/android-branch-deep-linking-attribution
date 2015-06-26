@@ -7,13 +7,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchGetCreditHistoryError;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchNotInitError;
 
 /**
  * * <p>
@@ -92,21 +90,17 @@ public class GetRewardHistoryRequest extends ServerRequest {
         }
     }
 
-
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            if (isInitNotStarted)
-                callback_.onReceivingResponse(null, new BranchNotInitError());
-            else
-                callback_.onReceivingResponse(null, new BranchGetCreditHistoryError());
+            callback_.onReceivingResponse(null, new BranchError("Trouble retrieving user credit history.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onReceivingResponse(null, new BranchInternetPermissionError());
+            callback_.onReceivingResponse(null, new BranchError("Trouble retrieving user credit history.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;

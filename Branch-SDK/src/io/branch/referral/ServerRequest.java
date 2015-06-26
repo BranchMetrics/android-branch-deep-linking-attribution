@@ -90,9 +90,10 @@ public abstract class ServerRequest {
 	 * <p>Called when there is an error on executing this request. Child class should handle the failure
 	 * accordingly. </>
 	 *
-	 * @param isInitNotStarted	A {@link Boolean} value specifying whether {@link Branch} is initialised or not.
+	 * @param statusCode		A {@link Integer} value specifying http return code or any branch specific error defined in {@link BranchError}.
+	 *
 	 */
-	public abstract void handleFailure(boolean isInitNotStarted);
+	public abstract void handleFailure(int statusCode);
 
 	/**
 	 * Specify whether the request is a GET or POST. Child class has to implement accordingly.

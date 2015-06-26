@@ -13,9 +13,6 @@ import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchNotInitError;
-import io.branch.referral.errors.BranchRedeemRewardsError;
 
 /**
  * * <p>
@@ -80,11 +77,11 @@ public class RedeemRewardsRequest extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchInternetPermissionError());
+            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         if (actualNumOfCreditsToRedeem_ <= 0) {
-            callback_.onStateChanged(false, new BranchRedeemRewardsError());
+            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", BranchError.ERR_BRANCH_REDEEM_REWARD));
             return true;
         }
         return false;
@@ -110,19 +107,16 @@ public class RedeemRewardsRequest extends ServerRequest {
         }
 
         if (callback_ != null) {
-            BranchError branchError = isRedemptionSucceeded ? null : new BranchRedeemRewardsError();
+            BranchError branchError = isRedemptionSucceeded ? null : new BranchError("Trouble redeeming rewards.", BranchError.ERR_BRANCH_REDEEM_REWARD);
             callback_.onStateChanged(isRedemptionSucceeded, branchError);
         }
 
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            if (isInitNotStarted)
-                callback_.onStateChanged(false, new BranchNotInitError());
-            else
-                callback_.onStateChanged(false, new BranchRedeemRewardsError());
+            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", statusCode));
         }
     }
 

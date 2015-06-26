@@ -12,7 +12,6 @@ import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchInternetPermissionError;
 
 /**
  * * <p>
@@ -66,7 +65,7 @@ public class LogoutRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         //No implementation on purpose
     }
 

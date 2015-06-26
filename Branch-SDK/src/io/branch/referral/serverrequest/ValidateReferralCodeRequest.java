@@ -7,14 +7,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchInvalidReferralCodeError;
-import io.branch.referral.errors.BranchNotInitError;
-import io.branch.referral.errors.BranchValidateReferralCodeError;
 
 /**
  * * <p>
@@ -76,12 +73,12 @@ public class ValidateReferralCodeRequest extends ServerRequest {
         if (callback_ != null) {
             try {
                 JSONObject json;
-                BranchInvalidReferralCodeError error = null;
+                BranchError error = null;
                 // check if a valid referral code json is returned
                 if (!resp.getObject().has(Branch.REFERRAL_CODE)) {
                     json = new JSONObject();
                     json.put("error_message", "Invalid referral code");
-                    error = new BranchInvalidReferralCodeError();
+                    error = new BranchError("Trouble validating the referral code.", BranchError.ERR_INVALID_REFERRAL_CODE);
                 } else {
                     json = resp.getObject();
                 }
@@ -94,19 +91,16 @@ public class ValidateReferralCodeRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            if (isInitNotStarted)
-                callback_.onInitFinished(null, new BranchNotInitError());
-            else
-                callback_.onInitFinished(null, new BranchValidateReferralCodeError());
+            callback_.onInitFinished(null, new BranchError("Trouble validating the referral code.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchInternetPermissionError());
+            callback_.onInitFinished(null, new BranchError("Trouble validating the referral code.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;

@@ -1014,7 +1014,7 @@ public class Branch {
 				if (initFinished_ || !hasNetwork_) {
 					processNextQueueItem();
 				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req);
+					handleFailure(req, BranchError.ERR_NO_SESSION);
 				}
 			}
 		}
@@ -1068,7 +1068,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 		else{
@@ -1105,7 +1105,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -1136,7 +1136,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -1166,7 +1166,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -1279,7 +1279,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -1370,7 +1370,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -1395,7 +1395,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -2165,7 +2165,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 
@@ -2304,7 +2304,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -2327,7 +2327,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -2350,7 +2350,7 @@ public class Branch {
 				lastRequestWasInit_ = false;
 				processNextQueueItem();
 			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req);
+				handleFailure(req, BranchError.ERR_NO_SESSION);
 			}
 		}
 	}
@@ -2429,7 +2429,7 @@ public class Branch {
 			lastRequestWasInit_ = false;
 			processNextQueueItem();
 		} else if (initFailed_ || initNotStarted_) {
-			handleFailure(req);
+			handleFailure(req, BranchError.ERR_NO_SESSION);
 		}
 	}
 	
@@ -2533,7 +2533,7 @@ public class Branch {
 				if (!(req instanceof RegisterInstallRequest) && !hasUser()) {
 					Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
 					networkCount_ = 0;
-					handleFailure(requestQueue_.getSize() - 1);
+					handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
 					return;
 				} else {
 					BranchPostTask postTask = new BranchPostTask(req);
@@ -2548,20 +2548,20 @@ public class Branch {
 
 	}
 
-	private void handleFailure(int index) {
+	private void handleFailure(int index, int statusCode) {
 		ServerRequest req;
 		if (index >= requestQueue_.getSize()) {
 			req = requestQueue_.peekAt(requestQueue_.getSize() - 1);
 		} else {
 			req = requestQueue_.peekAt(index);
 		}
-		handleFailure(req);
+		handleFailure(req, statusCode);
 	}
 
-	private void handleFailure(final ServerRequest req) {
+	private void handleFailure(final ServerRequest req, int statusCode) {
 		if (req == null)
 			return;
-		req.handleFailure(initNotStarted_);
+		req.handleFailure(statusCode);
 	}
 
 	private void updateAllRequestsInQueue() {
@@ -2819,7 +2819,7 @@ public class Branch {
 									((CreateUrlRequest) thisReq_).handleDuplicateURLError();
 								} else {
 									Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
-									handleFailure(0);
+									handleFailure(0, status);
 								}
 							} else {
 								if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
@@ -2828,10 +2828,10 @@ public class Branch {
 								if (lastRequestWasInit_ && !initFailed_) {
 									initFailed_ = true;
 									for (int i = 0; i < requestQueue_.getSize() - 1; i++) {
-										handleFailure(i);
+										handleFailure(i, status);
 									}
 								}
-								handleFailure(requestQueue_.getSize() - 1);
+								handleFailure(requestQueue_.getSize() - 1, status);
 							}
 						} else {
 
@@ -2844,7 +2844,7 @@ public class Branch {
 							} else {
 								hasNetwork_ = false;
 							}
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1);
+							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1, status);
 						}
 						/*	At this point Always remove the request from the queue.
 							Exceptions are ActionCompletedRequest} and IdentifyUserRequest.On Branch key error request should be removed to prevent any SOF error */

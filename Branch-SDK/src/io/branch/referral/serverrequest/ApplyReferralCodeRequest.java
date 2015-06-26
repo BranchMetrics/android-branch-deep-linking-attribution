@@ -2,20 +2,16 @@ package io.branch.referral.serverrequest;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchApplyReferralCodeError;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchInvalidReferralCodeError;
-import io.branch.referral.errors.BranchNotInitError;
 
 /**
  * * <p>
@@ -78,12 +74,12 @@ public class ApplyReferralCodeRequest extends ServerRequest {
         if (callback_ != null) {
             try {
                 JSONObject json;
-                BranchInvalidReferralCodeError error = null;
+                BranchError error = null;
                 // check if a valid referral code json is returned
                 if (!resp.getObject().has(Branch.REFERRAL_CODE)) {
                     json = new JSONObject();
                     json.put("error_message", "Invalid referral code");
-                    error = new BranchInvalidReferralCodeError();
+                    error = new BranchError("Trouble applying referral code.", BranchError.ERR_INVALID_REFERRAL_CODE);
                 } else {
                     json = resp.getObject();
                 }
@@ -92,23 +88,19 @@ public class ApplyReferralCodeRequest extends ServerRequest {
                 e.printStackTrace();
             }
         }
-
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            if (isInitNotStarted)
-                callback_.onInitFinished(null, new BranchNotInitError());
-            else
-                callback_.onInitFinished(null, new BranchApplyReferralCodeError());
+            callback_.onInitFinished(null, new BranchError("Trouble applying the referral code.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchInternetPermissionError());
+            callback_.onInitFinished(null, new BranchError("Trouble applying the referral code.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;

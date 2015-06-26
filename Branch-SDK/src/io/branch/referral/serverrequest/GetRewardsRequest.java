@@ -9,12 +9,10 @@ import org.json.JSONObject;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchGetCreditsError;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchNotInitError;
 
 /**
  * * <p>
@@ -75,19 +73,16 @@ public class GetRewardsRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            if (isInitNotStarted)
-                callback_.onStateChanged(false, new BranchNotInitError());
-            else
-                callback_.onStateChanged(false, new BranchGetCreditsError());
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchInternetPermissionError());
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;

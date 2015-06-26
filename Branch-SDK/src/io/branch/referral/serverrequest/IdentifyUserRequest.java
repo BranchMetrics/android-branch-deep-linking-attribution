@@ -2,19 +2,16 @@ package io.branch.referral.serverrequest;
 
 import android.app.Application;
 import android.content.Context;
-import android.nfc.tech.IsoDep;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.errors.BranchInternetPermissionError;
-import io.branch.referral.errors.BranchNotInitError;
-import io.branch.referral.errors.BranchSetIdentityError;
 
 /**
  * * <p>
@@ -24,6 +21,7 @@ import io.branch.referral.errors.BranchSetIdentityError;
 public class IdentifyUserRequest extends ServerRequest {
     Branch.BranchReferralInitListener callback_;
     String userId_ = null;
+
     /**
      * <p>Create an instance of {@link IdentifyUserRequest} to Identify the current user to the Branch API
      * by supplying a unique identifier as a {@link String} value, with a callback specified to perform a
@@ -84,7 +82,7 @@ public class IdentifyUserRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(boolean isInitNotStarted) {
+    public void handleFailure(int statusCode) {
         if (callback_ != null) {
             JSONObject obj = new JSONObject();
             try {
@@ -92,20 +90,16 @@ public class IdentifyUserRequest extends ServerRequest {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
-            if (isInitNotStarted)
-                callback_.onInitFinished(obj, new BranchNotInitError());
-            else
-                callback_.onInitFinished(obj, new BranchSetIdentityError());
+            callback_.onInitFinished(obj, new BranchError("Trouble setting the user alias.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchInternetPermissionError());
+            callback_.onInitFinished(null, new BranchError("Trouble setting the user alias.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
-        }
-        else{
+        } else {
             if (userId_ == null || userId_.length() == 0 || userId_.equals(prefHelper_.getIdentity())) {
                 return true;
             }
@@ -120,9 +114,10 @@ public class IdentifyUserRequest extends ServerRequest {
 
     /**
      * Return true if the user id provided for user identification is the same as existing id
+     *
      * @return
      */
-    public boolean isExistingID(){
+    public boolean isExistingID() {
         return (userId_ != null && userId_.equals(prefHelper_.getIdentity()));
     }
 
@@ -131,7 +126,7 @@ public class IdentifyUserRequest extends ServerRequest {
      *
      * @param branch {@link Branch} instance.
      */
-    public void handleUserExist(Branch branch){
+    public void handleUserExist(Branch branch) {
         if (callback_ != null) {
             callback_.onInitFinished(branch.getFirstReferringParams(), null);
         }
