@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
 	}
 
     /* Current mode for the Session Management */
-    public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.MANUAL;
+    public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.AUTO;
 	
 	EditText txtShortUrl;
 	Button cmdRefreshShortUrl;

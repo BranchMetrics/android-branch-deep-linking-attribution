@@ -44,7 +44,7 @@ public class RedeemRewardsRequest extends ServerRequest {
         callback_ = callback;
 
 
-        int availableCredits = prefHelper_.getCreditCount(Defines.Jsonkey.Bucket.getKey());
+        int availableCredits = prefHelper_.getCreditCount(bucketName);
         actualNumOfCreditsToRedeem_ = numOfCreditsToRedeem;
         if (numOfCreditsToRedeem > availableCredits) {
             actualNumOfCreditsToRedeem_ = availableCredits;
