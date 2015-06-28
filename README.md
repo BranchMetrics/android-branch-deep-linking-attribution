@@ -154,136 +154,144 @@ Edit your manifest file by adding the following new meta-data:
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_yyyyyyy" />
     </application>
     ```
-
 ### Initialize SDK and Register Deep Link Routing Function
 
-Called in your splash activity where you handle. If you created a custom link with your own custom dictionary data, you probably want to know when the user session init finishes, so you can check that data. Think of this callback as your "deep link router". If your app opens with some data, you want to route the user depending on the data you passed in. Otherwise, send them to a generic install flow.
+Branch must be notified when the app opens and when it closes, so that we know when to query the API for a new deep link. We recently discovered an Android mechanism that was exposed in version 14, that allows us to track behind-the-scenes when the app is opened and closed. It makes the integration **a lot** easier, so we've split it out from the legacy integration.
 
-This deep link routing callback is called 100% of the time on init, with your link params or an empty dictionary if none present.
+If you support below 14, you'll want to skip this section and head to [this one right below](initialization-to-support-android-pre-14-harder).
 
-####Method
-
-```java
-@Override
-public void onStart() {
-	super.onStart();
-
-	Branch branch = Branch.getInstance(getApplicationContext());
-	branch.initSession(new BranchReferralInitListener(){
-		@Override
-		public void onInitFinished(JSONObject referringParams, BranchError error) {
-			if (error == null) {
-				// params are the deep linked params associated with the link that the user clicked before showing up
-				// params will be empty if no data found
-
-				// here is the data from the example below if a new user clicked on Joe's link and installed the app
-				String name = referringParams.getString("user"); // returns Joe
-				String profileUrl = referringParams.getString("profile_pic"); // returns https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg
-				String description = referringParams.getString("description"); // returns Joe likes long walks on the beach...
-
-				// route to a profile page in the app for Joe
-				// show a customer welcome
-			} else {
-				Log.i("MyApp", error.getMessage());
-			}
-		}
-	}, this.getIntent().getData(), this);
-}
-
-@Override
-public void onNewIntent(Intent intent) {
-	// Android makes you do this yourself for some reason, so make sure this snippet is in the Activity registered for the intent filter
-	this.setIntent(intent);
-}
-```
-
-If you want to use your test app during development, in onStart() you can initialize the Branch object like this:
-
-```java
-Branch branch = Branch.getTestInstance(getApplicationContext());
-```
-
-_Please note that you need SDK version >= 1.5.0 to use getTestInstance()_
-
-Or
-
-```java
-Branch branch = Branch.getInstance(getApplicationContext(), "your test branch key"); // replace with your actual branch key
-```
-
-Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later.
-Also, note the Branch object is singleton, so you can and should still use `Branch.getInstance(getApplicationContext())` in all the other places (see examples below).
-
-####Parameters
-
-None
-
-#### Automatic Session Management
+#### Initialize Branch lifecycle for Android 14+
 
 Starting from Branch SDK version 1.5.7, there is no need for initialising and closing session with the new _automatic session management_. Automatic session management can work only with API level 14 and above, so make sure that your `minSdkVersion` is 14 or above.
 
-**Requirement**
 ```xml
-<uses-sdk
-	android:minSdkVersion="14"
-	   ------------        />
+<uses-sdk android:minSdkVersion="14"/>
 ```
 
 Once you do any of the below, there is no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
-
-```java
-  Branch branch = Branch.getInstance();
-```
-
-Branch SDK can do session management for you if you do one of the following:
-
-##### Common: you do not use Application class
 
 If you are not creating or using an Application class throughout your project, all you need to do is declare `BranchApp` as your application class in your manifest.
 
 ```xml
  <application
------
-android:name="io.branch.referal.BranchApp">
+    android:name="io.branch.referral.BranchApp">
 ```
 
-##### Rarer: you already use the Application class
-
-If you already have an Application class, then extend your application class with `BranchApp`.
+#### Register deep link router
 
 ```java
-public class YourApplication extends BranchApp
+Branch branch = Branch.getInstance(getApplicationContext());
+branch.initSession(new BranchReferralInitListener(){
+    @Override
+    public void onInitFinished(JSONObject referringParams, BranchError error) {
+        if (error == null) {
+            // params are the deep linked params associated with the link that the user clicked -> was re-directed to this app
+            // params will be empty if no data found
+            // ... insert custom logic here ...
+        } else {
+            Log.i("MyApp", error.getMessage());
+        }
+    }
+}, this.getIntent().getData(), this);
 ```
 
-##### Very rare: you already use and extend the Application class
+**NOTE** if you're calling this inside a fragment, please use getActivity() instead of passing in `this`. Also, `this.getIntent().getData()` refers to the data associated with an incoming intent.
 
-If you already have an Application class and don't want to extend it from `BranchApp` then create a Branch instance in your Application's `onCreate()` method.
+Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that'd done, go to said activity and do something like the following:
 
 ```java
-public void onCreate() {
-	super.onCreate();
-	//noinspection ConstantConditions
-	if (!BuildConfig.DEBUG) {
-		Branch.getAutoInstance(this);
-	} else {
-		Branch.getAutoTestInstance(this);
-	}
+@Override
+public void onNewIntent(Intent intent) {
+    this.setIntent(intent);
 }
 ```
 
-###Close session (session tracking to support for minSdkVersion < 14)
+Side note: This is a requirement because of the new Facebook AppLinks change. Facebook doesn't open up the browser anymore and just calls the URI to open the app directly. This prevented Branch clicks from being registered. To support it, we pass that link click id through the URI scheme to Branch, and send that back to the app, creating a 'click' without actually seeing a click. Android does a very poor job of clearing out intents that were previously called, so this helps ensure that once a URI scheme is called and consumed, it won't trigger deep linking anymore.
 
-**Note:** There is no need to use this method if you use _automatic session management_ as described above and only support minSdkVersion >= 14.
+#### Branch-provided data parameters in initSession callback
 
-**Required:** this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened.
+Previously, Branch did not return any information to the app if `initSession` was called but the user hadn't clicked on a link. Now Branch returns explicit parameters every time. Here is a list, and a description of what each represents.
+
+* `~` denotes analytics
+* `+` denotes information added by Branch
+* (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
+
+
+| **Parameter** | **Meaning**
+| ~channel | The channel on which the link was shared, specified at link creation time
+| ~feature | The feature, such as `invite` or `share`, specified at link creation time
+| ~tags | Any tags, specified at link creation time
+| ~campaign | The campaign the link is associated with, specified at link creation time
+| ~stage | The stage, specified at link creation time
+| ~creation_source | Where the link was created ('API', 'Dashboard', 'SDK', 'iOS SDK', 'Android SDK', or 'Web SDK')
+| +referrer | The referrer for the link click, if a link was clicked
+| +phone_number | The phone number of the user, if the user texted himself/herself the app
+| +is_first_session | Denotes whether this is the first session (install) or any other session (open)
+| +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
+
+
+### Initialization to support Android pre-14 (harder)
+
+Note: There is no need to use this section if you use _automatic session management_ as described above and only support minSdkVersion >= 14. Please skip to the [next section](#retrieve-session-install-or-open-parameters) and proceed. This section is only needed if you want to support pre-14.
+
+If you choose this method, you must call initSession and closeSession in onStart and onStop of _every Activity_ in your app. If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time. Branch must know when the app opens or closes to properly handle the deep link parameters retrieval.
+
+#### Init Session
+
+**NOTE** This guide assumes that you’re familiar with the Android UI lifecycle. A single Branch object instance is used per Activity or Fragment, so declare an object at the class-level, and you can call this in every Activity or Fragment where you need to interact with Branch; if it has already be initialised elsewhere in your app, the same instance will be returned.
+
+Inside your onStart, do the following, where the variable branch is created in your base activity class (of type Branch). This will initialize a Branch session and return the deep link parameters associated with the link that was just clicked, or an empty dictionary if not.
 
 ####Method
 
 ```java
 @Override
-public void onStop() {
-	super.onStop();
-	Branch.getInstance(getApplicationContext()).closeSession();
+protected void onStart() {
+    super.onStart();
+    Branch branch = Branch.getInstance(getApplicationContext());
+    branch.initSession(new BranchReferralInitListener(){
+        @Override
+        public void onInitFinished(JSONObject referringParams, BranchError error) {
+            if (error == null) {
+                // params are the deep linked params associated with the link that the user clicked -> was re-directed to this app
+                // params will be empty if no data found
+                // ... insert custom logic here ...
+            } else {
+                Log.i("MyApp", error.getMessage());
+            }
+        }
+    }, this.getIntent().getData(), this);
+}
+```
+
+**NOTE** if you're calling this inside a fragment, please use getActivity() instead of passing in `this`. Also, `this.getIntent().getData()` refers to the data associated with an incoming intent.
+
+Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that'd done, go to said activity and do something like the following:
+
+```java
+@Override
+public void onNewIntent(Intent intent) {
+    this.setIntent(intent);
+}
+```
+
+####Parameters
+
+None
+
+###Close session (session tracking to support for minSdkVersion < 14)
+
+**Note:** There is no need to use this method if you use _automatic session management_ as described above and only support minSdkVersion >= 14.
+
+**Required:** this call will clear the deep link parameters when the app is closed, so they can be refreshed after a new link is clicked or the app is reopened. Every activity that will use Branch in some way should include Branch SDK methods in both `onStart()` and `onStop()`. Don't forget `closeSession()` in every activity with Branch! If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
+
+####Method
+
+```java
+@Override
+protected void onStop() {
+    super.onStop();
+    branch.closeSession();
 }
 ```
 ####Parameters
@@ -318,6 +326,7 @@ To identify a user, just call:
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.setIdentity(your user id); // your user id should not exceed 127 characters
 ```
+
 ####Parameters
 
 None
