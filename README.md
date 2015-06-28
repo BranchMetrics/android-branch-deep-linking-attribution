@@ -215,6 +215,28 @@ public void onNewIntent(Intent intent) {
 
 Side note: This is a requirement because of the new Facebook AppLinks change. Facebook doesn't open up the browser anymore and just calls the URI to open the app directly. This prevented Branch clicks from being registered. To support it, we pass that link click id through the URI scheme to Branch, and send that back to the app, creating a 'click' without actually seeing a click. Android does a very poor job of clearing out intents that were previously called, so this helps ensure that once a URI scheme is called and consumed, it won't trigger deep linking anymore.
 
+#### Branch-provided data parameters in initSession callback
+
+Previously, Branch did not return any information to the app if `initSession` was called but the user hadn't clicked on a link. Now Branch returns explicit parameters every time. Here is a list, and a description of what each represents.
+
+* `~` denotes analytics
+* `+` denotes information added by Branch
+* (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
+
+
+| **Parameter** | **Meaning**
+| ~channel | The channel on which the link was shared, specified at link creation time
+| ~feature | The feature, such as `invite` or `share`, specified at link creation time
+| ~tags | Any tags, specified at link creation time
+| ~campaign | The campaign the link is associated with, specified at link creation time
+| ~stage | The stage, specified at link creation time
+| ~creation_source | Where the link was created ('API', 'Dashboard', 'SDK', 'iOS SDK', 'Android SDK', or 'Web SDK')
+| +referrer | The referrer for the link click, if a link was clicked
+| +phone_number | The phone number of the user, if the user texted himself/herself the app
+| +is_first_session | Denotes whether this is the first session (install) or any other session (open)
+| +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
+
+
 ### Initialization to support Android pre-14 (harder)
 
 Note: There is no need to use this section if you use _automatic session management_ as described above and only support minSdkVersion >= 14. Please skip to the [next section](#retrieve-session-install-or-open-parameters) and proceed. This section is only needed if you want to support pre-14.
