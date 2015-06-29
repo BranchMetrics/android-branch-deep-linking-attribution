@@ -227,7 +227,8 @@ public class SystemObserver {
 				if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
 					JSONObject packObj = new JSONObject();
 					try {
-						String label = appInfo.loadLabel(pm).toString();
+						CharSequence labelCs = appInfo.loadLabel(pm);
+						String label = labelCs == null ? null : labelCs.toString();
 						if (label != null)
 							packObj.put("name", label);
 						String packName = appInfo.packageName;
@@ -533,7 +534,7 @@ public class SystemObserver {
 	public int getUpdateState(boolean updatePrefs) {
 		PrefHelper pHelper = PrefHelper.getInstance(context_);
 		String currAppVersion = getAppVersion(); 
-		if (pHelper.getAppVersion() == PrefHelper.NO_STRING_VALUE) {
+		if (PrefHelper.NO_STRING_VALUE.equals(pHelper.getAppVersion())) {
 			// if no app version is in storage, this must be the first time Branch is here
 			if (updatePrefs) {
 				pHelper.setAppVersion(currAppVersion);
