@@ -54,7 +54,8 @@ import android.view.accessibility.AccessibilityEvent;
  * <pre style="background:#fff;padding:10px;border:2px solid silver;">
  * Branch.getInstance(this.getApplicationContext())		// from an Activity
  * 
- * Branch.getInstance(getActivity().getApplicationContext())	// from a Fragment</pre>
+ * Branch.getInstance(getActivity().getApplicationContext())	// from a Fragment
+ * </pre>
  * 
  */
 public class Branch {
@@ -370,8 +371,8 @@ public class Branch {
 	 *
 	 * @return An initialised singleton {@link Branch} object
 	 *
-	 * @throws BranchException Exception</br>
-	 *          1) If your {@link Application} is not instance of {@link BranchApp}.</br>
+	 * @throws BranchException Exception<br>
+	 *          1) If your {@link Application} is not instance of {@link BranchApp}.<br>
 	 *          2) If the minimum API level is below 14.
 	 */
 	public static Branch getInstance() throws BranchException {
