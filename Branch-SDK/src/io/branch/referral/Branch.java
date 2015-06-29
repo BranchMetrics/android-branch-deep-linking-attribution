@@ -3577,7 +3577,7 @@ public class Branch {
 	 * @see BranchError
 	 */
 	public interface BranchReferralInitListener {
-		public void onInitFinished(JSONObject referringParams, BranchError error);
+		void onInitFinished(JSONObject referringParams, BranchError error);
 	}
 
 	/**
@@ -3590,7 +3590,7 @@ public class Branch {
 	 * @see BranchError
 	 */
 	public interface BranchReferralStateChangedListener {
-		public void onStateChanged(boolean changed, BranchError error);
+		void onStateChanged(boolean changed, BranchError error);
 	}
 
 	/**
@@ -3603,7 +3603,7 @@ public class Branch {
 	 * @see BranchError
 	 */
 	public interface BranchLinkCreateListener {
-		public void onLinkCreate(String url, BranchError error);
+		void onLinkCreate(String url, BranchError error);
 	}
 
 	/**
@@ -3616,7 +3616,7 @@ public class Branch {
 	 * @see BranchError	
 	 */
 	public interface BranchListResponseListener {
-		public void onReceivingResponse(JSONArray list, BranchError error);
+		void onReceivingResponse(JSONArray list, BranchError error);
 	}
 	
 	
@@ -3626,7 +3626,7 @@ public class Branch {
 	public enum CreditHistoryOrder {
 		kMostRecentFirst, kLeastRecentFirst
 	}
-	
+
 	/**
 	 * <p>{@link BranchError} class containing the message to display in logs where the Branch 
 	 * initialisation process has failed due to poor connectivity, or because the App Key in use in 
@@ -3890,6 +3890,7 @@ public class Branch {
 	        }
 	    }
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB_MR1 )
 		@Override
 		public boolean dispatchGenericMotionEvent(MotionEvent event) {
 			return callback_.dispatchGenericMotionEvent(event);
@@ -3900,6 +3901,7 @@ public class Branch {
 			return callback_.dispatchKeyEvent(event);
 		}
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
 		@Override
 		public boolean dispatchKeyShortcutEvent(KeyEvent event) {
 			return callback_.dispatchKeyShortcutEvent(event);
@@ -3943,11 +3945,13 @@ public class Branch {
 			return callback_.dispatchTrackballEvent(event);
 		}
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
 		@Override
 		public void onActionModeFinished(ActionMode mode) {
 			callback_.onActionModeFinished(mode);
 		}
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
 		@Override
 		public void onActionModeStarted(ActionMode mode) {
 			callback_.onActionModeStarted(mode);
@@ -4014,6 +4018,7 @@ public class Branch {
 			callback_.onWindowFocusChanged(hasFocus);
 		}
 
+		@TargetApi( Build.VERSION_CODES.HONEYCOMB )
 		@Override
 		public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
 			return callback_.onWindowStartingActionMode(callback);
