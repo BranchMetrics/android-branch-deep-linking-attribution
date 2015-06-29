@@ -905,7 +905,16 @@ public class Branch {
 			activity.getWindow().setCallback(new BranchWindowCallback(activity.getWindow().getCallback()));
 		}
 	}
-	
+
+	private void clearTouchDebugInternal(Activity activity) {
+		if (activity.getWindow().getCallback() instanceof BranchWindowCallback) {
+			Window.Callback originalCallback =
+					((BranchWindowCallback) activity.getWindow().getCallback()).callback_;
+			activity.getWindow().setCallback(originalCallback);
+			debugListenerInitHistory_.remove(System.identityHashCode(activity));
+		}
+	}
+
 	private OnTouchListener retrieveOnTouchListener() {
 		if (debugOnTouchListener_ == null) {
 			debugOnTouchListener_ = new OnTouchListener() {
@@ -3280,7 +3289,9 @@ public class Branch {
 		}
 
 		@Override
-		public void onActivityPaused(Activity activity) {}
+		public void onActivityPaused(Activity activity) {
+			clearTouchDebugInternal(activity);
+		}
 
 		@Override
 		public void onActivityStopped(Activity activity) {

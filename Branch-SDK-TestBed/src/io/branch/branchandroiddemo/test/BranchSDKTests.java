@@ -27,12 +27,6 @@ public class BranchSDKTests extends InstrumentationTestCase {
 	private static int referralCodeAmount;
 	private static int referralCodeCalculationType;
 	private static int referralCodeLocation;
-	
-	public static void setUpBeforeClass() throws Exception {
-	}
-
-	public static void tearDownAfterClass() throws Exception {
-	}
 
 	public void setUp() throws Exception {
 		super.setUp();
@@ -81,7 +75,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
 		});
 		signal.await(1, TimeUnit.SECONDS);
 	}
-	
+
 	public void test04GetShortURLAsync1Cached() throws InterruptedException {
 		initSession();
 		
