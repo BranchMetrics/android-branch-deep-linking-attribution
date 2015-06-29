@@ -2,27 +2,18 @@
 *.class
 Branch-SDK-TestBed/.settings/org.eclipse.jdt.core.prefs
 Branch-SDK/.settings/org.eclipse.jdt.core.prefs
-Branch-SDK/gen/
-Branch-SDK/bin/
-Branch-SDK-TestBed/gen/
-Branch-SDK-TestBed/bin/
 
 # Android Studio
 .idea
 *.iml
 local.properties
 build/
-Branch-SDK/build/
-Branch-SDK-TestBed/build/
 
 # Gradle
-build/*
 .gradle/*
 *.properties
 .metadata/*
 
-
 *.gen
-
-*.gen
-
+bin/
+gen/
