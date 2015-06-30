@@ -8,7 +8,7 @@ Table of Contents|
 ------------- | 
 [Get the Demo App](#get-the-demo-app)| 
 |[Class Reference Table](#class-reference)|
-|[Important Migrations] (#important-migration-to-v078)|  
+|[Important Migrations](#important-migration-to-v150)|  
 [Troubleshooting FAQ](#faq)|
 [Installation](#installation)|
 [Configuration (for Tracking)](#configuration-for-tracking)|
@@ -27,22 +27,23 @@ For your reference, see the methods and parameters table below.
       
 | Tasks          | Methods          | Parameters     |
 |:------------- |:---------------:| -------------:|   
-[Initialize SDK and Register Deep Link Routing Function](#initialize-sdk-and-register-deep-link-routing-function)|[Method](#methods)|[Parameter](#parameters)
-|[Close session (session tracking to support for minSdkVersion < 14)](#close-session-session-tracking-to-support-for-minSdkVersion-< 14)|[Method](#methods-1)|[Parameter](#parameters-1)|
-|[Retrieve Session (Install or Open) Parameters](#retrieve-session-install-or-open-parameters)|[Method](#methods-2)|[Parameter](#parameters-2)| 
-|[Retrieve Install (Install Only) Parameters](#retrieve-install-install-only-parameters)|[Method](#methods-3)|[Parameter](#parameters-3)|
-[Persistent Identities](#persistent-identities)|[Method](#methods-4)|[Parameter](#parameters-4)|
-[Logout](#logout)|[Method](#methods-5)|[Parameter](#parameters-5)|
-[Register Custom Events](#register-custom-events)|[Method](#methods-6)| [Parameter](#parameters-6)|
-[Generate Tracked, Deep Linking URLs (Pass Data Across Install and Open)](#generate-tracked-deep-linking-urls-pass-data-across-install-and-open)|[Method](#methods-7)|[Parameter](#parameters-7)|
-[Referral System Rewarding Functionality](#get-reward-balance)|[Method](#methods-8)|[Parameter](#parameters-8)| 
-|[Get Reward Balance](#get-reward-balance)|[Method](#methods-9)|[Parameters] (#parameters-9)| 
-[Redeem All or Some of the Reward Balance (Store State)](#redeem-all-or-some-of-the-reward-balance-store-state)|[Method](#methods-10)|[Parameter](#parameters-10)|
-[Get Credit History](#get-credit-history)|[Method](#methods-11)|[Parameters] (#parameters-11)|
-[Get Referral Code](#get-referral-code)|[Method](#methods-12)|[Parameter] (#parameters-12)|
-[Create Referral Code](#create-referral-code)|[Method](#methods-13)|[Parameter] (#parameters-13)|
-[Validate Referral Code](#validate-referral-code)|[Method](#methods-17)|[Parameter](#parameters-17)|
-[Apply Referral Code](#apply-referral-code)|[Method](#methods-18)|[Parameter] (#parameters-18)|
+[Initialize SDK and Register Deep Link Routing Function](#initialize-sdk-and-register-deep-link-routing-function)|[Method](#method)|[Parameter](#parameters)
+|[Initialization to Support Android Pre-14 (Harder)](#initialization-to-support-android-pre-14-harder)|[Method](#method-1)|[Parameter](#parameters-1)|
+|[Close session session tracking to support for minSdkVersion< 14](###close-session-session-tracking-to-support-for-minsdkversion 14)|[Method](#method-2)|[Parameter](#parameters-2)|
+|[Retrieve Session (Install or Open) Parameters](#retrieve-session-install-or-open-parameters)|[Method](#method-3)|[Parameter](#parameters-3)| 
+|[Retrieve Install (Install Only) Parameters](#retrieve-install-install-only-parameters)|[Method](#method-4)|[Parameter](#parameters-4)|
+[Persistent Identities](#persistent-identities)|[Method](#method-5)|[Parameter](#parameters-5)|
+[Logout](#logout)|[Method](#method-6)|[Parameter](#parameters-6)|
+[Register Custom Events](#register-custom-events)|[Method](#method-7)| [Parameter](#parameters-7)|
+[Generate Tracked, Deep Linking URLs (Pass Data Across Install and Open)](#generate-tracked-deep-linking-urls-pass-data-across-install-and-open)|[Method](#method-8)|[Parameter](#parameters-8)|
+[Referral System Rewarding Functionality](#get-reward-balance)|[Method](#method-9)|[Parameter](#parameters-9)| 
+|[Get Reward Balance](#get-reward-balance)|[Method](#method-10)|[Parameters] (#parameters-10)| 
+[Redeem All or Some of the Reward Balance (Store State)](#redeem-all-or-some-of-the-reward-balance-store-state)|[Method](#method-11)|[Parameter](#parameters-11)|
+[Get Credit History](#get-credit-history)|[Method](#method-12)|[Parameters] (#parameters-12)|
+[Get Referral Code](#get-referral-code)|[Method](#method-13)|[Parameter] (#parameters-13)|
+[Create Referral Code](#create-referral-code)|[Method](#method-14)|[Parameter] (#parameters-14)|
+[Validate Referral Code](#validate-referral-code)|[Method](#method-15)|[Parameter](#parameters-15)|
+[Apply Referral Code](#apply-referral-code)|[Method](#method-16)|[Parameter] (#parameters-16)|
 
 
 ## Important Migration to v1.5.0
@@ -75,30 +76,7 @@ Have questions? Need troubleshooting assistance? See our [FAQs](https://dev.bran
 
 ## Installation
 
-The current compiled SDK footprint is *40kb*. You can clone this repository to keep up with the latest version, you can install the library project, or you can download the raw files.
-
-### Install Library Project
-
-Import the SDK as a Gradle dependency (for Android Studio):
-* Right click on the main module within your project (this is called 'app' by default).
-* Select **Open Module Settings**.
-* Within the **Dependencies** tab, click the **+** button at the bottom of the window and select **Library Dependency**.
-* Type *branch*, and hit the enter key to search Maven Central for the Branch SDK Library.
-* Select the latest *io.branch.sdk.android:library* item listed and accept the changes.
-
-**Note:** See the [Android Quick Start Guide for more details](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md) and a screencasted walkthrough.
-
-### Download Files
-
-You can also install by downloading the raw files below.
-
-* download the JAR file from here:
-https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
-
-* The testbed project:
-https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-TestBed.zip
-
-Or can just clone this project!
+For installation information, you can go to the [Android SDK Installation](https://dev.branch.io/references/android_sdk/#installation) section of our new documentation portal or to the [Android Quick Start Guide](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md).
 
 ### Register Your App
 
@@ -138,7 +116,7 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 
-### Add a Branch Key to Your Project
+### Add Your Branch Key to Your Project
 
 After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (or them if you want to do it for both your live and test apps) to your project.
 
@@ -158,7 +136,7 @@ Edit your manifest file by adding the following new meta-data:
 
 Branch must be notified when the app opens and when it closes, so that we know when to query the API for a new deep link. We recently discovered an Android mechanism that was exposed in version 14, that allows us to track behind-the-scenes when the app is opened and closed. It makes the integration **a lot** easier, so we've split it out from the legacy integration.
 
-If you support below 14, you'll want to skip this section and head to [this one right below](initialization-to-support-android-pre-14-harder).
+If you support below 14, you'll want to skip this section and head to [the section right below](initialization-to-support-android-pre-14-harder).
 
 #### Initialize Branch lifecycle for Android 14+
 
@@ -178,6 +156,8 @@ If you are not creating or using an Application class throughout your project, a
 ```
 
 #### Register deep link router
+
+####Method
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
@@ -216,23 +196,31 @@ Previously, Branch did not return any information to the app if `initSession` wa
 * `+` denotes information added by Branch
 * (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
 
+####Parameters
 
-| **Parameter** | **Meaning**
-| ~channel | The channel on which the link was shared, specified at link creation time
-| ~feature | The feature, such as `invite` or `share`, specified at link creation time
-| ~tags | Any tags, specified at link creation time
-| ~campaign | The campaign the link is associated with, specified at link creation time
-| ~stage | The stage, specified at link creation time
-| ~creation_source | Where the link was created ('API', 'Dashboard', 'SDK', 'iOS SDK', 'Android SDK', or 'Web SDK')
-| +referrer | The referrer for the link click, if a link was clicked
-| +phone_number | The phone number of the user, if the user texted himself/herself the app
-| +is_first_session | Denotes whether this is the first session (install) or any other session (open)
-| +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
+**~channel:** The channel on which the link was shared, specified at link creation time.
 
+**~feature:** The feature, such as `invite` or `share`, specified at link creation time.
+
+**~tags:** Any tags, specified at link creation time.
+
+**~campaign:** The campaign the link is associated with, specified at link creation time.
+
+**~stage:** The stage, specified at link creation time.
+
+**~creation_source:** Where the link was created ('API', 'Dashboard', 'SDK', 'iOS SDK', 'Android SDK', or 'Web SDK').
+
+**+referrer:** The referrer for the link click, if a link was clicked.
+
+**+phone_number:** The phone number of the user, if the user texted himself/herself the app.
+
+**+is_first_session:** Denotes whether this is the first session (install) or any other session (open).
+
+**+clicked_branch_link:** Denotes whether or not the user clicked a Branch link that triggered this session.
 
 ### Initialization to support Android pre-14 (harder)
 
-Note: There is no need to use this section if you use _automatic session management_ as described above and only support minSdkVersion >= 14. Please skip to the [next section](#retrieve-session-install-or-open-parameters) and proceed. This section is only needed if you want to support pre-14.
+**Note:** There is no need to use this section if you use _automatic session management_ as described above and only support minSdkVersion >= 14. Please skip to the [next section](#retrieve-session-install-or-open-parameters) and proceed. This section is only needed if you want to support pre-14.
 
 If you choose this method, you must call initSession and closeSession in onStart and onStop of _every Activity_ in your app. If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time. Branch must know when the app opens or closes to properly handle the deep link parameters retrieval.
 
@@ -266,7 +254,7 @@ protected void onStart() {
 
 **NOTE** if you're calling this inside a fragment, please use getActivity() instead of passing in `this`. Also, `this.getIntent().getData()` refers to the data associated with an incoming intent.
 
-Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that'd done, go to said activity and do something like the following:
+Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that's done, go to said activity and do something like the following:
 
 ```java
 @Override
@@ -481,17 +469,7 @@ You have the ability to control the direct deep linking of each link by insertin
 
 ## Referral System Rewarding Functionality
 
-In a standard referral system, you have two parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are some example scenarios:
-
-* Reward the original user for taking action (eg. inviting, purchasing, etc.).
-
-* Reward the invitee for installing the app from the original user's referral link.
-
-* Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something).
-
-These reward definitions are created on the dashboard, under the 'Reward Rules' section in the 'Referrals' tab on the dashboard.
-
-***Warning:*** For a referral program, you should not use unique awards for custom events and redeem pre-identify call. This can allow users to cheat the system.
+Check out [Referral links (with incentives)](https://dev.branch.io/recipes/referral_links_with_incentives/android/) for information about our referral system rewarding functionality. 
 
 ### Get Reward Balance
 
