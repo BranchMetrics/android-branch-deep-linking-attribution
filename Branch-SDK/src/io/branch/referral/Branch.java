@@ -313,7 +313,6 @@ public class Branch {
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
 	private Handler debugHandler_;
-	private Runnable longPressed_;
 	private boolean debugStarted_;
 
 	private Map<BranchLinkData, String> linkCache_;
@@ -3864,6 +3863,7 @@ public class Branch {
 	}
 	
 	public class BranchWindowCallback implements Window.Callback {
+		private Runnable longPressed_;
 		private Window.Callback callback_;
 		
 		public BranchWindowCallback(Window.Callback callback) {
