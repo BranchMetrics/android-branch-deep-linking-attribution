@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -277,14 +278,7 @@ public class Branch {
 	 * the class during application runtime.</p>
 	 */
 	private static Branch branchReferral_;
-	
-	/**
-	 * <p>A {@link Boolean} value used internally by the class when determining whether a singleton 
-	 * instance has already been instantiated and a session initialised with the Branch servers.</p>
-	 */
-	private boolean isInit_;
 	private BranchRemoteInterface kRemoteInterface_;
-	
 	private PrefHelper prefHelper_;
 	private SystemObserver systemObserver_;
 	private Context context_;
@@ -301,12 +295,7 @@ public class Branch {
 
 	private int networkCount_;
 
-	private boolean initNotStarted_;
-	private boolean initFinished_;
-	private boolean initFailed_;
-	
 	private boolean hasNetwork_;
-	private boolean lastRequestWasInit_;
 	private Handler debugHandler_;
 	private SparseArray<String> debugListenerInitHistory_;
 	private OnTouchListener debugOnTouchListener_;
@@ -324,6 +313,11 @@ public class Branch {
 	/* Set to true when {@link Activity} life cycle callbacks are registered. */
 	private static boolean isActivityLifeCycleCallbackRegistered_ = false;
 
+	/* Enumeration for defining session initialisation state. */
+	private enum SESSION_STATE {INITIALISED, INITIALISING, UNINITIALISED}
+
+	/* Holds the current Session state. Default is set to UNINITIALISED. */
+	private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton 
@@ -342,12 +336,7 @@ public class Branch {
 		closeTimer = new Timer();
 		rotateCloseTimer = new Timer();
 		lock = new Object();
-		initFinished_ = false;
-		initFailed_ = false;
-		lastRequestWasInit_ = true;
 		keepAlive_ = false;
-		isInit_ = false;
-		initNotStarted_ = true;
 		networkCount_ = 0;
 		hasNetwork_ = true;
 		debugListenerInitHistory_ = new SparseArray<String>();
@@ -381,8 +370,6 @@ public class Branch {
 		}
 		return branchReferral_;
 	}
-
-
 
 	/**
 	 * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton 
@@ -488,11 +475,11 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has 
+	 * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has
 	 * been initialised, to false - forcing re-initialisation.</p>
 	 */
 	public void resetUserSession() {
-		isInit_ = false;
+		initState_ = SESSION_STATE.UNINITIALISED;
 	}
 
 	/**
@@ -815,34 +802,23 @@ public class Branch {
 	}
 
 	private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
-		lastRequestWasInit_ = true;
-		initNotStarted_ = false;
-		initFailed_ = false;
-		if (!isInit_) {
-			isInit_ = true;
-			initializeSession(callback);
-		} else {
-			boolean installOrOpenInQueue = requestQueue_.containsInstallOrOpen();
-			if (hasUser() && hasSession() && !installOrOpenInQueue) {
-				if (callback != null)
-					callback.onInitFinished(new JSONObject(), null);
-				clearCloseTimer();
-				keepAlive();
-			} else {
-				if (!installOrOpenInQueue) {
-					initializeSession(callback);
-				} else {
-					ServerRequest request;
-					if (hasUser()) {
-						request = new RegisterOpenRequest(context_, callback, kRemoteInterface_.getSystemObserver());
-					} else {
-						request = new RegisterInstallRequest(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE);
-					}
-					if(!request.constructError_ && !request.handleErrors(context_)) {
-						requestQueue_.moveInstallOrOpenToFront(request, networkCount_, callback);
-						processNextQueueItem();
-					}
-				}
+		//If already initialised
+		if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
+			if (callback != null)
+				callback.onInitFinished(new JSONObject(), null);
+			clearCloseTimer();
+			keepAlive();
+		}
+		//If uninitialised or initialising
+		else {
+			//If initialising ,then set new callbacks.
+			if (initState_ == SESSION_STATE.INITIALISING) {
+				requestQueue_.setInstallOrOpenCallback(callback);
+			}
+			//if Uninitialised move request to the front if there is an existing request or create a new request.
+			else {
+				initState_ = SESSION_STATE.INITIALISING;
+				initializeSession(callback);
 			}
 		}
 
@@ -997,23 +973,18 @@ public class Branch {
 	 * closed application event to the Branch API.</p>
 	 */
 	private void executeClose() {
-		isInit_ = false;
-		lastRequestWasInit_ = false;
-		initNotStarted_ = true;
-		if (!hasNetwork_) {
-			// if there's no network connectivity, purge the old install/open
-			ServerRequest req = requestQueue_.peek();
-			if (req != null && (req instanceof RegisterInstallRequest) || (req instanceof RegisterOpenRequest)) {
-				requestQueue_.dequeue();
-			}
-		} else {
-			if (!requestQueue_.containsClose()) {
-				ServerRequest req = new RegisterCloseRequest(context_);
-				requestQueue_.enqueue(req);
-				if (initFinished_ || !hasNetwork_) {
-					processNextQueueItem();
-				} else if (initFailed_ || initNotStarted_) {
-					handleFailure(req, BranchError.ERR_NO_SESSION);
+		if (initState_ != SESSION_STATE.UNINITIALISED) {
+			initState_ = SESSION_STATE.UNINITIALISED;
+			if (!hasNetwork_) {
+				// if there's no network connectivity, purge the old install/open
+				ServerRequest req = requestQueue_.peek();
+				if (req != null && (req instanceof RegisterInstallRequest) || (req instanceof RegisterOpenRequest)) {
+					requestQueue_.dequeue();
+				}
+			} else {
+				if (!requestQueue_.containsClose()) {
+					ServerRequest req = new RegisterCloseRequest(context_);
+					handleNewRequest(req);
 				}
 			}
 		}
@@ -1050,6 +1021,7 @@ public class Branch {
 	public void setIdentity(String userId) {
 		setIdentity(userId, null);
 	}
+
 	/**
 	 * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
 	 * {@link String} value, with a callback specified to perform a defined action upon successful
@@ -1062,17 +1034,10 @@ public class Branch {
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
 		ServerRequest req = new IdentifyUserRequest(context_, callback, userId);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			requestQueue_.enqueue(req);
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
-		}
-		else{
-			if(((IdentifyUserRequest)req).isExistingID()){
-				((IdentifyUserRequest)req).handleUserExist(branchReferral_);
+			handleNewRequest(req);
+		} else {
+			if (((IdentifyUserRequest) req).isExistingID()) {
+				((IdentifyUserRequest) req).handleUserExist(branchReferral_);
 			}
 		}
 	}
@@ -1099,13 +1064,7 @@ public class Branch {
 	public void logout() {
 		ServerRequest req = new LogoutRequest(context_);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			requestQueue_.enqueue(req);
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -1128,15 +1087,7 @@ public class Branch {
 	public void loadActionCounts(BranchReferralStateChangedListener callback) {
 		ServerRequest req = new GetReferralCountRequest(context_, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -1158,15 +1109,7 @@ public class Branch {
 	public void loadRewards(BranchReferralStateChangedListener callback) {
 		ServerRequest req = new GetRewardsRequest(context_, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -1273,13 +1216,7 @@ public class Branch {
 	public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
 		RedeemRewardsRequest req = new RedeemRewardsRequest(context_, bucket, count, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			requestQueue_.enqueue(req);
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -1362,15 +1299,7 @@ public class Branch {
 	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
 		ServerRequest req = new GetRewardHistoryRequest(context_, bucket, afterId, length, order, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -1389,13 +1318,7 @@ public class Branch {
 
 		ServerRequest req = new ActionCompletedRequest(context_, action, metadata);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			requestQueue_.enqueue(req);
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -2157,17 +2080,8 @@ public class Branch {
 	public void getReferralCode(BranchReferralInitListener callback) {
 		ServerRequest req = new GetReferralCodeRequest(context_, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
-
 	}
 
 	/**
@@ -2296,15 +2210,7 @@ public class Branch {
 		ServerRequest req = new GetReferralCodeRequest(context_, prefix, amount, date, bucket,
 				calculationType, location, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -2319,15 +2225,7 @@ public class Branch {
 	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
 		ServerRequest req = new ValidateReferralCodeRequest(context_, callback, code);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -2342,15 +2240,7 @@ public class Branch {
 	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
 		ServerRequest req = new ApplyReferralCodeRequest(context_, callback, code);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
-			if (!initFailed_) {
-				requestQueue_.enqueue(req);
-			}
-			if (initFinished_ || !hasNetwork_) {
-				lastRequestWasInit_ = false;
-				processNextQueueItem();
-			} else if (initFailed_ || initNotStarted_) {
-				handleFailure(req, BranchError.ERR_NO_SESSION);
-			}
+			handleNewRequest(req);
 		}
 	}
 
@@ -2398,9 +2288,9 @@ public class Branch {
 		return null;
 
 	}
-	
+
 	private String generateShortLinkSync(ServerRequest req) {
-		if (!initFailed_ && initFinished_ && hasNetwork_) {
+		if (initState_ == SESSION_STATE.INITIALISED) {
 			ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());
 			String url = prefHelper_.getUserURL();
 			if (response.getStatusCode() == 200) {
@@ -2421,15 +2311,7 @@ public class Branch {
 	}
 
 	private void generateShortLinkAsync(final ServerRequest req) {
-		if (!initFailed_) {
-			requestQueue_.enqueue(req);
-		}
-		if (initFinished_ || !hasNetwork_) {
-			lastRequestWasInit_ = false;
-			processNextQueueItem();
-		} else if (initFailed_ || initNotStarted_) {
-			handleFailure(req, BranchError.ERR_NO_SESSION);
-		}
+		handleNewRequest(req);
 	}
 	
 	private JSONObject filterOutBadCharacters(JSONObject inputObj) {
@@ -2496,13 +2378,7 @@ public class Branch {
 			public void run() {
 				ServerRequest req = new SendAppListRequest(context_);
 				if (!req.constructError_ && !req.handleErrors(context_)) {
-					if (!initFailed_) {
-						requestQueue_.enqueue(req);
-					}
-					if (initFinished_ || !hasNetwork_) {
-						lastRequestWasInit_ = false;
-						processNextQueueItem();
-					}
+					handleNewRequest(req);
 				}
 			}
 		};
@@ -2528,13 +2404,24 @@ public class Branch {
 				networkCount_ = 1;
 				ServerRequest req = requestQueue_.peek();
 
+				Log.d("BranchTestRquest", "--Processing request " + req.getClass().getSimpleName());
 				serverSema_.release();
+				//All request except Install request need a valid IdentityID
 				if (!(req instanceof RegisterInstallRequest) && !hasUser()) {
+					Log.d("BranchTestRquest", "---- No user Not Executing request " + req.getClass().getSimpleName());
 					Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
 					networkCount_ = 0;
 					handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
 					return;
+				}
+				//All request except open and install need a session to execute
+				else if (!req.isSessionInitRequest() && (!hasSession() || !hasDeviceFingerPrint())) {
+					Log.d("BranchTestRquest", "---- No Session Not Executing request " + req.getClass().getSimpleName());
+					networkCount_ = 0;
+					handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+					return;
 				} else {
+					Log.d("BranchTestRquest", "----Executing request " + req.getClass().getSimpleName());
 					BranchPostTask postTask = new BranchPostTask(req);
 					postTask.execute();
 				}
@@ -2544,7 +2431,6 @@ public class Branch {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	private void handleFailure(int index, int statusCode) {
@@ -2622,6 +2508,10 @@ public class Branch {
 		return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
 	}
 
+	private boolean hasDeviceFingerPrint() {
+		return !prefHelper_.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE);
+	}
+
 	private boolean hasUser() {
 		return !prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE);
 	}
@@ -2635,31 +2525,60 @@ public class Branch {
 	}
 
 	private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
+		// If there isn't already an Open / Install request, add one to the queue
 		if (!requestQueue_.containsInstallOrOpen()) {
 			insertRequestAtFront(req);
-
-		} else {
+		}
+		// If there is already one in the queue, make sure it's in the front.
+		// Make sure a callback is associated with this request. This callback can
+		// be cleared if the app is terminated while an Open/Install is pending.
+		else {
 			requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
 		}
 
 		processNextQueueItem();
 	}
 
-
 	private void initializeSession(BranchReferralInitListener callback) {
-        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
-            && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
-            Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
-            return;
-        } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
-            Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
-        }
+		if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
+				&& (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
+			initState_ = SESSION_STATE.UNINITIALISED;
+			//Report Key error on callback
+			if (callback != null) {
+				callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", RemoteInterface.NO_BRANCH_KEY_STATUS));
+			}
+			Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+			return;
+		} else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
+			Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+		}
 
 		if (hasUser()) {
 			registerInstallOrOpen(new RegisterOpenRequest(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
 		} else {
-			registerInstallOrOpen(new RegisterInstallRequest(context_,callback ,kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE ),callback);
+			registerInstallOrOpen(new RegisterInstallRequest(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE), callback);
 		}
+	}
+
+	/**
+	 * Handles execution of a new request other than open or install.
+	 * Checks for the session initialistaion and adds a install/Open request infornt of this request
+	 * if the request need session to execute.
+	 *
+	 * @param req The {@link ServerRequest} to execute
+	 */
+	private void handleNewRequest(ServerRequest req) {
+		//If not initialised put an open or install request in front of this request(only if this needs session)
+		if (initState_ != SESSION_STATE.INITIALISED && req.isSessionInitRequest()) {
+			if (!(req instanceof LogoutRequest)) {
+				initializeSession(null);
+			} else {
+				Log.i(TAG, "Branch is not initialized, cannot logout");
+				return;
+			}
+		}
+		requestQueue_.enqueue(req);
+		processNextQueueItem();
 	}
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -2713,7 +2632,6 @@ public class Branch {
 		public void onActivityDestroyed(Activity activity) {}
 
 	}
-
 
 	/**
 	 * <p>An Interface class that is implemented by all classes that make use of 
@@ -2780,7 +2698,7 @@ public class Branch {
 	 * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
 	 * published in the main thread.
 	 */
-	public class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
+	private class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
 
 		String apiBaseUrl_ = "";
 		int timeOut_ = 0;
@@ -2811,76 +2729,71 @@ public class Branch {
 					hasNetwork_ = true;
 					boolean hasKeyError = false;
 
+					//If the request is not succeeded
 					if (status != 200) {
-						if (status >= 400 && status < 500) {
-							if (status == 409) {
-								if (thisReq_ instanceof CreateUrlRequest) {
-									((CreateUrlRequest) thisReq_).handleDuplicateURLError();
-								} else {
-									Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
-									handleFailure(0, status);
-								}
-							} else {
-								if (serverResponse.getObject().has("error") && serverResponse.getObject().getJSONObject("error").has("message")) {
-									Log.i("BranchSDK", "Branch API Error: " + serverResponse.getObject().getJSONObject("err or").getString("message"));
-								}
-								if (lastRequestWasInit_ && !initFailed_) {
-									initFailed_ = true;
-									for (int i = 0; i < requestQueue_.getSize() - 1; i++) {
-										handleFailure(i, status);
-									}
-								}
-								handleFailure(requestQueue_.getSize() - 1, status);
-							}
-						} else {
-
-							if (status == RemoteInterface.NO_CONNECTIVITY_STATUS) {
-								hasNetwork_ = false;
-								Log.i("BranchSDK", "Branch API Error: poor network connectivity. Please try again later.");
-							} else if (status == RemoteInterface.NO_BRANCH_KEY_STATUS) {
-								hasKeyError = true;
-								Log.i("BranchSDK", "Branch API Error: Please enter your branch_key in your project's manifest file first!");
-							} else {
-								hasNetwork_ = false;
-							}
-							handleFailure(lastRequestWasInit_ ? 0 : requestQueue_.getSize() - 1, status);
+						//If failed request is an initialisation request then mark session not initialised
+						if (thisReq_.isSessionInitRequest()) {
+							initState_ = SESSION_STATE.UNINITIALISED;
 						}
-						/*	At this point Always remove the request from the queue.
-							Exceptions are ActionCompletedRequest} and IdentifyUserRequest.On Branch key error request should be removed to prevent any SOF error */
-						if (thisReq_.shouldRetryOnFail() && !hasKeyError) {
-							thisReq_.clearCallbacks();/* Failure already notified. So no need for callback for further actions */
-						} else {
-							requestQueue_.dequeue();
+						//On a bad request continue processing
+						if (status == 409) {
+							if (thisReq_ instanceof CreateUrlRequest) {
+								((CreateUrlRequest) thisReq_).handleDuplicateURLError();
+							} else {
+								Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+								handleFailure(0, status);
+							}
 						}
+						//On Network error or Branch is down fail all the pending requests in the queue except
+						//for request which need to be replayed on failure.
+						else {
+							hasNetwork_ = false;
+							//Collect all request from the queue which need to be failed.
+							ArrayList<ServerRequest> requestToFail = new ArrayList<ServerRequest>();
+							for (int i = 0; i < requestQueue_.getSize(); i++) {
+								ServerRequest req = requestQueue_.peekAt(i);
+								requestToFail.add(requestQueue_.peekAt(i));
+							}
+							//Remove the requests from the request queue first
+							for (ServerRequest req : requestToFail) {
+								if (!req.shouldRetryOnFail()) {
+									requestQueue_.remove(req);
+								}
+							}
+							// Then, set the network count to zero, indicating that requests can be started again.
+							networkCount_ = 0;
 
-					} else {//Request is succeeded,Handle success here
-
+							//Finally call the request callback with the error.
+							for (ServerRequest req : requestToFail) {
+								req.handleFailure(status);
+								//If request need to be replayed, no need for the callbacks
+								if (req.shouldRetryOnFail())
+									req.clearCallbacks();
+							}
+						}
+					}
+					//If the request succeeded
+					else {
+						hasNetwork_ = true;
 						if (thisReq_ instanceof CreateUrlRequest) {
 							final String url = serverResponse.getObject().getString("url");
 							// cache the link
 							linkCache_.put(serverResponse.getLinkData(), url);
 						}
-
 						//Publish success to listeners
 						thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
-						if (thisReq_ instanceof RegisterInstallRequest) {
+						//If this request changes a session update the session-id to queued requests.
+						if (thisReq_.isSessionInitRequest()) {
 							updateAllRequestsInQueue();
-							initFinished_ = true;
-						}
-						if (thisReq_ instanceof RegisterOpenRequest) {
-							initFinished_ = true;
+							initState_ = SESSION_STATE.INITIALISED;
 						}
 						requestQueue_.dequeue();
 					}
-
 					networkCount_ = 0;
-
-					if (hasNetwork_ && !initFailed_) {
-						lastRequestWasInit_ = false;
+					if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
 						processNextQueueItem();
 					}
-
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}

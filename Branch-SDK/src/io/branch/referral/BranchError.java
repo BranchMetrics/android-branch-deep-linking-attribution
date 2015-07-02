@@ -57,8 +57,12 @@ public class BranchError {
      */
     private String getLocalisedErrorMessage(int statusCode) {
         String errMsg = "";
-        if (statusCode == ERR_BRANCH_INIT_FAILED) {
-            errMsg = " Did you forget to call init? Make sure you init the session before making Branch calls";
+        if (statusCode == RemoteInterface.NO_CONNECTIVITY_STATUS) {
+            errMsg = " Branch API Error: poor network connectivity. Please try again later.";
+        } else if (statusCode == RemoteInterface.NO_BRANCH_KEY_STATUS) {
+            errMsg = " Branch API Error: Please enter your branch_key in your project's manifest file first.";
+        } else if (statusCode == ERR_BRANCH_INIT_FAILED) {
+            errMsg = " Did you forget to call init? Make sure you init the session before making Branch calls.";
         } else if (statusCode == ERR_NO_SESSION) {
             errMsg = " Unable to initialize Branch. Check network connectivity or that your branch key is valid.";
         } else if (statusCode == ERR_NO_INTERNET_PERMISSION) {

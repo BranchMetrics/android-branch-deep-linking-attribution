@@ -148,4 +148,9 @@ public class RegisterOpenRequest extends ServerRequest {
     public void clearCallbacks() {
         callback_ = null;
     }
+
+    @Override
+    public boolean isSessionInitRequest() {
+        return true; //Since open request causes a new session
+    }
 }

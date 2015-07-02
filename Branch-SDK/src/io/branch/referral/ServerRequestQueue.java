@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -130,6 +131,7 @@ public class ServerRequestQueue {
 	 * @param request		The {@link ServerRequest} object to add to the queue.
 	 */
 	public void enqueue(ServerRequest request) {
+		Log.d("BranchTestRquest" ,"enqueing request "+ request.getClass().getSimpleName());
 		if (request != null) {
 			queue.add(request);
 			if (getSize() >= MAX_ITEMS) {
@@ -149,6 +151,7 @@ public class ServerRequestQueue {
 		ServerRequest req = null;
 		try {
 			req = queue.remove(0);
+			Log.d("BranchTestRquest", "--Dequeueing Request "+ req.getClass().getSimpleName()+" -- queue size is ---- "+queue.size());
 			persist();
 		} catch (IndexOutOfBoundsException ignored) {
 		} catch (NoSuchElementException ignored) {
@@ -210,15 +213,14 @@ public class ServerRequestQueue {
 		} catch (IndexOutOfBoundsException ignored) {
 		}
 	}
-	
+
 	/**
-	 * <p>As the method name implies, removes the {@link ServerRequest} object, at the position 
+	 * <p>As the method name implies, removes the {@link ServerRequest} object, at the position
 	 * indicated by the {@link Integer} parameter supplied.</p>
-	 * 
-	 * @param index		An {@link Integer} value specifying the index at which to insert the 
-	 * 					supplied {@link ServerRequest} object. Fails silently if the index 
-	 * 					supplied is invalid.
-	 * 
+	 *
+	 * @param index		An {@link Integer} value specifying the index at which to remove the
+	 *              	{@link ServerRequest} object. Fails silently if the index
+	 *              	supplied is invalid.
 	 * @return			The {@link ServerRequest} object being removed.
 	 */
 	public ServerRequest removeAt(int index) {
@@ -231,6 +233,24 @@ public class ServerRequestQueue {
 		return req;
 	}
 
+	/**
+	 * <p>As the method name implies, removes {@link ServerRequest} supplied in the parameter if it
+	 * is present in the queue.</p>
+	 *
+	 * @param request The {@link ServerRequest} object to be removed from the queue.
+	 * @return A {@link Boolean} whose value is true if the object is removed.
+	 */
+	public boolean remove(ServerRequest request) {
+		boolean isRemoved = false;
+		try {
+
+			isRemoved = queue.remove(request);
+			Log.d("BranchTestRquest", "--Removing form queue" + request.getClass().getSimpleName() + " -- queue size is ---- " + queue.size());
+			persist();
+		} catch (UnsupportedOperationException ignored) {
+		}
+		return isRemoved;
+	}
 	/**
 	 * <p>Determines whether the queue contains a session/app close request.</p>
 	 *
@@ -261,8 +281,7 @@ public class ServerRequestQueue {
 		synchronized (queue) {
 			for (ServerRequest req : queue) {
 				if (req != null &&
-						(req.getRequestPath().equals(Defines.RequestPath.RegisterInstall.getPath())
-								|| req.getRequestPath().equals(Defines.RequestPath.RegisterOpen.getPath()))) {
+						((req instanceof RegisterInstallRequest) || req instanceof RegisterOpenRequest)) {
 					return true;
 				}
 			}
@@ -271,12 +290,13 @@ public class ServerRequestQueue {
 	}
 
 	/**
-	 * <p>Moves any {@link ServerRequest} that is tagged with {@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL}
-	 * or {@link BranchRemoteInterface#REQ_TAG_REGISTER_INSTALL} to the front of the queue.</p>
+	 * <p>Moves any {@link ServerRequest} of type {@link RegisterInstallRequest}
+	 * or {@link RegisterOpenRequest} to the front of the queue.</p>
 	 *
-	 * @param tag          A {@link String} value.
+	 * @param request      A {@link ServerRequest} of type open or install which need to be moved to the front of the queue.
 	 * @param networkCount An {@link Integer} value that indicates whether or not to insert the
 	 *                     request at the front of the queue or not.
+	 * @param networkCount A {Branch.BranchReferralInitListener} instance for open or install callback.
 	 */
 	public void moveInstallOrOpenToFront(ServerRequest request, int networkCount, Branch.BranchReferralInitListener callback) {
 
@@ -284,13 +304,14 @@ public class ServerRequestQueue {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
-				if (req != null
-						&& (req.getRequestPath().equals(Defines.RequestPath.RegisterInstall.getPath())
-						|| req.getRequestPath().equals(Defines.RequestPath.RegisterOpen.getPath()))) {
-					if (req instanceof RegisterInstallRequest) {
-						((RegisterInstallRequest) req).setInitFinishedCallback(callback);
-					} else {
-						((RegisterOpenRequest) req).setInitFinishedCallback(callback);
+				if (req != null && (req instanceof RegisterInstallRequest || req instanceof RegisterOpenRequest)) {
+					//If a new  callback provided update the callbacks
+					if (callback != null) {
+						if (req instanceof RegisterInstallRequest) {
+							((RegisterInstallRequest) req).setInitFinishedCallback(callback);
+						} else {
+							((RegisterOpenRequest) req).setInitFinishedCallback(callback);
+						}
 					}
 					request = req;
 
@@ -300,11 +321,32 @@ public class ServerRequestQueue {
 			}
 		}
 
-		//ServerRequest req = new ServerRequest(tag);
 		if (networkCount == 0) {
 			insert(request, 0);
 		} else {
 			insert(request, 1);
+		}
+	}
+
+	/**
+	 * Sets the given callback to the existing open or install request in the queue
+	 *
+	 * @param callback	A{@link Branch.BranchReferralInitListener} callback instance.
+	 */
+	public void setInstallOrOpenCallback(Branch.BranchReferralInitListener callback) {
+		synchronized (queue) {
+			Iterator<ServerRequest> iter = queue.iterator();
+			while (iter.hasNext()) {
+				ServerRequest req = iter.next();
+				if (req != null) {
+					if (req instanceof RegisterInstallRequest) {
+						((RegisterInstallRequest) req).setInitFinishedCallback(callback);
+					} else if (req instanceof RegisterOpenRequest) {
+						((RegisterOpenRequest) req).setInitFinishedCallback(callback);
+					}
+				}
+
+			}
 		}
 	}
 }

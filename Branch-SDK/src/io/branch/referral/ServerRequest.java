@@ -117,6 +117,16 @@ public abstract class ServerRequest {
 	}
 
 	/**
+	 * Returns true if this request is causing a session initialisation. Only open or Install request causes an init session.
+	 * Request which initialise new session should override and handle accordingly.
+	 *
+	 * @return A {@link Boolean} whose value is true if this request causes a session initialisation.
+	 */
+	public boolean isSessionInitRequest() {
+		return false;
+	}
+
+	/**
 	 * <p>Provides the path to server for this request.
 	 * see {@link Defines.RequestPath} <p>
 	 *
