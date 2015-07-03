@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.5.11: Fix for a handling pending open request in queue while there is no valid identity_id.
+
 - v1.5.10: Fix for a possible memory leak with touch-debugging feature.
 
 - v1.5.9: Enhanced debugger triggering with the new session management. Also, fixed a bug in the new session management when the app already has a class extending from BranchApp.
