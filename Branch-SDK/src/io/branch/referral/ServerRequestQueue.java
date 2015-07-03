@@ -286,8 +286,6 @@ public class ServerRequestQueue {
                         || req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_OPEN))) {
                     if (req.getTag().equals(BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL)) {
 						tag = BranchRemoteInterface.REQ_TAG_REGISTER_INSTALL;
-					} else {
-						tag = BranchRemoteInterface.REQ_TAG_REGISTER_OPEN;
 					}
 					iter.remove();
 					break;
