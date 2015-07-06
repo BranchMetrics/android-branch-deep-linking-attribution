@@ -35,21 +35,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import io.branch.referral.serverrequest.ActionCompletedRequest;
-import io.branch.referral.serverrequest.ApplyReferralCodeRequest;
-import io.branch.referral.serverrequest.CreateUrlRequest;
-import io.branch.referral.serverrequest.GetReferralCodeRequest;
-import io.branch.referral.serverrequest.GetReferralCountRequest;
-import io.branch.referral.serverrequest.GetRewardHistoryRequest;
-import io.branch.referral.serverrequest.GetRewardsRequest;
-import io.branch.referral.serverrequest.IdentifyUserRequest;
-import io.branch.referral.serverrequest.LogoutRequest;
-import io.branch.referral.serverrequest.RedeemRewardsRequest;
-import io.branch.referral.serverrequest.RegisterCloseRequest;
-import io.branch.referral.serverrequest.RegisterInstallRequest;
-import io.branch.referral.serverrequest.RegisterOpenRequest;
-import io.branch.referral.serverrequest.SendAppListRequest;
-import io.branch.referral.serverrequest.ValidateReferralCodeRequest;
 
 /**
  * <p>
@@ -974,28 +959,28 @@ public class Branch {
 	 */
 	private void executeClose() {
 		if (initState_ != SESSION_STATE.UNINITIALISED) {
-			initState_ = SESSION_STATE.UNINITIALISED;
 			if (!hasNetwork_) {
 				// if there's no network connectivity, purge the old install/open
 				ServerRequest req = requestQueue_.peek();
-				if (req != null && (req instanceof RegisterInstallRequest) || (req instanceof RegisterOpenRequest)) {
+				if (req != null && (req instanceof ServerRequestRegisterInstall) || (req instanceof ServerRequestRegisterOpen)) {
 					requestQueue_.dequeue();
 				}
 			} else {
 				if (!requestQueue_.containsClose()) {
-					ServerRequest req = new RegisterCloseRequest(context_);
+					ServerRequest req = new ServerRequestRegisterClose(context_);
 					handleNewRequest(req);
 				}
 			}
+			initState_ = SESSION_STATE.UNINITIALISED;
 		}
 	}
 	
 	private boolean readAndStripParam(Uri data, Activity activity) {
 		if (data != null && data.isHierarchical()) {
-			if (data.getQueryParameter("link_click_id") != null) {
-				prefHelper_.setLinkClickIdentifier(data.getQueryParameter("link_click_id"));
+			if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
+				prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
 				
-				String paramString = "link_click_id=" + data.getQueryParameter("link_click_id");
+				String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
 				String uriString = activity.getIntent().getDataString();
 				if (data.getQuery().length() == paramString.length()) {
 					paramString = "\\?" + paramString;
@@ -1032,12 +1017,12 @@ public class Branch {
 	 *                 the data associated with the user id being assigned, if available.
 	 */
 	public void setIdentity(String userId, BranchReferralInitListener callback) {
-		ServerRequest req = new IdentifyUserRequest(context_, callback, userId);
+		ServerRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		} else {
-			if (((IdentifyUserRequest) req).isExistingID()) {
-				((IdentifyUserRequest) req).handleUserExist(branchReferral_);
+			if (((ServerRequestIdentifyUserRequest) req).isExistingID()) {
+				((ServerRequestIdentifyUserRequest) req).handleUserExist(branchReferral_);
 			}
 		}
 	}
@@ -1062,7 +1047,7 @@ public class Branch {
 	 * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
 	 */
 	public void logout() {
-		ServerRequest req = new LogoutRequest(context_);
+		ServerRequest req = new ServerRequestLogout(context_);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -1085,7 +1070,7 @@ public class Branch {
 	 *                 trigger actions defined therein upon a referral state change.
 	 */
 	public void loadActionCounts(BranchReferralStateChangedListener callback) {
-		ServerRequest req = new GetReferralCountRequest(context_, callback);
+		ServerRequest req = new ServerRequestGetReferralCount(context_, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -1107,7 +1092,7 @@ public class Branch {
 	 *                 trigger actions defined therein upon a referral state change.
 	 */
 	public void loadRewards(BranchReferralStateChangedListener callback) {
-		ServerRequest req = new GetRewardsRequest(context_, callback);
+		ServerRequest req = new ServerRequestGetRewards(context_, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -1168,7 +1153,7 @@ public class Branch {
 	 *                 the bucket.
 	 */
 	public void redeemRewards(int count) {
-		redeemRewards("default", count, null);
+		redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, null);
 	}
 
 	/**
@@ -1183,7 +1168,7 @@ public class Branch {
 	 *                 trigger actions defined therein upon a executing redeem rewards.
 	 */
 	public void redeemRewards(int count, BranchReferralStateChangedListener callback) {
-		redeemRewards("default", count, callback);
+		redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, callback);
 	}
 
 	/**
@@ -1214,7 +1199,7 @@ public class Branch {
 	 *                 trigger actions defined therein upon a executing redeem rewards.
 	 */
 	public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
-		RedeemRewardsRequest req = new RedeemRewardsRequest(context_, bucket, count, callback);
+		ServerRequestRedeemRewards req = new ServerRequestRedeemRewards(context_, bucket, count, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -1297,7 +1282,7 @@ public class Branch {
 	 *                 actions defined therein upon receipt of a response to a create link request.
 	 */
 	public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
-		ServerRequest req = new GetRewardHistoryRequest(context_, bucket, afterId, length, order, callback);
+		ServerRequest req = new ServerRequestGetRewardHistory(context_, bucket, afterId, length, order, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -1316,7 +1301,7 @@ public class Branch {
 		if (metadata != null)
 			metadata = filterOutBadCharacters(metadata);
 
-		ServerRequest req = new ActionCompletedRequest(context_, action, metadata);
+		ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -2078,7 +2063,7 @@ public class Branch {
 	 *                 actions defined therein upon receipt of a response to a referral code request.
 	 */
 	public void getReferralCode(BranchReferralInitListener callback) {
-		ServerRequest req = new GetReferralCodeRequest(context_, callback);
+		ServerRequest req = new ServerRequestGetReferralCode(context_, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -2207,7 +2192,7 @@ public class Branch {
 		String date = null;
 		if (expiration != null)
 			date = convertDate(expiration);
-		ServerRequest req = new GetReferralCodeRequest(context_, prefix, amount, date, bucket,
+		ServerRequest req = new ServerRequestGetReferralCode(context_, prefix, amount, date, bucket,
 				calculationType, location, callback);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
@@ -2223,7 +2208,7 @@ public class Branch {
 	 *                 of the referral submission request.
 	 */
 	public void validateReferralCode(final String code, BranchReferralInitListener callback) {
-		ServerRequest req = new ValidateReferralCodeRequest(context_, callback, code);
+		ServerRequest req = new ServerRequestValidateReferralCode(context_, callback, code);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -2238,7 +2223,7 @@ public class Branch {
 	 * @see BranchReferralInitListener
 	 */
 	public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
-		ServerRequest req = new ApplyReferralCodeRequest(context_, callback, code);
+		ServerRequest req = new ServerRequestApplyReferralCode(context_, callback, code);
 		if (!req.constructError_ && !req.handleErrors(context_)) {
 			handleNewRequest(req);
 		}
@@ -2265,7 +2250,7 @@ public class Branch {
 	}
 
 	private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
-		CreateUrlRequest req = new CreateUrlRequest(context_, alias, type, duration, tags,
+		ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias, type, duration, tags,
 				channel, feature, stage,
 				params, callback, async);
 
@@ -2376,7 +2361,7 @@ public class Branch {
 		Runnable periodicTask = new Runnable() {
 			@Override
 			public void run() {
-				ServerRequest req = new SendAppListRequest(context_);
+				ServerRequest req = new ServerRequestSendAppList(context_);
 				if (!req.constructError_ && !req.handleErrors(context_)) {
 					handleNewRequest(req);
 				}
@@ -2404,11 +2389,9 @@ public class Branch {
 				networkCount_ = 1;
 				ServerRequest req = requestQueue_.peek();
 
-				Log.d("BranchTestRquest", "--Processing request " + req.getClass().getSimpleName());
 				serverSema_.release();
 				//All request except Install request need a valid IdentityID
-				if (!(req instanceof RegisterInstallRequest) && !hasUser()) {
-					Log.d("BranchTestRquest", "---- No user Not Executing request " + req.getClass().getSimpleName());
+				if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
 					Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
 					networkCount_ = 0;
 					handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
@@ -2416,12 +2399,10 @@ public class Branch {
 				}
 				//All request except open and install need a session to execute
 				else if (!req.isSessionInitRequest() && (!hasSession() || !hasDeviceFingerPrint())) {
-					Log.d("BranchTestRquest", "---- No Session Not Executing request " + req.getClass().getSimpleName());
 					networkCount_ = 0;
 					handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
 					return;
 				} else {
-					Log.d("BranchTestRquest", "----Executing request " + req.getClass().getSimpleName());
 					BranchPostTask postTask = new BranchPostTask(req);
 					postTask.execute();
 				}
@@ -2457,9 +2438,9 @@ public class Branch {
 					Iterator<?> keys = req.getPost().keys();
 					while (keys.hasNext()) {
 						String key = (String) keys.next();
-						if (key.equals("session_id")) {
+						if (key.equals(Defines.Jsonkey.SessionID.getKey())) {
 							req.getPost().put(key, prefHelper_.getSessionID());
-						} else if (key.equals("identity_id")) {
+						} else if (key.equals(Defines.Jsonkey.IdentityID.getKey())) {
 							req.getPost().put(key, prefHelper_.getIdentityID());
 						}
 					}
@@ -2554,27 +2535,32 @@ public class Branch {
 		}
 
 		if (hasUser()) {
-			registerInstallOrOpen(new RegisterOpenRequest(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
+			registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
 		} else {
-			registerInstallOrOpen(new RegisterInstallRequest(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE), callback);
+			registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE), callback);
 		}
 	}
 
 	/**
 	 * Handles execution of a new request other than open or install.
-	 * Checks for the session initialistaion and adds a install/Open request infornt of this request
+	 * Checks for the session initialisation and adds a install/Open request in front of this request
 	 * if the request need session to execute.
 	 *
 	 * @param req The {@link ServerRequest} to execute
 	 */
 	private void handleNewRequest(ServerRequest req) {
 		//If not initialised put an open or install request in front of this request(only if this needs session)
-		if (initState_ != SESSION_STATE.INITIALISED && req.isSessionInitRequest()) {
-			if (!(req instanceof LogoutRequest)) {
-				initializeSession(null);
-			} else {
+		if (initState_ != SESSION_STATE.INITIALISED && req.isSessionInitRequest() == false) {
+			if((req instanceof ServerRequestLogout)){
 				Log.i(TAG, "Branch is not initialized, cannot logout");
 				return;
+			}
+			if((req instanceof ServerRequestRegisterClose)){
+				Log.i(TAG, "Branch is not initialized, cannot close session");
+				return;
+			}
+			else{
+				initializeSession(null);
 			}
 		}
 		requestQueue_.enqueue(req);
@@ -2708,7 +2694,6 @@ public class Branch {
 			thisReq_ = request;
 			apiBaseUrl_ = prefHelper_.getAPIBaseUrl();
 			timeOut_ = prefHelper_.getTimeout();
-
 		}
 
 		@Override
@@ -2737,8 +2722,8 @@ public class Branch {
 						}
 						//On a bad request continue processing
 						if (status == 409) {
-							if (thisReq_ instanceof CreateUrlRequest) {
-								((CreateUrlRequest) thisReq_).handleDuplicateURLError();
+							if (thisReq_ instanceof ServerRequestCreateUrl) {
+								((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
 							} else {
 								Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
 								handleFailure(0, status);
@@ -2775,10 +2760,26 @@ public class Branch {
 					//If the request succeeded
 					else {
 						hasNetwork_ = true;
-						if (thisReq_ instanceof CreateUrlRequest) {
+						//On create  new url cache the url.
+						if (thisReq_ instanceof ServerRequestCreateUrl) {
 							final String url = serverResponse.getObject().getString("url");
 							// cache the link
 							linkCache_.put(serverResponse.getLinkData(), url);
+						}
+						//On Logout clear the link cache and all pending requests
+						else if (thisReq_ instanceof ServerRequestLogout) {
+							linkCache_.clear();
+							requestQueue_.clear();
+						}
+						//On setting a new identity Id clear teh link cache
+						else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
+							try {
+								String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+								if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+									linkCache_.clear();
+								}
+							} catch (Exception ignore) {
+							}
 						}
 						//Publish success to listeners
 						thisReq_.onRequestSucceeded(serverResponse, branchReferral_);

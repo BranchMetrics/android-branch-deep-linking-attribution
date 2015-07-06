@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -18,7 +18,7 @@ import io.branch.referral.ServerResponse;
  * The server request for Applying a referral code. Handles request creation and execution.
  * </p>
  */
-public class ApplyReferralCodeRequest extends ServerRequest {
+class ServerRequestApplyReferralCode extends ServerRequest {
 
     Branch.BranchReferralInitListener callback_;
 
@@ -32,20 +32,20 @@ public class ApplyReferralCodeRequest extends ServerRequest {
      *                 response of the referral submission request.
      * @see Branch.BranchReferralInitListener
      */
-    public ApplyReferralCodeRequest(Context context, Branch.BranchReferralInitListener callback,
-                                    String code) {
+    public ServerRequestApplyReferralCode(Context context, Branch.BranchReferralInitListener callback,
+                                          String code) {
         super(context, Defines.RequestPath.ApplyReferralCode.getPath());
 
         callback_ = callback;
         JSONObject post = new JSONObject();
         try {
-            post.put("identity_id", prefHelper_.getIdentityID());
-            post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            post.put("session_id", prefHelper_.getSessionID());
+            post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put("link_click_id", prefHelper_.getLinkClickID());
+                post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            post.put("referral_code", code);
+            post.put(Defines.Jsonkey.ReferralCode.getKey(), code);
             setPost(post);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -53,7 +53,7 @@ public class ApplyReferralCodeRequest extends ServerRequest {
         }
     }
 
-    public ApplyReferralCodeRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestApplyReferralCode(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
@@ -61,7 +61,7 @@ public class ApplyReferralCodeRequest extends ServerRequest {
     public String getRequestUrl() {
         String code = "";
         try {
-            code = getPost().getString("referral_code");
+            code = getPost().getString(Defines.Jsonkey.ReferralCode.getKey());
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -16,7 +16,7 @@ import org.json.JSONObject;
  * <li>{@link ServerResponse#getLinkData()}</li>
  * </ul>
  */
-public class ServerResponse {
+class ServerResponse {
 	
 	/**
 	 * Resultant HTTP status code of the corresponding {@link ServerRequest}.

@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -7,26 +7,19 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for redeeming rewards. Handles request creation and execution.
  * </p>
  */
-public class RedeemRewardsRequest extends ServerRequest {
+class ServerRequestRedeemRewards extends ServerRequest {
 
 
     Branch.BranchReferralStateChangedListener callback_;
     int actualNumOfCreditsToRedeem_ = 0;
 
     /**
-     * <p>Create an instance of {@link RedeemRewardsRequest} to Redeem the specified number of credits
+     * <p>Create an instance of {@link ServerRequestRedeemRewards} to Redeem the specified number of credits
      * from the named bucket, if there are sufficient credits within it. If the number to redeem exceeds
      * the number available in the bucket, all of the available credits will be redeemed instead.</p>
      *
@@ -38,7 +31,7 @@ public class RedeemRewardsRequest extends ServerRequest {
      * @param callback             A {@link Branch.BranchReferralStateChangedListener} callback instance that will
      *                             trigger actions defined therein upon a executing redeem rewards.
      */
-    public RedeemRewardsRequest(Context context, String bucketName, int numOfCreditsToRedeem, Branch.BranchReferralStateChangedListener callback) {
+    public ServerRequestRedeemRewards(Context context, String bucketName, int numOfCreditsToRedeem, Branch.BranchReferralStateChangedListener callback) {
         super(context, Defines.RequestPath.RedeemRewards.getPath());
 
         callback_ = callback;
@@ -60,7 +53,7 @@ public class RedeemRewardsRequest extends ServerRequest {
                     post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
                 }
                 post.put(Defines.Jsonkey.Bucket.getKey(), bucketName);
-                post.put(Defines.Jsonkey.Amount.getKey(), numOfCreditsToRedeem);
+                post.put(Defines.Jsonkey.Amount.getKey(), actualNumOfCreditsToRedeem_);
                 setPost(post);
             } catch (JSONException ex) {
                 ex.printStackTrace();
@@ -70,7 +63,7 @@ public class RedeemRewardsRequest extends ServerRequest {
 
     }
 
-    public RedeemRewardsRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestRedeemRewards(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
@@ -92,10 +85,10 @@ public class RedeemRewardsRequest extends ServerRequest {
         boolean isRedemptionSucceeded = false;
         JSONObject post = getPost();
         if (post != null) {
-            if (post.has("bucket") && post.has("amount")) {
+            if (post.has(Defines.Jsonkey.Bucket.getKey()) && post.has(Defines.Jsonkey.Amount.getKey())) {
                 try {
-                    int redeemedCredits = post.getInt("amount");
-                    String creditBucket = post.getString("bucket");
+                    int redeemedCredits = post.getInt(Defines.Jsonkey.Amount.getKey());
+                    String creditBucket = post.getString(Defines.Jsonkey.Bucket.getKey());
                     isRedemptionSucceeded = redeemedCredits > 0;
 
                     int updatedCreditCount = prefHelper_.getCreditCount(creditBucket) - redeemedCredits;

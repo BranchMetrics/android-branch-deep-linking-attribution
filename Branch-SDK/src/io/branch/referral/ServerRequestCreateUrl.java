@@ -1,11 +1,13 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
 
+import org.apache.http.impl.cookie.NetscapeDomainHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.channels.Pipe;
 import java.util.Collection;
 
 import io.branch.referral.Branch;
@@ -21,7 +23,7 @@ import io.branch.referral.ServerResponse;
  * The server request for creating a  synchronous or asynchronous short url. Handles request creation and execution.
  * </p>
  */
-public class CreateUrlRequest extends ServerRequest {
+class ServerRequestCreateUrl extends ServerRequest {
 
     BranchLinkData linkPost_;
     boolean isAsync_ = true;
@@ -58,10 +60,10 @@ public class CreateUrlRequest extends ServerRequest {
      * @param async    {@link Boolean} value specifying whether to get the url asynchronously or not.     *
      * @return A {@link String} containing the resulting short URL.
      */
-    public CreateUrlRequest(Context context, final String alias, final int type, final int duration,
-                            final Collection<String> tags, final String channel, final String feature,
-                            final String stage, final String params,
-                            Branch.BranchLinkCreateListener callback, boolean async) {
+    public ServerRequestCreateUrl(Context context, final String alias, final int type, final int duration,
+                                  final Collection<String> tags, final String channel, final String feature,
+                                  final String stage, final String params,
+                                  Branch.BranchLinkCreateListener callback, boolean async) {
 
         super(context, Defines.RequestPath.GetURL.getPath());
 
@@ -70,11 +72,11 @@ public class CreateUrlRequest extends ServerRequest {
 
         linkPost_ = new BranchLinkData();
         try {
-            linkPost_.put("identity_id", prefHelper_.getIdentityID());
-            linkPost_.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            linkPost_.put("session_id", prefHelper_.getSessionID());
+            linkPost_.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            linkPost_.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            linkPost_.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                linkPost_.put("link_click_id", prefHelper_.getLinkClickID());
+                linkPost_.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
 
             linkPost_.putType(type);
@@ -85,6 +87,7 @@ public class CreateUrlRequest extends ServerRequest {
             linkPost_.putFeature(feature);
             linkPost_.putStage(stage);
             linkPost_.putParams(params);
+
             setPost(linkPost_);
 
         } catch (JSONException ex) {
@@ -94,7 +97,7 @@ public class CreateUrlRequest extends ServerRequest {
 
     }
 
-    public CreateUrlRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestCreateUrl(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

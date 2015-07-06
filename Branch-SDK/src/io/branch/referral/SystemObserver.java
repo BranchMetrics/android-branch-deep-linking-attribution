@@ -34,7 +34,7 @@ import android.view.WindowManager;
  * attributes and parameters used by the Branch class, and made publically available for use by 
  * other classes.</p>
  */
-public class SystemObserver {
+class SystemObserver {
 	
 	/**
 	 * Default value for when no value has been returned by a system information call, but where 
@@ -232,10 +232,10 @@ public class SystemObserver {
 							packObj.put("name", label);
 						String packName = appInfo.packageName;
 						if (packName != null) {
-							packObj.put("app_identifier", packName);
+							packObj.put(Defines.Jsonkey.AppIdentifier.getKey(), packName);
 							String uriScheme = getURIScheme(packName);
 							if (!uriScheme.equals(SystemObserver.BLANK))
-								packObj.put("uri_scheme", uriScheme);
+								packObj.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
 						}
 						String pSourceDir = appInfo.publicSourceDir;
 						if (pSourceDir != null)
@@ -254,7 +254,7 @@ public class SystemObserver {
 							if (packInfo.versionName != null)
 								packObj.put("version_name", packInfo.versionName);
 						}
-						packObj.put("os", this.getOS());
+						packObj.put(Defines.Jsonkey.OS.getKey(), this.getOS());
 						
 						arr.put(packObj);
 					} catch(JSONException ignore) {

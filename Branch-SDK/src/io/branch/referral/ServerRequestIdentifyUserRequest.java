@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -6,24 +6,17 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for identifying current user to Branch API. Handles request creation and execution.
  * </p>
  */
-public class IdentifyUserRequest extends ServerRequest {
+class ServerRequestIdentifyUserRequest extends ServerRequest {
     Branch.BranchReferralInitListener callback_;
     String userId_ = null;
 
     /**
-     * <p>Create an instance of {@link IdentifyUserRequest} to Identify the current user to the Branch API
+     * <p>Create an instance of {@link ServerRequestIdentifyUserRequest} to Identify the current user to the Branch API
      * by supplying a unique identifier as a {@link String} value, with a callback specified to perform a
      * defined action upon successful response to request.</p>
      *
@@ -32,7 +25,7 @@ public class IdentifyUserRequest extends ServerRequest {
      * @param callback A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public IdentifyUserRequest(Context context, Branch.BranchReferralInitListener callback, String userId) {
+    public ServerRequestIdentifyUserRequest(Context context, Branch.BranchReferralInitListener callback, String userId) {
         super(context, Defines.RequestPath.IdentifyUser.getPath());
 
         callback_ = callback;
@@ -40,13 +33,13 @@ public class IdentifyUserRequest extends ServerRequest {
 
         JSONObject post = new JSONObject();
         try {
-            post.put("identity_id", prefHelper_.getIdentityID());
-            post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            post.put("session_id", prefHelper_.getSessionID());
+            post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put("link_click_id", prefHelper_.getLinkClickID());
+                post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            post.put("identity", userId);
+            post.put(Defines.Jsonkey.Identity.getKey(), userId);
             setPost(post);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -54,22 +47,22 @@ public class IdentifyUserRequest extends ServerRequest {
         }
     }
 
-    public IdentifyUserRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestIdentifyUserRequest(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
 
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            if (getPost() != null && getPost().has("identity")) {
-                prefHelper_.setIdentity(getPost().getString("identity"));
+            if (getPost() != null && getPost().has(Defines.Jsonkey.Identity.getKey())) {
+                prefHelper_.setIdentity(getPost().getString(Defines.Jsonkey.Identity.getKey()));
             }
 
-            prefHelper_.setIdentityID(resp.getObject().getString("identity_id"));
-            prefHelper_.setUserURL(resp.getObject().getString("link"));
+            prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+            prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
 
-            if (resp.getObject().has("referring_data")) {
-                String params = resp.getObject().getString("referring_data");
+            if (resp.getObject().has(Defines.Jsonkey.ReferringData.getKey())) {
+                String params = resp.getObject().getString(Defines.Jsonkey.ReferringData.getKey());
                 prefHelper_.setInstallParams(params);
             }
 
@@ -100,9 +93,15 @@ public class IdentifyUserRequest extends ServerRequest {
             callback_.onInitFinished(null, new BranchError("Trouble setting the user alias.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         } else {
-            if (userId_ == null || userId_.length() == 0 || userId_.equals(prefHelper_.getIdentity())) {
+            try {
+                String userId= getPost().getString(Defines.Jsonkey.Identity.getKey());
+                if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
+                    return true;
+                }
+            } catch (JSONException ignore) {
                 return true;
             }
+
         }
         return false;
     }
@@ -118,7 +117,14 @@ public class IdentifyUserRequest extends ServerRequest {
      * @return
      */
     public boolean isExistingID() {
-        return (userId_ != null && userId_.equals(prefHelper_.getIdentity()));
+        try {
+            String userId= getPost().getString(Defines.Jsonkey.Identity.getKey());
+            return (userId != null && userId.equals(prefHelper_.getIdentity()));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
     }
 
     /*

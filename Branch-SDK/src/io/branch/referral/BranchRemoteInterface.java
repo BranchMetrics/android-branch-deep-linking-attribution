@@ -77,15 +77,15 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			String urlExtend = "v1/debug/connect";
 			JSONObject post = new JSONObject();
-			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+			post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 			if (sysObserver_.getBluetoothPresent()) {
 				post.put("device_name", BluetoothAdapter.getDefaultAdapter().getName());
 			} else {
 				post.put("device_name", sysObserver_.getPhoneModel());
 			}
-			post.put("os", sysObserver_.getOS());
-		    post.put("os_version", sysObserver_.getOSVersion());
-		    post.put("model", sysObserver_.getPhoneModel());
+			post.put(Defines.Jsonkey.OS.getKey(), sysObserver_.getOS());
+		    post.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver_.getOSVersion());
+		    post.put(Defines.Jsonkey.Model.getKey(), sysObserver_.getPhoneModel());
 		    post.put("is_simulator", sysObserver_.isSimulator());
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), false));
 		} catch (JSONException ex) {
@@ -100,7 +100,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			String urlExtend = "v1/debug/disconnect";
 			JSONObject post = new JSONObject();
-			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+			post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), false));
 		} catch (JSONException ex) {
 			ex.printStackTrace();
@@ -116,7 +116,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 		try {
 			String urlExtend = "v1/debug/log";
 			JSONObject post = new JSONObject();
-			post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+			post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 			post.put("log", log);
 			callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), false));
 		} catch (JSONException ex) {

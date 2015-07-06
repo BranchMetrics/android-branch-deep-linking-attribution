@@ -651,7 +651,7 @@ public class PrefHelper {
 	 * @param count		A {@link Integer} value that the default bucket credit count will be set to.
 	 */
 	public void setCreditCount(int count) {
-		setCreditCount("default", count);
+		setCreditCount(Defines.Jsonkey.DefaultBucket.getKey(), count);
 	}
 
 	/**
@@ -683,7 +683,7 @@ public class PrefHelper {
 	 * 			currently stored in preferences.
 	 */
 	public int getCreditCount() {
-		return getCreditCount("default");
+		return getCreditCount(Defines.Jsonkey.DefaultBucket.getKey());
 	}
 
 	/**

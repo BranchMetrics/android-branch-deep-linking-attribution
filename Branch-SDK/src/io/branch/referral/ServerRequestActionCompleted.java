@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -18,7 +18,7 @@ import io.branch.referral.ServerResponse;
  * The server request for Action completed event. Handles request creation and execution.
  * </p>
  */
-public class ActionCompletedRequest extends ServerRequest {
+class ServerRequestActionCompleted extends ServerRequest {
 
     /**
      * <p>Creates an ActionCompleteRequest instance. This request take care of reporting specific user
@@ -30,20 +30,20 @@ public class ActionCompletedRequest extends ServerRequest {
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public ActionCompletedRequest(Context context, String action, JSONObject metadata) {
+    public ServerRequestActionCompleted(Context context, String action, JSONObject metadata) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
         JSONObject post = new JSONObject();
 
         try {
-            post.put("identity_id", prefHelper_.getIdentityID());
-            post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            post.put("session_id", prefHelper_.getSessionID());
+            post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put("link_click_id", prefHelper_.getLinkClickID());
+                post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            post.put("event", action);
+            post.put(Defines.Jsonkey.Event.getKey(), action);
             if (metadata != null)
-                post.put("metadata", metadata);
+                post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
 
             setPost(post);
         } catch (JSONException ex) {
@@ -52,7 +52,7 @@ public class ActionCompletedRequest extends ServerRequest {
         }
     }
 
-    public ActionCompletedRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestActionCompleted(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

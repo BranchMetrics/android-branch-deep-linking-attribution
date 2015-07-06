@@ -7,7 +7,7 @@ package io.branch.referral;
  * are contained within an APK file.
  *
  */
-public class ApkParser {
+class ApkParser {
 	
 	// decompressXML -- Parse the 'compressed' binary form of Android XML docs 
 	// such as for AndroidManifest.xml in .apk files

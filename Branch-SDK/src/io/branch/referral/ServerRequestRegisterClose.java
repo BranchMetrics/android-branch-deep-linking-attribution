@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -18,7 +18,7 @@ import io.branch.referral.ServerResponse;
  * The server request for closing any open session. Handles request creation and execution.
  * </p>
  */
-public class RegisterCloseRequest extends ServerRequest {
+class ServerRequestRegisterClose extends ServerRequest {
 
     /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
@@ -26,15 +26,15 @@ public class RegisterCloseRequest extends ServerRequest {
      *
      * @param context Current {@link Application} context
      */
-    public RegisterCloseRequest(Context context) {
+    public ServerRequestRegisterClose(Context context) {
         super(context, Defines.RequestPath.RegisterClose.getPath());
         JSONObject closePost = new JSONObject();
         try {
-            closePost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            closePost.put("identity_id", prefHelper_.getIdentityID());
-            closePost.put("session_id", prefHelper_.getSessionID());
+            closePost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            closePost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            closePost.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                closePost.put("link_click_id", prefHelper_.getLinkClickID());
+                closePost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
             setPost(closePost);
         } catch (JSONException ex) {
@@ -43,7 +43,7 @@ public class RegisterCloseRequest extends ServerRequest {
         }
     }
 
-    public RegisterCloseRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestRegisterClose(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

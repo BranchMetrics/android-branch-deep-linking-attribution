@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -8,40 +8,40 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
- * The server request for getting referral count. Handles request creation and execution.
+ * The server request for retrieving rewards for the current session. Handles request creation and execution.
  * </p>
  */
-public class GetReferralCountRequest extends ServerRequest {
+class ServerRequestGetRewards extends ServerRequest {
+
     Branch.BranchReferralStateChangedListener callback_;
 
+
     /**
-     * p>Create an instance of GetReferralCountRequest to get the number of referrals.</p>
+     * <p>Create an instance of {@link ServerRequestGetRewards} to retrieve rewards for the current session,
+     * with a callback to perform a predefined action following successful report of state change.
+     * You'll then need to call getCredits in the callback to update the credit totals in your UX.</p>
      *
      * @param context  Current {@link Application} context
      * @param callback A {@link Branch.BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon receipt of a response to a	referral count request.
+     *                 trigger actions defined therein upon a referral state change.
      */
-    public GetReferralCountRequest(Context context, Branch.BranchReferralStateChangedListener callback) {
-        super(context, Defines.RequestPath.Referrals.getPath());
+    public ServerRequestGetRewards(Context context, Branch.BranchReferralStateChangedListener callback) {
+        super(context, Defines.RequestPath.GetCredits.getPath());
         callback_ = callback;
     }
 
-    public GetReferralCountRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestGetRewards(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
+
 
     @Override
     public String getRequestUrl() {
         return super.getRequestUrl() + prefHelper_.getIdentityID();
     }
+
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
@@ -51,37 +51,32 @@ public class GetReferralCountRequest extends ServerRequest {
             String key = (String) keys.next();
 
             try {
-                JSONObject counts = resp.getObject().getJSONObject(key);
-                int total = counts.getInt("total");
-                int unique = counts.getInt("unique");
+                int credits = resp.getObject().getInt(key);
 
-                if (total != prefHelper_.getActionTotalCount(key) || unique != prefHelper_.getActionUniqueCount(key)) {
+                if (credits != prefHelper_.getCreditCount(key)) {
                     updateListener = true;
                 }
-                prefHelper_.setActionTotalCount(key, total);
-                prefHelper_.setActionUniqueCount(key, unique);
+                prefHelper_.setCreditCount(key, credits);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-
         if (callback_ != null) {
             callback_.onStateChanged(updateListener, null);
         }
-
     }
 
     @Override
     public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", statusCode));
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;
@@ -96,5 +91,4 @@ public class GetReferralCountRequest extends ServerRequest {
     public void clearCallbacks() {
         callback_ = null;
     }
-
 }

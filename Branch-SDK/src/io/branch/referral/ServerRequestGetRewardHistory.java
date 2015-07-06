@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -6,24 +6,17 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for getting credit history. Handles request creation and execution.
  * </p>
  */
-public class GetRewardHistoryRequest extends ServerRequest {
+class ServerRequestGetRewardHistory extends ServerRequest {
 
     Branch.BranchListResponseListener callback_;
 
     /**
-     * <p>Create an instance of {@link GetRewardHistoryRequest} to get the credit history of the specified
+     * <p>Create an instance of {@link ServerRequestGetRewardHistory} to get the credit history of the specified
      * bucket and triggers a callback to handle the response.</p>
      *
      * @param context  Current {@link Application} context
@@ -46,29 +39,29 @@ public class GetRewardHistoryRequest extends ServerRequest {
      * @param callback A {@link Branch.BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public GetRewardHistoryRequest(Context context, String bucket, String afterId, int length,
-                                   Branch.CreditHistoryOrder order, Branch.BranchListResponseListener callback) {
+    public ServerRequestGetRewardHistory(Context context, String bucket, String afterId, int length,
+                                         Branch.CreditHistoryOrder order, Branch.BranchListResponseListener callback) {
 
         super(context, Defines.RequestPath.GetCreditHistory.getPath());
         callback_ = callback;
 
         JSONObject getCreditHistoryPost = new JSONObject();
         try {
-            getCreditHistoryPost.put("identity_id", prefHelper_.getIdentityID());
-            getCreditHistoryPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            getCreditHistoryPost.put("session_id", prefHelper_.getSessionID());
+            getCreditHistoryPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            getCreditHistoryPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            getCreditHistoryPost.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                getCreditHistoryPost.put("link_click_id", prefHelper_.getLinkClickID());
+                getCreditHistoryPost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            getCreditHistoryPost.put("length", length);
-            getCreditHistoryPost.put("direction", order.ordinal());
+            getCreditHistoryPost.put(Defines.Jsonkey.Length.getKey(), length);
+            getCreditHistoryPost.put(Defines.Jsonkey.Direction.getKey(), order.ordinal());
 
             if (bucket != null) {
-                getCreditHistoryPost.put("bucket", bucket);
+                getCreditHistoryPost.put(Defines.Jsonkey.Bucket.getKey(), bucket);
             }
 
             if (afterId != null) {
-                getCreditHistoryPost.put("begin_after_id", afterId);
+                getCreditHistoryPost.put(Defines.Jsonkey.BeginAfterID.getKey(), afterId);
             }
             setPost(getCreditHistoryPost);
         } catch (JSONException ex) {
@@ -79,7 +72,7 @@ public class GetRewardHistoryRequest extends ServerRequest {
     }
 
 
-    public GetRewardHistoryRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestGetRewardHistory(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

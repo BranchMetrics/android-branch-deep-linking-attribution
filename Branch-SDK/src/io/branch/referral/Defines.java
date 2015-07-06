@@ -6,18 +6,60 @@ package io.branch.referral;
  * </p>
  *
  */
-public class Defines {
+class Defines {
 
     public enum Jsonkey {
 
         IdentityID("identity_id"),
+        Identity("identity"),
         DeviceFingerprintID("device_fingerprint_id"),
         SessionID("session_id"),
         LinkClickID("link_click_id"),
 
         Bucket("bucket"),
         DefaultBucket("default"),
-        Amount("amount");
+        Amount("amount"),
+        CalculationType("calculation_type"),
+        Location("location"),
+        Type("type"),
+        CreationSource("creation_source"),
+        Prefix("prefix"),
+        Expiration("expiration"),
+        Event("event"),
+        Metadata("metadata"),
+        ReferralCode("referral_code"),
+        Total("total"),
+        Unique("unique"),
+        Length("length"),
+        Direction("direction"),
+        BeginAfterID("begin_after_id"),
+        Link("link"),
+        ReferringData("referring_data"),
+        Data("data"),
+        OS("os"),
+        HardwareID("hardware_id"),
+        IsHardwareIDReal("is_hardware_id_real"),
+        AppVersion("app_version"),
+        OSVersion("os_version"),
+        IsReferrable("is_referrable"),
+        Update("update"),
+        URIScheme("uri_scheme"),
+        AppIdentifier("app_identifier"),
+        LinkIdentifier("link_identifier"),
+        GoogleAdvertisingID("google_advertising_id"),
+        LATVal("lat_val"),
+        Debug("debug"),
+        Carrier("carrier"),
+        Bluetooth("bluetooth"),
+        BluetoothVersion("bluetooth_version"),
+        HasNfc("has_nfc"),
+        HasTelephone("has_telephone"),
+        Brand("brand"),
+        Model("model"),
+        ScreenDpi("screen_dpi"),
+        ScreenHeight("screen_height"),
+        ScreenWidth("screen_width"),
+        WiFi("wifi");
 
 
         private String key = "";
@@ -40,7 +82,6 @@ public class Defines {
      * <p>
      * Defines all server path for the requests
      * </p>
-     *
      */
     public enum RequestPath {
         RedeemRewards("v1/redeem"),

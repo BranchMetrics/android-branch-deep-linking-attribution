@@ -32,7 +32,7 @@ import org.json.JSONObject;
  * {@link HttpClient} object, and handling all restful calls via one of its GET or POST capable 
  * methods.</p>
  */
-public class RemoteInterface {
+class RemoteInterface {
     public static final String BRANCH_KEY = "branch_key";
 	public static final int NO_CONNECTIVITY_STATUS = -1009;
 	public static final int NO_BRANCH_KEY_STATUS = -1234;

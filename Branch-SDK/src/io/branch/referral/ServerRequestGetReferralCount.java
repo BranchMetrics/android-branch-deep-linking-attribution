@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -16,38 +16,32 @@ import io.branch.referral.ServerResponse;
 
 /**
  * * <p>
- * The server request for retrieving rewards for the current session. Handles request creation and execution.
+ * The server request for getting referral count. Handles request creation and execution.
  * </p>
  */
-public class GetRewardsRequest extends ServerRequest {
-
+class ServerRequestGetReferralCount extends ServerRequest {
     Branch.BranchReferralStateChangedListener callback_;
 
-
     /**
-     * <p>Create an instance of {@link GetRewardsRequest} to retrieve rewards for the current session,
-     * with a callback to perform a predefined action following successful report of state change.
-     * You'll then need to call getCredits in the callback to update the credit totals in your UX.</p>
+     * p>Create an instance of ServerRequestGetReferralCount to get the number of referrals.</p>
      *
      * @param context  Current {@link Application} context
      * @param callback A {@link Branch.BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon a referral state change.
+     *                 trigger actions defined therein upon receipt of a response to a	referral count request.
      */
-    public GetRewardsRequest(Context context, Branch.BranchReferralStateChangedListener callback) {
-        super(context, Defines.RequestPath.GetCredits.getPath());
+    public ServerRequestGetReferralCount(Context context, Branch.BranchReferralStateChangedListener callback) {
+        super(context, Defines.RequestPath.Referrals.getPath());
         callback_ = callback;
     }
 
-    public GetRewardsRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestGetReferralCount(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
-
 
     @Override
     public String getRequestUrl() {
         return super.getRequestUrl() + prefHelper_.getIdentityID();
     }
-
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
@@ -57,32 +51,37 @@ public class GetRewardsRequest extends ServerRequest {
             String key = (String) keys.next();
 
             try {
-                int credits = resp.getObject().getInt(key);
+                JSONObject counts = resp.getObject().getJSONObject(key);
+                int total = counts.getInt(Defines.Jsonkey.Total.getKey());
+                int unique = counts.getInt(Defines.Jsonkey.Unique.getKey());
 
-                if (credits != prefHelper_.getCreditCount(key)) {
+                if (total != prefHelper_.getActionTotalCount(key) || unique != prefHelper_.getActionUniqueCount(key)) {
                     updateListener = true;
                 }
-                prefHelper_.setCreditCount(key, credits);
+                prefHelper_.setActionTotalCount(key, total);
+                prefHelper_.setActionUniqueCount(key, unique);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+
         if (callback_ != null) {
             callback_.onStateChanged(updateListener, null);
         }
+
     }
 
     @Override
     public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", statusCode));
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;
@@ -97,4 +96,5 @@ public class GetRewardsRequest extends ServerRequest {
     public void clearCallbacks() {
         callback_ = null;
     }
+
 }

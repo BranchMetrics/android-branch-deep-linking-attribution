@@ -7,26 +7,10 @@ import android.content.pm.PackageManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.serverrequest.ActionCompletedRequest;
-import io.branch.referral.serverrequest.ApplyReferralCodeRequest;
-import io.branch.referral.serverrequest.CreateUrlRequest;
-import io.branch.referral.serverrequest.GetReferralCodeRequest;
-import io.branch.referral.serverrequest.GetReferralCountRequest;
-import io.branch.referral.serverrequest.GetRewardHistoryRequest;
-import io.branch.referral.serverrequest.GetRewardsRequest;
-import io.branch.referral.serverrequest.IdentifyUserRequest;
-import io.branch.referral.serverrequest.LogoutRequest;
-import io.branch.referral.serverrequest.RedeemRewardsRequest;
-import io.branch.referral.serverrequest.RegisterCloseRequest;
-import io.branch.referral.serverrequest.RegisterInstallRequest;
-import io.branch.referral.serverrequest.RegisterOpenRequest;
-import io.branch.referral.serverrequest.SendAppListRequest;
-import io.branch.referral.serverrequest.ValidateReferralCodeRequest;
-
 /**
  * Abstract class defining the structure of a Branch Server request.
  */
-public abstract class ServerRequest {
+abstract class ServerRequest {
 
 	private static final String POST_KEY = "REQ_POST";
 	private static final String POST_PATH_KEY = "REQ_POST_PATH";
@@ -235,49 +219,49 @@ public abstract class ServerRequest {
 		ServerRequest extendedReq = null;
 
 		if(requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())){
-			extendedReq = new ActionCompletedRequest(requestPath, post, context);
+			extendedReq = new ServerRequestActionCompleted(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.ApplyReferralCode.getPath())){
-			extendedReq = new ApplyReferralCodeRequest(requestPath, post, context);
+			extendedReq = new ServerRequestApplyReferralCode(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())){
-			extendedReq = new CreateUrlRequest(requestPath, post, context);
+			extendedReq = new ServerRequestCreateUrl(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetReferralCode.getPath())){
-			extendedReq = new GetReferralCodeRequest(requestPath, post, context);
+			extendedReq = new ServerRequestGetReferralCode(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.Referrals.getPath())){
-			extendedReq = new GetReferralCountRequest(requestPath, post, context);
+			extendedReq = new ServerRequestGetReferralCount(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())){
-			extendedReq = new GetRewardHistoryRequest(requestPath, post, context);
+			extendedReq = new ServerRequestGetRewardHistory(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())){
-			extendedReq = new GetRewardsRequest(requestPath, post, context);
+			extendedReq = new ServerRequestGetRewards(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())){
-			extendedReq = new IdentifyUserRequest(requestPath, post, context);
+			extendedReq = new ServerRequestIdentifyUserRequest(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())){
-			extendedReq = new LogoutRequest(requestPath, post, context);
+			extendedReq = new ServerRequestLogout(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())){
-			extendedReq = new RedeemRewardsRequest(requestPath, post, context);
+			extendedReq = new ServerRequestRedeemRewards(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())){
-			extendedReq = new RegisterCloseRequest(requestPath, post, context);
+			extendedReq = new ServerRequestRegisterClose(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())){
-			extendedReq = new RegisterInstallRequest(requestPath, post, context);
+			extendedReq = new ServerRequestRegisterInstall(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())){
-			extendedReq = new RegisterOpenRequest(requestPath, post, context);
+			extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())){
-			extendedReq = new SendAppListRequest(requestPath, post, context);
+			extendedReq = new ServerRequestSendAppList(requestPath, post, context);
 		}
 		else if(requestPath.equalsIgnoreCase(Defines.RequestPath.ValidateReferralCode.getPath())){
-			extendedReq = new ValidateReferralCodeRequest(requestPath, post, context);
+			extendedReq = new ServerRequestValidateReferralCode(requestPath, post, context);
 		}
 
 		return extendedReq;

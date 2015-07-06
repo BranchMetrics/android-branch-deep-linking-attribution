@@ -8,7 +8,7 @@ Check it out!
 
 ## Important migration to v1.5.0
 
-We have deprecated the bnc_app_key and replaced that with the new branch_key. Please see [add branch key](#add-your-branch-key-to-your-project) for details.
+We have deprecated the bnc_app_key and replaced that with the new branch_key. Please see [add Branch key](#add-your-branch-key-to-your-project) for details.
 
 ## Important migration to v1.4.5
 
@@ -138,13 +138,13 @@ Typically, you would register some sort of splash activitiy that handles routing
 </activity>
 ```
 ### Configure your AndroidManifest.xml
-**1. Provide interenet permission. Branch SDK need internet access to talk to Branch APIs.**
+**1. Provide internet permission. Branch SDK need internet access to talk to Branch APIs.**
 
 **2. Specify a versionName attribute in the manifest for Branch to identify the application version.**
 
-**3. Add your branch key to your project.**
+**3. Add your Branch key to your project.**
 
-After you register your app, your branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Now you need to add it (them, if you want to do it for both your live and test apps) to your project. Add brach key as a meta data in your mainifest.
+After you register your app, your Branch key can be retrieved on the [Settings](https://dashboard.branch.io/#/settings) page of the dashboard. Add it (them, if you want to do it for both your live and test apps) to your project's manifest file as a meta data.
 
  Edit your manifest file to have the above items
 ```xml
@@ -158,10 +158,10 @@ After you register your app, your branch key can be retrieved on the [Settings](
     <application>
         <!-- Other existing entries -->
 
-        <!-- Add this meta-data below, and change "key_live_xxxxxxx" to your actual live branch key -->
+        <!-- Add this meta-data below, and change "key_live_xxxxxxx" to your actual live Branch key -->
         <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_xxxxxxx" />
 
-        <!-- For your test app, if you have one; Again, use your actual test branch key -->
+        <!-- For your test app, if you have one; Again, use your actual test Branch key -->
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_yyyyyyy" />
     </application>
 </manifest>
@@ -218,7 +218,7 @@ _Please note that you need SDK version >= 1.5.0 to use getTestInstance()_
 Or
 
 ```java
-Branch branch = Branch.getInstance(getApplicationContext(), "your test branch key"); // replace with your actual branch key
+Branch branch = Branch.getInstance(getApplicationContext(), "your test Branch key"); // replace with your actual Branch key
 ```
 
 Either way, we recommend you put a `//TODO` to remind you to change back to live app during deployment later. 

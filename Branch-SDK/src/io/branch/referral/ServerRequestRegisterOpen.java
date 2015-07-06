@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -6,61 +6,53 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-import io.branch.referral.SystemObserver;
-
 /**
  * * <p>
  * The server request for registering an app open event to Branch API. Handles request creation and execution.
  * </p>
  */
-public class RegisterOpenRequest extends ServerRequest {
+class ServerRequestRegisterOpen extends ServerRequest {
 
     Branch.BranchReferralInitListener callback_;
 
     /**
-     * <p>Create an instance of {@link RegisterInstallRequest} to notify Branch API on app open event.</p>
+     * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
      *
      * @param context     Current {@link Application} context
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      * @param sysObserver {@link SystemObserver} instance.
      */
-    public RegisterOpenRequest(Context context, Branch.BranchReferralInitListener callback,
-                               SystemObserver sysObserver) {
+    public ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback,
+                                     SystemObserver sysObserver) {
         super(context, Defines.RequestPath.RegisterOpen.getPath());
 
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
-            openPost.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
-            openPost.put("identity_id", prefHelper_.getIdentityID());
-            openPost.put("is_referrable", prefHelper_.getIsReferrable());
+            openPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            openPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            openPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK))
-                openPost.put("app_version", sysObserver.getAppVersion());
-            openPost.put("os_version", sysObserver.getOSVersion());
-            openPost.put("update", sysObserver.getUpdateState(true));
+                openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
+            openPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
+            openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
             String uriScheme = sysObserver.getURIScheme();
             if (!uriScheme.equals(SystemObserver.BLANK))
-                openPost.put("uri_scheme", uriScheme);
+                openPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             if (!sysObserver.getOS().equals(SystemObserver.BLANK))
-                openPost.put("os", sysObserver.getOS());
+                openPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put("link_identifier", prefHelper_.getLinkClickIdentifier());
+                openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
             String advertisingId = sysObserver.getAdvertisingId();
             if (advertisingId != null) {
-                openPost.put("google_advertising_id", advertisingId);
+                openPost.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
             }
 
             int latVal = sysObserver.getLATValue();
-            openPost.put("lat_val", latVal);
-            openPost.put("debug", prefHelper_.isDebug());
+            openPost.put(Defines.Jsonkey.LATVal.getKey(), latVal);
+            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
 
             setPost(openPost);
         } catch (JSONException ex) {
@@ -70,34 +62,34 @@ public class RegisterOpenRequest extends ServerRequest {
 
     }
 
-    public RegisterOpenRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            prefHelper_.setSessionID(resp.getObject().getString("session_id"));
-            prefHelper_.setDeviceFingerPrintID(resp.getObject().getString("device_fingerprint_id"));
+            prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+            prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-            if (resp.getObject().has("identity_id")) {
-                prefHelper_.setIdentityID(resp.getObject().getString("identity_id"));
+            if (resp.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
+                prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
             }
-            if (resp.getObject().has("link_click_id")) {
-                prefHelper_.setLinkClickID(resp.getObject().getString("link_click_id"));
+            if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
+                prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
 
             if (prefHelper_.getIsReferrable() == 1) {
-                if (resp.getObject().has("data")) {
-                    String params = resp.getObject().getString("data");
+                if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                    String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
                     prefHelper_.setInstallParams(params);
                 }
             }
 
-            if (resp.getObject().has("data")) {
-                String params = resp.getObject().getString("data");
+            if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
                 prefHelper_.setSessionParams(params);
             } else {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);

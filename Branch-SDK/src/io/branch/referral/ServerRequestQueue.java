@@ -16,15 +16,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import io.branch.referral.serverrequest.RegisterInstallRequest;
-import io.branch.referral.serverrequest.RegisterOpenRequest;
-
 /**
  *<p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
  *complete. This allows you to start sending requests to the Branch API as soon as your app is 
  *opened.</p>
  */
-public class ServerRequestQueue {
+class ServerRequestQueue {
 	private static final String PREF_KEY = "BNCServerRequestQueue";
 	private static final int MAX_ITEMS = 25;
 	private static ServerRequestQueue SharedInstance;	
@@ -131,7 +128,6 @@ public class ServerRequestQueue {
 	 * @param request		The {@link ServerRequest} object to add to the queue.
 	 */
 	public void enqueue(ServerRequest request) {
-		Log.d("BranchTestRquest" ,"enqueing request "+ request.getClass().getSimpleName());
 		if (request != null) {
 			queue.add(request);
 			if (getSize() >= MAX_ITEMS) {
@@ -151,7 +147,6 @@ public class ServerRequestQueue {
 		ServerRequest req = null;
 		try {
 			req = queue.remove(0);
-			Log.d("BranchTestRquest", "--Dequeueing Request "+ req.getClass().getSimpleName()+" -- queue size is ---- "+queue.size());
 			persist();
 		} catch (IndexOutOfBoundsException ignored) {
 		} catch (NoSuchElementException ignored) {
@@ -243,13 +238,22 @@ public class ServerRequestQueue {
 	public boolean remove(ServerRequest request) {
 		boolean isRemoved = false;
 		try {
-
 			isRemoved = queue.remove(request);
-			Log.d("BranchTestRquest", "--Removing form queue" + request.getClass().getSimpleName() + " -- queue size is ---- " + queue.size());
 			persist();
 		} catch (UnsupportedOperationException ignored) {
 		}
 		return isRemoved;
+	}
+
+	/**
+	 * <p> Clears all pending requests in the queue </p>
+	 */
+	public void clear() {
+		try {
+			queue.clear();
+			persist();
+		} catch (UnsupportedOperationException ignored) {
+		}
 	}
 	/**
 	 * <p>Determines whether the queue contains a session/app close request.</p>
@@ -281,7 +285,7 @@ public class ServerRequestQueue {
 		synchronized (queue) {
 			for (ServerRequest req : queue) {
 				if (req != null &&
-						((req instanceof RegisterInstallRequest) || req instanceof RegisterOpenRequest)) {
+						((req instanceof ServerRequestRegisterInstall) || req instanceof ServerRequestRegisterOpen)) {
 					return true;
 				}
 			}
@@ -290,8 +294,8 @@ public class ServerRequestQueue {
 	}
 
 	/**
-	 * <p>Moves any {@link ServerRequest} of type {@link RegisterInstallRequest}
-	 * or {@link RegisterOpenRequest} to the front of the queue.</p>
+	 * <p>Moves any {@link ServerRequest} of type {@link ServerRequestRegisterInstall}
+	 * or {@link ServerRequestRegisterOpen} to the front of the queue.</p>
 	 *
 	 * @param request      A {@link ServerRequest} of type open or install which need to be moved to the front of the queue.
 	 * @param networkCount An {@link Integer} value that indicates whether or not to insert the
@@ -304,17 +308,9 @@ public class ServerRequestQueue {
 			Iterator<ServerRequest> iter = queue.iterator();
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
-				if (req != null && (req instanceof RegisterInstallRequest || req instanceof RegisterOpenRequest)) {
-					//If a new  callback provided update the callbacks
-					if (callback != null) {
-						if (req instanceof RegisterInstallRequest) {
-							((RegisterInstallRequest) req).setInitFinishedCallback(callback);
-						} else {
-							((RegisterOpenRequest) req).setInitFinishedCallback(callback);
-						}
-					}
-					request = req;
-
+				if (req != null && (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen)) {
+					//Remove all install or open in queue. Since this method is called each time on Install/open there will be only one
+					//instance of open/Install in queue. So we can break as we see the first open/install
 					iter.remove();
 					break;
 				}
@@ -339,10 +335,10 @@ public class ServerRequestQueue {
 			while (iter.hasNext()) {
 				ServerRequest req = iter.next();
 				if (req != null) {
-					if (req instanceof RegisterInstallRequest) {
-						((RegisterInstallRequest) req).setInitFinishedCallback(callback);
-					} else if (req instanceof RegisterOpenRequest) {
-						((RegisterOpenRequest) req).setInitFinishedCallback(callback);
+					if (req instanceof ServerRequestRegisterInstall) {
+						((ServerRequestRegisterInstall) req).setInitFinishedCallback(callback);
+					} else if (req instanceof ServerRequestRegisterOpen) {
+						((ServerRequestRegisterOpen) req).setInitFinishedCallback(callback);
 					}
 				}
 

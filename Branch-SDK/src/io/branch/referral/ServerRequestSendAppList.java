@@ -1,4 +1,4 @@
-package io.branch.referral.serverrequest;
+package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
@@ -7,22 +7,15 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-import io.branch.referral.SystemObserver;
-
 /**
  * * <p>
  * The server request for sending installed application details to Branch API. Handles request creation and execution.
  * </p>
  */
-public class SendAppListRequest extends ServerRequest {
+class ServerRequestSendAppList extends ServerRequest {
 
     /**
-     * <p>Creates an instance of {@link SendAppListRequest } to get the following details and report them to the
+     * <p>Creates an instance of {@link ServerRequestSendAppList } to get the following details and report them to the
      * Branch API <b>once a week</b>:</p>
      * <p/>
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
@@ -41,15 +34,15 @@ public class SendAppListRequest extends ServerRequest {
      * @see {@link SystemObserver}
      * @see {@link PrefHelper}
      */
-    public SendAppListRequest(Context context) {
+    public ServerRequestSendAppList(Context context) {
         super(context, Defines.RequestPath.SendAPPList.getPath());
 
         SystemObserver sysObserver = new SystemObserver(context);
         JSONObject post = new JSONObject();
         try {
             if (!sysObserver.getOS().equals(SystemObserver.BLANK))
-                post.put("os", sysObserver.getOS());
-            post.put("device_fingerprint_id", prefHelper_.getDeviceFingerPrintID());
+                post.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
+            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             post.put("apps_data", sysObserver.getListOfApps());
             setPost(post);
         } catch (JSONException ex) {
@@ -58,7 +51,7 @@ public class SendAppListRequest extends ServerRequest {
         }
     }
 
-    public SendAppListRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestSendAppList(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
