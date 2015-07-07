@@ -75,18 +75,22 @@ public class ReferralCodeActivity extends Activity {
 					    return;
 					}
 				}
-				
+
 				branch.getReferralCode(prefix, amount, expiration, null, getCalculationType(), getLocation(), new BranchReferralInitListener() {
 					@Override
 					public void onInitFinished(JSONObject referralCode, BranchError error) {
-						try {
-							if (!referralCode.has("error_message")) {
-								txtReferralCode.setText(referralCode.getString("referral_code"));
-							} else {
-								txtReferralCode.setText(referralCode.getString("error_message"));
+						if (error != null) {
+							Log.i("BranchTestBed", "branch get referral code failed. Caused by -" + error.getMessage());
+						} else {
+							try {
+								if (!referralCode.has("error_message")) {
+									txtReferralCode.setText(referralCode.getString("referral_code"));
+								} else {
+									txtReferralCode.setText(referralCode.getString("error_message"));
+								}
+							} catch (JSONException e) {
+								txtReferralCode.setText("Error parsing JSON");
 							}
-						} catch (JSONException e) {
-							txtReferralCode.setText("Error parsing JSON");
 						}
 					}
 				});
@@ -97,27 +101,31 @@ public class ReferralCodeActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				txtValid.setVisibility(View.GONE);
-				
+
 				final String referral_code = txtReferralCode.getText().toString();
 				if (referral_code.length() > 0) {
 					branch.validateReferralCode(referral_code, new BranchReferralInitListener() {
 						@Override
 						public void onInitFinished(JSONObject referralCode, BranchError error) {
-							try {
-								txtValid.setVisibility(View.VISIBLE);
-								if (!referralCode.has("error_message")) {
-									
-									String code = referralCode.getString("referral_code");
-									if (referral_code.equals(code)) {
-										txtValid.setText("Valid");
+							if (error != null) {
+								Log.i("BranchTestBed", "branch validate referral code failed. Caused by -" + error.getMessage());
+							} else {
+								try {
+									txtValid.setVisibility(View.VISIBLE);
+									if (!referralCode.has("error_message")) {
+
+										String code = referralCode.getString("referral_code");
+										if (referral_code.equals(code)) {
+											txtValid.setText("Valid");
+										} else {
+											txtValid.setText("Mismatch!");
+										}
 									} else {
-										txtValid.setText("Mismatch!");
+										txtValid.setText("Invalid");
 									}
-								} else {
-									txtValid.setText("Invalid");
+								} catch (JSONException e) {
+									txtReferralCode.setText("Error parsing JSON");
 								}
-							} catch (JSONException e) {
-								txtReferralCode.setText("Error parsing JSON");
 							}
 						}
 					});
@@ -135,21 +143,25 @@ public class ReferralCodeActivity extends Activity {
 					branch.applyReferralCode(referral_code, new BranchReferralInitListener() {
 						@Override
 						public void onInitFinished(JSONObject referralCode, BranchError error) {
-							try {
-								txtValid.setVisibility(View.VISIBLE);
-								if (!referralCode.has("error_message")) {
-									
-									String code = referralCode.getString("referral_code");
-									if (referral_code.equals(code)) {
-										txtValid.setText("Applied");
+							if (error != null) {
+								Log.i("BranchTestBed", "branch redeem referral code failed. Caused by -" + error.getMessage());
+							} else {
+								try {
+									txtValid.setVisibility(View.VISIBLE);
+									if (!referralCode.has("error_message")) {
+
+										String code = referralCode.getString("referral_code");
+										if (referral_code.equals(code)) {
+											txtValid.setText("Applied");
+										} else {
+											txtValid.setText("Mismatch!");
+										}
 									} else {
-										txtValid.setText("Mismatch!");
+										txtValid.setText("Invalid");
 									}
-								} else {
-									txtValid.setText("Invalid");
+								} catch (JSONException e) {
+									txtReferralCode.setText("Error parsing JSON");
 								}
-							} catch (JSONException e) {
-								txtReferralCode.setText("Error parsing JSON");
 							}
 						}
 					});
@@ -185,17 +197,18 @@ public class ReferralCodeActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-			branch = Branch.getInstance(this.getApplicationContext());
-			branch.initSession(this);
-		} else {
-			try {
+		try {
+			if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
 				branch = Branch.getInstance();
-			} catch (BranchException e) {
-				e.printStackTrace();
-				Log.d("BranchTestBed", e.getMessage());
+				branch.initSession(this);
+			} else {
+				branch = Branch.getInstance();
 			}
+		} catch (BranchException e) {
+			e.printStackTrace();
+			Log.d("BranchTestBed", e.getMessage());
 		}
+
 	}
 
 

@@ -19,7 +19,7 @@ import org.json.JSONObject;
  * </p>
  *
  */
-public class BranchLinkData extends JSONObject {
+class BranchLinkData extends JSONObject {
 
 	/**
 	 * <p>An iterable {@link Collection} of {@link String} tags associated with a deep
@@ -183,7 +183,7 @@ public class BranchLinkData extends JSONObject {
 	public void putType(int type) throws JSONException {
 		if (type != 0) {
 			this.type = type;
-			this.put("type", type);
+			this.put(Defines.Jsonkey.Type.getKey(), type);
 		}
 	}
 
@@ -264,7 +264,7 @@ public class BranchLinkData extends JSONObject {
 	 */
 	public void putParams(String params) throws JSONException {
 		this.params = params;
-		this.put("data", params);
+		this.put(Defines.Jsonkey.Data.getKey(), params);
 	}
 
 	/**
