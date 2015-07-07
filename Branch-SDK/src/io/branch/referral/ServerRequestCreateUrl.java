@@ -1,22 +1,12 @@
 package io.branch.referral;
 
-import android.app.Application;
-import android.content.Context;
+import java.util.Collection;
 
-import org.apache.http.impl.cookie.NetscapeDomainHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.channels.Pipe;
-import java.util.Collection;
-
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.BranchLinkData;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
+import android.app.Application;
+import android.content.Context;
 
 /**
  * * <p>

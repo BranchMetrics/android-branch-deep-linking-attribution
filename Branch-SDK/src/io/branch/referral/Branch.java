@@ -2735,15 +2735,12 @@ public class Branch {
 	 * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
 	 * published in the main thread.
 	 */
-	private class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
-
-		String apiBaseUrl_ = "";
+	private class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {		
 		int timeOut_ = 0;
 		ServerRequest thisReq_;
 
 		public BranchPostTask(ServerRequest request) {
-			thisReq_ = request;
-			apiBaseUrl_ = prefHelper_.getAPIBaseUrl();
+			thisReq_ = request;		
 			timeOut_ = prefHelper_.getTimeout();
 		}
 
@@ -2762,8 +2759,7 @@ public class Branch {
 			if (serverResponse != null) {
 				try {
 					int status = serverResponse.getStatusCode();
-					hasNetwork_ = true;
-					boolean hasKeyError = false;
+					hasNetwork_ = true;					
 
 					//If the request is not succeeded
 					if (status != 200) {
@@ -2786,8 +2782,7 @@ public class Branch {
 							hasNetwork_ = false;
 							//Collect all request from the queue which need to be failed.
 							ArrayList<ServerRequest> requestToFail = new ArrayList<ServerRequest>();
-							for (int i = 0; i < requestQueue_.getSize(); i++) {
-								ServerRequest req = requestQueue_.peekAt(i);
+							for (int i = 0; i < requestQueue_.getSize(); i++) {								
 								requestToFail.add(requestQueue_.peekAt(i));
 							}
 							//Remove the requests from the request queue first
