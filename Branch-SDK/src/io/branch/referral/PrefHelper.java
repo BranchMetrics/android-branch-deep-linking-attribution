@@ -1,17 +1,18 @@
 package io.branch.referral;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-
-import org.json.JSONException;
-
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
+
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 
 /**
  * <p>A class that uses the helper pattern to provide regularly referenced static values and 
@@ -47,6 +48,13 @@ public class PrefHelper {
 	 * @see {@link SystemObserver#getListOfApps()}
 	 */
 	private static boolean BNC_App_Listing = true;
+
+	/**
+	 * {@link Boolean} value that determines whether Touch debugging is enabled or not.
+	 *
+	 * @see {@link Branch#setTouchDebugInternal(Activity)}
+	 */
+	private static boolean BNC_Touch_Debugging = true;
 
 	private static boolean BNC_Smart_Session = true;
 
@@ -961,7 +969,7 @@ public class PrefHelper {
 	public void disableExternAppListing() {
 		BNC_App_Listing = false;
 	}
-	
+
 	/**
 	 * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps.</p>
 	 * 
@@ -970,6 +978,24 @@ public class PrefHelper {
 	 */
 	public boolean getExternAppListing() {
 		return BNC_App_Listing;
+	}
+
+	/**
+	 * <p>Sets the {@link Boolean} value that is checked prior to setting touch debugging feature.
+	 * <i>false</i>.</p>
+	 */
+	public void disableTouchDebugging() {
+		BNC_Touch_Debugging = false;
+	}
+
+	/**
+	 * <p>Sets the {@link Boolean} value that is checked prior to setting touch debugging feature .</p>
+	 *
+	 * @return A {@link Boolean} value containing the current value of the
+	 * {@link #BNC_Touch_Debugging} boolean.
+	 */
+	public boolean getTouchDebugging() {
+		return BNC_Touch_Debugging;
 	}
 
 	/**
