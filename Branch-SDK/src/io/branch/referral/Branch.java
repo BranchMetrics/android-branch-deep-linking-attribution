@@ -560,6 +560,15 @@ public class Branch {
 		prefHelper_.disableExternAppListing();
 	}
 
+
+	/**
+	 * <p>Calls the {@link PrefHelper#disableTouchDebugging()} ()} on the local instance to prevent
+	 * touch debugging feature.</p>
+	 */
+	public void disableTouchDebugging() {
+		prefHelper_.disableTouchDebugging();
+	}
+
 	/**
 	 * <p>If there's further Branch API call happening within the two seconds, we then don't close
 	 * the session; otherwise, we close the session after two seconds.</p>
@@ -842,11 +851,13 @@ public class Branch {
 			}
 		}
 
-		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
-			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) {
-				view.setOnTouchListener(debugOnTouchListener_);
+		if (prefHelper_.getTouchDebugging()) {
+			if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+				debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
+				View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
+				if (view != null) {
+					view.setOnTouchListener(debugOnTouchListener_);
+				}
 			}
 		}
 	}
