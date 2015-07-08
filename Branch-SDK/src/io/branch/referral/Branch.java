@@ -2629,6 +2629,12 @@ public class Branch {
 
 		} catch (NoSuchMethodError Ex) {
 			isActivityLifeCycleCallbackRegistered_ = false;
+			isAutoSessionMode_ = false;
+			/* LifeCycleEvents are  available only from API level 14. */
+			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+		} catch (NoClassDefFoundError Ex) {
+			isActivityLifeCycleCallbackRegistered_ = false;
+			isAutoSessionMode_ = false;
 			/* LifeCycleEvents are  available only from API level 14. */
 			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
 		}
