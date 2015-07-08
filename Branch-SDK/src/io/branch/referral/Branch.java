@@ -340,7 +340,7 @@ public class Branch {
 		debugHandler_ = new Handler();
 		debugStarted_ = false;
 		linkCache_ = new HashMap<BranchLinkData, String>();
-		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
+
 	}
 
 
@@ -558,6 +558,15 @@ public class Branch {
 	 */
 	public void disableAppList() {
 		prefHelper_.disableExternAppListing();
+	}
+
+
+	/**
+	 * <p>Calls the {@link PrefHelper#disableTouchDebugging()} ()} on the local instance to prevent
+	 * touch debugging feature.</p>
+	 */
+	public void disableTouchDebugging() {
+		prefHelper_.disableTouchDebugging();
 	}
 
 	/**
@@ -842,11 +851,13 @@ public class Branch {
 			}
 		}
 
-		if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
-			debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-			View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-			if (view != null) {
-				view.setOnTouchListener(debugOnTouchListener_);
+		if (prefHelper_.getTouchDebugging()) {
+			if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
+				debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
+				View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
+				if (view != null) {
+					view.setOnTouchListener(debugOnTouchListener_);
+				}
 			}
 		}
 	}
@@ -2610,6 +2621,7 @@ public class Branch {
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
 		try {
+			activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	 		/* Set an observer for activity life cycle events. */
 			application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
 			application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
@@ -2617,6 +2629,12 @@ public class Branch {
 
 		} catch (NoSuchMethodError Ex) {
 			isActivityLifeCycleCallbackRegistered_ = false;
+			isAutoSessionMode_ = false;
+			/* LifeCycleEvents are  available only from API level 14. */
+			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+		} catch (NoClassDefFoundError Ex) {
+			isActivityLifeCycleCallbackRegistered_ = false;
+			isAutoSessionMode_ = false;
 			/* LifeCycleEvents are  available only from API level 14. */
 			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
 		}
@@ -2645,7 +2663,9 @@ public class Branch {
 		@Override
 		public void onActivityResumed(Activity activity) {
 			//Set the activity for touch debug
-			setTouchDebugInternal(activity);
+			if (prefHelper_.getTouchDebugging()) {
+				setTouchDebugInternal(activity);
+			}
 		}
 
 		@Override

@@ -256,6 +256,8 @@ public class MainActivity extends Activity {
 		}
 
 		branch.setDebug();
+		//branch.disableTouchDebugging();
+
 		branch.initSession(new BranchReferralInitListener() {
 			@Override
 			public void onInitFinished(JSONObject referringParams,
