@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.6.1: Fixed crashing issue when used with API-level below 14
+
 - v1.6.O: Improved thread handling and request processing mechanism. Fixed few bugs related with session management in auto mode. Also added fixes for handling network down condition properly.
 
 - v1.5.11: Fix for a handling pending open request in queue while there is no valid identity_id.
