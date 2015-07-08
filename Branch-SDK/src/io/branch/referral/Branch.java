@@ -340,7 +340,7 @@ public class Branch {
 		debugHandler_ = new Handler();
 		debugStarted_ = false;
 		linkCache_ = new HashMap<BranchLinkData, String>();
-		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
+
 	}
 
 
@@ -2610,6 +2610,7 @@ public class Branch {
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
 		try {
+			activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	 		/* Set an observer for activity life cycle events. */
 			application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
 			application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
@@ -2645,7 +2646,9 @@ public class Branch {
 		@Override
 		public void onActivityResumed(Activity activity) {
 			//Set the activity for touch debug
-			setTouchDebugInternal(activity);
+			if (prefHelper_.getTouchDebugging()) {
+				setTouchDebugInternal(activity);
+			}
 		}
 
 		@Override
