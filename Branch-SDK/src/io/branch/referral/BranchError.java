@@ -21,6 +21,8 @@ public class BranchError {
     public static final int ERR_BRANCH_DUPLICATE_REFERRAL_CODE = -106;
     /* Error redeeming rewards. */
     public static final int ERR_BRANCH_REDEEM_REWARD = -107;
+    /* Error while creating share options. */
+    public static final int ERR_BRANCH_NO_SHARE_OPTION = -108;
 
 
     /**
@@ -73,7 +75,9 @@ public class BranchError {
             errMsg = " That Branch referral code is already in use.";
         } else if (statusCode == ERR_BRANCH_REDEEM_REWARD) {
             errMsg = " Unable to redeem rewards. Please make sure you have credits available to redeem.";
-        } else if (statusCode >= 500) {
+        } else if (statusCode == ERR_BRANCH_NO_SHARE_OPTION) {
+            errMsg = " Unable create share options. Couldn't find applications on device to share the link.";
+        }  else if (statusCode >= 500) {
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
         } else if (statusCode == 409) {
             errMsg = " A resource with this identifier already exists.";

@@ -340,7 +340,7 @@ public class Branch {
 		debugHandler_ = new Handler();
 		debugStarted_ = false;
 		linkCache_ = new HashMap<BranchLinkData, String>();
-		activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
+
 	}
 
 
@@ -2268,6 +2268,28 @@ public class Branch {
 		}
 	}
 
+	/**
+	 * <p>Creates options for sahring a link with other Applications. Creates a link with given attributes and shares with the
+	 * user selected clients</p>
+	 *
+	 * @param activity     The {@link Activity} to show the dialog for choosing sharing applicaion
+	 * @param tags         An iterable {@link Collection} of {@link String} tags associated with a deep
+	 *                     link.
+	 * @param feature      A {@link String} value identifying the feature that the link makes use of.
+	 *                     Should not exceed 128 characters.
+	 * @param stage        A {@link String} value identifying the stage in an application or user flow
+	 *                     process. Should not exceed 128 characters.
+	 * @param parameters   @param params	A {@link JSONObject} value containing the deep linked params associated with
+	 *                     the link that will be passed into a new app session when clicked
+	 * @param shareMessage A {@link String} message to be added to the link.
+	 * @param sharelist    A list of applicaitons to be added as priority options on the app chooser.
+	 * @param callback     A {@link BranchLinkShareListener} instance for getting sharing status.
+	 */
+	public void shareLink(Activity activity, Collection<String> tags, String feature, String stage, JSONObject parameters, String shareMessage, ArrayList<SharingHelper.SHARE_WITH> sharelist, BranchLinkShareListener callback) {
+		ShareLinkManager btn = new ShareLinkManager();
+		btn.shareLink(activity, tags, feature, stage, parameters, shareMessage, branchReferral_, sharelist, callback);
+	}
+
 	// PRIVATE FUNCTIONS
 
 	private String convertDate(Date date) {
@@ -2610,6 +2632,7 @@ public class Branch {
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private void setActivityLifeCycleObserver(Application application) {
 		try {
+			activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
 	 		/* Set an observer for activity life cycle events. */
 			application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
 			application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
@@ -2617,6 +2640,13 @@ public class Branch {
 
 		} catch (NoSuchMethodError Ex) {
 			isActivityLifeCycleCallbackRegistered_ = false;
+			isAutoSessionMode_ = false;
+			/* LifeCycleEvents are  available only from API level 14. */
+			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+		}
+		catch (NoClassDefFoundError Ex){
+			isActivityLifeCycleCallbackRegistered_ = false;
+			isAutoSessionMode_ = false;
 			/* LifeCycleEvents are  available only from API level 14. */
 			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
 		}
@@ -2709,6 +2739,10 @@ public class Branch {
 		public void onLinkCreate(String url, BranchError error);
 	}
 
+	public interface BranchLinkShareListener{
+		void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
+	}
+
 	/**
 	 * <p>An Interface class that is implemented by all classes that make use of
 	 * {@link BranchListResponseListener}, defining a single method that takes a list of
@@ -2721,6 +2755,8 @@ public class Branch {
 	public interface BranchListResponseListener {
 		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
+
+
 
 	/**
 	 * <p>enum containing the sort options for return of credit history.</p>

@@ -1,18 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Branch.BranchLinkCreateListener;
-import io.branch.referral.Branch.BranchReferralInitListener;
-import io.branch.referral.Branch.BranchReferralStateChangedListener;
-import io.branch.referral.BranchError;
-import io.branch.referral.BranchException;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,6 +9,20 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchLinkCreateListener;
+import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.Branch.BranchReferralStateChangedListener;
+import io.branch.referral.BranchError;
+import io.branch.referral.BranchException;
+import io.branch.referral.SharingHelper;
 
 public class MainActivity extends Activity {
 	Branch branch;
@@ -234,6 +235,42 @@ public class MainActivity extends Activity {
 				Log.i("BranchTestBed", "Navigating to Referral Code...");
 				Intent i = new Intent(getApplicationContext(), ReferralCodeActivity.class);
 				startActivity(i);
+			}
+		});
+
+		findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				JSONObject obj = new JSONObject();
+				try {
+					obj.put("name", "test name");
+					obj.put("message", "hello there with short url");
+					obj.put("$og_title", "this is new sharing title");
+					obj.put("$og_description", "this is new sharing description");
+					obj.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+				ArrayList<String> tags = new ArrayList<String>();
+				tags.add("tag1");
+				tags.add("tag2");
+
+				ArrayList<SharingHelper.SHARE_WITH> sharelist = new ArrayList<SharingHelper.SHARE_WITH>();
+				sharelist.add(SharingHelper.SHARE_WITH.FACEBOOK);
+				sharelist.add(SharingHelper.SHARE_WITH.TWITTER);
+				sharelist.add(SharingHelper.SHARE_WITH.EMAIL);
+				sharelist.add(SharingHelper.SHARE_WITH.MESSAGE);
+
+				branch.shareLink(MainActivity.this, tags, "Feature1", "1", obj, "My sharing Message", sharelist, new Branch.BranchLinkShareListener() {
+					@Override
+					public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+						if (error != null) {
+							Log.i("BranchTestBed", "branch share link failed. Caused by -" + error.getMessage());
+						} else {
+							Log.i("BranchTestBed", "Shared link" + sharedLink + " to " + sharedChannel);
+						}
+					}
+				});
 			}
 		});
 	}

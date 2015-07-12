@@ -151,6 +151,16 @@
         android:layout_marginTop="5dp"
         android:text="Referral Code"
         android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/share_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/cmdReferralCode"
+        android:textSize="21sp"
+        android:text="Share Link"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
     
 </RelativeLayout>
     
