@@ -314,6 +314,8 @@ public class Branch {
 	/* Holds the current Session state. Default is set to UNINITIALISED. */
 	private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
+	/* Instance  of share link manager to share links automatically with thirdparty applications. */
+	private ShareLinkManager shareLinkManager_;
 
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -977,6 +979,10 @@ public class Branch {
 			if (appListingSchedule_ == null) {
 				scheduleListOfApps();
 			}
+		}
+		/* Close any opened sharing dialog.*/
+		if(shareLinkManager_ != null) {
+			shareLinkManager_.cancelShareLink();
 		}
 	}
 
@@ -2269,25 +2275,28 @@ public class Branch {
 	}
 
 	/**
-	 * <p>Creates options for sahring a link with other Applications. Creates a link with given attributes and shares with the
+	 * <p>Creates options for shhring a link with other Applications. Creates a link with given attributes and shares with the
 	 * user selected clients</p>
 	 *
-	 * @param activity     The {@link Activity} to show the dialog for choosing sharing applicaion
-	 * @param tags         An iterable {@link Collection} of {@link String} tags associated with a deep
-	 *                     link.
-	 * @param feature      A {@link String} value identifying the feature that the link makes use of.
-	 *                     Should not exceed 128 characters.
-	 * @param stage        A {@link String} value identifying the stage in an application or user flow
-	 *                     process. Should not exceed 128 characters.
-	 * @param parameters   @param params	A {@link JSONObject} value containing the deep linked params associated with
-	 *                     the link that will be passed into a new app session when clicked
-	 * @param shareMessage A {@link String} message to be added to the link.
-	 * @param sharelist    A list of applicaitons to be added as priority options on the app chooser.
-	 * @param callback     A {@link BranchLinkShareListener} instance for getting sharing status.
+	 * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
 	 */
-	public void shareLink(Activity activity, Collection<String> tags, String feature, String stage, JSONObject parameters, String shareMessage, ArrayList<SharingHelper.SHARE_WITH> sharelist, BranchLinkShareListener callback) {
-		ShareLinkManager btn = new ShareLinkManager();
-		btn.shareLink(activity, tags, feature, stage, parameters, shareMessage, branchReferral_, sharelist, callback);
+	private void shareLink(ShareLinkBuilder builder) {
+		//Cancel any existing sharing in progress.
+		if (shareLinkManager_ != null) {
+			shareLinkManager_.cancelShareLink();
+		}
+		shareLinkManager_ = new ShareLinkManager();
+		shareLinkManager_.shareLink(builder);
+	}
+
+	/**
+	 * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
+	 * calling this method before your activity finishes inorder to prevent any window leak. </p>
+	 */
+	public void cancelShareLink() {
+		if (shareLinkManager_ != null) {
+			shareLinkManager_.cancelShareLink();
+		}
 	}
 
 	// PRIVATE FUNCTIONS
@@ -2681,6 +2690,10 @@ public class Branch {
 		@Override
 		public void onActivityPaused(Activity activity) {
 			clearTouchDebugInternal(activity);
+			/* Close any opened sharing dialog.*/
+			if(shareLinkManager_ != null) {
+				shareLinkManager_.cancelShareLink();
+			}
 		}
 
 		@Override
@@ -3056,6 +3069,164 @@ public class Branch {
 		@Override
 		public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
 			return callback_.onWindowStartingActionMode(callback);
+		}
+	}
+
+	//-------------------------- Branch Builders--------------------------------------//
+
+	/**
+	 * <p></p> Class for building a share link dailog.This creates a chooser for selecting application for
+	 * sharing a link created with given parameters. </p>
+	 */
+	public static class ShareLinkBuilder {
+
+		private final Activity activity_;
+		private final JSONObject linkCreationParams_;
+		private final Branch branch_;
+
+		private String shareMsg_;
+		private Collection<String> tags_ = null;
+		private String feature_ = "";
+		private String stage_ = "";
+		private Branch.BranchLinkShareListener callback_ = null;
+		private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
+
+
+		/**
+		 * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
+		 * user selected clients</p>
+		 *
+		 * @param activity   The {@link Activity} to show the dialog for choosing sharing application.
+		 * @param parameters @param params	A {@link JSONObject} value containing the deep link params.
+		 */
+		public ShareLinkBuilder(Activity activity, JSONObject parameters) {
+			this.activity_ = activity;
+			this.linkCreationParams_ = parameters;
+			this.branch_ = branchReferral_;
+
+			shareMsg_ = "";
+			tags_ = new ArrayList<String>();
+			feature_ = "";
+			stage_ = "";
+			callback_ = null;
+			preferredOptions_ = new ArrayList<SharingHelper.SHARE_WITH>();
+		}
+
+		/**
+		 * <p>Sets the message to be shared with the link.</p>
+		 *
+		 * @param message A {@link String} to be shared with the link
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder setMessage(String message) {
+			this.shareMsg_ = message;
+			return this;
+		}
+
+		/**
+		 * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
+		 * link.</p>
+		 *
+		 * @param tag A {@link String} to be added to the iterable {@link Collection} of {@link String} tags associated with a deep
+		 *            link.
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder addTag(String tag) {
+			this.tags_.add(tag);
+			return this;
+		}
+
+		/**
+		 * <p>Adds a feature that make use of the link.</p>
+		 *
+		 * @param feature A {@link String} value identifying the feature that the link makes use of.
+		 *                Should not exceed 128 characters.
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder setFeature(String feature) {
+			this.feature_ = feature;
+			return this;
+		}
+
+		/**
+		 * <p>Adds a stage application or user flow associated with this link.</p>
+		 *
+		 * @param stage A {@link String} value identifying the stage in an application or user flow
+		 *              process. Should not exceed 128 characters.
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder setStage(String stage) {
+			this.stage_ = stage;
+			return this;
+		}
+
+		/**
+		 * <p>Adds a callback to get the sharing status.</p>
+		 *
+		 * @param callback A {@link BranchLinkShareListener} instance for getting sharing status.
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder setCallback(BranchLinkShareListener callback) {
+			this.callback_ = callback;
+			return this;
+		}
+
+		/**
+		 * <p>Adds application to the preferred list of applications which are shown on share dialog.
+		 * Only these options will be visible when the application selector dialog launches. Other options can be
+		 * accessed by clicking "More"</p>
+		 *
+		 * @param preferredOption A list of applications to be added as preferred options on the app chooser.
+		 *                        Preferred applications are defined in {@link io.branch.referral.SharingHelper.SHARE_WITH}.
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) {
+			this.preferredOptions_.add(preferredOption);
+			return this;
+		}
+
+		/**
+		 * <p>Creates an application selector dialog and share a link with user selected sharing option.
+		 * The link is created with the paramateres provided to the builder. </p>
+		 */
+		public void ShareLink() {
+			branchReferral_.shareLink(this);
+		}
+
+		public Activity getActivity() {
+			return activity_;
+		}
+
+		public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
+			return preferredOptions_;
+		}
+
+		public Branch getBranch() {
+			return branch_;
+		}
+
+		public String getShareMsg() {
+			return shareMsg_;
+		}
+
+		public BranchLinkShareListener getCallback() {
+			return callback_;
+		}
+
+		public Collection<String> getTags() {
+			return tags_;
+		}
+
+		public JSONObject getLinkCreationParams() {
+			return linkCreationParams_;
+		}
+
+		public String getFeature() {
+			return feature_;
+		}
+
+		public String getStage() {
+			return stage_;
 		}
 	}
 }

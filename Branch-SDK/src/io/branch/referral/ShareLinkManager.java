@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -31,7 +33,7 @@ import java.util.List;
  * Class provides customised and easy way of sharing a deep link with other applications. </p>
  */
 class ShareLinkManager {
-    /* The custom chooser dialog foe selecting an application to share the link. */
+    /* The custom chooser dialog for selecting an application to share the link. */
     Dialog shareDlg_;
     /* The message to be attached with the shared link */
     String shareMsg_;
@@ -55,27 +57,26 @@ class ShareLinkManager {
     private Intent shareLinkIntent_;
     Context context_;
 
-    public void shareLink(Context context,
-                          Collection<String> tags,
-                          String feature,
-                          String stage,
-                          JSONObject parameters,
-                          String message,
-                          Branch branch,
-                          List<SharingHelper.SHARE_WITH> preferredOptions,
-                          Branch.BranchLinkShareListener callback) {
-        context_ = context;
-        tags_ = tags;
-        feature_ = feature;
-        stage_ = stage;
-        linkCreationParams_ = parameters;
-        shareMsg_ = message;
-        branch_ = branch;
-        callback_ = callback;
+    /**
+     * Creates an application selector and shares a link on user selecting the application.
+     *
+     * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     */
+    public void shareLink(Branch.ShareLinkBuilder builder) {
+        context_ = builder.getActivity();
+        tags_ = builder.getTags();
+        feature_ = builder.getFeature();
+        stage_ = builder.getStage();
+        linkCreationParams_ = builder.getLinkCreationParams();
+        shareMsg_ = builder.getShareMsg();
+        branch_ = builder.getBranch();
+        callback_ = builder.getCallback();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
         try {
-            createShareDialog(preferredOptions);
+            /* Remove any existing dialog. This class should handle only one dialog at a time. Dialogs should be closed on activity onPause(). */
+            cancelShareLink();
+            createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
             e.printStackTrace();
             if (callback_ != null) {
@@ -91,6 +92,7 @@ class ShareLinkManager {
      */
     public void cancelShareLink() {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
+            callback_ = null;
             shareDlg_.dismiss();
         }
     }
@@ -140,6 +142,7 @@ class ShareLinkManager {
         final ListView shareOptionListView = new ListView(context_);
         shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
+        shareOptionListView.setBackgroundColor(Color.WHITE);
 
         shareOptionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -152,21 +155,31 @@ class ShareLinkManager {
                 }
             }
         });
+
         shareDlg_ = new Dialog(context_);
+        setDialogWindow();
+        shareDlg_.setContentView(shareOptionListView);
+        TranslateAnimation slideUp = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0f);
+        slideUp.setDuration(500);
+        shareOptionListView.startAnimation(slideUp);
+        shareDlg_.show();
+
+    }
+
+    private void setDialogWindow() {
         shareDlg_.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        shareDlg_.getWindow().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-        Window window = shareDlg_.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-        wlp.gravity = Gravity.BOTTOM;
-        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        window.setAttributes(wlp);
+        shareDlg_.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        shareDlg_.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.copyFrom(shareDlg_.getWindow().getAttributes());
-        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        shareDlg_.setContentView(shareOptionListView);
-        shareDlg_.show();
+        lp.gravity = Gravity.BOTTOM;
+        lp.dimAmount = 0.8f;
         shareDlg_.getWindow().setAttributes(lp);
+        shareDlg_.getWindow().setWindowAnimations(android.R.anim.slide_in_left);
+
     }
 
     /**
@@ -211,6 +224,7 @@ class ShareLinkManager {
      * @param url   A {@link String} to add to the clip board
      * @param label A {@link String} label for the adding link
      */
+
     private void addLinkToClipBoard(String url, String label) {
         int sdk = android.os.Build.VERSION.SDK_INT;
         if (sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
@@ -271,7 +285,7 @@ class ShareLinkManager {
             this.setBackgroundColor(Color.argb(60, 17, 04, 56));
             this.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
             this.setMinHeight(100);
-
+            this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
         }
 
         public void setLabel(String appName, Drawable appIcon) {
@@ -318,6 +332,5 @@ class ShareLinkManager {
         }
 
     }
-
 
 }

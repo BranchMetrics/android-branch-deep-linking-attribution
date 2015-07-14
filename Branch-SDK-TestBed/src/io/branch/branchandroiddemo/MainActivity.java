@@ -251,26 +251,18 @@ public class MainActivity extends Activity {
 				} catch (JSONException ex) {
 					ex.printStackTrace();
 				}
-				ArrayList<String> tags = new ArrayList<String>();
-				tags.add("tag1");
-				tags.add("tag2");
 
-				ArrayList<SharingHelper.SHARE_WITH> sharelist = new ArrayList<SharingHelper.SHARE_WITH>();
-				sharelist.add(SharingHelper.SHARE_WITH.FACEBOOK);
-				sharelist.add(SharingHelper.SHARE_WITH.TWITTER);
-				sharelist.add(SharingHelper.SHARE_WITH.EMAIL);
-				sharelist.add(SharingHelper.SHARE_WITH.MESSAGE);
-
-				branch.shareLink(MainActivity.this, tags, "Feature1", "1", obj, "My sharing Message", sharelist, new Branch.BranchLinkShareListener() {
-					@Override
-					public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-						if (error != null) {
-							Log.i("BranchTestBed", "branch share link failed. Caused by -" + error.getMessage());
-						} else {
-							Log.i("BranchTestBed", "Shared link" + sharedLink + " to " + sharedChannel);
-						}
-					}
-				});
+				new Branch.ShareLinkBuilder(MainActivity.this, obj)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
+						.setMessage("See my content")
+						.setStage("stage1")
+						.setFeature("feature1")
+						.addTag("Tag1")
+						.addTag("Tag2")
+						.ShareLink();
 			}
 		});
 	}

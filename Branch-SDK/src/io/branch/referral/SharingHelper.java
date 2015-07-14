@@ -6,7 +6,7 @@ package io.branch.referral;
 public class SharingHelper {
     /**
      * <p>
-     * Defines all server path for the requests
+     * Defines the Application for sharing a deep link with.
      * </p>
      */
     public enum SHARE_WITH {
