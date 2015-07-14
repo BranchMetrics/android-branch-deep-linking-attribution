@@ -18,6 +18,7 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -126,16 +127,17 @@ class ShareLinkManager {
         /* Create all app list with copy link item. */
         matchingApps.removeAll(preferredApps);
         matchingApps.addAll(0, preferredApps);
-        matchingApps.add(new CopyLinkItem());
-
         if (preferredApps.size() > 0) {
-            /* Add more and copy link option to preferred app*/
-            preferredApps.add(new MoreShareItem());
-            preferredApps.add(new CopyLinkItem());
+            /* Add more and copy link option to preferred app.*/
+            if(matchingApps.size() > preferredApps.size()) {
+                preferredApps.add(new MoreShareItem());
+            }
             appList_ = preferredApps;
         } else {
             appList_ = matchingApps;
         }
+        matchingApps.add(new CopyLinkItem());
+        preferredApps.add(new CopyLinkItem());
         /* Copy link option will be always there for sharing. */
 
         final BaseAdapter adapter = new ChooserArrayAdapter();
@@ -179,6 +181,7 @@ class ShareLinkManager {
         lp.dimAmount = 0.8f;
         shareDlg_.getWindow().setAttributes(lp);
         shareDlg_.getWindow().setWindowAnimations(android.R.anim.slide_in_left);
+        shareDlg_.setCanceledOnTouchOutside(true);
 
     }
 
