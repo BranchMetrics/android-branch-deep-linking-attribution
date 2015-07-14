@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +19,6 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,10 +53,12 @@ class ShareLinkManager {
     /* List of apps available for sharing. */
     private List<ResolveInfo> appList_;
 
-    private final String OPTIONS_MORE = "More...";
-    private final String OPTIONS_COPY_LINK = "Copy link";
     private Intent shareLinkIntent_;
     Context context_;
+    /* Background color for the list view in enabled state. */
+    private final int BG_COLOR_ENABLED = Color.argb(60, 17, 4, 56);
+    /* Background color for the list view in disabled state. */
+    private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
 
     /**
      * Creates an application selector and shares a link on user selecting the application.
@@ -105,11 +107,11 @@ class ShareLinkManager {
      */
     private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
         final PackageManager packageManager = context_.getPackageManager();
-        final List<ResolveInfo> preferredApps = new ArrayList<ResolveInfo>();
+        final List<ResolveInfo> preferredApps = new ArrayList<>();
         final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
-        ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<SharingHelper.SHARE_WITH>(preferredOptions);
+        ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
 
-        /* Get alla apps available for sharing and the available preferred apps. */
+        /* Get all apps available for sharing and the available preferred apps. */
         for (ResolveInfo resolveInfo : matchingApps) {
             SharingHelper.SHARE_WITH foundMatching = null;
             String packageName = resolveInfo.activityInfo.packageName;
@@ -140,7 +142,7 @@ class ShareLinkManager {
         preferredApps.add(new CopyLinkItem());
         /* Copy link option will be always there for sharing. */
 
-        final BaseAdapter adapter = new ChooserArrayAdapter();
+        final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
         final ListView shareOptionListView = new ListView(context_);
         shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
@@ -153,7 +155,12 @@ class ShareLinkManager {
                     appList_ = matchingApps;
                     adapter.notifyDataSetChanged();
                 } else {
+                    if(callback_ != null){
+                        callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                    }
                     invokeSharingClient((ResolveInfo) view.getTag());
+                    adapter.selectedPos = pos;
+                    adapter.notifyDataSetChanged();
                 }
             }
         });
@@ -195,25 +202,25 @@ class ShareLinkManager {
         branch_.getShortUrl(tags_, channelName, feature_, stage_, linkCreationParams_, new Branch.BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
-                if (error != null) {
-                    if (callback_ != null) {
-                        callback_.onLinkShareResponse(url, channelName, error);
-                    } else {
-                        Log.i("BranchSDK", "Unable to share link " + error.getMessage());
-                    }
-                    shareDlg_.dismiss();
-                } else {
+                if (error == null) {
                     if (selectedResolveInfo instanceof CopyLinkItem) {
                         addLinkToClipBoard(url, shareMsg_);
                     } else {
-                        shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
-                        shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg_ + "\n" + url);
-                        context_.startActivity(shareLinkIntent_);
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, null);
                         } else {
                             Log.i("BranchSDK", "Shared link with " + channelName);
                         }
+                        shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
+                        shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg_ + "\n" + url);
+                        context_.startActivity(shareLinkIntent_);
+                    }
+                    shareDlg_.dismiss();
+                } else {
+                    if (callback_ != null) {
+                        callback_.onLinkShareResponse(url, channelName, error);
+                    } else {
+                        Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                     }
                     shareDlg_.dismiss();
                 }
@@ -228,6 +235,8 @@ class ShareLinkManager {
      * @param label A {@link String} label for the adding link
      */
 
+    @SuppressWarnings("deprecation")
+    @SuppressLint("NewApi")
     private void addLinkToClipBoard(String url, String label) {
         int sdk = android.os.Build.VERSION.SDK_INT;
         if (sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
@@ -245,6 +254,8 @@ class ShareLinkManager {
      * Adapter class for creating list of available share options
      */
     private class ChooserArrayAdapter extends BaseAdapter {
+        public int selectedPos = -1;
+
         @Override
         public int getCount() {
             return appList_.size();
@@ -269,9 +280,15 @@ class ShareLinkManager {
                 itemView = (ShareItemView) convertView;
             }
             ResolveInfo resolveInfo = appList_.get(position);
-            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(), resolveInfo.loadIcon(context_.getPackageManager()));
+            boolean setSelected = position == selectedPos;
+            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(), resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
             itemView.setTag(resolveInfo);
+            itemView.setClickable(false);
             return itemView;
+        }
+        @Override
+        public boolean isEnabled(int position) {
+            return selectedPos < 0;
         }
     }
 
@@ -285,13 +302,13 @@ class ShareLinkManager {
             super(context);
             context_ = context;
             this.setPadding(100, 5, 5, 5);
-            this.setBackgroundColor(Color.argb(60, 17, 04, 56));
-            this.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+
+            this.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
             this.setMinHeight(100);
             this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
         }
 
-        public void setLabel(String appName, Drawable appIcon) {
+        public void setLabel(String appName, Drawable appIcon, boolean isEnabled) {
             this.setText("\t" + appName);
             this.setTag(appName);
             if (appIcon == null) {
@@ -302,6 +319,11 @@ class ShareLinkManager {
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
             }
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
+            if(isEnabled){
+                this.setBackgroundColor(BG_COLOR_ENABLED);
+            }else{
+                this.setBackgroundColor(BG_COLOR_DISABLED);
+            }
         }
     }
 
@@ -311,7 +333,7 @@ class ShareLinkManager {
     private class MoreShareItem extends ResolveInfo {
         @Override
         public CharSequence loadLabel(PackageManager pm) {
-            return OPTIONS_MORE;
+            return "More...";
         }
 
         @Override
@@ -326,7 +348,7 @@ class ShareLinkManager {
     private class CopyLinkItem extends ResolveInfo {
         @Override
         public CharSequence loadLabel(PackageManager pm) {
-            return OPTIONS_COPY_LINK;
+            return "Copy link";
         }
 
         @Override

@@ -262,6 +262,20 @@ public class MainActivity extends Activity {
 						.setFeature("feature1")
 						.addTag("Tag1")
 						.addTag("Tag2")
+						.setCallback(new Branch.BranchLinkShareListener() {
+							@Override
+							public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+								if(error != null) {
+									Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel + " " + error.getMessage());
+								}else{
+									Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel);
+								}
+							}
+							@Override
+							public void onChannelSelected(String channelName) {
+								Log.i("BranchTestBed", "onChannelSelected... " + channelName );
+							}
+						})
 						.ShareLink();
 			}
 		});

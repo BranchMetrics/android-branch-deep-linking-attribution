@@ -2752,8 +2752,26 @@ public class Branch {
 		public void onLinkCreate(String url, BranchError error);
 	}
 
-	public interface BranchLinkShareListener{
+	/**
+	 * <p>An Interface class that is implemented by all classes that make use of
+	 * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
+	 */
+	public interface BranchLinkShareListener {
+		/**
+		 * Call method to update the sharing status. Called sharing is completed or on an error
+		 *
+		 * @param sharedLink    The link shared to the channel.
+		 * @param sharedChannel Channel selected for sharing.
+		 * @param error         A {@link BranchError} to update errors, if there is any.
+		 */
 		void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
+
+		/**
+		 * Called when user select a channel for sharing a deep link.
+		 *
+		 * @param channelName Name of the selected application to share the link.
+		 */
+		void onChannelSelected(String channelName);
 	}
 
 	/**
@@ -2768,8 +2786,6 @@ public class Branch {
 	public interface BranchListResponseListener {
 		public void onReceivingResponse(JSONArray list, BranchError error);
 	}
-
-
 
 	/**
 	 * <p>enum containing the sort options for return of credit history.</p>
