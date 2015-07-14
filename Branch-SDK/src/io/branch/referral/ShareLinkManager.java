@@ -313,7 +313,7 @@ class ShareLinkManager {
 
         @Override
         public Drawable loadIcon(PackageManager pm) {
-            return null;
+            return context_.getResources().getDrawable(android.R.drawable.ic_menu_more);
         }
     }
 
@@ -328,7 +328,7 @@ class ShareLinkManager {
 
         @Override
         public Drawable loadIcon(PackageManager pm) {
-            return null;
+            return context_.getResources().getDrawable(android.R.drawable.ic_menu_save);
         }
 
     }
