@@ -3106,6 +3106,7 @@ public class Branch {
 		private String stage_ = "";
 		private Branch.BranchLinkShareListener callback_ = null;
 		private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
+		private String defaultURL_;
 
 
 		/**
@@ -3126,6 +3127,7 @@ public class Branch {
 			stage_ = "";
 			callback_ = null;
 			preferredOptions_ = new ArrayList<SharingHelper.SHARE_WITH>();
+			defaultURL_ = null;
 		}
 
 		/**
@@ -3202,6 +3204,17 @@ public class Branch {
 		}
 
 		/**
+		 * Set a default url to share in case there is any error creating the deep link
+		 *
+		 * @param url A {@link String} with value of default url to be shared with the selected application in case deep link creation fails.
+		 * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+		 */
+		public ShareLinkBuilder setDefaultURL(String url) {
+			defaultURL_ = url;
+			return this;
+		}
+
+		/**
 		 * <p>Creates an application selector dialog and share a link with user selected sharing option.
 		 * The link is created with the paramateres provided to the builder. </p>
 		 */
@@ -3243,6 +3256,10 @@ public class Branch {
 
 		public String getStage() {
 			return stage_;
+		}
+
+		public String getDefaultURL() {
+			return defaultURL_;
 		}
 	}
 }

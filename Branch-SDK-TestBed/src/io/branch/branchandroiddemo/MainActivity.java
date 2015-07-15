@@ -262,18 +262,20 @@ public class MainActivity extends Activity {
 						.setFeature("feature1")
 						.addTag("Tag1")
 						.addTag("Tag2")
+						.setDefaultURL("https://play.google.com/store/apps/details?id=com.kindred.android")
 						.setCallback(new Branch.BranchLinkShareListener() {
 							@Override
 							public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-								if(error != null) {
+								if (error != null) {
 									Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel + " " + error.getMessage());
-								}else{
+								} else {
 									Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel);
 								}
 							}
+
 							@Override
 							public void onChannelSelected(String channelName) {
-								Log.i("BranchTestBed", "onChannelSelected... " + channelName );
+								Log.i("BranchTestBed", "onChannelSelected... " + channelName);
 							}
 						})
 						.ShareLink();

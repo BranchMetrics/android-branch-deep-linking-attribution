@@ -52,6 +52,8 @@ class ShareLinkManager {
     Branch.BranchLinkShareListener callback_;
     /* List of apps available for sharing. */
     private List<ResolveInfo> appList_;
+    /* Default URL to be shared in case there is an error creating deep link */
+    private String defaultURL_;
 
     private Intent shareLinkIntent_;
     Context context_;
@@ -74,8 +76,10 @@ class ShareLinkManager {
         shareMsg_ = builder.getShareMsg();
         branch_ = builder.getBranch();
         callback_ = builder.getCallback();
+        defaultURL_ = builder.getDefaultURL();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
+
         try {
             /* Remove any existing dialog. This class should handle only one dialog at a time. Dialogs should be closed on activity onPause(). */
             cancelShareLink();
@@ -129,17 +133,20 @@ class ShareLinkManager {
         /* Create all app list with copy link item. */
         matchingApps.removeAll(preferredApps);
         matchingApps.addAll(0, preferredApps);
-        if (preferredApps.size() > 0) {
+
+        matchingApps.add(new CopyLinkItem());
+        preferredApps.add(new CopyLinkItem());
+
+        if (preferredApps.size() > 1) {
             /* Add more and copy link option to preferred app.*/
-            if(matchingApps.size() > preferredApps.size()) {
+            if (matchingApps.size() > preferredApps.size()) {
                 preferredApps.add(new MoreShareItem());
             }
             appList_ = preferredApps;
         } else {
             appList_ = matchingApps;
         }
-        matchingApps.add(new CopyLinkItem());
-        preferredApps.add(new CopyLinkItem());
+
         /* Copy link option will be always there for sharing. */
 
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
@@ -155,7 +162,7 @@ class ShareLinkManager {
                     appList_ = matchingApps;
                     adapter.notifyDataSetChanged();
                 } else {
-                    if(callback_ != null){
+                    if (callback_ != null) {
                         callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                     }
                     invokeSharingClient((ResolveInfo) view.getTag());
@@ -168,11 +175,11 @@ class ShareLinkManager {
         shareDlg_ = new Dialog(context_);
         setDialogWindow();
         shareDlg_.setContentView(shareOptionListView);
+
         TranslateAnimation slideUp = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0f);
         slideUp.setDuration(500);
-        shareOptionListView.startAnimation(slideUp);
+        ((ViewGroup)shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideUp);
         shareDlg_.show();
-
     }
 
     private void setDialogWindow() {
@@ -197,35 +204,44 @@ class ShareLinkManager {
      *
      * @param selectedResolveInfo The {@link ResolveInfo} corresponding to the selected sharing client.
      */
-    void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
+    private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         branch_.getShortUrl(tags_, channelName, feature_, stage_, linkCreationParams_, new Branch.BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {
-                    if (selectedResolveInfo instanceof CopyLinkItem) {
-                        addLinkToClipBoard(url, shareMsg_);
-                    } else {
-                        if (callback_ != null) {
-                            callback_.onLinkShareResponse(url, channelName, null);
-                        } else {
-                            Log.i("BranchSDK", "Shared link with " + channelName);
-                        }
-                        shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
-                        shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg_ + "\n" + url);
-                        context_.startActivity(shareLinkIntent_);
-                    }
+                    shareWithClient(selectedResolveInfo, url, channelName);
                     shareDlg_.dismiss();
                 } else {
-                    if (callback_ != null) {
-                        callback_.onLinkShareResponse(url, channelName, error);
+                    //If there is a default URL specified share it.
+                    if (defaultURL_ != null && defaultURL_.length() > 0) {
+                        shareWithClient(selectedResolveInfo, defaultURL_, channelName);
                     } else {
-                        Log.i("BranchSDK", "Unable to share link " + error.getMessage());
+                        if (callback_ != null) {
+                            callback_.onLinkShareResponse(url, channelName, error);
+                        } else {
+                            Log.i("BranchSDK", "Unable to share link " + error.getMessage());
+                        }
                     }
                     shareDlg_.dismiss();
                 }
             }
         });
+    }
+
+    private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {
+        if (selectedResolveInfo instanceof CopyLinkItem) {
+            addLinkToClipBoard(url, shareMsg_);
+        } else {
+            if (callback_ != null) {
+                callback_.onLinkShareResponse(url, channelName, null);
+            } else {
+                Log.i("BranchSDK", "Shared link with " + channelName);
+            }
+            shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
+            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg_ + "\n" + url);
+            context_.startActivity(shareLinkIntent_);
+        }
     }
 
     /**
@@ -247,7 +263,7 @@ class ShareLinkManager {
             android.content.ClipData clip = android.content.ClipData.newPlainText(label, url);
             clipboard.setPrimaryClip(clip);
         }
-        Toast.makeText(context_, "Link copied", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context_, "Copied link to clipboard!", Toast.LENGTH_SHORT).show();
     }
 
     /*
