@@ -1,19 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Branch.BranchListResponseListener;
-import io.branch.referral.BranchException;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -25,6 +11,19 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchListResponseListener;
+import io.branch.referral.BranchError;
 
 public class CreditHistoryActivity extends Activity {
 	
@@ -46,57 +45,55 @@ public class CreditHistoryActivity extends Activity {
 		super.onStart();
 		
 		final CreditHistoryActivity self = this;
-		try {
-			if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-				branch = Branch.getInstance();
-				branch.initSession(this);
-			} else {
-				branch = Branch.getInstance();
-			}
-			branch.getCreditHistory(new BranchListResponseListener() {
-				@SuppressLint("NewApi") public void onReceivingResponse(JSONArray history, BranchError error) {
-					ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
-					if (error != null) {
-						Log.i("BranchTestBed", "branch load credit history failed. Caused by -" + error.getMessage());
-					} else {
-						if (history.length() > 0) {
-							Log.i("BranchTestBed", history.toString());
 
-							try {
-								for (int i = 0; i < history.length(); i++) {
-									JSONObject transaction = history.getJSONObject(i);
-									JSONObject xact = transaction.getJSONObject("transaction");
-									String bucket = xact.getString("bucket");
-									int amount = xact.getInt("amount");
-									String date = xact.getString("date");
-									Date xactDate = null;
-									try {
-										xactDate = DateParseFormat.parse(date);
-									} catch (ParseException e) {
-										e.printStackTrace();
-									}
-									list.add(new CreditTransaction(bucket + " : " + amount,
-											transaction.isNull("referrer") ? null : transaction.getString("referrer"),
-											transaction.isNull("referree") ? null : transaction.getString("referree"),
-											xactDate));
-								}
-
-
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
-						} else {
-							list.add(new CreditTransaction("None found"));
-						}
-						CreditHistoryArrayAdaptor adapter = new CreditHistoryArrayAdaptor(self, list);
-						listview.setAdapter(adapter);
-					}
-				}
-			});
-		}catch (BranchException ex) {
-			ex.printStackTrace();
-			Log.d("BranchTestBed", ex.getMessage());
+		if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
+			branch = Branch.getInstance();
+			branch.initSession(this);
+		} else {
+			branch = Branch.getInstance();
 		}
+		branch.getCreditHistory(new BranchListResponseListener() {
+			@SuppressLint("NewApi")
+			public void onReceivingResponse(JSONArray history, BranchError error) {
+				ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
+				if (error != null) {
+					Log.i("BranchTestBed", "branch load credit history failed. Caused by -" + error.getMessage());
+				} else {
+					if (history.length() > 0) {
+						Log.i("BranchTestBed", history.toString());
+
+						try {
+							for (int i = 0; i < history.length(); i++) {
+								JSONObject transaction = history.getJSONObject(i);
+								JSONObject xact = transaction.getJSONObject("transaction");
+								String bucket = xact.getString("bucket");
+								int amount = xact.getInt("amount");
+								String date = xact.getString("date");
+								Date xactDate = null;
+								try {
+									xactDate = DateParseFormat.parse(date);
+								} catch (ParseException e) {
+									e.printStackTrace();
+								}
+								list.add(new CreditTransaction(bucket + " : " + amount,
+										transaction.isNull("referrer") ? null : transaction.getString("referrer"),
+										transaction.isNull("referree") ? null : transaction.getString("referree"),
+										xactDate));
+							}
+
+
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					} else {
+						list.add(new CreditTransaction("None found"));
+					}
+					CreditHistoryArrayAdaptor adapter = new CreditHistoryArrayAdaptor(self, list);
+					listview.setAdapter(adapter);
+				}
+			}
+		});
+
 	}
 
 	@Override

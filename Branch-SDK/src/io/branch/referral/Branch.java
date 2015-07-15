@@ -346,23 +346,24 @@ public class Branch {
 
 	/**
 	 * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-	 * Make sure your app is instantiating {@link BranchApp} before calling this method.</p>
+	 * Make sure your app is instantiating {@link BranchApp} before calling this method
+	 * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
 	 *
 	 * @return An initialised singleton {@link Branch} object
 	 *
-	 * @throws BranchException Exception<br>
-	 *          1) If your {@link Application} is not instance of {@link BranchApp}.<br>
-	 *          2) If the minimum API level is below 14.
+	 *
 	 */
-	public static Branch getInstance() throws BranchException {
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	public static Branch getInstance() {
 		/* Check if BranchApp is instantiated. */
 		if (branchReferral_ == null ) {
-			throw BranchException.getInstantiationException();
+			Log.e("BranchSDK", "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
 		}
 		else if(isAutoSessionMode_ == true){
 			/* Check if Activity life cycle callbacks are set if in auto session mode. */
 			if (isActivityLifeCycleCallbackRegistered_ == false) {
-				throw BranchException.getAPILevelException();
+				Log.e("BranchSDK" ,"Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
+						"If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
 			}
 		}
 		return branchReferral_;
@@ -461,6 +462,7 @@ public class Branch {
 	 * 					instance within the singleton class, or a newly instantiated object where
 	 * 					one was not already requested during the current app lifecycle.
 	 */
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(Context context) {
     	isAutoSessionMode_ = true;
         getBranchInstance(context, true);
@@ -476,6 +478,8 @@ public class Branch {
 	 *
 	 * @return			An initialised {@link Branch} object.
 	 */
+
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(Context context) {
     	isAutoSessionMode_ = true;
     	getBranchInstance(context, false);
@@ -2631,12 +2635,12 @@ public class Branch {
 			isActivityLifeCycleCallbackRegistered_ = false;
 			isAutoSessionMode_ = false;
 			/* LifeCycleEvents are  available only from API level 14. */
-			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+			Log.w(TAG, new BranchError("",BranchError.ERR_API_LVL_14_NEEDED).getMessage());
 		} catch (NoClassDefFoundError Ex) {
 			isActivityLifeCycleCallbackRegistered_ = false;
 			isAutoSessionMode_ = false;
 			/* LifeCycleEvents are  available only from API level 14. */
-			Log.w(TAG, BranchException.BRANCH_API_LVL_ERR_MSG);
+			Log.w(TAG, new BranchError("",BranchError.ERR_API_LVL_14_NEEDED).getMessage());
 		}
 	}
 

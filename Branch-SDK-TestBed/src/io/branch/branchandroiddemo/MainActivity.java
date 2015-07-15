@@ -1,18 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Branch.BranchLinkCreateListener;
-import io.branch.referral.Branch.BranchReferralInitListener;
-import io.branch.referral.Branch.BranchReferralStateChangedListener;
-import io.branch.referral.BranchError;
-import io.branch.referral.BranchException;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,6 +9,18 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchLinkCreateListener;
+import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.Branch.BranchReferralStateChangedListener;
+import io.branch.referral.BranchError;
 
 public class MainActivity extends Activity {
 	Branch branch;
@@ -245,14 +244,7 @@ public class MainActivity extends Activity {
 		if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
 			branch = Branch.getInstance(this);
 		} else {
-			try {
-				branch = Branch.getInstance();
-			} catch (BranchException ex) {
-				ex.printStackTrace();
-				/* On API Level Error fall back to Manual session handling.*/
-				sessionMode = SESSION_MANAGEMENT_MODE.MANUAL;
-				branch = Branch.getInstance(this);
-			}
+			branch = Branch.getInstance();
 		}
 
 		branch.setDebug();

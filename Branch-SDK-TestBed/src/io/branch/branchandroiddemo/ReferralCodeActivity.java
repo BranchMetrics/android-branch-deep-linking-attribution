@@ -1,17 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Branch.BranchReferralInitListener;
-import io.branch.referral.BranchException;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +9,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.BranchError;
 
 public class ReferralCodeActivity extends Activity {
 	Branch branch;
@@ -193,22 +192,16 @@ public class ReferralCodeActivity extends Activity {
 				return 0;
 		}
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
-		try {
-			if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-				branch = Branch.getInstance();
-				branch.initSession(this);
-			} else {
-				branch = Branch.getInstance();
-			}
-		} catch (BranchException e) {
-			e.printStackTrace();
-			Log.d("BranchTestBed", e.getMessage());
+		if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
+			branch = Branch.getInstance();
+			branch.initSession(this);
+		} else {
+			branch = Branch.getInstance();
 		}
-
 	}
 
 
