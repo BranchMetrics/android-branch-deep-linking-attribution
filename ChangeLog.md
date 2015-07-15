@@ -1,6 +1,8 @@
 Branch Android SDK change log
 
-- v1.6.1: Fixed crashing issue when used with API-level below 14
+- v1.6.2: Removed the BranchException thrown by SDK method. Added more logs to notify errors.
+
+- v1.6.1: Fixed crashing issue when used with API-level below 14.
 
 - v1.6.O: Improved thread handling and request processing mechanism. Fixed few bugs related with session management in auto mode. Also added fixes for handling network down condition properly.
 
