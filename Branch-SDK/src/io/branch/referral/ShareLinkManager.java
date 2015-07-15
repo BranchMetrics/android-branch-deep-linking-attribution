@@ -82,7 +82,7 @@ class ShareLinkManager {
 
         try {
             /* Remove any existing dialog. This class should handle only one dialog at a time. Dialogs should be closed on activity onPause(). */
-            cancelShareLink();
+            cancelShareLinkDialog();
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,7 +97,7 @@ class ShareLinkManager {
     /**
      * Dismiss the share dialog if showing. Should be called on activity stopping.
      */
-    public void cancelShareLink() {
+    public void cancelShareLinkDialog() {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
             callback_ = null;
             shareDlg_.dismiss();

@@ -982,7 +982,7 @@ public class Branch {
 		}
 		/* Close any opened sharing dialog.*/
 		if(shareLinkManager_ != null) {
-			shareLinkManager_.cancelShareLink();
+			shareLinkManager_.cancelShareLinkDialog();
 		}
 	}
 
@@ -2283,7 +2283,7 @@ public class Branch {
 	private void shareLink(ShareLinkBuilder builder) {
 		//Cancel any existing sharing in progress.
 		if (shareLinkManager_ != null) {
-			shareLinkManager_.cancelShareLink();
+			shareLinkManager_.cancelShareLinkDialog();
 		}
 		shareLinkManager_ = new ShareLinkManager();
 		shareLinkManager_.shareLink(builder);
@@ -2293,9 +2293,9 @@ public class Branch {
 	 * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
 	 * calling this method before your activity finishes inorder to prevent any window leak. </p>
 	 */
-	public void cancelShareLink() {
+	public void cancelShareLinkDialog() {
 		if (shareLinkManager_ != null) {
-			shareLinkManager_.cancelShareLink();
+			shareLinkManager_.cancelShareLinkDialog();
 		}
 	}
 
@@ -2692,7 +2692,7 @@ public class Branch {
 			clearTouchDebugInternal(activity);
 			/* Close any opened sharing dialog.*/
 			if(shareLinkManager_ != null) {
-				shareLinkManager_.cancelShareLink();
+				shareLinkManager_.cancelShareLinkDialog();
 			}
 		}
 
