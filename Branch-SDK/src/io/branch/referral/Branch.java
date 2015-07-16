@@ -2758,7 +2758,7 @@ public class Branch {
 	 */
 	public interface BranchLinkShareListener {
 		/**
-		 * Call method to update the sharing status. Called sharing is completed or on an error
+		 *<p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
 		 *
 		 * @param sharedLink    The link shared to the channel.
 		 * @param sharedChannel Channel selected for sharing.
@@ -2767,7 +2767,11 @@ public class Branch {
 		void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
 
 		/**
-		 * Called when user select a channel for sharing a deep link.
+		 * <p>Called when user select a channel for sharing a deep link.
+		 * Branch will create a deep link for the selected channel and share with it after calling this
+		 * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
+		 * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
+		 * and sharing complete.</p>
 		 *
 		 * @param channelName Name of the selected application to share the link.
 		 */

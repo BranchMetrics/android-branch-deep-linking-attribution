@@ -63,7 +63,7 @@ class ShareLinkManager {
     private final int BG_COLOR_ENABLED = Color.argb(60, 17, 4, 56);
     /* Background color for the list view in disabled state. */
     private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
-
+    private static int viewItemMinHeight = 100;
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
@@ -83,8 +83,6 @@ class ShareLinkManager {
         shareLinkIntent_.setType("text/plain");
 
         try {
-            /* Remove any existing dialog. This class should handle only one dialog at a time. Dialogs should be closed on activity onPause(). */
-            cancelShareLinkDialog();
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,7 +100,7 @@ class ShareLinkManager {
     public void cancelShareLinkDialog() {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
             callback_ = null;
-            animateDismiss();
+            shareDlg_.dismiss();
         }
     }
 
@@ -170,6 +168,7 @@ class ShareLinkManager {
                     invokeSharingClient((ResolveInfo) view.getTag());
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
+                    animateDismiss();
                 }
             }
         });
@@ -213,10 +212,8 @@ class ShareLinkManager {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {
-                    animateDismiss();
                     shareWithClient(selectedResolveInfo, url, channelName);
                 } else {
-                    animateDismiss();
                     //If there is a default URL specified share it.
                     if (defaultURL_ != null && defaultURL_.length() > 0) {
                         shareWithClient(selectedResolveInfo, defaultURL_, channelName);
@@ -317,14 +314,13 @@ class ShareLinkManager {
      */
     private class ShareItemView extends TextView {
         Context context_;
-
+        final int padding = 5;
+        final int leftMargin = 100;
         public ShareItemView(Context context) {
             super(context);
             context_ = context;
-            this.setPadding(100, 5, 5, 5);
-
+            this.setPadding(leftMargin, padding, padding, padding);
             this.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-            this.setMinHeight(100);
             this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
         }
 
@@ -337,7 +333,11 @@ class ShareLinkManager {
             } else {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
+                if(viewItemMinHeight < (appIcon.getIntrinsicHeight()+padding)){
+                    viewItemMinHeight = (appIcon.getIntrinsicHeight()+padding);
+                }
             }
+            this.setMinHeight(viewItemMinHeight);
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
             if(isEnabled){
                 this.setBackgroundColor(BG_COLOR_ENABLED);
@@ -390,8 +390,10 @@ class ShareLinkManager {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                shareDlg_.dismiss();
-                shareDlg_ = null;
+                if(shareDlg_ != null) {
+                    shareDlg_.dismiss();
+                    shareDlg_ = null;
+                }
             }
 
             @Override
