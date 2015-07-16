@@ -21,6 +21,7 @@ import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.SharingHelper;
 
 public class MainActivity extends Activity {
 	Branch branch;
@@ -233,6 +234,50 @@ public class MainActivity extends Activity {
 				Log.i("BranchTestBed", "Navigating to Referral Code...");
 				Intent i = new Intent(getApplicationContext(), ReferralCodeActivity.class);
 				startActivity(i);
+			}
+		});
+
+		findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				JSONObject obj = new JSONObject();
+				try {
+					obj.put("name", "test name");
+					obj.put("message", "hello there with short url");
+					obj.put("$og_title", "this is new sharing title");
+					obj.put("$og_description", "this is new sharing description");
+					obj.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+
+				new Branch.ShareLinkBuilder(MainActivity.this, obj)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
+						.addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
+						.setMessage("See my content")
+						.setStage("stage1")
+						.setFeature("feature1")
+						.addTag("Tag1")
+						.addTag("Tag2")
+						.setDefaultURL("https://play.google.com/store/apps/details?id=com.kindred.android")
+						.setCallback(new Branch.BranchLinkShareListener() {
+							@Override
+							public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+								if (error != null) {
+									Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel + " " + error.getMessage());
+								} else {
+									Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel);
+								}
+							}
+
+							@Override
+							public void onChannelSelected(String channelName) {
+								Log.i("BranchTestBed", "onChannelSelected... " + channelName);
+							}
+						})
+						.ShareLink();
 			}
 		});
 	}
