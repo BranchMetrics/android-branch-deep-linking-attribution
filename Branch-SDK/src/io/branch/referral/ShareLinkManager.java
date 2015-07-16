@@ -15,7 +15,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
@@ -100,7 +102,7 @@ class ShareLinkManager {
     public void cancelShareLinkDialog() {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
             callback_ = null;
-            shareDlg_.dismiss();
+            animateDismiss();
         }
     }
 
@@ -178,6 +180,7 @@ class ShareLinkManager {
 
         TranslateAnimation slideUp = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0f);
         slideUp.setDuration(500);
+        slideUp.setInterpolator(new AccelerateInterpolator());
         ((ViewGroup)shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideUp);
         shareDlg_.show();
     }
@@ -210,9 +213,10 @@ class ShareLinkManager {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {
+                    animateDismiss();
                     shareWithClient(selectedResolveInfo, url, channelName);
-                    shareDlg_.dismiss();
                 } else {
+                    animateDismiss();
                     //If there is a default URL specified share it.
                     if (defaultURL_ != null && defaultURL_.length() > 0) {
                         shareWithClient(selectedResolveInfo, defaultURL_, channelName);
@@ -223,7 +227,7 @@ class ShareLinkManager {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
                     }
-                    shareDlg_.dismiss();
+
                 }
             }
         });
@@ -372,6 +376,28 @@ class ShareLinkManager {
             return context_.getResources().getDrawable(android.R.drawable.ic_menu_save);
         }
 
+    }
+
+    private void animateDismiss() {
+        TranslateAnimation slideDown = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1f);
+        slideDown.setDuration(500);
+        slideDown.setInterpolator(new DecelerateInterpolator());
+        ((ViewGroup) shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideDown);
+        slideDown.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                shareDlg_.dismiss();
+                shareDlg_ = null;
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
     }
 
 }
