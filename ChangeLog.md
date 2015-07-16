@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.7.0: Adding an easy way to share custom deep links with social media and other applications. Provides a customisable chooser dialog for selecting applications.
+
 - v1.6.2: Removed the BranchException thrown by SDK method. Added more logs to notify errors.
 
 - v1.6.1: Fixed crashing issue when used with API-level below 14.
