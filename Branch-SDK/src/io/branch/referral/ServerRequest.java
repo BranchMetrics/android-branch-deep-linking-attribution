@@ -279,5 +279,26 @@ abstract class ServerRequest {
 		return result == PackageManager.PERMISSION_GRANTED;
 	}
 
+	/**
+	 * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
+	 *
+	 * @param sysObserver {@link SystemObserver} instance.
+	 */
+	public void updateGAdsParams(SystemObserver sysObserver) {
+		try {
+			String advertisingId = sysObserver.getAdvertisingId();
+			if (advertisingId != null && getPost() != null) {
+				getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
+			}
+			int latVal = sysObserver.getLATValue();
+			if (getPost() != null) {
+				getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
 
 }
