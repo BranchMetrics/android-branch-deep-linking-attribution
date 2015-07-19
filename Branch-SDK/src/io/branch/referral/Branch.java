@@ -1040,7 +1040,6 @@ public class Branch {
 		if (data != null && data.isHierarchical()) {
 			if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
-
 				String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
 				String uriString = activity.getIntent().getDataString();
 				if (data.getQuery().length() == paramString.length()) {
@@ -2690,7 +2689,7 @@ public class Branch {
 		@Override
 		public void onActivityStarted(Activity activity) {
 			if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
-				initSession();// indicate  starting of session.
+				initSessionWithData(activity.getIntent().getData(), activity); // indicate  starting of session.
 			}
 			activityCnt_++;
 		}
