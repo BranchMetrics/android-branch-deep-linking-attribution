@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.7.2: Fixed bug with handling Activity intent in auto session management.
+
 - v1.7.1: Fixed bug with getting  Google Ads ID.
 
 - v1.7.0: Adding an easy way to share custom deep links with social media and other applications. Provides a customisable chooser dialog for selecting applications.
