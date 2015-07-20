@@ -1037,7 +1037,7 @@ public class Branch {
 	}
 
 	private boolean readAndStripParam(Uri data, Activity activity) {
-		if (data != null && data.isHierarchical()) {
+		if (data != null && data.isHierarchical() && activity != null) {
 			if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
 				prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
 				String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
