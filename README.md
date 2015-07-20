@@ -153,9 +153,9 @@ After you register your app, your Branch key can be retrieved on the [Settings](
     package="io.branch.sample"
     android:versionCode="1"
     android:versionName="1.0" >
-    
+
     <uses-permission android:name="android.permission.INTERNET" />
-    
+
     <application>
         <!-- Other existing entries -->
 
@@ -170,7 +170,9 @@ After you register your app, your Branch key can be retrieved on the [Settings](
 
 ### Proguard settings
 If your Application is enabled with proguard, add the following instruction to your proguard.cfg file:
-```-keep class com.google.android.gms.ads.identifier.** { *; }```
+```bash
+-keep class com.google.android.gms.ads.identifier.** { *; }
+```
 
 ## Initialization
 
