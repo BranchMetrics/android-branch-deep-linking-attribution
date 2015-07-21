@@ -243,6 +243,7 @@ public class MainActivity extends Activity {
 				JSONObject obj = new JSONObject();
 				try {
 					obj.put("name", "test name");
+					obj.put("auto_deeplink_key_1", "This is an auto deep linked value");
 					obj.put("message", "hello there with short url");
 					obj.put("$og_title", "this is new sharing title");
 					obj.put("$og_description", "this is new sharing description");
