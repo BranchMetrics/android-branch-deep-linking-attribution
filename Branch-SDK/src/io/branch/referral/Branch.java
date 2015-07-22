@@ -337,8 +337,6 @@ public class Branch {
 	/* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
 	private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
-
-
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton
 	 * pattern.</p>
@@ -2645,7 +2643,7 @@ public class Branch {
 		if (hasUser()) {
 			registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
 		} else {
-			registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE), callback);
+			registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
 		}
 	}
 
@@ -3381,4 +3379,5 @@ public class Branch {
 			return defaultURL_;
 		}
 	}
+
 }

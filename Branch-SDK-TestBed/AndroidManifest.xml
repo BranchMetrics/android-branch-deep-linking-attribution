@@ -51,6 +51,15 @@
         <meta-data android:name="io.branch.sdk.auto_link_disable" android:value="false"/>
 
         <uses-library android:name="android.test.runner" />
+
+        <!-- Add this for branch for install referrer tracking-->
+        <receiver
+            android:name="io.branch.referral.InstallListener" android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
     <instrumentation
