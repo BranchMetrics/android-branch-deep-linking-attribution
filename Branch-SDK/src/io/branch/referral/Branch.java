@@ -393,7 +393,12 @@ public class Branch {
 		}
 		branchReferral_.context_ = context.getApplicationContext();
 		if (branchKey.startsWith("key_")) {
-			branchReferral_.prefHelper_.setBranchKey(branchKey);
+			boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
+			//on setting a new key clear link cache and pending requests
+			if (isNewBranchKeySet) {
+				branchReferral_.linkCache_.clear();
+				branchReferral_.requestQueue_.clear();
+			}
 		} else {
 			branchReferral_.prefHelper_.setAppKey(branchKey);
 		}
@@ -405,11 +410,17 @@ public class Branch {
 			branchReferral_ = Branch.initInstance(context);
 
 			String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
+			boolean isNewBranchKeySet = false;
 			if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
 				Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
-				branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+				isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
 			} else {
-				branchReferral_.prefHelper_.setBranchKey(branchKey);
+				isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
+			}
+			//on setting a new key clear link cache and pending requests
+			if (isNewBranchKeySet) {
+				branchReferral_.linkCache_.clear();
+				branchReferral_.requestQueue_.clear();
 			}
 		}
 		branchReferral_.context_ = context;
@@ -2906,7 +2917,7 @@ public class Branch {
 							linkCache_.clear();
 							requestQueue_.clear();
 						}
-						//On setting a new identity Id clear teh link cache
+						//On setting a new identity Id clear the link cache
 						else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
 							try {
 								String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
