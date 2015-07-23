@@ -53,12 +53,23 @@
         <uses-library android:name="android.test.runner" />
 
         <!-- Add this for branch for install referrer tracking-->
-        <receiver
-            android:name="io.branch.referral.InstallListener" android:exported="true">
+        <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
+
+
+       <!-- If you are  using custom install listener and still want to notify Branch on install, you can do one  of the following
+            1) Extend your receiver class with {@link InstallListener}
+                            Or
+            2) If you don't want to extend from {@link InstallListener} create an instance of {@link InstallListener} in your receiver's onReceive() method
+               and call InstallListener#onReceive() method.-->
+        <!--<receiver android:name="io.branch.branchandroiddemo.CustomInstallListener" android:exported="true">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.android.vending.INSTALL_REFERRER" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
 
     </application>
 

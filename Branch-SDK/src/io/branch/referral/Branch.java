@@ -3335,7 +3335,7 @@ public class Branch {
 		 * <p>Creates an application selector dialog and share a link with user selected sharing option.
 		 * The link is created with the parameteres provided to the builder. </p>
 		 */
-		public void ShareLink() {
+		public void shareLink() {
 			branchReferral_.shareLink(this);
 		}
 

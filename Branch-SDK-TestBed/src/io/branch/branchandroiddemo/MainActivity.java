@@ -278,7 +278,7 @@ public class MainActivity extends Activity {
 								Log.i("BranchTestBed", "onChannelSelected... " + channelName);
 							}
 						})
-						.ShareLink();
+						.shareLink();
 			}
 		});
 	}
