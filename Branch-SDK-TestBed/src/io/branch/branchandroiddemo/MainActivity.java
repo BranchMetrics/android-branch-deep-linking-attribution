@@ -337,4 +337,17 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		//Checking if the previous activity is launched on branch Auto deep link.
+		if(requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)){
+			//Decide here where  to navigate  when an auto deep linked activity finishes.
+			//For e.g. Go to HomeActivity or a  SignUp Activity.
+			Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
+			startActivity(i);
+
+		}
+	}
 }
