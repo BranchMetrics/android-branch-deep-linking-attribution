@@ -394,9 +394,10 @@ public class Branch {
 		branchReferral_.context_ = context.getApplicationContext();
 		if (branchKey.startsWith("key_")) {
 			boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
-			//on setting a new key clear link cache
+			//on setting a new key clear link cache and pending requests
 			if (isNewBranchKeySet) {
 				branchReferral_.linkCache_.clear();
+				branchReferral_.requestQueue_.clear();
 			}
 		} else {
 			branchReferral_.prefHelper_.setAppKey(branchKey);
@@ -416,9 +417,10 @@ public class Branch {
 			} else {
 				isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
 			}
-			//on setting a new key clear link cache
+			//on setting a new key clear link cache and pending requests
 			if (isNewBranchKeySet) {
 				branchReferral_.linkCache_.clear();
+				branchReferral_.requestQueue_.clear();
 			}
 		}
 		branchReferral_.context_ = context;
