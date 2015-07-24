@@ -3,16 +3,6 @@ package io.branch.branchandroiddemo;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-
-import com.google.android.gms.tagmanager.InstallReferrerReceiver;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.Comparator;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.IllegalFormatCodePointException;
 
 import io.branch.referral.InstallListener;
 

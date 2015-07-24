@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
@@ -37,7 +36,7 @@ public class InstallListener extends BroadcastReceiver {
 
                 for (String referrerParam : referralParams) {
                     String[] keyValue  =  referrerParam.split("=");
-                    referrerMap.put(URLDecoder.decode(keyValue[0]),URLDecoder.decode(keyValue[1]));
+                    referrerMap.put(URLDecoder.decode(keyValue[0],"UTF-8"),URLDecoder.decode(keyValue[1],"UTF-8"));
                     Log.d("installTest", keyValue[0] +" = " + keyValue[1]);
                 }
 
