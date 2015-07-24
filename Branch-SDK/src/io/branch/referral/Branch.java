@@ -5,6 +5,11 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -314,8 +319,23 @@ public class Branch {
 	/* Holds the current Session state. Default is set to UNINITIALISED. */
 	private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
-	/* Instance  of share link manager to share links automatically with thirdparty applications. */
+	/* Instance  of share link manager to share links automatically with third party applications. */
 	private ShareLinkManager shareLinkManager_;
+
+	/*The current activity instance for the application.*/
+	private Activity currentActivity_;
+
+	/* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
+	private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
+
+	/* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
+	private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
+
+	/*Key for defining a request code for an activity. should be added as a metadata for an activity. This is used as a request code for launching a an activity on auto deep link. */
+	private final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
+
+	/* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
+	private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
 	/**
 	 * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -848,6 +868,7 @@ public class Branch {
 	}
 
 	private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
+		currentActivity_ = activity;
 		//If already initialised
 		if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
 			if (callback != null)
@@ -2632,7 +2653,7 @@ public class Branch {
 		if (hasUser()) {
 			registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
 		} else {
-			registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), PrefHelper.NO_STRING_VALUE), callback);
+			registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
 		}
 	}
 
@@ -2707,6 +2728,7 @@ public class Branch {
 
 		@Override
 		public void onActivityResumed(Activity activity) {
+			currentActivity_ = activity;
 			//Set the activity for touch debug
 			if (prefHelper_.getTouchDebugging()) {
 				setTouchDebugInternal(activity);
@@ -2934,6 +2956,7 @@ public class Branch {
 						if (thisReq_.isSessionInitRequest()) {
 							updateAllRequestsInQueue();
 							initState_ = SESSION_STATE.INITIALISED;
+							checkForAutoDeepLinkConfiguration();
 						}
 						requestQueue_.dequeue();
 					}
@@ -2948,6 +2971,80 @@ public class Branch {
 		}
 	}
 
+	//-------------------Auto deep link feature-------------------------------------------//
+
+	/**
+	 * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activitie configured for auto deep link on seeing matching keys.
+	 * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
+	 * <p>
+	 * Configure your activity in your manifest to enable auto deep linking as follows
+	 * <activity android:name=".YourActivity">
+	 * <meta-data android:name="io.branch.sdk.auto_link" android:value="DeepLinkKey1","DeepLinkKey2" />
+	 * </activity>
+	 * </p>
+	 *
+	 * @param activity Instane of activity to check if launched on auto deep link.
+	 * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
+	 */
+	public static boolean isAutoDeepLinkLaunch(Activity activity) {
+		return (activity.getIntent().getStringExtra(AUTO_DEEP_LINK_KEY) != null);
+	}
+
+	private void checkForAutoDeepLinkConfiguration() {
+		JSONObject latestParams = getLatestReferringParams();
+		String deepLinkActivity = null;
+		String deepLinkKey = null;
+
+		try {
+			//Check if the application is launched by clicking a Branch link.
+			if (latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false
+					|| latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false) {
+				return;
+			}
+
+			if (latestParams.length() > 0) {
+				// Check if auto deep link is disabled.
+				ApplicationInfo appInfo = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
+				if (appInfo.metaData != null && appInfo.metaData.getBoolean(AUTO_DEEP_LINK_DISABLE, false)) {
+					return;
+				}
+				PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), PackageManager.GET_ACTIVITIES | PackageManager.GET_META_DATA);
+				ActivityInfo[] activityInfos = info.activities;
+				int deepLinkActivity_Req_Code = DEF_AUTO_DEEP_LINK_REQ_CODE;
+
+				for (ActivityInfo activityInfo : activityInfos) {
+					if (activityInfo.metaData != null && activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY, null) != null) {
+						String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
+						for (String activityLinkKey : activityLinkKeys) {
+							if (latestParams.has(activityLinkKey)) {
+								deepLinkActivity = ((ActivityInfo) activityInfo).name;
+								deepLinkActivity_Req_Code = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
+								deepLinkKey = activityLinkKey;
+								break;
+							}
+						}
+					}
+					if (deepLinkActivity != null) {
+						break;
+					}
+				}
+				if (deepLinkActivity != null && currentActivity_ != null) {
+					Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
+					intent.putExtra(AUTO_DEEP_LINK_KEY, deepLinkKey);
+					currentActivity_.startActivityForResult(intent, deepLinkActivity_Req_Code);
+				} else {
+					Log.d("BranchSDK", "No Activity found matching for auto deep linking");
+				}
+			}
+		} catch (final PackageManager.NameNotFoundException e) {
+			Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
+		} catch (ClassNotFoundException e) {
+			Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
+		} catch (JSONException ignore) {
+		}
+	}
+
+	//--------------------Window callback handling for touch debug feature-----------------------//
 
 
 	public class BranchWindowCallback implements Window.Callback {
@@ -3253,7 +3350,7 @@ public class Branch {
 		 * <p>Creates an application selector dialog and share a link with user selected sharing option.
 		 * The link is created with the parameteres provided to the builder. </p>
 		 */
-		public void ShareLink() {
+		public void shareLink() {
 			branchReferral_.shareLink(this);
 		}
 
@@ -3297,4 +3394,5 @@ public class Branch {
 			return defaultURL_;
 		}
 	}
+
 }

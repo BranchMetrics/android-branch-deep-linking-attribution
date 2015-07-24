@@ -59,7 +59,9 @@ class Defines {
         ScreenDpi("screen_dpi"),
         ScreenHeight("screen_height"),
         ScreenWidth("screen_width"),
-        WiFi("wifi");
+        WiFi("wifi"),
+        Clicked_Branch_Link("+clicked_branch_link"),
+        IsFirstSession("+is_first_session");
 
 
         private String key = "";
