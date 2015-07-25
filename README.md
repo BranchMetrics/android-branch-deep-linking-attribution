@@ -19,15 +19,15 @@ Two important things to do in order to properly handle deep links from Facebook
 1. Make sure to update the Manifest so that the Activity with the intent filter for your URI scheme has *launchMode:singleTask*. See example [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
 2. Make sure to add this snippet of code to the Activity registered as singleTask.
-	```java
-	@Override
-	public void onNewIntent(Intent intent) {
-		// Because the activity is a singleTask activity, the new intent won't be
-		// launched but enters here, making handling it optional. For branch to work
-		// the intent must be updated by calling the following:
-		this.setIntent(intent);
-	}
-	```
+```java
+@Override
+public void onNewIntent(Intent intent) {
+    // Because the activity is a singleTask activity, the new intent won't be
+    // launched but enters here, making handling it optional. For branch to work
+    // the intent must be updated by calling the following:
+    this.setIntent(intent);
+}
+```
 
 3. Update the SDK to v1.4.5 or higher
 
@@ -64,7 +64,6 @@ Chrome is very picky about opening up the app directly. Chrome utilizes the inte
   2. Make sure the URI scheme of the test build matches the Branch settings.
 
   3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
-
 
 7.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
 
@@ -119,23 +118,23 @@ Typically, you would register some sort of splash activitiy that handles routing
 
 ```xml
 <activity
-	android:name="com.yourapp.SplashActivity"
-	android:label="@string/app_name"
-	<!-- Make sure the activity is launched as "singleTask" -->
-	android:launchMode="singleTask"
-	 >
-	<intent-filter>
-		<action android:name="android.intent.action.MAIN" />
-		<category android:name="android.intent.category.LAUNCHER" />
-	</intent-filter>
+    android:name="com.yourapp.SplashActivity"
+    android:label="@string/app_name"
+    <!-- Make sure the activity is launched as "singleTask" -->
+    android:launchMode="singleTask"
+     >
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+    </intent-filter>
 
-	<!-- Add this intent filter below, and change yourapp to your app name -->
-	<intent-filter>
-		<data android:scheme="yourapp" android:host="open" />
-		<action android:name="android.intent.action.VIEW" />
-		<category android:name="android.intent.category.DEFAULT" />
-		<category android:name="android.intent.category.BROWSABLE" />
-	</intent-filter>
+    <!-- Add this intent filter below, and change yourapp to your app name -->
+    <intent-filter>
+        <data android:scheme="yourapp" android:host="open" />
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+    </intent-filter>
 </activity>
 ```
 ### Configure your AndroidManifest.xml
@@ -153,9 +152,9 @@ After you register your app, your Branch key can be retrieved on the [Settings](
     package="io.branch.sample"
     android:versionCode="1"
     android:versionName="1.0" >
-    
+
     <uses-permission android:name="android.permission.INTERNET" />
-    
+
     <application>
         <!-- Other existing entries -->
 
@@ -194,7 +193,6 @@ If you are not creating or using an Application class throughout your project, a
  <application
     android:name="io.branch.referral.BranchApp">
 ```
-
 
 #### Register deep link router
 
@@ -235,7 +233,6 @@ Previously, Branch did not return any information to the app if `initSession` wa
 * `+` denotes information added by Branch
 * (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
 
-
 | **Parameter** | **Meaning**
 | ~channel | The channel on which the link was shared, specified at link creation time
 | ~feature | The feature, such as `invite` or `share`, specified at link creation time
@@ -247,7 +244,6 @@ Previously, Branch did not return any information to the app if `initSession` wa
 | +phone_number | The phone number of the user, if the user texted himself/herself the app
 | +is_first_session | Denotes whether this is the first session (install) or any other session (open)
 | +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
-
 
 ### Initialization to support Android pre-14 (harder)
 
@@ -314,7 +310,6 @@ Previously, Branch did not return any information to the app if `initSession` wa
 * `+` denotes information added by Branch
 * (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
 
-
 | **Parameter** | **Meaning**
 | ~channel | The channel on which the link was shared, specified at link creation time
 | ~feature | The feature, such as `invite` or `share`, specified at link creation time
@@ -326,7 +321,6 @@ Previously, Branch did not return any information to the app if `initSession` wa
 | +phone_number | The phone number of the user, if the user texted himself/herself the app
 | +is_first_session | Denotes whether this is the first session (install) or any other session (open)
 | +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
-
 
 #### Retrieve session (install or open) parameters
 
@@ -399,17 +393,17 @@ For more details on how to create links, see the [Branch link creation guide](ht
 
 JSONObject dataToInclude = new JSONObject();
 try {
-	dataToInclude.put("user", "Joe");
-	dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
-	dataToInclude.put("description", "Joe likes long walks on the beach...")
+    dataToInclude.put("user", "Joe");
+    dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
+    dataToInclude.put("description", "Joe likes long walks on the beach...")
 
-	// customize the display of the Branch link
-	dataToInclude.put("$og_title", "Joe's My App Referral");
-	dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
-	dataToInclude.put("$og_description", "Join Joe in My App - it's awesome");
+    // customize the display of the Branch link
+    dataToInclude.put("$og_title", "Joe's My App Referral");
+    dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
+    dataToInclude.put("$og_description", "Join Joe in My App - it's awesome");
 
-	// customize the desktop redirect location
-	dataToInclude.put("$desktop_url", "http://myapp.com/desktop_splash");
+    // customize the desktop redirect location
+    dataToInclude.put("$desktop_url", "http://myapp.com/desktop_splash");
 } catch (JSONException ex) { }
 
 // associate a url with a set of tags, channel, feature, and stage for better analytics.
@@ -430,14 +424,14 @@ tags.put("trial6");
 
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
-	@Override
-	public void onLinkCreate(String url, Branch.BranchError error) {
-		if (error == null) {
-			// show the link to the user or share it immediately
-		} else {
-			Log.i("MyApp", error.getMessage());
-		}
-	}
+    @Override
+    public void onLinkCreate(String url, Branch.BranchError error) {
+        if (error == null) {
+            // show the link to the user or share it immediately
+        } else {
+            Log.i("MyApp", error.getMessage());
+        }
+    }
 });
 
 // The callback will return null if the link generation fails (or if the alias specified is aleady taken.)
@@ -497,13 +491,13 @@ Reward balances change randomly on the backend when certain actions are taken (d
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.loadRewards(new BranchReferralStateChangedListener() {
-	@Override
-	public void onStateChanged(boolean changed, Branch.BranchError error) {
-		// changed boolean will indicate if the balance changed from what is currently in memory
+    @Override
+    public void onStateChanged(boolean changed, Branch.BranchError error) {
+        // changed boolean will indicate if the balance changed from what is currently in memory
 
-		// will return the balance of the current user's credits
-		int credits = branch.getCredits();
-	}
+        // will return the balance of the current user's credits
+        int credits = branch.getCredits();
+    }
 });
 ```
 
@@ -523,13 +517,13 @@ This call will retrieve the entire history of credits and redemptions from the i
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getCreditHistory(new BranchListResponseListener() {
-	public void onReceivingResponse(JSONArray list, Branch.BranchError error) {
-		if (error == null) {
-			// show the list in your app
-		} else {
-			Log.i("MyApp", error.getMessage());
-		}
-	}
+    public void onReceivingResponse(JSONArray list, Branch.BranchError error) {
+        if (error == null) {
+            // show the list in your app
+        } else {
+            Log.i("MyApp", error.getMessage());
+        }
+    }
 });
 ```
 
@@ -589,15 +583,15 @@ Retrieve the referral code created by current user
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode(new BranchReferralInitListener() {
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			String code = referralCode.getString("referral_code");
-			// do whatever with code
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            String code = referralCode.getString("referral_code");
+            // do whatever with code
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```
 
@@ -615,15 +609,15 @@ The returned referral code is a 6 character long unique alpha-numeric string wra
 // Create a referral code of 5 credits
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode(5, new BranchReferralInitListener() {
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			String code = referralCode.getString("referral_code");
-			// do whatever with code
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            String code = referralCode.getString("referral_code");
+            // do whatever with code
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```
 
@@ -636,15 +630,15 @@ The resulting code will have your prefix, concatenated with a 2 character long u
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, new BranchReferralInitListener() {  // prefix should not exceed 48 characters
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			String code = referralCode.getString("referral_code");
-			// do whatever with code
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            String code = referralCode.getString("referral_code");
+            // do whatever with code
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```
 
@@ -657,15 +651,15 @@ The prefix parameter is optional here, i.e. it could be getReferralCode(5, expir
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, expirationDate, new BranchReferralInitListener() {  // prefix should not exceed 48 characters
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			String code = referralCode.getString("referral_code");
-			// do whatever with code
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            String code = referralCode.getString("referral_code");
+            // do whatever with code
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```
 
@@ -690,15 +684,15 @@ You can also tune the referral code to the finest granularity, with the followin
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.getReferralCode("BRANCH", 5, expirationDate, "default", REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, new BranchReferralInitListener() { // prefix should not exceed 48 characters
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			String code = referralCode.getString("referral_code");
-			// do whatever with code
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            String code = referralCode.getString("referral_code");
+            // do whatever with code
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```
 
@@ -718,23 +712,23 @@ If valid, returns the referral code JSONObject in the call back.
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.validateReferralCode(code, new BranchReferralInitListener() {
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			if (!referralCode.has("error_message")) {		// will change to using a second callback parameter for error code soon!
-				String referral_code = referralCode.getString("referral_code");
-				if (referral_code.equals(code)) {
-					// valid
-				} else {
-					// invalid (should never happen)
-				}
-			} else {
-				// invalid
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            if (!referralCode.has("error_message")) {        // will change to using a second callback parameter for error code soon!
+                String referral_code = referralCode.getString("referral_code");
+                if (referral_code.equals(code)) {
+                    // valid
+                } else {
+                    // invalid (should never happen)
+                }
+            } else {
+                // invalid
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```
 
@@ -749,17 +743,17 @@ If the code is valid, returns the referral code JSONObject in the call back.
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 branch.applyReferralCode(code, new BranchReferralInitListener() {
-	@Override
-	public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
-		try {
-			if (!referralCode.has("error_message")) {
-				// applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.
-			} else {
-				// invalid code
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+    @Override
+    public void onInitFinished(JSONObject referralCode, Branch.BranchError error) {
+        try {
+            if (!referralCode.has("error_message")) {
+                // applied. you can get the referral code amount from the referralCode JSONObject and deduct it in your UI.
+            } else {
+                // invalid code
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 });
 ```

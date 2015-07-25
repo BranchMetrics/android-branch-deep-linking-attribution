@@ -63,7 +63,6 @@ class Defines {
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session");
 
-
         private String key = "";
 
         private Jsonkey(String key) {
@@ -103,7 +102,6 @@ class Defines {
         ApplyReferralCode("v1/applycode/"),
         DebugConnect("v1/debug/connect");
 
-
         private String key = "";
 
         private RequestPath(String key) {
@@ -119,6 +117,5 @@ class Defines {
             return key;
         }
     }
-
 
 }

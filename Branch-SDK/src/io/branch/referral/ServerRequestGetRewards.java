@@ -17,7 +17,6 @@ class ServerRequestGetRewards extends ServerRequest {
 
     Branch.BranchReferralStateChangedListener callback_;
 
-
     /**
      * <p>Create an instance of {@link ServerRequestGetRewards} to retrieve rewards for the current session,
      * with a callback to perform a predefined action following successful report of state change.
@@ -36,12 +35,10 @@ class ServerRequestGetRewards extends ServerRequest {
         super(requestPath, post, context);
     }
 
-
     @Override
     public String getRequestUrl() {
         return super.getRequestUrl() + prefHelper_.getIdentityID();
     }
-
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {

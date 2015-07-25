@@ -9,7 +9,7 @@
         android:targetSdkVersion="20" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -26,10 +26,10 @@
             </intent-filter>
             <intent-filter>
                 <data android:scheme="branchtest" android:host="open" />
-            	<action android:name="android.intent.action.VIEW" />
-            	<category android:name="android.intent.category.DEFAULT" />
-            	<category android:name="android.intent.category.BROWSABLE" />
-        	</intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
         </activity>
 
         <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity"/>
@@ -58,7 +58,6 @@
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
-
 
        <!-- If you are  using custom install listener and still want to notify Branch on install, you can do one  of the following
             1) Extend your receiver class with {@link InstallListener}

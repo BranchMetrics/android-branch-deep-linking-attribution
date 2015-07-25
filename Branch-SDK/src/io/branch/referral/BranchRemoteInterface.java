@@ -52,7 +52,6 @@ public class BranchRemoteInterface extends RemoteInterface {
         callback_ = callback;
     }
 
-
     /**
      * <p>Create custom URL, and return the server response for use elsewhere within the app.</p>
      *
@@ -124,12 +123,7 @@ public class BranchRemoteInterface extends RemoteInterface {
         }
     }
 
-
     public SystemObserver getSystemObserver() {
         return sysObserver_;
     }
-
-
-
-
 }

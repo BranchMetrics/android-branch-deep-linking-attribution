@@ -104,7 +104,6 @@ class ServerRequestRegisterOpen extends ServerRequest {
 
     }
 
-
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
         callback_ = callback;
     }

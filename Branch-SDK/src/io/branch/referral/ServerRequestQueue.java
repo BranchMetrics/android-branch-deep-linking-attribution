@@ -17,7 +17,7 @@ import android.content.SharedPreferences;
 
 /**
  *<p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
- *complete. This allows you to start sending requests to the Branch API as soon as your app is 
+ *complete. This allows you to start sending requests to the Branch API as soon as your app is
  *opened.</p>
  */
 class ServerRequestQueue {
@@ -32,11 +32,11 @@ class ServerRequestQueue {
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link ServerRequestQueue}.</p>
      *
-     * @param c		A {@link Context} from which this call was made.
+     * @param c A {@link Context} from which this call was made.
      *
-     * @return		An initialised {@link ServerRequestQueue} object, either fetched from a
-     * 				pre-initialised instance within the singleton class, or a newly instantiated
-     * 				object where one was not already requested during the current app lifecycle.
+     * @return An initialised {@link ServerRequestQueue} object, either fetched from a
+     *         pre-initialised instance within the singleton class, or a newly instantiated
+     *         object where one was not already requested during the current app lifecycle.
      */
     public static ServerRequestQueue getInstance(Context c) {
         if (SharedInstance == null) {
@@ -50,10 +50,10 @@ class ServerRequestQueue {
     }
 
     /**
-     * <p>The main constructor of the ServerRequestQueue class is private because the class uses the 
+     * <p>The main constructor of the ServerRequestQueue class is private because the class uses the
      * Singleton pattern.</p>
-     * 
-     * @param c		A {@link Context} from which this call was made.
+     *
+     * @param c A {@link Context} from which this call was made.
      */
     @SuppressLint( "CommitPrefEdits" )
     private ServerRequestQueue(Context c) {
@@ -111,11 +111,11 @@ class ServerRequestQueue {
     }
 
     /**
-     * <p>Gets the number of {@link ServerRequest} objects currently queued up for submission to 
+     * <p>Gets the number of {@link ServerRequest} objects currently queued up for submission to
      * the Branch API.</p>
-     * 
-     * @return		An {@link Integer} value indicating the current size of the {@link List} object 
-     * 				that forms the logical queue for the class.
+     *
+     * @return An {@link Integer} value indicating the current size of the {@link List} object
+     *         that forms the logical queue for the class.
      */
     public int getSize() {
         return queue.size();
@@ -124,7 +124,7 @@ class ServerRequestQueue {
     /**
      * <p>Adds a {@link ServerRequest} object to the queue.</p>
      *
-     * @param request		The {@link ServerRequest} object to add to the queue.
+     * @param request The {@link ServerRequest} object to add to the queue.
      */
     public void enqueue(ServerRequest request) {
         if (request != null) {
@@ -135,12 +135,12 @@ class ServerRequestQueue {
             persist();
         }
     }
-    
+
     /**
      * <p>Removes the queued {@link ServerRequest} object at position with index 0 within the queue,
      * and returns it as a result.</p>
      *
-     * @return		The {@link ServerRequest} object at position with index 0 within the queue.
+     * @return The {@link ServerRequest} object at position with index 0 within the queue.
      */
     public ServerRequest dequeue() {
         ServerRequest req = null;
@@ -157,7 +157,7 @@ class ServerRequestQueue {
      * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue, but
      * unlike {@link #dequeue()}, does not remove it from the queue.</p>
      *
-     * @return		The {@link ServerRequest} object at position with index 0 within the queue.
+     * @return The {@link ServerRequest} object at position with index 0 within the queue.
      */
     public ServerRequest peek() {
         ServerRequest req = null;
@@ -173,12 +173,12 @@ class ServerRequestQueue {
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
      * parameter, within the queue. Like {@link #peek()}, the item is not removed from the queue.</p>
      *
-     * @param index		An {@link Integer} that specifies the position within the queue from which to
-     * 					pull the {@link ServerRequest} object.
+     * @param index An {@link Integer} that specifies the position within the queue from which to
+     *              pull the {@link ServerRequest} object.
      *
-     * @return			The {@link ServerRequest} object at the specified index. Returns null if no
-     * 					request exists at that position, or if the index supplied is not valid, for
-     * 					instance if {@link #getSize()} is 6 and index 6 is called.
+     * @return The {@link ServerRequest} object at the specified index. Returns null if no
+     *         request exists at that position, or if the index supplied is not valid, for
+     *         instance if {@link #getSize()} is 6 and index 6 is called.
      */
     public ServerRequest peekAt(int index) {
         ServerRequest req = null;
@@ -194,11 +194,11 @@ class ServerRequestQueue {
      * <p>As the method name implies, inserts a {@link ServerRequest} into the queue at the index
      * position specified.</p>
      *
-     * @param request		The {@link ServerRequest} to insert into the queue.
+     * @param request The {@link ServerRequest} to insert into the queue.
      *
-     * @param index			An {@link Integer} value specifying the index at which to insert the
-     * 						supplied {@link ServerRequest} object. Fails silently if the index
-     * 						supplied is invalid.
+     * @param index An {@link Integer} value specifying the index at which to insert the
+     *              supplied {@link ServerRequest} object. Fails silently if the index
+     *              supplied is invalid.
      */
     public void insert(ServerRequest request, int index) {
         try {
@@ -212,10 +212,10 @@ class ServerRequestQueue {
      * <p>As the method name implies, removes the {@link ServerRequest} object, at the position
      * indicated by the {@link Integer} parameter supplied.</p>
      *
-     * @param index		An {@link Integer} value specifying the index at which to remove the
-     *              	{@link ServerRequest} object. Fails silently if the index
-     *              	supplied is invalid.
-     * @return			The {@link ServerRequest} object being removed.
+     * @param index An {@link Integer} value specifying the index at which to remove the
+     *              {@link ServerRequest} object. Fails silently if the index
+     *              supplied is invalid.
+     * @return The {@link ServerRequest} object being removed.
      */
     public ServerRequest removeAt(int index) {
         ServerRequest req = null;
@@ -326,7 +326,7 @@ class ServerRequestQueue {
     /**
      * Sets the given callback to the existing open or install request in the queue
      *
-     * @param callback	A{@link Branch.BranchReferralInitListener} callback instance.
+     * @param callback A{@link Branch.BranchReferralInitListener} callback instance.
      */
     public void setInstallOrOpenCallback(Branch.BranchReferralInitListener callback) {
         synchronized (queue) {

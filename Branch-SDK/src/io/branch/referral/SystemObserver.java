@@ -30,8 +30,8 @@ import android.view.Display;
 import android.view.WindowManager;
 
 /**
- * <p>Class that provides a series of methods providing access to commonly used, device-wide 
- * attributes and parameters used by the Branch class, and made publically available for use by 
+ * <p>Class that provides a series of methods providing access to commonly used, device-wide
+ * attributes and parameters used by the Branch class, and made publically available for use by
  * other classes.</p>
  */
 class SystemObserver {
@@ -335,7 +335,7 @@ class SystemObserver {
     /**
      * <p>Checks whether the current device supports
      * <a href="https://developer.android.com/guide/topics/connectivity/bluetooth-le.html">
-     * 		Bluetooth Low Energy (LE)</a>.
+     * Bluetooth Low Energy (LE)</a>.
      * </p>
      *
      * <p>This is determined by checking the SDK version available on the current device. BTLE was
@@ -395,8 +395,8 @@ class SystemObserver {
      * current device.</p>
      *
      * <ul>
-     * 	<li><i>true</i> - the device has telephony capabilities; is a phone or phablet.</li>
-     *  <li><i>false</i> - the device has telephony capabilities; is a WiFi tablet or other non-phone device.</li>
+     *     <li><i>true</i> - the device has telephony capabilities; is a phone or phablet.</li>
+     *     <li><i>false</i> - the device has telephony capabilities; is a WiFi tablet or other non-phone device.</li>
      * </ul>
      */
     public boolean getTelephonePresent() {
@@ -527,8 +527,8 @@ class SystemObserver {
      * <li><i>0</i> - App has been updated since initial install.</li>
      * </ul>
      *
-     * @param updatePrefs		A {@link Boolean} value indicating whether or not current App version
-     * 							number should be updated in preferences.
+     * @param updatePrefs A {@link Boolean} value indicating whether or not current App version
+     *                    number should be updated in preferences.
      */
     @SuppressLint("NewApi")
     public int getUpdateState(boolean updatePrefs) {

@@ -31,21 +31,21 @@ class ApkParser {
     public static int endTag =    0x00100103;
 
     /**
-     * <p>Gets the result of decompression of AndroidManifest.xml from within an APK, as a 
+     * <p>Gets the result of decompression of AndroidManifest.xml from within an APK, as a
      * {@link String}, based on an input {@link byte} array parameter.</p>
-     * 
-     * <p>The {@link SystemObserver#getURIScheme()} method outputs the required {@link Byte} array, 
-     * so can be used as a parameter for this method, for instance by using the following code in an 
+     *
+     * <p>The {@link SystemObserver#getURIScheme()} method outputs the required {@link Byte} array,
+     * so can be used as a parameter for this method, for instance by using the following code in an
      * Activity Context:</p>
-     * 
+     *
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * SystemObserver systemObserver = new SystemObserver(this); 	// "this" being an Activity in this case
-     * 
+     *
      * String manifestStr = decompressXML(systemObserver.getURIScheme());</pre>
-     * 
-     * @param xml 	A {@link Byte[]} containing the XML to be decompressed.
-     * 
-     * @return 		A {@link String} containing the result of the decompression action.
+     *
+     * @param xml A {@link Byte[]} containing the XML to be decompressed.
+     *
+     * @return A {@link String} containing the result of the decompression action.
      */
     public String decompressXML(byte[] xml) {
         // Compressed XML file/bytes starts with 24x bytes of data,
@@ -158,9 +158,9 @@ class ApkParser {
      *
      * </p>
      *
-     * @param value 	The {@link String} value to be assessed.
-     * 
-     * @return 			A {@link Boolean} value; if valid returns true, else false.
+     * @param value The {@link String} value to be assessed.
+     *
+     * @return A {@link Boolean} value; if valid returns true, else false.
      */
     private boolean validURI(String value) {
         if (value != null) {
@@ -185,16 +185,16 @@ class ApkParser {
     }
 
     /**
-     * <p>Get a {@link String} of the value stored in StringTable format at offset strOff, as 
+     * <p>Get a {@link String} of the value stored in StringTable format at offset strOff, as
      * calculated from an initial starting point and a number of words to traverse.
      * </p>
      *
      * @param xml The {@link Byte} array to be processed.
-     * @param sitOff An {@link Integer} value indicating the initial offset within the supplied 
+     * @param sitOff An {@link Integer} value indicating the initial offset within the supplied
      * {@link Byte} array.
      * @param stOff An {@link Integer} value indicating the initial offset of the supplied array.
      * @param strInd An {@link Integer} value indicating the string index to use in the LEW calculation.
-     * @return A call to {@link #compXmlStringAt(byte[],int)}, with the result of the offset calculation 
+     * @return A call to {@link #compXmlStringAt(byte[],int)}, with the result of the offset calculation
      * of this method as the {@link Integer} parameter.
      */
     public String compXmlString(byte[] xml, int sitOff, int stOff, int strInd) {
@@ -221,16 +221,16 @@ class ApkParser {
     } // end of compXmlStringAt
 
     /**
-     * Gets the LEW (Little-Endian Word) from a {@link Byte} array, at the position defined by the 
+     * Gets the LEW (Little-Endian Word) from a {@link Byte} array, at the position defined by the
      * offset {@link Integer} provided.
      *
-     * @param arr 	The {@link Byte} array to process.
-     * 
-     * @param off 	An {@link int} value indicating the offset from which the return value should be
-     *            	taken.
-     *            
-     * @return 		The {@link Integer} Little Endian 32 bit word taken from the input {@link Byte} array 
-     * 				at the offset supplied as a parameter.
+     * @param arr The {@link Byte} array to process.
+     *
+     * @param off An {@link int} value indicating the offset from which the return value should be
+     *            taken.
+     *
+     * @return The {@link Integer} Little Endian 32 bit word taken from the input {@link Byte} array
+     *         at the offset supplied as a parameter.
      */
     public int LEW(byte[] arr, int off) {
         return arr[off+3]<<24&0xff000000 | arr[off+2]<<16&0xff0000 | arr[off+1]<<8&0xff00 | arr[off]&0xFF;

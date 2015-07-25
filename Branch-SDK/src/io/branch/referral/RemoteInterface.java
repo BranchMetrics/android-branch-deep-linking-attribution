@@ -28,8 +28,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * <p>This class assists with RESTful calls to the Branch API, by encapsulating a generic 
- * {@link HttpClient} object, and handling all restful calls via one of its GET or POST capable 
+ * <p>This class assists with RESTful calls to the Branch API, by encapsulating a generic
+ * {@link HttpClient} object, and handling all restful calls via one of its GET or POST capable
  * methods.</p>
  */
 class RemoteInterface {
@@ -53,7 +53,6 @@ class RemoteInterface {
      */
     protected PrefHelper prefHelper_;
 
-
     public RemoteInterface(Context context) {
         prefHelper_ = PrefHelper.getInstance(context);
     }
@@ -62,11 +61,10 @@ class RemoteInterface {
      * <p>Creates an instance of {@link HttpClient}, with a defined timeout, to be used for all of
      * the method calls within the class.</p>
      *
-     * @param timeout		An {@link Integer} value indicating the time in milliseconds to wait
-     * 						before considering a request to have timed out.
+     * @param timeout An {@link Integer} value indicating the time in milliseconds to wait
+     *                before considering a request to have timed out.
      *
-     * @return				An instance of {@link HttpClient}, pre-configured with the timeout value
-     * 						supplied.
+     * @return An instance of {@link HttpClient}, pre-configured with the timeout value supplied.
      */
     private HttpClient getGenericHttpClient(int timeout) {
         if (timeout <= 0)
@@ -83,21 +81,21 @@ class RemoteInterface {
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
      *
-     * @param entity		A generic {@link HttpEntity} returned as a result of a HTTP response.
+     * @param entity A generic {@link HttpEntity} returned as a result of a HTTP response.
      *
-     * @param statusCode	An {@link Integer} value containing the HTTP response code.
+     * @param statusCode An {@link Integer} value containing the HTTP response code.
      *
-     * @param tag			A {@link String} value containing the tag value to be applied to the
-     * 						resultant {@link ServerResponse} object.
+     * @param tag A {@link String} value containing the tag value to be applied to the
+     *            resultant {@link ServerResponse} object.
      *
-     * @param log			A {@link Boolean} value indicating whether or not to log the raw
-     * 						content lines via the debug interface.
+     * @param log A {@link Boolean} value indicating whether or not to log the raw
+     *            content lines via the debug interface.
      *
-     * @param linkData		A {@link BranchLinkData} object containing the data dictionary associated
-     * 						with the link subject of the original server request.
+     * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
+     *                 with the link subject of the original server request.
      *
-     * @return				A {@link ServerResponse} object representing the {@link HttpEntity}
-     * 						response in Branch SDK terms.
+     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     *         response in Branch SDK terms.
      *
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
@@ -135,14 +133,14 @@ class RemoteInterface {
      * <p>Make a RESTful GET request, by calling {@link #make_restful_get(String, String, int, int, boolean)}
      * with the logging {@link Boolean} parameter pre-populated.</p>
      *
-     * @param url		A {@link String} URL to request from.
+     * @param url A {@link String} URL to request from.
      *
-     * @param tag		A {@link String} tag for logging/analytics purposes.
+     * @param tag A {@link String} tag for logging/analytics purposes.
      *
-     * @param timeout	An {@link Integer} value containing the number of milliseconds to wait
-     * 					before considering a server request to have timed out.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
      *
-     * @return			A {@link ServerResponse} object containing the result of the RESTful request.
+     * @return A {@link ServerResponse} object containing the result of the RESTful request.
      */
     public ServerResponse make_restful_get(String url, String tag, int timeout) {
         return make_restful_get(url, tag, timeout, 0, true);
@@ -171,17 +169,17 @@ class RemoteInterface {
      * <p>The main RESTful GET method; the other one ({@link #make_restful_get(String, String, int)}) calls this one
      * with a pre-populated logging parameter.</p>
      *
-     * @param baseUrl		A {@link String} URL to request from.
+     * @param baseUrl A {@link String} URL to request from.
      *
-     * @param tag		A {@link String} tag for logging/analytics purposes.
+     * @param tag A {@link String} tag for logging/analytics purposes.
      *
-     * @param timeout	An {@link Integer} value containing the number of milliseconds to wait
-     * 					before considering a server request to have timed out.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
      *
-     * @param log		A {@link Boolean} value that specifies whether debug logging should be
-     * 					enabled for this request or not.
+     * @param log A {@link Boolean} value that specifies whether debug logging should be
+     *            enabled for this request or not.
      *
-     * @return			A {@link ServerResponse} object containing the result of the RESTful request.
+     * @return A {@link ServerResponse} object containing the result of the RESTful request.
      */
     private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
@@ -230,17 +228,17 @@ class RemoteInterface {
      * <p>Makes a RESTful POST call with logging enabled, without an associated data dictionary;
      * passed as null.</p>
      *
-     * @param body			A {@link JSONObject} containing the main data body/payload of the request.
+     * @param body A {@link JSONObject} containing the main data body/payload of the request.
      *
-     * @param url			A {@link String} URL to request from.
+     * @param url A {@link String} URL to request from.
      *
-     * @param tag			A {@link String} tag for logging/analytics purposes.
+     * @param tag A {@link String} tag for logging/analytics purposes.
      *
-     * @param timeout		An {@link Integer} value containing the number of milliseconds to wait
-     * 						before considering a server request to have timed out.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
      *
-     * @return				A {@link ServerResponse} object representing the {@link HttpEntity}
-     * 						response in Branch SDK terms.
+     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     *         response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
         return make_restful_post(body, url, tag, timeout, 0, true, null);
@@ -249,20 +247,20 @@ class RemoteInterface {
     /**
      * <p>Makes a RESTful POST call with logging enabled.</p>
      *
-     * @param body			A {@link JSONObject} containing the main data body/payload of the request.
+     * @param body A {@link JSONObject} containing the main data body/payload of the request.
      *
-     * @param url			A {@link String} URL to request from.
+     * @param url A {@link String} URL to request from.
      *
-     * @param tag			A {@link String} tag for logging/analytics purposes.
+     * @param tag A {@link String} tag for logging/analytics purposes.
      *
-     * @param timeout		An {@link Integer} value containing the number of milliseconds to wait
-     * 						before considering a server request to have timed out.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
      *
-     * @param linkData		A {@link BranchLinkData} object containing the data dictionary associated
-     * 						with the link subject of the original server request.
+     * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
+     *                 with the link subject of the original server request.
      *
-     * @return				A {@link ServerResponse} object representing the {@link HttpEntity}
-     * 						response in Branch SDK terms.
+     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     *         response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
         return make_restful_post(body, url, tag, timeout, 0, true, linkData);
@@ -271,46 +269,45 @@ class RemoteInterface {
     /**
      * <p>Makes a RESTful POST call without an associated data dictionary; passed as null.</p>
      *
-     * @param body			A {@link JSONObject} containing the main data body/payload of the request.
+     * @param body A {@link JSONObject} containing the main data body/payload of the request.
      *
-     * @param url			A {@link String} URL to request from.
+     * @param url A {@link String} URL to request from.
      *
-     * @param tag			A {@link String} tag for logging/analytics purposes.
+     * @param tag A {@link String} tag for logging/analytics purposes.
      *
-     * @param timeout		An {@link Integer} value containing the number of milliseconds to wait
-     * 						before considering a server request to have timed out.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
      *
-     * @param log			A {@link Boolean} value that specifies whether debug logging should be
-     * 						enabled for this request or not.
+     * @param log A {@link Boolean} value that specifies whether debug logging should be
+     *            enabled for this request or not.
      *
-     * @return				A {@link ServerResponse} object representing the {@link HttpEntity}
-     * 						response in Branch SDK terms.
+     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     *         response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
         return make_restful_post(body, url, tag, timeout, 0, log, null);
     }
 
-
     /**
      * <p>The main RESTful POST method. The others call this one with pre-populated parameters.</p>
      *
-     * @param body			A {@link JSONObject} containing the main data body/payload of the request.
+     * @param body A {@link JSONObject} containing the main data body/payload of the request.
      *
-     * @param url			A {@link String} URL to request from.
+     * @param url A {@link String} URL to request from.
      *
-     * @param tag			A {@link String} tag for logging/analytics purposes.
+     * @param tag A {@link String} tag for logging/analytics purposes.
      *
-     * @param timeout		An {@link Integer} value containing the number of milliseconds to wait
-     * 						before considering a server request to have timed out.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
      *
-     * @param log			A {@link Boolean} value that specifies whether debug logging should be
-     * 						enabled for this request or not.
+     * @param log A {@link Boolean} value that specifies whether debug logging should be
+     *            enabled for this request or not.
      *
-     * @param linkData		A {@link BranchLinkData} object containing the data dictionary associated
-     * 						with the link subject of the original server request.
+     * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
+     *                 with the link subject of the original server request.
      *
-     * @return				A {@link ServerResponse} object representing the {@link HttpEntity}
-     * 						response in Branch SDK terms.
+     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     *         response in Branch SDK terms.
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
                                             int retryNumber, boolean log, BranchLinkData linkData) {

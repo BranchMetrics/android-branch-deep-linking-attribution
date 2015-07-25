@@ -43,8 +43,8 @@ public class BranchApp extends Application {
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest.
      *
-     * @return   value of "io.branch.sdk.TestMode" entry in application manifest.
-     *          false if "io.branch.sdk.TestMode" is not added in the manifest.
+     * @return value of "io.branch.sdk.TestMode" entry in application manifest.
+     *         false if "io.branch.sdk.TestMode" is not added in the manifest.
      */
 
     private boolean isTestModeEnabled() {

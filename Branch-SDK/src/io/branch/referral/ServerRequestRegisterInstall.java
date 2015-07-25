@@ -89,7 +89,6 @@ class ServerRequestRegisterInstall extends ServerRequest {
 
     }
 
-
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }

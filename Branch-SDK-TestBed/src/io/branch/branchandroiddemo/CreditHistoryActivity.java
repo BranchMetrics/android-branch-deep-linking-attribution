@@ -81,7 +81,6 @@ public class CreditHistoryActivity extends Activity {
                                         xactDate));
                             }
 
-
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
