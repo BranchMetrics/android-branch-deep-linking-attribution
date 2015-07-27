@@ -181,8 +181,8 @@ public class PrefHelper {
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
      *
-     * @param context 		A reference to the {@link Context} that the application is operating
-     * 						within. This is normally the base context of the application.
+     * @param context A reference to the {@link Context} that the application is operating
+     *                within. This is normally the base context of the application.
      */
     private PrefHelper(Context context) {
         this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE,
@@ -195,11 +195,10 @@ public class PrefHelper {
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link PrefHelper}.</p>
      *
-     * @param context		The {@link Context} within which the object should be instantiated; this
-     * 						parameter is passed to the private {@link #PrefHelper(Context)}
-     * 						constructor method.
-     *
-     * @return				A {@link PrefHelper} object instance.
+     * @param context The {@link Context} within which the object should be instantiated; this
+     *                parameter is passed to the private {@link #PrefHelper(Context)}
+     *                constructor method.
+     * @return A {@link PrefHelper} object instance.
      */
     public static PrefHelper getInstance(Context context) {
         if (prefHelper_ == null) {
@@ -211,8 +210,8 @@ public class PrefHelper {
     /**
      * <p>Returns the base URL to use for all calls to the Branch API as a {@link String}.</p>
      *
-     * @return 			A {@link String} variable containing the hard-coded base URL that the Branch
-     * 					API uses.
+     * @return A {@link String} variable containing the hard-coded base URL that the Branch
+     * API uses.
      */
     public String getAPIBaseUrl() {
         return "https://api.branch.io/";
@@ -221,7 +220,7 @@ public class PrefHelper {
     /**
      * <p>Sets the duration in milliseconds to override the timeout value for calls to the Branch API.</p>
      *
-     * @param timeout	The {@link Integer} value of the timeout setting in milliseconds.
+     * @param timeout The {@link Integer} value of the timeout setting in milliseconds.
      */
     public void setTimeout(int timeout) {
         setInteger(KEY_TIMEOUT, timeout);
@@ -232,8 +231,8 @@ public class PrefHelper {
      * SDK setting unless it has been overridden manually between Branch object instantiation and
      * this call.</p>
      *
-     * @return 		An {@link Integer} value containing the currently set timeout value in
-     * 				milliseconds.
+     * @return An {@link Integer} value containing the currently set timeout value in
+     * milliseconds.
      */
     public int getTimeout() {
         return getInteger(KEY_TIMEOUT, TIMEOUT);
@@ -241,12 +240,12 @@ public class PrefHelper {
 
     /**
      * <p>Sets the value specifying the number of times that a Branch API call has been re-attempted.</p>
-     *
+     * <p/>
      * <p>This overrides the default retry value.</p>
      *
-     * @param retry		An {@link Integer} value specifying the value to be specified in preferences
-     * 					that determines the number of times that a Branch API call has been re-
-     * 					attempted.
+     * @param retry An {@link Integer} value specifying the value to be specified in preferences
+     *              that determines the number of times that a Branch API call has been re-
+     *              attempted.
      */
     public void setRetryCount(int retry) {
         setInteger(KEY_RETRY_COUNT, retry);
@@ -255,8 +254,8 @@ public class PrefHelper {
     /**
      * <p>Gets the current count of the number of times that a Branch API call has been re-attempted.</p>
      *
-     * @return			An {@link Integer} value containing the current count of the number of times
-     * 					that a Branch API call has been attempted.
+     * @return An {@link Integer} value containing the current count of the number of times
+     * that a Branch API call has been attempted.
      */
     public int getRetryCount() {
         return getInteger(KEY_RETRY_COUNT, MAX_RETRIES);
@@ -266,8 +265,8 @@ public class PrefHelper {
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
      * to the Branch API.</p>
      *
-     * @param retryInt		An {@link Integer} value specifying the number of milliseconds to wait
-     * 						before re-attempting a timed-out request.
+     * @param retryInt An {@link Integer} value specifying the number of milliseconds to wait
+     *                 before re-attempting a timed-out request.
      */
     public void setRetryInterval(int retryInt) {
         setInteger(KEY_RETRY_INTERVAL, retryInt);
@@ -277,8 +276,8 @@ public class PrefHelper {
      * <p>Gets the amount of time in milliseconds to wait before re-attempting a timed-out request
      * to the Branch API.</p>
      *
-     * @return		An {@link Integer} value containing the currently set retry interval in
-     * 				milliseconds.
+     * @return An {@link Integer} value containing the currently set retry interval in
+     * milliseconds.
      */
     public int getRetryInterval() {
         return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
@@ -287,7 +286,7 @@ public class PrefHelper {
     /**
      * <p>Sets the value of {@link #KEY_APP_VERSION} in preferences.</p>
      *
-     * @param version		A {@link String} value containing the current app version.
+     * @param version A {@link String} value containing the current app version.
      */
     public void setAppVersion(String version) {
         setString(KEY_APP_VERSION, version);
@@ -296,7 +295,7 @@ public class PrefHelper {
     /**
      * <p>Returns the current value of {@link #KEY_APP_VERSION} as stored in preferences.</p>
      *
-     * @return		A {@link String} value containing the current app version.
+     * @return A {@link String} value containing the current app version.
      */
     public String getAppVersion() {
         return getString(KEY_APP_VERSION);
@@ -304,24 +303,24 @@ public class PrefHelper {
 
     /**
      * <p>Sets the Branch App Key in preferences programmatically.</p>
-     *
+     * <p/>
      * <p><b>Note: </b> This is a deprecated method, you should configure your <i>App Key</i> as an XML
      * String value instead.</p>
      *
+     * @param key A {@link String} value containing the App Key for the current App.
      * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
      * Branch Quick-Start Guide for Android</a>
      * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/2cb4f05fd8f67bce1019456f26b7f384a39abb2c/README.md#add-your-app-key-to-your-project">
      * Adding your app key to your project</a>
-     *
-     * @param key		A {@link String} value containing the App Key for the current App.
      */
     public void setAppKey(String key) {
         setString(KEY_APP_KEY, key);
     }
+
     /**
      * <p>Gets the Branch App Key in preferences programmatically.</p>
      *
-     * @return		A {@link String} value containing the current App Key as configured.
+     * @return A {@link String} value containing the current App Key as configured.
      */
     public String getAppKey() {
         String appKey = null;
@@ -378,7 +377,7 @@ public class PrefHelper {
      * <p>Sets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
      * as a {@link String} in preferences.</p>
      *
-     * @param device_fingerprint_id 		A {@link String} that uniquely identifies this build.
+     * @param device_fingerprint_id A {@link String} that uniquely identifies this build.
      */
     public void setDeviceFingerPrintID(String device_fingerprint_id) {
         setString(KEY_DEVICE_FINGERPRINT_ID, device_fingerprint_id);
@@ -388,7 +387,7 @@ public class PrefHelper {
      * <p>Gets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
      * as a {@link String} from preferences.</p>
      *
-     * @return		A {@link String} that uniquely identifies this build.
+     * @return A {@link String} that uniquely identifies this build.
      */
     public String getDeviceFingerPrintID() {
         return getString(KEY_DEVICE_FINGERPRINT_ID);
@@ -397,8 +396,8 @@ public class PrefHelper {
     /**
      * <p>Sets the ID of the {@link KEY_SESSION_ID} {@link String} value in preferences.</p>
      *
-     * @param session_id		A {@link String} value containing the session ID as returned by the
-     * 							Branch API upon successful initialisation.
+     * @param session_id A {@link String} value containing the session ID as returned by the
+     *                   Branch API upon successful initialisation.
      */
     public void setSessionID(String session_id) {
         setString(KEY_SESSION_ID, session_id);
@@ -407,8 +406,8 @@ public class PrefHelper {
     /**
      * <p>Gets the ID of the {@link KEY_SESSION_ID} {@link String} value from preferences.</p>
      *
-     * @return			A {@link String} value containing the session ID as returned by the Branch
-     * 					API upon successful initialisation.
+     * @return A {@link String} value containing the session ID as returned by the Branch
+     * API upon successful initialisation.
      */
     public String getSessionID() {
         return getString(KEY_SESSION_ID);
@@ -416,14 +415,14 @@ public class PrefHelper {
 
     /**
      * <p>Sets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p/>
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     *
+     * <p/>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
      *
-     * @param identity_id		A {@link String} value containing the currently configured identity
-     * 							within preferences.
+     * @param identity_id A {@link String} value containing the currently configured identity
+     *                    within preferences.
      */
     public void setIdentityID(String identity_id) {
         setString(KEY_IDENTITY_ID, identity_id);
@@ -432,8 +431,8 @@ public class PrefHelper {
     /**
      * <p>Gets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
      *
-     * @return		A {@link String} value containing the currently configured user id within
-     * 				preferences.
+     * @return A {@link String} value containing the currently configured user id within
+     * preferences.
      */
     public String getIdentityID() {
         return getString(KEY_IDENTITY_ID);
@@ -441,14 +440,14 @@ public class PrefHelper {
 
     /**
      * <p>Sets the {@link KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     *
+     * <p/>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentityID(String)} - the UID reference of the user</p>
      *
-     * @param identity		A {@link String} value containing the currently configured identity
-     * 						within preferences.
+     * @param identity A {@link String} value containing the currently configured identity
+     *                 within preferences.
      */
     public void setIdentity(String identity) {
         setString(KEY_IDENTITY, identity);
@@ -456,11 +455,11 @@ public class PrefHelper {
 
     /**
      * <p>Gets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      *
-     * @return		A {@link String} value containing the username assigned to the currentuser ID.
+     * @return A {@link String} value containing the username assigned to the currentuser ID.
      */
     public String getIdentity() {
         return getString(KEY_IDENTITY);
@@ -469,8 +468,8 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
      *
-     * @param link_click_id			A {@link String} value containing the identifier of the
-     * 								associated link.
+     * @param link_click_id A {@link String} value containing the identifier of the
+     *                      associated link.
      */
     public void setLinkClickID(String link_click_id) {
         setString(KEY_LINK_CLICK_ID, link_click_id);
@@ -479,7 +478,7 @@ public class PrefHelper {
     /**
      * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
      *
-     * @return		A {@link String} value containing the identifier of the associated link.
+     * @return A {@link String} value containing the identifier of the associated link.
      */
     public String getLinkClickID() {
         return getString(KEY_LINK_CLICK_ID);
@@ -488,8 +487,8 @@ public class PrefHelper {
     /**
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
-     * @param identifer			A {@link String} value containing the identifier of the associated
-     * 							link.
+     * @param identifer A {@link String} value containing the identifier of the associated
+     *                  link.
      */
     public void setLinkClickIdentifier(String identifer) {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
@@ -498,7 +497,7 @@ public class PrefHelper {
     /**
      * <p>Gets the KEY_LINK_CLICK_IDENTIFER {@link String} value that has been set via the Branch API.</p>
      *
-     * @return		A {@link String} value containing the identifier of the associated link.
+     * @return A {@link String} value containing the identifier of the associated link.
      */
     public String getLinkClickIdentifier() {
         return getString(KEY_LINK_CLICK_IDENTIFIER);
@@ -506,11 +505,11 @@ public class PrefHelper {
 
     /**
      * <p>Gets the session parameters as currently set in preferences.</p>
-     *
+     * <p/>
      * <p>Parameters are stored in JSON format, and must be parsed prior to access.</p>
      *
-     * @return		A {@link String} value containing the JSON-encoded structure of parameters for
-     * 				the current session.
+     * @return A {@link String} value containing the JSON-encoded structure of parameters for
+     * the current session.
      */
     public String getSessionParams() {
         return getString(KEY_SESSION_PARAMS);
@@ -519,8 +518,8 @@ public class PrefHelper {
     /**
      * <p>Sets the session parameters as currently set in preferences.</p>
      *
-     * @param params		A {@link String} value containing the JSON-encoded structure of
-     * 						parameters for the current session.
+     * @param params A {@link String} value containing the JSON-encoded structure of
+     *               parameters for the current session.
      */
     public void setSessionParams(String params) {
         setString(KEY_SESSION_PARAMS, params);
@@ -529,8 +528,8 @@ public class PrefHelper {
     /**
      * <p>Gets the session parameters as originally set at time of app installation, in preferences.</p>
      *
-     * @return		A {@link String} value containing the JSON-encoded structure of parameters as
-     * 				they were at the time of installation.
+     * @return A {@link String} value containing the JSON-encoded structure of parameters as
+     * they were at the time of installation.
      */
     public String getInstallParams() {
         return getString(KEY_INSTALL_PARAMS);
@@ -539,8 +538,8 @@ public class PrefHelper {
     /**
      * <p>Sets the session parameters as originally set at time of app installation, in preferences.</p>
      *
-     * @param params		A {@link String} value containing the JSON-encoded structure of
-     * 						parameters as they should be at the time of installation.
+     * @param params A {@link String} value containing the JSON-encoded structure of
+     *               parameters as they should be at the time of installation.
      */
     public void setInstallParams(String params) {
         setString(KEY_INSTALL_PARAMS, params);
@@ -549,7 +548,7 @@ public class PrefHelper {
     /**
      * <p>Sets the user URL from preferences.</p>
      *
-     * @param user_url		A {@link String} value containing the current user URL.
+     * @param user_url A {@link String} value containing the current user URL.
      */
     public void setUserURL(String user_url) {
         setString(KEY_USER_URL, user_url);
@@ -558,7 +557,7 @@ public class PrefHelper {
     /**
      * <p>Sets the user URL from preferences.</p>
      *
-     * @return		A {@link String} value containing the current user URL.
+     * @return A {@link String} value containing the current user URL.
      */
     public String getUserURL() {
         return getString(KEY_USER_URL);
@@ -568,8 +567,8 @@ public class PrefHelper {
      * <p>Gets the {@link Integer} value of the preference setting {@link #KEY_IS_REFERRABLE}, which
      * indicates whether or not the current session should be considered referrable.</p>
      *
-     * @return		A {@link Integer} value indicating whether or not the session should be
-     * 				considered referrable.
+     * @return A {@link Integer} value indicating whether or not the session should be
+     * considered referrable.
      */
     public int getIsReferrable() {
         return getInteger(KEY_IS_REFERRABLE);
@@ -578,9 +577,9 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 1, or <i>true</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
-     *
+     * <p/>
      * <ul>
-     * 		<li>Sets {@link #KEY_IS_REFERRABLE} to 1 - <i>true</i> - This session <b><u>is</u></b> referrable.</li>
+     * <li>Sets {@link #KEY_IS_REFERRABLE} to 1 - <i>true</i> - This session <b><u>is</u></b> referrable.</li>
      * </ul>
      */
     public void setIsReferrable() {
@@ -590,11 +589,10 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
-     *
+     * <p/>
      * <ul>
-     * 		<li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
+     * <li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
      * </ul>
-     *
      */
     public void clearIsReferrable() {
         setInteger(KEY_IS_REFERRABLE, 0);
@@ -649,14 +647,14 @@ public class PrefHelper {
 
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     *
+     * <p/>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
      * when the last system sync occurred.
      * </p>
      *
-     * @param count		A {@link Integer} value that the default bucket credit count will be set to.
+     * @param count A {@link Integer} value that the default bucket credit count will be set to.
      */
     public void setCreditCount(int count) {
         setCreditCount(Defines.Jsonkey.DefaultBucket.getKey(), count);
@@ -664,15 +662,15 @@ public class PrefHelper {
 
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     *
+     * <p/>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
      * when the last system sync occurred.
      * </p>
      *
-     * @param bucket	A {@link String} value containing the value of the bucket being referenced.
-     * @param count		A {@link Integer} value that the default bucket credit count will be set to.
+     * @param bucket A {@link String} value containing the value of the bucket being referenced.
+     * @param count  A {@link Integer} value that the default bucket credit count will be set to.
      */
     public void setCreditCount(String bucket, int count) {
         ArrayList<String> buckets = getBuckets();
@@ -687,8 +685,8 @@ public class PrefHelper {
      * <p>Get the current cached credit count for the default bucket, as currently stored in
      * preferences for the current app.</p>
      *
-     * @return	A {@link Integer} value specifying the current number of credits in the bucket, as
-     * 			currently stored in preferences.
+     * @return A {@link Integer} value specifying the current number of credits in the bucket, as
+     * currently stored in preferences.
      */
     public int getCreditCount() {
         return getCreditCount(Defines.Jsonkey.DefaultBucket.getKey());
@@ -698,10 +696,9 @@ public class PrefHelper {
      * <p>Get the current cached credit count for the default bucket, as currently stored in
      * preferences for the current app.</p>
      *
-     * @param bucket	- A {@link String} value containing the value of the bucket being referenced.
-     *
-     * @return	A {@link Integer} value specifying the current number of credits in the bucket, as
-     * 			currently stored in preferences.
+     * @param bucket A {@link String} value containing the value of the bucket being referenced.
+     * @return A {@link Integer} value specifying the current number of credits in the bucket, as
+     * currently stored in preferences.
      */
     public int getCreditCount(String bucket) {
         return getInteger(KEY_CREDIT_BASE + bucket);
@@ -730,10 +727,10 @@ public class PrefHelper {
      * <p>Sets the count of total number of times that the specified action has been carried out
      * during the current session, as defined in preferences.</p>
      *
-     * @param action	- A {@link String} value containing the name of the action to return the
-     * 					count for.
-     * @param count		- An {@link Integer} value containing the total number of times that the
-     * 					specified action has been carried out during the current session.
+     * @param action - A {@link String} value containing the name of the action to return the
+     *               count for.
+     * @param count  - An {@link Integer} value containing the total number of times that the
+     *               specified action has been carried out during the current session.
      */
     public void setActionTotalCount(String action, int count) {
         ArrayList<String> actions = getActions();
@@ -748,10 +745,10 @@ public class PrefHelper {
      * <p>Sets the count of the unique number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
      *
-     * @param action	- A {@link String} value containing the name of the action to return the
-     * 					count for.
-     * @param count		- An {@link Integer} value containing the total number of times that the
-     * 					specified action has been carried out during the current session.
+     * @param action  A {@link String} value containing the name of the action to return the
+     *               count for.
+     * @param count  An {@link Integer} value containing the total number of times that the
+     *               specified action has been carried out during the current session.
      */
     public void setActionUniqueCount(String action, int count) {
         setInteger(KEY_UNIQUE_BASE + action, count);
@@ -761,11 +758,10 @@ public class PrefHelper {
      * <p>Gets the count of total number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
      *
-     * @param action	A {@link String} value containing the name of the action to return the
-     * 					count for.
-     *
-     * @return 			An {@link Integer} value containing the total number of times that the
-     * 					specified action has been carried out during the current session.
+     * @param action A {@link String} value containing the name of the action to return the
+     *               count for.
+     * @return An {@link Integer} value containing the total number of times that the
+     * specified action has been carried out during the current session.
      */
     public int getActionTotalCount(String action) {
         return getInteger(KEY_TOTAL_BASE + action);
@@ -775,11 +771,10 @@ public class PrefHelper {
      * <p>Gets the count of the unique number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
      *
-     * @param action	A {@link String} value containing the name of the action to return the
-     * 					count for.
-     *
-     * @return 			An {@link Integer} value containing the total number of times that the
-     * 					specified action has been carried out during the current session.
+     * @param action A {@link String} value containing the name of the action to return the
+     *               count for.
+     * @return An {@link Integer} value containing the total number of times that the
+     * specified action has been carried out during the current session.
      */
     public int getActionUniqueCount(String action) {
         return getInteger(KEY_UNIQUE_BASE + action);
@@ -806,9 +801,8 @@ public class PrefHelper {
     /**
      * <p>A basic method that returns an integer value from a specified preferences Key.</p>
      *
-     * @param key	- A {@link String} value containing the key to reference.
-     *
-     * @return	An {@link Integer} value of the specified key as stored in preferences.
+     * @param key A {@link String} value containing the key to reference.
+     * @return An {@link Integer} value of the specified key as stored in preferences.
      */
     public int getInteger(String key) {
         return getInteger(key, 0);
@@ -818,13 +812,11 @@ public class PrefHelper {
      * <p>A basic method that returns an {@link Integer} value from a specified preferences Key, with a
      * default value supplied in case the value is null.</p>
      *
-     * @param key	- A {@link String} value containing the key to reference.
-     *
-     * @param defaultValue	- An {@link Integer} specifying the value to use if the preferences value
-     * 						is null.
-     *
-     * @return	An {@link Integer} value containing the value of the specified key, or the supplied
-     * 			default value if null.
+     * @param key          A {@link String} value containing the key to reference.
+     * @param defaultValue An {@link Integer} specifying the value to use if the preferences value
+     *                     is null.
+     * @return An {@link Integer} value containing the value of the specified key, or the supplied
+     * default value if null.
      */
     public int getInteger(String key, int defaultValue) {
         return prefHelper_.appSharedPrefs_.getInt(key, defaultValue);
@@ -833,9 +825,8 @@ public class PrefHelper {
     /**
      * <p>A basic method that returns a {@link Long} value from a specified preferences Key.</p>
      *
-     * @param key	- A {@link String} value containing the key to reference.
-     *
-     * @return	A {@link Long} value of the specified key as stored in preferences.
+     * @param key A {@link String} value containing the key to reference.
+     * @return A {@link Long} value of the specified key as stored in preferences.
      */
     public long getLong(String key) {
         return prefHelper_.appSharedPrefs_.getLong(key, 0);
@@ -844,9 +835,8 @@ public class PrefHelper {
     /**
      * <p>A basic method that returns a {@link Float} value from a specified preferences Key.</p>
      *
-     * @param key	- A {@link String} value containing the key to reference.
-     *
-     * @return	A {@link Float} value of the specified key as stored in preferences.
+     * @param key A {@link String} value containing the key to reference.
+     * @return A {@link Float} value of the specified key as stored in preferences.
      */
     public float getFloat(String key) {
         return prefHelper_.appSharedPrefs_.getFloat(key, 0);
@@ -855,9 +845,8 @@ public class PrefHelper {
     /**
      * <p>A basic method that returns a {@link String} value from a specified preferences Key.</p>
      *
-     * @param key	- A {@link String} value containing the key to reference.
-     *
-     * @return	A {@link String} value of the specified key as stored in preferences.
+     * @param key A {@link String} value containing the key to reference.
+     * @return A {@link String} value of the specified key as stored in preferences.
      */
     public String getString(String key) {
         return prefHelper_.appSharedPrefs_.getString(key, NO_STRING_VALUE);
@@ -866,9 +855,8 @@ public class PrefHelper {
     /**
      * <p>A basic method that returns a {@link Boolean} value from a specified preferences Key.</p>
      *
-     * @param key	- A {@link String} value containing the key to reference.
-     *
-     * @return	An {@link Boolean} value of the specified key as stored in preferences.
+     * @param key A {@link String} value containing the key to reference.
+     * @return An {@link Boolean} value of the specified key as stored in preferences.
      */
     public boolean getBool(String key) {
         return prefHelper_.appSharedPrefs_.getBoolean(key, false);
@@ -877,8 +865,8 @@ public class PrefHelper {
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
-     * @param key		- A {@link String} value containing the key to reference.
-     * @param value		- An {@link Integer} value to set the preference record to.
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value An {@link Integer} value to set the preference record to.
      */
     public void setInteger(String key, int value) {
         prefHelper_.prefsEditor_.putInt(key, value);
@@ -888,8 +876,8 @@ public class PrefHelper {
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
-     * @param key		- A {@link String} value containing the key to reference.
-     * @param value		- A {@link Long} value to set the preference record to.
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link Long} value to set the preference record to.
      */
     public void setLong(String key, long value) {
         prefHelper_.prefsEditor_.putLong(key, value);
@@ -899,8 +887,8 @@ public class PrefHelper {
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
-     * @param key		- A {@link String} value containing the key to reference.
-     * @param value		- A {@link Float} value to set the preference record to.
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link Float} value to set the preference record to.
      */
     public void setFloat(String key, float value) {
         prefHelper_.prefsEditor_.putFloat(key, value);
@@ -910,8 +898,8 @@ public class PrefHelper {
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
-     * @param key		- A {@link String} value containing the key to reference.
-     * @param value		- A {@link String} value to set the preference record to.
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link String} value to set the preference record to.
      */
     public void setString(String key, String value) {
         prefHelper_.prefsEditor_.putString(key, value);
@@ -921,8 +909,8 @@ public class PrefHelper {
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
-     * @param key		- A {@link String} value containing the key to reference.
-     * @param value		- A {@link Boolean} value to set the preference record to.
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link Boolean} value to set the preference record to.
      */
     public void setBool(String key, Boolean value) {
         prefHelper_.prefsEditor_.putBoolean(key, value);
@@ -955,7 +943,7 @@ public class PrefHelper {
     /**
      * <p>Gets the value of the debug status {@link Boolean} value.</p>
      *
-     * @return	A {@link Boolean} value indicating the current state of external debugging.
+     * @return A {@link Boolean} value indicating the current state of external debugging.
      */
     public boolean getExternDebug() {
         return BNC_Dev_Debug;
@@ -973,7 +961,7 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps.</p>
      *
-     * @return	A {@link Boolean} value containing the current value of the
+     * @return A {@link Boolean} value containing the current value of the
      * {@link #BNC_App_Listing} boolean.
      */
     public boolean getExternAppListing() {
@@ -1062,11 +1050,11 @@ public class PrefHelper {
      * <p>Gets the {@link Boolean} value of {@link #BNC_Debug}, which indicates whether or not
      * debugging is enabled.</p>
      *
-     * @return	A {@link Boolean} value indicating current debug state:
-     *
+     * @return A {@link Boolean} value indicating current debug state:
+     * <p/>
      * <ul>
-     * 	<li><i>true</i> - Debugging is enabled.</li>
-     *  <li><i>false</i> - Debugging is disabled.</li>
+     * <li><i>true</i> Debugging is enabled.</li>
+     * <li><i>false</i> Debugging is disabled.</li>
      * </ul>
      */
     public boolean isDebug() {
@@ -1076,9 +1064,8 @@ public class PrefHelper {
     /**
      * <p>Creates a <b>Log</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
-     * @param tag		- A {@link String} value specifying the logging tag to use for the message.
-     *
-     * @param message	- A {@link String} value containing the logging message to record.
+     * @param tag     A {@link String} value specifying the logging tag to use for the message.
+     * @param message A {@link String} value containing the logging message to record.
      */
     public void log(final String tag, final String message) {
         if (BNC_Debug || BNC_Dev_Debug) {
@@ -1098,9 +1085,8 @@ public class PrefHelper {
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
-     * @param tag		A {@link String} value specifying the logging tag to use for the message.
-     *
-     * @param message	A {@link String} value containing the debug message to record.
+     * @param tag     A {@link String} value specifying the logging tag to use for the message.
+     * @param message A {@link String} value containing the debug message to record.
      */
     public static void Debug(String tag, String message) {
         if (prefHelper_ != null) {
@@ -1115,11 +1101,11 @@ public class PrefHelper {
     /**
      * <p>Sends an empty logging message to keep the debugger connection alive.</p>
      *
-     * @return		A {@link Boolean} value indicating the debug connection state:
-     *
+     * @return A {@link Boolean} value indicating the debug connection state:
+     * <p/>
      * <ul>
-     * 		<li><i>true</i> - If the debug connection has been kept alive.</li>
-     * 		<li><i>false</i> - If the debug connection has not been kept alive, if
+     * <li><i>true</i> - If the debug connection has been kept alive.</li>
+     * <li><i>false</i> - If the debug connection has not been kept alive, if
      * {@link #BNC_Remote_Debug} is false, or if there is no current remote connection.</li>
      * </ul>
      */
@@ -1164,8 +1150,8 @@ public class PrefHelper {
         /**
          * Called when the server response is returned following a request to the debug API.
          *
-         * @param serverResponse	A {@link ServerResponse} object containing the result of the
-         * 							{@link DebugNetworkCallback} action.
+         * @param serverResponse A {@link ServerResponse} object containing the result of the
+         *                       {@link DebugNetworkCallback} action.
          */
         @Override
         public void finished(ServerResponse serverResponse) {

@@ -35,7 +35,7 @@ public class BranchRemoteInterface extends RemoteInterface {
     /**
      * <p>The main constructor of the BranchRemoteInterface class.</p>
      *
-     * @param context		A {@link Context} from which this call was made.
+     * @param context A {@link Context} from which this call was made.
      */
     public BranchRemoteInterface(Context context) {
         super(context);
@@ -45,8 +45,8 @@ public class BranchRemoteInterface extends RemoteInterface {
     /**
      * <p>Sets a callback listener to handle network events received during this app session.</p>
      *
-     * @param callback		A {@link NetworkCallback} object instance that will be triggered for
-     * 						each network event that occurs during this app session.
+     * @param callback A {@link NetworkCallback} object instance that will be triggered for
+     *                 each network event that occurs during this app session.
      */
     public void setNetworkCallbackListener(NetworkCallback callback) {
         callback_ = callback;
@@ -109,7 +109,7 @@ public class BranchRemoteInterface extends RemoteInterface {
     /**
      * <p>Log messages to the server's debug interface.</p>
      *
-     * @param log		A {@link String} variable containing information to log.
+     * @param log A {@link String} variable containing information to log.
      */
     public void sendLog(String log) {
         try {

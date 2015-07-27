@@ -39,7 +39,7 @@ class ApkParser {
      * Activity Context:</p>
      *
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
-     * SystemObserver systemObserver = new SystemObserver(this); 	// "this" being an Activity in this case
+     * SystemObserver systemObserver = new SystemObserver(this);    // "this" being an Activity in this case
      *
      * String manifestStr = decompressXML(systemObserver.getURIScheme());</pre>
      *
