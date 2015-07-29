@@ -45,13 +45,7 @@ class ServerRequestRegisterOpen extends ServerRequest {
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
-            String advertisingId = sysObserver.getAdvertisingId();
-            if (advertisingId != null) {
-                openPost.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
-            }
 
-            int latVal = sysObserver.getLATValue();
-            openPost.put(Defines.Jsonkey.LATVal.getKey(), latVal);
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
 
             setPost(openPost);

@@ -167,6 +167,12 @@ After you register your app, your Branch key can be retrieved on the [Settings](
 </manifest>
 ```
 
+### Proguard settings
+If your Application is enabled with proguard, add the following instruction to your proguard.cfg file:
+```bash
+-keep class com.google.android.gms.ads.identifier.** { *; }
+```
+
 ## Initialization
 
 Branch must be notified when the app opens and when it closes, so that we know when to query the API for a new deep link. We recently discovered an Android mechanism that was exposed in version 14, that allows us to track behind-the-scenes when the app is opened and closed. It makes the integration **a lot** easier, so we've split it out from the legacy integration.

@@ -71,15 +71,8 @@ class ServerRequestRegisterInstall extends ServerRequest {
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
-            String advertisingId = sysObserver.getAdvertisingId();
-            if (advertisingId != null) {
-                installPost.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
-            }
 
-            int latVal = sysObserver.getLATValue();
-            installPost.put(Defines.Jsonkey.LATVal.getKey(), latVal);
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
-
             setPost(installPost);
 
         } catch (JSONException ex) {

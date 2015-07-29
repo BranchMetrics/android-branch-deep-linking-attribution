@@ -339,14 +339,24 @@ public class PrefHelper {
         return appKey;
     }
 
-    public void setBranchKey(String key) {
+
+    /**
+     * Set the given Branch Key to preference. Clears the preference data if the key is a new key.
+     *
+     * @param key A {@link String} representing Branch Key.
+     * @return A {@link Boolean} which is true if the key set is a new key. On Setting a new key need to clear all preference items.
+     */
+    public boolean setBranchKey(String key) {
         Branch_Key = key;
         String currentBranchKey = getString(KEY_BRANCH_KEY);
         if (key == null || currentBranchKey == null || !currentBranchKey.equals(key)) {
             clearPrefOnBranchKeyChange();
             setString(KEY_BRANCH_KEY, key);
+            return true;
         }
+        return false;
     }
+
 
     public String getBranchKey() {
         if (Branch_Key == null) {

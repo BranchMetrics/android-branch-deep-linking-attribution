@@ -209,62 +209,70 @@ abstract class ServerRequest {
      * to the request path.</p>
      *
      * @param requestPath Path for the server request. see {@link Defines.RequestPath}
-     * @param post A {@link JSONObject} object containing post data stored as key-value pairs.
-     * @param context Application context.
-     *
+     * @param post        A {@link JSONObject} object containing post data stored as key-value pairs.
+     * @param context     Application context.
      * @return A {@link ServerRequest} object for the given Post data.
      */
-    private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context){
+    private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context) {
         ServerRequest extendedReq = null;
 
-        if(requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())){
+        if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
             extendedReq = new ServerRequestActionCompleted(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.ApplyReferralCode.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.ApplyReferralCode.getPath())) {
             extendedReq = new ServerRequestApplyReferralCode(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetReferralCode.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetReferralCode.getPath())) {
             extendedReq = new ServerRequestGetReferralCode(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.Referrals.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Referrals.getPath())) {
             extendedReq = new ServerRequestGetReferralCount(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())) {
             extendedReq = new ServerRequestGetRewardHistory(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())) {
             extendedReq = new ServerRequestGetRewards(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
             extendedReq = new ServerRequestLogout(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())) {
             extendedReq = new ServerRequestRedeemRewards(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
             extendedReq = new ServerRequestRegisterClose(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
             extendedReq = new ServerRequestRegisterInstall(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
             extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())) {
             extendedReq = new ServerRequestSendAppList(requestPath, post, context);
-        }
-        else if(requestPath.equalsIgnoreCase(Defines.RequestPath.ValidateReferralCode.getPath())){
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.ValidateReferralCode.getPath())) {
             extendedReq = new ServerRequestValidateReferralCode(requestPath, post, context);
         }
 
         return extendedReq;
     }
+
+    /**
+     * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
+     *
+     * @param sysObserver {@link SystemObserver} instance.
+     */
+    public void updateGAdsParams(SystemObserver sysObserver) {
+        try {
+            String advertisingId = sysObserver.getAdvertisingId();
+            if (advertisingId != null && getPost() != null) {
+                getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
+            }
+            int latVal = sysObserver.getLATValue();
+            if (getPost() != null) {
+                getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     /*
      * Checks if this Application has internet permissions.
