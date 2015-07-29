@@ -37,9 +37,6 @@ class ServerRequestRegisterOpen extends ServerRequest {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             openPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
             openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
-            String uriScheme = sysObserver.getURIScheme();
-            if (!uriScheme.equals(SystemObserver.BLANK))
-                openPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             if (!sysObserver.getOS().equals(SystemObserver.BLANK))
                 openPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {

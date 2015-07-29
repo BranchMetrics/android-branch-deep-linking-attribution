@@ -57,9 +57,12 @@ class ServerRequestRegisterInstall extends ServerRequest {
                 installPost.put(Defines.Jsonkey.Model.getKey(), sysObserver.getPhoneModel());
             if (!sysObserver.getOS().equals(SystemObserver.BLANK))
                 installPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
-            String uriScheme = sysObserver.getURIScheme();
-            if (!uriScheme.equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
+            // Read and update the URI scheme only if running in debug mode
+            if(prefHelper_.isDebug()) {
+                String uriScheme = sysObserver.getURIScheme();
+                if (!uriScheme.equals(SystemObserver.BLANK))
+                    installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
+            }
             installPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
             DisplayMetrics dMetrics = sysObserver.getScreenDisplay();
             installPost.put(Defines.Jsonkey.ScreenDpi.getKey(), dMetrics.densityDpi);

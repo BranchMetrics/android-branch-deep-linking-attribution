@@ -2966,7 +2966,7 @@ public class Branch {
                 int deepLinkActivity_Req_Code = DEF_AUTO_DEEP_LINK_REQ_CODE;
 
                 for (ActivityInfo activityInfo : activityInfos) {
-                    if (activityInfo.metaData != null && activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY, null) != null) {
+                    if (activityInfo.metaData != null && activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
                         String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
                         for (String activityLinkKey : activityLinkKeys) {
                             if (latestParams.has(activityLinkKey)) {
@@ -2985,9 +2985,7 @@ public class Branch {
                     Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
                     intent.putExtra(AUTO_DEEP_LINK_KEY, deepLinkKey);
                     currentActivity_.startActivityForResult(intent, deepLinkActivity_Req_Code);
-                } else {
-                    Log.d("BranchSDK", "No Activity found matching for auto deep linking");
-                }
+                } 
             }
         } catch (final PackageManager.NameNotFoundException e) {
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
