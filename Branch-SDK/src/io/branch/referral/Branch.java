@@ -2583,7 +2583,11 @@ public class Branch {
         public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {}
 
         @Override
-        public void onActivityDestroyed(Activity activity) {}
+        public void onActivityDestroyed(Activity activity) {
+            if(currentActivity_ == activity) {
+                currentActivity_ = null;
+            }
+        }
 
     }
 
