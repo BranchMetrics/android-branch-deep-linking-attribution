@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.8.1: Removing unnecessary reading of URI scheme. URI Scheme is read only when running in debug mode.
+
 - v1.8.0: Adding new auto deep linking feature.
 
 - v1.7.2: Fixed bug with handling Activity intent in auto session management.
