@@ -27,7 +27,7 @@ class ServerRequestGetReferralCount extends ServerRequest {
      *
      * @param context  Current {@link Application} context
      * @param callback A {@link Branch.BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon receipt of a response to a	referral count request.
+     *                 trigger actions defined therein upon receipt of a response to a referral count request.
      */
     public ServerRequestGetReferralCount(Context context, Branch.BranchReferralStateChangedListener callback) {
         super(context, Defines.RequestPath.Referrals.getPath());

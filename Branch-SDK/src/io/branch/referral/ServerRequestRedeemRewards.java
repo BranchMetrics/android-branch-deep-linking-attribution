@@ -14,7 +14,6 @@ import org.json.JSONObject;
  */
 class ServerRequestRedeemRewards extends ServerRequest {
 
-
     Branch.BranchReferralStateChangedListener callback_;
     int actualNumOfCreditsToRedeem_ = 0;
 
@@ -35,7 +34,6 @@ class ServerRequestRedeemRewards extends ServerRequest {
         super(context, Defines.RequestPath.RedeemRewards.getPath());
 
         callback_ = callback;
-
 
         int availableCredits = prefHelper_.getCreditCount(bucketName);
         actualNumOfCreditsToRedeem_ = numOfCreditsToRedeem;

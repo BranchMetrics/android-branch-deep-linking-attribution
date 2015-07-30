@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-
     <TextView
         android:id="@+id/launch_mode_txt"
         android:layout_width="fill_parent"

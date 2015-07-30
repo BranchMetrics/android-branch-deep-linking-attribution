@@ -51,7 +51,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginTop="15dp"
         android:text="Reward Type" />
-    
+
     <RadioGroup
         android1:id="@+id/codeType"
         android1:layout_width="wrap_content"
@@ -72,9 +72,8 @@
             android1:layout_height="wrap_content"
             android1:text="Unique" />
 
-    
     </RadioGroup>
-    
+
     <TextView
         android:id="@+id/txtLocation"
         android:layout_width="wrap_content"
@@ -83,7 +82,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginTop="15dp"
         android:text="Location" />
-    
+
     <RadioGroup
         android1:id="@+id/codeLocation"
         android1:layout_width="wrap_content"
@@ -110,8 +109,8 @@
             android1:layout_height="wrap_content"
             android1:text="Both" />
     </RadioGroup>
-    
-  	<TextView
+
+    <TextView
         android:id="@+id/txtOptional"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -173,7 +172,4 @@
         android:layout_margin="20dp"
         android:text="Redeem"
         android:textSize="14sp" />
-
-    
-
 </RelativeLayout>

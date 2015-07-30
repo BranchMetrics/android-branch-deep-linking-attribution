@@ -95,7 +95,6 @@ class ServerRequestCreateUrl extends ServerRequest {
         return linkPost_;
     }
 
-
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {

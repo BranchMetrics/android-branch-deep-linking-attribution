@@ -71,7 +71,6 @@ class ServerRequestGetRewardHistory extends ServerRequest {
 
     }
 
-
     public ServerRequestGetRewardHistory(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }

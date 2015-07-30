@@ -51,7 +51,6 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
         super(requestPath, post, context);
     }
 
-
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
             if (getPost() != null && getPost().has(Defines.Jsonkey.Identity.getKey())) {

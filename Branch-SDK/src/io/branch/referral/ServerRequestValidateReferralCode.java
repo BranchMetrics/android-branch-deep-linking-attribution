@@ -60,7 +60,6 @@ class ServerRequestValidateReferralCode extends ServerRequest {
         return super.getRequestUrl() + code;
     }
 
-
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         if (callback_ != null) {

@@ -99,7 +99,6 @@ class ServerRequestGetReferralCode extends ServerRequest {
         }
     }
 
-
     public ServerRequestGetReferralCode(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
