@@ -884,6 +884,11 @@ public class Branch {
                     ((BranchWindowCallback) activity.getWindow().getCallback()).callback_;
             activity.getWindow().setCallback(originalCallback);
             debugListenerInitHistory_.remove(System.identityHashCode(activity));
+            
+            //Remove the pending threads on the handler inorder to prevent any leak.
+            if (debugHandler_ != null) {
+                debugHandler_.removeCallbacksAndMessages(null);
+            }
         }
     }
 
