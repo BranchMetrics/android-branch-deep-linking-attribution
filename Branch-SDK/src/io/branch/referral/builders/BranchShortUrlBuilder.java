@@ -189,7 +189,7 @@ public class BranchShortUrlBuilder {
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
      */
 
-    public void generateShortLink(Branch.BranchLinkCreateListener callback) {
+    public void generateShortUrl(Branch.BranchLinkCreateListener callback) {
         String shortUrl = null;
         if (branchReferral_ != null) {
             branchReferral_.generateShortLink(alias_, type_, duration_, tags_, channel_, feature_, stage_, stringifyParams(params_), callback, true);
