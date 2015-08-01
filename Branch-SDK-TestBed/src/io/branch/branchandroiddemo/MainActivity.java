@@ -122,9 +122,9 @@ public class MainActivity extends Activity {
                         .addParameters("$og_title", "this is a title")
                         .addParameters("$og_description", "this is a description")
                         .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
-                
+
                 // Get URL Asynchronously
-                shortUrlBuilder.getShortUrlAsync(new Branch.BranchLinkCreateListener() {
+                shortUrlBuilder.generateShortLink(new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         if (error != null) {
@@ -135,7 +135,7 @@ public class MainActivity extends Activity {
                     }
                 });
                 // OR Get the URL synchronously
-                //shortUrlBuilder.getShortUrlSync();
+                //shortUrlBuilder.getShortUrl();
             }
         });
 
