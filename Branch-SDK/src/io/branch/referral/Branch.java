@@ -1466,7 +1466,7 @@ public class Branch {
      *
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync() {
@@ -1481,7 +1481,7 @@ public class Branch {
      *               the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(JSONObject params) {
@@ -1501,7 +1501,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
@@ -1529,7 +1529,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
@@ -1552,7 +1552,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
@@ -1575,7 +1575,7 @@ public class Branch {
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1598,7 +1598,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1628,7 +1628,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1653,7 +1653,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1678,7 +1678,7 @@ public class Branch {
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1769,7 +1769,7 @@ public class Branch {
      * @param callback A {@link BranchLinkCreateListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
@@ -1787,7 +1787,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
@@ -1814,7 +1814,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1849,7 +1849,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1879,7 +1879,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1909,7 +1909,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -1939,7 +1939,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1975,7 +1975,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2008,7 +2008,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2041,7 +2041,7 @@ public class Branch {
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
      *
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -2083,10 +2083,10 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
-     * @deprecated use {@link io.branch.referral.builders.BranchShortUrlBuilder} instead.
+     * @deprecated use {@link BranchShortUrlBuilder} instead.
      */
     @Deprecated
-    public String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
+    private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
         ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias, type, duration, tags,
                 channel, feature, stage,
                 params, callback, async);
@@ -2109,6 +2109,30 @@ public class Branch {
 
         return null;
 
+    }
+
+    /**
+     * <p> Generates a shorl url fot the given {@link ServerRequestCreateUrl} object </p>
+     *
+     * @param req An instance  of {@link ServerRequestCreateUrl} with parameters create the short link.
+     * @return A url created with the given request if the request is synchronous else null.
+     * Note : This method can be used only internally. Use {@link BranchShortUrlBuilder} for creating short urls.
+     */
+    public String generateShortLinkInternal(ServerRequestCreateUrl req) {
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            if (linkCache_.containsKey(req.getLinkPost())) {
+                String url = linkCache_.get(req.getLinkPost());
+                req.onUrlAvailable(url);
+                return url;
+            } else {
+                if (req.isAsync()) {
+                    generateShortLinkAsync(req);
+                } else {
+                    return generateShortLinkSync(req);
+                }
+            }
+        }
+        return null;
     }
 
     /**

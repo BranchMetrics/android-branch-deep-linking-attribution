@@ -1,11 +1,11 @@
-package io.branch.referral.builders;
+package io.branch.referral;
+
+import android.content.Context;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
-import io.branch.referral.Branch;
 
 /**
  * <p>
@@ -16,32 +16,36 @@ import io.branch.referral.Branch;
 public class BranchShortUrlBuilder {
 
     /* Deep linked params associated with the link that will be passed into a new app session when clicked */
-    protected JSONObject params_;
+    private JSONObject params_;
     /* Name of the channel that the link belongs to. */
-    protected String channel_;
+    private String channel_;
     /* Name that identifies the feature that the link makes use of. */
-    protected String feature_;
+    private String feature_;
     /* Name that identify the stage in an application or user flow process. */
-    protected String stage_;
+    private String stage_;
     /* Link 'alias' can be used to label the endpoint on the link. */
-    protected String alias_;
+    private String alias_;
     /* Number of times the link should perform deep link */
-    protected int type_ = Branch.LINK_TYPE_UNLIMITED_USE;
+    private int type_ = Branch.LINK_TYPE_UNLIMITED_USE;
     /* The amount of time that Branch allows a click to remain outstanding. */
-    protected int duration_ = 0;
+    private int duration_ = 0;
     /* An iterable collection of name associated with a deep link. */
-    protected ArrayList<String> tags_;
+    private ArrayList<String> tags_;
     /* Branch Instance */
-    Branch branchReferral_;
+    private Branch branchReferral_;
+    /* Application context. */
+    private final Context context_;
 
     /**
      * <p>
      * Creates an instance of {@link BranchShortUrlBuilder} to create short links synchronously.
      * {@see getShortUrl() }
      * </p>
+     * @param context A {@link Context} from which this call was made.
      */
-    public BranchShortUrlBuilder() {
+    public BranchShortUrlBuilder(Context context) {
         branchReferral_ = Branch.getInstance();
+        context_ = context.getApplicationContext();
     }
 
     /**
@@ -177,7 +181,10 @@ public class BranchShortUrlBuilder {
     public String getShortUrl() {
         String shortUrl = null;
         if (branchReferral_ != null) {
-            shortUrl = branchReferral_.generateShortLink(alias_, type_, duration_, tags_, channel_, feature_, stage_, stringifyParams(params_), null, false);
+            ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
+                    channel_, feature_, stage_,
+                    stringifyParams(params_), null, true);
+            shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
     }
@@ -192,13 +199,16 @@ public class BranchShortUrlBuilder {
     public void generateShortUrl(Branch.BranchLinkCreateListener callback) {
         String shortUrl = null;
         if (branchReferral_ != null) {
-            branchReferral_.generateShortLink(alias_, type_, duration_, tags_, channel_, feature_, stage_, stringifyParams(params_), callback, true);
+            ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
+                    channel_, feature_, stage_,
+                    stringifyParams(params_), callback, true);
+            branchReferral_.generateShortLinkInternal(req);
         }
     }
 
     //------------------------- Utility methods -----------------------//
 
-    protected static String stringifyParams(JSONObject params) {
+    private static String stringifyParams(JSONObject params) {
         if (params == null) {
             params = new JSONObject();
         }
@@ -209,4 +219,6 @@ public class BranchShortUrlBuilder {
         }
         return params.toString();
     }
+
+
 }

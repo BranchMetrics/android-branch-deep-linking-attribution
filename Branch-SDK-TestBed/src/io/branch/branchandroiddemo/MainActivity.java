@@ -19,8 +19,8 @@ import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchShortUrlBuilder;
 import io.branch.referral.SharingHelper;
-import io.branch.referral.builders.BranchShortUrlBuilder;
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                BranchShortUrlBuilder shortUrlBuilder = new BranchShortUrlBuilder()
+                BranchShortUrlBuilder shortUrlBuilder = new BranchShortUrlBuilder(MainActivity.this)
                         .addTag("tag1")
                         .addTag("tag2")
                         .setChannel("channel1")
@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
                         .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
 
                 // Get URL Asynchronously
-                shortUrlBuilder.generateShortLink(new Branch.BranchLinkCreateListener() {
+                shortUrlBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         if (error != null) {
@@ -136,6 +136,7 @@ public class MainActivity extends Activity {
                 });
                 // OR Get the URL synchronously
                 //shortUrlBuilder.getShortUrl();
+
             }
         });
 
