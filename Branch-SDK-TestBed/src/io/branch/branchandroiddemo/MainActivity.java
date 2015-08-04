@@ -19,7 +19,7 @@ import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
-import io.branch.referral.BranchShortUrlBuilder;
+import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.SharingHelper;
 
 public class MainActivity extends Activity {
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                BranchShortUrlBuilder shortUrlBuilder = new BranchShortUrlBuilder(MainActivity.this)
+                BranchShortLinkBuilder shortUrlBuilder = new BranchShortLinkBuilder(MainActivity.this)
                         .addTag("tag1")
                         .addTag("tag2")
                         .setChannel("channel1")
@@ -136,8 +136,8 @@ public class MainActivity extends Activity {
                 });
                 // OR Get the URL synchronously
                 //shortUrlBuilder.getShortUrl();
-
             }
+
         });
 
         cmdRefreshCounts.setOnClickListener(new OnClickListener() {
