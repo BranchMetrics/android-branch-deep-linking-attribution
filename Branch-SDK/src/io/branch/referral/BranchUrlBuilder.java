@@ -88,7 +88,7 @@ public abstract class BranchUrlBuilder {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    getJsonParamString(params_), null, false);
+                    BranchUtil.getJsonParamString(params_), null, false);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
@@ -99,16 +99,9 @@ public abstract class BranchUrlBuilder {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    getJsonParamString(params_), callback, true);
+                    BranchUtil.getJsonParamString(params_), callback, true);
             branchReferral_.generateShortLinkInternal(req);
         }
     }
 
-    /**
-     * Get the the JSON Parameters specified for the link in string format
-     * @return A{@link String} representation for the JSON parameters specified for creating this link.
-     */
-    protected String getJsonParamString(JSONObject params){
-        return BranchUtil.stringifyParams(BranchUtil.filterOutBadCharacters(params));
-    }
 }

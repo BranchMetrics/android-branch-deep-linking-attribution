@@ -1414,7 +1414,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync() {
-        return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, stringifyParams(null), null, false);
+        return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyParams(null), null, false);
     }
 
     /**
@@ -1639,7 +1639,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
-        generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, stringifyParams(null), callback, true);
+        generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null,BranchUtil.stringifyParams(null), callback, true);
     }
 
     /**
@@ -2352,23 +2352,6 @@ public class Branch {
     private String convertDate(Date date) {
         return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
     }
-
-    private String stringifyParams(JSONObject params) {
-        if (params == null) {
-            params = new JSONObject();
-        }
-
-        try {
-            params.put("source", "android");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return params.toString();
-    }
-
-
-
 
     private String generateShortLinkSync(ServerRequest req) {
         if (initState_ == SESSION_STATE.INITIALISED) {

@@ -116,11 +116,12 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder {
     }
 
     /**
-     * <p>Set the number of times the link should perform deep link.</p>
+     * <p>Sets an {@link int} that can be used for scenarios where you want the link to
+     * only deep link the first time or unlimited times</p>
      *
      * @param type {@link int} that can be used for scenarios where you want the link to
-     *             only deep link the first time.
-     * @returnA {@link BranchShortLinkBuilder} instance.
+     *             only deep link the first time.Possible values is {@link Branch#LINK_TYPE_ONE_TIME_USE} or {@link Branch#LINK_TYPE_UNLIMITED_USE}
+     * @return A {@link BranchShortLinkBuilder} instance.
      */
     public BranchShortLinkBuilder setType(int type) {
         this.type_ = type;
