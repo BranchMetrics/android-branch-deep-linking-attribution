@@ -13,14 +13,13 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
-import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.SharingHelper;
 
 public class MainActivity extends Activity {
@@ -112,20 +111,20 @@ public class MainActivity extends Activity {
         cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                JSONObject obj = new JSONObject();
-                try {
-                    obj.put("name", "test name");
-                    obj.put("message", "hello there with short url");
-                    obj.put("$og_title", "this is a title");
-                    obj.put("$og_description", "this is a description");
-                    obj.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
-                } catch (JSONException ex) {
-                    ex.printStackTrace();
-                }
-                ArrayList<String> tags = new ArrayList<String>();
-                tags.add("tag1");
-                tags.add("tag2");
-                branch.getShortUrl(tags, "channel1", "feature1", "1", obj, new BranchLinkCreateListener() {
+                BranchShortLinkBuilder shortUrlBuilder = new BranchShortLinkBuilder(MainActivity.this)
+                        .addTag("tag1")
+                        .addTag("tag2")
+                        .setChannel("channel1")
+                        .setFeature("feature1")
+                        .setStage("1")
+                        .addParameters("name", "test name")
+                        .addParameters("message", "hello there with short url")
+                        .addParameters("$og_title", "this is a title")
+                        .addParameters("$og_description", "this is a description")
+                        .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
+
+                // Get URL Asynchronously
+                shortUrlBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         if (error != null) {
@@ -135,7 +134,10 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
+                // OR Get the URL synchronously
+                //shortUrlBuilder.getShortUrl();
             }
+
         });
 
         cmdRefreshCounts.setOnClickListener(new OnClickListener() {
