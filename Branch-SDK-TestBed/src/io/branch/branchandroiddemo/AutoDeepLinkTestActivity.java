@@ -1,9 +1,12 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.util.Log;
 import android.widget.TextView;
 
 import org.json.JSONException;
+
+import java.util.Iterator;
 
 import io.branch.referral.Branch;
 
@@ -33,6 +36,16 @@ public class AutoDeepLinkTestActivity extends Activity {
 
         } else {
             launch_mode_txt.setText("Launched by normal application flow");
+        }
+
+        //You can also get linked params for the intent extra.
+        if (getIntent().getExtras() != null && getIntent().getExtras().keySet() != null) {
+            Iterator<?> keys = getIntent().getExtras().keySet().iterator();
+            while (keys.hasNext()) {
+                String key = (String) keys.next();
+                Log.i("BranchTestBed:", "Deep Linked Param " +
+                        key + " = " + getIntent().getExtras().getString(key));
+            }
         }
 
     }

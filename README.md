@@ -476,6 +476,57 @@ You have the ability to control the direct deep linking of each link by insertin
 | "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure.
 | "$always_deeplink" | true or false. (default is not to deep link first) This key can be specified to have our linking service force try to open the app, even if we're not sure the user has the app installed. If the app is not installed, we fall back to the respective app store or $platform_url key. By default, we only open the app if we've seen a user initiate a session in your app from a Branch link (has been cookied and deep linked by Branch)
 
+### Deep link Activities
+Branch provides a very easy and powerful automatic deep linking to Activities. You can configure Activities to be launched on clicking a link. Here is how you configure an Activity for auto deep linking.
+
+1)Configure auto deep link keys for Activity in manifest file
+```xml
+<activity android:name=".AutoDeepLinkTestActivity">
+     <!-- Keys for auto deep linking this activity -->
+     <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
+     <!-- Optional request ID for launching this activity on auto deep link key matches -->
+     <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
+</activity>
+```
+
+2)Create  link with deep link keys.
+While you create the link you can specify the deep link keys in the JSONObject parameters you pass for creating a link.
+
+```java
+JSONObject dataToInclude = new JSONObject();
+try {
+    dataToInclude.put("name", "test name");
+    dataToInclude.put("auto_deeplink_key_1", "This is an auto deep linked key's value");
+} catch (JSONException ex) {
+    ex.printStackTrace();
+}
+String autoDeepLikedUrl = branch.getShortUrlSync(dataToInclude);
+ ```
+That's it. Now clicking on a link Branch will check for Activities which are matching for auto deep linking and Launch that Activity. Optionally you can configure a request code to launch the Activity in auto deep link mode in your manifest as
+as shown above. Do this if you want to handle something on auto deep linked Activity finish on your main activity as the example below.
+
+```java
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    //Checking if the previous activity is launched on Branch Auto deep link.
+    if(requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)){
+        //Decide here where  to navigate  when an auto deep linked activity finishes.For e.g. go to HomeActivity or a  SignUp Activity.
+        Intent i = new Intent(getApplicationContext(), SignUpActivity.class);
+        startActivity(i);
+    }
+}
+```
+Your deep liked parameters are added to the intent extra with the same key you have used in the JSONObject for creating the link.
+
+```java
+String name = getIntent().getExtras().getString("name");
+```
+You can also get the deep linked parameters as the original JSONObject that you used for link creation
+```java
+JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
+```
+
 ## Referral system rewarding functionality
 
 In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:
