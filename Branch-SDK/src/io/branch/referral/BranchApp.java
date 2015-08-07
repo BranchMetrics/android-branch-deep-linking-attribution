@@ -1,8 +1,6 @@
 package io.branch.referral;
 
 import android.app.Application;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 
 /**
  * <p>

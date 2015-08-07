@@ -4,11 +4,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Iterator;
-
 /**
  * Class for Branch utility methods
  */
