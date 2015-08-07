@@ -490,8 +490,9 @@ public class Branch {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(Context context) {
         isAutoSessionMode_ = true;
-        getBranchInstance(context, true);
-        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        boolean isDebug = BranchUtil.isTestModeEnabled(context);
+        getBranchInstance(context, !isDebug);
+        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -2552,6 +2553,10 @@ public class Branch {
         @Override
         public void onActivityStarted(Activity activity) {
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
+                // Check if debug mode is set in manifest. If so enable debug.
+                if (BranchUtil.isTestModeEnabled(context_)) {
+                    setDebug();
+                }
                 initSessionWithData(activity.getIntent().getData(), activity); // indicate  starting of session.
             }
             activityCnt_++;
