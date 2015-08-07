@@ -185,6 +185,7 @@ class RemoteInterface {
     private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
+        HttpClient httpClient = null;
         if (addCommonParams(getParameters, retryNumber)) {
             modifiedUrl += this.convertJSONtoString(getParameters);
         } else {
@@ -194,7 +195,8 @@ class RemoteInterface {
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
             HttpGet request = new HttpGet(modifiedUrl);
-            HttpResponse response = getGenericHttpClient(timeout).execute(request);
+            httpClient = getGenericHttpClient(timeout);
+            HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() >= 500 &&
                 retryNumber < prefHelper_.getRetryCount()) {
                 try {
@@ -220,6 +222,10 @@ class RemoteInterface {
         } catch (IOException ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
             return new ServerResponse(tag, 500);
+        } finally {
+            if (httpClient != null && httpClient.getConnectionManager() != null) {
+                httpClient.getConnectionManager().shutdown();
+            }
         }
         return null;
     }
@@ -312,6 +318,7 @@ class RemoteInterface {
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
                                             int retryNumber, boolean log, BranchLinkData linkData) {
+        HttpClient httpClient = null;
         try {
             JSONObject bodyCopy = new JSONObject();
             Iterator<?> keys = body.keys();
@@ -334,7 +341,8 @@ class RemoteInterface {
             HttpPost request = new HttpPost(url);
             request.setEntity(new ByteArrayEntity(bodyCopy.toString().getBytes("UTF8")));
             request.setHeader("Content-type", "application/json");
-            HttpResponse response = getGenericHttpClient(timeout).execute(request);
+            httpClient = getGenericHttpClient(timeout);
+            HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() >= 500
                     && retryNumber < prefHelper_.getRetryCount()) {
                 try {
@@ -361,6 +369,10 @@ class RemoteInterface {
                     Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
             }
             return new ServerResponse(tag, 500);
+        } finally {
+            if (httpClient != null && httpClient.getConnectionManager() != null) {
+                httpClient.getConnectionManager().shutdown();
+            }
         }
     }
     //endregion
