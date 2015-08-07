@@ -492,11 +492,7 @@ public class Branch {
         isAutoSessionMode_ = true;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, !isDebug);
-        //Check if debug mode is debug is set in manifest.
-        if(isDebug) {
-            branchReferral_.setDebug();
-        }
-        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -2557,8 +2553,8 @@ public class Branch {
         @Override
         public void onActivityStarted(Activity activity) {
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
-                //Check if debug mode is set in manifest. If so enable debug.
-                if(BranchUtil.isTestModeEnabled(context_)){
+                // Check if debug mode is set in manifest. If so enable debug.
+                if (BranchUtil.isTestModeEnabled(context_)) {
                     setDebug();
                 }
                 initSessionWithData(activity.getIntent().getData(), activity); // indicate  starting of session.
