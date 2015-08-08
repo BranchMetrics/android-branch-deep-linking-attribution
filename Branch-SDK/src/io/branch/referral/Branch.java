@@ -2872,10 +2872,10 @@ public class Branch {
                     Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
                     intent.putExtra(AUTO_DEEP_LINK_KEY, deepLinkKey);
 
-                    //Put the raw JSON params as extra in case need to get the deep link params as JSON String
+                    // Put the raw JSON params as extra in case need to get the deep link params as JSON String
                     intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
 
-                    //Add individual parameters in the data
+                    // Add individual parameters in the data
                     Iterator<?> keys = latestParams.keys();
                     while (keys.hasNext()) {
                         String key = (String) keys.next();
