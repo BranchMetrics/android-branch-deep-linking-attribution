@@ -47,15 +47,11 @@ Just call ```setDebug()``` after you get a reference to the Branch singleton. We
 
 Yes. Even if you don't call setDebug(), you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
 
-4.) __Facebook deep links seem to not work?__
-
-Branch uses the Facebook App Links protocol to pass the deep links through to your app from Facebook. Funny enough, if you also have a Facebook app configured in the developer portal and you choose 'Deep link from feed', Facebook ignores it's own protocol. Make sure to *uncheck* this option in your Facebook app.
-
-5.) __Why do I not see any installs after I reinstall?__
+4.) __Why do I not see any installs after I reinstall?__
 
 We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install.' To register an install on the same phone again, see FAQ #2 about debugging.
 
-6.) __Chrome seems to take me to Google Play all the time. Why?__
+5.) __Chrome seems to take me to Google Play all the time. Why?__
 
 Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
 
@@ -65,11 +61,6 @@ Chrome is very picky about opening up the app directly. Chrome utilizes the inte
 
   3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
 
-7.) __Why is the most recent version of Chrome (40+) is showing me a page not found error?__
-
-The Google Chrome team decided that it didn't want to try to open up the app if a user manually entered in a link into Chrome - see the history of this issue [here](https://code.google.com/p/chromium/issues/detail?id=331571). The scope of the bug applies to people who copy and paste a Branch link into Chrome, whereas anyone who clicks on a link in Chrome or something that opens the link in Chrome will properly redirect.
-
-We've filed an issue plus documented how you can file your own with the Chrome team to get this changed. Please see [this document](https://github.com/BranchMetrics/Branch-Android-SDK/blob/master/ChromeHelp.md) for more ways you can help!
 
 ## Installation
 
@@ -77,14 +68,7 @@ Current compiled SDK footprint is *40kb*
 
 ### Install library project
 
-Import the SDK as a Gradle dependency (for Android Studio):
-* Right click on the main module within your project (this is called 'app' by default).
-* Select **Open Module Settings**.
-* Within the **Dependencies** tab, click the **+** button at the bottom of the window and select **Library Dependency**.
-* Type *branch*, and hit the enter key to search Maven Central for the Branch SDK Library.
-* Select the latest *io.branch.sdk.android:library* item listed and accept the changes.
-
-See the [Android Quick Start Guide for more detail](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md) and a screencasted walkthrough.
+Just add `compile 'io.branch.sdk.android:library:1.+'` to the dependencies section of your `build.gradle` file.
 
 Or download the JAR file from here:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
@@ -475,6 +459,64 @@ You have the ability to control the direct deep linking of each link by insertin
 | --- | ---
 | "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure.
 | "$always_deeplink" | true or false. (default is not to deep link first) This key can be specified to have our linking service force try to open the app, even if we're not sure the user has the app installed. If the app is not installed, we fall back to the respective app store or $platform_url key. By default, we only open the app if we've seen a user initiate a session in your app from a Branch link (has been cookied and deep linked by Branch)
+
+### Deep link Activities
+
+Branch provides a very easy and powerful automatic deep linking to Activities. You can configure Activities to be launched on clicking a link. Here is how you configure an Activity for auto deep linking.
+
+1) Configure auto deep link keys for Activity in manifest file
+
+```xml
+<activity android:name=".AutoDeepLinkTestActivity">
+     <!-- Keys for auto deep linking this activity -->
+     <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
+     <!-- Optional request ID for launching this activity on auto deep link key matches -->
+     <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
+</activity>
+```
+
+2) Create a link with deep link keys.
+
+While you create the link you can specify the deep link keys in the JSONObject parameters you pass for creating a link.
+
+```java
+JSONObject dataToInclude = new JSONObject();
+try {
+    dataToInclude.put("name", "test name");
+    dataToInclude.put("auto_deeplink_key_1", "This is an auto deep linked key's value");
+} catch (JSONException ex) {
+    ex.printStackTrace();
+}
+String autoDeepLikedUrl = branch.getShortUrlSync(dataToInclude);
+ ```
+
+That's it. Now clicking on a link Branch will check for Activities which are matching for auto deep linking and Launch that Activity. Optionally you can configure a request code to launch the Activity in auto deep link mode in your manifest as
+as shown above. Do this if you want to handle something on auto deep linked Activity finish on your main activity as the example below.
+
+```java
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    //Checking if the previous activity is launched on Branch Auto deep link.
+    if(requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)){
+        //Decide here where  to navigate  when an auto deep linked activity finishes.For e.g. go to HomeActivity or a  SignUp Activity.
+        Intent i = new Intent(getApplicationContext(), SignUpActivity.class);
+        startActivity(i);
+    }
+}
+```
+
+Your deep linked parameters are added to the intent extra with the same key you have used in the JSONObject for creating the link.
+
+```java
+String name = getIntent().getExtras().getString("name");
+```
+
+You can also get the deep linked parameters as the original JSONObject that you used for link creation
+
+```java
+JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
+```
 
 ## Referral system rewarding functionality
 

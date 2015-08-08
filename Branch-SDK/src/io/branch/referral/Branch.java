@@ -2871,6 +2871,16 @@ public class Branch {
                 if (deepLinkActivity != null && currentActivity_ != null) {
                     Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
                     intent.putExtra(AUTO_DEEP_LINK_KEY, deepLinkKey);
+
+                    //Put the raw JSON params as extra in case need to get the deep link params as JSON String
+                    intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
+
+                    //Add individual parameters in the data
+                    Iterator<?> keys = latestParams.keys();
+                    while (keys.hasNext()) {
+                        String key = (String) keys.next();
+                        intent.putExtra(key, latestParams.getString(key));
+                    }
                     currentActivity_.startActivityForResult(intent, deepLinkActivity_Req_Code);
                 } 
             }
