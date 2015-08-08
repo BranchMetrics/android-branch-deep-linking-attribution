@@ -367,10 +367,14 @@ public class PrefHelper {
     public String readBranchKey(boolean isLive) {
         String branchKey = null;
         String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
+        if (!isLive) { setExternDebug(); }
         try {
             final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
                 branchKey = ai.metaData.getString(metaDataKey);
+                if (branchKey == null && !isLive) {
+                	branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
+                }
             }
         } catch (final PackageManager.NameNotFoundException e) {
         }

@@ -75,7 +75,7 @@ class ServerRequestRegisterInstall extends ServerRequest {
                 installPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
 
-            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
+            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
             setPost(installPost);
 
         } catch (JSONException ex) {

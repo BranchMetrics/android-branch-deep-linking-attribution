@@ -575,7 +575,9 @@ public class Branch {
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
+     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead. 
      */
+    @Deprecated
     public void setDebug() {
         prefHelper_.setExternDebug();
     }
@@ -636,11 +638,7 @@ public class Branch {
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-        if (systemObserver_.getUpdateState(false) == 0 && !hasUser()) {
-            prefHelper_.setIsReferrable();
-        } else {
-            prefHelper_.clearIsReferrable();
-        }
+        prefHelper_.setIsReferrable();
         initUserSessionInternal(callback, activity);
         return false;
     }
@@ -2990,12 +2988,14 @@ public class Branch {
             return callback_.dispatchTrackballEvent(event);
         }
 
-        @Override
+        @SuppressLint("NewApi")
+		@Override
         public void onActionModeFinished(ActionMode mode) {
             callback_.onActionModeFinished(mode);
         }
 
-        @Override
+        @SuppressLint("NewApi")
+		@Override
         public void onActionModeStarted(ActionMode mode) {
             callback_.onActionModeStarted(mode);
         }

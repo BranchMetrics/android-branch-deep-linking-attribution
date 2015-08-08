@@ -43,7 +43,7 @@ class ServerRequestRegisterOpen extends ServerRequest {
                 openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
 
-            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
+            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
 
             setPost(openPost);
         } catch (JSONException ex) {

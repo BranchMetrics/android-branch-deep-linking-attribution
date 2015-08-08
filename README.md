@@ -39,13 +39,13 @@ At Branch, we live and breath uptime &amp; performance. We've developed mechanis
 
 2.) __How can I debug or test the SDK?__
 
-Just call ```setDebug()``` after you get a reference to the Branch singleton. We'll log all requests. More importantly, we won't reference the hardware ID of the phone so you can register installs after uninstalling and reinstalling the app.
+Just add ```<meta-data android:name="io.branch.sdk.TestMode" android:value="true" />``` in the Manifest. We'll log all requests. More importantly, we won't reference the hardware ID of the phone so you can register installs after uninstalling and reinstalling the app.
 
 *Note: Make sure to remove this line before releasing!*
 
 3.) __Is there any way to start debugging dynamically?__
 
-Yes. Even if you don't call setDebug(), you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
+Yes. Even if you don't use the manifest metadata you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
 
 4.) __Why do I not see any installs after I reinstall?__
 

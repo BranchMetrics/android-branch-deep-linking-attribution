@@ -293,7 +293,6 @@ public class MainActivity extends Activity {
             branch = Branch.getInstance();
         }
 
-        branch.setDebug();
         //branch.disableTouchDebugging();
 
         branch.initSession(new BranchReferralInitListener() {
