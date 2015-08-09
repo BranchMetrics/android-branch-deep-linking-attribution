@@ -373,7 +373,7 @@ public class PrefHelper {
             if (ai.metaData != null) {
                 branchKey = ai.metaData.getString(metaDataKey);
                 if (branchKey == null && !isLive) {
-                	branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
+                    branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {

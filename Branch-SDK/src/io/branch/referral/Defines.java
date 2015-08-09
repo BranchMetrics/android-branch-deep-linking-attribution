@@ -60,9 +60,12 @@ class Defines {
         ScreenHeight("screen_height"),
         ScreenWidth("screen_width"),
         WiFi("wifi"),
+        
         Clicked_Branch_Link("+clicked_branch_link"),
-        IsFirstSession("+is_first_session");
-
+        IsFirstSession("+is_first_session"),
+        AndroidDeepLinkPath("$android_deeplink_path"),
+        DeepLinkPath("$deeplink_path");
+        
         private String key = "";
 
         private Jsonkey(String key) {
