@@ -41,7 +41,7 @@
             <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
             
             <!-- Deep link path for auto deep linking -->
-            <meta-data android:name="io.branch.sdk.auto_link_path" android:value="custom/path/{ variable },another/path/" />
+            <meta-data android:name="io.branch.sdk.auto_link_path" android:value="custom/path/*,another/path/" />
             
             <!-- Optional request ID for launching this activity on auto deep link key matches -->
             <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />

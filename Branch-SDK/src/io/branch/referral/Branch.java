@@ -2932,7 +2932,7 @@ public class Branch {
         for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
             String pathSegmentTemplate = pathSegmentsTemplate[i];
             String pathSegmentTarget = pathSegmentsTarget[i];
-            if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("{")) {
+            if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("*")) {
                 matched = false;
                 break;
             }
