@@ -324,9 +324,15 @@ public class Branch {
     /*The current activity instance for the application.*/
     private Activity currentActivity_;
 
+    /* Key to indicate whether the Activity was launched by Branch or not. */
+    private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
+    
     /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
 
+    /* Path for $deeplink_path or $android_deeplink_path to auto deep link. The activities which need to automatically deep linked should define in this in the activity metadata. */
+    private static final String AUTO_DEEP_LINK_PATH = "io.branch.sdk.auto_link_path";
+    
     /* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
     private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
 
@@ -2825,13 +2831,12 @@ public class Branch {
      * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
      */
     public static boolean isAutoDeepLinkLaunch(Activity activity) {
-        return (activity.getIntent().getStringExtra(AUTO_DEEP_LINK_KEY) != null);
+        return (activity.getIntent().getStringExtra(AUTO_DEEP_LINKED) != null);
     }
 
     private void checkForAutoDeepLinkConfiguration() {
         JSONObject latestParams = getLatestReferringParams();
         String deepLinkActivity = null;
-        String deepLinkKey = null;
 
         try {
             //Check if the application is launched by clicking a Branch link.
@@ -2839,7 +2844,6 @@ public class Branch {
                     || latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false) {
                 return;
             }
-
             if (latestParams.length() > 0) {
                 // Check if auto deep link is disabled.
                 ApplicationInfo appInfo = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
@@ -2848,18 +2852,14 @@ public class Branch {
                 }
                 PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), PackageManager.GET_ACTIVITIES | PackageManager.GET_META_DATA);
                 ActivityInfo[] activityInfos = info.activities;
-                int deepLinkActivity_Req_Code = DEF_AUTO_DEEP_LINK_REQ_CODE;
+                int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
 
                 for (ActivityInfo activityInfo : activityInfos) {
-                    if (activityInfo.metaData != null && activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
-                        String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
-                        for (String activityLinkKey : activityLinkKeys) {
-                            if (latestParams.has(activityLinkKey)) {
-                                deepLinkActivity = ((ActivityInfo) activityInfo).name;
-                                deepLinkActivity_Req_Code = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
-                                deepLinkKey = activityLinkKey;
-                                break;
-                            }
+                    if (activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
+                        if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
+                        	deepLinkActivity = ((ActivityInfo) activityInfo).name;
+                            deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
+                            break;
                         }
                     }
                     if (deepLinkActivity != null) {
@@ -2868,7 +2868,7 @@ public class Branch {
                 }
                 if (deepLinkActivity != null && currentActivity_ != null) {
                     Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
-                    intent.putExtra(AUTO_DEEP_LINK_KEY, deepLinkKey);
+                    intent.putExtra(AUTO_DEEP_LINKED, "true");
 
                     // Put the raw JSON params as extra in case need to get the deep link params as JSON String
                     intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
@@ -2879,7 +2879,7 @@ public class Branch {
                         String key = (String) keys.next();
                         intent.putExtra(key, latestParams.getString(key));
                     }
-                    currentActivity_.startActivityForResult(intent, deepLinkActivity_Req_Code);
+                    currentActivity_.startActivityForResult(intent, deepLinkActivityReqCode);
                 } 
             }
         } catch (final PackageManager.NameNotFoundException e) {
@@ -2890,6 +2890,60 @@ public class Branch {
         }
     }
 
+    private boolean checkForAutoDeepLinkKeys(JSONObject params, ActivityInfo activityInfo) {
+    	if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
+	    	String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
+	        for (String activityLinkKey : activityLinkKeys) {
+	            if (params.has(activityLinkKey)) {
+	                return true;
+	            }
+	        }
+    	}
+        return false;
+    }
+    
+    private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
+    	String deepLinkPath = null;
+    	try {
+	    	if (params.has(Defines.Jsonkey.AndroidDeepLinkPath.getKey())) {
+				deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.getKey());
+	    	} else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
+	    		deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
+	    	}
+    	} catch (JSONException e) { }
+    	
+    	if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {	
+	    	String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
+	    	
+	        for (String activityLinkPath : activityLinkPaths) {
+	            if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
+	                return true;
+	            }
+	        }
+    	}
+        return false;
+    }
+    
+    private boolean pathMatch(String templatePath, String path) {
+    	boolean matched = true;
+    	String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
+    	String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
+    	
+    	if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
+    		return false;
+    	}
+    	
+    	for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
+			String pathSegmentTemplate = pathSegmentsTemplate[i];
+			String pathSegmentTarget = pathSegmentsTarget[i];
+			if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("{")) {
+				matched = false;
+				break;
+			}
+    	}
+    	return matched;
+    }
+    
     //--------------------Window callback handling for touch debug feature-----------------------//
 
 

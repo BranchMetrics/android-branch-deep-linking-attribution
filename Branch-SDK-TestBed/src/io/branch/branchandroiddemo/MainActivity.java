@@ -307,12 +307,8 @@ public class MainActivity extends Activity {
                         Iterator<?> keys = referringParams.keys();
                         while (keys.hasNext()) {
                             String key = (String) keys.next();
-                            Log.i("BranchTestBed",
-                                    key + ", " + referringParams.getString(key));
-
-                            Log.i("BranchTestBed",
-                                    "isUserIdentified " + branch.isUserIdentified());
-
+                            String value = referringParams.getString(key);
+                            Log.i("BranchTestBed", key + ", " + value);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
