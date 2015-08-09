@@ -1,6 +1,6 @@
 Branch Android SDK change log
 
-- v1.8.4: Deprecate setDebug and migrate to use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in Manifest instead
+- v1.8.4: Deprecate setDebug and migrate to use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in Manifest instead. Added support to specify deep link path to Activity.
 
 - v1.8.3: Fix for SMV issue caused by resource leak. Changes to add link parameters to intent for auto deep linked Activities.
 
