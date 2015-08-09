@@ -2857,7 +2857,7 @@ public class Branch {
                 for (ActivityInfo activityInfo : activityInfos) {
                     if (activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
                         if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                        	deepLinkActivity = ((ActivityInfo) activityInfo).name;
+                            deepLinkActivity = ((ActivityInfo) activityInfo).name;
                             deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
                             break;
                         }
@@ -2911,13 +2911,11 @@ public class Branch {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
         } catch (JSONException e) { }
-    	
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
-	    	
             for (String activityLinkPath : activityLinkPaths) {
-	            if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
-	                return true;
+                if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
+                    return true;
                 }
             }
         }
@@ -2928,11 +2926,9 @@ public class Branch {
         boolean matched = true;
         String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
         String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
-    	
         if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
             return false;
         }
-    	
         for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
             String pathSegmentTemplate = pathSegmentsTemplate[i];
             String pathSegmentTarget = pathSegmentsTarget[i];
@@ -3043,13 +3039,13 @@ public class Branch {
         }
 
         @SuppressLint("NewApi")
-		@Override
+        @Override
         public void onActionModeFinished(ActionMode mode) {
             callback_.onActionModeFinished(mode);
         }
 
         @SuppressLint("NewApi")
-		@Override
+        @Override
         public void onActionModeStarted(ActionMode mode) {
             callback_.onActionModeStarted(mode);
         }
