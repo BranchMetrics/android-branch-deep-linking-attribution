@@ -2891,57 +2891,57 @@ public class Branch {
     }
 
     private boolean checkForAutoDeepLinkKeys(JSONObject params, ActivityInfo activityInfo) {
-    	if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
-	    	String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
-	        for (String activityLinkKey : activityLinkKeys) {
-	            if (params.has(activityLinkKey)) {
-	                return true;
-	            }
-	        }
-    	}
+        if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
+            String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
+            for (String activityLinkKey : activityLinkKeys) {
+                if (params.has(activityLinkKey)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
     
     private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
-    	String deepLinkPath = null;
-    	try {
-	    	if (params.has(Defines.Jsonkey.AndroidDeepLinkPath.getKey())) {
-				deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.getKey());
-	    	} else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
-	    		deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
-	    	}
-    	} catch (JSONException e) { }
+        String deepLinkPath = null;
+        try {
+            if (params.has(Defines.Jsonkey.AndroidDeepLinkPath.getKey())) {
+                deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.getKey());
+            } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
+                deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
+            }
+        } catch (JSONException e) { }
     	
-    	if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {	
-	    	String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
+        if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
+            String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
 	    	
-	        for (String activityLinkPath : activityLinkPaths) {
+            for (String activityLinkPath : activityLinkPaths) {
 	            if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
 	                return true;
-	            }
-	        }
-    	}
+                }
+            }
+        }
         return false;
     }
     
     private boolean pathMatch(String templatePath, String path) {
-    	boolean matched = true;
-    	String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
-    	String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
+        boolean matched = true;
+        String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
+        String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
     	
-    	if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
-    		return false;
-    	}
+        if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
+            return false;
+        }
     	
-    	for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
-			String pathSegmentTemplate = pathSegmentsTemplate[i];
-			String pathSegmentTarget = pathSegmentsTarget[i];
-			if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("{")) {
-				matched = false;
-				break;
-			}
-    	}
-    	return matched;
+        for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
+            String pathSegmentTemplate = pathSegmentsTemplate[i];
+            String pathSegmentTarget = pathSegmentsTarget[i];
+            if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("{")) {
+                matched = false;
+                break;
+            }
+        }
+        return matched;
     }
     
     //--------------------Window callback handling for touch debug feature-----------------------//
