@@ -1,12 +1,12 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <p>
@@ -88,7 +88,7 @@ public abstract class BranchUrlBuilder {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    BranchUtil.getJsonParamString(params_), null, false);
+                    BranchUtil.formatAndStringifyLinkParam(params_), null, false);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
@@ -99,8 +99,10 @@ public abstract class BranchUrlBuilder {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    BranchUtil.getJsonParamString(params_), callback, true);
+                    BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
             branchReferral_.generateShortLinkInternal(req);
+        }else{
+            Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
         }
     }
 

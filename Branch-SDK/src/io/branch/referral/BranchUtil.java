@@ -11,13 +11,13 @@ import java.util.Iterator;
 class BranchUtil {
 
     /**
-     * Converts a given link param as {@link JSONObject} to string
+     * Converts a given link param as {@link JSONObject} to string after adding the source param and removes replaces any illegal characters.
      *
      * @param params Link param JSONObject.
      * @return A {@link String} representation of link params.
      */
-    public static String getJsonParamString(JSONObject params) {
-        return stringifyParams(filterOutBadCharacters(params));
+    public static String formatAndStringifyLinkParam(JSONObject params) {
+        return stringifyAndAddSource(filterOutBadCharacters(params));
     }
 
     /**
@@ -26,7 +26,7 @@ class BranchUtil {
      * @param params JSONObject to convert to string
      * @return A {@link String} value representing the JSONObject
      */
-    public static String stringifyParams(JSONObject params) {
+    public static String stringifyAndAddSource(JSONObject params) {
         if (params == null) {
             params = new JSONObject();
         }
@@ -47,9 +47,9 @@ class BranchUtil {
     public static JSONObject filterOutBadCharacters(JSONObject inputObj) {
         JSONObject filteredObj = new JSONObject();
         if (inputObj != null) {
-            Iterator<?> keys = inputObj.keys();
+            Iterator<String> keys = inputObj.keys();
             while (keys.hasNext()) {
-                String key = (String) keys.next();
+                String key = keys.next();
                 try {
                     if (inputObj.has(key) && inputObj.get(key).getClass().equals(String.class)) {
                         filteredObj.put(key, inputObj.getString(key).replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\""));
