@@ -10,32 +10,9 @@ import org.json.JSONObject;
  * a short url Synchronously or asynchronously.
  * </p>
  */
-public class BranchShortLinkBuilder extends BranchUrlBuilder {
+public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuilder> {
     public BranchShortLinkBuilder(Context context) {
         super(context);
-    }
-
-    /**
-     * <p>Adds a tag to the iterable collection of name associated with a deep link.</p>
-     *
-     * @param tag {@link String} tags associated with a deep link.
-     * @return A {@link BranchShortLinkBuilder} instance.
-     */
-    public BranchShortLinkBuilder addTag(String tag) {
-        super.addTag(tag);
-        return this;
-    }
-
-    /**
-     * <p>Adds the the given key value pair to the parameters associated with this link.</p>
-     *
-     * @param key   A {@link String} with value of key for the parameter
-     * @param value A {@link String} with value of value for the parameter
-     * @returnA {@link BranchShortLinkBuilder} instance.
-     */
-    public BranchShortLinkBuilder addParameters(String key, String value) {
-        super.addParameters(key, value);
-        return this;
     }
 
     /**

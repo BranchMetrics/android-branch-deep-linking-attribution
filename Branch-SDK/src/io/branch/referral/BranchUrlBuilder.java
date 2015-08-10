@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * a short url Synchronously or asynchronously.
  * </p>
  */
-public abstract class BranchUrlBuilder {
+public abstract class BranchUrlBuilder<URLBuilderInstance> {
 
     /* Deep linked params associated with the link that will be passed into a new app session when clicked */
     protected JSONObject params_;
@@ -42,6 +42,7 @@ public abstract class BranchUrlBuilder {
      * Creates an instance of {@link BranchUrlBuilder} to create short links synchronously.
      * {@see getShortUrl() }
      * </p>
+     *
      * @param context A {@link Context} from which this call was made.
      */
     protected BranchUrlBuilder(Context context) {
@@ -55,13 +56,14 @@ public abstract class BranchUrlBuilder {
      * @param tag {@link String} tags associated with a deep link.
      * @return A {@link BranchUrlBuilder} instance.
      */
-    protected BranchUrlBuilder addTag(String tag) {
+    public URLBuilderInstance addTag(String tag) {
         if (this.tags_ == null) {
             tags_ = new ArrayList<String>();
         }
         this.tags_.add(tag);
-        return this;
+        return (URLBuilderInstance) this;
     }
+
     /**
      * <p>Adds the the given key value pair to the parameters associated with this link.</p>
      *
@@ -69,7 +71,7 @@ public abstract class BranchUrlBuilder {
      * @param value A {@link String} with value of value for the parameter
      * @returnA {@link BranchUrlBuilder} instance.
      */
-    protected BranchUrlBuilder addParameters(String key, String value) {
+    public URLBuilderInstance addParameters(String key, String value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();
@@ -78,12 +80,12 @@ public abstract class BranchUrlBuilder {
         } catch (JSONException ignore) {
 
         }
-        return this;
+        return (URLBuilderInstance) this;
     }
 
     ///------------------------- Link Build methods---------------------------///
 
-    protected String getUrl(){
+    protected String getUrl() {
         String shortUrl = null;
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
@@ -101,7 +103,7 @@ public abstract class BranchUrlBuilder {
                     channel_, feature_, stage_,
                     BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
             branchReferral_.generateShortLinkInternal(req);
-        }else{
+        } else {
             Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
         }
     }

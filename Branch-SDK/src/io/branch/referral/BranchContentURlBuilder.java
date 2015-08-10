@@ -5,25 +5,13 @@ import android.content.Context;
 /**
  * Created by sojanpr on 8/3/15.
  */
-public class BranchContentURlBuilder extends BranchUrlBuilder {
+public class BranchContentURlBuilder extends BranchUrlBuilder<BranchContentURlBuilder> {
 
     public BranchContentURlBuilder(Context context, String channel) {
         super(context);
         channel_ = channel;
         type_ = Branch.LINK_TYPE_UNLIMITED_USE;
         feature_ = Branch.FEATURE_TAG_SHARE;
-    }
-
-    @Override
-    public BranchContentURlBuilder addTag(String tag) {
-        super.addTag(tag);
-        return this;
-    }
-
-    @Override
-    public BranchContentURlBuilder addParameters(String key, String value) {
-        super.addParameters(key, value);
-        return this;
     }
 
     /**

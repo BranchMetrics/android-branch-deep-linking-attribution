@@ -8,25 +8,13 @@ import android.content.Context;
  * a referral url synchronously or asynchronously.
  * </p>
  */
-public class BranchReferralURLBuilder extends BranchUrlBuilder {
+public class BranchReferralURLBuilder extends BranchUrlBuilder<BranchReferralURLBuilder> {
 
     public BranchReferralURLBuilder(Context context, String channel) {
         super(context);
         channel_ = channel;
         type_ = Branch.LINK_TYPE_UNLIMITED_USE;
         feature_ = Branch.FEATURE_TAG_REFERRAL;
-    }
-
-    @Override
-    public BranchReferralURLBuilder addTag(String tag) {
-        super.addTag(tag);
-        return this;
-    }
-
-    @Override
-    public BranchReferralURLBuilder addParameters(String key, String value) {
-        super.addParameters(key, value);
-        return this;
     }
 
     /**
