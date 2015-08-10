@@ -5,9 +5,9 @@ import android.content.Context;
 /**
  * Created by sojanpr on 8/3/15.
  */
-public class BranchContentURlBuilder extends BranchUrlBuilder<BranchContentURlBuilder> {
+public class BranchContentUrlBuilder extends BranchUrlBuilder<BranchContentUrlBuilder> {
 
-    public BranchContentURlBuilder(Context context, String channel) {
+    public BranchContentUrlBuilder(Context context, String channel) {
         super(context);
         channel_ = channel;
         type_ = Branch.LINK_TYPE_UNLIMITED_USE;

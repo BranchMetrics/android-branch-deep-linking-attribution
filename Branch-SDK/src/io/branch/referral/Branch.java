@@ -2016,7 +2016,7 @@ public class Branch {
      * @see BranchLinkData#putChannel(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     * @deprecated use {@link BranchReferralURLBuilder} instead.
+     * @deprecated use {@link BranchReferralUrlBuilder} instead.
      */
     @Deprecated
     public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
@@ -2039,7 +2039,7 @@ public class Branch {
      * @see BranchLinkData#putChannel(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     * @deprecated use {@link BranchReferralURLBuilder} instead.
+     * @deprecated use {@link BranchReferralUrlBuilder} instead.
      */
     @Deprecated
     public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
@@ -2055,7 +2055,7 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting referral URL.
-     * @deprecated use {@link BranchReferralURLBuilder} instead.
+     * @deprecated use {@link BranchReferralUrlBuilder} instead.
      */
     @Deprecated
     public String getReferralUrlSync(String channel, JSONObject params) {
@@ -2073,7 +2073,7 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting referral URL.
-     * @deprecated use {@link BranchReferralURLBuilder} instead.
+     * @deprecated use {@link BranchReferralUrlBuilder} instead.
      */
     @Deprecated
     public String getReferralUrlSync(Collection<String> tags, String channel, JSONObject params) {
@@ -2095,7 +2095,7 @@ public class Branch {
      * @see BranchLinkData#putChannel(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     * @deprecated use {@link BranchContentURlBuilder} instead.
+     * @deprecated use {@link BranchContentUrlBuilder} instead.
      */
     @Deprecated
     public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
@@ -2134,7 +2134,7 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting content URL.
-     * @deprecated use {@link BranchContentURlBuilder} instead.
+     * @deprecated use {@link BranchContentUrlBuilder} instead.
      */
     @Deprecated
     public String getContentUrlSync(String channel, JSONObject params) {
@@ -2152,7 +2152,7 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting content URL.
-     * @deprecated use {@link BranchContentURlBuilder} instead.
+     * @deprecated use {@link BranchContentUrlBuilder} instead.
      */
     @Deprecated
     public String getContentUrlSync(Collection<String> tags, String channel, JSONObject params) {

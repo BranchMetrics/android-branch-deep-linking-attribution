@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * a short url Synchronously or asynchronously.
  * </p>
  */
-public abstract class BranchUrlBuilder<URLBuilderInstance> {
+public abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
 
     /* Deep linked params associated with the link that will be passed into a new app session when clicked */
     protected JSONObject params_;
@@ -54,14 +54,14 @@ public abstract class BranchUrlBuilder<URLBuilderInstance> {
      * <p>Adds a tag to the iterable collection of name associated with a deep link.</p>
      *
      * @param tag {@link String} tags associated with a deep link.
-     * @return A {@link BranchUrlBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
-    public URLBuilderInstance addTag(String tag) {
+    public T addTag(String tag) {
         if (this.tags_ == null) {
             tags_ = new ArrayList<String>();
         }
         this.tags_.add(tag);
-        return (URLBuilderInstance) this;
+        return (T) this;
     }
 
     /**
@@ -69,9 +69,9 @@ public abstract class BranchUrlBuilder<URLBuilderInstance> {
      *
      * @param key   A {@link String} with value of key for the parameter
      * @param value A {@link String} with value of value for the parameter
-     * @returnA {@link BranchUrlBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
-    public URLBuilderInstance addParameters(String key, String value) {
+    public T addParameters(String key, String value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();
@@ -80,7 +80,7 @@ public abstract class BranchUrlBuilder<URLBuilderInstance> {
         } catch (JSONException ignore) {
 
         }
-        return (URLBuilderInstance) this;
+        return (T) this;
     }
 
     ///------------------------- Link Build methods---------------------------///

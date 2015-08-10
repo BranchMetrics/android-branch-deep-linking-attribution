@@ -8,9 +8,9 @@ import android.content.Context;
  * a referral url synchronously or asynchronously.
  * </p>
  */
-public class BranchReferralURLBuilder extends BranchUrlBuilder<BranchReferralURLBuilder> {
+public class BranchReferralUrlBuilder extends BranchUrlBuilder<BranchReferralUrlBuilder> {
 
-    public BranchReferralURLBuilder(Context context, String channel) {
+    public BranchReferralUrlBuilder(Context context, String channel) {
         super(context);
         channel_ = channel;
         type_ = Branch.LINK_TYPE_UNLIMITED_USE;

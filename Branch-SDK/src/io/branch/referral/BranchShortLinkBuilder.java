@@ -24,7 +24,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *              http://bnc.lt/AUSTIN28.
      *              Should not exceed 128 characters
      *              </p>
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setAlias(String alias) {
         this.alias_ = alias;
@@ -36,7 +36,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *
      * @param channel A {@link String} denoting the channel that the link belongs to. Should not
      *                exceed 128 characters.
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setChannel(String channel) {
         this.channel_ = channel;
@@ -48,7 +48,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *
      * @param duration A {@link Integer} value specifying the time that Branch allows a click to
      *                 remain outstanding and be eligible to be matched with a new app session.
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setDuration(int duration) {
         this.duration_ = duration;
@@ -60,7 +60,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *
      * @param feature A {@link String} value identifying the feature that the link makes use of.
      *                Should not exceed 128 characters.
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setFeature(String feature) {
         this.feature_ = feature;
@@ -73,7 +73,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      * @param parameters A {@link JSONObject} value containing the deep linked params associated with
      *                   the link that will be passed into a new app session when clicked.
      *                   {@see addParameters} if you want to set parameters as individual key value.
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setParameters(JSONObject parameters) {
         this.params_ = parameters;
@@ -85,7 +85,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *
      * @param stage A {@link String} value identifying the stage in an application or user flow
      *              process. Should not exceed 128 characters.
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setStage(String stage) {
         this.stage_ = stage;
@@ -98,7 +98,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *
      * @param type {@link int} that can be used for scenarios where you want the link to
      *             only deep link the first time.Possible values is {@link Branch#LINK_TYPE_ONE_TIME_USE} or {@link Branch#LINK_TYPE_UNLIMITED_USE}
-     * @return A {@link BranchShortLinkBuilder} instance.
+     * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setType(int type) {
         this.type_ = type;
