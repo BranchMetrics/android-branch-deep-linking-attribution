@@ -26,7 +26,7 @@ public class InstallListener extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("installTest", "InstallListener :- Received install referrer event");
+//        Log.d("installTest", "InstallListener :- Received install referrer event");
         String rawReferrerString = intent.getStringExtra("referrer");
         if(rawReferrerString != null) {
             try {
@@ -38,7 +38,7 @@ public class InstallListener extends BroadcastReceiver {
                     String[] keyValue  =  referrerParam.split("=");
                     if (keyValue.length > 1) { // To make sure that there is one key value pair in referrer
                         referrerMap.put(URLDecoder.decode(keyValue[0], "UTF-8"), URLDecoder.decode(keyValue[1], "UTF-8"));
-                        Log.d("installTest", keyValue[0] + " = " + keyValue[1]);
+//                        Log.d("installTest", keyValue[0] + " = " + keyValue[1]);
                     }
                 }
 
