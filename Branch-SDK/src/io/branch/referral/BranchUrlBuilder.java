@@ -14,6 +14,7 @@ import java.util.ArrayList;
  * a short url Synchronously or asynchronously.
  * </p>
  */
+@SuppressWarnings("rawtypes")
 abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
 
     /* Deep linked params associated with the link that will be passed into a new app session when clicked */
@@ -56,7 +57,8 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
      * @param tag {@link String} tags associated with a deep link.
      * @return This Builder object to allow for chaining of calls to set methods.
      */
-    public T addTag(String tag) {
+    @SuppressWarnings("unchecked")
+	public T addTag(String tag) {
         if (this.tags_ == null) {
             tags_ = new ArrayList<String>();
         }
@@ -71,7 +73,8 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
      * @param value A {@link String} with value of value for the parameter
      * @return This Builder object to allow for chaining of calls to set methods.
      */
-    public T addParameters(String key, String value) {
+    @SuppressWarnings("unchecked")
+	public T addParameters(String key, String value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();
@@ -96,8 +99,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         return shortUrl;
     }
 
-    protected void generateUrl(Branch.BranchLinkCreateListener callback) {
-        String shortUrl = null;
+    protected void generateUrl(Branch.BranchLinkCreateListener callback) {        
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,

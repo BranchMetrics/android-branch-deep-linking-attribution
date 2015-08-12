@@ -206,7 +206,8 @@ class ShareLinkManager {
      *
      * @param selectedResolveInfo The {@link ResolveInfo} corresponding to the selected sharing client.
      */
-    private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
+    @SuppressWarnings("deprecation")
+	private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         branch_.getShortUrl(tags_, channelName, feature_, stage_, linkCreationParams_, new Branch.BranchLinkCreateListener() {
             @Override

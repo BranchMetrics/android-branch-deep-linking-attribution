@@ -1,7 +1,5 @@
 package io.branch.referral;
 
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
