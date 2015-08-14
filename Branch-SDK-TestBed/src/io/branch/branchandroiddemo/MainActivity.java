@@ -263,6 +263,7 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setMessage("See my content")
+                        .setSubject("Check this out!")
                         .setStage("stage1")
                         .setFeature("feature1")
                         .addTag("Tag1")

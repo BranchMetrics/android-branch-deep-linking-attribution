@@ -40,6 +40,8 @@ class ShareLinkManager {
     Dialog shareDlg_;
     /* The message to be attached with the shared link */
     String shareMsg_;
+    /* The subject to be attached with the sharing message */
+    String shareSub_;
     /* Json object containing key-value pairs for the parameters to be linked. */
     JSONObject linkCreationParams_;
     /* Current Branch instance. */
@@ -76,6 +78,7 @@ class ShareLinkManager {
         stage_ = builder.getStage();
         linkCreationParams_ = builder.getLinkCreationParams();
         shareMsg_ = builder.getShareMsg();
+        shareSub_ = builder.getShareSub();
         branch_ = builder.getBranch();
         callback_ = builder.getCallback();
         defaultURL_ = builder.getDefaultURL();
@@ -241,6 +244,9 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
+            if(shareSub_ != null && shareSub_.trim().length() > 0) {
+                shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub_);
+            }
             shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg_ + "\n" + url);
             context_.startActivity(shareLinkIntent_);
         }
