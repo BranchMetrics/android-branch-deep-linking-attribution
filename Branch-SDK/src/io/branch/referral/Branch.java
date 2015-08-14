@@ -3243,6 +3243,7 @@ public class Branch {
         private final Branch branch_;
 
         private String shareMsg_;
+        private String shareSub_;
         private Collection<String> tags_ = null;
         private String feature_ = "";
         private String stage_ = "";
@@ -3283,6 +3284,16 @@ public class Branch {
             return this;
         }
 
+        /**
+         * <p>Sets the subject of this message. This will be added to Email and SMS Application capable of handling subject in the message.</p>
+         *
+         * @param subject A {@link String} subject of this message.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder setSubject(String subject) {
+            this.shareSub_ = subject;
+            return this;
+        }
         /**
          * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
          * link.</p>
@@ -3358,7 +3369,7 @@ public class Branch {
 
         /**
          * <p>Creates an application selector dialog and share a link with user selected sharing option.
-         * The link is created with the parameteres provided to the builder. </p>
+         * The link is created with the parameters provided to the builder. </p>
          */
         public void shareLink() {
             branchReferral_.shareLink(this);
@@ -3379,6 +3390,11 @@ public class Branch {
         public String getShareMsg() {
             return shareMsg_;
         }
+
+        public String getShareSub() {
+            return shareSub_;
+        }
+
 
         public BranchLinkShareListener getCallback() {
             return callback_;
