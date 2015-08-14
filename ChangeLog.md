@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.8.6: Adding option to specify email/sms subject to the share link builder.
+
 - v1.8.5: Fix crash on install app from market due to referrer string parse error.
 
 - v1.8.4: Deprecate setDebug and migrate to use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in Manifest instead. Added support to specify deep link path to Activity.
