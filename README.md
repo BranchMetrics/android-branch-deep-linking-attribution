@@ -41,6 +41,8 @@ At Branch, we live and breath uptime &amp; performance. We've developed mechanis
 
 Just add ```<meta-data android:name="io.branch.sdk.TestMode" android:value="true" />``` in the Manifest. We'll log all requests. More importantly, we won't reference the hardware ID of the phone so you can register installs after uninstalling and reinstalling the app.
 
+** If you aren't using automatic session management, then you must use ```branch.getTestInstance(getApplicationContext())```**
+
 *Note: Make sure to remove this line before releasing!*
 
 3.) __Is there any way to start debugging dynamically?__
