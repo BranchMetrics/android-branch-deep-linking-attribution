@@ -18,9 +18,7 @@ import java.util.Iterator;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
-import io.branch.referral.BranchContentUrlBuilder;
 import io.branch.referral.BranchError;
-import io.branch.referral.BranchReferralUrlBuilder;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.SharingHelper;
 
@@ -270,6 +268,10 @@ public class MainActivity extends Activity {
                         .addTag("Tag2")
                         .setDefaultURL("https://play.google.com/store/apps/details?id=com.kindred.android")
                         .setCallback(new Branch.BranchLinkShareListener() {
+                            @Override
+                            public void onShareLinkDialogLaunched() {
+                                Log.i("BranchTestBed", "onShareLinkDialogLaunched");
+                            }
                             @Override
                             public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
                                 if (error != null) {

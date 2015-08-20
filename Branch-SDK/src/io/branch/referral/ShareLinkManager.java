@@ -7,18 +7,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -37,7 +30,7 @@ import java.util.List;
  */
 class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
-    Dialog shareDlg_;
+    AnimatedDialog shareDlg_;
     /* The message to be attached with the shared link */
     String shareMsg_;
     /* The subject to be attached with the sharing message */
@@ -66,12 +59,14 @@ class ShareLinkManager {
     /* Background color for the list view in disabled state. */
     private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
     private static int viewItemMinHeight = 100;
+
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
-    public void shareLink(Branch.ShareLinkBuilder builder) {
+    public Dialog shareLink(Branch.ShareLinkBuilder builder) {
         context_ = builder.getActivity();
         tags_ = builder.getTags();
         feature_ = builder.getFeature();
@@ -95,6 +90,8 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
+
+        return shareDlg_;
     }
 
     /**
@@ -103,9 +100,11 @@ class ShareLinkManager {
     public void cancelShareLinkDialog() {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
             callback_ = null;
-            shareDlg_.dismiss();
+            shareDlg_.cancel();
+            shareDlg_ = null;
         }
     }
+
 
     /**
      * Create a custom chooser dialog with available share options.
@@ -171,38 +170,21 @@ class ShareLinkManager {
                     invokeSharingClient((ResolveInfo) view.getTag());
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
-                    animateDismiss();
+                    if(shareDlg_ != null){
+                        shareDlg_.cancel();
+                    }
                 }
             }
         });
 
-        shareDlg_ = new Dialog(context_);
-        setDialogWindow();
+        shareDlg_ = new AnimatedDialog(context_);
         shareDlg_.setContentView(shareOptionListView);
-
-        TranslateAnimation slideUp = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0f);
-        slideUp.setDuration(500);
-        slideUp.setInterpolator(new AccelerateInterpolator());
-        ((ViewGroup)shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideUp);
         shareDlg_.show();
+        if(callback_!= null){
+           callback_.onShareLinkDialogLaunched();
+        }
     }
 
-    private void setDialogWindow() {
-        shareDlg_.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        shareDlg_.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        shareDlg_.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.copyFrom(shareDlg_.getWindow().getAttributes());
-        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
-        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        lp.gravity = Gravity.BOTTOM;
-        lp.dimAmount = 0.8f;
-        shareDlg_.getWindow().setAttributes(lp);
-        shareDlg_.getWindow().setWindowAnimations(android.R.anim.slide_in_left);
-        shareDlg_.setCanceledOnTouchOutside(true);
-
-    }
 
     /**
      * Invokes a sharing client with a link created by the given json objects.
@@ -383,30 +365,6 @@ class ShareLinkManager {
             return context_.getResources().getDrawable(android.R.drawable.ic_menu_save);
         }
 
-    }
-
-    private void animateDismiss() {
-        TranslateAnimation slideDown = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1f);
-        slideDown.setDuration(500);
-        slideDown.setInterpolator(new DecelerateInterpolator());
-        ((ViewGroup) shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideDown);
-        slideDown.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                if(shareDlg_ != null) {
-                    shareDlg_.dismiss();
-                    shareDlg_ = null;
-                }
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
     }
 
 }

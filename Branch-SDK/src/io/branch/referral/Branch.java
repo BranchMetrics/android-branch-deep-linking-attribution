@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -2332,14 +2333,15 @@ public class Branch {
      * user selected clients.</p>
      *
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     * @return The instance of the {@link Dialog} holding the share view.
      */
-    private void shareLink(ShareLinkBuilder builder) {
+    private Dialog shareLink(ShareLinkBuilder builder) {
         //Cancel any existing sharing in progress.
         if (shareLinkManager_ != null) {
             shareLinkManager_.cancelShareLinkDialog();
         }
         shareLinkManager_ = new ShareLinkManager();
-        shareLinkManager_.shareLink(builder);
+        return shareLinkManager_.shareLink(builder);
     }
 
     /**
@@ -2761,6 +2763,10 @@ public class Branch {
      * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
      */
     public interface BranchLinkShareListener {
+        /**
+         * <p> Callback method to update when sahring dailog is launched.</p>
+         */
+        void onShareLinkDialogLaunched();
         /**
          *<p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
          *
@@ -3370,9 +3376,12 @@ public class Branch {
         /**
          * <p>Creates an application selector dialog and share a link with user selected sharing option.
          * The link is created with the parameters provided to the builder. </p>
+         *
+         * @return The instance of the {@link Dialog} holding the share view. Cancelling this dialog closes with animation.
+         * Dismiss the dialog to closes without animation.
          */
-        public void shareLink() {
-            branchReferral_.shareLink(this);
+        public Dialog shareLink() {
+            return branchReferral_.shareLink(this);
         }
 
         public Activity getActivity() {
