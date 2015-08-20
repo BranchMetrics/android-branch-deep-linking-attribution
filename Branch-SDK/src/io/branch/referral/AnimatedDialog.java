@@ -4,9 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.ViewGroup;
@@ -99,9 +97,6 @@ class AnimatedDialog extends Dialog {
         lp.copyFrom(getWindow().getAttributes());
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
-        WindowManager wm = (WindowManager) context_.getSystemService(Context.WINDOW_SERVICE); // for activity use context instead of getActivity()
-        Display display = wm.getDefaultDisplay(); // getting the screen size of device
-        Point size = new Point();
         lp.gravity = Gravity.BOTTOM;
         lp.dimAmount = 0.8f;
         getWindow().setAttributes(lp);

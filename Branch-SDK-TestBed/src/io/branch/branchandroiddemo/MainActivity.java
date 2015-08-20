@@ -270,7 +270,7 @@ public class MainActivity extends Activity {
                         .setCallback(new Branch.BranchLinkShareListener() {
                             @Override
                             public void onShareLinkDialogLaunched() {
-                                Log.i("BranchTestBed", "onShareLinkDialogLaunched");
+                                Log.i("BranchTestBed", "onShareLinkDialogLaunched()");
                             }
                             @Override
                             public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
@@ -286,6 +286,9 @@ public class MainActivity extends Activity {
                                 Log.i("BranchTestBed", "onChannelSelected... " + channelName);
                             }
                         })
+                        // Custom style for Copy url and More options
+                        //.setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
+                        //.setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
                         .shareLink();
             }
         });
