@@ -10,6 +10,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -1005,7 +1006,7 @@ public class Branch {
         }
         /* Close any opened sharing dialog.*/
         if(shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog();
+            shareLinkManager_.cancelShareLinkDialog(true);
         }
     }
 
@@ -2336,7 +2337,7 @@ public class Branch {
     private void shareLink(ShareLinkBuilder builder) {
         //Cancel any existing sharing in progress.
         if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog();
+            shareLinkManager_.cancelShareLinkDialog(true);
         }
         shareLinkManager_ = new ShareLinkManager();
         shareLinkManager_.shareLink(builder);
@@ -2345,10 +2346,14 @@ public class Branch {
     /**
      * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
      * calling this method before your activity finishes inorder to prevent any window leak. </p>
+     *
+     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
+     *                     A value of true will close the dialog with an animation. Setting this value
+     *                     to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog() {
+    public void cancelShareLinkDialog(boolean animateClose) {
         if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog();
+            shareLinkManager_.cancelShareLinkDialog(animateClose);
         }
     }
 
@@ -2692,7 +2697,7 @@ public class Branch {
             clearTouchDebugInternal(activity);
             /* Close any opened sharing dialog.*/
             if(shareLinkManager_ != null) {
-                shareLinkManager_.cancelShareLinkDialog();
+                shareLinkManager_.cancelShareLinkDialog(true);
             }
         }
 
@@ -2761,6 +2766,16 @@ public class Branch {
      * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
      */
     public interface BranchLinkShareListener {
+        /**
+         * <p> Callback method to update when share link dialog is launched.</p>
+         */
+        void onShareLinkDialogLaunched();
+
+        /**
+         * <p> Callback method to update when sharing dialog is dismissed.</p>
+         */
+        void onShareLinkDialogDismissed();
+
         /**
          *<p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
          *
@@ -3251,6 +3266,14 @@ public class Branch {
         private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
         private String defaultURL_;
 
+        //Customise more and copy url option
+        private Drawable moreOptionIcon_;
+        private String moreOptionText_;
+
+        private Drawable copyUrlIcon_;
+        private String copyURlText_;
+        private String urlCopiedMessage_;
+
 
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
@@ -3271,6 +3294,13 @@ public class Branch {
             callback_ = null;
             preferredOptions_ = new ArrayList<SharingHelper.SHARE_WITH>();
             defaultURL_ = null;
+
+            moreOptionIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_more);
+            moreOptionText_ = "More...";
+
+            copyUrlIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_save);
+            copyURlText_ = "Copy link";
+            urlCopiedMessage_ =  "Copied link to clipboard!";
         }
 
         /**
@@ -3357,7 +3387,7 @@ public class Branch {
         }
 
         /**
-         * Set a default url to share in case there is any error creating the deep link
+         *<p> Set a default url to share in case there is any error creating the deep link </p>
          *
          * @param url A {@link String} with value of default url to be shared with the selected application in case deep link creation fails.
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
@@ -3368,8 +3398,40 @@ public class Branch {
         }
 
         /**
+         * <p> Set the icon and label for the option to expand the application list to see more options.
+         * Default label is set to "More" </p>
+         *
+         * @param icon  Drawable to set as the icon for more option. Default icon is system menu_more icon.
+         * @param label A {@link String} with value for the more option label. Default label is "More"
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) {
+            moreOptionIcon_ = icon;
+            moreOptionText_ = label;
+            return this;
+        }
+
+        /**
+         * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
+         *
+         * @param icon    Drawable to set as the icon for copy url  option. Default icon is system menu_save icon
+         * @param label   A {@link String} with value for the copy url option label. Default label is "Copy link"
+         * @param message A {@link String} with value for a toast message displayed on copying a url.
+         *                Default message is "Copied link to clipboard!"
+         * @return
+         */
+        public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) {
+            copyUrlIcon_ = icon;
+            copyURlText_ = label;
+            urlCopiedMessage_ = message;
+            return this;
+        }
+
+
+        /**
          * <p>Creates an application selector dialog and share a link with user selected sharing option.
          * The link is created with the parameters provided to the builder. </p>
+         *
          */
         public void shareLink() {
             branchReferral_.shareLink(this);
@@ -3418,6 +3480,26 @@ public class Branch {
 
         public String getDefaultURL() {
             return defaultURL_;
+        }
+
+        public Drawable getMoreOptionIcon() {
+            return moreOptionIcon_;
+        }
+
+        public String getMoreOptionText() {
+            return moreOptionText_;
+        }
+
+        public Drawable getCopyUrlIcon() {
+            return copyUrlIcon_;
+        }
+
+        public String getCopyURlText() {
+            return copyURlText_;
+        }
+
+        public String getUrlCopiedMessage() {
+            return urlCopiedMessage_;
         }
     }
 

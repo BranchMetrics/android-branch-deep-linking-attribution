@@ -18,9 +18,7 @@ import java.util.Iterator;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
-import io.branch.referral.BranchContentUrlBuilder;
 import io.branch.referral.BranchError;
-import io.branch.referral.BranchReferralUrlBuilder;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.SharingHelper;
 
@@ -271,6 +269,16 @@ public class MainActivity extends Activity {
                         .setDefaultURL("https://play.google.com/store/apps/details?id=com.kindred.android")
                         .setCallback(new Branch.BranchLinkShareListener() {
                             @Override
+                            public void onShareLinkDialogLaunched() {
+                                Log.i("BranchTestBed", "onShareLinkDialogLaunched()");
+                            }
+
+                            @Override
+                            public void onShareLinkDialogDismissed() {
+                                Log.i("BranchTestBed", "onShareLinkDialogDismissed()");
+                            }
+
+                            @Override
                             public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
                                 if (error != null) {
                                     Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel + " " + error.getMessage());
@@ -284,6 +292,9 @@ public class MainActivity extends Activity {
                                 Log.i("BranchTestBed", "onChannelSelected... " + channelName);
                             }
                         })
+                        // Custom style for Copy url and More options
+                        //.setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
+                        //.setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
                         .shareLink();
             }
         });
