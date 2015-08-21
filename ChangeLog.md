@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.8.7: Adding internationalization support for sharing link builder. Additional callbacks are also added to notify sharing dialog is launch and dismiss events.
+
 - v1.8.6: Adding option to specify email/sms subject to the share link builder.
 
 - v1.8.5: Fix crash on install app from market due to referrer string parse error.
