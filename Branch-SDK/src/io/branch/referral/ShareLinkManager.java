@@ -197,8 +197,9 @@ class ShareLinkManager {
                     shareWithClient(selectedResolveInfo, url, channelName);
                 } else {
                     //If there is a default URL specified share it.
-                    if (builder_.getDefaultURL() != null && builder_.getDefaultURL().length() > 0) {
-                        shareWithClient(selectedResolveInfo, builder_.getDefaultURL(), channelName);
+                    String defaultUrl = builder_.getDefaultURL();
+                    if (defaultUrl != null && defaultUrl.trim().length() > 0) {
+                        shareWithClient(selectedResolveInfo, defaultUrl, channelName);
                     } else {
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, error);
@@ -222,8 +223,9 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
-            if (builder_.getShareSub() != null && builder_.getShareSub().trim().length() > 0) {
-                shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, builder_.getShareSub());
+            String shareSub = builder_.getShareSub();
+            if (shareSub != null && shareSub.trim().length() > 0) {
+                shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
             shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
             context_.startActivity(shareLinkIntent_);

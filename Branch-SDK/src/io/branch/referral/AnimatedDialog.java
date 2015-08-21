@@ -104,8 +104,7 @@ class AnimatedDialog extends Dialog {
         slideUp.setDuration(500);
         slideUp.setInterpolator(new AccelerateInterpolator());
         ((ViewGroup) getWindow().getDecorView()).getChildAt(0).startAnimation(slideUp);
-
-        AnimatedDialog.super.show();
+        super.show();
     }
 
     /**
@@ -113,6 +112,7 @@ class AnimatedDialog extends Dialog {
      */
     private void slideClose() {
         if (!isClosing_) {
+            isClosing_ = true;
             TranslateAnimation slideDown = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1f);
             slideDown.setDuration(500);
             slideDown.setInterpolator(new DecelerateInterpolator());
@@ -121,13 +121,12 @@ class AnimatedDialog extends Dialog {
             slideDown.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    isClosing_ = true;
                 }
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     isClosing_ = false;
-                    AnimatedDialog.super.dismiss();
+                    dismiss();
                 }
 
                 @Override
