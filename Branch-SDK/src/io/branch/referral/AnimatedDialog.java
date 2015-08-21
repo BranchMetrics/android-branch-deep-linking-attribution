@@ -125,7 +125,6 @@ class AnimatedDialog extends Dialog {
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
-                    isClosing_ = false;
                     dismiss();
                 }
 
