@@ -19,7 +19,7 @@ import android.view.animation.TranslateAnimation;
  * <p>Class for creating a Dialog which open and closes with an animation to the content view </p>
  */
 class AnimatedDialog extends Dialog {
-    private static boolean isClosing_ = false;
+    private boolean isClosing_ = false;
     Context context_;
     public AnimatedDialog(Context context) {
         super(context);
