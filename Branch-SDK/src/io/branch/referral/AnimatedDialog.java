@@ -20,7 +20,6 @@ import android.view.animation.TranslateAnimation;
  */
 class AnimatedDialog extends Dialog {
     private boolean isClosing_ = false;
-    Context context_;
     public AnimatedDialog(Context context) {
         super(context);
         init(context);
@@ -63,7 +62,6 @@ class AnimatedDialog extends Dialog {
 
     //------------------Private methods------------------//
     private void init(Context context) {
-        context_ = context;
         setDialogWindowAttributes();
         // Listen for the backpress in order to dismiss the dialog with animation
         setOnKeyListener(new OnKeyListener() {
