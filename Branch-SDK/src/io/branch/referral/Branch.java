@@ -3441,10 +3441,6 @@ public class Branch {
             branchReferral_.shareLink(this);
         }
 
-        public Dialog createShareDialog(){
-            return branchReferral_.shareLink(this);
-        }
-
         public Activity getActivity() {
             return activity_;
         }

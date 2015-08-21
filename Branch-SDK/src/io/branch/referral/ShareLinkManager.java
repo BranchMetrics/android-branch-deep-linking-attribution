@@ -320,9 +320,7 @@ class ShareLinkManager {
             } else {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
-                if (viewItemMinHeight < (appIcon.getIntrinsicHeight() + padding)) {
-                    viewItemMinHeight = (appIcon.getIntrinsicHeight() + padding);
-                }
+                viewItemMinHeight = Math.max(viewItemMinHeight, (appIcon.getIntrinsicHeight() + padding));
             }
             this.setMinHeight(viewItemMinHeight);
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
