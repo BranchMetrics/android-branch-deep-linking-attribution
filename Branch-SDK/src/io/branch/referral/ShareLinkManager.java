@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -43,6 +44,7 @@ class ShareLinkManager {
     private static int viewItemMinHeight = 100;
 
     private Branch.ShareLinkBuilder builder_;
+
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
@@ -72,11 +74,20 @@ class ShareLinkManager {
 
     /**
      * Dismiss the share dialog if showing. Should be called on activity stopping.
+     *
+     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
+     *                     A value of true will close the dialog with an animation. Setting this value
+     *                     to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog() {
+    public void cancelShareLinkDialog(boolean animateClose) {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
-            callback_ = null;
-            shareDlg_.cancel();
+            if (animateClose) {
+                // Cancel the dialog with animation
+                shareDlg_.cancel();
+            } else {
+                // Dismiss the dialog immediately
+                shareDlg_.dismiss();
+            }
             shareDlg_ = null;
         }
     }
@@ -146,7 +157,7 @@ class ShareLinkManager {
                     invokeSharingClient((ResolveInfo) view.getTag());
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
-                    if(shareDlg_ != null){
+                    if (shareDlg_ != null) {
                         shareDlg_.cancel();
                     }
                 }
@@ -156,9 +167,18 @@ class ShareLinkManager {
         shareDlg_ = new AnimatedDialog(context_);
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
-        if(callback_!= null){
-           callback_.onShareLinkDialogLaunched();
+        if (callback_ != null) {
+            callback_.onShareLinkDialogLaunched();
         }
+        shareDlg_.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                if (callback_ != null) {
+                    callback_.onShareLinkDialogDismissed();
+                    callback_ = null;
+                }
+            }
+        });
     }
 
 
@@ -168,7 +188,7 @@ class ShareLinkManager {
      * @param selectedResolveInfo The {@link ResolveInfo} corresponding to the selected sharing client.
      */
     @SuppressWarnings("deprecation")
-	private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
+    private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         builder_.getBranch().getShortUrl(builder_.getTags(), channelName, builder_.getFeature(), builder_.getStage(), builder_.getLinkCreationParams(), new Branch.BranchLinkCreateListener() {
             @Override
@@ -202,7 +222,7 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
-            if(builder_.getShareSub() != null && builder_.getShareSub().trim().length() > 0) {
+            if (builder_.getShareSub() != null && builder_.getShareSub().trim().length() > 0) {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, builder_.getShareSub());
             }
             shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
@@ -268,6 +288,7 @@ class ShareLinkManager {
             itemView.setClickable(false);
             return itemView;
         }
+
         @Override
         public boolean isEnabled(int position) {
             return selectedPos < 0;
@@ -281,6 +302,7 @@ class ShareLinkManager {
         Context context_;
         final int padding = 5;
         final int leftMargin = 100;
+
         public ShareItemView(Context context) {
             super(context);
             context_ = context;
@@ -298,15 +320,15 @@ class ShareLinkManager {
             } else {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
-                if(viewItemMinHeight < (appIcon.getIntrinsicHeight()+padding)){
-                    viewItemMinHeight = (appIcon.getIntrinsicHeight()+padding);
+                if (viewItemMinHeight < (appIcon.getIntrinsicHeight() + padding)) {
+                    viewItemMinHeight = (appIcon.getIntrinsicHeight() + padding);
                 }
             }
             this.setMinHeight(viewItemMinHeight);
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
-            if(isEnabled){
+            if (isEnabled) {
                 this.setBackgroundColor(BG_COLOR_ENABLED);
-            }else{
+            } else {
                 this.setBackgroundColor(BG_COLOR_DISABLED);
             }
         }

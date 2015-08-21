@@ -272,6 +272,12 @@ public class MainActivity extends Activity {
                             public void onShareLinkDialogLaunched() {
                                 Log.i("BranchTestBed", "onShareLinkDialogLaunched()");
                             }
+
+                            @Override
+                            public void onShareLinkDialogDismissed() {
+                                Log.i("BranchTestBed", "onShareLinkDialogDismissed()");
+                            }
+
                             @Override
                             public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
                                 if (error != null) {

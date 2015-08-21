@@ -1007,7 +1007,7 @@ public class Branch {
         }
         /* Close any opened sharing dialog.*/
         if(shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog();
+            shareLinkManager_.cancelShareLinkDialog(true);
         }
     }
 
@@ -2339,7 +2339,7 @@ public class Branch {
     private Dialog shareLink(ShareLinkBuilder builder) {
         //Cancel any existing sharing in progress.
         if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog();
+            shareLinkManager_.cancelShareLinkDialog(true);
         }
         shareLinkManager_ = new ShareLinkManager();
         return shareLinkManager_.shareLink(builder);
@@ -2348,10 +2348,14 @@ public class Branch {
     /**
      * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
      * calling this method before your activity finishes inorder to prevent any window leak. </p>
+     *
+     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
+     *                     A value of true will close the dialog with an animation. Setting this value
+     *                     to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog() {
+    public void cancelShareLinkDialog(boolean animateClose) {
         if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog();
+            shareLinkManager_.cancelShareLinkDialog(animateClose);
         }
     }
 
@@ -2695,7 +2699,7 @@ public class Branch {
             clearTouchDebugInternal(activity);
             /* Close any opened sharing dialog.*/
             if(shareLinkManager_ != null) {
-                shareLinkManager_.cancelShareLinkDialog();
+                shareLinkManager_.cancelShareLinkDialog(true);
             }
         }
 
@@ -2765,9 +2769,15 @@ public class Branch {
      */
     public interface BranchLinkShareListener {
         /**
-         * <p> Callback method to update when sahring dailog is launched.</p>
+         * <p> Callback method to update when share link dialog is launched.</p>
          */
         void onShareLinkDialogLaunched();
+
+        /**
+         * <p> Callback method to update when sharing dialog is dismissed.</p>
+         */
+        void onShareLinkDialogDismissed();
+
         /**
          *<p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
          *
@@ -3427,7 +3437,11 @@ public class Branch {
          * @return The instance of the {@link Dialog} holding the share view. Cancelling this dialog closes with animation.
          * Dismiss the dialog to closes without animation.
          */
-        public Dialog shareLink() {
+        public void shareLink() {
+            branchReferral_.shareLink(this);
+        }
+
+        public Dialog createShareDialog(){
             return branchReferral_.shareLink(this);
         }
 
