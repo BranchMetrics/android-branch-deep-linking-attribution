@@ -54,14 +54,6 @@ class AnimatedDialog extends Dialog {
         slideClose();
     }
 
-    /**
-     * </p> Dismiss the dialog.</p>
-     */
-    @Override
-    public void dismiss() {
-        super.dismiss();
-    }
-
     @Override
     public void setContentView(int layoutResID) {
         setDialogWindowAttributes();
