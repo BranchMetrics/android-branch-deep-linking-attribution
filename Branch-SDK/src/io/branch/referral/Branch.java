@@ -43,11 +43,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * <p>
@@ -2365,9 +2367,16 @@ public class Branch {
 
     private String generateShortLinkSync(ServerRequest req) {
         if (initState_ == SESSION_STATE.INITIALISED) {
-            ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());
+            ServerResponse response = null;
+            try {
+                int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
+                response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignore) {
+            } catch (ExecutionException ignore) {
+            } catch (TimeoutException ignore) {
+            }
             String url = prefHelper_.getUserURL();
-            if (response.getStatusCode() == 200) {
+            if (response != null && response.getStatusCode() == 200) {
                 try {
                     url = response.getObject().getString("url");
                     if (response.getLinkData() != null) {
@@ -2815,6 +2824,16 @@ public class Branch {
      */
     public enum CreditHistoryOrder {
         kMostRecentFirst, kLeastRecentFirst
+    }
+
+    /**
+     * Async Task to create  a shorlink for synchronous methods
+     */
+    private class getShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
+        @Override
+        protected ServerResponse doInBackground(ServerRequest... serverRequests) {
+            return kRemoteInterface_.createCustomUrlSync(serverRequests[0].getPost());
+        }
     }
 
     /**
