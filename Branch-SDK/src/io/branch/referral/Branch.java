@@ -3412,19 +3412,51 @@ public class Branch {
         }
 
         /**
+         * <p> Set the icon and label for the option to expand the application list to see more options.
+         * Default label is set to "More" </p>
+         *
+         * @param drawableIconID Resource ID for the drawable to set as the icon for more option. Default icon is system menu_more icon.
+         * @param stringLabelID  Resource ID for String label for the more option. Default label is "More"
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) {
+            moreOptionIcon_ = activity_.getResources().getDrawable(drawableIconID);
+            moreOptionText_ = activity_.getResources().getString(stringLabelID);
+            ;
+            return this;
+        }
+
+        /**
          * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
          *
          * @param icon    Drawable to set as the icon for copy url  option. Default icon is system menu_save icon
          * @param label   A {@link String} with value for the copy url option label. Default label is "Copy link"
          * @param message A {@link String} with value for a toast message displayed on copying a url.
          *                Default message is "Copied link to clipboard!"
-         * @return
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) {
             copyUrlIcon_ = icon;
             copyURlText_ = label;
             urlCopiedMessage_ = message;
             return this;
+        }
+
+        /**
+         * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
+         *
+         * @param drawableIconID  Resource ID for the drawable to set as the icon for copy url  option. Default icon is system menu_save icon
+         * @param stringLabelID   Resource ID for the string label the copy url option. Default label is "Copy link"
+         * @param stringMessageID Resource ID for the string message to show toast message displayed on copying a url
+         * @returnA {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
+            copyUrlIcon_ = activity_.getResources().getDrawable(drawableIconID);
+            ;
+            copyURlText_ = activity_.getResources().getString(stringLabelID);
+            urlCopiedMessage_ = activity_.getResources().getString(stringMessageID);
+            return this;
+
         }
 
 
