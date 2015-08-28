@@ -58,7 +58,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
      * @return This Builder object to allow for chaining of calls to set methods.
      */
     @SuppressWarnings("unchecked")
-	public T addTag(String tag) {
+    public T addTag(String tag) {
         if (this.tags_ == null) {
             tags_ = new ArrayList<String>();
         }
@@ -74,7 +74,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
      * @return This Builder object to allow for chaining of calls to set methods.
      */
     @SuppressWarnings("unchecked")
-	public T addParameters(String key, String value) {
+    public T addParameters(String key, String value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();
