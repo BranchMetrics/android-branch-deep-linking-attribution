@@ -124,18 +124,18 @@ public class MainActivity extends Activity {
                         .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
 
                 // Get URL Asynchronously
-                shortUrlBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
-                    @Override
-                    public void onLinkCreate(String url, BranchError error) {
-                        if (error != null) {
-                            Log.i("BranchTestBed", "branch create short url failed. Caused by -" + error.getMessage());
-                        } else {
-                            txtShortUrl.setText(url);
-                        }
-                    }
-                });
+//                shortUrlBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
+//                    @Override
+//                    public void onLinkCreate(String url, BranchError error) {
+//                        if (error != null) {
+//                            Log.i("BranchTestBed", "branch create short url failed. Caused by -" + error.getMessage());
+//                        } else {
+//                            txtShortUrl.setText(url);
+//                        }
+//                    }
+//                });
                 // OR Get the URL synchronously
-                //shortUrlBuilder.getShortUrl();
+                txtShortUrl.setText(shortUrlBuilder.getShortUrl());
             }
 
 
