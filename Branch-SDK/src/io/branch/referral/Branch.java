@@ -3471,7 +3471,6 @@ public class Branch {
          */
         public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
             copyUrlIcon_ = activity_.getResources().getDrawable(drawableIconID);
-            ;
             copyURlText_ = activity_.getResources().getString(stringLabelID);
             urlCopiedMessage_ = activity_.getResources().getString(stringMessageID);
             return this;
