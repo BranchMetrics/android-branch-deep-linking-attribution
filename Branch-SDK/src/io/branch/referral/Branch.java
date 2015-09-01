@@ -33,6 +33,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -2376,7 +2377,7 @@ public class Branch {
             } catch (TimeoutException ignore) {
             }
             String url = prefHelper_.getUserURL();
-            if (response != null && response.getStatusCode() == 200) {
+            if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
                     url = response.getObject().getString("url");
                     if (response.getLinkData() != null) {

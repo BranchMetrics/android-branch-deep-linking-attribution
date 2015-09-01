@@ -1,31 +1,28 @@
 package io.branch.referral;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Iterator;
-
 import android.content.Context;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.SocketException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.Iterator;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * <p>This class assists with RESTful calls to the Branch API, by encapsulating a generic
@@ -58,23 +55,6 @@ class RemoteInterface {
         prefHelper_ = PrefHelper.getInstance(context);
     }
 
-    /**
-     * <p>Creates an instance of {@link HttpClient}, with a defined timeout, to be used for all of
-     * the method calls within the class.</p>
-     *
-     * @param timeout An {@link Integer} value indicating the time in milliseconds to wait
-     *                before considering a request to have timed out.
-     *
-     * @return An instance of {@link HttpClient}, pre-configured with the timeout value supplied.
-     */
-    private HttpClient getGenericHttpClient(int timeout) {
-        if (timeout <= 0)
-            timeout = DEFAULT_TIMEOUT;
-        HttpParams httpParams = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, timeout);
-        HttpConnectionParams.setSoTimeout(httpParams, timeout);
-        return new DefaultHttpClient(httpParams);
-    }
 
     /**
      * <p>Converts a generic {@link HttpEntity} object into a {@link ServerResponse} object by
@@ -82,7 +62,7 @@ class RemoteInterface {
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
      *
-     * @param entity A generic {@link HttpEntity} returned as a result of a HTTP response.
+     * @param inStream A generic {@link InputStream} returned as a result of a HTTP connection.
      *
      * @param statusCode An {@link Integer} value containing the HTTP response code.
      *
@@ -100,12 +80,11 @@ class RemoteInterface {
      *
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
-    private ServerResponse processEntityForJSON (HttpEntity entity, int statusCode, String tag, boolean log, BranchLinkData linkData) {
+    private ServerResponse processEntityForJSON (InputStream inStream, int statusCode, String tag, boolean log, BranchLinkData linkData) {
         ServerResponse result = new ServerResponse(tag, statusCode, linkData);
         try {
-            if (entity != null) {
-                InputStream instream = entity.getContent();
-                BufferedReader rd = new BufferedReader(new InputStreamReader(instream));
+            if (inStream != null) {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(inStream));
 
                 String line = rd.readLine();
                 if (log) PrefHelper.Debug("BranchSDK", "returned " + line);
@@ -185,7 +164,10 @@ class RemoteInterface {
     private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
-        HttpClient httpClient = null;
+        HttpsURLConnection connection = null;
+        if (timeout <= 0) {
+            timeout = DEFAULT_TIMEOUT;
+        }
         if (addCommonParams(getParameters, retryNumber)) {
             modifiedUrl += this.convertJSONtoString(getParameters);
         } else {
@@ -194,11 +176,13 @@ class RemoteInterface {
 
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
-            HttpGet request = new HttpGet(modifiedUrl);
-            httpClient = getGenericHttpClient(timeout);
-            HttpResponse response = httpClient.execute(request);
-            if (response.getStatusLine().getStatusCode() >= 500 &&
-                retryNumber < prefHelper_.getRetryCount()) {
+            URL urlObject = new URL(modifiedUrl);
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+
+            if (connection.getResponseCode() >= 500 &&
+                    retryNumber < prefHelper_.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper_.getRetryInterval());
                 } catch (InterruptedException e) {
@@ -207,10 +191,9 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
             } else {
-                return processEntityForJSON(response.getEntity(),
-                    response.getStatusLine().getStatusCode(), tag, log, null);
+                return processEntityForJSON(connection.getInputStream(),
+                        connection.getResponseCode(), tag, log, null);
             }
-
         } catch (ClientProtocolException ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
         } catch (SocketException ex) {
@@ -223,8 +206,8 @@ class RemoteInterface {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
             return new ServerResponse(tag, 500);
         } finally {
-            if (httpClient != null && httpClient.getConnectionManager() != null) {
-                httpClient.getConnectionManager().shutdown();
+            if (connection != null ) {
+                connection.disconnect();
             }
         }
         return null;
@@ -298,27 +281,24 @@ class RemoteInterface {
     /**
      * <p>The main RESTful POST method. The others call this one with pre-populated parameters.</p>
      *
-     * @param body A {@link JSONObject} containing the main data body/payload of the request.
-     *
-     * @param url A {@link String} URL to request from.
-     *
-     * @param tag A {@link String} tag for logging/analytics purposes.
-     *
-     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
-     *                before considering a server request to have timed out.
-     *
-     * @param log A {@link Boolean} value that specifies whether debug logging should be
-     *            enabled for this request or not.
-     *
+     * @param body     A {@link JSONObject} containing the main data body/payload of the request.
+     * @param url      A {@link String} URL to request from.
+     * @param tag      A {@link String} tag for logging/analytics purposes.
+     * @param timeout  An {@link Integer} value containing the number of milliseconds to wait
+     *                 before considering a server request to have timed out.
+     * @param log      A {@link Boolean} value that specifies whether debug logging should be
+     *                 enabled for this request or not.
      * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
      *                 with the link subject of the original server request.
-     *
      * @return A {@link ServerResponse} object representing the {@link HttpEntity}
-     *         response in Branch SDK terms.
+     * response in Branch SDK terms.
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
-                                            int retryNumber, boolean log, BranchLinkData linkData) {
-        HttpClient httpClient = null;
+                                             int retryNumber, boolean log, BranchLinkData linkData) {
+        HttpURLConnection connection = null;
+        if (timeout <= 0) {
+            timeout = DEFAULT_TIMEOUT;
+        }
         try {
             JSONObject bodyCopy = new JSONObject();
             Iterator<?> keys = body.keys();
@@ -338,12 +318,21 @@ class RemoteInterface {
                 PrefHelper.Debug("BranchSDK", "posting to " + url);
                 PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
             }
-            HttpPost request = new HttpPost(url);
-            request.setEntity(new ByteArrayEntity(bodyCopy.toString().getBytes("UTF8")));
-            request.setHeader("Content-type", "application/json");
-            httpClient = getGenericHttpClient(timeout);
-            HttpResponse response = httpClient.execute(request);
-            if (response.getStatusLine().getStatusCode() >= 500
+            URL urlObject = new URL(url);
+            connection = (HttpURLConnection) urlObject.openConnection();
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestMethod("POST");
+
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
+            outputStreamWriter.write(bodyCopy.toString());
+            outputStreamWriter.flush();
+
+            if (connection.getResponseCode() >= HttpURLConnection.HTTP_INTERNAL_ERROR
                     && retryNumber < prefHelper_.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper_.getRetryInterval());
@@ -353,9 +342,10 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
             } else {
-                ServerResponse serverResponse = processEntityForJSON(response.getEntity(), response.getStatusLine().getStatusCode(), tag, log, linkData);
-                return serverResponse;
+                return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
             }
+
+
         } catch (SocketException ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
@@ -370,8 +360,8 @@ class RemoteInterface {
             }
             return new ServerResponse(tag, 500);
         } finally {
-            if (httpClient != null && httpClient.getConnectionManager() != null) {
-                httpClient.getConnectionManager().shutdown();
+            if (connection != null) {
+                connection.disconnect();
             }
         }
     }
