@@ -129,7 +129,9 @@ class ServerRequestRegisterInstall extends ServerRequest {
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        callback_ = callback;
+        if(callback != null) {  // Update callback if set with valid callback instance.
+            callback_ = callback;
+        }
     }
 
     @Override
