@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.app.Application;
 import android.content.Context;
 import android.util.DisplayMetrics;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
