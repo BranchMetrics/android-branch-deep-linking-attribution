@@ -278,12 +278,13 @@ public class Branch {
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
+    private static BranchReferralInitListener mBranchReferralInitListener_;
+
 
     private BranchRemoteInterface kRemoteInterface_;
     private PrefHelper prefHelper_;
     private SystemObserver systemObserver_;
     private Context context_;
-
     final Object lock;
 
     private Timer closeTimer;
@@ -373,6 +374,18 @@ public class Branch {
 
     }
 
+    public static void setListener(BranchReferralInitListener listener) {
+        if (listener != null) {
+            mBranchReferralInitListener_ = listener;
+        }
+    }
+
+    public static BranchReferralInitListener getListener() {
+        if (mBranchReferralInitListener_ != null) {
+            return mBranchReferralInitListener_;
+        }
+        return null;
+    }
 
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
@@ -845,8 +858,10 @@ public class Branch {
         currentActivity_ = activity;
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
-            if (callback != null)
-                callback.onInitFinished(new JSONObject(), null);
+            if (callback != null) {
+                //callback.onInitFinished(new JSONObject(), null);
+                mBranchReferralInitListener_.onInitFinished(new JSONObject(), null);
+            }
             clearCloseTimer();
             keepAlive();
         }
@@ -854,12 +869,14 @@ public class Branch {
         else {
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
-                requestQueue_.setInstallOrOpenCallback(callback);
+                //requestQueue_.setInstallOrOpenCallback(callback);
+                requestQueue_.setInstallOrOpenCallback(mBranchReferralInitListener_);
             }
             //if Uninitialised move request to the front if there is an existing request or create a new request.
             else {
                 initState_ = SESSION_STATE.INITIALISING;
-                initializeSession(callback);
+                //initializeSession(callback);
+                initializeSession(mBranchReferralInitListener_);
             }
         }
 
