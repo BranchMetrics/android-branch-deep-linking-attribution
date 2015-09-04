@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,7 +99,9 @@ class ServerRequestRegisterOpen extends ServerRequest {
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        callback_ = callback;
+        if(callback != null) {      // Update callback if set with valid callback instance.
+            callback_ = callback;
+        }
     }
 
     @Override
