@@ -2687,7 +2687,11 @@ public class Branch {
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     setDebug();
                 }
-                initSessionWithData(activity.getIntent().getData(), activity); // indicate  starting of session.
+                Uri intentData = null;
+                if (activity.getIntent() != null) {
+                    intentData = activity.getIntent().getData();
+                }
+                initSessionWithData(intentData, activity); // indicate  starting of session.
             }
             activityCnt_++;
         }
