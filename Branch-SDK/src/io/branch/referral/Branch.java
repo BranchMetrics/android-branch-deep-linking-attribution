@@ -2881,13 +2881,13 @@ public class Branch {
                         }
                         // On a bad request notify with call back and remove the request.
                         if (status == 409) {
+                            requestQueue_.remove(thisReq_);
                             if (thisReq_ instanceof ServerRequestCreateUrl) {
                                 ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
                             } else {
                                 Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
                                 handleFailure(0, status);
                             }
-                            requestQueue_.remove(thisReq_);
                         }
                         //On Network error or Branch is down fail all the pending requests in the queue except
                         //for request which need to be replayed on failure.
