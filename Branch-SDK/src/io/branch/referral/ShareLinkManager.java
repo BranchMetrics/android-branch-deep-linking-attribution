@@ -90,6 +90,7 @@ class ShareLinkManager {
             }
             shareDlg_ = null;
         }
+        context_ = null; // Release  context to prevent leaks
     }
 
 
@@ -177,6 +178,7 @@ class ShareLinkManager {
                     callback_.onShareLinkDialogDismissed();
                     callback_ = null;
                 }
+                context_ = null; // Release  context to prevent leaks
             }
         });
     }
