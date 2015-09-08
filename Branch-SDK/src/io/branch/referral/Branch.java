@@ -2879,7 +2879,7 @@ public class Branch {
                         if (thisReq_.isSessionInitRequest()) {
                             initState_ = SESSION_STATE.UNINITIALISED;
                         }
-                        //On a bad request continue processing
+                        // On a bad request notify with call back and remove the request.
                         if (status == 409) {
                             if (thisReq_ instanceof ServerRequestCreateUrl) {
                                 ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
@@ -2887,6 +2887,7 @@ public class Branch {
                                 Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
                                 handleFailure(0, status);
                             }
+                            requestQueue_.remove(thisReq_);
                         }
                         //On Network error or Branch is down fail all the pending requests in the queue except
                         //for request which need to be replayed on failure.
