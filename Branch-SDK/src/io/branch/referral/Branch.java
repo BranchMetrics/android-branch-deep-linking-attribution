@@ -2879,8 +2879,9 @@ public class Branch {
                         if (thisReq_.isSessionInitRequest()) {
                             initState_ = SESSION_STATE.UNINITIALISED;
                         }
-                        //On a bad request continue processing
+                        // On a bad request notify with call back and remove the request.
                         if (status == 409) {
+                            requestQueue_.remove(thisReq_);
                             if (thisReq_ instanceof ServerRequestCreateUrl) {
                                 ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
                             } else {
