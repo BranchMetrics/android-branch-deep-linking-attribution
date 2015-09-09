@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.8.9: Fix issue requests not removed from request queue on resource conflict. Fixing couple of possible NPE and Memory leaks.
+
 - v1.8.8: Fix for callback not invoked on session error when creating a short link with builder.
 
 - v1.8.7: Adding internationalization support for sharing link builder. Additional callbacks are also added to notify sharing dialog is launch and dismiss events.
