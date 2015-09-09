@@ -41,9 +41,9 @@ class ShareLinkManager {
     /* Current activity context.*/
     Context context_;
     /* Default height for the list item.*/
-    private static int viewItemMinHeight = 100;
+    private static int viewItemMinHeight_ = 100;
     /* Indicates whether a sharing is in progress*/
-    private boolean isShareInProgress_ =false;
+    private boolean isShareInProgress_ = false;
 
     private Branch.ShareLinkBuilder builder_;
 
@@ -335,9 +335,9 @@ class ShareLinkManager {
             } else {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
-                viewItemMinHeight = Math.max(viewItemMinHeight, (appIcon.getIntrinsicHeight() + padding));
+                viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
-            this.setMinHeight(viewItemMinHeight);
+            this.setMinHeight(viewItemMinHeight_);
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
             if (isEnabled) {
                 this.setBackgroundColor(BG_COLOR_ENABLED);
