@@ -41,9 +41,12 @@ class ShareLinkManager {
     /* Current activity context.*/
     Context context_;
     /* Default height for the list item.*/
-    private static int viewItemMinHeight = 100;
+    private static int viewItemMinHeight_ = 100;
+    /* Indicates whether a sharing is in progress*/
+    private boolean isShareInProgress_ = false;
 
     private Branch.ShareLinkBuilder builder_;
+
 
     /**
      * Creates an application selector and shares a link on user selecting the application.
@@ -177,8 +180,11 @@ class ShareLinkManager {
                     callback_.onShareLinkDialogDismissed();
                     callback_ = null;
                 }
-                context_ = null; // Release  context to prevent leaks
-                builder_ = null;
+                // Release  context to prevent leaks
+                if (!isShareInProgress_) {
+                    context_ = null;
+                    builder_ = null;
+                }
                 shareDlg_ = null;
             }
         });
@@ -192,6 +198,7 @@ class ShareLinkManager {
      */
     @SuppressWarnings("deprecation")
     private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
+        isShareInProgress_ = true;
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         builder_.getBranch().getShortUrl(builder_.getTags(), channelName, builder_.getFeature(), builder_.getStage(), builder_.getLinkCreationParams(), new Branch.BranchLinkCreateListener() {
             @Override
@@ -212,6 +219,9 @@ class ShareLinkManager {
                     }
 
                 }
+                isShareInProgress_ = false;
+                context_ = null;
+                builder_ = null;
             }
         });
     }
@@ -325,9 +335,9 @@ class ShareLinkManager {
             } else {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
-                viewItemMinHeight = Math.max(viewItemMinHeight, (appIcon.getIntrinsicHeight() + padding));
+                viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
-            this.setMinHeight(viewItemMinHeight);
+            this.setMinHeight(viewItemMinHeight_);
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
             if (isEnabled) {
                 this.setBackgroundColor(BG_COLOR_ENABLED);
