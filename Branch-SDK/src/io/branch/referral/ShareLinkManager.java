@@ -89,6 +89,7 @@ class ShareLinkManager {
                 shareDlg_.dismiss();
             }
         }
+
     }
 
 
