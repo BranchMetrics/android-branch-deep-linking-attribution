@@ -2127,7 +2127,7 @@ public class Branch {
      * @see BranchLinkData#putChannel(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     * @deprecated use {@link BranchUrlBuilder#getContentUrl()} instead.
+     * @deprecated use {@link BranchContentUrlBuilder} instead.
      */
     @Deprecated
     public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {

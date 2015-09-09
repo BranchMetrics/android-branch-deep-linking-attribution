@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.8.10: Fix for a possible NPE on sharing link in slow network conditions.
+
 - v1.8.9: Fix issue requests not removed from request queue on resource conflict. Fixing couple of possible NPE and Memory leaks.
 
 - v1.8.8: Fix for callback not invoked on session error when creating a short link with builder.
