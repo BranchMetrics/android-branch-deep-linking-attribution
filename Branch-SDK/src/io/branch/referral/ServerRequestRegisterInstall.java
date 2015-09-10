@@ -83,6 +83,8 @@ class ServerRequestRegisterInstall extends ServerRequest {
             constructError_ = true;
         }
 
+        executeSynchronously = prefHelper_.isInitSynchronously();
+
     }
 
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {

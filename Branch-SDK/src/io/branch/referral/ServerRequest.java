@@ -19,8 +19,12 @@ abstract class ServerRequest {
     protected String requestPath_;
     protected PrefHelper prefHelper_;
 
+
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
+
+    /* Set this to true if you want to execute this request synchronously */
+    public boolean executeSynchronously = false;
 
     /**
      * <p>Creates an instance of ServerRequest.</p>

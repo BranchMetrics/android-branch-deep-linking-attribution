@@ -171,6 +171,9 @@ public class PrefHelper {
      */
     private Context context_;
 
+    /* Specifies whether to do branch init synchronously. */
+    private boolean initSynchronously_ = false;
+
     /**
      * <p>Empty, but required constructor for the {@link PrefHelper} {@link SharedPreferences}
      * helper class.</p>
@@ -236,6 +239,14 @@ public class PrefHelper {
      */
     public int getTimeout() {
         return getInteger(KEY_TIMEOUT, TIMEOUT);
+    }
+
+    public void initSynchronously(boolean initSync){
+        initSynchronously_ = initSync;
+    }
+
+    public boolean isInitSynchronously(){
+        return initSynchronously_;
     }
 
     /**

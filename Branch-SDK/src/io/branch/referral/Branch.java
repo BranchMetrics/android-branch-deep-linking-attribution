@@ -346,6 +346,7 @@ public class Branch {
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -2483,7 +2484,13 @@ public class Branch {
                     return;
                 } else {
                     BranchPostTask postTask = new BranchPostTask(req);
-                    postTask.execute();
+                    //If opted sync do it sync
+                    if(req.executeSynchronously){
+                        postTask.execute().get();
+                    }
+                    else { //else do it async
+                        postTask.execute();
+                    }
                 }
             } else {
                 serverSema_.release();

@@ -51,6 +51,8 @@ class ServerRequestRegisterOpen extends ServerRequest {
             constructError_ = true;
         }
 
+        executeSynchronously = prefHelper_.isInitSynchronously();
+
     }
 
 
