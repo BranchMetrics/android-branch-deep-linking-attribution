@@ -4,9 +4,6 @@ import android.content.Context;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,8 +22,8 @@ import java.util.Iterator;
 import javax.net.ssl.HttpsURLConnection;
 
 /**
- * <p>This class assists with RESTful calls to the Branch API, by encapsulating a generic
- * {@link HttpClient} object, and handling all restful calls via one of its GET or POST capable
+ * <p>This class assists with RESTful calls to the Branch API, by using
+ * {@link HttpURLConnection} object, and handling all restful calls via one of its GET or POST capable
  * methods.</p>
  */
 class RemoteInterface {
@@ -57,7 +54,7 @@ class RemoteInterface {
 
 
     /**
-     * <p>Converts a generic {@link HttpEntity} object into a {@link ServerResponse} object by
+     * <p>Converts {@link HttpURLConnection} resultant output object into a {@link ServerResponse} object by
      * reading the content supplied in the raw server response, and creating a {@link JSONObject}
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
@@ -75,7 +72,7 @@ class RemoteInterface {
      * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
      *                 with the link subject of the original server request.
      *
-     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      *         response in Branch SDK terms.
      *
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
@@ -194,8 +191,6 @@ class RemoteInterface {
                 return processEntityForJSON(connection.getInputStream(),
                         connection.getResponseCode(), tag, log, null);
             }
-        } catch (ClientProtocolException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "Client protocol exception: " + ex.getMessage());
         } catch (SocketException ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
@@ -210,7 +205,7 @@ class RemoteInterface {
                 connection.disconnect();
             }
         }
-        return null;
+
     }
     //endregion
 
@@ -227,7 +222,7 @@ class RemoteInterface {
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
      *
-     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      *         response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
@@ -249,7 +244,7 @@ class RemoteInterface {
      * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
      *                 with the link subject of the original server request.
      *
-     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      *         response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
@@ -271,7 +266,7 @@ class RemoteInterface {
      * @param log A {@link Boolean} value that specifies whether debug logging should be
      *            enabled for this request or not.
      *
-     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      *         response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
@@ -290,7 +285,7 @@ class RemoteInterface {
      *                 enabled for this request or not.
      * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
      *                 with the link subject of the original server request.
-     * @return A {@link ServerResponse} object representing the {@link HttpEntity}
+     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      * response in Branch SDK terms.
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
