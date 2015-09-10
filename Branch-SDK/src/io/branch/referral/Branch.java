@@ -23,6 +23,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SearchEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
@@ -3255,6 +3256,12 @@ public class Branch {
             return callback_.onSearchRequested();
         }
 
+        @TargetApi(Build.VERSION_CODES.M)
+        @Override
+        public boolean onSearchRequested(SearchEvent searchEvent) {
+            return false;
+        }
+
         @Override
         public void onWindowAttributesChanged(WindowManager.LayoutParams attrs) {
             callback_.onWindowAttributesChanged(attrs);
@@ -3269,6 +3276,12 @@ public class Branch {
         @Override
         public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
             return callback_.onWindowStartingActionMode(callback);
+        }
+
+        @TargetApi(Build.VERSION_CODES.M)
+        @Override
+        public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int type) {
+            return null;
         }
     }
 
