@@ -57,7 +57,7 @@
         <!-- Optional. Set to true to  init session synchronously-->
         <meta-data android:name="io.branch.sdk.init_synchronously" android:value="true"/>
 
-        <!-- Optional. Set timeout value in millisecond for the synchronous init session operation -->
+        <!-- Optional. Integer value to set timeout in millisecond for the synchronous init session operation -->
         <meta-data android:name="io.branch.sdk.init_sync_timeout_ms" android:value="10000"/>
 
         <uses-library android:name="android.test.runner" />

@@ -393,7 +393,7 @@ public class Branch {
             appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             if (appInfo.metaData != null){
                 initSessionSynchronously_ =  appInfo.metaData.getBoolean(IS_SYNC_SESSION_ENABLED, false);
-                initSessionSyncTimeOut_ = appInfo.metaData.getLong(SYNC_SESSION_TIMEOUT);
+                initSessionSyncTimeOut_ = appInfo.metaData.getInt(SYNC_SESSION_TIMEOUT,-1);
             }
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
@@ -874,7 +874,7 @@ public class Branch {
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null)
-                callback.onInitFinished(new JSONObject(), null);
+                callback.onInitFinished(getLatestReferringParams(), null);
             clearCloseTimer();
             keepAlive();
         }
