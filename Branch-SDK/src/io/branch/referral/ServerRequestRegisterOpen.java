@@ -22,9 +22,10 @@ class ServerRequestRegisterOpen extends ServerRequest {
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      * @param sysObserver {@link SystemObserver} instance.
+     * @param executeSync if set to true execute this request synchronously
      */
     public ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback,
-                                     SystemObserver sysObserver) {
+                                     SystemObserver sysObserver, boolean executeSync) {
         super(context, Defines.RequestPath.RegisterOpen.getPath());
 
         callback_ = callback;
@@ -51,7 +52,7 @@ class ServerRequestRegisterOpen extends ServerRequest {
             constructError_ = true;
         }
 
-        executeSynchronously = prefHelper_.isInitSynchronously();
+        executeSynchronously = executeSync;
 
     }
 

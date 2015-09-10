@@ -23,10 +23,11 @@ class ServerRequestRegisterInstall extends ServerRequest {
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      * @param sysObserver {@link SystemObserver} instance.
-     * @param installID   installation ID.                                   .
+     * @param installID   installation ID.
+     * @param executeSync if set to true execute this request synchronously
      */
     public ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
-                                        SystemObserver sysObserver, String installID) {
+                                        SystemObserver sysObserver, String installID, boolean executeSync) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
 
@@ -83,7 +84,7 @@ class ServerRequestRegisterInstall extends ServerRequest {
             constructError_ = true;
         }
 
-        executeSynchronously = prefHelper_.isInitSynchronously();
+        executeSynchronously = executeSync;
 
     }
 

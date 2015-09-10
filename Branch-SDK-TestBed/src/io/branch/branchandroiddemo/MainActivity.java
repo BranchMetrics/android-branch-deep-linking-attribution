@@ -57,7 +57,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        PrefHelper.getInstance(this).initSynchronously(true);
 
         txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
         cmdRefreshShortUrl = (Button) findViewById(R.id.cmdRefreshShortURL);

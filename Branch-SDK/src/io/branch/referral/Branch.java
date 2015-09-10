@@ -328,6 +328,12 @@ public class Branch {
     /*The current activity instance for the application.*/
     private Activity currentActivity_;
 
+    /* Key to indicate whether the whether init session need to be in sync or Async model. */
+    private static final String IS_SYNC_SESSION_ENABLED = "io.branch.sdk.init_synchronously";
+
+    /* Time out value in millisecond to time out synchronous init session operation. */
+    private static final String SYNC_SESSION_TIMEOUT = "io.branch.sdk.init_sync_timeout_ms";
+
     /* Key to indicate whether the Activity was launched by Branch or not. */
     private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
     
@@ -345,6 +351,14 @@ public class Branch {
 
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
+
+    /* Variable to determine whether to do init session sync or async manner.*/
+    private boolean initSessionSynchronously_ = false;
+
+    /* Time out in millisecond to time out the sync init operation.*/
+    private long initSessionSyncTimeOut_ =  -1;
+
+
 
 
     /**
@@ -373,6 +387,17 @@ public class Branch {
         debugStarted_ = false;
         linkCache_ = new HashMap<BranchLinkData, String>();
 
+        // Check if synchronised init session is enabled or not
+        ApplicationInfo appInfo = null;
+        try {
+            appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (appInfo.metaData != null){
+                initSessionSynchronously_ =  appInfo.metaData.getBoolean(IS_SYNC_SESSION_ENABLED, false);
+                initSessionSyncTimeOut_ = appInfo.metaData.getLong(SYNC_SESSION_TIMEOUT);
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -688,6 +713,7 @@ public class Branch {
         initSession(callback, activity);
         return uriHandled;
     }
+
 
     /**
      * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
@@ -2483,12 +2509,18 @@ public class Branch {
                     handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                     return;
                 } else {
-                    BranchPostTask postTask = new BranchPostTask(req);
+                    BranchPostTask postTask = new BranchPostTask(req, req.executeSynchronously);
                     //If opted sync do it sync
-                    if(req.executeSynchronously){
-                        postTask.execute().get();
-                    }
-                    else { //else do it async
+                    if (req.executeSynchronously) {
+                        ServerResponse response;
+                        if (initSessionSyncTimeOut_ > 0) {
+                            response = postTask.execute().get(initSessionSyncTimeOut_, TimeUnit.MILLISECONDS);
+                        } else {
+                            response = postTask.execute().get();
+                        }
+
+                        processSeverResponse(req, response);
+                    } else { //else do it async
                         postTask.execute();
                     }
                 }
@@ -2621,9 +2653,9 @@ public class Branch {
         }
 
         if (hasUser()) {
-            registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
+            registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver(), initSessionSynchronously_), callback);
         } else {
-            registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
+            registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID(), initSessionSynchronously_), callback);
         }
     }
 
@@ -2856,20 +2888,22 @@ public class Branch {
      */
     private class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
         int timeOut_ = 0;
-        ServerRequest thisReq_;
+        final ServerRequest thisReq_;
+        final boolean isBlockedExecution_;
 
-        public BranchPostTask(ServerRequest request) {
+        public BranchPostTask(ServerRequest request, boolean isBlockedExecution) {
             thisReq_ = request;
             timeOut_ = prefHelper_.getTimeout();
+            isBlockedExecution_ = isBlockedExecution;
         }
 
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
-//            if(thisReq_.isSessionInitRequest()){
-//                thisReq_.updateGAdsParams(systemObserver_);
-//            }
+            if(thisReq_.isSessionInitRequest() && !isBlockedExecution_){
+                thisReq_.updateGAdsParams(systemObserver_);
+            }
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
 
@@ -2877,103 +2911,107 @@ public class Branch {
                 return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
 
             }
-
-
         }
 
         @Override
         protected void onPostExecute(ServerResponse serverResponse) {
             super.onPostExecute(serverResponse);
-            if (serverResponse != null) {
-                try {
-                    int status = serverResponse.getStatusCode();
-                    hasNetwork_ = true;
+            if (!isBlockedExecution_) {
+                processSeverResponse(thisReq_, serverResponse);
+            }
+        }
+    }
 
-                    //If the request is not succeeded
-                    if (status != 200) {
-                        //If failed request is an initialisation request then mark session not initialised
-                        if (thisReq_.isSessionInitRequest()) {
-                            initState_ = SESSION_STATE.UNINITIALISED;
-                        }
-                        // On a bad request notify with call back and remove the request.
-                        if (status == 409) {
-                            requestQueue_.remove(thisReq_);
-                            if (thisReq_ instanceof ServerRequestCreateUrl) {
-                                ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
-                            } else {
-                                Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
-                                handleFailure(0, status);
-                            }
-                        }
-                        //On Network error or Branch is down fail all the pending requests in the queue except
-                        //for request which need to be replayed on failure.
-                        else {
-                            hasNetwork_ = false;
-                            //Collect all request from the queue which need to be failed.
-                            ArrayList<ServerRequest> requestToFail = new ArrayList<ServerRequest>();
-                            for (int i = 0; i < requestQueue_.getSize(); i++) {
-                                requestToFail.add(requestQueue_.peekAt(i));
-                            }
-                            //Remove the requests from the request queue first
-                            for (ServerRequest req : requestToFail) {
-                                if (!req.shouldRetryOnFail()) {
-                                    requestQueue_.remove(req);
-                                }
-                            }
-                            // Then, set the network count to zero, indicating that requests can be started again.
-                            networkCount_ = 0;
+    private void processSeverResponse(ServerRequest serverRequest, ServerResponse serverResponse) {
+        if (serverResponse != null) {
+            try {
+                int status = serverResponse.getStatusCode();
+                hasNetwork_ = true;
 
-                            //Finally call the request callback with the error.
-                            for (ServerRequest req : requestToFail) {
-                                req.handleFailure(status);
-                                //If request need to be replayed, no need for the callbacks
-                                if (req.shouldRetryOnFail())
-                                    req.clearCallbacks();
-                            }
+                //If the request is not succeeded
+                if (status != 200) {
+                    //If failed request is an initialisation request then mark session not initialised
+                    if (serverRequest.isSessionInitRequest()) {
+                        initState_ = SESSION_STATE.UNINITIALISED;
+                    }
+                    // On a bad request notify with call back and remove the request.
+                    if (status == 409) {
+                        requestQueue_.remove(serverRequest);
+                        if (serverRequest instanceof ServerRequestCreateUrl) {
+                            ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
+                        } else {
+                            Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+                            handleFailure(0, status);
                         }
                     }
-                    //If the request succeeded
+                    //On Network error or Branch is down fail all the pending requests in the queue except
+                    //for request which need to be replayed on failure.
                     else {
-                        hasNetwork_ = true;
-                        //On create  new url cache the url.
-                        if (thisReq_ instanceof ServerRequestCreateUrl) {
-                            final String url = serverResponse.getObject().getString("url");
-                            // cache the link
-                            linkCache_.put(serverResponse.getLinkData(), url);
+                        hasNetwork_ = false;
+                        //Collect all request from the queue which need to be failed.
+                        ArrayList<ServerRequest> requestToFail = new ArrayList<ServerRequest>();
+                        for (int i = 0; i < requestQueue_.getSize(); i++) {
+                            requestToFail.add(requestQueue_.peekAt(i));
                         }
-                        //On Logout clear the link cache and all pending requests
-                        else if (thisReq_ instanceof ServerRequestLogout) {
-                            linkCache_.clear();
-                            requestQueue_.clear();
-                        }
-                        //On setting a new identity Id clear the link cache
-                        else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
-                            try {
-                                String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
-                                if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                    linkCache_.clear();
-                                }
-                            } catch (Exception ignore) {
+                        //Remove the requests from the request queue first
+                        for (ServerRequest req : requestToFail) {
+                            if (!req.shouldRetryOnFail()) {
+                                requestQueue_.remove(req);
                             }
                         }
-                        //Publish success to listeners
-                        thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                        // Then, set the network count to zero, indicating that requests can be started again.
+                        networkCount_ = 0;
 
-                        //If this request changes a session update the session-id to queued requests.
-                        if (thisReq_.isSessionInitRequest()) {
-                            updateAllRequestsInQueue();
-                            initState_ = SESSION_STATE.INITIALISED;
-                            checkForAutoDeepLinkConfiguration();
+                        //Finally call the request callback with the error.
+                        for (ServerRequest req : requestToFail) {
+                            req.handleFailure(status);
+                            //If request need to be replayed, no need for the callbacks
+                            if (req.shouldRetryOnFail())
+                                req.clearCallbacks();
                         }
-                        requestQueue_.dequeue();
                     }
-                    networkCount_ = 0;
-                    if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
-                        processNextQueueItem();
-                    }
-                } catch (JSONException ex) {
-                    ex.printStackTrace();
                 }
+                //If the request succeeded
+                else {
+                    hasNetwork_ = true;
+                    //On create  new url cache the url.
+                    if (serverRequest instanceof ServerRequestCreateUrl) {
+                        final String url = serverResponse.getObject().getString("url");
+                        // cache the link
+                        linkCache_.put(serverResponse.getLinkData(), url);
+                    }
+                    //On Logout clear the link cache and all pending requests
+                    else if (serverRequest instanceof ServerRequestLogout) {
+                        linkCache_.clear();
+                        requestQueue_.clear();
+                    }
+                    //On setting a new identity Id clear the link cache
+                    else if (serverRequest instanceof ServerRequestIdentifyUserRequest) {
+                        try {
+                            String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                            if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+                                linkCache_.clear();
+                            }
+                        } catch (Exception ignore) {
+                        }
+                    }
+                    //Publish success to listeners
+                    serverRequest.onRequestSucceeded(serverResponse, branchReferral_);
+
+                    //If this request changes a session update the session-id to queued requests.
+                    if (serverRequest.isSessionInitRequest()) {
+                        updateAllRequestsInQueue();
+                        initState_ = SESSION_STATE.INITIALISED;
+                        checkForAutoDeepLinkConfiguration();
+                    }
+                    requestQueue_.dequeue();
+                }
+                networkCount_ = 0;
+                if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
+                    processNextQueueItem();
+                }
+            } catch (JSONException ex) {
+                ex.printStackTrace();
             }
         }
     }
