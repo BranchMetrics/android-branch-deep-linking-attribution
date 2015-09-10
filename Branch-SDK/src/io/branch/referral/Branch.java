@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -2512,9 +2513,20 @@ public class Branch {
                     BranchPostTask postTask = new BranchPostTask(req, req.executeSynchronously);
                     //If opted sync do it sync
                     if (req.executeSynchronously) {
-                        ServerResponse response;
+                        ServerResponse response = null;
                         if (initSessionSyncTimeOut_ > 0) {
-                            response = postTask.execute().get(initSessionSyncTimeOut_, TimeUnit.MILLISECONDS);
+                            try {
+                                response = postTask.execute().get(initSessionSyncTimeOut_, TimeUnit.MILLISECONDS);
+                            } catch (CancellationException ignore) {
+                            } catch (ExecutionException ignore) {
+                            } catch (InterruptedException ignore) {
+                            } catch (TimeoutException ignore) {
+                            } finally {
+                                if (response == null) {
+                                    initState_ = SESSION_STATE.UNINITIALISED;
+                                    networkCount_ = 0;
+                                }
+                            }
                         } else {
                             response = postTask.execute().get();
                         }
@@ -2632,6 +2644,7 @@ public class Branch {
         // Make sure a callback is associated with this request. This callback can
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
+            requestQueue_.setInstallOrOpenCallback(callback);
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
 
@@ -3013,6 +3026,9 @@ public class Branch {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
+        }
+        else{
+            serverRequest.handleFailure(BranchError.ERR_BRANCH_REQ_TIME_OUT);
         }
     }
 
