@@ -312,30 +312,60 @@ public class MainActivity extends Activity {
         }
 
         //branch.disableTouchDebugging();
+        //Asynchrounous init
+//        branch.initSession(new BranchReferralInitListener() {
+//            @Override
+//            public void onInitFinished(JSONObject referringParams,
+//                                       BranchError error) {
+//                if (error != null) {
+//                    Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
+//                } else {
+//                    Log.i("BranchTestBed", "branch init complete!");
+//                    try {
+//                        Iterator<?> keys = referringParams.keys();
+//                        while (keys.hasNext()) {
+//                            String key = (String) keys.next();
+//                            String value = referringParams.getString(key);
+//                            Log.i("BranchTestBed", key + ", " + value);
+//                        }
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }, MainActivity.this.getIntent().getData(), MainActivity.this);
 
-        branch.initSession(new BranchReferralInitListener() {
+
+        //Synchrounous Init need  to be on  a seperate thread
+        new Thread(new Runnable() {
             @Override
-            public void onInitFinished(JSONObject referringParams,
-                                       BranchError error) {
-                if (error != null) {
-                    Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
-                } else {
-                    Log.i("BranchTestBed", "branch init complete!");
-                    try {
-                        Iterator<?> keys = referringParams.keys();
-                        while (keys.hasNext()) {
-                            String key = (String) keys.next();
-                            String value = referringParams.getString(key);
-                            Log.i("BranchTestBed", key + ", " + value);
+            public void run() {
+                branch.initSession(new BranchReferralInitListener() {
+                    @Override
+                    public void onInitFinished(JSONObject referringParams,
+                                               BranchError error) {
+                        if (error != null) {
+                            Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
+                        } else {
+                            Log.i("BranchTestBed", "branch init complete!");
+                            try {
+                                Iterator<?> keys = referringParams.keys();
+                                while (keys.hasNext()) {
+                                    String key = (String) keys.next();
+                                    String value = referringParams.getString(key);
+                                    Log.i("BranchTestBed", key + ", " + value);
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
-                }
-            }
-        }, this.getIntent().getData(), this);
+                }, MainActivity.this.getIntent().getData(), MainActivity.this);
 
-        Log.i("BranchTestBed", "just after init");
+                Log.i("BranchTestBed", "just after init");
+            }
+        }).start();
+
 
     }
 
