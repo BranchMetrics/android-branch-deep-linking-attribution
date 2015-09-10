@@ -2867,14 +2867,18 @@ public class Branch {
         protected ServerResponse doInBackground(Void... voids) {
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
-            if(thisReq_.isSessionInitRequest()){
-                thisReq_.updateGAdsParams(systemObserver_);
-            }
+//            if(thisReq_.isSessionInitRequest()){
+//                thisReq_.updateGAdsParams(systemObserver_);
+//            }
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+
             } else {
                 return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+
             }
+
+
         }
 
         @Override

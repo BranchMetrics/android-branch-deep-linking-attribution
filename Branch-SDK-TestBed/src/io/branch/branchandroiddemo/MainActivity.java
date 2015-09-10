@@ -20,6 +20,7 @@ import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.SharingHelper;
 
 public class MainActivity extends Activity {
@@ -56,6 +57,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        PrefHelper.getInstance(this).initSynchronously(true);
 
         txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
         cmdRefreshShortUrl = (Button) findViewById(R.id.cmdRefreshShortURL);
@@ -333,6 +335,8 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
+
+        Log.i("BranchTestBed", "just after init");
 
     }
 
