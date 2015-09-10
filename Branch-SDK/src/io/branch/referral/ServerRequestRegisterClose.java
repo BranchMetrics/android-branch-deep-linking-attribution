@@ -58,7 +58,8 @@ class ServerRequestRegisterClose extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
-        //No Implementation on purpose
+        // Clear the latest session params on close
+        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
     }
 
     @Override

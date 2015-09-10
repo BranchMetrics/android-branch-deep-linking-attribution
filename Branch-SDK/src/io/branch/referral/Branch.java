@@ -2593,6 +2593,8 @@ public class Branch {
         // Make sure a callback is associated with this request. This callback can
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
+            // Update the callback to the latest one in initsession call
+            requestQueue_.setInstallOrOpenCallback(callback);
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
 
