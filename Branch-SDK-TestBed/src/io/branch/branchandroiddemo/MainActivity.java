@@ -52,6 +52,28 @@ public class MainActivity extends Activity {
     Button cmdGetCreditHistory;
     Button cmdReferralCode;
 
+    BranchReferralInitListener mBranchCallback = new Branch.BranchReferralInitListener() {
+
+        @Override
+        public void onInitFinished(JSONObject referringParams, BranchError error) {
+            if (error != null) {
+                Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
+            } else {
+                Log.i("BranchTestBed", "branch init complete!");
+                try {
+                    Iterator<?> keys = referringParams.keys();
+                    while (keys.hasNext()) {
+                        String key = (String) keys.next();
+                        String value = referringParams.getString(key);
+                        Log.i("BranchTestBed", key + ", " + value);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -298,13 +320,20 @@ public class MainActivity extends Activity {
                         .shareLink();
             }
         });
+
+        Branch.setListener(mBranchCallback);
+        if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
+            branch = Branch.getInstance(this);
+        } else {
+            branch = Branch.getInstance();
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
+        /*if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
             branch = Branch.getInstance(this);
         } else {
             branch = Branch.getInstance();
@@ -332,8 +361,7 @@ public class MainActivity extends Activity {
                     }
                 }
             }
-        }, this.getIntent().getData(), this);
-
+        }, this.getIntent().getData(), this);*/
     }
 
     @Override
