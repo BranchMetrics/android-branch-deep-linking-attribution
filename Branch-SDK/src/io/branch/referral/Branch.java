@@ -846,8 +846,16 @@ public class Branch {
         currentActivity_ = activity;
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
-            if (callback != null)
-                callback.onInitFinished(new JSONObject(), null);
+            if (callback != null) {
+                if(isAutoSessionMode_) {
+                    // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
+                    // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
+                    callback.onInitFinished(getLatestReferringParams(), null);
+                }else{
+                    // Since user will do init session per activity in non auto session mode , we don't want to repeat the referring params with each initSession()call.
+                    callback.onInitFinished(new JSONObject(), null);
+                }
+            }
             clearCloseTimer();
             keepAlive();
         }
