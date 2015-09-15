@@ -14,6 +14,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -336,7 +338,8 @@ public class MainActivity extends Activity {
 //        }, MainActivity.this.getIntent().getData(), MainActivity.this);
 
 
-        //Synchrounous Init need  to be on  a seperate thread
+        //Synchronous Init need  to be on  a separate thread
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -359,8 +362,16 @@ public class MainActivity extends Activity {
                                 e.printStackTrace();
                             }
                         }
+
+                        countDownLatch.countDown();
                     }
                 }, MainActivity.this.getIntent().getData(), MainActivity.this);
+
+                try {
+                    countDownLatch.await(5000, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 Log.i("BranchTestBed", "just after init");
             }
