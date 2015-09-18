@@ -74,11 +74,16 @@ class ServerRequestRegisterOpen extends ServerRequest {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
 
+            // If call "initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity)"
+            // User want to override install param update with isReferrable value. In this case we need to update the install
+            // param with latest link params in open or install call.
             if (prefHelper_.getIsReferrable() == 1) {
                 if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                     String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
                     prefHelper_.setInstallParams(params);
                 }
+                // Clear isReferrable inorder to prevent update of install params on successive open calls.
+                prefHelper_.clearIsReferrable();
             }
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {

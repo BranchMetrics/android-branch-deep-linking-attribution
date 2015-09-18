@@ -105,6 +105,8 @@ class ServerRequestRegisterInstall extends ServerRequest {
                 } else {
                     prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
                 }
+                // Clear isReferrable inorder to prevent update of install params on successive open calls
+                prefHelper_.clearIsReferrable();
             }
 
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {

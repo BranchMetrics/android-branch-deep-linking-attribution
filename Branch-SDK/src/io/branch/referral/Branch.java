@@ -648,8 +648,7 @@ public class Branch {
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-        prefHelper_.setIsReferrable();
-        initUserSessionInternal(callback, activity);
+        initUserSessionInternal(callback, activity, !hasUser());
         return false;
     }
 
@@ -833,25 +832,21 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-        if (isReferrable) {
-            this.prefHelper_.setIsReferrable();
-        } else {
-            this.prefHelper_.clearIsReferrable();
-        }
-        initUserSessionInternal(callback, activity);
+
+        initUserSessionInternal(callback, activity, isReferrable);
         return false;
     }
 
-    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
+    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
         currentActivity_ = activity;
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null) {
-                if(isAutoSessionMode_) {
+                if (isAutoSessionMode_) {
                     // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
                     // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
                     callback.onInitFinished(getLatestReferringParams(), null);
-                }else{
+                } else {
                     // Since user will do init session per activity in non auto session mode , we don't want to repeat the referring params with each initSession()call.
                     callback.onInitFinished(new JSONObject(), null);
                 }
@@ -861,6 +856,14 @@ public class Branch {
         }
         //If uninitialised or initialising
         else {
+            // In case of Auto session init will be called from banch before user. So initialising
+            // State also need to look for isReferrable value
+            if (isReferrable) {
+                this.prefHelper_.setIsReferrable();
+            } else {
+                this.prefHelper_.clearIsReferrable();
+            }
+
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
                 requestQueue_.setInstallOrOpenCallback(callback);
