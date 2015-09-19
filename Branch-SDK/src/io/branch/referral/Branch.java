@@ -701,7 +701,7 @@ public class Branch {
      */
     public boolean initSession(BranchReferralInitListener callback, Activity activity) {
         if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-            initUserSessionInternal(callback, activity, !hasUser());
+            initUserSessionInternal(callback, activity, true);
         } else {
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
             initUserSessionInternal(callback, activity, isReferrable);
