@@ -507,8 +507,8 @@ public class Branch {
     public static Branch getAutoInstance(Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-        boolean isDebug = BranchUtil.isTestModeEnabled(context);
-        getBranchInstance(context, !isDebug);
+        boolean isLive = !BranchUtil.isTestModeEnabled(context);
+        getBranchInstance(context, isLive);
         branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
