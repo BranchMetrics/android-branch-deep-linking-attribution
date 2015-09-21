@@ -325,8 +325,14 @@ public class Branch {
     /* Instance  of share link manager to share links automatically with third party applications. */
     private ShareLinkManager shareLinkManager_;
 
-    /*The current activity instance for the application.*/
+    /* The current activity instance for the application.*/
     private Activity currentActivity_;
+
+    /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
+    private enum CUSTOM_REFERRABLE_SETTINGS { USE_DEFAULT, REFERRABLE, NON_REFERRABLE }
+
+    /* By default assume user want to use the default settings. Update this option when user specify custom referrable settings */
+    private static CUSTOM_REFERRABLE_SETTINGS customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
 
     /* Key to indicate whether the Activity was launched by Branch or not. */
     private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
@@ -500,6 +506,31 @@ public class Branch {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(Context context) {
         isAutoSessionMode_ = true;
+        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
+        boolean isLive = !BranchUtil.isTestModeEnabled(context);
+        getBranchInstance(context, isLive);
+        branchReferral_.setActivityLifeCycleObserver((Application) context);
+        return branchReferral_;
+    }
+
+    /**
+     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+     * object of the type {@link Branch}.</p>
+     * <p/>
+     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+     *
+     * @param context      A {@link Context} from which this call was made.
+     * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
+     *                     should be considered as potentially referrable or not. By default, a user is only referrable
+     *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
+     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
+     * instance within the singleton class, or a newly instantiated object where
+     * one was not already requested during the current app lifecycle.
+     */
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    public static Branch getAutoInstance(Context context, boolean isReferrable) {
+        isAutoSessionMode_ = true;
+        customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, !isDebug);
         branchReferral_.setActivityLifeCycleObserver((Application) context);
@@ -517,8 +548,29 @@ public class Branch {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(Context context) {
         isAutoSessionMode_ = true;
+        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application)context);
+        branchReferral_.setActivityLifeCycleObserver((Application) context);
+        return branchReferral_;
+    }
+
+    /**
+     * <p>If you configured the your Strings file according to the guide, you'll be able to use
+     * the test version of your app by just calling this static method before calling initSession.</p>
+     *
+     * @param context      A {@link Context} from which this call was made.
+     * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
+     *                     should be considered as potentially referrable or not. By default, a user is only referrable
+     *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
+     * @return An initialised {@link Branch} object.
+     */
+
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    public static Branch getAutoTestInstance(Context context, boolean isReferrable) {
+        isAutoSessionMode_ = true;
+        customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
+        getBranchInstance(context, false);
+        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -648,8 +700,12 @@ public class Branch {
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-        prefHelper_.setIsReferrable();
-        initUserSessionInternal(callback, activity);
+        if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
+            initUserSessionInternal(callback, activity, true);
+        } else {
+            boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
+            initUserSessionInternal(callback, activity, isReferrable);
+        }
         return false;
     }
 
@@ -833,25 +889,21 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-        if (isReferrable) {
-            this.prefHelper_.setIsReferrable();
-        } else {
-            this.prefHelper_.clearIsReferrable();
-        }
-        initUserSessionInternal(callback, activity);
+
+        initUserSessionInternal(callback, activity, isReferrable);
         return false;
     }
 
-    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
+    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
         currentActivity_ = activity;
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null) {
-                if(isAutoSessionMode_) {
+                if (isAutoSessionMode_) {
                     // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
                     // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
                     callback.onInitFinished(getLatestReferringParams(), null);
-                }else{
+                } else {
                     // Since user will do init session per activity in non auto session mode , we don't want to repeat the referring params with each initSession()call.
                     callback.onInitFinished(new JSONObject(), null);
                 }
@@ -861,6 +913,14 @@ public class Branch {
         }
         //If uninitialised or initialising
         else {
+            // In case of Auto session init will be called from banch before user. So initialising
+            // State also need to look for isReferrable value
+            if (isReferrable) {
+                this.prefHelper_.setIsReferrable();
+            } else {
+                this.prefHelper_.clearIsReferrable();
+            }
+
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
                 requestQueue_.setInstallOrOpenCallback(callback);
