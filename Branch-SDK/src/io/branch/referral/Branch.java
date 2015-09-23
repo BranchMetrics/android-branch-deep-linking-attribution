@@ -642,7 +642,7 @@ public class Branch {
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
-     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead. 
+     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
      */
     @Deprecated
     public void setDebug() {
@@ -2054,9 +2054,7 @@ public class Branch {
                 }
             }
         }
-
         return null;
-
     }
 
     /**
@@ -2942,8 +2940,8 @@ public class Branch {
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
-            //So updating them for install and open on background thread.
-            if(thisReq_.isSessionInitRequest()){
+            //So updating them for request that need GA prams in background thread.
+            if (thisReq_.isUpdateGAParams()) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
             if (thisReq_.isGetRequest()) {
@@ -3115,7 +3113,7 @@ public class Branch {
                         intent.putExtra(key, latestParams.getString(key));
                     }
                     currentActivity_.startActivityForResult(intent, deepLinkActivityReqCode);
-                } 
+                }
             }
         } catch (final PackageManager.NameNotFoundException e) {
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
@@ -3644,7 +3642,7 @@ public class Branch {
 
     //------------------------ Content Indexing methods----------------------//
     public void reportContentView(RegisterViewBuilder builder) {
-        ServerRequest req = new ServerRequestRegisterView(currentActivity_, builder, activityStack_);
+        ServerRequest req = new ServerRequestRegisterView(currentActivity_, builder, activityStack_, systemObserver_);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }

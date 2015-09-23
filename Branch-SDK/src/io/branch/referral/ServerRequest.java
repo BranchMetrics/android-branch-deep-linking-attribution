@@ -110,6 +110,14 @@ abstract class ServerRequest {
     }
 
     /**
+     * Returns true if this request need to update GA params. Request which need to have GA params
+     * with it should override and return true
+     * @return  A {@link Boolean} whose value is true if this request need to be updated with GA params.
+     */
+    public boolean isUpdateGAParams() { return false;}
+
+
+    /**
      * <p>Provides the path to server for this request.
      * see {@link Defines.RequestPath} <p>
      *

@@ -177,6 +177,11 @@ class ServerRequestRegisterInstall extends ServerRequest {
 
     @Override
     public boolean isSessionInitRequest() {
-        return true; //Since open request causes a new session
+        return true; //Since install request causes a new session
+    }
+
+    @Override
+    public boolean isUpdateGAParams() {
+        return true; // Since install request need to update GA params
     }
 }

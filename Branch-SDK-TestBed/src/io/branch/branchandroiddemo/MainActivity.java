@@ -21,6 +21,7 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.indexing.RegisterViewBuilder;
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -335,6 +336,15 @@ public class MainActivity extends Activity {
             }
         }, this.getIntent().getData(), this);
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        new RegisterViewBuilder("my_test_content_id", "my_test_title", "my_test_desc", "http://my_content_url")
+                .addExtra("my_extra_key_1", "value1")
+                .addExtra("my_extra_key_2", "value2")
+                .register();
     }
 
     @Override

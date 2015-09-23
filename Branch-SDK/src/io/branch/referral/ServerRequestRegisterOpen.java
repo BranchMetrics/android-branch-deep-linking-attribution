@@ -150,4 +150,9 @@ class ServerRequestRegisterOpen extends ServerRequest {
     public boolean isSessionInitRequest() {
         return true; //Since open request causes a new session
     }
+
+    @Override
+    public boolean isUpdateGAParams() {
+        return true; // Since open request need to update GA params
+    }
 }

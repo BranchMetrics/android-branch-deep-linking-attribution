@@ -29,13 +29,13 @@ class ServerRequestRegisterView extends ServerRequest {
      * @param currentActivity current Activity
      * @param builder         An instance of {@link RegisterViewBuilder} to create the register view request
      */
-    public ServerRequestRegisterView(Activity currentActivity, RegisterViewBuilder builder, ArrayList<String> activityStack) {
+    public ServerRequestRegisterView(Activity currentActivity, RegisterViewBuilder builder, ArrayList<String> activityStack, SystemObserver sysObserver) {
         super(currentActivity.getApplicationContext(), Defines.RequestPath.RegisterView.getPath());
 
         callback_ = builder.getCallback();
         JSONObject registerViewPost;
         try {
-            registerViewPost = createContentViewJson(currentActivity, builder, activityStack);
+            registerViewPost = createContentViewJson(currentActivity, builder, activityStack, sysObserver);
             setPost(registerViewPost);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -72,6 +72,11 @@ class ServerRequestRegisterView extends ServerRequest {
     }
 
     @Override
+    public boolean isUpdateGAParams() {
+        return true; // Since register view needs GA params
+    }
+
+    @Override
     public void clearCallbacks() {
         callback_ = null;
     }
@@ -87,7 +92,7 @@ class ServerRequestRegisterView extends ServerRequest {
      * @throws JSONException {@link JSONException} on any Json errors
      */
     private JSONObject createContentViewJson(Activity activity, RegisterViewBuilder builder
-            , ArrayList<String> ActivityStack) throws JSONException {
+            , ArrayList<String> ActivityStack, SystemObserver sysObserver) throws JSONException {
 
         JSONObject contentObject = new JSONObject();
 
@@ -107,6 +112,12 @@ class ServerRequestRegisterView extends ServerRequest {
         contentObject.put(Defines.Jsonkey.ContentScreen.getKey(), urlString);
         contentObject.put(Defines.Jsonkey.EventTime.getKey(), date);
         contentObject.put(Defines.Jsonkey.ContentPath.getKey(), path);
+
+        String uniqId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
+        if (!uniqId.equals(SystemObserver.BLANK)) {
+            contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqId);
+        }
+
         String appVersion;
         try {
             appVersion = applicationContext.getPackageManager().getPackageInfo(applicationContext.getPackageName(), PackageManager.MATCH_DEFAULT_ONLY).versionName;
