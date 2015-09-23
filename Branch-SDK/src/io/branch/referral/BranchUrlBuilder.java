@@ -37,6 +37,8 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     protected Branch branchReferral_;
     /* Application context. */
     private final Context context_;
+    /* Content Id associated with this link */
+    protected String contentId_;
 
     /**
      * <p>
@@ -49,6 +51,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     protected BranchUrlBuilder(Context context) {
         branchReferral_ = Branch.getInstance();
         context_ = context.getApplicationContext();
+        contentId_ = null;
     }
 
     /**
@@ -93,7 +96,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    BranchUtil.formatAndStringifyLinkParam(params_), null, false);
+                    BranchUtil.formatAndStringifyLinkParam(params_), null, contentId_, false);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
@@ -103,7 +106,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
+                    BranchUtil.formatAndStringifyLinkParam(params_), callback,contentId_, true);
             branchReferral_.generateShortLinkInternal(req);
         } else {
             if (callback != null) {

@@ -121,7 +121,8 @@ public class MainActivity extends Activity {
                         .addParameters("message", "hello there with short url")
                         .addParameters("$og_title", "this is a title")
                         .addParameters("$og_description", "this is a description")
-                        .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
+                        .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png")
+                        .setContentId("my_test_content_id");
 
                 // Get URL Asynchronously
 //                shortUrlBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
