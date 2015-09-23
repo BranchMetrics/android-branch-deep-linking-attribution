@@ -7,12 +7,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for Action completed event. Handles request creation and execution.

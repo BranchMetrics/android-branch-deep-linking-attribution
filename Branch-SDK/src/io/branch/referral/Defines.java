@@ -64,7 +64,17 @@ class Defines {
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),
         AndroidDeepLinkPath("$android_deeplink_path"),
-        DeepLinkPath("$deeplink_path");
+        DeepLinkPath("$deeplink_path"),
+
+        ContentScreen("content_screen"),
+        ContentPath("content_path"),
+        ContentID("content_id"),
+        ContentTitle("content_title"),
+        ContentDesc("content_desc"),
+        ContentImgUrl("content_imgurl"),
+        EventTime("event_time"),
+        Params("params"),
+        Extra("extra");
         
         private String key = "";
 
@@ -93,6 +103,7 @@ class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
+        RegisterView("v1/contentview"),
         Referrals("v1/referrals/"),
         SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),

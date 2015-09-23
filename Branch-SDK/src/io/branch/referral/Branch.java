@@ -52,6 +52,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.referral.indexing.RegisterViewBuilder;
+
 /**
  * <p>
  * The core object required when using Branch SDK. You should declare an object of this type at
@@ -273,6 +275,9 @@ public class Branch {
      * looping task before triggering an actual connection close during a session close action.</p>
      */
     private static final int PREVENT_CLOSE_TIMEOUT = 500;
+
+    /* Variable to keep the activity stack */
+    ArrayList<String> activityStack_ = new ArrayList<String>();
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -2765,6 +2770,14 @@ public class Branch {
                 initSessionWithData(intentData, activity); // indicate  starting of session.
             }
             activityCnt_++;
+
+            // Activity stack for finding the structured path to this activity
+            if (activityStack_.size() > 1 && (activityStack_.get(activityStack_.size() - 2)).equals(activity.getClass().getSimpleName())) {
+                activityStack_.remove(activityStack_.get(activityStack_.size() - 2));
+                activityStack_.remove(activityStack_.get(activityStack_.size() - 1));
+            } else {
+                activityStack_.add(activity.getClass().getSimpleName());
+            }
         }
 
         @Override
@@ -3629,4 +3642,11 @@ public class Branch {
         }
     }
 
+    //------------------------ Content Indexing methods----------------------//
+    public void reportContentView(RegisterViewBuilder builder) {
+        ServerRequest req = new ServerRequestRegisterView(currentActivity_, builder, activityStack_);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
+    }
 }
