@@ -1,5 +1,7 @@
 package io.branch.referral.indexing;
 
+import android.app.Activity;
+
 import java.util.HashMap;
 
 import io.branch.referral.Branch;
@@ -18,6 +20,11 @@ public class RegisterViewBuilder {
     private final String contentImgUrl_;
     private final HashMap<String, String> additionalParams_;
     private RegisterViewStatusListener callback_;
+
+    /* In case of Manual session management application need to pass the current activity */
+    private Activity containerActivity_ =  null;
+    /* In case of Manual session management application need to pass the path to the content if desired to have the path */
+    private String contentPath_ = null;
 
     /**
      * Created a builder for Registering view of contents with the given params
@@ -57,6 +64,34 @@ public class RegisterViewBuilder {
     @SuppressWarnings("unused")
     public RegisterViewBuilder setReportContentListener(RegisterViewStatusListener reportContentListener) {
         callback_ = reportContentListener;
+        return this;
+    }
+
+    /**
+     * Set the container activity for the registering view
+     * Note : No need to set this for Automatic session management. Set this only if your app is
+     * managing Branch session.
+     *
+     * @param activity {@link Activity} instance  containing the view
+     * @return This Builder object to allow for chaining of calls to set methods
+     */
+    @SuppressWarnings("unused")
+    public RegisterViewBuilder setContainerActivity(Activity activity) {
+        containerActivity_ = activity;
+        return this;
+    }
+
+    /**
+     * Set any path to the registering view
+     * Note : No need to set this for Automatic session management. Set this only if your app is
+     * managing Branch session.
+     *
+     * @param contentPath A {@link String} with value of path to the content
+     * @return This Builder object to allow for chaining of calls to set methods
+     */
+    @SuppressWarnings("unused")
+    public RegisterViewBuilder setContentPath(String contentPath) {
+        contentPath_ = contentPath;
         return this;
     }
 
@@ -117,8 +152,15 @@ public class RegisterViewBuilder {
         return contentTitle_;
     }
 
-
     public String getContentDesc() {
         return contentDesc_;
+    }
+
+    public Activity getContainerActivity() {
+        return containerActivity_;
+    }
+
+    public String getContentPath() {
+        return contentPath_;
     }
 }

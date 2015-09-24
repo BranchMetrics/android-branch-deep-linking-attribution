@@ -103,7 +103,7 @@ class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
-        RegisterView("v1/contentview"),
+        RegisterView("v0.1/register_view/"),
         Referrals("v1/referrals/"),
         SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),

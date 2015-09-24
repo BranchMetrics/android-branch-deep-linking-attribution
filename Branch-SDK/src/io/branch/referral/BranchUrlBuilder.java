@@ -89,6 +89,18 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         return (T) this;
     }
 
+    /**
+     * Sets the content identifier associated with link content     *
+     *
+     * @param contentId Content identifier associated with this link
+     * @return This Builder object to allow for chaining of calls to set methods.
+     */
+    public T setContentId(String contentId) {
+        this.contentId_ = contentId;
+        return (T) this;
+    }
+
+
     ///------------------------- Link Build methods---------------------------///
 
     protected String getUrl() {

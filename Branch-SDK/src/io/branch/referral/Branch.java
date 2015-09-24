@@ -3642,7 +3642,24 @@ public class Branch {
 
     //------------------------ Content Indexing methods----------------------//
     public void reportContentView(RegisterViewBuilder builder) {
-        ServerRequest req = new ServerRequestRegisterView(currentActivity_, builder, activityStack_, systemObserver_);
+        ServerRequest req;
+        if (builder.getContainerActivity() == null) {
+            builder.setContainerActivity(currentActivity_);
+        }
+        if (builder.getContentPath() == null) {
+            String path = "";
+            if (activityStack_ != null) {
+                if (activityStack_.size() == 0) {
+                    path = builder.getContainerActivity().getClass().getSimpleName() + "\\";
+                } else {
+                    for (String pathContent : activityStack_) {
+                        path += pathContent + "\\";
+                    }
+                }
+            }
+            builder.setContentPath(path);
+        }
+        req = new ServerRequestRegisterView(builder, systemObserver_);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }

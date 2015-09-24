@@ -8,7 +8,6 @@ import android.os.Build;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -26,16 +25,14 @@ class ServerRequestRegisterView extends ServerRequest {
     /**
      * <p>Create an instance of {@link ServerRequestRegisterView} to notify Branch on a content view event.</p>
      *
-     * @param currentActivity current Activity
-     * @param builder         An instance of {@link RegisterViewBuilder} to create the register view request
+     * @param builder An instance of {@link RegisterViewBuilder} to create the register view request
      */
-    public ServerRequestRegisterView(Activity currentActivity, RegisterViewBuilder builder, ArrayList<String> activityStack, SystemObserver sysObserver) {
-        super(currentActivity.getApplicationContext(), Defines.RequestPath.RegisterView.getPath());
-
+    public ServerRequestRegisterView(RegisterViewBuilder builder, SystemObserver sysObserver) {
+        super(builder.getContainerActivity().getApplicationContext(), Defines.RequestPath.RegisterView.getPath());
         callback_ = builder.getCallback();
         JSONObject registerViewPost;
         try {
-            registerViewPost = createContentViewJson(currentActivity, builder, activityStack, sysObserver);
+            registerViewPost = createContentViewJson(builder, sysObserver);
             setPost(registerViewPost);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -81,72 +78,74 @@ class ServerRequestRegisterView extends ServerRequest {
         callback_ = null;
     }
 
+    @Override
+    public String getRequestUrl() {
+        return "http://54.153.121.111:5000/v0.1/register_view/";
+    }
 
     /**
      * Creates a Json with given parameters for register view.
      *
-     * @param activity      Current Activity
-     * @param builder       An instance of {@link RegisterViewBuilder} to create the Json
-     * @param ActivityStack Activity stack for creating the path of the activity
+     * @param builder An instance of {@link RegisterViewBuilder} to create the Json
      * @return A {@link JSONObject} for post data for register view request
      * @throws JSONException {@link JSONException} on any Json errors
      */
-    private JSONObject createContentViewJson(Activity activity, RegisterViewBuilder builder
-            , ArrayList<String> ActivityStack, SystemObserver sysObserver) throws JSONException {
+    private JSONObject createContentViewJson(RegisterViewBuilder builder,
+                                             SystemObserver sysObserver) throws JSONException {
 
         JSONObject contentObject = new JSONObject();
+        JSONObject extrasObj = new JSONObject();
 
         String os_Info = "Android " + Build.VERSION.SDK_INT;
         String sessionID = prefHelper_.getSessionID();
-        Context applicationContext = activity.getApplicationContext();
+        if (builder.getContainerActivity() != null) {
+            Activity activity = builder.getContainerActivity();
+            Context applicationContext = activity.getApplicationContext();
+            String urlString = applicationContext.getPackageName() + ":" + activity.getClass().getSimpleName();
+            contentObject.put(Defines.Jsonkey.ContentScreen.getKey(), urlString);
+            String appVersion;
+            try {
+                appVersion = applicationContext.getPackageManager().getPackageInfo(applicationContext.getPackageName(), PackageManager.MATCH_DEFAULT_ONLY).versionName;
+                contentObject.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
 
-        String urlString = activity.getApplicationContext().getPackageName() + ":" + activity.getClass().getSimpleName();
-        String date = String.valueOf(System.currentTimeMillis());
-        String path = "";
-        for (String pathContent : ActivityStack) {
-            path += pathContent + "\\";
+            if (activity.getIntent() != null &&
+                    activity.getIntent().getExtras() != null) {
+                Set<String> extraKeys = activity.getIntent().getExtras().keySet();
+                for (String extraKey : extraKeys) {
+                    Object value = activity.getIntent().getExtras().get(extraKey);
+                    if (value instanceof String
+                            || value instanceof Integer
+                            || value instanceof Boolean) {
+                        extrasObj.put(extraKey, value.toString());
+                    }
+                }
+            }
         }
 
+        String date = String.valueOf(System.currentTimeMillis());
         contentObject.put(Defines.Jsonkey.OS.getKey(), os_Info);
         contentObject.put(Defines.Jsonkey.SessionID.getKey(), sessionID);
-        contentObject.put(Defines.Jsonkey.ContentScreen.getKey(), urlString);
+
         contentObject.put(Defines.Jsonkey.EventTime.getKey(), date);
-        contentObject.put(Defines.Jsonkey.ContentPath.getKey(), path);
+        contentObject.put(Defines.Jsonkey.ContentPath.getKey(), builder.getContentPath());
 
         String uniqId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
         if (!uniqId.equals(SystemObserver.BLANK)) {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqId);
         }
 
-        String appVersion;
-        try {
-            appVersion = applicationContext.getPackageManager().getPackageInfo(applicationContext.getPackageName(), PackageManager.MATCH_DEFAULT_ONLY).versionName;
-            contentObject.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
 
-        JSONObject extrasObj = new JSONObject();
-        if (activity.getIntent().getExtras() != null) {
-            Set<String> extraKeys = activity.getIntent().getExtras().keySet();
-            for (String extraKey : extraKeys) {
-                Object value = activity.getIntent().getExtras().get(extraKey);
-                if (value instanceof String
-                        || value instanceof Integer
-                        || value instanceof Boolean) {
-                    extrasObj.put(extraKey, value.toString());
-                }
-            }
-        }
-        if (builder != null) {
-            extrasObj.put(Defines.Jsonkey.ContentID.getKey(), builder.getContentId());
-            extrasObj.put(Defines.Jsonkey.ContentTitle.getKey(), builder.getContentTitle());
-            extrasObj.put(Defines.Jsonkey.ContentDesc.getKey(), builder.getContentDesc());
-            extrasObj.put(Defines.Jsonkey.ContentImgUrl.getKey(), builder.getContentImgUrl());
-        }
+        extrasObj.put(Defines.Jsonkey.ContentID.getKey(), builder.getContentId());
+        extrasObj.put(Defines.Jsonkey.ContentTitle.getKey(), builder.getContentTitle());
+        extrasObj.put(Defines.Jsonkey.ContentDesc.getKey(), builder.getContentDesc());
+        extrasObj.put(Defines.Jsonkey.ContentImgUrl.getKey(), builder.getContentImgUrl());
+
         contentObject.put(Defines.Jsonkey.Params.getKey(), extrasObj);
 
-        if (builder != null && builder.getAdditionalParams() != null) {
+        if (builder.getAdditionalParams() != null) {
             HashMap extras = builder.getAdditionalParams();
             Set extraKeys = extras.keySet();
             JSONObject reportExtraObj = new JSONObject();

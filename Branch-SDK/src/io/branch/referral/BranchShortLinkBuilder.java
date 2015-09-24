@@ -105,17 +105,6 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
         return this;
     }
 
-    /**
-     * Sets the content identifier associated with link content     *
-     *
-     * @param contentId Content identifier associated with this link
-     * @return This Builder object to allow for chaining of calls to set methods.
-     */
-    public BranchShortLinkBuilder setContentId(String contentId) {
-        this.contentId_ = contentId;
-        return this;
-    }
-
 
     //---------------Generate URL methods -----------------------//
 
