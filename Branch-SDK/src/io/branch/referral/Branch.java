@@ -3016,16 +3016,18 @@ public class Branch {
                 ActivityInfo[] activityInfos = info.activities;
                 int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
 
-                for (ActivityInfo activityInfo : activityInfos) {
-                    if (activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
-                        if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                            deepLinkActivity = ((ActivityInfo) activityInfo).name;
-                            deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
+                if (activityInfos != null) {
+                    for (ActivityInfo activityInfo : activityInfos) {
+                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
+                            if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
+                                deepLinkActivity = ((ActivityInfo) activityInfo).name;
+                                deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
+                                break;
+                            }
+                        }
+                        if (deepLinkActivity != null) {
                             break;
                         }
-                    }
-                    if (deepLinkActivity != null) {
-                        break;
                     }
                 }
                 if (deepLinkActivity != null && currentActivity_ != null) {
