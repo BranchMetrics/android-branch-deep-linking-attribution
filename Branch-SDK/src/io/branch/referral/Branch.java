@@ -3015,16 +3015,20 @@ public class Branch {
                             } catch (Exception ignore) {
                             }
                         }
-                        //Publish success to listeners
-                        thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
+                        requestQueue_.dequeue();
+                        
                         //If this request changes a session update the session-id to queued requests.
                         if (thisReq_.isSessionInitRequest()) {
                             updateAllRequestsInQueue();
                             initState_ = SESSION_STATE.INITIALISED;
+                            //Publish success to listeners
+                            thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                             checkForAutoDeepLinkConfiguration();
+                        }else {
+                            //Publish success to listeners
+                            thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                         }
-                        requestQueue_.dequeue();
                     }
                     networkCount_ = 0;
                     if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
