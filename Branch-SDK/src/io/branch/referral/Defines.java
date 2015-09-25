@@ -71,7 +71,7 @@ class Defines {
         ContentID("content_id"),
         ContentTitle("content_title"),
         ContentDesc("content_desc"),
-        ContentImgUrl("content_imgurl"),
+        ContentImgUrl("content_img_url"),
         EventTime("event_time"),
         Params("params"),
         Extra("extra");
