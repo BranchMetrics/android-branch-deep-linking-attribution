@@ -3017,7 +3017,7 @@ public class Branch {
                         }
 
                         requestQueue_.dequeue();
-                        
+
                         //If this request changes a session update the session-id to queued requests.
                         if (thisReq_.isSessionInitRequest()) {
                             updateAllRequestsInQueue();
@@ -3025,7 +3025,7 @@ public class Branch {
                             //Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                             checkForAutoDeepLinkConfiguration();
-                        }else {
+                        } else {
                             //Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                         }
