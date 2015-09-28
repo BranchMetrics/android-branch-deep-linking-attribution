@@ -2537,21 +2537,25 @@ public class Branch {
                 ServerRequest req = requestQueue_.peek();
 
                 serverSema_.release();
-                //All request except Install request need a valid IdentityID
-                if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                    Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
-                    networkCount_ = 0;
-                    handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                    return;
-                }
-                //All request except open and install need a session to execute
-                else if (!req.isSessionInitRequest() && (!hasSession() || !hasDeviceFingerPrint())) {
-                    networkCount_ = 0;
-                    handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                    return;
+                if (req != null) {
+                    //All request except Install request need a valid IdentityID
+                    if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
+                        Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
+                        networkCount_ = 0;
+                        handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                        return;
+                    }
+                    //All request except open and install need a session to execute
+                    else if (!req.isSessionInitRequest() && (!hasSession() || !hasDeviceFingerPrint())) {
+                        networkCount_ = 0;
+                        handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                        return;
+                    } else {
+                        BranchPostTask postTask = new BranchPostTask(req);
+                        postTask.execute();
+                    }
                 } else {
-                    BranchPostTask postTask = new BranchPostTask(req);
-                    postTask.execute();
+                    requestQueue_.remove(req); //Inc ase there is any request nullified remove it.
                 }
             } else {
                 serverSema_.release();
@@ -2975,7 +2979,7 @@ public class Branch {
                             }
                             //Remove the requests from the request queue first
                             for (ServerRequest req : requestToFail) {
-                                if (!req.shouldRetryOnFail()) {
+                                if (req == null || !req.shouldRetryOnFail()) { // Should remove any nullified request object also from queque
                                     requestQueue_.remove(req);
                                 }
                             }
@@ -2984,10 +2988,12 @@ public class Branch {
 
                             //Finally call the request callback with the error.
                             for (ServerRequest req : requestToFail) {
-                                req.handleFailure(status);
-                                //If request need to be replayed, no need for the callbacks
-                                if (req.shouldRetryOnFail())
-                                    req.clearCallbacks();
+                                if (req != null) {
+                                    req.handleFailure(status);
+                                    //If request need to be replayed, no need for the callbacks
+                                    if (req.shouldRetryOnFail())
+                                        req.clearCallbacks();
+                                }
                             }
                         }
                     }
@@ -3076,16 +3082,18 @@ public class Branch {
                 ActivityInfo[] activityInfos = info.activities;
                 int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
 
-                for (ActivityInfo activityInfo : activityInfos) {
-                    if (activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
-                        if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                            deepLinkActivity = ((ActivityInfo) activityInfo).name;
-                            deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
+                if (activityInfos != null) {
+                    for (ActivityInfo activityInfo : activityInfos) {
+                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
+                            if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
+                                deepLinkActivity = ((ActivityInfo) activityInfo).name;
+                                deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
+                                break;
+                            }
+                        }
+                        if (deepLinkActivity != null) {
                             break;
                         }
-                    }
-                    if (deepLinkActivity != null) {
-                        break;
                     }
                 }
                 if (deepLinkActivity != null && currentActivity_ != null) {
