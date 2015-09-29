@@ -14,11 +14,11 @@ import io.branch.referral.BranchError;
  * </p>
  */
 public class RegisterViewBuilder {
-    private final String contentId_;
     private final String contentTitle_;
     private final String contentDesc_;
     private final String contentImgUrl_;
     private final HashMap<String, String> additionalParams_;
+    private String contentId_;
     private RegisterViewStatusListener callback_;
 
     /* In case of Manual session management application need to pass the current activity */
@@ -29,17 +29,27 @@ public class RegisterViewBuilder {
     /**
      * Created a builder for Registering view of contents with the given params
      *
-     * @param contentId     A {@link String} with value of ID for the content
+
      * @param title         A {@link String} with value of title for the content
      * @param description   A {@link String} with value of description for the content
      * @param contentImgUrl A url associated with the content
      */
-    public RegisterViewBuilder(String contentId, String title, String description, String contentImgUrl) {
-        contentId_ = contentId;
+    public RegisterViewBuilder(String title, String description, String contentImgUrl) {
         contentTitle_ = title;
         contentDesc_ = description;
         contentImgUrl_ = contentImgUrl;
         additionalParams_ = new HashMap<>();
+    }
+
+    /**
+     * Set a identifier to this content.
+     *
+     * @param contentId A {@link String} with value of ID for the content
+     * @return
+     */
+    public RegisterViewBuilder setContentId(String contentId) {
+        contentId_ = contentId;
+        return this;
     }
 
     /**

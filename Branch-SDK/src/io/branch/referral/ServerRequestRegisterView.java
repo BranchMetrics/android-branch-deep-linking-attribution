@@ -137,11 +137,12 @@ class ServerRequestRegisterView extends ServerRequest {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqId);
         }
 
-
-        extrasObj.put(Defines.Jsonkey.ContentID.getKey(), builder.getContentId());
         extrasObj.put(Defines.Jsonkey.ContentTitle.getKey(), builder.getContentTitle());
         extrasObj.put(Defines.Jsonkey.ContentDesc.getKey(), builder.getContentDesc());
         extrasObj.put(Defines.Jsonkey.ContentImgUrl.getKey(), builder.getContentImgUrl());
+        if (builder.getContentId() != null && builder.getContentId().length() > 0) {
+            extrasObj.put(Defines.Jsonkey.ContentID.getKey(), builder.getContentId());
+        }
 
         contentObject.put(Defines.Jsonkey.Params.getKey(), extrasObj);
 
