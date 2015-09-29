@@ -63,8 +63,8 @@ class ServerRequestCreateUrl extends ServerRequest {
 
         linkPost_ = new BranchLinkData();
         try {
-            if (contentId != null) {
-                JSONObject paramsJson  = new JSONObject(params);
+            if (contentId != null && contentId.length() > 0) {
+                JSONObject paramsJson = new JSONObject(params);
                 paramsJson.put(Defines.Jsonkey.ContentID.getKey(), contentId);
                 params = paramsJson.toString();
             }
