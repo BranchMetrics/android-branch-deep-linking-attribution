@@ -68,10 +68,10 @@ class Defines {
 
         ContentScreen("content_screen"),
         ContentPath("content_path"),
-        ContentID("content_id"),
-        ContentTitle("content_title"),
-        ContentDesc("content_desc"),
-        ContentImgUrl("content_img_url"),
+        ContentID("$content_id"),
+        ContentTitle("$content_title"),
+        ContentDesc("$content_desc"),
+        ContentImgUrl("$content_img_url"),
         EventTime("event_time"),
         Params("params"),
         Extra("extra");

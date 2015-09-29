@@ -53,7 +53,7 @@ class ServerRequestCreateUrl extends ServerRequest {
      */
     public ServerRequestCreateUrl(Context context, final String alias, final int type, final int duration,
                                   final Collection<String> tags, final String channel, final String feature,
-                                  final String stage, final String params,
+                                  final String stage, String params,
                                   Branch.BranchLinkCreateListener callback, String contentId, boolean async) {
 
         super(context, Defines.RequestPath.GetURL.getPath());
@@ -64,7 +64,9 @@ class ServerRequestCreateUrl extends ServerRequest {
         linkPost_ = new BranchLinkData();
         try {
             if (contentId != null) {
-                linkPost_.put(Defines.Jsonkey.ContentID.getKey(), contentId);
+                JSONObject paramsJson  = new JSONObject(params);
+                paramsJson.put(Defines.Jsonkey.ContentID.getKey(), contentId);
+                params = paramsJson.toString();
             }
             linkPost_.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
             linkPost_.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
