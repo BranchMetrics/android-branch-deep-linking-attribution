@@ -74,6 +74,9 @@ class ServerRequestRegisterInstall extends ServerRequest {
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
+            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
+                installPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
+            }
 
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
             setPost(installPost);
@@ -97,6 +100,7 @@ class ServerRequestRegisterInstall extends ServerRequest {
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
             prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
 
             if (prefHelper_.getIsReferrable() == 1) {
                 if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {

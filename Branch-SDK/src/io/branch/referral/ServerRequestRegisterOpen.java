@@ -42,6 +42,9 @@ class ServerRequestRegisterOpen extends ServerRequest {
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
+            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
+            }
 
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
 
@@ -65,6 +68,7 @@ class ServerRequestRegisterOpen extends ServerRequest {
             prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
             prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
             if (resp.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
                 prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
             }

@@ -1057,7 +1057,7 @@ public class Branch {
                 String uriString = activity.getIntent().getDataString();
                 if (data.getQuery().length() == paramString.length()) {
                     paramString = "\\?" + paramString;
-                } else if ((uriString.length()-paramString.length()) == uriString.indexOf(paramString)) {
+                } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
                     paramString = "&" + paramString;
                 } else {
                     paramString = paramString + "&";
@@ -1065,6 +1065,12 @@ public class Branch {
                 Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
                 activity.getIntent().setData(newData);
                 return true;
+            } else {
+                // Check if the clicked url is an app link pointing to this app
+                if ((data.getScheme().equalsIgnoreCase("http") || data.getScheme().equalsIgnoreCase("https"))
+                        && data.getHost() != null && data.getHost().length() > 0) {
+                    prefHelper_.setAppLink(data.toString());
+                }
             }
         }
         return false;
