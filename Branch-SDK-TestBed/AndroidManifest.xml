@@ -39,7 +39,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="bnc.lt.com/branchtest"/>
+                <data android:scheme="https" android:host="bnc.lt/xhsd"/> <!-- Live App link-->
+                <data android:scheme="https" android:host="bnc.lt/Ojqd"/> <!-- Test App link-->
             </intent-filter>
         </activity>
 

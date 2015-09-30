@@ -123,6 +123,26 @@ Typically, you would register some sort of splash activitiy that handles routing
     </intent-filter>
 </activity>
 ```
+### Leverage Android AppLink for deep linking
+
+If you are building applications targeting for Android M or above, Branch make it really easy to configure your app for deep linking using AppLinks.
+In your project's manifest file, you can register activities to for AppLinking by adding an intent filter as follows. You only need to know `your_live_app_id`
+and `your_test_app_id` which you can obtain from the Branch dash board once you enable AppLinking support for your application.
+
+```xml
+  <activity android:name="com.yourapp.your_activity">
+            <!-- AppLink your activity to Branch links-->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="bnc.lt/your_live_app_id"/> <!-- your_live_app_id can be obtained from Branch dash board -->
+                <data android:scheme="https" android:host="bnc.lt/your_test_app_id"/> <!-- your_test_app_id can be obtained from Branch dash board -->
+            </intent-filter>
+        </activity>
+        ```
+That's all you need. Deep linked parameters associated with the link is passed through Branch initialization process.
+
 ### Configure your AndroidManifest.xml
 **1. Provide internet permission. Branch SDK need internet access to talk to Branch APIs.**
 
