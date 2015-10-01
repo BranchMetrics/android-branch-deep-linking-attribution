@@ -12,7 +12,7 @@ import org.json.JSONObject;
  * The server request for registering an app install to Branch API. Handles request creation and execution.
  * </p>
  */
-class ServerRequestRegisterInstall extends ServerRequest {
+class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
 
@@ -87,6 +87,11 @@ class ServerRequestRegisterInstall extends ServerRequest {
 
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+    }
+
+    @Override
+    public boolean hasCallBack() {
+        return callback_ != null;
     }
 
     @Override
@@ -173,10 +178,5 @@ class ServerRequestRegisterInstall extends ServerRequest {
     @Override
     public void clearCallbacks() {
         callback_ = null;
-    }
-
-    @Override
-    public boolean isSessionInitRequest() {
-        return true; //Since open request causes a new session
     }
 }

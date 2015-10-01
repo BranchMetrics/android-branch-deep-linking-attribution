@@ -11,7 +11,7 @@ import org.json.JSONObject;
  * The server request for registering an app open event to Branch API. Handles request creation and execution.
  * </p>
  */
-class ServerRequestRegisterOpen extends ServerRequest {
+class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
 
@@ -147,7 +147,7 @@ class ServerRequestRegisterOpen extends ServerRequest {
     }
 
     @Override
-    public boolean isSessionInitRequest() {
-        return true; //Since open request causes a new session
+    public boolean hasCallBack() {
+        return callback_ != null;
     }
 }
