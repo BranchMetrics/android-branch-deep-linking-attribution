@@ -352,6 +352,9 @@ public class Branch {
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
+     /* Sets to true when the init session params are reported to the app though call back.*/
+    private boolean isInitReportedThroughCallBack = false;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -902,7 +905,12 @@ public class Branch {
                 if (isAutoSessionMode_) {
                     // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
                     // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
-                    callback.onInitFinished(getLatestReferringParams(), null);
+                    if (isInitReportedThroughCallBack == false) { //Check if session params are reported already in case user call initsession form a different activity(not a noraml case)
+                        callback.onInitFinished(getLatestReferringParams(), null);
+                        isInitReportedThroughCallBack = true;
+                    } else {
+                        callback.onInitFinished(new JSONObject(), null);
+                    }
                 } else {
                     // Since user will do init session per activity in non auto session mode , we don't want to repeat the referring params with each initSession()call.
                     callback.onInitFinished(new JSONObject(), null);
@@ -2546,7 +2554,7 @@ public class Branch {
                         return;
                     }
                     //All request except open and install need a session to execute
-                    else if (!req.isSessionInitRequest() && (!hasSession() || !hasDeviceFingerPrint())) {
+                    else if (!(req instanceof ServerRequestInitSession) && (!hasSession() || !hasDeviceFingerPrint())) {
                         networkCount_ = 0;
                         handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         return;
@@ -2703,7 +2711,7 @@ public class Branch {
      */
     private void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (initState_ != SESSION_STATE.INITIALISED && req.isSessionInitRequest() == false) {
+        if (initState_ != SESSION_STATE.INITIALISED && (req instanceof ServerRequestInitSession) == false) {
             if((req instanceof ServerRequestLogout)){
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
@@ -2934,7 +2942,7 @@ public class Branch {
         protected ServerResponse doInBackground(Void... voids) {
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
-            if(thisReq_.isSessionInitRequest()){
+            if (thisReq_ instanceof ServerRequestInitSession) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
             if (thisReq_.isGetRequest()) {
@@ -2955,7 +2963,7 @@ public class Branch {
                     //If the request is not succeeded
                     if (status != 200) {
                         //If failed request is an initialisation request then mark session not initialised
-                        if (thisReq_.isSessionInitRequest()) {
+                        if (thisReq_ instanceof ServerRequestInitSession) {
                             initState_ = SESSION_STATE.UNINITIALISED;
                         }
                         // On a bad request notify with call back and remove the request.
@@ -3025,11 +3033,17 @@ public class Branch {
                         requestQueue_.dequeue();
 
                         //If this request changes a session update the session-id to queued requests.
-                        if (thisReq_.isSessionInitRequest()) {
+                        if (thisReq_ instanceof ServerRequestInitSession) {
                             updateAllRequestsInQueue();
                             initState_ = SESSION_STATE.INITIALISED;
                             //Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+
+                            if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
+                                isInitReportedThroughCallBack = true;
+                            } else {
+                                isInitReportedThroughCallBack = false;
+                            }
                             checkForAutoDeepLinkConfiguration();
                         } else {
                             //Publish success to listeners
