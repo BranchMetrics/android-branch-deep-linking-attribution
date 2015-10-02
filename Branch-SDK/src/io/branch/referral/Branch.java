@@ -921,7 +921,7 @@ public class Branch {
         }
         //If uninitialised or initialising
         else {
-            // In case of Auto session init will be called from banch before user. So initialising
+            // In case of Auto session init will be called from Branch before user. So initialising
             // State also need to look for isReferrable value
             if (isReferrable) {
                 this.prefHelper_.setIsReferrable();
@@ -2719,9 +2719,9 @@ public class Branch {
             if((req instanceof ServerRequestRegisterClose)){
                 Log.i(TAG, "Branch is not initialized, cannot close session");
                 return;
-            }
-            else{
-                initializeSession(null);
+            } else {
+                boolean isReferrable = prefHelper_.getIsReferrable() == 1;
+                initUserSessionInternal(null, currentActivity_, isReferrable);
             }
         }
         requestQueue_.enqueue(req);
@@ -3032,11 +3032,16 @@ public class Branch {
 
                         requestQueue_.dequeue();
 
-                        //If this request changes a session update the session-id to queued requests.
+                        // If this request changes a session update the session-id to queued requests.
                         if (thisReq_ instanceof ServerRequestInitSession) {
+                            // Immediately set session and Identity and update the pending request with the params
+                            prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                            if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
+                                prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                            }
                             updateAllRequestsInQueue();
                             initState_ = SESSION_STATE.INITIALISED;
-                            //Publish success to listeners
+                            // Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
                             if (((ServerRequestInitSession) thisReq_).hasCallBack()) {

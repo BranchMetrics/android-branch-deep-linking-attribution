@@ -202,6 +202,9 @@ class ServerRequestQueue {
      */
     public void insert(ServerRequest request, int index) {
         try {
+            if (queue.size() < index) {
+                index = queue.size();
+            }
             queue.add(index, request);
             persist();
         } catch (IndexOutOfBoundsException ignored) {
