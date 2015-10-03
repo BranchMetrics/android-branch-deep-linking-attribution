@@ -62,12 +62,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
             prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-            if (resp.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
-            }
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
             } else {

@@ -98,9 +98,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
             prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
-            prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
-            prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
