@@ -2712,16 +2712,20 @@ public class Branch {
     private void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && (req instanceof ServerRequestInitSession) == false) {
-            if((req instanceof ServerRequestLogout)){
+            if ((req instanceof ServerRequestLogout)) {
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
-            if((req instanceof ServerRequestRegisterClose)){
+            if ((req instanceof ServerRequestRegisterClose)) {
                 Log.i(TAG, "Branch is not initialized, cannot close session");
                 return;
             } else {
-                boolean isReferrable = prefHelper_.getIsReferrable() == 1;
-                initUserSessionInternal(null, currentActivity_, isReferrable);
+                if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
+                    initUserSessionInternal(null, currentActivity_, true);
+                } else {
+                    boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
+                    initUserSessionInternal(null, currentActivity_, isReferrable);
+                }
             }
         }
         requestQueue_.enqueue(req);
