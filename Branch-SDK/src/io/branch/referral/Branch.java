@@ -1201,9 +1201,9 @@ public class Branch {
     /**
      * <p>Fire-and-forget retrieval of action count for the current session. Without a callback.</p>
      *
-     * @deprecated loadActionCounts has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
-     *             Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
-     *             For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
+     * @deprecated This method has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
+     * Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
+     * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
     @Deprecated
     public void loadActionCounts() {
@@ -1218,11 +1218,9 @@ public class Branch {
      *
      * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
      *                 trigger actions defined therein upon a referral state change.
-     *
-     * @deprecated loadActionCounts has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
-     *             Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
-     *             For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">Advanced referral rewards</a>.
-     *
+     * @deprecated This method has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
+     * Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
+     * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">Advanced referral rewards</a>.
      */
     @Deprecated
     public void loadActionCounts(BranchReferralStateChangedListener callback) {
@@ -1281,7 +1279,11 @@ public class Branch {
      * @param action A {@link String} value containing the name of the action to count.
      * @return An {@link Integer} value of the total number of times that an action has
      * been executed.
+     * @deprecated This method has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
+     * Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
+     * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
+    @Deprecated
     public int getTotalCountsForAction(String action) {
         return prefHelper_.getActionTotalCount(action);
     }
@@ -1292,7 +1294,11 @@ public class Branch {
      * @param action A {@link String} value containing the name of the action to count.
      * @return An {@link Integer} value of the number of unique times that the
      * specified action has been carried out.
+     * @deprecated This method has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
+     * Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
+     * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
+    @Deprecated
     public int getUniqueCountsForAction(String action) {
         return prefHelper_.getActionUniqueCount(action);
     }
