@@ -1200,7 +1200,12 @@ public class Branch {
 
     /**
      * <p>Fire-and-forget retrieval of action count for the current session. Without a callback.</p>
+     *
+     * @deprecated loadActionCounts has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
+     *             Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
+     *             For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
+    @Deprecated
     public void loadActionCounts() {
         loadActionCounts(null);
     }
@@ -1213,7 +1218,13 @@ public class Branch {
      *
      * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
      *                 trigger actions defined therein upon a referral state change.
+     *
+     * @deprecated loadActionCounts has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
+     *             Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
+     *             For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">Advanced referral rewards</a>.
+     *
      */
+    @Deprecated
     public void loadActionCounts(BranchReferralStateChangedListener callback) {
         ServerRequest req = new ServerRequestGetReferralCount(context_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
