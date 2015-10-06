@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.8.12: Fix for issue link parameters are provided in init session callback multiple times. Bug fixes for handling requests queued before initialising session.
+
 - v1.8.11: Fix for issue deep link params are empty when session initialised on with a delay with a multi threaded environment.
 
 - v1.8.10: Fix for a possible NPE on sharing link in slow network conditions.
