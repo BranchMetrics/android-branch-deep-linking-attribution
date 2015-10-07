@@ -31,18 +31,19 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
-        </activity>
 
-        <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity">
-            <!-- AppLink example-->
+            <!-- Non AppLink example -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="bnc.lt/xhsd"/> <!-- Live App link-->
-                <data android:scheme="https" android:host="bnc.lt/Ojqd"/> <!-- Test App link-->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/xhsd" /> <!-- Live App link-->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/Ojqd" /> <!-- Test App link-->
             </intent-filter>
         </activity>
+
+        <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity"/>
+
 
         <activity android:name="io.branch.branchandroiddemo.ReferralCodeActivity"/>
 

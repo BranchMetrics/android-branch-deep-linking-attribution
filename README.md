@@ -136,12 +136,17 @@ and `your_test_app_id` which you can obtain from the Branch dash board once you 
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="bnc.lt/your_live_app_id"/> <!-- your_live_app_id can be obtained from Branch dash board -->
-                <data android:scheme="https" android:host="bnc.lt/your_test_app_id"/> <!-- your_test_app_id can be obtained from Branch dash board -->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_live_app_id" /> <!-- your_live_app_id can be obtained from Branch dash board -->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_test_app_id" /> <!-- your_test_app_id can be obtained from Branch dash board -->
+                <!-- If you set up a white label for your links in your Branch link settngs then  only need to add the white label domain -->
+                <data android:scheme="https" android:host="your.app.com"/>
             </intent-filter>
         </activity>
         ```
 That's all you need. Deep linked parameters associated with the link is passed through Branch initialization process.
+
+Note: While using AppLinks please make sure you have registered the Activity for deeplinking using Branch URI scheme as discussed in the previous session inorder to get deeplink work on previous versions of Android
+(which does not support AppLinks).
 
 ### Configure your AndroidManifest.xml
 **1. Provide internet permission. Branch SDK need internet access to talk to Branch APIs.**
