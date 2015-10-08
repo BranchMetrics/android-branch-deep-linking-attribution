@@ -86,7 +86,9 @@ public class BranchRemoteInterface extends RemoteInterface {
             post.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver_.getOSVersion());
             post.put(Defines.Jsonkey.Model.getKey(), sysObserver_.getPhoneModel());
             post.put("is_simulator", sysObserver_.isSimulator());
-            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), false));
+            post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+            post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), true));
         } catch (JSONException ex) {
             ex.printStackTrace();
         }
@@ -100,7 +102,9 @@ public class BranchRemoteInterface extends RemoteInterface {
             String urlExtend = "v1/debug/disconnect";
             JSONObject post = new JSONObject();
             post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
-            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), false));
+            post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+            post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), true));
         } catch (JSONException ex) {
             ex.printStackTrace();
         }
@@ -116,8 +120,10 @@ public class BranchRemoteInterface extends RemoteInterface {
             String urlExtend = "v1/debug/log";
             JSONObject post = new JSONObject();
             post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+            post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
             post.put("log", log);
-            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), false));
+            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), true));
         } catch (JSONException ex) {
             ex.printStackTrace();
         }
