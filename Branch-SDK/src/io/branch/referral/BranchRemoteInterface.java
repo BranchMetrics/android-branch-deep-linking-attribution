@@ -73,22 +73,31 @@ public class BranchRemoteInterface extends RemoteInterface {
      * <p>Connect to server debug endpoint.</p>
      */
     public void connectToDebug() {
-        try {
-            String urlExtend = "v1/debug/connect";
-            JSONObject post = new JSONObject();
-            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
-            if (sysObserver_.getBluetoothPresent()) {
-                post.put("device_name", BluetoothAdapter.getDefaultAdapter().getName());
-            } else {
-                post.put("device_name", sysObserver_.getPhoneModel());
+        // If session is not initialised no need to try to connect to debug
+        if (prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)) {
+            callback_.finished(new ServerResponse(PrefHelper.REQ_TAG_DEBUG_CONNECT, RemoteInterface.NO_CONNECTIVITY_STATUS));
+        } else {
+            try {
+                String urlExtend = "v1/debug/connect";
+                JSONObject post = new JSONObject();
+                post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                if (sysObserver_.getBluetoothPresent()) {
+                    post.put("device_name", BluetoothAdapter.getDefaultAdapter().getName());
+                } else {
+                    post.put("device_name", sysObserver_.getPhoneModel());
+                }
+                post.put(Defines.Jsonkey.OS.getKey(), sysObserver_.getOS());
+                post.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver_.getOSVersion());
+                post.put(Defines.Jsonkey.Model.getKey(), sysObserver_.getPhoneModel());
+                post.put("is_simulator", sysObserver_.isSimulator());
+                post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                if (!prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE)) {
+                    post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                }
+                callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), true));
+            } catch (JSONException ex) {
+                ex.printStackTrace();
             }
-            post.put(Defines.Jsonkey.OS.getKey(), sysObserver_.getOS());
-            post.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver_.getOSVersion());
-            post.put(Defines.Jsonkey.Model.getKey(), sysObserver_.getPhoneModel());
-            post.put("is_simulator", sysObserver_.isSimulator());
-            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), false));
-        } catch (JSONException ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -96,13 +105,24 @@ public class BranchRemoteInterface extends RemoteInterface {
      * <p>Disconnect from the server debug interface.</p>
      */
     public void disconnectFromDebug() {
-        try {
-            String urlExtend = "v1/debug/disconnect";
-            JSONObject post = new JSONObject();
-            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
-            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), false));
-        } catch (JSONException ex) {
-            ex.printStackTrace();
+        // If device is not finger printed then return error
+        if (prefHelper_.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
+            callback_.finished(new ServerResponse(PrefHelper.REQ_TAG_DEBUG_CONNECT, RemoteInterface.NO_CONNECTIVITY_STATUS));
+        } else {
+            try {
+                String urlExtend = "v1/debug/disconnect";
+                JSONObject post = new JSONObject();
+                post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                if (!prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)) {
+                    post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                }
+                if (!prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE)) {
+                    post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                }
+                callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_DISCONNECT, prefHelper_.getTimeout(), true));
+            } catch (JSONException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -112,14 +132,25 @@ public class BranchRemoteInterface extends RemoteInterface {
      * @param log A {@link String} variable containing information to log.
      */
     public void sendLog(String log) {
-        try {
-            String urlExtend = "v1/debug/log";
-            JSONObject post = new JSONObject();
-            post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
-            post.put("log", log);
-            callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), false));
-        } catch (JSONException ex) {
-            ex.printStackTrace();
+        // If device is not finger printed then return error
+        if (prefHelper_.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
+            callback_.finished(new ServerResponse(PrefHelper.REQ_TAG_DEBUG_CONNECT, RemoteInterface.NO_CONNECTIVITY_STATUS));
+        } else {
+            try {
+                String urlExtend = "v1/debug/log";
+                JSONObject post = new JSONObject();
+                post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                if (!prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)) {
+                    post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                }
+                if (!prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE)) {
+                    post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                }
+                post.put("log", log);
+                callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_LOG, prefHelper_.getTimeout(), true));
+            } catch (JSONException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
