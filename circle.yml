@@ -7,8 +7,8 @@ dependencies:
   #cache_directories:
     #- ~/.android
     #- ~/android
-    pre:
-        - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
+  pre:
+    - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
         
   override:
     #- ./install-dependencies.sh
