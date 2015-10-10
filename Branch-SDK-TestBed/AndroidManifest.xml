@@ -21,14 +21,24 @@
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Non AppLink example -->
             <intent-filter>
                 <data android:scheme="branchtest"/>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+
+            <!-- AppLink example -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/xhsd" /> <!-- Live App link-->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/Ojqd" /> <!-- Test App link-->
             </intent-filter>
         </activity>
 

@@ -84,6 +84,7 @@ public class PrefHelper {
     private static final String KEY_IDENTITY = "bnc_identity";
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
+    private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
@@ -517,6 +518,24 @@ public class PrefHelper {
     }
 
     /**
+     * <p> Set the KEY_APP_LINK {@link String} values that has been started the application. </p>
+     *
+     * @param appLinkUrl The App link which started this application
+     */
+    public void setAppLink(String appLinkUrl) {
+        setString(KEY_APP_LINK, appLinkUrl);
+    }
+
+    /**
+     * <p> Get the App link which statrted the application.</p>
+     *
+     * @return A {@link String} value of App linnk url
+     */
+    public String getAppLink() {
+        return getString(KEY_APP_LINK);
+    }
+
+    /**
      * <p>Gets the session parameters as currently set in preferences.</p>
      * <p/>
      * <p>Parameters are stored in JSON format, and must be parsed prior to access.</p>
@@ -939,10 +958,12 @@ public class PrefHelper {
         // Note: Link Click Identifier is not cleared because of the potential for that to mess up a deep link
         String linkClickID = getLinkClickID();
         String linkClickIdentifier = getLinkClickIdentifier();
+        String appLink = getAppLink();
         prefsEditor_.clear();
 
         setLinkClickID(linkClickID);
         setLinkClickIdentifier(linkClickIdentifier);
+        setAppLink(appLink);
         prefHelper_.prefsEditor_.commit();
     }
 

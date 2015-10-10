@@ -23,6 +23,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SearchEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
@@ -1132,7 +1133,7 @@ public class Branch {
                 String uriString = activity.getIntent().getDataString();
                 if (data.getQuery().length() == paramString.length()) {
                     paramString = "\\?" + paramString;
-                } else if ((uriString.length()-paramString.length()) == uriString.indexOf(paramString)) {
+                } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
                     paramString = "&" + paramString;
                 } else {
                     paramString = paramString + "&";
@@ -1140,6 +1141,12 @@ public class Branch {
                 Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
                 activity.getIntent().setData(newData);
                 return true;
+            } else {
+                // Check if the clicked url is an app link pointing to this app
+                if ((data.getScheme().equalsIgnoreCase("http") || data.getScheme().equalsIgnoreCase("https"))
+                        && data.getHost() != null && data.getHost().length() > 0) {
+                    prefHelper_.setAppLink(data.toString());
+                }
             }
         }
         return false;
@@ -2519,9 +2526,7 @@ public class Branch {
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
      * <p/>
      * <ul>
-     * <li>{@link SystemObserver#getAppKey()}</li>
      * <li>{@link SystemObserver#getOS()}</li>
-     * <li>{@link SystemObserver#getDeviceFingerPrintID()}</li>
      * <li>{@link SystemObserver#getListOfApps()}</li>
      * </ul>
      *
@@ -3375,6 +3380,12 @@ public class Branch {
             return callback_.onSearchRequested();
         }
 
+        @TargetApi(Build.VERSION_CODES.M)
+        @Override
+        public boolean onSearchRequested(SearchEvent searchEvent) {
+            return false;
+        }
+
         @Override
         public void onWindowAttributesChanged(WindowManager.LayoutParams attrs) {
             callback_.onWindowAttributesChanged(attrs);
@@ -3389,6 +3400,12 @@ public class Branch {
         @Override
         public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
             return callback_.onWindowStartingActionMode(callback);
+        }
+
+        @TargetApi(Build.VERSION_CODES.M)
+        @Override
+        public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int type) {
+            return null;
         }
     }
 
