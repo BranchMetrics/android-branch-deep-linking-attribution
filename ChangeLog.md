@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.9.0: Support for Android App-links. Deprecating loadActionCount API
+
 - v1.8.12: Fix for issue link parameters are provided in init session callback multiple times. Bug fixes for handling requests queued before initialising session.
 
 - v1.8.11: Fix for issue deep link params are empty when session initialised on with a delay with a multi threaded environment.

@@ -11,7 +11,7 @@ dependencies {
 }
 
 android {
-    compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
+    compileSdkVersion 23
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
     
     defaultConfig {
