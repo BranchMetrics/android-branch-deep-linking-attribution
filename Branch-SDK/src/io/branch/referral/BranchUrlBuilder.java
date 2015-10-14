@@ -38,8 +38,6 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     protected Branch branchReferral_;
     /* Application context. */
     private final Context context_;
-    /* Content Id associated with this link */
-    protected String contentId_;
 
     /**
      * <p>
@@ -52,7 +50,6 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     protected BranchUrlBuilder(Context context) {
         branchReferral_ = Branch.getInstance();
         context_ = context.getApplicationContext();
-        contentId_ = null;
     }
 
     /**
@@ -64,7 +61,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     @SuppressWarnings("unchecked")
     public T addTag(String tag) {
         if (this.tags_ == null) {
-            tags_ = new ArrayList<String>();
+            tags_ = new ArrayList<>();
         }
         this.tags_.add(tag);
         return (T) this;
@@ -79,7 +76,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     @SuppressWarnings("unchecked")
     public T addTags(List<String> tags) {
         if (this.tags_ == null) {
-            tags_ = new ArrayList<String>();
+            tags_ = new ArrayList<>();
         }
         this.tags_.addAll(tags);
         return (T) this;
@@ -105,18 +102,6 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         return (T) this;
     }
 
-    /**
-     * Sets the content identifier associated with link content
-     *
-     * @param canonicalID Content identifier associated with this link
-     * @return This Builder object to allow for chaining of calls to set methods.
-     */
-    public T setCanonicalID(String canonicalID) {
-        this.contentId_ = canonicalID;
-        return (T) this;
-    }
-
-
     ///------------------------- Link Build methods---------------------------///
 
     protected String getUrl() {
@@ -124,7 +109,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    BranchUtil.formatAndStringifyLinkParam(params_), null, contentId_, false);
+                    BranchUtil.formatAndStringifyLinkParam(params_), null, false);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
@@ -134,7 +119,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
-                    BranchUtil.formatAndStringifyLinkParam(params_), callback,contentId_, true);
+                    BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
             branchReferral_.generateShortLinkInternal(req);
         } else {
             if (callback != null) {

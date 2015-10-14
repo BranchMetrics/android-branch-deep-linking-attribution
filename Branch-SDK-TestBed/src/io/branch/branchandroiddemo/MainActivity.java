@@ -120,13 +120,13 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myTag1")
                         .addTag("myTag2")
-                        .setAlias("myContentName")
                         .setChannel("myChannel2")
                         .setFeature("Myfeature2")
                         .setStage("10")
                         .addControlParameter("Name", "MyUserName1")
                         .addControlParameter("Message", "My Custom message")
                         .setDuration(100);
+                      //.setAlias("myContentName") // in case you need to white label your link
 
                 txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
             }
@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                        .setAlias("mySahreContentName")
+                        //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")

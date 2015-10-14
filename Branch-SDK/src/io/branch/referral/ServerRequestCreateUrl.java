@@ -47,14 +47,13 @@ class ServerRequestCreateUrl extends ServerRequest {
      *                    the link that will be passed into a new app session when clicked
      * @param callback    A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
      *                    actions defined therein upon receipt of a response to a create link request.
-     * @param canonicalID Content Identifier associated with this link
      * @param async       {@link Boolean} value specifying whether to get the url asynchronously or not.
      * @return A {@link String} containing the resulting short URL.
      */
     public ServerRequestCreateUrl(Context context, final String alias, final int type, final int duration,
                                   final Collection<String> tags, final String channel, final String feature,
                                   final String stage, String params,
-                                  Branch.BranchLinkCreateListener callback, String canonicalID, boolean async) {
+                                  Branch.BranchLinkCreateListener callback, boolean async) {
 
         super(context, Defines.RequestPath.GetURL.getPath());
 
@@ -63,11 +62,7 @@ class ServerRequestCreateUrl extends ServerRequest {
 
         linkPost_ = new BranchLinkData();
         try {
-            if (canonicalID != null && canonicalID.length() > 0) {
-                JSONObject paramsJson = new JSONObject(params);
-                paramsJson.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalID);
-                params = paramsJson.toString();
-            }
+
             linkPost_.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
             linkPost_.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             linkPost_.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());

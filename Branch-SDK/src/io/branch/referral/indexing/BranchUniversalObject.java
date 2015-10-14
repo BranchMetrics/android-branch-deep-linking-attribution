@@ -323,7 +323,6 @@ public class BranchUniversalObject {
 
     private BranchShortLinkBuilder getLinkBuilder(Context context, LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
-        shortLinkBuilder.setCanonicalID(canonicalIdentifier_);
         if (linkProperties.getTags() != null) {
             shortLinkBuilder.addTags(linkProperties.getTags());
         }

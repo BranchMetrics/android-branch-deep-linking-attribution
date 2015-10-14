@@ -2037,7 +2037,7 @@ public class Branch {
     private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
         ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias, type, duration, tags,
                 channel, feature, stage,
-                params, callback, null, async);
+                params, callback, async);
 
         if (!req.constructError_ && !req.handleErrors(context_)) {
             if (linkCache_.containsKey(req.getLinkPost())) {
