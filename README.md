@@ -123,30 +123,31 @@ Typically, you would register some sort of splash activitiy that handles routing
     </intent-filter>
 </activity>
 ```
-### Leverage Android AppLink for deep linking
+### Leverage Android App Links for deep linking
 
-If you are building applications targeting for Android M or above, Branch make it really easy to configure your app for deep linking using AppLinks.
-In your project's manifest file, you can register activities to for AppLinking by adding an intent filter as follows. You only need to know `your_live_app_id`
-and `your_test_app_id` which you can obtain from the Branch dash board once you enable AppLinking support for your application.
+If you are building applications targeting for Android M or above, Branch make it really easy to configure your app for deep linking using App Links.
+In your project's manifest file, you can register activities to for App Linking by adding an intent filter as follows. You only need to know `live_app_alpha_encoded_id`
+and `test_app_alpha_encoded_id` which you can obtain from the Branch dash board once you enable App Linking support for your application.
 
 ```xml
   <activity android:name="com.yourapp.your_activity">
-            <!-- AppLink your activity to Branch links-->
+            <!-- App Link your activity to Branch links-->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_live_app_id" /> <!-- your_live_app_id can be obtained from Branch dash board -->
-                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_test_app_id" /> <!-- your_test_app_id can be obtained from Branch dash board -->
-                <!-- If you set up a white label for your links in your Branch link settngs then  only need to add the white label domain -->
+                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/live_app_alpha_encoded_id" /> <!-- live_app_alpha_encoded_id can be obtained from the Branch Dashboard here: https://dashboard.branch.io/#/settings/link -->
+                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/test_app_alpha_encoded_id" /> <!-- test_app_alpha_encoded_id can be obtained from the Branch Dashboard here: https://dashboard.branch.io/#/settings/link -->
+                <!-- If you set up a white label for your links in your Branch link settings then  only need to add the white label domain -->
                 <data android:scheme="https" android:host="your.app.com"/>
             </intent-filter>
-        </activity>
-        ```
+  </activity>
+```
+
 That's all you need. Deep linked parameters associated with the link is passed through Branch initialization process.
 
-Note: While using AppLinks please make sure you have registered the Activity for deeplinking using Branch URI scheme as discussed in the previous session inorder to get deeplink work on previous versions of Android
-(which does not support AppLinks).
+Note: While using App Links please make sure you have registered the Activity for deep linking using Branch URI scheme as discussed in the previous session inorder to get deep link work on previous versions of Android
+(which does not support App Links).
 
 ### Configure your AndroidManifest.xml
 **1. Provide internet permission. Branch SDK need internet access to talk to Branch APIs.**
