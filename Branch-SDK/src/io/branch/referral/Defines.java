@@ -108,7 +108,7 @@ public class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
-        RegisterView("v0.1/register_view/"),
+        RegisterView("v1/content-view"),
         Referrals("v1/referrals/"),
         SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),

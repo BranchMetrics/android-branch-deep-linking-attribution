@@ -76,11 +76,6 @@ class ServerRequestRegisterView extends ServerRequest {
         callback_ = null;
     }
 
-    @Override
-    public String getRequestUrl() {
-        return "http://54.153.121.111:5000/v0.1/register_view/";
-    }
-
     /**
      * Creates a Json with given parameters for register view.
      *
