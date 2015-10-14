@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -188,8 +189,15 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
             } else {
-                return processEntityForJSON(connection.getInputStream(),
-                        connection.getResponseCode(), tag, log, null);
+                try {
+                    return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, null);
+                } catch (FileNotFoundException ex) {
+                    // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
+                    if (log) {
+                        PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
+                    }
+                    return processEntityForJSON(null, connection.getResponseCode(), tag, log, null);
+                }
             }
         } catch (SocketException ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
@@ -337,7 +345,15 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
             } else {
-                return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                try {
+                    return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                } catch (FileNotFoundException ex) {
+                    // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
+                    if (log) {
+                        PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
+                    }
+                    return processEntityForJSON(null, connection.getResponseCode(), tag, log, linkData);
+                }
             }
 
 
