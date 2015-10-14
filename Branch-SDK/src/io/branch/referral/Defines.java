@@ -6,7 +6,7 @@ package io.branch.referral;
  * </p>
  *
  */
-class Defines {
+public class Defines {
 
     public enum Jsonkey {
 
@@ -69,9 +69,14 @@ class Defines {
         ContentScreen("content_screen"),
         ContentPath("content_path"),
         ContentID("$content_id"),
-        ContentTitle("$content_title"),
-        ContentDesc("$content_desc"),
-        ContentImgUrl("$content_img_url"),
+        CanonicalIdentifier("$canonical_identifier"),
+        ContentTitle("$og_title"),
+        ContentDesc("$og_description"),
+        ContentImgUrl("$og_image_url"),
+        ContentType("$content_type"),
+        PublicallyIndexable("$publicly_indexable"),
+        ContentKeyWords("$keywords"),
+        ContentExpiryTime("$exp_date"),
         EventTime("event_time"),
         Params("params"),
         Extra("extra");

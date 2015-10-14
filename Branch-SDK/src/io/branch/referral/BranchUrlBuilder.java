@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
@@ -70,6 +71,21 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     }
 
     /**
+     * <p>Adds a tag to the iterable collection of name associated with a deep link.</p>
+     *
+     * @param tags {@link List} with collection of tags associated with a deep link.
+     * @return This Builder object to allow for chaining of calls to set methods.
+     */
+    @SuppressWarnings("unchecked")
+    public T addTags(List<String> tags) {
+        if (this.tags_ == null) {
+            tags_ = new ArrayList<String>();
+        }
+        this.tags_.addAll(tags);
+        return (T) this;
+    }
+
+    /**
      * <p>Adds the the given key value pair to the parameters associated with this link.</p>
      *
      * @param key   A {@link String} with value of key for the parameter
@@ -90,13 +106,13 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     }
 
     /**
-     * Sets the content identifier associated with link content     *
+     * Sets the content identifier associated with link content
      *
-     * @param contentId Content identifier associated with this link
+     * @param canonicalID Content identifier associated with this link
      * @return This Builder object to allow for chaining of calls to set methods.
      */
-    public T setContentId(String contentId) {
-        this.contentId_ = contentId;
+    public T setCanonicalID(String canonicalID) {
+        this.contentId_ = canonicalID;
         return (T) this;
     }
 

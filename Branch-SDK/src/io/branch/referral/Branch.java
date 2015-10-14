@@ -52,7 +52,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.referral.indexing.RegisterViewBuilder;
+import io.branch.referral.indexing.BranchUniversalObject;
 
 /**
  * <p>
@@ -2497,9 +2497,7 @@ public class Branch {
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
      * <p/>
      * <ul>
-     * <li>{@link SystemObserver#getAppKey()}</li>
      * <li>{@link SystemObserver#getOS()}</li>
-     * <li>{@link SystemObserver#getDeviceFingerPrintID()}</li>
      * <li>{@link SystemObserver#getListOfApps()}</li>
      * </ul>
      *
@@ -3060,7 +3058,7 @@ public class Branch {
      * </activity>
      * </p>
      *
-     * @param activity Instane of activity to check if launched on auto deep link.
+     * @param activity Instance of activity to check if launched on auto deep link.
      * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
      */
     public static boolean isAutoDeepLinkLaunch(Activity activity) {
@@ -3360,14 +3358,10 @@ public class Branch {
     public static class ShareLinkBuilder {
 
         private final Activity activity_;
-        private final JSONObject linkCreationParams_;
         private final Branch branch_;
 
         private String shareMsg_;
         private String shareSub_;
-        private Collection<String> tags_ = null;
-        private String feature_ = "";
-        private String stage_ = "";
         private Branch.BranchLinkShareListener callback_ = null;
         private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
         private String defaultURL_;
@@ -3375,28 +3369,32 @@ public class Branch {
         //Customise more and copy url option
         private Drawable moreOptionIcon_;
         private String moreOptionText_;
-
         private Drawable copyUrlIcon_;
         private String copyURlText_;
         private String urlCopiedMessage_;
 
+        BranchShortLinkBuilder shortLinkBuilder_;
 
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
          * user selected clients</p>
          *
-         * @param activity  The {@link Activity} to show the dialog for choosing sharing application.
+         * @param activity   The {@link Activity} to show the dialog for choosing sharing application.
          * @param parameters @param params  A {@link JSONObject} value containing the deep link params.
          */
         public ShareLinkBuilder(Activity activity, JSONObject parameters) {
             this.activity_ = activity;
-            this.linkCreationParams_ = parameters;
             this.branch_ = branchReferral_;
-
+            shortLinkBuilder_ = new BranchShortLinkBuilder(activity);
+            try {
+                Iterator<String> keys = parameters.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    shortLinkBuilder_.addParameters(key, (String) parameters.get(key));
+                }
+            } catch (Exception ignore) {
+            }
             shareMsg_ = "";
-            tags_ = new ArrayList<String>();
-            feature_ = "";
-            stage_ = "";
             callback_ = null;
             preferredOptions_ = new ArrayList<SharingHelper.SHARE_WITH>();
             defaultURL_ = null;
@@ -3406,7 +3404,18 @@ public class Branch {
 
             copyUrlIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_save);
             copyURlText_ = "Copy link";
-            urlCopiedMessage_ =  "Copied link to clipboard!";
+            urlCopiedMessage_ = "Copied link to clipboard!";
+        }
+
+        /**
+         * *<p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
+         * user selected clients</p>
+         * @param activity The {@link Activity} to show the dialog for choosing sharing application.
+         * @param shortLinkBuilder An instance of {@link BranchShortLinkBuilder} to create link to be shared
+         */
+        public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) {
+            this(activity, new JSONObject());
+            shortLinkBuilder_ = shortLinkBuilder;
         }
 
         /**
@@ -3430,6 +3439,7 @@ public class Branch {
             this.shareSub_ = subject;
             return this;
         }
+
         /**
          * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
          * link.</p>
@@ -3439,7 +3449,20 @@ public class Branch {
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder addTag(String tag) {
-            this.tags_.add(tag);
+            this.shortLinkBuilder_.addTag(tag);
+            return this;
+        }
+
+        /**
+         * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
+         * link.</p>
+         *
+         * @param tags A {@link java.util.List} of tags to be added to the iterable {@link Collection} of {@link String} tags associated with a deep
+         *             link.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder addTags(ArrayList<String> tags) {
+            this.shortLinkBuilder_.addTags(tags);
             return this;
         }
 
@@ -3451,7 +3474,7 @@ public class Branch {
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setFeature(String feature) {
-            this.feature_ = feature;
+            this.shortLinkBuilder_.setFeature(feature);
             return this;
         }
 
@@ -3463,7 +3486,7 @@ public class Branch {
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setStage(String stage) {
-            this.stage_ = stage;
+            this.shortLinkBuilder_.setStage(stage);
             return this;
         }
 
@@ -3493,7 +3516,37 @@ public class Branch {
         }
 
         /**
-         *<p> Set a default url to share in case there is any error creating the deep link </p>
+         * <p>Adds application to the preferred list of applications which are shown on share dialog.
+         * Only these options will be visible when the application selector dialog launches. Other options can be
+         * accessed by clicking "More"</p>
+         *
+         * @param preferredOptions A list of applications to be added as preferred options on the app chooser.
+         *                         Preferred applications are defined in {@link io.branch.referral.SharingHelper.SHARE_WITH}.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) {
+            this.preferredOptions_.addAll(preferredOptions);
+            return this;
+        }
+
+        /**
+         * Add the given key value to the deep link parameters
+         *
+         * @param key   A {@link String} with value for the key for the deep link params
+         * @param value A {@link String} with deep link parameters value
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder addParam(String key, String value) {
+            try {
+                this.shortLinkBuilder_.addParameters(key, value);
+            } catch (Exception ignore) {
+
+            }
+            return this;
+        }
+
+        /**
+         * <p> Set a default url to share in case there is any error creating the deep link </p>
          *
          * @param url A {@link String} with value of default url to be shared with the selected application in case deep link creation fails.
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
@@ -3564,11 +3617,41 @@ public class Branch {
 
         }
 
+        /**
+         * <p> Sets the alias for this link. </p>
+         *
+         * @param alias Link 'alias' can be used to label the endpoint on the link.
+         *              <p>
+         *              For example:
+         *              http://bnc.lt/AUSTIN28.
+         *              Should not exceed 128 characters
+         *              </p>
+         * @return This Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setAlias(String alias) {
+            this.shortLinkBuilder_.setAlias(alias);
+            return this;
+        }
+
+        /**
+         * <p> Sets the amount of time that Branch allows a click to remain outstanding.</p>
+         *
+         * @param matchDuration A {@link Integer} value specifying the time that Branch allows a click to
+         *                      remain outstanding and be eligible to be matched with a new app session.
+         * @return This Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setMatchDuration(int matchDuration) {
+            this.shortLinkBuilder_.setDuration(matchDuration);
+            return this;
+        }
+
+        public void setShortLinkBuilderInternal(BranchShortLinkBuilder shortLinkBuilder) {
+            this.shortLinkBuilder_ = shortLinkBuilder;
+        }
 
         /**
          * <p>Creates an application selector dialog and share a link with user selected sharing option.
          * The link is created with the parameters provided to the builder. </p>
-         *
          */
         public void shareLink() {
             branchReferral_.shareLink(this);
@@ -3594,25 +3677,8 @@ public class Branch {
             return shareSub_;
         }
 
-
         public BranchLinkShareListener getCallback() {
             return callback_;
-        }
-
-        public Collection<String> getTags() {
-            return tags_;
-        }
-
-        public JSONObject getLinkCreationParams() {
-            return linkCreationParams_;
-        }
-
-        public String getFeature() {
-            return feature_;
-        }
-
-        public String getStage() {
-            return stage_;
         }
 
         public String getDefaultURL() {
@@ -3638,28 +3704,17 @@ public class Branch {
         public String getUrlCopiedMessage() {
             return urlCopiedMessage_;
         }
+
+        public BranchShortLinkBuilder getShortLinkBuilder() {
+            return shortLinkBuilder_;
+        }
     }
 
     //------------------------ Content Indexing methods----------------------//
-    public void reportContentView(RegisterViewBuilder builder) {
+
+    public void markContentViewed(BranchUniversalObject branchUniversalObject, BranchUniversalObject.MarkViewStatusListener callback) {
         ServerRequest req;
-        if (builder.getContainerActivity() == null) {
-            builder.setContainerActivity(currentActivity_);
-        }
-        if (builder.getContentPath() == null) {
-            String path = "";
-            if (activityStack_ != null) {
-                if (activityStack_.size() == 0) {
-                    path = builder.getContainerActivity().getClass().getSimpleName() + "\\";
-                } else {
-                    for (String pathContent : activityStack_) {
-                        path += pathContent + "\\";
-                    }
-                }
-            }
-            builder.setContentPath(path);
-        }
-        req = new ServerRequestRegisterView(builder, systemObserver_);
+        req = new ServerRequestRegisterView(currentActivity_, branchUniversalObject, systemObserver_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }

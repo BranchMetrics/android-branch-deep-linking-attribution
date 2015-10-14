@@ -1,8 +1,6 @@
 package io.branch.referral;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Build;
 
 import org.json.JSONException;
@@ -11,7 +9,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Set;
 
-import io.branch.referral.indexing.RegisterViewBuilder;
+import io.branch.referral.indexing.BranchUniversalObject;
 
 /**
  * * <p>
@@ -20,19 +18,19 @@ import io.branch.referral.indexing.RegisterViewBuilder;
  */
 class ServerRequestRegisterView extends ServerRequest {
 
-    RegisterViewBuilder.RegisterViewStatusListener callback_;
+    BranchUniversalObject.MarkViewStatusListener callback_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterView} to notify Branch on a content view event.</p>
      *
-     * @param builder An instance of {@link RegisterViewBuilder} to create the register view request
+     * @param branchUniversalObject An instance of {@link BranchUniversalObject} to mar as viewed
      */
-    public ServerRequestRegisterView(RegisterViewBuilder builder, SystemObserver sysObserver) {
-        super(builder.getContainerActivity().getApplicationContext(), Defines.RequestPath.RegisterView.getPath());
-        callback_ = builder.getCallback();
+    public ServerRequestRegisterView(Context context, BranchUniversalObject branchUniversalObject, SystemObserver sysObserver, BranchUniversalObject.MarkViewStatusListener callback) {
+        super(context, Defines.RequestPath.RegisterView.getPath());
+        callback_ = callback;
         JSONObject registerViewPost;
         try {
-            registerViewPost = createContentViewJson(builder, sysObserver);
+            registerViewPost = createContentViewJson(branchUniversalObject, sysObserver);
             setPost(registerViewPost);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -43,21 +41,21 @@ class ServerRequestRegisterView extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         if (callback_ != null) {
-            callback_.onRegisterViewFinished(true, null);
+            callback_.onMarkViewFinished(true, null);
         }
     }
 
     @Override
     public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            callback_.onRegisterViewFinished(false, new BranchError("Unable to register content view", statusCode));
+            callback_.onMarkViewFinished(false, new BranchError("Unable to register content view", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onRegisterViewFinished(false, new BranchError("Unable to register content view", BranchError.ERR_NO_INTERNET_PERMISSION));
+            callback_.onMarkViewFinished(false, new BranchError("Unable to register content view", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;
@@ -86,75 +84,61 @@ class ServerRequestRegisterView extends ServerRequest {
     /**
      * Creates a Json with given parameters for register view.
      *
-     * @param builder An instance of {@link RegisterViewBuilder} to create the Json
+     * @param universalObject An instance of {@link BranchUniversalObject} to create the Json
      * @return A {@link JSONObject} for post data for register view request
      * @throws JSONException {@link JSONException} on any Json errors
      */
-    private JSONObject createContentViewJson(RegisterViewBuilder builder,
+    private JSONObject createContentViewJson(BranchUniversalObject universalObject,
                                              SystemObserver sysObserver) throws JSONException {
 
         JSONObject contentObject = new JSONObject();
-        JSONObject extrasObj = new JSONObject();
+
 
         String os_Info = "Android " + Build.VERSION.SDK_INT;
         String sessionID = prefHelper_.getSessionID();
-        if (builder.getContainerActivity() != null) {
-            Activity activity = builder.getContainerActivity();
-            Context applicationContext = activity.getApplicationContext();
-            String urlString = applicationContext.getPackageName() + ":" + activity.getClass().getSimpleName();
-            contentObject.put(Defines.Jsonkey.ContentScreen.getKey(), urlString);
-            String appVersion;
-            try {
-                appVersion = applicationContext.getPackageManager().getPackageInfo(applicationContext.getPackageName(), PackageManager.MATCH_DEFAULT_ONLY).versionName;
-                contentObject.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
 
-            if (activity.getIntent() != null &&
-                    activity.getIntent().getExtras() != null) {
-                Set<String> extraKeys = activity.getIntent().getExtras().keySet();
-                for (String extraKey : extraKeys) {
-                    Object value = activity.getIntent().getExtras().get(extraKey);
-                    if (value instanceof String
-                            || value instanceof Integer
-                            || value instanceof Boolean) {
-                        extrasObj.put(extraKey, value.toString());
-                    }
-                }
-            }
-        }
-
-        String date = String.valueOf(System.currentTimeMillis());
         contentObject.put(Defines.Jsonkey.OS.getKey(), os_Info);
         contentObject.put(Defines.Jsonkey.SessionID.getKey(), sessionID);
 
-        contentObject.put(Defines.Jsonkey.EventTime.getKey(), date);
-        contentObject.put(Defines.Jsonkey.ContentPath.getKey(), builder.getContentPath());
+        String uniqueId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
+        if (!uniqueId.equals(SystemObserver.BLANK)) {
+            contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqueId);
+        }
+        contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 
-        String uniqId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
-        if (!uniqId.equals(SystemObserver.BLANK)) {
-            contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqId);
+        JSONObject paramsObj = new JSONObject();
+
+        paramsObj.put(Defines.Jsonkey.ContentTitle.getKey(), universalObject.getTitle());
+        paramsObj.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), universalObject.getCanonicalIdentifier());
+        paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeyWords());
+        paramsObj.put(Defines.Jsonkey.PublicallyIndexable.getKey(), universalObject.isPublicallyIndexable());
+
+        String desc = universalObject.getDescription();
+        if(desc != null && desc.trim().length() > 0 ) {
+            paramsObj.put(Defines.Jsonkey.ContentDesc.getKey(), desc);
+        }
+        String imageUrl = universalObject.getImageUrl();
+        if(imageUrl != null && imageUrl.trim().length() > 0 ) {
+            paramsObj.put(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl);
+        }
+        String contentType = universalObject.getType();
+        if(contentType != null && contentType.trim().length() > 0 ) {
+            paramsObj.put(Defines.Jsonkey.ContentType.getKey(), contentType);
+        }
+        long expiryTime = universalObject.getExpirationTime();
+        if(expiryTime > 0) {
+            paramsObj.put(Defines.Jsonkey.ContentExpiryTime.getKey(), universalObject.getExpirationTime());
         }
 
-        extrasObj.put(Defines.Jsonkey.ContentTitle.getKey(), builder.getContentTitle());
-        extrasObj.put(Defines.Jsonkey.ContentDesc.getKey(), builder.getContentDesc());
-        extrasObj.put(Defines.Jsonkey.ContentImgUrl.getKey(), builder.getContentImgUrl());
-        if (builder.getContentId() != null && builder.getContentId().length() > 0) {
-            extrasObj.put(Defines.Jsonkey.ContentID.getKey(), builder.getContentId());
-        }
+        contentObject.put(Defines.Jsonkey.Params.getKey(), paramsObj);
 
-        contentObject.put(Defines.Jsonkey.Params.getKey(), extrasObj);
-
-        if (builder.getAdditionalParams() != null) {
-            HashMap extras = builder.getAdditionalParams();
-            Set extraKeys = extras.keySet();
-            JSONObject reportExtraObj = new JSONObject();
-            for (Object key : extraKeys) {
-                reportExtraObj.put((String) key, extras.get(key));
-            }
-            contentObject.put(Defines.Jsonkey.Extra.getKey(), reportExtraObj);
+        HashMap metaData = universalObject.getMetaData();
+        Set extraKeys = metaData.keySet();
+        JSONObject metaDataObject = new JSONObject();
+        for (Object key : extraKeys) {
+            metaDataObject.put((String) key, metaData.get(key));
         }
+        contentObject.put(Defines.Jsonkey.Metadata.getKey(), metaDataObject);
 
         return contentObject;
     }
