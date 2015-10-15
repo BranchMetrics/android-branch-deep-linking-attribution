@@ -45,6 +45,7 @@ class ShareLinkManager {
     /* Indicates whether a sharing is in progress*/
     private boolean isShareInProgress_ = false;
 
+    @SuppressWarnings("deprecation")
     private Branch.ShareLinkBuilder builder_;
 
 
@@ -54,6 +55,7 @@ class ShareLinkManager {
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
      * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
+    @SuppressWarnings("deprecation")
     public Dialog shareLink(Branch.ShareLinkBuilder builder) {
         builder_ = builder;
         context_ = builder.getActivity();
@@ -353,11 +355,13 @@ class ShareLinkManager {
      * Class for sharing item more
      */
     private class MoreShareItem extends ResolveInfo {
+        @SuppressWarnings("NullableProblems")
         @Override
         public CharSequence loadLabel(PackageManager pm) {
             return builder_.getMoreOptionText();
         }
 
+        @SuppressWarnings("NullableProblems")
         @Override
         public Drawable loadIcon(PackageManager pm) {
             return builder_.getMoreOptionIcon();
@@ -368,11 +372,13 @@ class ShareLinkManager {
      * Class for Sharing Item copy URl
      */
     private class CopyLinkItem extends ResolveInfo {
+        @SuppressWarnings("NullableProblems")
         @Override
         public CharSequence loadLabel(PackageManager pm) {
             return builder_.getCopyURlText();
         }
 
+        @SuppressWarnings("NullableProblems")
         @Override
         public Drawable loadIcon(PackageManager pm) {
             return builder_.getCopyUrlIcon();

@@ -1,11 +1,22 @@
 package io.branch.referral.util;
 
+import android.app.Activity;
+import android.content.Context;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.branch.referral.Branch;
+
 /**
+ * <p>
  * Class for representing properties for a deep link.
- * Use this class to specify the properties of a deep link that you create.
+ * Use this class to specify the properties of a deep link that you want to create.
+ *
+ * @see io.branch.referral.indexing.BranchUniversalObject#getShortUrl(Context, LinkProperties)
+ * @see io.branch.referral.indexing.BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
+ * @see io.branch.referral.indexing.BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+ * </p>
  */
 public class LinkProperties {
     private final ArrayList<String> tags_;
@@ -16,6 +27,9 @@ public class LinkProperties {
     private final HashMap<String, String> controlParams_;
     private String channel_;
 
+    /**
+     * Create an instance of {@link LinkProperties}
+     */
     public LinkProperties() {
         tags_ = new ArrayList<>();
         feature_ = "Share";

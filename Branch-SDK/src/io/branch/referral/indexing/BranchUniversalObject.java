@@ -234,9 +234,9 @@ public class BranchUniversalObject {
         return type_;
     }
 
-    public JSONArray getKeywordsJsonArray(){
+    public JSONArray getKeywordsJsonArray() {
         JSONArray keywordArray = new JSONArray();
-        for(String keyword : keyWords_){
+        for (String keyword : keyWords_) {
             keywordArray.put(keyword);
         }
         return keywordArray;
@@ -309,6 +309,7 @@ public class BranchUniversalObject {
             }
         } catch (JSONException ignore) {
         }
+        @SuppressWarnings("deprecation")
         Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
                 .setCallback(callback)
                 .setSubject(style.getMessageTitle())
@@ -330,6 +331,7 @@ public class BranchUniversalObject {
     }
 
 
+    @SuppressWarnings("deprecation")
     private BranchShortLinkBuilder getLinkBuilder(Context context, LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         if (linkProperties.getTags() != null) {

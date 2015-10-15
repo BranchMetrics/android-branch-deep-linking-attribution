@@ -1,17 +1,21 @@
 package io.branch.referral.util;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import java.util.ArrayList;
 
+import io.branch.referral.Branch;
 import io.branch.referral.SharingHelper;
 
 /**
  * Class for defining the share sheet properties.
- * Defines the properties of share sheet. Use this to customise the share sheet style.
+ * Defines the properties of share sheet. Use this class customise the share sheet style.
+ *
+ * @see io.branch.referral.indexing.BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
  */
-public class ShareSheetStyle{
+public class ShareSheetStyle {
     //Customise more and copy url option
     private Drawable moreOptionIcon_;
     private String moreOptionText_;
@@ -28,9 +32,9 @@ public class ShareSheetStyle{
 
     final Context context_;
 
-    public ShareSheetStyle(Context context, String messageTitle, String messageBody){
+    public ShareSheetStyle(Context context, String messageTitle, String messageBody) {
         context_ = context;
-        moreOptionIcon_ =  null;
+        moreOptionIcon_ = null;
         moreOptionText_ = null;
 
         copyUrlIcon_ = null;
@@ -45,10 +49,10 @@ public class ShareSheetStyle{
     }
 
     /**
-     *<p> Set a default url to share in case there is any error creating the deep link </p>
+     * <p> Set a default url to share in case there is any error creating the deep link </p>
      *
      * @param url A {@link String} with value of default url to be shared with the selected application in case deep link creation fails.
-     * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+     * @return This object to allow method chaining
      */
     public ShareSheetStyle setDefaultURL(String url) {
         defaultURL_ = url;
@@ -61,7 +65,7 @@ public class ShareSheetStyle{
      *
      * @param icon  Drawable to set as the icon for more option. Default icon is system menu_more icon.
      * @param label A {@link String} with value for the more option label. Default label is "More"
-     * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+     * @return This object to allow method chaining
      */
     public ShareSheetStyle setMoreOptionStyle(Drawable icon, String label) {
         moreOptionIcon_ = icon;
@@ -75,7 +79,7 @@ public class ShareSheetStyle{
      *
      * @param drawableIconID Resource ID for the drawable to set as the icon for more option. Default icon is system menu_more icon.
      * @param stringLabelID  Resource ID for String label for the more option. Default label is "More"
-     * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+     * @return This object to allow method chaining
      */
     public ShareSheetStyle setMoreOptionStyle(int drawableIconID, int stringLabelID) {
         moreOptionIcon_ = context_.getResources().getDrawable(drawableIconID);
@@ -91,7 +95,7 @@ public class ShareSheetStyle{
      * @param label   A {@link String} with value for the copy url option label. Default label is "Copy link"
      * @param message A {@link String} with value for a toast message displayed on copying a url.
      *                Default message is "Copied link to clipboard!"
-     * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+     * @return This object to allow method chaining
      */
     public ShareSheetStyle setCopyUrlStyle(Drawable icon, String label, String message) {
         copyUrlIcon_ = icon;
@@ -106,7 +110,7 @@ public class ShareSheetStyle{
      * @param drawableIconID  Resource ID for the drawable to set as the icon for copy url  option. Default icon is system menu_save icon
      * @param stringLabelID   Resource ID for the string label the copy url option. Default label is "Copy link"
      * @param stringMessageID Resource ID for the string message to show toast message displayed on copying a url
-     * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+     * @return A {@link ShareSheetStyle} instance.
      */
     public ShareSheetStyle setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
         copyUrlIcon_ = context_.getResources().getDrawable(drawableIconID);
@@ -122,7 +126,7 @@ public class ShareSheetStyle{
      *
      * @param preferredOption A list of applications to be added as preferred options on the app chooser.
      *                        Preferred applications are defined in {@link io.branch.referral.SharingHelper.SHARE_WITH}.
-     * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+     * @return This object to allow method chaining
      */
     public ShareSheetStyle addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) {
         this.preferredOptions_.add(preferredOption);

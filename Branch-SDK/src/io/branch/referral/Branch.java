@@ -169,6 +169,7 @@ public class Branch {
 
     /**
      * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
+     *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_TITLE = "$og_title";
@@ -176,6 +177,7 @@ public class Branch {
     /**
      * The description of the object to appear in social media feeds that use
      * Facebook's Open Graph specification.
+     *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_DESC = "$og_description";
@@ -183,18 +185,21 @@ public class Branch {
     /**
      * An image URL which should represent your object to appear in social media feeds that use
      * Facebook's Open Graph specification.
+     *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_IMAGE_URL = "$og_image_url";
 
     /**
      * A URL to a video file that complements this object.
+     *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_VIDEO = "$og_video";
 
     /**
      * The canonical URL of your object that will be used as its permanent ID in the graph.
+     *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_URL = "$og_url";
@@ -322,7 +327,9 @@ public class Branch {
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
 
     /* Enumeration for defining session initialisation state. */
-    private enum SESSION_STATE {INITIALISED, INITIALISING, UNINITIALISED}
+    private enum SESSION_STATE {
+        INITIALISED, INITIALISING, UNINITIALISED
+    }
 
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
@@ -334,7 +341,9 @@ public class Branch {
     private Activity currentActivity_;
 
     /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
-    private enum CUSTOM_REFERRABLE_SETTINGS { USE_DEFAULT, REFERRABLE, NON_REFERRABLE }
+    private enum CUSTOM_REFERRABLE_SETTINGS {
+        USE_DEFAULT, REFERRABLE, NON_REFERRABLE
+    }
 
     /* By default assume user want to use the default settings. Update this option when user specify custom referrable settings */
     private static CUSTOM_REFERRABLE_SETTINGS customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -392,19 +401,16 @@ public class Branch {
      * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
      *
      * @return An initialised singleton {@link Branch} object
-     *
-     *
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getInstance() {
         /* Check if BranchApp is instantiated. */
-        if (branchReferral_ == null ) {
+        if (branchReferral_ == null) {
             Log.e("BranchSDK", "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
-        }
-        else if(isAutoSessionMode_ == true){
+        } else if (isAutoSessionMode_ == true) {
             /* Check if Activity life cycle callbacks are set if in auto session mode. */
             if (isActivityLifeCycleCallbackRegistered_ == false) {
-                Log.e("BranchSDK" ,"Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
+                Log.e("BranchSDK", "Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
                         "If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
             }
         }
@@ -642,6 +648,7 @@ public class Branch {
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
+     *
      * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
      */
     @Deprecated
@@ -669,10 +676,10 @@ public class Branch {
     /**
      * <p>If there's further Branch API call happening within the two seconds, we then don't close
      * the session; otherwise, we close the session after two seconds.</p>
-     *
+     * <p/>
      * <p>Call this method if you don't want this smart session feature and would rather manage
      * the session yourself.</p>
-     *
+     * <p/>
      * <p><b>Note:</b>  smart session - we keep session alive for two seconds</p>
      */
     public void disableSmartSession() {
@@ -877,7 +884,7 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
-        return initSession(callback, isReferrable, (Activity)null);
+        return initSession(callback, isReferrable, (Activity) null);
     }
 
     /**
@@ -953,7 +960,7 @@ public class Branch {
      *
      * @param activity The current activity.
      */
-    private void setTouchDebugInternal(Activity activity){
+    private void setTouchDebugInternal(Activity activity) {
         if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
             debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
             activity.getWindow().setCallback(new BranchWindowCallback(activity.getWindow().getCallback()));
@@ -992,12 +999,12 @@ public class Branch {
                     public void run() {
                         debugHandler_.removeCallbacks(_longPressed);
                         if (!started) {
-                            Log.i("Branch Debug","======= Start Debug Session =======");
+                            Log.i("Branch Debug", "======= Start Debug Session =======");
                             prefHelper_.setDebug();
                             timer = new Timer();
                             timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
                         } else {
-                            Log.i("Branch Debug","======= End Debug Session =======");
+                            Log.i("Branch Debug", "======= End Debug Session =======");
                             prefHelper_.clearDebug();
                             timer.cancel();
                             timer = null;
@@ -1011,25 +1018,25 @@ public class Branch {
                     int pointerCount = ev.getPointerCount();
                     final int actionPerformed = ev.getAction();
                     switch (actionPerformed & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        if (systemObserver_.isSimulator()) {
-                            debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-                        }
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                    case MotionEvent.ACTION_CANCEL:
-                        debugHandler_.removeCallbacks(_longPressed);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        v.performClick();
-                        debugHandler_.removeCallbacks(_longPressed);
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        if (pointerCount == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
-                            debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-                        }
-                        break;
+                        case MotionEvent.ACTION_DOWN:
+                            if (systemObserver_.isSimulator()) {
+                                debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+                            }
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            break;
+                        case MotionEvent.ACTION_CANCEL:
+                            debugHandler_.removeCallbacks(_longPressed);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            v.performClick();
+                            debugHandler_.removeCallbacks(_longPressed);
+                            break;
+                        case MotionEvent.ACTION_POINTER_DOWN:
+                            if (pointerCount == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
+                                debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
+                            }
+                            break;
                     }
                     return true;
                 }
@@ -1062,7 +1069,7 @@ public class Branch {
             }
 
             // else, real close
-            synchronized(lock) {
+            synchronized (lock) {
                 clearCloseTimer();
                 rotateCloseTimer.schedule(new TimerTask() {
                     @Override
@@ -1081,7 +1088,7 @@ public class Branch {
             }
         }
         /* Close any opened sharing dialog.*/
-        if(shareLinkManager_ != null) {
+        if (shareLinkManager_ != null) {
             shareLinkManager_.cancelShareLinkDialog(true);
         }
     }
@@ -1090,7 +1097,7 @@ public class Branch {
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
      */
-    private void closeSessionInternal(){
+    private void closeSessionInternal() {
         executeClose();
         if (prefHelper_.getExternAppListing()) {
             if (appListingSchedule_ == null) {
@@ -1129,7 +1136,7 @@ public class Branch {
                 String uriString = activity.getIntent().getDataString();
                 if (data.getQuery().length() == paramString.length()) {
                     paramString = "\\?" + paramString;
-                } else if ((uriString.length()-paramString.length()) == uriString.indexOf(paramString)) {
+                } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
                     paramString = "&" + paramString;
                 } else {
                     paramString = paramString + "&";
@@ -1288,8 +1295,8 @@ public class Branch {
      * credits within it. If the number to redeem exceeds the number available in the bucket, all of
      * the available credits will be redeemed instead.</p>
      *
-     * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
-     *                 the bucket.
+     * @param count A {@link Integer} specifying the number of credits to attempt to redeem from
+     *              the bucket.
      */
     public void redeemRewards(int count) {
         redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, null);
@@ -1316,7 +1323,6 @@ public class Branch {
      *
      * @param bucket A {@link String} value containing the name of the referral bucket to attempt
      *               to redeem credits from.
-     *
      * @param count  A {@link Integer} specifying the number of credits to attempt to redeem from
      *               the specified bucket.
      */
@@ -1484,15 +1490,15 @@ public class Branch {
     }
 
 
-
     //-----------------Generate Short URL      -------------------------------------------//
+
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
      *
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync() {
@@ -1506,13 +1512,14 @@ public class Branch {
      * @param params A {@link JSONObject} value containing the deep linked params associated with
      *               the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(JSONObject params) {
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
+
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1526,8 +1533,8 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
@@ -1554,8 +1561,8 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
@@ -1577,8 +1584,8 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
@@ -1600,8 +1607,8 @@ public class Branch {
      * @param duration A {@link Integer} value specifying the time that Branch allows a click to
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1623,8 +1630,8 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     * *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1653,8 +1660,8 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1678,8 +1685,8 @@ public class Branch {
      * @param params  A {@link JSONObject} value containing the deep linked params associated with
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1703,8 +1710,8 @@ public class Branch {
      * @param duration A {@link Integer} value specifying the time that Branch allows a click to
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1716,12 +1723,12 @@ public class Branch {
      *
      * @param callback A {@link BranchLinkCreateListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
-        generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null,BranchUtil.stringifyAndAddSource(new JSONObject()), callback, true);
+        generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), callback, true);
     }
 
     /**
@@ -1734,8 +1741,8 @@ public class Branch {
      * @see BranchLinkData
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
@@ -1761,8 +1768,9 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * <p/>
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1796,8 +1804,8 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1826,8 +1834,8 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1856,8 +1864,8 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -1886,8 +1894,8 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1922,8 +1930,8 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1955,8 +1963,8 @@ public class Branch {
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1988,8 +1996,8 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
-     *
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -2021,8 +2029,7 @@ public class Branch {
      *                 the link that will be passed into a new app session when clicked
      * @param callback A {@link BranchLinkCreateListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
-     * @param  async   A {@link Boolean} whose value is true if the link should be created asynchronously.
-     *
+     * @param async    A {@link Boolean} whose value is true if the link should be created asynchronously.
      * @see BranchLinkData
      * @see BranchLinkData#putTags(Collection)
      * @see BranchLinkData#putChannel(String)
@@ -2031,7 +2038,8 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
-     * @deprecated use {@link BranchShortLinkBuilder} instead.
+     * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
     @Deprecated
     private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
@@ -2083,6 +2091,7 @@ public class Branch {
 
 
     //-----------------Generate Referral URL      -------------------------------------------//
+
     /**
      * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
      *
@@ -2162,6 +2171,7 @@ public class Branch {
 
 
     //------------------Generate  content Url------------------------------------------------//
+
     /**
      * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
      *
@@ -2241,6 +2251,7 @@ public class Branch {
 
 
     //----------------Get referral code ---------------------------------------//
+
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2408,6 +2419,7 @@ public class Branch {
      *
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
      */
+    @SuppressWarnings("deprecation")
     private void shareLink(ShareLinkBuilder builder) {
         //Cancel any existing sharing in progress.
         if (shareLinkManager_ != null) {
@@ -2617,7 +2629,7 @@ public class Branch {
 
     private void keepAlive() {
         keepAlive_ = true;
-        synchronized(lock) {
+        synchronized (lock) {
             clearTimer();
             closeTimer.schedule(new TimerTask() {
                 @Override
@@ -2701,15 +2713,14 @@ public class Branch {
     private void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && req.isSessionInitRequest() == false) {
-            if((req instanceof ServerRequestLogout)){
+            if ((req instanceof ServerRequestLogout)) {
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
-            if((req instanceof ServerRequestRegisterClose)){
+            if ((req instanceof ServerRequestRegisterClose)) {
                 Log.i(TAG, "Branch is not initialized, cannot close session");
                 return;
-            }
-            else{
+            } else {
                 initializeSession(null);
             }
         }
@@ -2731,12 +2742,12 @@ public class Branch {
             isActivityLifeCycleCallbackRegistered_ = false;
             isAutoSessionMode_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
-            Log.w(TAG, new BranchError("",BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+            Log.w(TAG, new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
         } catch (NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
             isAutoSessionMode_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
-            Log.w(TAG, new BranchError("",BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+            Log.w(TAG, new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
         }
     }
 
@@ -2745,12 +2756,13 @@ public class Branch {
      * session.</p>
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks{
+    private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks {
         private int activityCnt_ = 0; //Keep the count of live  activities.
 
 
         @Override
-        public void onActivityCreated(Activity activity, Bundle bundle) {}
+        public void onActivityCreated(Activity activity, Bundle bundle) {
+        }
 
         @Override
         public void onActivityStarted(Activity activity) {
@@ -2789,7 +2801,7 @@ public class Branch {
         public void onActivityPaused(Activity activity) {
             clearTouchDebugInternal(activity);
             /* Close any opened sharing dialog.*/
-            if(shareLinkManager_ != null) {
+            if (shareLinkManager_ != null) {
                 shareLinkManager_.cancelShareLinkDialog(true);
             }
         }
@@ -2797,18 +2809,19 @@ public class Branch {
         @Override
         public void onActivityStopped(Activity activity) {
             activityCnt_--; // Check if this is the last activity.If so stop
-                            // session.
+            // session.
             if (activityCnt_ < 1) {
                 closeSessionInternal();
             }
         }
 
         @Override
-        public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {}
+        public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+        }
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-            if(currentActivity_ == activity) {
+            if (currentActivity_ == activity) {
                 currentActivity_ = null;
             }
         }
@@ -2870,7 +2883,7 @@ public class Branch {
         void onShareLinkDialogDismissed();
 
         /**
-         *<p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
+         * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
          *
          * @param sharedLink    The link shared to the channel.
          * @param sharedChannel Channel selected for sharing.
@@ -3141,7 +3154,8 @@ public class Branch {
             } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
-        } catch (JSONException e) { }
+        } catch (JSONException e) {
+        }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
             for (String activityLinkPath : activityLinkPaths) {
@@ -3188,12 +3202,12 @@ public class Branch {
                     public void run() {
                         debugHandler_.removeCallbacks(longPressed_);
                         if (!debugStarted_) {
-                            Log.i("Branch Debug","======= Start Debug Session =======");
+                            Log.i("Branch Debug", "======= Start Debug Session =======");
                             prefHelper_.setDebug();
                             timer = new Timer();
                             timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
                         } else {
-                            Log.i("Branch Debug","======= End Debug Session =======");
+                            Log.i("Branch Debug", "======= End Debug Session =======");
                             prefHelper_.clearDebug();
                             if (timer != null) {
                                 timer.cancel();
@@ -3354,7 +3368,11 @@ public class Branch {
     /**
      * <p> Class for building a share link dialog.This creates a chooser for selecting application for
      * sharing a link created with given parameters. </p>
+     * @deprecated Do not use this class directly. Use {@link BranchUniversalObject } to create share sheet for to your content.
+     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
      */
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public static class ShareLinkBuilder {
 
         private final Activity activity_;
@@ -3372,6 +3390,7 @@ public class Branch {
         private Drawable copyUrlIcon_;
         private String copyURlText_;
         private String urlCopiedMessage_;
+
 
         BranchShortLinkBuilder shortLinkBuilder_;
 
@@ -3410,7 +3429,8 @@ public class Branch {
         /**
          * *<p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
          * user selected clients</p>
-         * @param activity The {@link Activity} to show the dialog for choosing sharing application.
+         *
+         * @param activity         The {@link Activity} to show the dialog for choosing sharing application.
          * @param shortLinkBuilder An instance of {@link BranchShortLinkBuilder} to create link to be shared
          */
         public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) {
