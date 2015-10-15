@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -91,6 +92,18 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
      */
     @SuppressWarnings("unchecked")
     public T addParameters(String key, String value) {
+        try {
+            if (this.params_ == null) {
+                this.params_ = new JSONObject();
+            }
+            this.params_.put(key, value);
+        } catch (JSONException ignore) {
+
+        }
+        return (T) this;
+    }
+
+    public T addParameters(String key, JSONArray value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();

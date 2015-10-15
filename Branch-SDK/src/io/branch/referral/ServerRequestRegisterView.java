@@ -94,18 +94,23 @@ class ServerRequestRegisterView extends ServerRequest {
 
         contentObject.put(Defines.Jsonkey.OS.getKey(), os_Info);
         contentObject.put(Defines.Jsonkey.SessionID.getKey(), sessionID);
+        contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 
         String uniqueId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
         if (!uniqueId.equals(SystemObserver.BLANK)) {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqueId);
         }
-        contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+
+        String appVersion = sysObserver.getAppVersion();
+        if (!appVersion.equals(SystemObserver.BLANK)) {
+            contentObject.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
+        }
 
         JSONObject paramsObj = new JSONObject();
 
         paramsObj.put(Defines.Jsonkey.ContentTitle.getKey(), universalObject.getTitle());
         paramsObj.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), universalObject.getCanonicalIdentifier());
-        paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeyWords());
+        paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeywordsJsonArray());
         paramsObj.put(Defines.Jsonkey.PublicallyIndexable.getKey(), universalObject.isPublicallyIndexable());
 
         String desc = universalObject.getDescription();

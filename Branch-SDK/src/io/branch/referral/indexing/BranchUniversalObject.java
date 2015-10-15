@@ -3,6 +3,7 @@ package io.branch.referral.indexing;
 import android.app.Activity;
 import android.content.Context;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -233,6 +234,14 @@ public class BranchUniversalObject {
         return type_;
     }
 
+    public JSONArray getKeywordsJsonArray(){
+        JSONArray keywordArray = new JSONArray();
+        for(String keyword : keyWords_){
+            keywordArray.put(keyword);
+        }
+        return keywordArray;
+    }
+
     //-------------------- Register views--------------------------//
 
     /**
@@ -344,7 +353,7 @@ public class BranchUniversalObject {
 
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentTitle.getKey(), title_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentKeyWords.getKey(), getKeyWords().toString());
+        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentKeyWords.getKey(), getKeywordsJsonArray());
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentDesc.getKey(), description_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentType.getKey(), type_);
@@ -361,6 +370,5 @@ public class BranchUniversalObject {
 
         return shortLinkBuilder;
     }
-
 
 }
