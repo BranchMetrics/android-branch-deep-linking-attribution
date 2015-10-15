@@ -31,15 +31,15 @@ import io.branch.referral.util.ShareSheetStyle;
  */
 public class BranchUniversalObject {
     /* Canonical identifier for the content referred. Normally the canonical path for your content in the app or web */
-    private final String canonicalIdentifier_;
-    /* Title for the BranchUniversalObject that identify your content referred */
-    private final String title_;
+    private String canonicalIdentifier_;
+    /* Title for the content referred by BranchUniversalObject */
+    private String title_;
     /* Description for the content referred */
     private String description_;
     /* An image url associated with the content referred */
     private String imageUrl_;
     /* Meta data provided for the content */
-    private final HashMap<String, String> metaData_;
+    private final HashMap<String, String> metadata_;
     /* Mime type for the content referred */
     private String type_;
     /* Content index mode */
@@ -64,19 +64,42 @@ public class BranchUniversalObject {
      * <p>
      * Create a BranchUniversalObject with the given content.
      * </p>
-     *
-     * @param canonicalIdentifier A {@link String} with value of canonical identifier for the content referred by this object
-     * @param title               A {@link String} with value for title of content referred by this object
      */
-    public BranchUniversalObject(String canonicalIdentifier, String title) {
-        canonicalIdentifier_ = canonicalIdentifier;
-        title_ = title;
-        metaData_ = new HashMap<>();
+    public BranchUniversalObject() {
+        metadata_ = new HashMap<>();
         keyWords_ = new ArrayList<>();
+        canonicalIdentifier_ = "";
+        title_ = "";
         description_ = "";
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         expiration_ = 0L;
+    }
+
+    /**
+     * <p>
+     * Set the canonical identifier for this BranchUniversalObject. Canonical identifier is normally the canonical path for your content in the application or web
+     * </p>
+     *
+     * @param canonicalIdentifier A {@link String} with value for the canonical identifier
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchUniversalObject setCanonicalIdentifier(String canonicalIdentifier) {
+        this.canonicalIdentifier_ = canonicalIdentifier;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set a title for the content referred by this object
+     * </p>
+     *
+     * @param title A {@link String} with value of for the content title
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchUniversalObject setTitle(String title) {
+        this.title_ = title;
+        return this;
     }
 
     /**
@@ -110,11 +133,12 @@ public class BranchUniversalObject {
      * Adds the given {@link java.util.Map} to the meta data
      * </p>
      *
-     * @param metaData A {@link HashMap} with {@link String} key value pairs
+     * @param metadata A {@link HashMap} with {@link String} key value pairs
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject addContentMetaData(HashMap<String, String> metaData) {
-        this.metaData_.putAll(metaData);
+    @SuppressWarnings("unused")
+    public BranchUniversalObject addContentMetaData(HashMap<String, String> metadata) {
+        this.metadata_.putAll(metadata);
         return this;
     }
 
@@ -127,8 +151,8 @@ public class BranchUniversalObject {
      * @param value A {@link String} value for metadata value
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject addContentMetaData(String key, String value) {
-        this.metaData_.put(key, value);
+    public BranchUniversalObject addContentMetadata(String key, String value) {
+        this.metadata_.put(key, value);
         return this;
     }
 
@@ -166,6 +190,7 @@ public class BranchUniversalObject {
      * @param keyWords An {@link ArrayList} of {@link String} values
      * @return This instance to allow for chaining of calls to set methods
      */
+    @SuppressWarnings("unused")
     public BranchUniversalObject addKeyWords(ArrayList<String> keyWords) {
         this.keyWords_.addAll(keyWords);
         return this;
@@ -198,16 +223,12 @@ public class BranchUniversalObject {
     }
 
 
-    public ArrayList<String> getKeyWords() {
-        return keyWords_;
-    }
-
     public boolean isPublicallyIndexable() {
         return indexMode_ == CONTENT_INDEX_MODE.PUBLIC;
     }
 
-    public HashMap<String, String> getMetaData() {
-        return metaData_;
+    public HashMap<String, String> getMetadata() {
+        return metadata_;
     }
 
     public long getExpirationTime() {
@@ -300,8 +321,8 @@ public class BranchUniversalObject {
     public void showShareSheet(Activity activity, LinkProperties linkProperties, ShareSheetStyle style, Branch.BranchLinkShareListener callback) {
         JSONObject params = new JSONObject();
         try {
-            for (String key : metaData_.keySet()) {
-                params.put(key, metaData_.get(key));
+            for (String key : metadata_.keySet()) {
+                params.put(key, metadata_.get(key));
             }
             HashMap<String, String> controlParams = linkProperties.getControlParams();
             for (String key : controlParams.keySet()) {
@@ -362,8 +383,8 @@ public class BranchUniversalObject {
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expiration_);
 
         HashMap<String, String> controlParam = linkProperties.getControlParams();
-        for (String key : metaData_.keySet()) {
-            shortLinkBuilder.addParameters(key, metaData_.get(key));
+        for (String key : metadata_.keySet()) {
+            shortLinkBuilder.addParameters(key, metadata_.get(key));
         }
         for (String key : controlParam.keySet()) {
             shortLinkBuilder.addParameters(key, controlParam.get(key));

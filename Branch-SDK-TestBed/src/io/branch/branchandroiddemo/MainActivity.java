@@ -78,6 +78,21 @@ public class MainActivity extends Activity {
         cmdGetCreditHistory = (Button) findViewById(R.id.cmdGetCreditHistory);
         cmdReferralCode = (Button) findViewById(R.id.cmdReferralCode);
 
+        // Create a BranchUniversal object for the content referred on this activity instance
+        branchUniversalObject = new BranchUniversalObject()
+                .setCanonicalIdentifier("canonical/identifier/")
+                .setTitle("My Content Title")
+                .setContentDescription("My Content Description ")
+                .setContentImageUrl("https://contents/mycontent.png")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setContentType("application/vnd.businessobjects")
+                .setContentExpiration(new Date(1476566432000L))
+                .addKeyWord("My_Keyword1")
+                .addKeyWord("My_Keyword2")
+                .addContentMetadata("Metadata_Key1", "Metadata_value1")
+                .addContentMetadata("Metadata_Key2", "Metadata_value2");
+
+
         cmdIdentifyUser.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,17 +133,22 @@ public class MainActivity extends Activity {
             public void onClick(View arg0) {
 
                 LinkProperties linkProperties = new LinkProperties()
-                        .addTag("myTag1")
-                        .addTag("myTag2")
-                        .setChannel("myChannel2")
-                        .setFeature("Myfeature2")
-                        .setStage("10")
+                        .addTag("Tag1")
+                        .setChannel("Sharing_Channel_name")
+                        .setFeature("my_feature_name")
                         .addControlParameter("Name", "MyUserName1")
                         .addControlParameter("Message", "My Custom message")
                         .setDuration(100);
                       //.setAlias("myContentName") // in case you need to white label your link
 
                 txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
+
+                branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        String shortUrl = url;
+                    }
+                });
             }
 
 
@@ -240,7 +260,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                        //.setAlias("mylinkName") // In case you need to white label your link
+                                //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -260,6 +280,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onShareLinkDialogLaunched() {
                     }
+
                     @Override
                     public void onShareLinkDialogDismissed() {
                     }
@@ -272,20 +293,6 @@ public class MainActivity extends Activity {
                 });
             }
         });
-
-        branchUniversalObject = new BranchUniversalObject("canonical/identifier/", "My Content Title")
-                .setContentDescription("My Content Description ")
-                .setContentImageUrl("https://contents/mycontent.png")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                .setContentType("application/vnd.businessobjects")
-                .setContentExpiration(new Date(2015, 11, 12))
-                .addKeyWord("My Key1")
-                .addKeyWord("My Key2")
-
-                .addContentMetaData("name", "test name")
-                .addContentMetaData("auto_deeplink_key_1", "This is an auto deep linked value")
-                .addContentMetaData("message", "hello there with short url");
-
 
     }
 

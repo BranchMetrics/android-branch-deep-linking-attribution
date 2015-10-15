@@ -108,31 +108,38 @@ class ServerRequestRegisterView extends ServerRequest {
 
         JSONObject paramsObj = new JSONObject();
 
-        paramsObj.put(Defines.Jsonkey.ContentTitle.getKey(), universalObject.getTitle());
-        paramsObj.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), universalObject.getCanonicalIdentifier());
         paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeywordsJsonArray());
         paramsObj.put(Defines.Jsonkey.PublicallyIndexable.getKey(), universalObject.isPublicallyIndexable());
 
+        String canonicalId = universalObject.getCanonicalIdentifier();
+        if (canonicalId != null && canonicalId.trim().length() > 0) {
+            paramsObj.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalId);
+        }
+        String title = universalObject.getTitle();
+        if (title != null && title.trim().length() > 0) {
+            paramsObj.put(Defines.Jsonkey.ContentTitle.getKey(), universalObject.getTitle());
+        }
+
         String desc = universalObject.getDescription();
-        if(desc != null && desc.trim().length() > 0 ) {
+        if (desc != null && desc.trim().length() > 0) {
             paramsObj.put(Defines.Jsonkey.ContentDesc.getKey(), desc);
         }
         String imageUrl = universalObject.getImageUrl();
-        if(imageUrl != null && imageUrl.trim().length() > 0 ) {
+        if (imageUrl != null && imageUrl.trim().length() > 0) {
             paramsObj.put(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl);
         }
         String contentType = universalObject.getType();
-        if(contentType != null && contentType.trim().length() > 0 ) {
+        if (contentType != null && contentType.trim().length() > 0) {
             paramsObj.put(Defines.Jsonkey.ContentType.getKey(), contentType);
         }
         long expiryTime = universalObject.getExpirationTime();
-        if(expiryTime > 0) {
+        if (expiryTime > 0) {
             paramsObj.put(Defines.Jsonkey.ContentExpiryTime.getKey(), universalObject.getExpirationTime());
         }
 
         contentObject.put(Defines.Jsonkey.Params.getKey(), paramsObj);
 
-        HashMap metaData = universalObject.getMetaData();
+        HashMap metaData = universalObject.getMetadata();
         Set extraKeys = metaData.keySet();
         JSONObject metaDataObject = new JSONObject();
         for (Object key : extraKeys) {

@@ -281,9 +281,6 @@ public class Branch {
      */
     private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
-    /* Variable to keep the activity stack */
-    ArrayList<String> activityStack_ = new ArrayList<String>();
-
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -2778,14 +2775,6 @@ public class Branch {
                 initSessionWithData(intentData, activity); // indicate  starting of session.
             }
             activityCnt_++;
-
-            // Activity stack for finding the structured path to this activity
-            if (activityStack_.size() > 1 && (activityStack_.get(activityStack_.size() - 2)).equals(activity.getClass().getSimpleName())) {
-                activityStack_.remove(activityStack_.get(activityStack_.size() - 2));
-                activityStack_.remove(activityStack_.get(activityStack_.size() - 1));
-            } else {
-                activityStack_.add(activity.getClass().getSimpleName());
-            }
         }
 
         @Override
