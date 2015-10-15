@@ -112,8 +112,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View arg0) {
                 BranchShortLinkBuilder shortUrlBuilder = new BranchShortLinkBuilder(MainActivity.this)
-                        .addTag("tag1")
-                        .addTag("tag2")
+                        .addTag("tag12")
+                        .addTag("tag23")
                         .setChannel("channel1")
                         .setFeature("feature1")
                         .setStage("1")
@@ -264,8 +264,8 @@ public class MainActivity extends Activity {
                         .setSubject("Check this out!")
                         .setStage("stage1")
                         .setFeature("feature1")
-                        .addTag("Tag1")
-                        .addTag("Tag2")
+                        .addTag("Tag_1")
+                        .addTag("Tag_2")
                         .setDefaultURL("https://play.google.com/store/apps/details?id=com.kindred.android")
                         .setCallback(new Branch.BranchLinkShareListener() {
                             @Override

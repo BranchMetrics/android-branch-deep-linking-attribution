@@ -2,14 +2,11 @@ machine:
   environment:
     PATH: /home/ubuntu/gradle-2.4/bin:$PATH
     #ANDROID_HOME: /home/ubuntu/android
-    ADB_INSTALL_TIMEOUT: 8
 
 dependencies:
   #cache_directories:
     #- ~/.android
     #- ~/android
-  pre:
-    - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
         
   override:
     #- ./install-dependencies.sh

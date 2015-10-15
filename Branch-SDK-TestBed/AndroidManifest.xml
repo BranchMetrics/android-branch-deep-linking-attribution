@@ -37,8 +37,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/xhsd" /> <!-- Live App link-->
-                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/Ojqd" /> <!-- Test App link-->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/cbAf" /> <!-- Live App link-->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/GaAf" /> <!-- Test App link-->
             </intent-filter>
         </activity>
 
@@ -58,8 +58,10 @@
             <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
         </activity>
 
-        <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv" />
+        <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
+        <!--<meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv" />-->
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_emgSLjOJiosiHcCK8TqJ1lgjAto6GxLi" />
+
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
 
         <!-- Optional. Set to true to disable auto deep link feature-->
