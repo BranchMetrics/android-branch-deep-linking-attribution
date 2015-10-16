@@ -637,13 +637,13 @@ Branch SDK provides a customisable share sheet for sharing content with other ap
 Creating a Share Sheet for the content of `BranchUniversalObject` is as simple as follows
 
 ```java
-branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, branchLinkShareListener)
+branchUniversalObject.showShareSheet(activity, linkProperties, shareSheetStyle, branchLinkShareListener)
 ```
 
 The parameter `shareSheetStyle` is an instance of `ShareSheetStyle` class which defines the customisation parameters for the share sheet.
 
 ```java
-ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
+ShareSheetStyle shareSheetStyle = new ShareSheetStyle(activity, "My Sharing Message Title", "My Sharing message body")
                         .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
                         .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
@@ -669,7 +669,7 @@ branch.initSession(new BranchReferralInitListener() {
                     }
                 }
             }
-        }, this.getIntent().getData(), this);
+        }, activity.getIntent().getData(), activity);
 ```
 
 ## Referral system rewarding functionality
