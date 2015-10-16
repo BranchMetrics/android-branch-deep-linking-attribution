@@ -81,10 +81,10 @@ public class MainActivity extends Activity {
 
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
-                .setCanonicalIdentifier("canonical/identifier/")
+                .setCanonicalIdentifier("item/12345")
                 .setTitle("My Content Title")
                 .setContentDescription("My Content Description ")
-                .setContentImageUrl("https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png")
+                .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
                 .setContentType("application/vnd.businessobjects")
                 .setContentExpiration(new Date(1476566432000L))
