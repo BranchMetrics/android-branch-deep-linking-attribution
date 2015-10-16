@@ -22,7 +22,7 @@ import io.branch.referral.util.ShareSheetStyle;
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
  * It provides convenient methods for sharing, deep linking, and tracking how often that content is viewed. This information is then used to provide you with powerful content analytics
- * and deep linking.BranchUniversalObject provides convenient methods to work on your content with Branch services
+ * and deep linking.
  * </p>
  */
 public class BranchUniversalObject {
@@ -43,7 +43,7 @@ public class BranchUniversalObject {
     /* Any keyword associated with the content. Used for indexing */
     private final ArrayList<String> keywords_;
     /* Expiry date for the content and any associated links. Represented as epoch milli second */
-    private long expiration_;
+    private long expirationInMilliSec_;
 
     private LinkProperties linkProperties_;
 
@@ -71,7 +71,7 @@ public class BranchUniversalObject {
         description_ = "";
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
-        expiration_ = 0L;
+        expirationInMilliSec_ = 0L;
         linkProperties_ = new LinkProperties();
     }
 
@@ -217,7 +217,7 @@ public class BranchUniversalObject {
      * @return This instance to allow for chaining of calls to set methods
      */
     public BranchUniversalObject setContentExpiration(Date expirationDate) {
-        this.expiration_ = expirationDate.getTime();
+        this.expirationInMilliSec_ = expirationDate.getTime();
         return this;
     }
 
@@ -231,7 +231,7 @@ public class BranchUniversalObject {
     }
 
     public long getExpirationTime() {
-        return expiration_;
+        return expirationInMilliSec_;
     }
 
     public String getCanonicalIdentifier() {
@@ -383,7 +383,7 @@ public class BranchUniversalObject {
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentDesc.getKey(), description_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentType.getKey(), type_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expiration_);
+        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expirationInMilliSec_);
 
         HashMap<String, String> controlParam = linkProperties.getControlParams();
         for (String key : metadata_.keySet()) {
@@ -441,7 +441,7 @@ public class BranchUniversalObject {
                         latestParam.remove(Defines.Jsonkey.ContentType.getKey());
                     }
                     if (latestParam.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
-                        branchUniversalObject.expiration_ = latestParam.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
+                        branchUniversalObject.expirationInMilliSec_ = latestParam.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
                         latestParam.remove(Defines.Jsonkey.ContentExpiryTime.getKey());
                     }
 
