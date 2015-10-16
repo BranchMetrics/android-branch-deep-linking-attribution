@@ -2637,6 +2637,8 @@ public class Branch {
                             req.getPost().put(key, prefHelper_.getSessionID());
                         } else if (key.equals(Defines.Jsonkey.IdentityID.getKey())) {
                             req.getPost().put(key, prefHelper_.getIdentityID());
+                        } else if (key.equals(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                            req.getPost().put(key, prefHelper_.getDeviceFingerPrintID());
                         }
                     }
                 }
@@ -3083,6 +3085,9 @@ public class Branch {
                             prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
                             if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
                                 prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                            }
+                            if (serverResponse.getObject().has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                                prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
                             }
                             updateAllRequestsInQueue();
                             initState_ = SESSION_STATE.INITIALISED;
