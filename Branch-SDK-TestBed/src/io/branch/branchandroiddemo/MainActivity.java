@@ -136,8 +136,8 @@ public class MainActivity extends Activity {
                         .addTag("Tag1")
                         .setChannel("Sharing_Channel_name")
                         .setFeature("my_feature_name")
-                        .addControlParameter("Name", "MyUserName1")
-                        .addControlParameter("Message", "My Custom message")
+                        .addControlParameter("$android_deeplink_path", "custom/path/*")
+                        .addControlParameter("$android_deeplink_path", "custom/details/*")
                         .setDuration(100);
                       //.setAlias("myContentName") // in case you need to white label your link
 
@@ -262,12 +262,12 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                                //.setAlias("mylinkName") // In case you need to white label your link
+                         //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
-                        .addControlParameter("Name", "MyUserName1")
-                        .addControlParameter("Message", "My Custom message")
+                        .addControlParameter("$android_deeplink_path", "custom/path/*")
+                        .addControlParameter("$android_deeplink_path", "custom/details/*")
                         .setDuration(100);
 
                 ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
@@ -336,7 +336,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        branchUniversalObject.markAsViewed();
+        branchUniversalObject.registerView();
     }
 
     @Override

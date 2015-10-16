@@ -18,14 +18,14 @@ import io.branch.referral.indexing.BranchUniversalObject;
  */
 class ServerRequestRegisterView extends ServerRequest {
 
-    BranchUniversalObject.MarkViewStatusListener callback_;
+    BranchUniversalObject.RegisterViewStatusListener callback_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterView} to notify Branch on a content view event.</p>
      *
      * @param branchUniversalObject An instance of {@link BranchUniversalObject} to mar as viewed
      */
-    public ServerRequestRegisterView(Context context, BranchUniversalObject branchUniversalObject, SystemObserver sysObserver, BranchUniversalObject.MarkViewStatusListener callback) {
+    public ServerRequestRegisterView(Context context, BranchUniversalObject branchUniversalObject, SystemObserver sysObserver, BranchUniversalObject.RegisterViewStatusListener callback) {
         super(context, Defines.RequestPath.RegisterView.getPath());
         callback_ = callback;
         JSONObject registerViewPost;
@@ -41,21 +41,21 @@ class ServerRequestRegisterView extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         if (callback_ != null) {
-            callback_.onMarkViewFinished(true, null);
+            callback_.onRegisterViewFinished(true, null);
         }
     }
 
     @Override
     public void handleFailure(int statusCode) {
         if (callback_ != null) {
-            callback_.onMarkViewFinished(false, new BranchError("Unable to register content view", statusCode));
+            callback_.onRegisterViewFinished(false, new BranchError("Unable to register content view", statusCode));
         }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onMarkViewFinished(false, new BranchError("Unable to register content view", BranchError.ERR_NO_INTERNET_PERMISSION));
+            callback_.onRegisterViewFinished(false, new BranchError("Unable to register content view", BranchError.ERR_NO_INTERNET_PERMISSION));
             return true;
         }
         return false;

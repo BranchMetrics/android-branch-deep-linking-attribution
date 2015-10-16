@@ -10,8 +10,8 @@ import io.branch.referral.Branch;
 
 /**
  * <p/>
- * Class for representing properties for a deep link.
- * Use this class to specify the properties of a deep link that you want to create.
+ * Class for representing any additional information that is specific to the link.
+ * Use this class to specify the properties of a deep link such as channel, feature etc and any control params associated with the link.
  *
  * @see io.branch.referral.indexing.BranchUniversalObject#getShortUrl(Context, LinkProperties)
  * @see io.branch.referral.indexing.BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
@@ -57,7 +57,8 @@ public class LinkProperties {
     }
 
     /**
-     * <p>Adds a tag to the iterable collection of name associated with a deep link.</p>
+     * <p>Adds a tag to the iterable collection of name associated with a deep link.
+     * </p>
      *
      * @param tag {@link String} tags associated with a deep link.
      * @return This Builder object to allow for chaining of calls to set methods.
@@ -68,7 +69,9 @@ public class LinkProperties {
     }
 
     /**
-     * <p>Adds the the given key value pair to the parameters associated with this link.</p>
+     * <p>Adds any control params that control the behaviour of the link.
+     * Control parameters include Custom redirect url ($android_url,$ios_url),
+     * path for auto deep linking($android_deeplink_path,$deeplink_path) etc </p>
      *
      * @param key   A {@link String} with value of key for the parameter
      * @param value A {@link String} with value of value for the parameter

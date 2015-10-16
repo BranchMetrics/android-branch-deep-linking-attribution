@@ -19,15 +19,10 @@ import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 
 /**
- * Created by sojanpr on 10/8/15.
- * <p/>
- * <p>Class for representing a piece of content in your application to work with Branch provided services such as
- * 1) Content Deep linking
- * 2) Content Analytics
- * 3) Content indexing
- * 4) Content Sharing
- * etc.
- * BranchUniversalObject provides convenient methods to work on your content with above Branch services  </p>
+ * <p>Class represents a single piece of content within your app, as well as any associated metadata.
+ * It provides convenient methods for sharing, deep linking, and tracking how often that content is viewed. This information is then used to provide you with powerful content analytics
+ * and deep linking.BranchUniversalObject provides convenient methods to work on your content with Branch services
+ * </p>
  */
 public class BranchUniversalObject {
     /* Canonical identifier for the content referred. Normally the canonical path for your content in the app or web */
@@ -38,7 +33,7 @@ public class BranchUniversalObject {
     private String description_;
     /* An image url associated with the content referred */
     private String imageUrl_;
-    /* Meta data provided for the content */
+    /* Meta data provided for the content. This meta data is used as the link parameters for links created from this object */
     private final HashMap<String, String> metadata_;
     /* Mime type for the content referred */
     private String type_;
@@ -130,21 +125,21 @@ public class BranchUniversalObject {
 
     /**
      * <p>
-     * Adds the given {@link java.util.Map} to the meta data
+     * Adds the the given set of key value pairs to the metadata associated with this content. These key values are passed to another user on deep linking.
      * </p>
      *
      * @param metadata A {@link HashMap} with {@link String} key value pairs
      * @return This instance to allow for chaining of calls to set methods
      */
     @SuppressWarnings("unused")
-    public BranchUniversalObject addContentMetaData(HashMap<String, String> metadata) {
+    public BranchUniversalObject addContentMetadata(HashMap<String, String> metadata) {
         this.metadata_.putAll(metadata);
         return this;
     }
 
     /**
      * <p>
-     * Adds the given {@link java.util.Map} to the meta data
+     * Adds the the given set of key value pair to the metadata associated with this content. These key value is passed to another user on deep linking.
      * </p>
      *
      * @param key   A {@link String} value for metadata key
@@ -268,21 +263,21 @@ public class BranchUniversalObject {
     /**
      * Mark the content referred by this object as viewed. This increment the view count of the contents referred by this object.
      */
-    public void markAsViewed() {
-        markAsViewed(null);
+    public void registerView() {
+        registerView(null);
     }
 
     /**
      * Mark the content referred by this object as viewed. This increment the view count of the contents referred by this object.
      *
-     * @param callback An instance of {@link MarkViewStatusListener} to listen to results of the operation
+     * @param callback An instance of {@link RegisterViewStatusListener} to listen to results of the operation
      */
-    public void markAsViewed(MarkViewStatusListener callback) {
+    public void registerView(RegisterViewStatusListener callback) {
         if (Branch.getInstance() != null) {
-            Branch.getInstance().markContentViewed(this, callback);
+            Branch.getInstance().registerView(this, callback);
         } else {
             if (callback != null) {
-                callback.onMarkViewFinished(false, new BranchError("Register view error", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+                callback.onRegisterViewFinished(false, new BranchError("Register view error", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
             }
         }
     }
@@ -293,7 +288,7 @@ public class BranchUniversalObject {
      * Callback interface for listening register content view status
      * </p>
      */
-    public interface MarkViewStatusListener {
+    public interface RegisterViewStatusListener {
         /**
          * Called on finishing the the register view process
          *
@@ -301,7 +296,7 @@ public class BranchUniversalObject {
          * @param error      An instance of {@link BranchError} to notify any error occurred during registering a content view event.
          *                   A null value is set if the registering content view succeeds
          */
-        void onMarkViewFinished(boolean registered, BranchError error);
+        void onRegisterViewFinished(boolean registered, BranchError error);
     }
 
 

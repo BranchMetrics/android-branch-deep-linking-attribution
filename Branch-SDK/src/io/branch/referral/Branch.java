@@ -1151,9 +1151,12 @@ public class Branch {
                 return true;
             } else {
                 // Check if the clicked url is an app link pointing to this app
-                if ((data.getScheme().equalsIgnoreCase("http") || data.getScheme().equalsIgnoreCase("https"))
-                        && data.getHost() != null && data.getHost().length() > 0) {
-                    prefHelper_.setAppLink(data.toString());
+                String scheme = data.getScheme();
+                if (scheme != null) {
+                    if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                            && data.getHost() != null && data.getHost().length() > 0) {
+                        prefHelper_.setAppLink(data.toString());
+                    }
                 }
             }
         }
@@ -1526,7 +1529,7 @@ public class Branch {
      *
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync() {
@@ -1541,7 +1544,7 @@ public class Branch {
      *               the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(JSONObject params) {
@@ -1562,7 +1565,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
@@ -1590,7 +1593,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
@@ -1613,7 +1616,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
@@ -1636,7 +1639,7 @@ public class Branch {
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1659,7 +1662,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1689,7 +1692,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1714,7 +1717,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1739,7 +1742,7 @@ public class Branch {
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1752,7 +1755,7 @@ public class Branch {
      * @param callback A {@link BranchLinkCreateListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
@@ -1770,7 +1773,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
@@ -1798,7 +1801,7 @@ public class Branch {
      * @see BranchLinkCreateListener
      * <p/>
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1833,7 +1836,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1863,7 +1866,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1893,7 +1896,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -1923,7 +1926,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1959,7 +1962,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1992,7 +1995,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2025,7 +2028,7 @@ public class Branch {
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -2067,7 +2070,7 @@ public class Branch {
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
@@ -3420,7 +3423,7 @@ public class Branch {
      * <p> Class for building a share link dialog.This creates a chooser for selecting application for
      * sharing a link created with given parameters. </p>
      * @deprecated Do not use this class directly. Use {@link BranchUniversalObject } to create share sheet for to your content.
-     * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
+     * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -3783,7 +3786,7 @@ public class Branch {
 
     //------------------------ Content Indexing methods----------------------//
 
-    public void markContentViewed(BranchUniversalObject branchUniversalObject, BranchUniversalObject.MarkViewStatusListener callback) {
+    public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         ServerRequest req;
         req = new ServerRequestRegisterView(currentActivity_, branchUniversalObject, systemObserver_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
