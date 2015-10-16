@@ -67,9 +67,6 @@ public class Defines {
 
         AndroidAppLinkURL("android_app_link_url"),
 
-        ContentScreen("content_screen"),
-        ContentPath("content_path"),
-        ContentID("$content_id"),
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle("$og_title"),
         ContentDesc("$og_description"),
@@ -78,9 +75,8 @@ public class Defines {
         PublicallyIndexable("$publicly_indexable"),
         ContentKeyWords("$keywords"),
         ContentExpiryTime("$exp_date"),
-        EventTime("event_time"),
-        Params("params"),
-        Extra("extra");
+        Params("params");
+
         
         private String key = "";
 
@@ -109,7 +105,7 @@ public class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
-        RegisterView("v1/content-view"),
+        RegisterView("v1/register-view"),
         Referrals("v1/referrals/"),
         SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),

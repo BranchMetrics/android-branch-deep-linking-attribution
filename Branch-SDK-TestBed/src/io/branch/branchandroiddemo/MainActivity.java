@@ -138,7 +138,7 @@ public class MainActivity extends Activity {
                         .setChannel("Sharing_Channel_name")
                         .setFeature("my_feature_name")
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
-                        .addControlParameter("$android_deeplink_path", "custom/details/*")
+                        .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
                       //.setAlias("myContentName") // in case you need to white label your link
 
@@ -263,12 +263,12 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                         //.setAlias("mylinkName") // In case you need to white label your link
+                                //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
-                        .addControlParameter("$android_deeplink_path", "custom/details/*")
+                        .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
 
                 ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
@@ -321,8 +321,8 @@ public class MainActivity extends Activity {
 
                     //Retrieve the BranchUniversalObject used to create the deep link that opened this application session.
                     BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBrachUniversalObject();
-                    if(branchUniversalObject != null ){
-                        HashMap<String,String> metaData = branchUniversalObject.getMetadata();
+                    if (branchUniversalObject != null) {
+                        HashMap<String, String> metaData = branchUniversalObject.getMetadata();
                         HashMap<String, String> controlParams = branchUniversalObject.getLinkProperties().getControlParams();
                     }
                     try {

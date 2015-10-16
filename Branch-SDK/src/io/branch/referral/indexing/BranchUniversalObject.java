@@ -41,7 +41,7 @@ public class BranchUniversalObject {
     /* Content index mode */
     private CONTENT_INDEX_MODE indexMode_;
     /* Any keyword associated with the content. Used for indexing */
-    private final ArrayList<String> keyWords_;
+    private final ArrayList<String> keywords_;
     /* Expiry date for the content and any associated links. Represented as epoch milli second */
     private long expiration_;
 
@@ -65,7 +65,7 @@ public class BranchUniversalObject {
      */
     public BranchUniversalObject() {
         metadata_ = new HashMap<>();
-        keyWords_ = new ArrayList<>();
+        keywords_ = new ArrayList<>();
         canonicalIdentifier_ = "";
         title_ = "";
         description_ = "";
@@ -186,12 +186,12 @@ public class BranchUniversalObject {
      * Adds any keywords associated with the content referred
      * </p>
      *
-     * @param keyWords An {@link ArrayList} of {@link String} values
+     * @param keywords An {@link ArrayList} of {@link String} values
      * @return This instance to allow for chaining of calls to set methods
      */
     @SuppressWarnings("unused")
-    public BranchUniversalObject addKeyWords(ArrayList<String> keyWords) {
-        this.keyWords_.addAll(keyWords);
+    public BranchUniversalObject addKeyWords(ArrayList<String> keywords) {
+        this.keywords_.addAll(keywords);
         return this;
     }
 
@@ -200,11 +200,11 @@ public class BranchUniversalObject {
      * Add a keyword associated with the content referred
      * </p>
      *
-     * @param keyWord A{@link String} with value for keyword
+     * @param keyword A{@link String} with value for keyword
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject addKeyWord(String keyWord) {
-        this.keyWords_.add(keyWord);
+    public BranchUniversalObject addKeyWord(String keyword) {
+        this.keywords_.add(keyword);
         return this;
     }
 
@@ -260,7 +260,7 @@ public class BranchUniversalObject {
 
     public JSONArray getKeywordsJsonArray() {
         JSONArray keywordArray = new JSONArray();
-        for (String keyword : keyWords_) {
+        for (String keyword : keywords_) {
             keywordArray.put(keyword);
         }
         return keywordArray;
@@ -424,7 +424,7 @@ public class BranchUniversalObject {
                     if (latestParam.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
                         JSONArray keywordJsonArray = latestParam.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
                         for (int i = 0; i < keywordJsonArray.length(); i++) {
-                            branchUniversalObject.keyWords_.add((String) keywordJsonArray.get(i));
+                            branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
                         }
                         latestParam.remove(Defines.Jsonkey.ContentKeyWords.getKey());
                     }
