@@ -2871,8 +2871,9 @@ public class Branch {
      * @see BranchError
      */
     public interface BranchReferralInitListener {
-        public void onInitFinished(JSONObject referringParams, BranchError error);
+        void onInitFinished(JSONObject referringParams, BranchError error);
     }
+
 
     /**
      * <p>An Interface class that is implemented by all classes that make use of
@@ -2884,7 +2885,7 @@ public class Branch {
      * @see BranchError
      */
     public interface BranchReferralStateChangedListener {
-        public void onStateChanged(boolean changed, BranchError error);
+        void onStateChanged(boolean changed, BranchError error);
     }
 
     /**
@@ -2897,7 +2898,7 @@ public class Branch {
      * @see BranchError
      */
     public interface BranchLinkCreateListener {
-        public void onLinkCreate(String url, BranchError error);
+        void onLinkCreate(String url, BranchError error);
     }
 
     /**
@@ -2946,7 +2947,7 @@ public class Branch {
      * @see BranchError
      */
     public interface BranchListResponseListener {
-        public void onReceivingResponse(JSONArray list, BranchError error);
+        void onReceivingResponse(JSONArray list, BranchError error);
     }
 
     /**

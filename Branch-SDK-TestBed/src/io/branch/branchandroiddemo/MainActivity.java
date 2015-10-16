@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
@@ -317,6 +318,13 @@ public class MainActivity extends Activity {
                     Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
                 } else {
                     Log.i("BranchTestBed", "branch init complete!");
+
+                    //Retrieve the BranchUniversalObject used to create the deep link that opened this application session.
+                    BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBrachUniversalObject();
+                    if(branchUniversalObject != null ){
+                        HashMap<String,String> metaData = branchUniversalObject.getMetadata();
+                        HashMap<String, String> controlParams = branchUniversalObject.getLinkProperties().getControlParams();
+                    }
                     try {
                         Iterator<?> keys = referringParams.keys();
                         while (keys.hasNext()) {

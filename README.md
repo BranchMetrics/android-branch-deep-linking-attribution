@@ -650,6 +650,28 @@ ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sha
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
 ```
 
+### Retrieving BranchUniversalObject on deep linking
+When application is opened by clicking a Branch link the `BranchUniversalObject` used to create the link can be retrieved up on initialising Branch session
+
+```java
+branch.initSession(new BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                if (error != null) {
+                    //Retrieve the BranchUniversalObject used to create the deep link that opened this application session.
+                    BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBrachUniversalObject();
+                    if (branchUniversalObject != null) {
+                        HashMap<String, String> metaData = branchUniversalObject.getMetadata();
+                        HashMap<String, String> controlParams = branchUniversalObject.getLinkProperties().getControlParams();
+                        // Take action based on metadata
+                    } else {
+                        // Session is  not started by a Branch Link Click
+                    }
+                }
+            }
+        }, this.getIntent().getData(), this);
+```
+
 ## Referral system rewarding functionality
 
 In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:

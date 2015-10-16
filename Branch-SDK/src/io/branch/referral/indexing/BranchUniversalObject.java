@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -44,6 +45,8 @@ public class BranchUniversalObject {
     /* Expiry date for the content and any associated links. Represented as epoch milli second */
     private long expiration_;
 
+    private LinkProperties linkProperties_;
+
     /**
      * Defines the Content indexing modes
      * PUBLIC | PRIVATE
@@ -69,6 +72,7 @@ public class BranchUniversalObject {
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         expiration_ = 0L;
+        linkProperties_ = new LinkProperties();
     }
 
     /**
@@ -250,6 +254,10 @@ public class BranchUniversalObject {
         return type_;
     }
 
+    public LinkProperties getLinkProperties() {
+        return linkProperties_;
+    }
+
     public JSONArray getKeywordsJsonArray() {
         JSONArray keywordArray = new JSONArray();
         for (String keyword : keyWords_) {
@@ -387,6 +395,112 @@ public class BranchUniversalObject {
 
 
         return shortLinkBuilder;
+    }
+
+    /**
+     * Get the {@link BranchUniversalObject} associated with the latest deep linking. This should retrieve the
+     * exact object used for creating the deep link. This should be called only after initialising Branch Session.
+     *
+     * @return  A {@link BranchUniversalObject} used to create the deep link that started the this app session.
+     * Null is returned if this session is not started by Branch link click
+     */
+    public static BranchUniversalObject getReferredBrachUniversalObject() {
+        BranchUniversalObject branchUniversalObject = null;
+        Branch branchInstance = Branch.getInstance();
+        if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
+            JSONObject latestParam = branchInstance.getLatestReferringParams();
+            try {
+                if (latestParam.has("+clicked_branch_link") && latestParam.getBoolean("+clicked_branch_link")) {
+                    branchUniversalObject = new BranchUniversalObject();
+
+                    if (latestParam.has(Defines.Jsonkey.ContentTitle.getKey())) {
+                        branchUniversalObject.title_ = latestParam.getString(Defines.Jsonkey.ContentTitle.getKey());
+                        latestParam.remove(Defines.Jsonkey.ContentTitle.getKey());
+                    }
+                    if (latestParam.has(Defines.Jsonkey.CanonicalIdentifier.getKey())) {
+                        branchUniversalObject.canonicalIdentifier_ = latestParam.getString(Defines.Jsonkey.CanonicalIdentifier.getKey());
+                        latestParam.remove(Defines.Jsonkey.CanonicalIdentifier.getKey());
+                    }
+                    if (latestParam.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
+                        JSONArray keywordJsonArray = latestParam.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
+                        for (int i = 0; i < keywordJsonArray.length(); i++) {
+                            branchUniversalObject.keyWords_.add((String) keywordJsonArray.get(i));
+                        }
+                        latestParam.remove(Defines.Jsonkey.ContentKeyWords.getKey());
+                    }
+                    if (latestParam.has(Defines.Jsonkey.ContentDesc.getKey())) {
+                        branchUniversalObject.description_ = latestParam.getString(Defines.Jsonkey.ContentDesc.getKey());
+                        latestParam.remove(Defines.Jsonkey.ContentDesc.getKey());
+                    }
+                    if (latestParam.has(Defines.Jsonkey.ContentImgUrl.getKey())) {
+                        branchUniversalObject.imageUrl_ = latestParam.getString(Defines.Jsonkey.ContentImgUrl.getKey());
+                        latestParam.remove(Defines.Jsonkey.ContentImgUrl.getKey());
+                    }
+                    if (latestParam.has(Defines.Jsonkey.ContentType.getKey())) {
+                        branchUniversalObject.type_ = latestParam.getString(Defines.Jsonkey.ContentType.getKey());
+                        latestParam.remove(Defines.Jsonkey.ContentType.getKey());
+                    }
+                    if (latestParam.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
+                        branchUniversalObject.expiration_ = latestParam.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
+                        latestParam.remove(Defines.Jsonkey.ContentExpiryTime.getKey());
+                    }
+
+                    ///-----------Link Properties----------------///
+                    if (latestParam.has("~channel")) {
+                        branchUniversalObject.linkProperties_.setChannel(latestParam.getString("~channel"));
+                        latestParam.remove("~channel");
+                    }
+                    if (latestParam.has("~creation_source")) {
+                        latestParam.remove("~creation_source");
+                    }
+                    if (latestParam.has("~feature")) {
+                        branchUniversalObject.linkProperties_.setFeature(latestParam.getString("~feature"));
+                        latestParam.remove("~feature");
+                    }
+                    if (latestParam.has("~id")) {
+                        latestParam.remove("~id");
+                    }
+                    if (latestParam.has("~stage")) {
+                        branchUniversalObject.linkProperties_.setStage(latestParam.getString("~stage"));
+                        latestParam.remove("~stage");
+                    }
+                    if (latestParam.has("~duration")) {
+                        branchUniversalObject.linkProperties_.setDuration(latestParam.getInt("~duration"));
+                        latestParam.remove("~duration");
+                    }
+                    if (latestParam.has("$match_duration")) {
+                        branchUniversalObject.linkProperties_.setDuration(latestParam.getInt("$match_duration"));
+                        latestParam.remove("$match_duration");
+                    }
+                    if (latestParam.has("~tags")) {
+                        JSONArray tagsArray = latestParam.getJSONArray("~tags");
+                        for (int i = 0; i < tagsArray.length(); i++) {
+                            branchUniversalObject.linkProperties_.addTag(tagsArray.getString(i));
+                        }
+                        latestParam.remove("~tags");
+                    }
+
+                    latestParam.remove("+match_guaranteed");
+                    latestParam.remove("+click_timestamp");
+                    latestParam.remove("+is_first_session");
+                    latestParam.remove("+clicked_branch_link");
+                    latestParam.remove("$match_duration");
+
+                    Iterator<String> keys = latestParam.keys();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        if (key.startsWith("$")) {
+                            branchUniversalObject.linkProperties_.addControlParameter(key, latestParam.getString(key));
+                        } else {
+                            branchUniversalObject.addContentMetadata(key, latestParam.getString(key));
+                        }
+                    }
+                }
+
+            } catch (Exception ignore) {
+            }
+        }
+        return branchUniversalObject;
     }
 
 }
