@@ -13,14 +13,17 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
-import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.indexing.BranchUniversalObject;
+import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -52,6 +55,8 @@ public class MainActivity extends Activity {
     Button cmdGetCreditHistory;
     Button cmdReferralCode;
 
+    BranchUniversalObject branchUniversalObject;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +77,21 @@ public class MainActivity extends Activity {
         cmdCommitBuyMetadata = (Button) findViewById(R.id.cmdCommitBuyMetadataAction);
         cmdGetCreditHistory = (Button) findViewById(R.id.cmdGetCreditHistory);
         cmdReferralCode = (Button) findViewById(R.id.cmdReferralCode);
+
+        // Create a BranchUniversal object for the content referred on this activity instance
+        branchUniversalObject = new BranchUniversalObject()
+                .setCanonicalIdentifier("canonical/identifier/")
+                .setTitle("My Content Title")
+                .setContentDescription("My Content Description ")
+                .setContentImageUrl("https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setContentType("application/vnd.businessobjects")
+                .setContentExpiration(new Date(1476566432000L))
+                .addKeyWord("My_Keyword1")
+                .addKeyWord("My_Keyword2")
+                .addContentMetadata("Metadata_Key1", "Metadata_value1")
+                .addContentMetadata("Metadata_Key2", "Metadata_value2");
+
 
         cmdIdentifyUser.setOnClickListener(new OnClickListener() {
             @Override
@@ -111,33 +131,28 @@ public class MainActivity extends Activity {
         cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                BranchShortLinkBuilder shortUrlBuilder = new BranchShortLinkBuilder(MainActivity.this)
-                        .addTag("tag1")
-                        .addTag("tag2")
-                        .setChannel("channel1")
-                        .setFeature("feature1")
-                        .setStage("1")
-                        .addParameters("name", "test name")
-                        .addParameters("message", "hello there with short url")
-                        .addParameters("$og_title", "this is a title")
-                        .addParameters("$og_description", "this is a description")
-                        .addParameters("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
 
-                // Get URL Asynchronously
-//                shortUrlBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
-//                    @Override
-//                    public void onLinkCreate(String url, BranchError error) {
-//                        if (error != null) {
-//                            Log.i("BranchTestBed", "branch create short url failed. Caused by -" + error.getMessage());
-//                        } else {
-//                            txtShortUrl.setText(url);
-//                        }
-//                    }
-//                });
-                // OR Get the URL synchronously
-                txtShortUrl.setText(shortUrlBuilder.getShortUrl());
+                LinkProperties linkProperties = new LinkProperties()
+                        .addTag("Tag1")
+                        .setChannel("Sharing_Channel_name")
+                        .setFeature("my_feature_name")
+                        .addControlParameter("Name", "MyUserName1")
+                        .addControlParameter("Message", "My Custom message")
+                        .setDuration(100);
+                      //.setAlias("myContentName") // in case you need to white label your link
+
+                // Sync link create example
+                txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
+
+                // Async Link creation example
+               /* branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        String shortUrl = url;
+                    }
+                });*/
+
             }
-
 
         });
 
@@ -214,7 +229,7 @@ public class MainActivity extends Activity {
                     params.put("boolean", true);
                     params.put("int", 1);
                     params.put("double", 0.13415512301);
-                } catch(JSONException e) {
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
                 branch.userCompletedAction("buy", params);
@@ -244,60 +259,43 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 JSONObject obj = new JSONObject();
-                try {
-                    obj.put("name", "test name");
-                    obj.put("auto_deeplink_key_1", "This is an auto deep linked value");
-                    obj.put("message", "hello there with short url");
-                    obj.put("$og_title", "this is new sharing title");
-                    obj.put("$og_description", "this is new sharing description");
-                    obj.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/branchhost/mosaic_og.png");
-                } catch (JSONException ex) {
-                    ex.printStackTrace();
-                }
+                LinkProperties linkProperties = new LinkProperties()
+                        .addTag("myShareTag1")
+                        .addTag("myShareTag2")
+                                //.setAlias("mylinkName") // In case you need to white label your link
+                        .setChannel("myShareChannel2")
+                        .setFeature("mySharefeature2")
+                        .setStage("10")
+                        .addControlParameter("Name", "MyUserName1")
+                        .addControlParameter("Message", "My Custom message")
+                        .setDuration(100);
 
-                new Branch.ShareLinkBuilder(MainActivity.this, obj)
+                ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
+                        .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
+                        .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
-                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
-                        .setMessage("See my content")
-                        .setSubject("Check this out!")
-                        .setStage("stage1")
-                        .setFeature("feature1")
-                        .addTag("Tag1")
-                        .addTag("Tag2")
-                        .setDefaultURL("https://play.google.com/store/apps/details?id=com.kindred.android")
-                        .setCallback(new Branch.BranchLinkShareListener() {
-                            @Override
-                            public void onShareLinkDialogLaunched() {
-                                Log.i("BranchTestBed", "onShareLinkDialogLaunched()");
-                            }
+                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER);
 
-                            @Override
-                            public void onShareLinkDialogDismissed() {
-                                Log.i("BranchTestBed", "onShareLinkDialogDismissed()");
-                            }
+                branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
+                    @Override
+                    public void onShareLinkDialogLaunched() {
+                    }
 
-                            @Override
-                            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-                                if (error != null) {
-                                    Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel + " " + error.getMessage());
-                                } else {
-                                    Log.i("BranchTestBed", "onLinkShareResponse... " + sharedLink + " " + sharedChannel);
-                                }
-                            }
-
-                            @Override
-                            public void onChannelSelected(String channelName) {
-                                Log.i("BranchTestBed", "onChannelSelected... " + channelName);
-                            }
-                        })
-                        // Custom style for Copy url and More options
-                        //.setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
-                        //.setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
-                        .shareLink();
+                    @Override
+                    public void onShareLinkDialogDismissed() {
+                    }
+                    @Override
+                    public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+                    }
+                    @Override
+                    public void onChannelSelected(String channelName) {
+                    }
+                });
             }
         });
+
     }
 
     @Override
@@ -309,7 +307,6 @@ public class MainActivity extends Activity {
         } else {
             branch = Branch.getInstance();
         }
-
         //branch.disableTouchDebugging();
 
         branch.initSession(new BranchReferralInitListener() {
@@ -334,6 +331,12 @@ public class MainActivity extends Activity {
             }
         }, this.getIntent().getData(), this);
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        branchUniversalObject.markAsViewed();
     }
 
     @Override

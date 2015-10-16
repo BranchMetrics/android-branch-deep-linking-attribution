@@ -4,12 +4,18 @@ import android.content.Context;
 
 import org.json.JSONObject;
 
+import io.branch.referral.indexing.BranchUniversalObject;
+
 /**
  * <p>
  * Class for creating builder for getting a short url with Branch. This builder provide an easy and flexible way to configure and create
  * a short url Synchronously or asynchronously.
  * </p>
+ *
+ * @deprecated Use {@link BranchUniversalObject } to create links to your content.
+ * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_sharing/android/">Content Sharing</a>
  */
+@Deprecated
 public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuilder> {
     public BranchShortLinkBuilder(Context context) {
         super(context);

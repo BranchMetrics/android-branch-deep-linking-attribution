@@ -546,6 +546,94 @@ You can also get the deep linked parameters as the original JSONObject that you 
 JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
 ```
 
+## BranchUniversalObject
+BranchUniversalObject is the best way of operating your contents with Branch services. BranchUniversalObject represents a piece of content in your app with necessary meta data and content indexing information.
+BranchUniversalObject provides convenient methods to operate on your content with BranchServices such as content deep linking, content sharing, content analytics etc.
+Below are the properties of BranchUniversalObject.
+
+| Property | Description
+| --- | ---
+| Canonical Identifier | Canonical identifier for the content referred. Normally the canonical path for your content in the application or web
+| Title | Title for the content referred by BranchUniversalObject
+| Description | Description for the content referred by BranchUniversalObject
+| Image Url | An image url associated with the content referred
+| MetaData | A collection of meta data provided for the content referred
+| Type | Mime type associated with the content referred
+| Index Mode | Determines whether to index the data publically
+| Keywords | A collection of keywords associated with the content. Used for indexing
+| Expiration | Expiry time for the content and any associated links
+
+In your application you can define a BranchUniversalObject for any content as follows.
+
+```java
+ branchUniversalObject = new BranchUniversalObject()
+                .setCanonicalIdentifier("canonical/identifier/")
+                .setTitle("My Content Title")
+                .setContentDescription("My Content Description ")
+                .setContentImageUrl("https://contents/mycontent.png")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setContentType("application/vnd.businessobjects")
+                .setContentExpiration(new Date(1476566432000L))
+                .addKeyWord("My_Keyword1")
+                .addKeyWord("My_Keyword2")
+                .addContentMetadata("Metadata_Key1", "Metadata_value1")
+                .addContentMetadata("Metadata_Key2", "Metadata_value2");
+```
+
+Typically you will be creating BranchUniversalObject for content oriented Activities or Fragments in your application. Once you have created a BranchUniversalObject for a piece of content it is easy
+do the following using the BranchUniversalObject.
+
+### Register content views
+BranchUniversalObject provides easy way to update the views of a contents associated with it as follows.
+```java
+branchUniversalObject.markAsViewed();
+```
+
+### Create shortened links
+A shortened link for a BranchUniversalObject can be created in very simple steps as follows.
+#### Synchronously
+```java
+String shortUrl = branchUniversalObject.getShortUrl(context, linkProperties)
+```
+#### Asynchronously
+```java
+branchUniversalObject.generateShortUrl(context, linkProperties, new BranchLinkCreateListener() {
+                @Override
+                public void onLinkCreate(String url, BranchError error) {
+                    String shortUrl = url;
+                }
+            });
+```
+
+The parameter `linkProperties` is an instance of `LinkProperties` class which define the properties of the link you are creating and the control parameters associated with the link. Control parameters are extra control key values defined for the link.
+These control parameters are provided through BranchInitSession callback along with other properties of BranchUniversal object upon initialising a BranchSession on a link click.
+```java
+LinkProperties linkProperties = new LinkProperties()
+                           .addTag("Tag1")
+                           .setChannel("Sharing_Channel_name")
+                           .setFeature("my_feature_name")
+                           .addControlParameter("Name", "MyUserName1")
+                           .addControlParameter("Message", "My Custom message")
+```
+
+### Create a share sheet
+Branch SDK provides a customisable share sheet for sharing content with other applications and services. share sheet is customizable and will automatically generate a link when the user selects a channel to share to.
+Creating a Share Sheet for the content of BranchUniversalObject is as simple as follows
+```java
+ branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, branchLinkShareListener)
+```
+
+The parameter `shareSheetStyle` is an instance of `ShareSheetStyle` class which defines the customisation parameters for the share sheet.
+
+```java
+ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
+                        .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
+                        .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
+                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
+                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
+```
+
+
 ## Referral system rewarding functionality
 
 In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:

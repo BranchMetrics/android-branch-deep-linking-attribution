@@ -56,8 +56,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     }
 
-
-
     public ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
@@ -109,7 +107,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        if(callback != null) {      // Update callback if set with valid callback instance.
+        if (callback != null) {      // Update callback if set with valid callback instance.
             callback_ = callback;
         }
     }
