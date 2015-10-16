@@ -3428,11 +3428,7 @@ public class Branch {
     /**
      * <p> Class for building a share link dialog.This creates a chooser for selecting application for
      * sharing a link created with given parameters. </p>
-     * @deprecated Do not use this class directly. Use {@link BranchUniversalObject } to create share sheet for to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
      */
-    @Deprecated
-    @SuppressWarnings("deprecation")
     public static class ShareLinkBuilder {
 
         private final Activity activity_;
