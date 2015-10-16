@@ -13,7 +13,7 @@ import io.branch.referral.indexing.BranchUniversalObject;
  * </p>
  *
  * @deprecated Use {@link BranchUniversalObject } to create links to your content.
- * For more details on content sharing please visit <a http://s3-us-west-1.amazonaws.com/branch-assets/BranchUniversalObject-Android.md">BranchUniversalObject</a>
+ * For more details on content sharing please visit <a https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
  */
 @Deprecated
 public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuilder> {
