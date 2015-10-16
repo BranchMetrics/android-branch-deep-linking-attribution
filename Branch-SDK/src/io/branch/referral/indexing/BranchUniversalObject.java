@@ -221,49 +221,123 @@ public class BranchUniversalObject {
         return this;
     }
 
-
+    /**
+     * <p>
+     * Specifies whether the contents referred by this object is publically indexable
+     * </p>
+     *
+     * @return A {@link Boolean} whose value is set to true if index mode is public
+     */
     public boolean isPublicallyIndexable() {
         return indexMode_ == CONTENT_INDEX_MODE.PUBLIC;
     }
 
+    /**
+     * <p>
+     * Get the meta data provided for the content referred bt this object
+     * </p>
+     *
+     * @return
+     */
     public HashMap<String, String> getMetadata() {
         return metadata_;
     }
 
+    /**
+     * <p>
+     * Get expiry date for the content and any associated links. Represented as epoch milli second
+     * </p>
+     *
+     * @return A {@link Long} with content expiration time in epoch milliseconds
+     */
     public long getExpirationTime() {
         return expirationInMilliSec_;
     }
 
+    /**
+     * <p>
+     * Get the canonical identifier for this BranchUniversalObject
+     * </p>
+     *
+     * @return A {@link String} with value for the canonical identifier
+     */
     public String getCanonicalIdentifier() {
         return canonicalIdentifier_;
     }
 
+    /**
+     * <p/>
+     * Get description for the content for the content referred by this object
+     * <p/>
+     *
+     * @return A {@link String} with value for the description of the content referred by this object
+     */
     public String getDescription() {
         return description_;
     }
 
+    /**
+     * <p/>
+     * Get the url to any image associated with this content.
+     * <p/>
+     *
+     * @return A {@link String} specifying a url to an image associated with content referred by this object
+     */
     public String getImageUrl() {
         return imageUrl_;
     }
 
+    /**
+     * <p>
+     * Get a title for the content referred by this object
+     * </p>
+     *
+     * @return A {@link String} with value of for the content title
+     */
     public String getTitle() {
         return title_;
     }
 
+    /**
+     * <p>
+     * Get a title for the content referred by this object
+     * </p>
+     *
+     * @return A {@link String} with value of for the content title
+     */
     public String getType() {
         return type_;
     }
 
+    /**
+     * Returns the Link properties associated with the deep link associated with this {@link BranchUniversalObject}
+     *
+     * @return An instance of {@link LinkProperties} associated with this {@link BranchUniversalObject}
+     */
     public LinkProperties getLinkProperties() {
         return linkProperties_;
     }
 
+    /**
+     * Get the keywords associated with this {@link BranchUniversalObject}
+     *
+     * @return A {@link JSONArray} with keywords associated with this {@link BranchUniversalObject}
+     */
     public JSONArray getKeywordsJsonArray() {
         JSONArray keywordArray = new JSONArray();
         for (String keyword : keywords_) {
             keywordArray.put(keyword);
         }
         return keywordArray;
+    }
+
+    /**
+     * Get the keywords associated with this {@link BranchUniversalObject}
+     *
+     * @return A {@link ArrayList} with keywords associated with this {@link BranchUniversalObject}
+     */
+    public ArrayList<String> getKeywords() {
+        return keywords_;
     }
 
     //-------------------- Register views--------------------------//
@@ -401,7 +475,7 @@ public class BranchUniversalObject {
      * Get the {@link BranchUniversalObject} associated with the latest deep linking. This should retrieve the
      * exact object used for creating the deep link. This should be called only after initialising Branch Session.
      *
-     * @return  A {@link BranchUniversalObject} used to create the deep link that started the this app session.
+     * @return A {@link BranchUniversalObject} used to create the deep link that started the this app session.
      * Null is returned if this session is not started by Branch link click
      */
     public static BranchUniversalObject getReferredBrachUniversalObject() {

@@ -130,31 +130,69 @@ public class LinkProperties {
         return this;
     }
 
-
+    /**
+     * Get the list of tags associated with this {@link LinkProperties}
+     *
+     * @return {@link ArrayList} with the tags associated with this {@link LinkProperties}
+     */
     public ArrayList<String> getTags() {
         return tags_;
     }
 
+    /**
+     * Get all control params associated with this {@link LinkProperties}
+     *
+     * @return A {@link HashMap<String, String>} with key value pairs for the control params associated with this {@link LinkProperties}
+     */
     public HashMap<String, String> getControlParams() {
         return controlParams_;
     }
 
+    /**
+     * <p>
+     * Get the amount of time that Branch allows a click to remain outstanding.
+     * </p>
+     *
+     * @return A {@link Integer} value specifying the time that Branch allows a click to
+     * remain outstanding and be eligible to be matched with a new app session.
+     */
     public int getMatchDuration() {
         return matchDuration_;
     }
 
+    /**
+     * <p> Get the alias for this link. </p>
+     *
+     * @return A {@link String} with value alias 'alias' used to label the endpoint on the link.
+     */
     public String getAlias() {
         return alias_;
     }
 
+    /**
+     * <p> Get a name that identifies the feature that the link makes use of.</p>
+     *
+     * @return A {@link String} value identifying the feature that the link makes use of.
+     */
     public String getFeature() {
         return feature_;
     }
 
+    /**
+     * <p> Get a name that identify the stage in an application or user flow process.</p>
+     *
+     * @return A {@link String} value identifying the stage in an application or user flow
+     * process
+     */
     public String getStage() {
         return stage_;
     }
 
+    /**
+     * <p> Gets the channel for this link. </p>
+     *
+     * @return A {@link String} denoting the channel that the link belongs to
+     */
     public String getChannel() {
         return channel_;
     }
