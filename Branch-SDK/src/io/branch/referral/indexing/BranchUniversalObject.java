@@ -2,6 +2,8 @@ package io.branch.referral.indexing;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,7 +27,7 @@ import io.branch.referral.util.ShareSheetStyle;
  * and deep linking.
  * </p>
  */
-public class BranchUniversalObject {
+public class BranchUniversalObject implements Parcelable {
     /* Canonical identifier for the content referred. Normally the canonical path for your content in the app or web */
     private String canonicalIdentifier_;
     /* Title for the content referred by BranchUniversalObject */
@@ -46,6 +48,7 @@ public class BranchUniversalObject {
     private long expirationInMilliSec_;
 
     private LinkProperties linkProperties_;
+
 
     /**
      * Defines the Content indexing modes
@@ -237,7 +240,7 @@ public class BranchUniversalObject {
      * Get the meta data provided for the content referred bt this object
      * </p>
      *
-     * @return
+     * @return A {@link HashMap} containing metadata for the provided for this {@link BranchUniversalObject}
      */
     public HashMap<String, String> getMetadata() {
         return metadata_;
@@ -336,6 +339,7 @@ public class BranchUniversalObject {
      *
      * @return A {@link ArrayList} with keywords associated with this {@link BranchUniversalObject}
      */
+    @SuppressWarnings("unused")
     public ArrayList<String> getKeywords() {
         return keywords_;
     }
@@ -576,5 +580,63 @@ public class BranchUniversalObject {
         }
         return branchUniversalObject;
     }
+
+    //---------------------Marshaling and Unmarshaling----------//
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public BranchUniversalObject createFromParcel(Parcel in) {
+            return new BranchUniversalObject(in);
+        }
+
+        public BranchUniversalObject[] newArray(int size) {
+            return new BranchUniversalObject[size];
+        }
+    };
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(canonicalIdentifier_);
+        dest.writeString(title_);
+        dest.writeString(description_);
+        dest.writeString(imageUrl_);
+        dest.writeString(type_);
+        dest.writeLong(expirationInMilliSec_);
+        dest.writeInt(indexMode_.ordinal());
+        dest.writeSerializable(keywords_);
+
+        int metaDataSize = metadata_.size();
+        dest.writeInt(metaDataSize);
+        for (HashMap.Entry<String, String> entry : metadata_.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeString(entry.getValue());
+        }
+        dest.writeParcelable(linkProperties_, flags);
+    }
+
+    private BranchUniversalObject(Parcel in) {
+        this();
+
+        canonicalIdentifier_ = in.readString();
+        title_ = in.readString();
+        description_ = in.readString();
+        imageUrl_ = in.readString();
+        type_ = in.readString();
+        expirationInMilliSec_ = in.readLong();
+        indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
+        @SuppressWarnings("unchecked")
+        ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
+        keywords_.addAll(keywordsTemp);
+        int metadataSize = in.readInt();
+        for (int i = 0; i < metadataSize; i++) {
+            metadata_.put(in.readString(), in.readString());
+        }
+        linkProperties_ = in.readParcelable(LinkProperties.class.getClassLoader());
+
+    }
+
 
 }

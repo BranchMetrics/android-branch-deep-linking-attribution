@@ -2,6 +2,8 @@ package io.branch.referral.util;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +20,7 @@ import io.branch.referral.Branch;
  * @see io.branch.referral.indexing.BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
  * </p>
  */
-public class LinkProperties {
+public class LinkProperties implements Parcelable {
     private final ArrayList<String> tags_;
     private String feature_;
     private String alias_;
@@ -34,10 +36,10 @@ public class LinkProperties {
         tags_ = new ArrayList<>();
         feature_ = "Share";
         controlParams_ = new HashMap<>();
-        alias_ = null;
-        stage_ = null;
+        alias_ = "";
+        stage_ = "";
         matchDuration_ = 0;
-        channel_ = null;
+        channel_ = "";
     }
 
     /**
@@ -138,11 +140,11 @@ public class LinkProperties {
     public ArrayList<String> getTags() {
         return tags_;
     }
-
+    
     /**
      * Get all control params associated with this {@link LinkProperties}
      *
-     * @return A {@link HashMap<String, String>} with key value pairs for the control params associated with this {@link LinkProperties}
+     * @return A {@link HashMap} with key value pairs for the control params associated with this {@link LinkProperties}
      */
     public HashMap<String, String> getControlParams() {
         return controlParams_;
@@ -195,5 +197,57 @@ public class LinkProperties {
      */
     public String getChannel() {
         return channel_;
+    }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public LinkProperties createFromParcel(Parcel in) {
+            return new LinkProperties(in);
+        }
+
+        public LinkProperties[] newArray(int size) {
+            return new LinkProperties[size];
+        }
+    };
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        dest.writeString(feature_);
+        dest.writeString(alias_);
+        dest.writeString(stage_);
+        dest.writeString(channel_);
+        dest.writeInt(matchDuration_);
+        dest.writeSerializable(tags_);
+
+        int controlParamSize = controlParams_.size();
+        dest.writeInt(controlParamSize);
+        for (HashMap.Entry<String, String> entry : controlParams_.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeString(entry.getValue());
+        }
+
+    }
+
+    private LinkProperties(Parcel in) {
+        this();
+        feature_ = in.readString();
+        alias_ = in.readString();
+        stage_ = in.readString();
+        channel_ = in.readString();
+        matchDuration_ = in.readInt();
+        @SuppressWarnings("unchecked")
+        ArrayList<String> tagsTemp = (ArrayList<String>) in.readSerializable();
+        tags_.addAll(tagsTemp);
+
+        int controlPramSize = in.readInt();
+        for (int i = 0; i < controlPramSize; i++) {
+            controlParams_.put(in.readString(), in.readString());
+        }
     }
 }
