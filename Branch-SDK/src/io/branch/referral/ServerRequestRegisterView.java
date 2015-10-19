@@ -92,7 +92,7 @@ class ServerRequestRegisterView extends ServerRequest {
         contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 
         String uniqueId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
-        if (!uniqueId.equals(SystemObserver.BLANK)) {
+        if (!uniqueId.equals(SystemObserver.BLANK) && sysObserver.hasRealHardwareId()) {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqueId);
         }
 
