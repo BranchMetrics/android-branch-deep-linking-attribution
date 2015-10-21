@@ -336,13 +336,13 @@ public class Branch {
 
     /* Key to indicate whether the Activity was launched by Branch or not. */
     private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
-    
+
     /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
 
     /* Path for $deeplink_path or $android_deeplink_path to auto deep link. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_PATH = "io.branch.sdk.auto_link_path";
-    
+
     /* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
     private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
 
@@ -640,7 +640,7 @@ public class Branch {
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
-     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead. 
+     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
      */
     @Deprecated
     public void setDebug() {
@@ -969,7 +969,7 @@ public class Branch {
                     ((BranchWindowCallback) activity.getWindow().getCallback()).callback_;
             activity.getWindow().setCallback(originalCallback);
             debugListenerInitHistory_.remove(System.identityHashCode(activity));
-            
+
             //Remove the pending threads on the handler inorder to prevent any leak.
             if (debugHandler_ != null) {
                 debugHandler_.removeCallbacksAndMessages(null);
@@ -3035,9 +3035,11 @@ public class Branch {
                         hasNetwork_ = true;
                         //On create  new url cache the url.
                         if (thisReq_ instanceof ServerRequestCreateUrl) {
-                            final String url = serverResponse.getObject().getString("url");
-                            // cache the link
-                            linkCache_.put(serverResponse.getLinkData(), url);
+                            if (serverResponse.getObject() != null) {
+                                final String url = serverResponse.getObject().getString("url");
+                                // cache the link
+                                linkCache_.put(serverResponse.getLinkData(), url);
+                            }
                         }
                         //On Logout clear the link cache and all pending requests
                         else if (thisReq_ instanceof ServerRequestLogout) {
@@ -3047,9 +3049,11 @@ public class Branch {
                         //On setting a new identity Id clear the link cache
                         else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                             try {
-                                String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
-                                if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                    linkCache_.clear();
+                                if (serverResponse.getObject() != null) {
+                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                                    if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+                                        linkCache_.clear();
+                                    }
                                 }
                             } catch (Exception ignore) {
                             }
@@ -3060,21 +3064,23 @@ public class Branch {
                         // If this request changes a session update the session-id to queued requests.
                         if (thisReq_ instanceof ServerRequestInitSession) {
                             // Immediately set session and Identity and update the pending request with the params
-                            prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
-                            if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                                prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
-                            }
-                            updateAllRequestsInQueue();
-                            initState_ = SESSION_STATE.INITIALISED;
-                            // Publish success to listeners
-                            thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                            if (serverResponse.getObject() != null) {
+                                prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
+                                    prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                }
+                                updateAllRequestsInQueue();
+                                initState_ = SESSION_STATE.INITIALISED;
+                                // Publish success to listeners
+                                thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
-                            if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
-                                isInitReportedThroughCallBack = true;
-                            } else {
-                                isInitReportedThroughCallBack = false;
+                                if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
+                                    isInitReportedThroughCallBack = true;
+                                } else {
+                                    isInitReportedThroughCallBack = false;
+                                }
+                                checkForAutoDeepLinkConfiguration();
                             }
-                            checkForAutoDeepLinkConfiguration();
                         } else {
                             //Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
@@ -3158,7 +3164,7 @@ public class Branch {
                         intent.putExtra(key, latestParams.getString(key));
                     }
                     currentActivity_.startActivityForResult(intent, deepLinkActivityReqCode);
-                } 
+                }
             }
         } catch (final PackageManager.NameNotFoundException e) {
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
@@ -3179,7 +3185,7 @@ public class Branch {
         }
         return false;
     }
-    
+
     private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
         String deepLinkPath = null;
         try {
@@ -3199,7 +3205,7 @@ public class Branch {
         }
         return false;
     }
-    
+
     private boolean pathMatch(String templatePath, String path) {
         boolean matched = true;
         String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
@@ -3217,7 +3223,7 @@ public class Branch {
         }
         return matched;
     }
-    
+
     //--------------------Window callback handling for touch debug feature-----------------------//
 
 
