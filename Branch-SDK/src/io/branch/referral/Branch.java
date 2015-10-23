@@ -457,7 +457,7 @@ public class Branch {
                 branchReferral_.requestQueue_.clear();
             }
         }
-        branchReferral_.context_ = context;
+        branchReferral_.context_ = context.getApplicationContext();
 
         /* If {@link Application} is instantiated register for activity life cycle events. */
         if (context instanceof BranchApp) {
@@ -1059,22 +1059,28 @@ public class Branch {
             return;
         }
 
+
         if (prefHelper_.getSmartSession()) {
             if (keepAlive_) {
                 return;
             }
 
+
             // else, real close
-            synchronized(lock) {
+            synchronized (lock) {
                 clearCloseTimer();
                 rotateCloseTimer.schedule(new TimerTask() {
                     @Override
                     public void run() {
+                        //Since non auto session has no lifecycle callback enabled free up the currentActivity_
+                        currentActivity_ = null;
                         executeClose();
                     }
                 }, PREVENT_CLOSE_TIMEOUT);
             }
         } else {
+            //Since non auto session has no lifecycle callback enabled free up the currentActivity_
+            currentActivity_ = null;
             executeClose();
         }
 
@@ -1084,7 +1090,7 @@ public class Branch {
             }
         }
         /* Close any opened sharing dialog.*/
-        if(shareLinkManager_ != null) {
+        if (shareLinkManager_ != null) {
             shareLinkManager_.cancelShareLinkDialog(true);
         }
     }
