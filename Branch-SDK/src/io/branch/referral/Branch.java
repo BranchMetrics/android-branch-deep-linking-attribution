@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.referral.indexing.BranchUniversalObject;
+import io.branch.referral.util.LinkProperties;
 
 /**
  * <p>
@@ -363,7 +364,7 @@ public class Branch {
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
-     /* Sets to true when the init session params are reported to the app though call back.*/
+    /* Sets to true when the init session params are reported to the app though call back.*/
     private boolean isInitReportedThroughCallBack = false;
 
     /**
@@ -687,6 +688,20 @@ public class Branch {
     }
 
     /**
+     * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
+     * to perform an action upon successful initialisation.</p>
+     *
+     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called following
+     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
+     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
+     * unsuccessful.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback) {
+        initSession(callback, (Activity) null);
+        return false;
+    }
+
+    /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
      * to perform an action upon successful initialisation.</p>
      *
@@ -697,6 +712,27 @@ public class Branch {
      */
     public boolean initSession(BranchReferralInitListener callback) {
         initSession(callback, (Activity) null);
+        return false;
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a
+     * {@link BranchUniversalReferralInitListener} to perform an action upon successful initialisation.</p>
+     *
+     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                 following successful (or unsuccessful) initialisation of the session
+     *                 with the Branch API.
+     * @param activity The calling {@link Activity} for context.
+     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
+     * unsuccessful.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) {
+        if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
+            initUserSessionInternal(callback, activity, true);
+        } else {
+            boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
+            initUserSessionInternal(callback, activity, isReferrable);
+        }
         return false;
     }
 
@@ -724,6 +760,22 @@ public class Branch {
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
+     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                 following successful (or unsuccessful) initialisation of the session
+     *                 with the Branch API.
+     * @param data     A {@link  Uri} variable containing the details of the source link that
+     *                 led to this initialisation action.
+     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
+     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
+     * valid URI format.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
+        return initSession(callback, data, null);
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API.</p>
+     *
      * @param callback A {@link BranchReferralInitListener} instance that will be called
      *                 following successful (or unsuccessful) initialisation of the session
      *                 with the Branch API.
@@ -735,6 +787,25 @@ public class Branch {
      */
     public boolean initSession(BranchReferralInitListener callback, Uri data) {
         return initSession(callback, data, null);
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API.</p>
+     *
+     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                 following successful (or unsuccessful) initialisation of the session
+     *                 with the Branch API.
+     * @param data     A {@link  Uri} variable containing the details of the source link that
+     *                 led to this initialisation action.
+     * @param activity The calling {@link Activity} for context.
+     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
+     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
+     * valid URI format.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
+        boolean uriHandled = readAndStripParam(data, activity);
+        initSession(callback, activity);
+        return uriHandled;
     }
 
     /**
@@ -772,7 +843,7 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(Activity activity) {
-        return initSession(null, activity);
+        return initSession((BranchReferralInitListener) null, activity);
     }
 
     /**
@@ -799,7 +870,7 @@ public class Branch {
      */
     public boolean initSessionWithData(Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
-        initSession(null, activity);
+        initSession((BranchReferralInitListener) null, activity);
         return uriHandled;
     }
 
@@ -814,7 +885,7 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(boolean isReferrable) {
-        return initSession(null, isReferrable, (Activity) null);
+        return initSession((BranchReferralInitListener) null, isReferrable, (Activity) null);
     }
 
     /**
@@ -829,7 +900,25 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(boolean isReferrable, Activity activity) {
-        return initSession(null, isReferrable, activity);
+        return initSession((BranchReferralInitListener) null, isReferrable, activity);
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API.</p>
+     *
+     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                     following successful (or unsuccessful) initialisation of the session
+     *                     with the Branch API.
+     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
+     *                     session should be considered as potentially referrable or not.
+     *                     By default, a user is only referrable if initSession results in a
+     *                     fresh install. Overriding this gives you control of who is referrable.
+     * @param data         A {@link  Uri} variable containing the details of the source link that
+     *                     led to this initialisation action.
+     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {
+        return initSession(callback, isReferrable, data, null);
     }
 
     /**
@@ -848,6 +937,27 @@ public class Branch {
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
         return initSession(callback, isReferrable, data, null);
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API.</p>
+     *
+     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                     following successful (or unsuccessful) initialisation of the session
+     *                     with the Branch API.
+     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
+     *                     session should be considered as potentially referrable or not.
+     *                     By default, a user is only referrable if initSession results in a
+     *                     fresh install. Overriding this gives you control of who is referrable.
+     * @param data         A {@link  Uri} variable containing the details of the source link that
+     *                     led to this initialisation action.
+     * @param activity     The calling {@link Activity} for context.
+     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+        boolean uriHandled = readAndStripParam(data, activity);
+        initSession(callback, isReferrable, activity);
+        return uriHandled;
     }
 
     /**
@@ -874,6 +984,22 @@ public class Branch {
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
+     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                     following successful (or unsuccessful) initialisation of the session
+     *                     with the Branch API.
+     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
+     *                     session should be considered as potentially referrable or not.
+     *                     By default, a user is only referrable if initSession results in a
+     *                     fresh install. Overriding this gives you control of who is referrable.
+     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
+        return initSession(callback, isReferrable, (Activity) null);
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API.</p>
+     *
      * @param callback     A {@link BranchReferralInitListener} instance that will be called
      *                     following successful (or unsuccessful) initialisation of the session
      *                     with the Branch API.
@@ -890,6 +1016,24 @@ public class Branch {
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
+     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
+     *                     following successful (or unsuccessful) initialisation of the session
+     *                     with the Branch API.
+     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
+     *                     session should be considered as potentially referrable or not.
+     *                     By default, a user is only referrable if initSession results in a
+     *                     fresh install. Overriding this gives you control of who is referrable.
+     * @param activity     The calling {@link Activity} for context.
+     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
+        initUserSessionInternal(callback, activity, isReferrable);
+        return false;
+    }
+
+    /**
+     * <p>Initialises a session with the Branch API.</p>
+     *
      * @param callback     A {@link BranchReferralInitListener} instance that will be called
      *                     following successful (or unsuccessful) initialisation of the session
      *                     with the Branch API.
@@ -901,9 +1045,14 @@ public class Branch {
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-
         initUserSessionInternal(callback, activity, isReferrable);
         return false;
+    }
+
+
+    private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
+        BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
+        initUserSessionInternal(branchUniversalReferralInitWrapper, activity, isReferrable);
     }
 
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
@@ -2760,10 +2909,10 @@ public class Branch {
                 return;
             } else {
                 if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-                    initUserSessionInternal(null, currentActivity_, true);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_, true);
                 } else {
                     boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-                    initUserSessionInternal(null, currentActivity_, isReferrable);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_, isReferrable);
                 }
             }
         }
@@ -2874,6 +3023,21 @@ public class Branch {
      */
     public interface BranchReferralInitListener {
         void onInitFinished(JSONObject referringParams, BranchError error);
+    }
+
+    /**
+     * <p>An Interface class that is implemented by all classes that make use of
+     * {@link BranchUniversalReferralInitListener}, defining a single method that provides
+     * {@link BranchUniversalObject}, {@link LinkProperties} and an error message of {@link BranchError} format that will be
+     * returned on failure of the request response.
+     * In case of an error the value for {@link BranchUniversalObject} and {@link LinkProperties} are set to null.</p>
+     *
+     * @see BranchUniversalObject
+     * @see LinkProperties
+     * @see BranchError
+     */
+    public interface BranchUniversalReferralInitListener {
+        void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error);
     }
 
 

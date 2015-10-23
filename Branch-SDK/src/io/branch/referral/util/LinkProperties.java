@@ -5,8 +5,12 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import io.branch.referral.Branch;
 
@@ -214,6 +218,56 @@ public class LinkProperties implements Parcelable {
             return new LinkProperties[size];
         }
     };
+
+    /**
+     * Create a {@link LinkProperties} object based on the latest link click.
+     *
+     * @return A {@link LinkProperties} object based on the latest link click or a null if there is no link click registered for this session
+     */
+    public static LinkProperties getReferredLinkProperties() {
+        LinkProperties linkProperties = null;
+        Branch branchInstance = Branch.getInstance();
+        if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
+            JSONObject latestParam = branchInstance.getLatestReferringParams();
+
+            try {
+                if (latestParam.has("+clicked_branch_link") && latestParam.getBoolean("+clicked_branch_link")) {
+                    linkProperties = new LinkProperties();
+                    if (latestParam.has("~channel")) {
+                        linkProperties.setChannel(latestParam.getString("~channel"));
+                    }
+                    if (latestParam.has("~feature")) {
+                        linkProperties.setFeature(latestParam.getString("~feature"));
+                    }
+                    if (latestParam.has("~stage")) {
+                        linkProperties.setStage(latestParam.getString("~stage"));
+                    }
+                    if (latestParam.has("~duration")) {
+                        linkProperties.setDuration(latestParam.getInt("~duration"));
+                    }
+                    if (latestParam.has("$match_duration")) {
+                        linkProperties.setDuration(latestParam.getInt("$match_duration"));
+                    }
+                    if (latestParam.has("~tags")) {
+                        JSONArray tagsArray = latestParam.getJSONArray("~tags");
+                        for (int i = 0; i < tagsArray.length(); i++) {
+                            linkProperties.addTag(tagsArray.getString(i));
+                        }
+                    }
+
+                    Iterator<String> keys = latestParam.keys();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        if (key.startsWith("$")) {
+                            linkProperties.addControlParameter(key, latestParam.getString(key));
+                        }
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        return linkProperties;
+    }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {

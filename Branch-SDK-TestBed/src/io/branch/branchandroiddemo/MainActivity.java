@@ -14,8 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -310,30 +308,22 @@ public class MainActivity extends Activity {
         }
         //branch.disableTouchDebugging();
 
-        branch.initSession(new BranchReferralInitListener() {
+        branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
-            public void onInitFinished(JSONObject referringParams,
-                                       BranchError error) {
+            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
                     Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
                 } else {
                     Log.i("BranchTestBed", "branch init complete!");
-
-                    //Retrieve the BranchUniversalObject used to create the deep link that opened this application session.
-                    BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBrachUniversalObject();
                     if (branchUniversalObject != null) {
-                        HashMap<String, String> metaData = branchUniversalObject.getMetadata();
-                        HashMap<String, String> controlParams = branchUniversalObject.getLinkProperties().getControlParams();
+                        Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
+                        Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getMetadata());
                     }
-                    try {
-                        Iterator<?> keys = referringParams.keys();
-                        while (keys.hasNext()) {
-                            String key = (String) keys.next();
-                            String value = referringParams.getString(key);
-                            Log.i("BranchTestBed", key + ", " + value);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+
+                    if (linkProperties != null) {
+                        Log.i("BranchTestBed", "Channel " + linkProperties.getChannel());
+                        Log.i("BranchTestBed", "control params " + linkProperties.getControlParams());
                     }
                 }
             }
