@@ -1678,7 +1678,7 @@ public class Branch {
      *
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync() {
@@ -1693,7 +1693,7 @@ public class Branch {
      *               the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(JSONObject params) {
@@ -1714,7 +1714,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
@@ -1742,7 +1742,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
@@ -1765,7 +1765,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
@@ -1788,7 +1788,7 @@ public class Branch {
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1811,7 +1811,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1841,7 +1841,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1866,7 +1866,7 @@ public class Branch {
      *                the link that will be passed into a new app session when clicked
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
@@ -1891,7 +1891,7 @@ public class Branch {
      *                 remain outstanding and be eligible to be matched with a new app session.
      * @return A {@link String} containing the resulting short URL.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
@@ -1904,7 +1904,7 @@ public class Branch {
      * @param callback A {@link BranchLinkCreateListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
@@ -1922,7 +1922,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
@@ -1950,7 +1950,7 @@ public class Branch {
      * @see BranchLinkCreateListener
      * <p/>
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -1985,7 +1985,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2015,7 +2015,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2045,7 +2045,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -2075,7 +2075,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2111,7 +2111,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2144,7 +2144,7 @@ public class Branch {
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
@@ -2177,7 +2177,7 @@ public class Branch {
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
@@ -2219,7 +2219,7 @@ public class Branch {
      * @see BranchLinkData#putDuration(int)
      * @see BranchLinkCreateListener
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
-     * For more details on content sharing please visit <a href="https://gist.github.com/sojanpr/158485479a1bfc0aa7e5">BranchUniversalObject</a>
+     * For more details on content sharing please visit <a href="https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/README.md#branchuniversalobject">BranchUniversalObject</a>
      */
     @Deprecated
     private String generateShortLink(final String alias, final int type, final int duration, final Collection<String> tags, final String channel, final String feature, final String stage, final String params, BranchLinkCreateListener callback, boolean async) {
