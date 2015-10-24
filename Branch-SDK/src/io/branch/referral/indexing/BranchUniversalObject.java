@@ -400,7 +400,7 @@ public class BranchUniversalObject implements Parcelable {
             }
         } catch (JSONException ignore) {
         }
-        @SuppressWarnings("deprecation")
+
         Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
                 .setCallback(callback)
                 .setSubject(style.getMessageTitle())
@@ -421,8 +421,6 @@ public class BranchUniversalObject implements Parcelable {
         shareLinkBuilder.shareLink();
     }
 
-
-    @SuppressWarnings("deprecation")
     private BranchShortLinkBuilder getLinkBuilder(Context context, LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         if (linkProperties.getTags() != null) {

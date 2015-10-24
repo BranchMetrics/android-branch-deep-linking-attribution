@@ -45,7 +45,6 @@ class ShareLinkManager {
     /* Indicates whether a sharing is in progress*/
     private boolean isShareInProgress_ = false;
 
-    @SuppressWarnings("deprecation")
     private Branch.ShareLinkBuilder builder_;
 
 
@@ -55,7 +54,6 @@ class ShareLinkManager {
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
      * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
-    @SuppressWarnings("deprecation")
     public Dialog shareLink(Branch.ShareLinkBuilder builder) {
         builder_ = builder;
         context_ = builder.getActivity();
@@ -198,7 +196,6 @@ class ShareLinkManager {
      *
      * @param selectedResolveInfo The {@link ResolveInfo} corresponding to the selected sharing client.
      */
-    @SuppressWarnings("deprecation")
     private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
         isShareInProgress_ = true;
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
@@ -255,7 +252,6 @@ class ShareLinkManager {
      * @param url   A {@link String} to add to the clip board
      * @param label A {@link String} label for the adding link
      */
-
     @SuppressWarnings("deprecation")
     @SuppressLint("NewApi")
     private void addLinkToClipBoard(String url, String label) {

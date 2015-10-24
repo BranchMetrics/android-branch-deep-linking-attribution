@@ -2599,7 +2599,6 @@ public class Branch {
      *
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
      */
-    @SuppressWarnings("deprecation")
     private void shareLink(ShareLinkBuilder builder) {
         //Cancel any existing sharing in progress.
         if (shareLinkManager_ != null) {
