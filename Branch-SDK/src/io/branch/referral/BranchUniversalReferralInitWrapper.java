@@ -21,7 +21,7 @@ class BranchUniversalReferralInitWrapper implements Branch.BranchReferralInitLis
             if (error != null) {
                 universalReferralInitListener_.onInitFinished(null, null, error);
             } else {
-                BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBrachUniversalObject();
+                BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBranchUniversalObject();
                 LinkProperties linkProperties = LinkProperties.getReferredLinkProperties();
                 universalReferralInitListener_.onInitFinished(branchUniversalObject, linkProperties, error);
             }

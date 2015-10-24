@@ -469,7 +469,7 @@ public class BranchUniversalObject implements Parcelable {
      * @return A {@link BranchUniversalObject} used to create the deep link that started the this app session.
      * Null is returned if this session is not started by Branch link click
      */
-    public static BranchUniversalObject getReferredBrachUniversalObject() {
+    public static BranchUniversalObject getReferredBranchUniversalObject() {
         BranchUniversalObject branchUniversalObject = null;
         Branch branchInstance = Branch.getInstance();
         if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
