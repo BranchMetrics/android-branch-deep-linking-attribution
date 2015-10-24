@@ -1,4 +1,4 @@
-package io.branch.referral.indexing;
+package io.branch.indexing;
 
 import android.app.Activity;
 import android.content.Context;
@@ -173,7 +173,7 @@ public class BranchUniversalObject implements Parcelable {
      * Set the indexing mode for the content referred in this object
      * </p>
      *
-     * @param indexMode {@link io.branch.referral.indexing.BranchUniversalObject.CONTENT_INDEX_MODE} value for the content referred
+     * @param indexMode {@link BranchUniversalObject.CONTENT_INDEX_MODE} value for the content referred
      * @return This instance to allow for chaining of calls to set methods
      */
     public BranchUniversalObject setContentIndexingMode(CONTENT_INDEX_MODE indexMode) {

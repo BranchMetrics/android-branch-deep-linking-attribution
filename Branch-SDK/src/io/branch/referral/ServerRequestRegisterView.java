@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Set;
 
-import io.branch.referral.indexing.BranchUniversalObject;
+import io.branch.indexing.BranchUniversalObject;
 
 /**
  * * <p>

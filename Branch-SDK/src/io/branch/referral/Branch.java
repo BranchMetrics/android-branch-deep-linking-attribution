@@ -52,7 +52,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.referral.indexing.BranchUniversalObject;
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.LinkProperties;
 
 /**

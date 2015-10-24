@@ -2,7 +2,7 @@ package io.branch.referral;
 
 import org.json.JSONObject;
 
-import io.branch.referral.indexing.BranchUniversalObject;
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.LinkProperties;
 
 /**

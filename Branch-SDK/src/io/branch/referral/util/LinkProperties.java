@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 
 /**
@@ -19,9 +20,9 @@ import io.branch.referral.Branch;
  * Class for representing any additional information that is specific to the link.
  * Use this class to specify the properties of a deep link such as channel, feature etc and any control params associated with the link.
  *
- * @see io.branch.referral.indexing.BranchUniversalObject#getShortUrl(Context, LinkProperties)
- * @see io.branch.referral.indexing.BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
- * @see io.branch.referral.indexing.BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+ * @see BranchUniversalObject#getShortUrl(Context, LinkProperties)
+ * @see BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
+ * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
  * </p>
  */
 public class LinkProperties implements Parcelable {

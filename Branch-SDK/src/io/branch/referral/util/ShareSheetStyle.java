@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 
 import java.util.ArrayList;
 
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.SharingHelper;
 
@@ -13,7 +14,7 @@ import io.branch.referral.SharingHelper;
  * Class for defining the share sheet properties.
  * Defines the properties of share sheet. Use this class customise the share sheet style.
  *
- * @see io.branch.referral.indexing.BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+ * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
  */
 public class ShareSheetStyle {
     //Customise more and copy url option

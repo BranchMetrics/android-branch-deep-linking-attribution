@@ -20,7 +20,7 @@ import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.SharingHelper;
-import io.branch.referral.indexing.BranchUniversalObject;
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 
