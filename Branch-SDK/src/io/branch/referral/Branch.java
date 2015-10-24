@@ -348,13 +348,13 @@ public class Branch {
 
     /* Key to indicate whether the Activity was launched by Branch or not. */
     private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
-    
+
     /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
 
     /* Path for $deeplink_path or $android_deeplink_path to auto deep link. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_PATH = "io.branch.sdk.auto_link_path";
-    
+
     /* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
     private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
 
@@ -466,7 +466,7 @@ public class Branch {
                 branchReferral_.requestQueue_.clear();
             }
         }
-        branchReferral_.context_ = context;
+        branchReferral_.context_ = context.getApplicationContext();
 
         /* If {@link Application} is instantiated register for activity life cycle events. */
         if (context instanceof BranchApp) {
@@ -1127,7 +1127,7 @@ public class Branch {
                     ((BranchWindowCallback) activity.getWindow().getCallback()).callback_;
             activity.getWindow().setCallback(originalCallback);
             debugListenerInitHistory_.remove(System.identityHashCode(activity));
-            
+
             //Remove the pending threads on the handler inorder to prevent any leak.
             if (debugHandler_ != null) {
                 debugHandler_.removeCallbacksAndMessages(null);
@@ -1217,10 +1217,12 @@ public class Branch {
             return;
         }
 
+
         if (prefHelper_.getSmartSession()) {
             if (keepAlive_) {
                 return;
             }
+
 
             // else, real close
             synchronized (lock) {
@@ -1228,11 +1230,15 @@ public class Branch {
                 rotateCloseTimer.schedule(new TimerTask() {
                     @Override
                     public void run() {
+                        //Since non auto session has no lifecycle callback enabled free up the currentActivity_
+                        currentActivity_ = null;
                         executeClose();
                     }
                 }, PREVENT_CLOSE_TIMEOUT);
             }
         } else {
+            //Since non auto session has no lifecycle callback enabled free up the currentActivity_
+            currentActivity_ = null;
             executeClose();
         }
 
@@ -3220,9 +3226,11 @@ public class Branch {
                         hasNetwork_ = true;
                         //On create  new url cache the url.
                         if (thisReq_ instanceof ServerRequestCreateUrl) {
-                            final String url = serverResponse.getObject().getString("url");
-                            // cache the link
-                            linkCache_.put(serverResponse.getLinkData(), url);
+                            if (serverResponse.getObject() != null) {
+                                final String url = serverResponse.getObject().getString("url");
+                                // cache the link
+                                linkCache_.put(serverResponse.getLinkData(), url);
+                            }
                         }
                         //On Logout clear the link cache and all pending requests
                         else if (thisReq_ instanceof ServerRequestLogout) {
@@ -3232,9 +3240,11 @@ public class Branch {
                         //On setting a new identity Id clear the link cache
                         else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                             try {
-                                String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
-                                if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                    linkCache_.clear();
+                                if (serverResponse.getObject() != null) {
+                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                                    if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+                                        linkCache_.clear();
+                                    }
                                 }
                             } catch (Exception ignore) {
                             }
@@ -3245,24 +3255,23 @@ public class Branch {
                         // If this request changes a session update the session-id to queued requests.
                         if (thisReq_ instanceof ServerRequestInitSession) {
                             // Immediately set session and Identity and update the pending request with the params
-                            prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
-                            if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                                prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
-                            }
-                            if (serverResponse.getObject().has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                                prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
-                            }
-                            updateAllRequestsInQueue();
-                            initState_ = SESSION_STATE.INITIALISED;
-                            // Publish success to listeners
-                            thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                            if (serverResponse.getObject() != null) {
+                                prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
+                                    prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                }
+                                updateAllRequestsInQueue();
+                                initState_ = SESSION_STATE.INITIALISED;
+                                // Publish success to listeners
+                                thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
-                            if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
-                                isInitReportedThroughCallBack = true;
-                            } else {
-                                isInitReportedThroughCallBack = false;
+                                if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
+                                    isInitReportedThroughCallBack = true;
+                                } else {
+                                    isInitReportedThroughCallBack = false;
+                                }
+                                checkForAutoDeepLinkConfiguration();
                             }
-                            checkForAutoDeepLinkConfiguration();
                         } else {
                             //Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
@@ -3367,7 +3376,7 @@ public class Branch {
         }
         return false;
     }
-    
+
     private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
         String deepLinkPath = null;
         try {
@@ -3388,7 +3397,7 @@ public class Branch {
         }
         return false;
     }
-    
+
     private boolean pathMatch(String templatePath, String path) {
         boolean matched = true;
         String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
@@ -3406,7 +3415,7 @@ public class Branch {
         }
         return matched;
     }
-    
+
     //--------------------Window callback handling for touch debug feature-----------------------//
 
 
