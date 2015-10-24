@@ -546,7 +546,7 @@ You can also get the deep linked parameters as the original JSONObject that you 
 JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
 ```
 
-## BranchUniversalObject
+## `BranchUniversalObject`
 
 `BranchUniversalObject` is the best way of tracking and sharing content with Branch. `BranchUniversalObject` represents a single piece of content within your app, as well as any associated metadata. It provides convenient methods for sharing, deeplinking, and tracking how often that content is viewed. This information is then used to provide you with powerful content analytics.
 
@@ -650,19 +650,16 @@ ShareSheetStyle shareSheetStyle = new ShareSheetStyle(activity, "My Sharing Mess
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
 ```
 
-### Retrieving BranchUniversalObject on deep linking
-When application is opened by clicking a Branch link the `BranchUniversalObject` used to create the link can be retrieved up on initialising Branch session
+### Initialising Branch session with BranchUniversalObject
+When application is opened by clicking a Branch link the `BranchUniversalObject` used to create the link can be retrieved up on initialising Branch session using `BranchUniversalReferralInitListener` callback
 
 ```java
-branch.initSession(new BranchReferralInitListener() {
+branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
-            public void onInitFinished(JSONObject referringParams, BranchError error) {
+            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
-                    //Retrieve the BranchUniversalObject used to create the deep link that opened this application session.
-                    BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBrachUniversalObject();
                     if (branchUniversalObject != null) {
                         HashMap<String, String> metaData = branchUniversalObject.getMetadata();
-                        HashMap<String, String> controlParams = branchUniversalObject.getLinkProperties().getControlParams();
                         // Take action based on metadata
                     } else {
                         // Session is  not started by a Branch Link Click
@@ -671,6 +668,7 @@ branch.initSession(new BranchReferralInitListener() {
             }
         }, activity.getIntent().getData(), activity);
 ```
+Please note that `branchUniversalObject` and `linkProperties` will be `null` if application is not opened by clicking a Branch link.
 
 ## Referral system rewarding functionality
 
