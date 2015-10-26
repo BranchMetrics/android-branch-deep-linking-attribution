@@ -1,67 +1,10 @@
 # Branch Metrics Android SDK
 
-This is the repository of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
+This is the readme file of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
 
+## [SDK Implementation Guide](https://dev.branch.io) and [support portal with user forums](http://support.branch.io)
 
-Check it out!
-
-## Important migration to v1.5.0
-
-We have deprecated the bnc_app_key and replaced that with the new branch_key. Please see [add Branch key](#add-your-branch-key-to-your-project) for details.
-
-## Important migration to v1.4.5
-
-Branch uses Facebook's App Links metatags automatically to provide the best linking from the Facebook platform. Unfortunately, Facebook changed the way they handle App Links routing in the latest update on April 8ish.
-
-Two important things to do in order to properly handle deep links from Facebook
-
-1. Make sure to update the Manifest so that the Activity with the intent filter for your URI scheme has *launchMode:singleTask*. See example [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
-
-2. Make sure to add this snippet of code to the Activity registered as singleTask.
-```java
-@Override
-public void onNewIntent(Intent intent) {
-    // Because the activity is a singleTask activity, the new intent won't be
-    // launched but enters here, making handling it optional. For branch to work
-    // the intent must be updated by calling the following:
-    this.setIntent(intent);
-}
-```
-
-3. Update the SDK to v1.4.5 or higher
-
-## FAQ
-
-1.) __What if Branch goes down or there is a poor connection?__
-
-At Branch, we live and breath uptime &amp; performance. We've developed mechanisms internal to the SDK to deal with network issues. We always call the callbacks with the error parameter describing the issue. If the phone is in airplane mode and the connection is not available, the callbacks are called immediately. If there is a server latency, we timeout after 3 seconds and will retry 4 more times with a 3 second pause in between each. These timeouts are adjustable on the singleton instance by calling: ```setNetworkTimeout``` (ms), ```setRetryCount``` and ```setRetryInterval``` (ms).
-
-2.) __How can I debug or test the SDK?__
-
-Just add ```<meta-data android:name="io.branch.sdk.TestMode" android:value="true" />``` in the Manifest. We'll log all requests. More importantly, we won't reference the hardware ID of the phone so you can register installs after uninstalling and reinstalling the app.
-
-** If you aren't using automatic session management, then you must use ```branch.getTestInstance(getApplicationContext())```**
-
-*Note: Make sure to remove this line before releasing!*
-
-3.) __Is there any way to start debugging dynamically?__
-
-Yes. Even if you don't use the manifest metadata you can still start debugging dynamically. When you are testing your app, just put four fingers on your phone screen (or just single touch on simulator) and hold for three seconds, and you should be able to see an indication of start debug session in the log. From then on, all requests will be logged. If you have signed into our dashboard at that time and are in the "Debug" page, this will even start a remote debug session. To enable this feature, make sure you pass "this" as the third parameter when you call ```initSession``` in the Activity's ```onStart()```.
-
-4.) __Why do I not see any installs after I reinstall?__
-
-We do a lot of smart things to give you an accurate read on the number of installs you actually have. The most common one is associating the user with the actual hardware ID of the phone. If a user uninstalls the app, then reinstalls, we'll know it's the same person from before and just register the user as 'open' instead of an 'install.' To register an install on the same phone again, see FAQ #2 about debugging.
-
-5.) __Chrome seems to take me to Google Play all the time. Why?__
-
-Chrome is very picky about opening up the app directly. Chrome utilizes the intent system to try to open up the app, and fails back to the Play Store far too easily. Here are 3 things to verify:
-
-  1. Make sure the package name for the test build matches the package registered in the Branch settings and matches the package in Google play.
-
-  2. Make sure the URI scheme of the test build matches the Branch settings.
-
-  3. Verify that you've added the proper host 'open' in the Manifest - see [here](https://github.com/BranchMetrics/Branch-Android-SDK#register-an-activity-for-direct-deep-linking-optional-but-recommended)
-
+=======
 
 ## Installation
 
@@ -88,8 +31,8 @@ You can sign up for your own app id at [https://dashboard.branch.io](https://das
 Ideally, you want to use our links any time you have an external link pointing to your app (share, invite, referral, etc) because:
 
 1. Our dashboard can tell you where your installs are coming from
-1. Our links are the highest possible converting channel to new downloads and users
-1. You can pass that shared data across install to give new users a custom welcome or show them the content they expect to see
+2. Our links are the highest possible converting channel to new downloads and users
+3. You can pass that shared data across install to give new users a custom welcome or show them the content they expect to see
 
 Our linking infrastructure will support anything you want to build. If it doesn't, we'll fix it so that it does: just reach out to alex@branch.io with requests.
 
