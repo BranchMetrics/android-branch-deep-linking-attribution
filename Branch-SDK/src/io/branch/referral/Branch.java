@@ -1148,7 +1148,7 @@ public class Branch {
                 return true;
             } else {
                 // Check if the clicked url is an app link pointing to this app
-                if ((data.getScheme().equalsIgnoreCase("http") || data.getScheme().equalsIgnoreCase("https"))
+                if (("http".equalsIgnoreCase(data.getScheme()) || "https".equalsIgnoreCase(data.getScheme()))
                         && data.getHost() != null && data.getHost().length() > 0) {
                     prefHelper_.setAppLink(data.toString());
                 }
