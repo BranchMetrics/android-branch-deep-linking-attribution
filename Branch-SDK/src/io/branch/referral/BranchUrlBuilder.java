@@ -3,10 +3,12 @@ package io.branch.referral;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
@@ -15,7 +17,7 @@ import java.util.ArrayList;
  * </p>
  */
 @SuppressWarnings("rawtypes")
-abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
+abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
 
     /* Deep linked params associated with the link that will be passed into a new app session when clicked */
     protected JSONObject params_;
@@ -60,9 +62,24 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
     @SuppressWarnings("unchecked")
     public T addTag(String tag) {
         if (this.tags_ == null) {
-            tags_ = new ArrayList<String>();
+            tags_ = new ArrayList<>();
         }
         this.tags_.add(tag);
+        return (T) this;
+    }
+
+    /**
+     * <p>Adds a tag to the iterable collection of name associated with a deep link.</p>
+     *
+     * @param tags {@link List} with collection of tags associated with a deep link.
+     * @return This Builder object to allow for chaining of calls to set methods.
+     */
+    @SuppressWarnings("unchecked")
+    public T addTags(List<String> tags) {
+        if (this.tags_ == null) {
+            tags_ = new ArrayList<>();
+        }
+        this.tags_.addAll(tags);
         return (T) this;
     }
 
@@ -75,6 +92,18 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
      */
     @SuppressWarnings("unchecked")
     public T addParameters(String key, String value) {
+        try {
+            if (this.params_ == null) {
+                this.params_ = new JSONObject();
+            }
+            this.params_.put(key, value);
+        } catch (JSONException ignore) {
+
+        }
+        return (T) this;
+    }
+    @SuppressWarnings("unchecked")
+    public T addParameters(String key, JSONArray value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();
@@ -99,7 +128,7 @@ abstract class BranchUrlBuilder< T extends BranchUrlBuilder> {
         return shortUrl;
     }
 
-    protected void generateUrl(Branch.BranchLinkCreateListener callback) {        
+    protected void generateUrl(Branch.BranchLinkCreateListener callback) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,

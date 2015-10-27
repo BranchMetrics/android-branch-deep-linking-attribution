@@ -4,9 +4,8 @@ package io.branch.referral;
  * <p>
  * Defines all Json keys associated with branch request parameters.
  * </p>
- *
  */
-class Defines {
+public class Defines {
 
     public enum Jsonkey {
 
@@ -65,7 +64,19 @@ class Defines {
         IsFirstSession("+is_first_session"),
         AndroidDeepLinkPath("$android_deeplink_path"),
         DeepLinkPath("$deeplink_path"),
-        AndroidAppLinkURL("android_app_link_url");
+
+        AndroidAppLinkURL("android_app_link_url"),
+
+        CanonicalIdentifier("$canonical_identifier"),
+        ContentTitle("$og_title"),
+        ContentDesc("$og_description"),
+        ContentImgUrl("$og_image_url"),
+        ContentType("$content_type"),
+        PublicallyIndexable("$publicly_indexable"),
+        ContentKeyWords("$keywords"),
+        ContentExpiryTime("$exp_date"),
+        Params("params");
+
         
         private String key = "";
 
@@ -94,6 +105,7 @@ class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
+        RegisterView("v1/register-view"),
         Referrals("v1/referrals/"),
         SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),
