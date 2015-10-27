@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.10.0: Added support for the brand new BranchUniversalObject for easy tracking of views on content, easy creation of links and easy sharing
+
 - v1.9.0: Support for Android App-links. Deprecating loadActionCount API
 
 - v1.8.12: Fix for issue link parameters are provided in init session callback multiple times. Bug fixes for handling requests queued before initialising session.
