@@ -181,4 +181,15 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     public void clearCallbacks() {
         callback_ = null;
     }
+
+    public void updateInstallID(String installID) {
+        if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                if (getPost() != null) {
+                    getPost().put(Defines.Jsonkey.LinkClickID.getKey(), installID);
+                }
+            } catch (JSONException ignore) {
+            }
+        }
+    }
 }
