@@ -450,10 +450,10 @@ public class BranchUniversalObject implements Parcelable {
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentType.getKey(), type_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expirationInMilliSec_);
 
-        HashMap<String, String> controlParam = linkProperties.getControlParams();
         for (String key : metadata_.keySet()) {
             shortLinkBuilder.addParameters(key, metadata_.get(key));
         }
+        HashMap<String, String> controlParam = linkProperties.getControlParams();
         for (String key : controlParam.keySet()) {
             shortLinkBuilder.addParameters(key, controlParam.get(key));
         }

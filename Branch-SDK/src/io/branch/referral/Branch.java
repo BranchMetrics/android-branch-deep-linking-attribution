@@ -1364,7 +1364,18 @@ public class Branch {
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      */
     public void logout() {
-        ServerRequest req = new ServerRequestLogout(context_);
+        logout(null);
+    }
+
+    /**
+     * <p>This method should be called if you know that a different person is about to use the app. For example,
+     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
+     *
+     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
+     */
+    public void logout(LogoutStatusListener callback) {
+        ServerRequest req = new ServerRequestLogout(context_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
@@ -2905,6 +2916,7 @@ public class Branch {
         if (initState_ != SESSION_STATE.INITIALISED && (req instanceof ServerRequestInitSession) == false) {
 
             if ((req instanceof ServerRequestLogout)) {
+                ((ServerRequestLogout)req).handleFailure(BranchError.ERR_NO_SESSION);
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
@@ -3118,6 +3130,22 @@ public class Branch {
      */
     public interface BranchListResponseListener {
         void onReceivingResponse(JSONArray list, BranchError error);
+    }
+
+    /**
+     * <p>
+     * Callback interface for listening logout status
+     * </p>
+     */
+    public interface LogoutStatusListener {
+        /**
+         * Called on finishing the the logout process
+         *
+         * @param loggedOut A {@link Boolean} which is set to true if logout succeeded
+         * @param error     An instance of {@link BranchError} to notify any error occurred during logout.
+         *                  A null value is set if logout succeeded.
+         */
+        void onLogoutFinished(boolean loggedOut, BranchError error);
     }
 
     /**

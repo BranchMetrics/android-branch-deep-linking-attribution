@@ -61,7 +61,7 @@ public class BranchError {
      * @return A {@link String} with localised error message for the given status
      */
     private String getLocalisedErrorMessage(int statusCode) {
-        String errMsg = "";
+        String errMsg;
         if (statusCode == RemoteInterface.NO_CONNECTIVITY_STATUS) {
             errMsg = " Branch API Error: poor network connectivity. Please try again later.";
         } else if (statusCode == RemoteInterface.NO_BRANCH_KEY_STATUS) {
@@ -87,7 +87,7 @@ public class BranchError {
                     " Make  sure your Application class is an instance of BranchLikedApp.";
         } else if (statusCode == ERR_BRANCH_NO_SHARE_OPTION) {
             errMsg = " Unable create share options. Couldn't find applications on device to share the link.";
-        }  else if (statusCode >= 500) {
+        } else if (statusCode >= 500) {
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
         } else if (statusCode == 409) {
             errMsg = " A resource with this identifier already exists.";

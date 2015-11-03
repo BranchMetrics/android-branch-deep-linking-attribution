@@ -111,7 +111,12 @@ public class MainActivity extends Activity {
         cmdLogoutUser.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.logout();
+                branch.logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        Log.i("BranchTestBed", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                    }
+                });
 
                 txtRewardBalance.setText("rewards = ");
                 txtInstallCount.setText("install count =");
