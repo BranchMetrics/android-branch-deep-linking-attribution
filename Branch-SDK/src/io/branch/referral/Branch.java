@@ -649,6 +649,7 @@ public class Branch {
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
+     *
      * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
      */
     @Deprecated
@@ -2934,7 +2935,7 @@ public class Branch {
         if (initState_ != SESSION_STATE.INITIALISED && (req instanceof ServerRequestInitSession) == false) {
 
             if ((req instanceof ServerRequestLogout)) {
-                ((ServerRequestLogout)req).handleFailure(BranchError.ERR_NO_SESSION);
+                ((ServerRequestLogout) req).handleFailure(BranchError.ERR_NO_SESSION);
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
@@ -3282,40 +3283,51 @@ public class Branch {
                             linkCache_.clear();
                             requestQueue_.clear();
                         }
-                        //On setting a new identity Id clear the link cache
-                        else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
-                            try {
-                                if (serverResponse.getObject() != null) {
-                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
-                                    if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                        linkCache_.clear();
-                                    }
-                                }
-                            } catch (Exception ignore) {
-                            }
-                        }
-
                         requestQueue_.dequeue();
 
                         // If this request changes a session update the session-id to queued requests.
-                        if (thisReq_ instanceof ServerRequestInitSession) {
+                        if (thisReq_ instanceof ServerRequestInitSession
+                                || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                             // Immediately set session and Identity and update the pending request with the params
                             if (serverResponse.getObject() != null) {
-                                prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                boolean updateRequestsInQueue = false;
+                                if (serverResponse.getObject().has(Defines.Jsonkey.SessionID.getKey())) {
+                                    prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                    updateRequestsInQueue = true;
+                                }
                                 if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                                    prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                                    if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+                                        //On setting a new identity Id clear the link cache
+                                        linkCache_.clear();
+                                        prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                        updateRequestsInQueue = true;
+                                    }
                                 }
-                                updateAllRequestsInQueue();
-                                initState_ = SESSION_STATE.INITIALISED;
-                                // Publish success to listeners
-                                thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                if (serverResponse.getObject().has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                                    prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
+                                    updateRequestsInQueue = true;
+                                }
 
-                                if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
-                                    isInitReportedThroughCallBack = true;
-                                } else {
-                                    isInitReportedThroughCallBack = false;
+                                if (updateRequestsInQueue) {
+                                    updateAllRequestsInQueue();
                                 }
-                                checkForAutoDeepLinkConfiguration();
+
+                                if (thisReq_ instanceof ServerRequestInitSession) {
+                                    initState_ = SESSION_STATE.INITIALISED;
+                                    // Publish success to listeners
+                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+
+                                    if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
+                                        isInitReportedThroughCallBack = true;
+                                    } else {
+                                        isInitReportedThroughCallBack = false;
+                                    }
+                                    checkForAutoDeepLinkConfiguration();
+                                } else {
+                                    // For setting identity just call only request succeeded
+                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                }
                             }
                         } else {
                             //Publish success to listeners
