@@ -2453,7 +2453,9 @@ public class Branch {
      *
      * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestGetReferralCode(context_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -2467,7 +2469,9 @@ public class Branch {
      * @param amount   An {@link Integer} value of credits associated with this referral code.
      * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final int amount, BranchReferralInitListener callback) {
         this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
@@ -2481,7 +2485,9 @@ public class Branch {
      * @param amount   An {@link Integer} value of credits associated with this referral code.
      * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
@@ -2494,7 +2500,9 @@ public class Branch {
      * @param callback   A {@link BranchReferralInitListener} callback instance that will trigger
      *                   actions defined therein upon receipt of a response to a referral code
      *                   request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
         this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
@@ -2510,7 +2518,9 @@ public class Branch {
      * @param callback   A {@link BranchReferralInitListener} callback instance that will trigger
      *                   actions defined therein upon receipt of a response to a referral code
      *                   request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
         this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
@@ -2537,7 +2547,9 @@ public class Branch {
      * @param callback        A {@link BranchReferralInitListener} callback instance that will
      *                        trigger actions defined therein upon receipt of a response to a
      *                        referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
     }
@@ -2567,7 +2579,9 @@ public class Branch {
      * @param callback        A {@link BranchReferralInitListener} callback instance that will
      *                        trigger actions defined therein upon receipt of a response to a
      *                        referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
         String date = null;
         if (expiration != null)
@@ -2586,7 +2600,9 @@ public class Branch {
      * @param code     A {@link String} object containing the referral code supplied.
      * @param callback A {@link BranchReferralInitListener} callback to handle the server response
      *                 of the referral submission request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void validateReferralCode(final String code, BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestValidateReferralCode(context_, callback, code);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -2601,7 +2617,9 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback to handle the server
      *                 response of the referral submission request.
      * @see BranchReferralInitListener
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestApplyReferralCode(context_, callback, code);
         if (!req.constructError_ && !req.handleErrors(context_)) {
