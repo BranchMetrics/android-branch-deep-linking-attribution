@@ -315,9 +315,6 @@ public class Branch {
 
     private ScheduledFuture<?> appListingSchedule_;
 
-    /* BranchActivityLifeCycleObserver instance. Should be initialised on creating Instance with Application object. */
-    private BranchActivityLifeCycleObserver activityLifeCycleObserver_;
-
     /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
     private static boolean isAutoSessionMode_ = false;
 
@@ -359,10 +356,10 @@ public class Branch {
     private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
 
     /*Key for defining a request code for an activity. should be added as a metadata for an activity. This is used as a request code for launching a an activity on auto deep link. */
-    private final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
+    private static final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
 
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
-    private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
+    private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
     /* Sets to true when the init session params are reported to the app though call back.*/
     private boolean isInitReportedThroughCallBack = false;
@@ -387,11 +384,11 @@ public class Branch {
         keepAlive_ = false;
         networkCount_ = 0;
         hasNetwork_ = true;
-        debugListenerInitHistory_ = new SparseArray<String>();
+        debugListenerInitHistory_ = new SparseArray<>();
         debugOnTouchListener_ = retrieveOnTouchListener();
         debugHandler_ = new Handler();
         debugStarted_ = false;
-        linkCache_ = new HashMap<BranchLinkData, String>();
+        linkCache_ = new HashMap<>();
 
     }
 
@@ -408,9 +405,9 @@ public class Branch {
         /* Check if BranchApp is instantiated. */
         if (branchReferral_ == null) {
             Log.e("BranchSDK", "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
-        } else if (isAutoSessionMode_ == true) {
+        } else if (isAutoSessionMode_) {
             /* Check if Activity life cycle callbacks are set if in auto session mode. */
-            if (isActivityLifeCycleCallbackRegistered_ == false) {
+            if (!isActivityLifeCycleCallbackRegistered_) {
                 Log.e("BranchSDK", "Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
                         "If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
             }
@@ -453,7 +450,7 @@ public class Branch {
             branchReferral_ = Branch.initInstance(context);
 
             String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
-            boolean isNewBranchKeySet = false;
+            boolean isNewBranchKeySet;
             if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
                 isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
@@ -1063,7 +1060,7 @@ public class Branch {
                 if (isAutoSessionMode_) {
                     // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
                     // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
-                    if (isInitReportedThroughCallBack == false) { //Check if session params are reported already in case user call initsession form a different activity(not a noraml case)
+                    if (!isInitReportedThroughCallBack) { //Check if session params are reported already in case user call initsession form a different activity(not a noraml case)
                         callback.onInitFinished(getLatestReferringParams(), null);
                         isInitReportedThroughCallBack = true;
                     } else {
@@ -1391,6 +1388,7 @@ public class Branch {
      */
     @Deprecated
     public void loadActionCounts() {
+        //noinspection deprecation
         loadActionCounts(null);
     }
 
@@ -1699,6 +1697,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync() {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), null, false);
     }
 
@@ -1714,6 +1713,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1735,6 +1735,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1763,6 +1764,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1786,6 +1788,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, type, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1809,6 +1812,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1832,6 +1836,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1862,6 +1867,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1887,6 +1893,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, type, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1912,6 +1919,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1925,6 +1933,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), callback, true);
     }
 
@@ -1943,6 +1952,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -1971,6 +1981,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2006,6 +2017,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2036,6 +2048,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, type, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2066,6 +2079,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2096,6 +2110,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2132,6 +2147,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2165,6 +2181,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, type, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2198,6 +2215,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2306,6 +2324,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2329,6 +2348,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2345,6 +2365,7 @@ public class Branch {
      */
     @Deprecated
     public String getReferralUrlSync(String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2363,6 +2384,7 @@ public class Branch {
      */
     @Deprecated
     public String getReferralUrlSync(Collection<String> tags, String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2386,6 +2408,7 @@ public class Branch {
      */
     @Deprecated
     public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2409,6 +2432,7 @@ public class Branch {
      */
     @Deprecated
     public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2425,6 +2449,7 @@ public class Branch {
      */
     @Deprecated
     public String getContentUrlSync(String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2443,6 +2468,7 @@ public class Branch {
      */
     @Deprecated
     public String getContentUrlSync(Collection<String> tags, String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2474,6 +2500,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralCode(final int amount, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2490,6 +2517,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2505,6 +2533,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2523,6 +2552,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2552,6 +2582,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
     }
 
@@ -2669,9 +2700,7 @@ public class Branch {
             try {
                 int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
                 response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ignore) {
-            } catch (ExecutionException ignore) {
-            } catch (TimeoutException ignore) {
+            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
             String url = prefHelper_.getUserURL();
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
@@ -2770,19 +2799,17 @@ public class Branch {
                         Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
                         networkCount_ = 0;
                         handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                        return;
                     }
                     //All request except open and install need a session to execute
                     else if (!(req instanceof ServerRequestInitSession) && (!hasSession() || !hasDeviceFingerPrint())) {
                         networkCount_ = 0;
                         handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                        return;
                     } else {
                         BranchPostTask postTask = new BranchPostTask(req);
                         postTask.execute();
                     }
                 } else {
-                    requestQueue_.remove(req); //Inc ase there is any request nullified remove it.
+                    requestQueue_.remove(null); //Inc ase there is any request nullified remove it.
                 }
             } else {
                 serverSema_.release();
@@ -2932,10 +2959,10 @@ public class Branch {
      */
     private void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (initState_ != SESSION_STATE.INITIALISED && (req instanceof ServerRequestInitSession) == false) {
+        if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
 
             if ((req instanceof ServerRequestLogout)) {
-                ((ServerRequestLogout) req).handleFailure(BranchError.ERR_NO_SESSION);
+                req.handleFailure(BranchError.ERR_NO_SESSION);
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
@@ -2959,18 +2986,13 @@ public class Branch {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
-            activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
+            BranchActivityLifeCycleObserver activityLifeCycleObserver = new BranchActivityLifeCycleObserver();
             /* Set an observer for activity life cycle events. */
-            application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
-            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
+            application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
+            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
             isActivityLifeCycleCallbackRegistered_ = true;
 
-        } catch (NoSuchMethodError Ex) {
-            isActivityLifeCycleCallbackRegistered_ = false;
-            isAutoSessionMode_ = false;
-            /* LifeCycleEvents are  available only from API level 14. */
-            Log.w(TAG, new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
-        } catch (NoClassDefFoundError Ex) {
+        } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
             isAutoSessionMode_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
@@ -2996,6 +3018,7 @@ public class Branch {
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
+                    //noinspection deprecation
                     setDebug();
                 }
                 Uri intentData = null;
@@ -3243,7 +3266,7 @@ public class Branch {
                         else {
                             hasNetwork_ = false;
                             //Collect all request from the queue which need to be failed.
-                            ArrayList<ServerRequest> requestToFail = new ArrayList<ServerRequest>();
+                            ArrayList<ServerRequest> requestToFail = new ArrayList<>();
                             for (int i = 0; i < requestQueue_.getSize(); i++) {
                                 requestToFail.add(requestQueue_.peekAt(i));
                             }
@@ -3318,11 +3341,7 @@ public class Branch {
                                     // Publish success to listeners
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
 
-                                    if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
-                                        isInitReportedThroughCallBack = true;
-                                    } else {
-                                        isInitReportedThroughCallBack = false;
-                                    }
+                                    isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
                                     checkForAutoDeepLinkConfiguration();
                                 } else {
                                     // For setting identity just call only request succeeded
@@ -3370,8 +3389,8 @@ public class Branch {
 
         try {
             //Check if the application is launched by clicking a Branch link.
-            if (latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false
-                    || latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false) {
+            if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
+                    || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
                 return;
             }
             if (latestParams.length() > 0) {
@@ -3388,13 +3407,10 @@ public class Branch {
                     for (ActivityInfo activityInfo : activityInfos) {
                         if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
                             if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                                deepLinkActivity = ((ActivityInfo) activityInfo).name;
+                                deepLinkActivity = activityInfo.name;
                                 deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
                                 break;
                             }
-                        }
-                        if (deepLinkActivity != null) {
-                            break;
                         }
                     }
                 }
@@ -3442,7 +3458,7 @@ public class Branch {
             } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
-        } catch (JSONException e) {
+        } catch (JSONException ignored) {
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
@@ -3700,13 +3716,13 @@ public class Branch {
             }
             shareMsg_ = "";
             callback_ = null;
-            preferredOptions_ = new ArrayList<SharingHelper.SHARE_WITH>();
+            preferredOptions_ = new ArrayList<>();
             defaultURL_ = null;
 
-            moreOptionIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_more);
+            moreOptionIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_more);
             moreOptionText_ = "More...";
 
-            copyUrlIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_save);
+            copyUrlIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_save);
             copyURlText_ = "Copy link";
             urlCopiedMessage_ = "Copied link to clipboard!";
         }
@@ -3884,9 +3900,8 @@ public class Branch {
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) {
-            moreOptionIcon_ = activity_.getResources().getDrawable(drawableIconID);
+            moreOptionIcon_ = BranchUtil.getDrawable(activity_.getApplicationContext(), drawableIconID);
             moreOptionText_ = activity_.getResources().getString(stringLabelID);
-            ;
             return this;
         }
 
@@ -3912,10 +3927,10 @@ public class Branch {
          * @param drawableIconID  Resource ID for the drawable to set as the icon for copy url  option. Default icon is system menu_save icon
          * @param stringLabelID   Resource ID for the string label the copy url option. Default label is "Copy link"
          * @param stringMessageID Resource ID for the string message to show toast message displayed on copying a url
-         * @returnA {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
-            copyUrlIcon_ = activity_.getResources().getDrawable(drawableIconID);
+            copyUrlIcon_ = BranchUtil.getDrawable(activity_.getApplicationContext(), drawableIconID);
             copyURlText_ = activity_.getResources().getString(stringLabelID);
             urlCopiedMessage_ = activity_.getResources().getString(stringMessageID);
             return this;
