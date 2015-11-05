@@ -2694,7 +2694,7 @@ public class Branch {
         return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
     }
 
-    private String generateShortLinkSync(ServerRequest req) {
+    private String generateShortLinkSync(ServerRequestCreateUrl req) {
         if (initState_ == SESSION_STATE.INITIALISED) {
             ServerResponse response = null;
             try {
@@ -2702,7 +2702,7 @@ public class Branch {
                 response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
-            String url = prefHelper_.getUserURL();
+            String url = req.getLongUrl();
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
                     url = response.getObject().getString("url");
@@ -2723,7 +2723,7 @@ public class Branch {
     private void generateShortLinkAsync(final ServerRequest req) {
         handleNewRequest(req);
     }
-
+    
     private JSONObject convertParamsStringToDictionary(String paramString) {
         if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
             return new JSONObject();
