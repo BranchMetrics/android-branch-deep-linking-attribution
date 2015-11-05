@@ -16,6 +16,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.ActionMode;
@@ -372,7 +374,7 @@ public class Branch {
      *
      * @param context A {@link Context} from which this call was made.
      */
-    private Branch(Context context) {
+    private Branch(@NonNull Context context) {
         prefHelper_ = PrefHelper.getInstance(context);
         kRemoteInterface_ = new BranchRemoteInterface(context);
         systemObserver_ = new SystemObserver(context);
@@ -427,7 +429,7 @@ public class Branch {
      * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
      * Adding your app key to your project</a>
      */
-    public static Branch getInstance(Context context, String branchKey) {
+    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
         }
@@ -445,7 +447,7 @@ public class Branch {
         return branchReferral_;
     }
 
-    private static Branch getBranchInstance(Context context, boolean isLive) {
+    private static Branch getBranchInstance(@NonNull Context context, boolean isLive) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
 
@@ -486,7 +488,7 @@ public class Branch {
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    public static Branch getInstance(Context context) {
+    public static Branch getInstance(@NonNull Context context) {
         return getBranchInstance(context, true);
     }
 
@@ -497,7 +499,7 @@ public class Branch {
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-    public static Branch getTestInstance(Context context) {
+    public static Branch getTestInstance(@NonNull Context context) {
         return getBranchInstance(context, false);
     }
 
@@ -513,7 +515,7 @@ public class Branch {
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(Context context) {
+    public static Branch getAutoInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
@@ -537,7 +539,7 @@ public class Branch {
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(Context context, boolean isReferrable) {
+    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
@@ -555,7 +557,7 @@ public class Branch {
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoTestInstance(Context context) {
+    public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false);
@@ -575,7 +577,7 @@ public class Branch {
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoTestInstance(Context context, boolean isReferrable) {
+    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
@@ -589,7 +591,7 @@ public class Branch {
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-    private static Branch initInstance(Context context) {
+    private static Branch initInstance(@NonNull Context context) {
         return new Branch(context.getApplicationContext());
     }
 
@@ -766,7 +768,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data) {
         return initSession(callback, data, null);
     }
 
@@ -782,7 +784,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data) {
         return initSession(callback, data, null);
     }
 
@@ -799,7 +801,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, activity);
         return uriHandled;
@@ -818,7 +820,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, activity);
         return uriHandled;
@@ -852,7 +854,7 @@ public class Branch {
      *             initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSessionWithData(Uri data) {
+    public boolean initSessionWithData(@NonNull Uri data) {
         return initSessionWithData(data, null);
     }
 
@@ -896,7 +898,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(boolean isReferrable, Activity activity) {
+    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
         return initSession((BranchReferralInitListener) null, isReferrable, activity);
     }
 
@@ -932,7 +934,7 @@ public class Branch {
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
+    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
 
@@ -951,7 +953,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+    public boolean initSession( BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, isReferrable, activity);
         return uriHandled;
@@ -972,7 +974,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, isReferrable, activity);
         return uriHandled;
@@ -990,7 +992,7 @@ public class Branch {
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
+    public boolean initSession( BranchUniversalReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
 
@@ -1006,7 +1008,7 @@ public class Branch {
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
+    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
 
@@ -1321,7 +1323,7 @@ public class Branch {
      *
      * @param userId A {@link String} value containing the unique identifier of the user.
      */
-    public void setIdentity(String userId) {
+    public void setIdentity(@NonNull String userId) {
         setIdentity(userId, null);
     }
 
@@ -1334,7 +1336,7 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(String userId, BranchReferralInitListener callback) {
+    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1466,7 +1468,7 @@ public class Branch {
      * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
     @Deprecated
-    public int getTotalCountsForAction(String action) {
+    public int getTotalCountsForAction(@NonNull String action) {
         return prefHelper_.getActionTotalCount(action);
     }
 
@@ -1481,7 +1483,7 @@ public class Branch {
      * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
     @Deprecated
-    public int getUniqueCountsForAction(String action) {
+    public int getUniqueCountsForAction(@NonNull String action) {
         return prefHelper_.getActionUniqueCount(action);
     }
 
@@ -1521,7 +1523,7 @@ public class Branch {
      * @param count  A {@link Integer} specifying the number of credits to attempt to redeem from
      *               the specified bucket.
      */
-    public void redeemRewards(final String bucket, final int count) {
+    public void redeemRewards(@NonNull final String bucket, final int count) {
         redeemRewards(bucket, count, null);
     }
 
@@ -1538,7 +1540,7 @@ public class Branch {
      * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
      *                 trigger actions defined therein upon a executing redeem rewards.
      */
-    public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
+    public void redeemRewards(@NonNull final String bucket, final int count, BranchReferralStateChangedListener callback) {
         ServerRequestRedeemRewards req = new ServerRequestRedeemRewards(context_, bucket, count, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1565,7 +1567,7 @@ public class Branch {
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String bucket, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener callback) {
         getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
     }
 
@@ -1590,7 +1592,7 @@ public class Branch {
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         getCreditHistory(null, afterId, length, order, callback);
     }
 
@@ -1617,7 +1619,7 @@ public class Branch {
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(final String bucket, final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         ServerRequest req = new ServerRequestGetRewardHistory(context_, bucket, afterId, length, order, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1633,7 +1635,7 @@ public class Branch {
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public void userCompletedAction(final String action, JSONObject metadata) {
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
         if (metadata != null)
             metadata = BranchUtil.filterOutBadCharacters(metadata);
 

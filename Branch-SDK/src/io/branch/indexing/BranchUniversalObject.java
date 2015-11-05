@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,7 +85,7 @@ public class BranchUniversalObject implements Parcelable {
      * @param canonicalIdentifier A {@link String} with value for the canonical identifier
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject setCanonicalIdentifier(String canonicalIdentifier) {
+    public BranchUniversalObject setCanonicalIdentifier(@NonNull String canonicalIdentifier) {
         this.canonicalIdentifier_ = canonicalIdentifier;
         return this;
     }
@@ -96,7 +98,7 @@ public class BranchUniversalObject implements Parcelable {
      * @param title A {@link String} with value of for the content title
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject setTitle(String title) {
+    public BranchUniversalObject setTitle(@NonNull String title) {
         this.title_ = title;
         return this;
     }
@@ -122,7 +124,7 @@ public class BranchUniversalObject implements Parcelable {
      * @param imageUrl A {@link String} specifying a url to an image associated with content referred by this object
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject setContentImageUrl(String imageUrl) {
+    public BranchUniversalObject setContentImageUrl(@NonNull String imageUrl) {
         this.imageUrl_ = imageUrl;
         return this;
     }
@@ -347,7 +349,7 @@ public class BranchUniversalObject implements Parcelable {
      *
      * @param callback An instance of {@link RegisterViewStatusListener} to listen to results of the operation
      */
-    public void registerView(RegisterViewStatusListener callback) {
+    public void registerView(@Nullable RegisterViewStatusListener callback) {
         if (Branch.getInstance() != null) {
             Branch.getInstance().registerView(this, callback);
         } else {
@@ -378,17 +380,17 @@ public class BranchUniversalObject implements Parcelable {
     //--------------------- Create Link --------------------------//
 
 
-    public String getShortUrl(Context context, LinkProperties linkProperties) {
+    public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         return getLinkBuilder(context, linkProperties).getShortUrl();
     }
 
-    public void generateShortUrl(Context context, LinkProperties linkProperties, Branch.BranchLinkCreateListener callback) {
+    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
         getLinkBuilder(context, linkProperties).generateShortUrl(callback);
     }
 
     //------------------ Share sheet -------------------------------------//
 
-    public void showShareSheet(Activity activity, LinkProperties linkProperties, ShareSheetStyle style, Branch.BranchLinkShareListener callback) {
+    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
         JSONObject params = new JSONObject();
         try {
             for (String key : metadata_.keySet()) {
@@ -421,7 +423,7 @@ public class BranchUniversalObject implements Parcelable {
         shareLinkBuilder.shareLink();
     }
 
-    private BranchShortLinkBuilder getLinkBuilder(Context context, LinkProperties linkProperties) {
+    private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         if (linkProperties.getTags() != null) {
             shortLinkBuilder.addTags(linkProperties.getTags());

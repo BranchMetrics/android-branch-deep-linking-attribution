@@ -8,13 +8,6 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for getting referral code. Handles request creation and execution.
@@ -35,16 +28,16 @@ class ServerRequestGetReferralCode extends ServerRequest {
      * @param bucket          A {@link String} value containing the name of the referral bucket
      *                        that the code will belong to.
      * @param calculationType The type of referral calculation. i.e.
-     *                        {@link #LINK_TYPE_UNLIMITED_USE} or
-     *                        {@link #LINK_TYPE_ONE_TIME_USE}
+     *                        {@link Branch#LINK_TYPE_UNLIMITED_USE} or
+     *                        {@link Branch#LINK_TYPE_ONE_TIME_USE}
      * @param location        The user to reward for applying the referral code.
      *                        <p/>
      *                        <p>Valid options:</p>
      *                        <p/>
      *                        <ul>
-     *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
-     *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
-     *                        <li>{@link #REFERRAL_CODE_LOCATION_BOTH}</li>
+     *                        <li>{@link Branch#REFERRAL_CODE_LOCATION_REFERREE}</li>
+     *                        <li>{@link Branch#REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
+     *                        <li>{@link Branch#REFERRAL_CODE_LOCATION_BOTH}</li>
      *                        </ul>
      * @param callback        A {@link Branch.BranchReferralInitListener} callback instance that will
      *                        trigger actions defined therein upon receipt of a response to a
@@ -135,7 +128,9 @@ class ServerRequestGetReferralCode extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchError("Trouble retrieving the referral code.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onInitFinished(null, new BranchError("Trouble retrieving the referral code.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;

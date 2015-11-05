@@ -24,9 +24,9 @@ class ServerRequestSendAppList extends ServerRequest {
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
      * <p/>
      * <ul>
-     * <li>{@link SystemObserver#getAppKey()}</li>
+     * <li>{@link PrefHelper#getAppKey()}</li>
      * <li>{@link SystemObserver#getOS()}</li>
-     * <li>{@link SystemObserver#getDeviceFingerPrintID()}</li>
+     * <li>{@link PrefHelper#getDeviceFingerPrintID()}</li>
      * <li>{@link SystemObserver#getListOfApps()}</li>
      * </ul>
      *
