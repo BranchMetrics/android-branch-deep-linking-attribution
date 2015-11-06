@@ -1,7 +1,11 @@
 apply plugin: 'com.android.library'
 
+//File name for out put jar created
+def jarFileName
+
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
+    compile 'com.android.support:support-annotations:22.2.0'
 }
 
 android {
@@ -9,7 +13,7 @@ android {
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
     
     defaultConfig {
-        minSdkVersion 7
+        minSdkVersion 8
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
@@ -39,5 +43,27 @@ android {
         release.setRoot('build-types/release')
     }
 }
+
+//------------- Jar Generation code. ---------------//
+//Run makeJar to create a jar file for SDK to the route directory
+android {
+    lintOptions {
+        abortOnError false
+    }
+}
+
+task clearJar(type: Delete) {
+    delete 'build/libs/'+ jarFileName
+}
+
+task makeJar(type: Copy) {
+    from('build/intermediates/bundles/release/')
+    into('../')
+    include('classes.jar')
+    rename ('classes.jar', 'BranchSDK-'+project.VERSION_NAME+'.jar')
+}
+
+makeJar.dependsOn(clearJar, build)
+
 
 apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'

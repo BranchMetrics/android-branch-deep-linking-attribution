@@ -89,18 +89,19 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchError("Trouble setting the user alias.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onInitFinished(null, new BranchError("Trouble setting the user alias.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         } else {
             try {
-                String userId= getPost().getString(Defines.Jsonkey.Identity.getKey());
+                String userId = getPost().getString(Defines.Jsonkey.Identity.getKey());
                 if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
                     return true;
                 }
             } catch (JSONException ignore) {
                 return true;
             }
-
         }
         return false;
     }
@@ -113,7 +114,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
     /**
      * Return true if the user id provided for user identification is the same as existing id
      *
-     * @return
+     * @return True if the user id refferes to the existing user
      */
     public boolean isExistingID() {
         try {

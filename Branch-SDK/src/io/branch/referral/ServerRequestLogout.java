@@ -14,15 +14,19 @@ import org.json.JSONObject;
  */
 class ServerRequestLogout extends ServerRequest {
 
+    private Branch.LogoutStatusListener callback_;
+
     /**
      * <p>Create an instance of {@link ServerRequestLogout} to signal when  different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      *
-     * @param context Current {@link Application} context
+     * @param context  Current {@link Application} context
+     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
-    public ServerRequestLogout(Context context) {
+    public ServerRequestLogout(Context context, Branch.LogoutStatusListener callback) {
         super(context, Defines.RequestPath.Logout.getPath());
+        callback_ = callback;
         JSONObject post = new JSONObject();
         try {
             post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
@@ -55,18 +59,27 @@ class ServerRequestLogout extends ServerRequest {
             prefHelper_.clearUserValues();
         } catch (JSONException e) {
             e.printStackTrace();
+        } finally {
+            if (callback_ != null) {
+                callback_.onLogoutFinished(true, null);
+            }
         }
     }
 
     @Override
     public void handleFailure(int statusCode) {
-        //No implementation on purpose
+        if (callback_ != null) {
+            callback_.onLogoutFinished(false, new BranchError("Logout error. ", statusCode));
+        }
     }
 
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
             Log.i("BranchSDK", "Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
+            if (callback_ != null) {
+                callback_.onLogoutFinished(false, new BranchError("Logout failed", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;
@@ -79,6 +92,6 @@ class ServerRequestLogout extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
-        //No Implementation on purpose
+        callback_ = null;
     }
 }

@@ -8,12 +8,6 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for getting referral count. Handles request creation and execution.
@@ -81,7 +75,9 @@ class ServerRequestGetReferralCount extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;

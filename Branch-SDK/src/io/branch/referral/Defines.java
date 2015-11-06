@@ -83,7 +83,7 @@ public class Defines {
         
         private String key = "";
 
-        private Jsonkey(String key) {
+        Jsonkey(String key) {
             this.key = key;
         }
 
@@ -123,7 +123,7 @@ public class Defines {
 
         private String key = "";
 
-        private RequestPath(String key) {
+        RequestPath(String key) {
             this.key = key;
         }
 
@@ -135,6 +135,38 @@ public class Defines {
         public String toString() {
             return key;
         }
+    }
+
+    /**
+     * <p>
+     * Defines link parameter keys
+     * </p>
+     */
+    public enum LinkParam {
+        Tags("tags"),
+        Alias("alias"),
+        Type("type"),
+        Duration("duration"),
+        Channel("channel"),
+        Feature("feature"),
+        Stage("stage"),
+        Data("data");
+
+        private String key = "";
+
+        LinkParam(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
     }
 
 }

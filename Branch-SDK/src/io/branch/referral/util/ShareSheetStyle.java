@@ -3,6 +3,10 @@ package io.branch.referral.util;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 
 import java.util.ArrayList;
 
@@ -33,7 +37,7 @@ public class ShareSheetStyle {
 
     final Context context_;
 
-    public ShareSheetStyle(Context context, String messageTitle, String messageBody) {
+    public ShareSheetStyle(@NonNull Context context,@NonNull String messageTitle, @NonNull String messageBody) {
         context_ = context;
         moreOptionIcon_ = null;
         moreOptionText_ = null;
@@ -82,8 +86,8 @@ public class ShareSheetStyle {
      * @param stringLabelID  Resource ID for String label for the more option. Default label is "More"
      * @return This object to allow method chaining
      */
-    public ShareSheetStyle setMoreOptionStyle(int drawableIconID, int stringLabelID) {
-        moreOptionIcon_ = context_.getResources().getDrawable(drawableIconID);
+    public ShareSheetStyle setMoreOptionStyle(@DrawableRes int drawableIconID, @StringRes int stringLabelID) {
+        moreOptionIcon_ = getDrawable(context_, drawableIconID);
         moreOptionText_ = context_.getResources().getString(stringLabelID);
 
         return this;
@@ -113,8 +117,8 @@ public class ShareSheetStyle {
      * @param stringMessageID Resource ID for the string message to show toast message displayed on copying a url
      * @return A {@link ShareSheetStyle} instance.
      */
-    public ShareSheetStyle setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
-        copyUrlIcon_ = context_.getResources().getDrawable(drawableIconID);
+    public ShareSheetStyle setCopyUrlStyle(@DrawableRes int drawableIconID, @StringRes int stringLabelID, @StringRes int stringMessageID) {
+        copyUrlIcon_ = getDrawable(context_, drawableIconID);
         copyURlText_ = context_.getResources().getString(stringLabelID);
         urlCopiedMessage_ = context_.getResources().getString(stringMessageID);
         return this;
@@ -168,6 +172,15 @@ public class ShareSheetStyle {
 
     public String getUrlCopiedMessage() {
         return urlCopiedMessage_;
+    }
+
+    private Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return context.getResources().getDrawable(drawableID, context.getTheme());
+        } else {
+            //noinspection deprecation
+            return context.getResources().getDrawable(drawableID);
+        }
     }
 
 }

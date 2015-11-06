@@ -16,6 +16,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.ActionMode;
@@ -316,9 +318,6 @@ public class Branch {
 
     private ScheduledFuture<?> appListingSchedule_;
 
-    /* BranchActivityLifeCycleObserver instance. Should be initialised on creating Instance with Application object. */
-    private BranchActivityLifeCycleObserver activityLifeCycleObserver_;
-
     /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
     private static boolean isAutoSessionMode_ = false;
 
@@ -360,10 +359,10 @@ public class Branch {
     private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
 
     /*Key for defining a request code for an activity. should be added as a metadata for an activity. This is used as a request code for launching a an activity on auto deep link. */
-    private final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
+    private static final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
 
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
-    private final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
+    private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
     /* Sets to true when the init session params are reported to the app though call back.*/
     private boolean isInitReportedThroughCallBack = false;
@@ -376,7 +375,7 @@ public class Branch {
      *
      * @param context A {@link Context} from which this call was made.
      */
-    private Branch(Context context) {
+    private Branch(@NonNull Context context) {
         prefHelper_ = PrefHelper.getInstance(context);
         kRemoteInterface_ = new BranchRemoteInterface(context);
         systemObserver_ = new SystemObserver(context);
@@ -388,11 +387,11 @@ public class Branch {
         keepAlive_ = false;
         networkCount_ = 0;
         hasNetwork_ = true;
-        debugListenerInitHistory_ = new SparseArray<String>();
+        debugListenerInitHistory_ = new SparseArray<>();
         debugOnTouchListener_ = retrieveOnTouchListener();
         debugHandler_ = new Handler();
         debugStarted_ = false;
-        linkCache_ = new HashMap<BranchLinkData, String>();
+        linkCache_ = new HashMap<>();
 
     }
 
@@ -409,9 +408,9 @@ public class Branch {
         /* Check if BranchApp is instantiated. */
         if (branchReferral_ == null) {
             Log.e("BranchSDK", "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
-        } else if (isAutoSessionMode_ == true) {
+        } else if (isAutoSessionMode_) {
             /* Check if Activity life cycle callbacks are set if in auto session mode. */
-            if (isActivityLifeCycleCallbackRegistered_ == false) {
+            if (!isActivityLifeCycleCallbackRegistered_) {
                 Log.e("BranchSDK", "Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
                         "If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
             }
@@ -431,7 +430,7 @@ public class Branch {
      * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
      * Adding your app key to your project</a>
      */
-    public static Branch getInstance(Context context, String branchKey) {
+    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
         }
@@ -449,12 +448,12 @@ public class Branch {
         return branchReferral_;
     }
 
-    private static Branch getBranchInstance(Context context, boolean isLive) {
+    private static Branch getBranchInstance(@NonNull Context context, boolean isLive) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
 
             String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
-            boolean isNewBranchKeySet = false;
+            boolean isNewBranchKeySet;
             if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
                 isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
@@ -490,7 +489,7 @@ public class Branch {
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    public static Branch getInstance(Context context) {
+    public static Branch getInstance(@NonNull Context context) {
         return getBranchInstance(context, true);
     }
 
@@ -501,7 +500,7 @@ public class Branch {
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-    public static Branch getTestInstance(Context context) {
+    public static Branch getTestInstance(@NonNull Context context) {
         return getBranchInstance(context, false);
     }
 
@@ -517,7 +516,7 @@ public class Branch {
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(Context context) {
+    public static Branch getAutoInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
@@ -541,7 +540,7 @@ public class Branch {
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(Context context, boolean isReferrable) {
+    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
@@ -559,7 +558,7 @@ public class Branch {
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoTestInstance(Context context) {
+    public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false);
@@ -579,7 +578,7 @@ public class Branch {
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoTestInstance(Context context, boolean isReferrable) {
+    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
@@ -593,7 +592,7 @@ public class Branch {
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-    private static Branch initInstance(Context context) {
+    private static Branch initInstance(@NonNull Context context) {
         return new Branch(context.getApplicationContext());
     }
 
@@ -650,6 +649,7 @@ public class Branch {
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
+     *
      * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
      */
     @Deprecated
@@ -769,7 +769,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data) {
         return initSession(callback, data, null);
     }
 
@@ -785,7 +785,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data) {
         return initSession(callback, data, null);
     }
 
@@ -802,7 +802,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, activity);
         return uriHandled;
@@ -821,7 +821,7 @@ public class Branch {
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, activity);
         return uriHandled;
@@ -855,7 +855,7 @@ public class Branch {
      *             initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSessionWithData(Uri data) {
+    public boolean initSessionWithData(@NonNull Uri data) {
         return initSessionWithData(data, null);
     }
 
@@ -899,7 +899,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(boolean isReferrable, Activity activity) {
+    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
         return initSession((BranchReferralInitListener) null, isReferrable, activity);
     }
 
@@ -935,7 +935,7 @@ public class Branch {
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
+    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
 
@@ -954,7 +954,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+    public boolean initSession( BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, isReferrable, activity);
         return uriHandled;
@@ -975,7 +975,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, isReferrable, activity);
         return uriHandled;
@@ -993,7 +993,7 @@ public class Branch {
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
+    public boolean initSession( BranchUniversalReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
 
@@ -1009,7 +1009,7 @@ public class Branch {
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
+    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
 
@@ -1063,7 +1063,7 @@ public class Branch {
                 if (isAutoSessionMode_) {
                     // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
                     // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
-                    if (isInitReportedThroughCallBack == false) { //Check if session params are reported already in case user call initsession form a different activity(not a noraml case)
+                    if (!isInitReportedThroughCallBack) { //Check if session params are reported already in case user call initsession form a different activity(not a noraml case)
                         callback.onInitFinished(getLatestReferringParams(), null);
                         isInitReportedThroughCallBack = true;
                     } else {
@@ -1348,7 +1348,7 @@ public class Branch {
      *
      * @param userId A {@link String} value containing the unique identifier of the user.
      */
-    public void setIdentity(String userId) {
+    public void setIdentity(@NonNull String userId) {
         setIdentity(userId, null);
     }
 
@@ -1361,7 +1361,7 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(String userId, BranchReferralInitListener callback) {
+    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1389,7 +1389,18 @@ public class Branch {
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      */
     public void logout() {
-        ServerRequest req = new ServerRequestLogout(context_);
+        logout(null);
+    }
+
+    /**
+     * <p>This method should be called if you know that a different person is about to use the app. For example,
+     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
+     *
+     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
+     */
+    public void logout(LogoutStatusListener callback) {
+        ServerRequest req = new ServerRequestLogout(context_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
@@ -1404,6 +1415,7 @@ public class Branch {
      */
     @Deprecated
     public void loadActionCounts() {
+        //noinspection deprecation
         loadActionCounts(null);
     }
 
@@ -1481,7 +1493,7 @@ public class Branch {
      * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
     @Deprecated
-    public int getTotalCountsForAction(String action) {
+    public int getTotalCountsForAction(@NonNull String action) {
         return prefHelper_.getActionTotalCount(action);
     }
 
@@ -1496,7 +1508,7 @@ public class Branch {
      * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
      */
     @Deprecated
-    public int getUniqueCountsForAction(String action) {
+    public int getUniqueCountsForAction(@NonNull String action) {
         return prefHelper_.getActionUniqueCount(action);
     }
 
@@ -1536,7 +1548,7 @@ public class Branch {
      * @param count  A {@link Integer} specifying the number of credits to attempt to redeem from
      *               the specified bucket.
      */
-    public void redeemRewards(final String bucket, final int count) {
+    public void redeemRewards(@NonNull final String bucket, final int count) {
         redeemRewards(bucket, count, null);
     }
 
@@ -1553,7 +1565,7 @@ public class Branch {
      * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
      *                 trigger actions defined therein upon a executing redeem rewards.
      */
-    public void redeemRewards(final String bucket, final int count, BranchReferralStateChangedListener callback) {
+    public void redeemRewards(@NonNull final String bucket, final int count, BranchReferralStateChangedListener callback) {
         ServerRequestRedeemRewards req = new ServerRequestRedeemRewards(context_, bucket, count, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1580,7 +1592,7 @@ public class Branch {
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String bucket, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener callback) {
         getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
     }
 
@@ -1605,7 +1617,7 @@ public class Branch {
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         getCreditHistory(null, afterId, length, order, callback);
     }
 
@@ -1632,7 +1644,7 @@ public class Branch {
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String bucket, final String afterId, final int length, final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(final String bucket, final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         ServerRequest req = new ServerRequestGetRewardHistory(context_, bucket, afterId, length, order, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1648,7 +1660,7 @@ public class Branch {
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public void userCompletedAction(final String action, JSONObject metadata) {
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
         if (metadata != null)
             metadata = BranchUtil.filterOutBadCharacters(metadata);
 
@@ -1712,6 +1724,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync() {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), null, false);
     }
 
@@ -1727,6 +1740,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1748,6 +1762,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1776,6 +1791,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String alias, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1799,6 +1815,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(int type, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, type, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1822,6 +1839,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String channel, String feature, String stage, JSONObject params, int duration) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1845,6 +1863,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1875,6 +1894,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1900,6 +1920,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, type, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1925,6 +1946,7 @@ public class Branch {
      */
     @Deprecated
     public String getShortUrlSync(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -1938,6 +1960,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), callback, true);
     }
 
@@ -1956,6 +1979,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -1984,6 +2008,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2019,6 +2044,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String alias, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2049,6 +2075,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(int type, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, type, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2079,6 +2106,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2109,6 +2137,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2145,6 +2174,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(String alias, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2178,6 +2208,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(int type, Collection<String> tags, String channel, String feature, String stage, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, type, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2211,6 +2242,7 @@ public class Branch {
      */
     @Deprecated
     public void getShortUrl(Collection<String> tags, String channel, String feature, String stage, JSONObject params, int duration, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2319,6 +2351,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2342,6 +2375,7 @@ public class Branch {
      */
     @Deprecated
     public void getReferralUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2358,6 +2392,7 @@ public class Branch {
      */
     @Deprecated
     public String getReferralUrlSync(String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2376,6 +2411,7 @@ public class Branch {
      */
     @Deprecated
     public String getReferralUrlSync(Collection<String> tags, String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2399,6 +2435,7 @@ public class Branch {
      */
     @Deprecated
     public void getContentUrl(String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2422,6 +2459,7 @@ public class Branch {
      */
     @Deprecated
     public void getContentUrl(Collection<String> tags, String channel, JSONObject params, BranchLinkCreateListener callback) {
+        //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
 
@@ -2438,6 +2476,7 @@ public class Branch {
      */
     @Deprecated
     public String getContentUrlSync(String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2456,6 +2495,7 @@ public class Branch {
      */
     @Deprecated
     public String getContentUrlSync(Collection<String> tags, String channel, JSONObject params) {
+        //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
 
@@ -2467,7 +2507,9 @@ public class Branch {
      *
      * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestGetReferralCode(context_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -2481,8 +2523,11 @@ public class Branch {
      * @param amount   An {@link Integer} value of credits associated with this referral code.
      * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final int amount, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2495,8 +2540,11 @@ public class Branch {
      * @param amount   An {@link Integer} value of credits associated with this referral code.
      * @param callback A {@link BranchReferralInitListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2508,8 +2556,11 @@ public class Branch {
      * @param callback   A {@link BranchReferralInitListener} callback instance that will trigger
      *                   actions defined therein upon receipt of a response to a referral code
      *                   request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final int amount, final Date expiration, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2524,8 +2575,11 @@ public class Branch {
      * @param callback   A {@link BranchReferralInitListener} callback instance that will trigger
      *                   actions defined therein upon receipt of a response to a referral code
      *                   request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, final Date expiration, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
 
@@ -2551,8 +2605,11 @@ public class Branch {
      * @param callback        A {@link BranchReferralInitListener} callback instance that will
      *                        trigger actions defined therein upon receipt of a response to a
      *                        referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, final int calculationType, final int location, BranchReferralInitListener callback) {
+        //noinspection deprecation
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
     }
 
@@ -2581,7 +2638,9 @@ public class Branch {
      * @param callback        A {@link BranchReferralInitListener} callback instance that will
      *                        trigger actions defined therein upon receipt of a response to a
      *                        referral code request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void getReferralCode(final String prefix, final int amount, final Date expiration, final String bucket, final int calculationType, final int location, BranchReferralInitListener callback) {
         String date = null;
         if (expiration != null)
@@ -2600,7 +2659,9 @@ public class Branch {
      * @param code     A {@link String} object containing the referral code supplied.
      * @param callback A {@link BranchReferralInitListener} callback to handle the server response
      *                 of the referral submission request.
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void validateReferralCode(final String code, BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestValidateReferralCode(context_, callback, code);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -2615,7 +2676,9 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback to handle the server
      *                 response of the referral submission request.
      * @see BranchReferralInitListener
+     * @deprecated This method has been deprecated. v1.10.1 onwards Branch will not support any improvements or modifications for referral code functionality.
      */
+    @Deprecated
     public void applyReferralCode(final String code, final BranchReferralInitListener callback) {
         ServerRequest req = new ServerRequestApplyReferralCode(context_, callback, code);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -2658,17 +2721,15 @@ public class Branch {
         return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
     }
 
-    private String generateShortLinkSync(ServerRequest req) {
+    private String generateShortLinkSync(ServerRequestCreateUrl req) {
         if (initState_ == SESSION_STATE.INITIALISED) {
             ServerResponse response = null;
             try {
                 int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
                 response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ignore) {
-            } catch (ExecutionException ignore) {
-            } catch (TimeoutException ignore) {
+            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
-            String url = prefHelper_.getUserURL();
+            String url = req.getLongUrl();
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
                     url = response.getObject().getString("url");
@@ -2689,7 +2750,7 @@ public class Branch {
     private void generateShortLinkAsync(final ServerRequest req) {
         handleNewRequest(req);
     }
-
+    
     private JSONObject convertParamsStringToDictionary(String paramString) {
         if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
             return new JSONObject();
@@ -2765,19 +2826,17 @@ public class Branch {
                         Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
                         networkCount_ = 0;
                         handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                        return;
                     }
                     //All request except open and install need a session to execute
                     else if (!(req instanceof ServerRequestInitSession) && (!hasSession() || !hasDeviceFingerPrint())) {
                         networkCount_ = 0;
                         handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                        return;
                     } else {
                         BranchPostTask postTask = new BranchPostTask(req);
                         postTask.execute();
                     }
                 } else {
-                    requestQueue_.remove(req); //Inc ase there is any request nullified remove it.
+                    requestQueue_.remove(null); //Inc ase there is any request nullified remove it.
                 }
             } else {
                 serverSema_.release();
@@ -2927,9 +2986,10 @@ public class Branch {
      */
     private void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (initState_ != SESSION_STATE.INITIALISED && (req instanceof ServerRequestInitSession) == false) {
+        if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
 
             if ((req instanceof ServerRequestLogout)) {
+                req.handleFailure(BranchError.ERR_NO_SESSION);
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
@@ -2953,18 +3013,13 @@ public class Branch {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
-            activityLifeCycleObserver_ = new BranchActivityLifeCycleObserver();
+            BranchActivityLifeCycleObserver activityLifeCycleObserver = new BranchActivityLifeCycleObserver();
             /* Set an observer for activity life cycle events. */
-            application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver_);
-            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver_);
+            application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
+            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
             isActivityLifeCycleCallbackRegistered_ = true;
 
-        } catch (NoSuchMethodError Ex) {
-            isActivityLifeCycleCallbackRegistered_ = false;
-            isAutoSessionMode_ = false;
-            /* LifeCycleEvents are  available only from API level 14. */
-            Log.w(TAG, new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
-        } catch (NoClassDefFoundError Ex) {
+        } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
             isAutoSessionMode_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
@@ -2990,6 +3045,7 @@ public class Branch {
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
+                    //noinspection deprecation
                     setDebug();
                 }
                 Uri intentData = null;
@@ -3146,6 +3202,22 @@ public class Branch {
     }
 
     /**
+     * <p>
+     * Callback interface for listening logout status
+     * </p>
+     */
+    public interface LogoutStatusListener {
+        /**
+         * Called on finishing the the logout process
+         *
+         * @param loggedOut A {@link Boolean} which is set to true if logout succeeded
+         * @param error     An instance of {@link BranchError} to notify any error occurred during logout.
+         *                  A null value is set if logout succeeded.
+         */
+        void onLogoutFinished(boolean loggedOut, BranchError error);
+    }
+
+    /**
      * <p>enum containing the sort options for return of credit history.</p>
      */
     public enum CreditHistoryOrder {
@@ -3221,7 +3293,7 @@ public class Branch {
                         else {
                             hasNetwork_ = false;
                             //Collect all request from the queue which need to be failed.
-                            ArrayList<ServerRequest> requestToFail = new ArrayList<ServerRequest>();
+                            ArrayList<ServerRequest> requestToFail = new ArrayList<>();
                             for (int i = 0; i < requestQueue_.getSize(); i++) {
                                 requestToFail.add(requestQueue_.peekAt(i));
                             }
@@ -3261,40 +3333,47 @@ public class Branch {
                             linkCache_.clear();
                             requestQueue_.clear();
                         }
-                        //On setting a new identity Id clear the link cache
-                        else if (thisReq_ instanceof ServerRequestIdentifyUserRequest) {
-                            try {
-                                if (serverResponse.getObject() != null) {
-                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
-                                    if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                        linkCache_.clear();
-                                    }
-                                }
-                            } catch (Exception ignore) {
-                            }
-                        }
-
                         requestQueue_.dequeue();
 
                         // If this request changes a session update the session-id to queued requests.
-                        if (thisReq_ instanceof ServerRequestInitSession) {
+                        if (thisReq_ instanceof ServerRequestInitSession
+                                || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                             // Immediately set session and Identity and update the pending request with the params
                             if (serverResponse.getObject() != null) {
-                                prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                boolean updateRequestsInQueue = false;
+                                if (serverResponse.getObject().has(Defines.Jsonkey.SessionID.getKey())) {
+                                    prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                    updateRequestsInQueue = true;
+                                }
                                 if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                                    prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                                    if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+                                        //On setting a new identity Id clear the link cache
+                                        linkCache_.clear();
+                                        prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                        updateRequestsInQueue = true;
+                                    }
                                 }
-                                updateAllRequestsInQueue();
-                                initState_ = SESSION_STATE.INITIALISED;
-                                // Publish success to listeners
-                                thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                if (serverResponse.getObject().has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                                    prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
+                                    updateRequestsInQueue = true;
+                                }
 
-                                if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
-                                    isInitReportedThroughCallBack = true;
-                                } else {
-                                    isInitReportedThroughCallBack = false;
+                                if (updateRequestsInQueue) {
+                                    updateAllRequestsInQueue();
                                 }
-                                checkForAutoDeepLinkConfiguration();
+
+                                if (thisReq_ instanceof ServerRequestInitSession) {
+                                    initState_ = SESSION_STATE.INITIALISED;
+                                    // Publish success to listeners
+                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+
+                                    isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
+                                    checkForAutoDeepLinkConfiguration();
+                                } else {
+                                    // For setting identity just call only request succeeded
+                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                }
                             }
                         } else {
                             //Publish success to listeners
@@ -3337,8 +3416,8 @@ public class Branch {
 
         try {
             //Check if the application is launched by clicking a Branch link.
-            if (latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false
-                    || latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey()) == false) {
+            if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
+                    || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
                 return;
             }
             if (latestParams.length() > 0) {
@@ -3355,13 +3434,10 @@ public class Branch {
                     for (ActivityInfo activityInfo : activityInfos) {
                         if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
                             if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                                deepLinkActivity = ((ActivityInfo) activityInfo).name;
+                                deepLinkActivity = activityInfo.name;
                                 deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
                                 break;
                             }
-                        }
-                        if (deepLinkActivity != null) {
-                            break;
                         }
                     }
                 }
@@ -3409,7 +3485,7 @@ public class Branch {
             } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
-        } catch (JSONException e) {
+        } catch (JSONException ignored) {
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
@@ -3667,13 +3743,13 @@ public class Branch {
             }
             shareMsg_ = "";
             callback_ = null;
-            preferredOptions_ = new ArrayList<SharingHelper.SHARE_WITH>();
+            preferredOptions_ = new ArrayList<>();
             defaultURL_ = null;
 
-            moreOptionIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_more);
+            moreOptionIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_more);
             moreOptionText_ = "More...";
 
-            copyUrlIcon_ = activity.getResources().getDrawable(android.R.drawable.ic_menu_save);
+            copyUrlIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_save);
             copyURlText_ = "Copy link";
             urlCopiedMessage_ = "Copied link to clipboard!";
         }
@@ -3851,9 +3927,8 @@ public class Branch {
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) {
-            moreOptionIcon_ = activity_.getResources().getDrawable(drawableIconID);
+            moreOptionIcon_ = BranchUtil.getDrawable(activity_.getApplicationContext(), drawableIconID);
             moreOptionText_ = activity_.getResources().getString(stringLabelID);
-            ;
             return this;
         }
 
@@ -3879,10 +3954,10 @@ public class Branch {
          * @param drawableIconID  Resource ID for the drawable to set as the icon for copy url  option. Default icon is system menu_save icon
          * @param stringLabelID   Resource ID for the string label the copy url option. Default label is "Copy link"
          * @param stringMessageID Resource ID for the string message to show toast message displayed on copying a url
-         * @returnA {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
          */
         public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
-            copyUrlIcon_ = activity_.getResources().getDrawable(drawableIconID);
+            copyUrlIcon_ = BranchUtil.getDrawable(activity_.getApplicationContext(), drawableIconID);
             copyURlText_ = activity_.getResources().getString(stringLabelID);
             urlCopiedMessage_ = activity_.getResources().getString(stringMessageID);
             return this;

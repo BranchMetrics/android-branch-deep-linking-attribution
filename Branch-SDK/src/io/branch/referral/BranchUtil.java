@@ -3,6 +3,10 @@ package io.branch.referral;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -88,5 +92,15 @@ class BranchUtil {
             }
         }
         return filteredObj;
+    }
+
+
+    public static Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return context.getResources().getDrawable(drawableID, context.getTheme());
+        } else {
+            //noinspection deprecation
+            return context.getResources().getDrawable(drawableID);
+        }
     }
 }

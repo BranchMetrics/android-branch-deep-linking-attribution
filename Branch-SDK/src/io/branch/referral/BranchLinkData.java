@@ -1,23 +1,23 @@
 package io.branch.referral;
 
 import android.annotation.SuppressLint;
-import java.util.Collection;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Collection;
 
 /**
  * <p>
  * The {@link BranchLinkData} object is based on {@link JSONObject} and expands
  * the class to enable collections of tags.
  * </p>
- * 
+ * <p/>
  * <p>
  * Tags are returned from the server, and form the data dictionary that each
  * deep link shared via the Branch platform contains.
  * </p>
- *
  */
 class BranchLinkData extends JSONObject {
 
@@ -146,8 +146,12 @@ class BranchLinkData extends JSONObject {
             JSONArray tagArray = new JSONArray();
             for (String tag : tags)
                 tagArray.put(tag);
-            this.put("tags", tagArray);
+            this.put(Defines.LinkParam.Tags.getKey(), tagArray);
         }
+    }
+
+    public Collection<String> getTags() {
+        return tags;
     }
 
     /**
@@ -160,8 +164,12 @@ class BranchLinkData extends JSONObject {
     public void putAlias(String alias) throws JSONException {
         if (alias != null) {
             this.alias = alias;
-            this.put("alias", alias);
+            this.put(Defines.LinkParam.Alias.getKey(), alias);
         }
+    }
+
+    public String getAlias() {
+        return alias;
     }
 
     /**
@@ -179,8 +187,12 @@ class BranchLinkData extends JSONObject {
     public void putType(int type) throws JSONException {
         if (type != 0) {
             this.type = type;
-            this.put(Defines.Jsonkey.Type.getKey(), type);
+            this.put(Defines.LinkParam.Type.getKey(), type);
         }
+    }
+
+    public int getType() {
+        return type;
     }
 
     /**
@@ -195,8 +207,12 @@ class BranchLinkData extends JSONObject {
     public void putDuration(int duration) throws JSONException {
         if (duration > 0) {
             this.duration = duration;
-            this.put("duration", duration);
+            this.put(Defines.LinkParam.Duration.getKey(), duration);
         }
+    }
+
+    public int getDuration() {
+        return duration;
     }
 
     /**
@@ -211,8 +227,12 @@ class BranchLinkData extends JSONObject {
     public void putChannel(String channel) throws JSONException {
         if (channel != null) {
             this.channel = channel;
-            this.put("channel", channel);
+            this.put(Defines.LinkParam.Channel.getKey(), channel);
         }
+    }
+
+    public String getChannel() {
+        return channel;
     }
 
     /**
@@ -226,8 +246,12 @@ class BranchLinkData extends JSONObject {
     public void putFeature(String feature) throws JSONException {
         if (feature != null) {
             this.feature = feature;
-            this.put("feature", feature);
+            this.put(Defines.LinkParam.Feature.getKey(), feature);
         }
+    }
+
+    public String getFeature() {
+        return feature;
     }
 
     /**
@@ -241,8 +265,12 @@ class BranchLinkData extends JSONObject {
     public void putStage(String stage) throws JSONException {
         if (stage != null) {
             this.stage = stage;
-            this.put("stage", stage);
+            this.put(Defines.LinkParam.Stage.getKey(), stage);
         }
+    }
+
+    public String getStage() {
+        return stage;
     }
 
     /**
@@ -254,7 +282,11 @@ class BranchLinkData extends JSONObject {
      */
     public void putParams(String params) throws JSONException {
         this.params = params;
-        this.put(Defines.Jsonkey.Data.getKey(), params);
+        this.put(Defines.LinkParam.Data.getKey(), params);
+    }
+
+    public String getParams() {
+        return params;
     }
 
     /**

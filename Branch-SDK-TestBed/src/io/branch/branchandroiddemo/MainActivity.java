@@ -111,7 +111,12 @@ public class MainActivity extends Activity {
         cmdLogoutUser.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.logout();
+                branch.logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        Log.i("BranchTestBed", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                    }
+                });
 
                 txtRewardBalance.setText("rewards = ");
                 txtInstallCount.setText("install count =");
@@ -138,7 +143,7 @@ public class MainActivity extends Activity {
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
-                      //.setAlias("myContentName") // in case you need to white label your link
+                //.setAlias("myContentName") // in case you need to white label your link
 
                 // Sync link create example
                 txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
@@ -156,9 +161,11 @@ public class MainActivity extends Activity {
         });
 
         cmdRefreshCounts.setOnClickListener(new OnClickListener() {
+            @SuppressWarnings("deprecation")
             @Override
             public void onClick(View v) {
                 branch.loadActionCounts(new BranchReferralStateChangedListener() {
+                    @SuppressWarnings("deprecation")
                     @Override
                     public void onStateChanged(boolean changed, BranchError error) {
                         if (error != null) {
@@ -200,10 +207,10 @@ public class MainActivity extends Activity {
                             Log.i("BranchTestBed", "branch redeem rewards failed. Caused by -" + error.getMessage());
                         } else {
                             if (changed) {
-                                Log.i("BranchTestBed", "redeemed rewards = " + changed);
+                                Log.i("BranchTestBed", "redeemed rewards = " + true);
                                 txtRewardBalance.setText("rewards = " + branch.getCredits());
                             } else {
-                                Log.i("BranchTestBed", "redeem rewards error : " + error);
+                                Log.i("BranchTestBed", "redeem rewards unknown error ");
                             }
                         }
                     }
@@ -255,6 +262,7 @@ public class MainActivity extends Activity {
         });
 
         findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
+            @SuppressWarnings("deprecation")
             @Override
             public void onClick(View view) {
                 JSONObject obj = new JSONObject();
@@ -270,7 +278,7 @@ public class MainActivity extends Activity {
                         .setDuration(100);
 
                 ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
-                        .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send),"Save this URl","Link added to clipboard")
+                        .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Save this URl", "Link added to clipboard")
                         .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
@@ -285,9 +293,11 @@ public class MainActivity extends Activity {
                     @Override
                     public void onShareLinkDialogDismissed() {
                     }
+
                     @Override
                     public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
                     }
+
                     @Override
                     public void onChannelSelected(String channelName) {
                     }
@@ -355,7 +365,7 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
 
         //Checking if the previous activity is launched on branch Auto deep link.
-        if(requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)){
+        if (requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)) {
             //Decide here where  to navigate  when an auto deep linked activity finishes.
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
