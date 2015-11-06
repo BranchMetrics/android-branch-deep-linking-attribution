@@ -45,6 +45,13 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
             }
+            // External URI or Extras if exist
+            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
+            }
+            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
 
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
 
@@ -65,6 +72,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         try {
             prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));

@@ -75,7 +75,10 @@ public class Defines {
         PublicallyIndexable("$publicly_indexable"),
         ContentKeyWords("$keywords"),
         ContentExpiryTime("$exp_date"),
-        Params("params");
+        Params("params"),
+
+        External_Intent_URI("external_intent_uri"),
+        External_Intent_Extra("external_intent_extra");
 
         
         private String key = "";
