@@ -42,6 +42,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
@@ -1310,10 +1311,34 @@ public class Branch {
                     if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
                             && data.getHost() != null && data.getHost().length() > 0) {
                         prefHelper_.setAppLink(data.toString());
+                        return false;
                     }
                 }
             }
         }
+
+        // If not started by Branch then check if there is any external URI on extra params
+        try {
+            if (data != null) {
+                prefHelper_.setExternalIntentUri(data.toString());
+            }
+            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                Bundle bundle = activity.getIntent().getExtras();
+                Set<String> extraKeys = bundle.keySet();
+
+                if (extraKeys.size() > 0) {
+                    JSONObject extrasJson = new JSONObject();
+                    for (String key : extraKeys) {
+                        extrasJson.put(key, bundle.get(key));
+                    }
+                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                }
+            }
+        } catch (Exception ignore){
+
+        }
+
+
         return false;
     }
 

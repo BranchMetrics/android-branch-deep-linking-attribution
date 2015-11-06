@@ -103,6 +103,9 @@ public class PrefHelper {
 
     private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
 
+    private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
+    private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
+
     /**
      * {@link String} value used by {@link BranchRemoteInterface#connectToDebug()}.
      */
@@ -408,7 +411,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the ID of the {@link KEY_SESSION_ID} {@link String} value in preferences.</p>
+     * <p>Sets the ID of the {@link #KEY_SESSION_ID} {@link String} value in preferences.</p>
      *
      * @param session_id A {@link String} value containing the session ID as returned by the
      *                   Branch API upon successful initialisation.
@@ -418,7 +421,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Gets the ID of the {@link KEY_SESSION_ID} {@link String} value from preferences.</p>
+     * <p>Gets the ID of the {@link #KEY_SESSION_ID} {@link String} value from preferences.</p>
      *
      * @return A {@link String} value containing the session ID as returned by the Branch
      * API upon successful initialisation.
@@ -428,7 +431,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+     * <p>Sets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
      * <p/>
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
@@ -443,7 +446,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Gets the {@link KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+     * <p>Gets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
      *
      * @return A {@link String} value containing the currently configured user id within
      * preferences.
@@ -453,7 +456,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the {@link KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
+     * <p>Sets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
      * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
@@ -489,6 +492,7 @@ public class PrefHelper {
         setString(KEY_LINK_CLICK_ID, link_click_id);
     }
 
+
     /**
      * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
      *
@@ -496,6 +500,43 @@ public class PrefHelper {
      */
     public String getLinkClickID() {
         return getString(KEY_LINK_CLICK_ID);
+    }
+
+    /**
+     * <p>Sets the {@link #KEY_EXTERNAL_INTENT_URI} with value with given intent URI String.</p>
+     *
+     * @param uri A {@link String} value containing intent URI to set
+     *
+     */
+    public void setExternalIntentUri(String uri) {
+        setString(KEY_EXTERNAL_INTENT_URI, uri);
+    }
+
+    /**
+     * <p>Gets the {@link #KEY_EXTERNAL_INTENT_URI} {@link String} value that has been set via the Branch API.</p>
+     * @return A {@link String} value containing external URI set.
+     */
+    public String getExternalIntentUri() {
+        return getString(KEY_EXTERNAL_INTENT_URI);
+    }
+
+
+    /**
+     * <p>Sets the {@link #KEY_EXTERNAL_INTENT_EXTRA} with value with given intent extras in string format.</p>
+     *
+     * @param extras A {@link String} value containing intent URI extra to set
+     *
+     */
+    public void setExternalIntentExtra(String extras) {
+        setString(KEY_EXTERNAL_INTENT_EXTRA, extras);
+    }
+
+    /**
+     * <p>Gets the {@link #KEY_EXTERNAL_INTENT_EXTRA} {@link String} value that has been set via the Branch API.</p>
+     * @return A {@link String} value containing external intent extra set.
+     */
+    public String getExternalIntentExtra() {
+        return getString(KEY_EXTERNAL_INTENT_EXTRA);
     }
 
     /**
