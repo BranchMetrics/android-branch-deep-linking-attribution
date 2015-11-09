@@ -7,17 +7,19 @@ dependencies:
   #cache_directories:
     #- ~/.android
     #- ~/android
+  pre:
+    - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
+        
   override:
     #- ./install-dependencies.sh
     - VERSION=`perl -ne '/VERSION_NAME=(.*)/ && print "$1\n"' <  gradle.properties`.jar && cd Branch-SDK && jar -cf $VERSION src/
     - cd && wget https://services.gradle.org/distributions/gradle-2.4-bin.zip && unzip gradle-2.4-bin.zip
-    
 
 test:
 
   override:
     - gradle
-    - emulator -avd circleci-android22 -no-audio -no-window:
+    - emulator -avd circleci-android23 -no-audio -no-window:
         background: true
         parallel: true
     - circle-android wait-for-boot
@@ -31,7 +33,6 @@ test:
         background: true
     - adb wait-for-device
     - adb shell am instrument -w io.branch.branchandroiddemo/android.test.InstrumentationTestRunner
-    
 
 deployment:
   production:
@@ -46,5 +47,4 @@ deployment:
       #- sleep 600
       #- ~/gradle-2.4/bin/gradle uploadArchives
       #- upload to s3d
-
 

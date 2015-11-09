@@ -7,12 +7,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for closing any open session. Handles request creation and execution.
@@ -58,7 +52,8 @@ class ServerRequestRegisterClose extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
-        //No Implementation on purpose
+        // Clear the latest session params on close
+        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
     }
 
     @Override

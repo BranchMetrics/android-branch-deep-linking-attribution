@@ -4,9 +4,8 @@ package io.branch.referral;
  * <p>
  * Defines all Json keys associated with branch request parameters.
  * </p>
- *
  */
-class Defines {
+public class Defines {
 
     public enum Jsonkey {
 
@@ -60,13 +59,31 @@ class Defines {
         ScreenHeight("screen_height"),
         ScreenWidth("screen_width"),
         WiFi("wifi"),
+
         Clicked_Branch_Link("+clicked_branch_link"),
-        IsFirstSession("+is_first_session");
+        IsFirstSession("+is_first_session"),
+        AndroidDeepLinkPath("$android_deeplink_path"),
+        DeepLinkPath("$deeplink_path"),
 
+        AndroidAppLinkURL("android_app_link_url"),
 
+        CanonicalIdentifier("$canonical_identifier"),
+        ContentTitle("$og_title"),
+        ContentDesc("$og_description"),
+        ContentImgUrl("$og_image_url"),
+        ContentType("$content_type"),
+        PublicallyIndexable("$publicly_indexable"),
+        ContentKeyWords("$keywords"),
+        ContentExpiryTime("$exp_date"),
+        Params("params"),
+
+        External_Intent_URI("external_intent_uri"),
+        External_Intent_Extra("external_intent_extra");
+
+        
         private String key = "";
 
-        private Jsonkey(String key) {
+        Jsonkey(String key) {
             this.key = key;
         }
 
@@ -91,6 +108,7 @@ class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
+        RegisterView("v1/register-view"),
         Referrals("v1/referrals/"),
         SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),
@@ -103,10 +121,9 @@ class Defines {
         ApplyReferralCode("v1/applycode/"),
         DebugConnect("v1/debug/connect");
 
-
         private String key = "";
 
-        private RequestPath(String key) {
+        RequestPath(String key) {
             this.key = key;
         }
 
@@ -120,5 +137,36 @@ class Defines {
         }
     }
 
+    /**
+     * <p>
+     * Defines link parameter keys
+     * </p>
+     */
+    public enum LinkParam {
+        Tags("tags"),
+        Alias("alias"),
+        Type("type"),
+        Duration("duration"),
+        Channel("channel"),
+        Feature("feature"),
+        Stage("stage"),
+        Data("data");
+
+        private String key = "";
+
+        LinkParam(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
 
 }

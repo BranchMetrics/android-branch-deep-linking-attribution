@@ -17,7 +17,6 @@ class ServerRequestGetRewards extends ServerRequest {
 
     Branch.BranchReferralStateChangedListener callback_;
 
-
     /**
      * <p>Create an instance of {@link ServerRequestGetRewards} to retrieve rewards for the current session,
      * with a callback to perform a predefined action following successful report of state change.
@@ -36,12 +35,10 @@ class ServerRequestGetRewards extends ServerRequest {
         super(requestPath, post, context);
     }
 
-
     @Override
     public String getRequestUrl() {
         return super.getRequestUrl() + prefHelper_.getIdentityID();
     }
-
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
@@ -76,7 +73,9 @@ class ServerRequestGetRewards extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;

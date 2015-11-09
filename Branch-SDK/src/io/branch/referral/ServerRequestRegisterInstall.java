@@ -12,7 +12,7 @@ import org.json.JSONObject;
  * The server request for registering an app install to Branch API. Handles request creation and execution.
  * </p>
  */
-class ServerRequestRegisterInstall extends ServerRequest {
+class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
 
@@ -57,9 +57,12 @@ class ServerRequestRegisterInstall extends ServerRequest {
                 installPost.put(Defines.Jsonkey.Model.getKey(), sysObserver.getPhoneModel());
             if (!sysObserver.getOS().equals(SystemObserver.BLANK))
                 installPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
-            String uriScheme = sysObserver.getURIScheme();
-            if (!uriScheme.equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
+            // Read and update the URI scheme only if running in debug mode
+            if(prefHelper_.isDebug()) {
+                String uriScheme = sysObserver.getURIScheme();
+                if (!uriScheme.equals(SystemObserver.BLANK))
+                    installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
+            }
             installPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
             DisplayMetrics dMetrics = sysObserver.getScreenDisplay();
             installPost.put(Defines.Jsonkey.ScreenDpi.getKey(), dMetrics.densityDpi);
@@ -71,8 +74,18 @@ class ServerRequestRegisterInstall extends ServerRequest {
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
+            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
+                installPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
+            }
+            // External URI or Extras if exist
+            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+                installPost.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
+            }
+            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
+                installPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
 
-            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
+            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
             setPost(installPost);
 
         } catch (JSONException ex) {
@@ -82,26 +95,39 @@ class ServerRequestRegisterInstall extends ServerRequest {
 
     }
 
-
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
     @Override
+    public boolean hasCallBack() {
+        return callback_ != null;
+    }
+
+    @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
-            prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
-            prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
 
-            if (prefHelper_.getIsReferrable() == 1) {
-                if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
-                    String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
-                    prefHelper_.setInstallParams(params);
-                } else {
-                    prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
+            if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
+                // If Clicked on a branch link
+                if (dataObj.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
+                        && dataObj.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
+
+                    // Check if there is any install params. Install param will be empty on until click a branch link
+                    // or When a user logout
+                    if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                        // if clicked on link then check for is Referrable state
+                        if (prefHelper_.getIsReferrable() == 1) {
+                            String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
+                            prefHelper_.setInstallParams(params);
+                        }
+                    }
                 }
             }
 
@@ -127,7 +153,9 @@ class ServerRequestRegisterInstall extends ServerRequest {
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        callback_ = callback;
+        if(callback != null) {  // Update callback if set with valid callback instance.
+            callback_ = callback;
+        }
     }
 
     @Override
@@ -146,7 +174,9 @@ class ServerRequestRegisterInstall extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;
@@ -160,10 +190,5 @@ class ServerRequestRegisterInstall extends ServerRequest {
     @Override
     public void clearCallbacks() {
         callback_ = null;
-    }
-
-    @Override
-    public boolean isSessionInitRequest() {
-        return true; //Since open request causes a new session
     }
 }

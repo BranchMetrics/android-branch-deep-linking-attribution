@@ -17,3 +17,11 @@ build/
 *.gen
 bin/
 gen/
+
+# Mac stuff
+*.DS_Store
+
+# Branch
+Branch-SDK-TestBed/gradle/wrapper/gradle-wrapper.jar
+Branch-SDK-TestBed/gradlew
+Branch-SDK-TestBed/gradlew.bat

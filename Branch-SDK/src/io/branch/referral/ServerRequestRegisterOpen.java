@@ -11,7 +11,7 @@ import org.json.JSONObject;
  * The server request for registering an app open event to Branch API. Handles request creation and execution.
  * </p>
  */
-class ServerRequestRegisterOpen extends ServerRequest {
+class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
 
@@ -37,16 +37,23 @@ class ServerRequestRegisterOpen extends ServerRequest {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             openPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
             openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
-            String uriScheme = sysObserver.getURIScheme();
-            if (!uriScheme.equals(SystemObserver.BLANK))
-                openPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             if (!sysObserver.getOS().equals(SystemObserver.BLANK))
                 openPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
+            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
+            }
+            // External URI or Extras if exist
+            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
+            }
+            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
 
-            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug());
+            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
 
             setPost(openPost);
         } catch (JSONException ex) {
@@ -56,8 +63,6 @@ class ServerRequestRegisterOpen extends ServerRequest {
 
     }
 
-
-
     public ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
@@ -65,22 +70,31 @@ class ServerRequestRegisterOpen extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            prefHelper_.setSessionID(resp.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
-            prefHelper_.setDeviceFingerPrintID(resp.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-            if (resp.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                prefHelper_.setIdentityID(resp.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
-            }
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
 
-            if (prefHelper_.getIsReferrable() == 1) {
-                if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
-                    String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
-                    prefHelper_.setInstallParams(params);
+            if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
+                // If Clicked on a branch link
+                if (dataObj.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
+                        && dataObj.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
+
+                    // Check if there is any install params. Install param will be empty on until click a branch link
+                    // or When a user logout
+                    if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                        // if clicked on link then check for is Referrable state
+                        if (prefHelper_.getIsReferrable() == 1) {
+                            String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
+                            prefHelper_.setInstallParams(params);
+                        }
+                    }
                 }
             }
 
@@ -100,9 +114,10 @@ class ServerRequestRegisterOpen extends ServerRequest {
 
     }
 
-
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        callback_ = callback;
+        if (callback != null) {      // Update callback if set with valid callback instance.
+            callback_ = callback;
+        }
     }
 
     @Override
@@ -121,7 +136,9 @@ class ServerRequestRegisterOpen extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;
@@ -138,7 +155,7 @@ class ServerRequestRegisterOpen extends ServerRequest {
     }
 
     @Override
-    public boolean isSessionInitRequest() {
-        return true; //Since open request causes a new session
+    public boolean hasCallBack() {
+        return callback_ != null;
     }
 }

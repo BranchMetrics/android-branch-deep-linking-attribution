@@ -1,5 +1,33 @@
 Branch Android SDK change log
 
+- v1.10.0: Added support for the brand new BranchUniversalObject for easy tracking of views on content, easy creation of links and easy sharing
+
+- v1.9.0: Support for Android App-links. Deprecating loadActionCount API
+
+- v1.8.12: Fix for issue link parameters are provided in init session callback multiple times. Bug fixes for handling requests queued before initialising session.
+
+- v1.8.11: Fix for issue deep link params are empty when session initialised on with a delay with a multi threaded environment.
+
+- v1.8.10: Fix for a possible NPE on sharing link in slow network conditions.
+
+- v1.8.9: Fix issue requests not removed from request queue on resource conflict. Fixing couple of possible NPE and Memory leaks.
+
+- v1.8.8: Fix for callback not invoked on session error when creating a short link with builder.
+
+- v1.8.7: Adding internationalization support for sharing link builder. Additional callbacks are also added to notify sharing dialog is launch and dismiss events.
+
+- v1.8.6: Adding option to specify email/sms subject to the share link builder.
+
+- v1.8.5: Fix crash on install app from market due to referrer string parse error.
+
+- v1.8.4: Deprecate setDebug and migrate to use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in Manifest instead. Added support to specify deep link path to Activity.
+
+- v1.8.3: Fix for SMV issue caused by resource leak. Changes to add link parameters to intent for auto deep linked Activities.
+
+- v1.8.2: Fix issue test and live keys are not set properly with auto session management when not using BranchApp.
+
+- v1.8.1: Removing unnecessary reading of URI scheme. URI Scheme is read only when running in debug mode.
+
 - v1.8.0: Adding new auto deep linking feature.
 
 - v1.7.2: Fixed bug with handling Activity intent in auto session management.

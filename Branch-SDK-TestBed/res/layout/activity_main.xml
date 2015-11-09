@@ -2,7 +2,7 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    
+
     <EditText
         android:id="@+id/editReferralShortUrl"
         android:layout_width="260dp"
@@ -11,7 +11,7 @@
         android:textSize="14sp"
         android:gravity="center"
         android:hint="short referral url" />
-    
+
     <Button
         android:id="@+id/cmdRefreshShortURL"
         android:layout_width="180dp"
@@ -20,8 +20,8 @@
         android:layout_below="@+id/editReferralShortUrl"
         android:text="Refresh Short URL"
         />
-    
-    <TextView 
+
+    <TextView
         android:id="@+id/txtRewardBalance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -29,23 +29,23 @@
         android:padding="5dp"
         android:text="credits = "
         android:layout_below="@+id/cmdRefreshShortURL"/>
-    
-    <TextView 
+
+    <TextView
         android:id="@+id/txtInstallCount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:text="install count = "
         android:layout_below="@+id/txtRewardBalance"/>
-    
-    <TextView 
+
+    <TextView
         android:id="@+id/txtEventCount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
-       	android:text="buy count = "
+        android:text="buy count = "
         android:layout_below="@+id/txtInstallCount"/>
-    
+
     <Button
         android:id="@+id/cmdRefreshCounts"
         android:layout_width="130dp"
@@ -55,7 +55,7 @@
         android:layout_below="@+id/txtEventCount"
         android:text="Refresh Counts"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdIdentifyUser"
         android:layout_width="140dp"
@@ -65,7 +65,7 @@
         android:layout_below="@+id/txtEventCount"
         android:text="Identify User"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdRedeemFive"
         android:layout_width="130dp"
@@ -76,7 +76,7 @@
         android:layout_marginTop="5dp"
         android:text="Redeem 5"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdClearUser"
         android:layout_width="140dp"
@@ -87,7 +87,7 @@
         android:layout_marginTop="5dp"
         android:text="Clear User"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdRefreshReward"
         android:layout_width="150dp"
@@ -97,7 +97,7 @@
         android:layout_marginTop="5dp"
         android:text="Refresh Rewards"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdPrintInstallParam"
         android:layout_width="150dp"
@@ -107,7 +107,7 @@
         android:layout_marginTop="5dp"
         android:text="Print Install Param"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdCommitBuyAction"
         android:layout_width="130dp"
@@ -118,7 +118,7 @@
         android:layout_marginTop="5dp"
         android:text="Execute Buy"
         android:textSize="14sp" />
-    
+
     <Button
         android:id="@+id/cmdCommitBuyMetadataAction"
         android:layout_width="140dp"
@@ -161,6 +161,6 @@
         android:text="Share Link"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"/>
-    
+
 </RelativeLayout>
-    
+

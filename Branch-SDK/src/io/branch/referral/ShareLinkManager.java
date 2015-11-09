@@ -3,32 +3,23 @@ package io.branch.referral;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -37,48 +28,36 @@ import java.util.List;
  */
 class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
-    Dialog shareDlg_;
-    /* The message to be attached with the shared link */
-    String shareMsg_;
-    /* Json object containing key-value pairs for the parameters to be linked. */
-    JSONObject linkCreationParams_;
-    /* Current Branch instance. */
-    Branch branch_;
-    /* Set of tags to be attached to the link. */
-    Collection<String> tags_;
-    /* Feature name associated with the link. */
-    String feature_;
-    /* Stage associated with the link. */
-    String stage_;
-    /* Callback instance for messaging sharing status. */
+    AnimatedDialog shareDlg_;
     Branch.BranchLinkShareListener callback_;
     /* List of apps available for sharing. */
     private List<ResolveInfo> appList_;
-    /* Default URL to be shared in case there is an error creating deep link */
-    private String defaultURL_;
-
+    /* Intent for sharing with selected application.*/
     private Intent shareLinkIntent_;
-    Context context_;
     /* Background color for the list view in enabled state. */
     private final int BG_COLOR_ENABLED = Color.argb(60, 17, 4, 56);
     /* Background color for the list view in disabled state. */
     private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
-    private static int viewItemMinHeight = 100;
+    /* Current activity context.*/
+    Context context_;
+    /* Default height for the list item.*/
+    private static int viewItemMinHeight_ = 100;
+    /* Indicates whether a sharing is in progress*/
+    private boolean isShareInProgress_ = false;
+
+    private Branch.ShareLinkBuilder builder_;
+
+
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
      * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
-    public void shareLink(Branch.ShareLinkBuilder builder) {
+    public Dialog shareLink(Branch.ShareLinkBuilder builder) {
+        builder_ = builder;
         context_ = builder.getActivity();
-        tags_ = builder.getTags();
-        feature_ = builder.getFeature();
-        stage_ = builder.getStage();
-        linkCreationParams_ = builder.getLinkCreationParams();
-        shareMsg_ = builder.getShareMsg();
-        branch_ = builder.getBranch();
         callback_ = builder.getCallback();
-        defaultURL_ = builder.getDefaultURL();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
 
@@ -92,17 +71,30 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
+
+        return shareDlg_;
     }
 
     /**
      * Dismiss the share dialog if showing. Should be called on activity stopping.
+     *
+     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
+     *                     A value of true will close the dialog with an animation. Setting this value
+     *                     to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog() {
+    public void cancelShareLinkDialog(boolean animateClose) {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
-            callback_ = null;
-            shareDlg_.dismiss();
+            if (animateClose) {
+                // Cancel the dialog with animation
+                shareDlg_.cancel();
+            } else {
+                // Dismiss the dialog immediately
+                shareDlg_.dismiss();
+            }
         }
+
     }
+
 
     /**
      * Create a custom chooser dialog with available share options.
@@ -168,38 +160,36 @@ class ShareLinkManager {
                     invokeSharingClient((ResolveInfo) view.getTag());
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
-                    animateDismiss();
+                    if (shareDlg_ != null) {
+                        shareDlg_.cancel();
+                    }
                 }
             }
         });
 
-        shareDlg_ = new Dialog(context_);
-        setDialogWindow();
+        shareDlg_ = new AnimatedDialog(context_);
         shareDlg_.setContentView(shareOptionListView);
-
-        TranslateAnimation slideUp = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0f);
-        slideUp.setDuration(500);
-        slideUp.setInterpolator(new AccelerateInterpolator());
-        ((ViewGroup)shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideUp);
         shareDlg_.show();
+        if (callback_ != null) {
+            callback_.onShareLinkDialogLaunched();
+        }
+        shareDlg_.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                if (callback_ != null) {
+                    callback_.onShareLinkDialogDismissed();
+                    callback_ = null;
+                }
+                // Release  context to prevent leaks
+                if (!isShareInProgress_) {
+                    context_ = null;
+                    builder_ = null;
+                }
+                shareDlg_ = null;
+            }
+        });
     }
 
-    private void setDialogWindow() {
-        shareDlg_.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        shareDlg_.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        shareDlg_.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.copyFrom(shareDlg_.getWindow().getAttributes());
-        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
-        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        lp.gravity = Gravity.BOTTOM;
-        lp.dimAmount = 0.8f;
-        shareDlg_.getWindow().setAttributes(lp);
-        shareDlg_.getWindow().setWindowAnimations(android.R.anim.slide_in_left);
-        shareDlg_.setCanceledOnTouchOutside(true);
-
-    }
 
     /**
      * Invokes a sharing client with a link created by the given json objects.
@@ -207,16 +197,21 @@ class ShareLinkManager {
      * @param selectedResolveInfo The {@link ResolveInfo} corresponding to the selected sharing client.
      */
     private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
+        isShareInProgress_ = true;
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
-        branch_.getShortUrl(tags_, channelName, feature_, stage_, linkCreationParams_, new Branch.BranchLinkCreateListener() {
+        BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
+        shortLinkBuilder.setChannel(channelName);
+
+        shortLinkBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {
                     shareWithClient(selectedResolveInfo, url, channelName);
                 } else {
                     //If there is a default URL specified share it.
-                    if (defaultURL_ != null && defaultURL_.length() > 0) {
-                        shareWithClient(selectedResolveInfo, defaultURL_, channelName);
+                    String defaultUrl = builder_.getDefaultURL();
+                    if (defaultUrl != null && defaultUrl.trim().length() > 0) {
+                        shareWithClient(selectedResolveInfo, defaultUrl, channelName);
                     } else {
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, error);
@@ -224,15 +219,17 @@ class ShareLinkManager {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
                     }
-
                 }
+                isShareInProgress_ = false;
+                context_ = null;
+                builder_ = null;
             }
         });
     }
 
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {
         if (selectedResolveInfo instanceof CopyLinkItem) {
-            addLinkToClipBoard(url, shareMsg_);
+            addLinkToClipBoard(url, builder_.getShareMsg());
         } else {
             if (callback_ != null) {
                 callback_.onLinkShareResponse(url, channelName, null);
@@ -240,7 +237,11 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
-            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg_ + "\n" + url);
+            String shareSub = builder_.getShareSub();
+            if (shareSub != null && shareSub.trim().length() > 0) {
+                shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
+            }
+            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
             context_.startActivity(shareLinkIntent_);
         }
     }
@@ -251,7 +252,6 @@ class ShareLinkManager {
      * @param url   A {@link String} to add to the clip board
      * @param label A {@link String} label for the adding link
      */
-
     @SuppressWarnings("deprecation")
     @SuppressLint("NewApi")
     private void addLinkToClipBoard(String url, String label) {
@@ -264,7 +264,7 @@ class ShareLinkManager {
             android.content.ClipData clip = android.content.ClipData.newPlainText(label, url);
             clipboard.setPrimaryClip(clip);
         }
-        Toast.makeText(context_, "Copied link to clipboard!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context_, builder_.getUrlCopiedMessage(), Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -303,6 +303,7 @@ class ShareLinkManager {
             itemView.setClickable(false);
             return itemView;
         }
+
         @Override
         public boolean isEnabled(int position) {
             return selectedPos < 0;
@@ -316,6 +317,7 @@ class ShareLinkManager {
         Context context_;
         final int padding = 5;
         final int leftMargin = 100;
+
         public ShareItemView(Context context) {
             super(context);
             context_ = context;
@@ -333,15 +335,13 @@ class ShareLinkManager {
             } else {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
-                if(viewItemMinHeight < (appIcon.getIntrinsicHeight()+padding)){
-                    viewItemMinHeight = (appIcon.getIntrinsicHeight()+padding);
-                }
+                viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
-            this.setMinHeight(viewItemMinHeight);
+            this.setMinHeight(viewItemMinHeight_);
             this.setTextColor(context_.getResources().getColor(android.R.color.black));
-            if(isEnabled){
+            if (isEnabled) {
                 this.setBackgroundColor(BG_COLOR_ENABLED);
-            }else{
+            } else {
                 this.setBackgroundColor(BG_COLOR_DISABLED);
             }
         }
@@ -351,14 +351,16 @@ class ShareLinkManager {
      * Class for sharing item more
      */
     private class MoreShareItem extends ResolveInfo {
+        @SuppressWarnings("NullableProblems")
         @Override
         public CharSequence loadLabel(PackageManager pm) {
-            return "More...";
+            return builder_.getMoreOptionText();
         }
 
+        @SuppressWarnings("NullableProblems")
         @Override
         public Drawable loadIcon(PackageManager pm) {
-            return context_.getResources().getDrawable(android.R.drawable.ic_menu_more);
+            return builder_.getMoreOptionIcon();
         }
     }
 
@@ -366,40 +368,18 @@ class ShareLinkManager {
      * Class for Sharing Item copy URl
      */
     private class CopyLinkItem extends ResolveInfo {
+        @SuppressWarnings("NullableProblems")
         @Override
         public CharSequence loadLabel(PackageManager pm) {
-            return "Copy link";
+            return builder_.getCopyURlText();
         }
 
+        @SuppressWarnings("NullableProblems")
         @Override
         public Drawable loadIcon(PackageManager pm) {
-            return context_.getResources().getDrawable(android.R.drawable.ic_menu_save);
+            return builder_.getCopyUrlIcon();
         }
 
-    }
-
-    private void animateDismiss() {
-        TranslateAnimation slideDown = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1f);
-        slideDown.setDuration(500);
-        slideDown.setInterpolator(new DecelerateInterpolator());
-        ((ViewGroup) shareDlg_.getWindow().getDecorView()).getChildAt(0).startAnimation(slideDown);
-        slideDown.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                if(shareDlg_ != null) {
-                    shareDlg_.dismiss();
-                    shareDlg_ = null;
-                }
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
     }
 
 }

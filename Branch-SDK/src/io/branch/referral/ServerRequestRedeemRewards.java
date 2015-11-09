@@ -14,7 +14,6 @@ import org.json.JSONObject;
  */
 class ServerRequestRedeemRewards extends ServerRequest {
 
-
     Branch.BranchReferralStateChangedListener callback_;
     int actualNumOfCreditsToRedeem_ = 0;
 
@@ -35,7 +34,6 @@ class ServerRequestRedeemRewards extends ServerRequest {
         super(context, Defines.RequestPath.RedeemRewards.getPath());
 
         callback_ = callback;
-
 
         int availableCredits = prefHelper_.getCreditCount(bucketName);
         actualNumOfCreditsToRedeem_ = numOfCreditsToRedeem;
@@ -70,11 +68,15 @@ class ServerRequestRedeemRewards extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         if (actualNumOfCreditsToRedeem_ <= 0) {
-            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", BranchError.ERR_BRANCH_REDEEM_REWARD));
+            if (callback_ != null) {
+                callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards.", BranchError.ERR_BRANCH_REDEEM_REWARD));
+            }
             return true;
         }
         return false;

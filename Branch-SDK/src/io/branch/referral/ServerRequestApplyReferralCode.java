@@ -6,13 +6,6 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.ServerRequest;
-import io.branch.referral.ServerResponse;
-
 /**
  * * <p>
  * The server request for Applying a referral code. Handles request creation and execution.
@@ -68,7 +61,6 @@ class ServerRequestApplyReferralCode extends ServerRequest {
         return super.getRequestUrl() + code;
     }
 
-
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         if (callback_ != null) {
@@ -100,7 +92,9 @@ class ServerRequestApplyReferralCode extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onInitFinished(null, new BranchError("Trouble applying the referral code.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onInitFinished(null, new BranchError("Trouble applying the referral code.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;

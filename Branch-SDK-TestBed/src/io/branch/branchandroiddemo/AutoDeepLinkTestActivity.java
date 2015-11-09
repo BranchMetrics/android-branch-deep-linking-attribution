@@ -1,9 +1,10 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.util.Log;
 import android.widget.TextView;
 
-import org.json.JSONException;
+import java.util.Iterator;
 
 import io.branch.referral.Branch;
 
@@ -22,17 +23,20 @@ public class AutoDeepLinkTestActivity extends Activity {
 
         TextView launch_mode_txt = (TextView) findViewById(R.id.launch_mode_txt);
         if (Branch.isAutoDeepLinkLaunch(this)) {
-            try {
-                String autoDeeplinkedValue = Branch.getInstance().getLatestReferringParams().getString("auto_deeplink_key_1");
-                launch_mode_txt.setText("Launched by Branch on auto deep linking!"
-                        + "\n\n" + autoDeeplinkedValue);
-                Branch.getInstance().getLatestReferringParams();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
+            launch_mode_txt.setText("Launched by Branch on auto deep linking!");
+            Branch.getInstance().getLatestReferringParams();
         } else {
             launch_mode_txt.setText("Launched by normal application flow");
+        }
+
+        //You can also get linked params for the intent extra.
+        if (getIntent().getExtras() != null && getIntent().getExtras().keySet() != null) {
+            Iterator<?> keys = getIntent().getExtras().keySet().iterator();
+            while (keys.hasNext()) {
+                String key = (String) keys.next();
+                Log.i("BranchTestBed:", "Deep Linked Param " +
+                        key + " = " + getIntent().getExtras().getString(key));
+            }
         }
 
     }

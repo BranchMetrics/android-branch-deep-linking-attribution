@@ -26,182 +26,181 @@ import io.branch.referral.Branch.BranchListResponseListener;
 import io.branch.referral.BranchError;
 
 public class CreditHistoryActivity extends Activity {
-	
-	private static SimpleDateFormat DateParseFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
-	private static SimpleDateFormat DatePrintFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-	private Branch branch;
-	private ListView listview;
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_credit_history);
-		
-		listview = (ListView) findViewById(R.id.list);
-	}
-	
-	@Override
-	protected void onStart() {
-		super.onStart();
-		
-		final CreditHistoryActivity self = this;
 
-		if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-			branch = Branch.getInstance();
-			branch.initSession(this);
-		} else {
-			branch = Branch.getInstance();
-		}
-		branch.getCreditHistory(new BranchListResponseListener() {
-			@SuppressLint("NewApi")
-			public void onReceivingResponse(JSONArray history, BranchError error) {
-				ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
-				if (error != null) {
-					Log.i("BranchTestBed", "branch load credit history failed. Caused by -" + error.getMessage());
-				} else {
-					if (history.length() > 0) {
-						Log.i("BranchTestBed", history.toString());
+    private static SimpleDateFormat DateParseFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+    private static SimpleDateFormat DatePrintFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    private Branch branch;
+    private ListView listview;
 
-						try {
-							for (int i = 0; i < history.length(); i++) {
-								JSONObject transaction = history.getJSONObject(i);
-								JSONObject xact = transaction.getJSONObject("transaction");
-								String bucket = xact.getString("bucket");
-								int amount = xact.getInt("amount");
-								String date = xact.getString("date");
-								Date xactDate = null;
-								try {
-									xactDate = DateParseFormat.parse(date);
-								} catch (ParseException e) {
-									e.printStackTrace();
-								}
-								list.add(new CreditTransaction(bucket + " : " + amount,
-										transaction.isNull("referrer") ? null : transaction.getString("referrer"),
-										transaction.isNull("referree") ? null : transaction.getString("referree"),
-										xactDate));
-							}
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_credit_history);
 
+        listview = (ListView) findViewById(R.id.list);
+    }
 
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-					} else {
-						list.add(new CreditTransaction("None found"));
-					}
-					CreditHistoryArrayAdaptor adapter = new CreditHistoryArrayAdaptor(self, list);
-					listview.setAdapter(adapter);
-				}
-			}
-		});
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-	}
+        final CreditHistoryActivity self = this;
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-		if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-			branch.closeSession();
-		}
-	}
-	
-	private class CreditHistoryArrayAdaptor extends BaseAdapter {
+        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
+            branch = Branch.getInstance();
+            branch.initSession(this);
+        } else {
+            branch = Branch.getInstance();
+        }
+        branch.getCreditHistory(new BranchListResponseListener() {
+            @SuppressLint("NewApi")
+            public void onReceivingResponse(JSONArray history, BranchError error) {
+                ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
+                if (error != null) {
+                    Log.i("BranchTestBed", "branch load credit history failed. Caused by -" + error.getMessage());
+                } else {
+                    if (history.length() > 0) {
+                        Log.i("BranchTestBed", history.toString());
 
-		private ArrayList<CreditTransaction> listData;
+                        try {
+                            for (int i = 0; i < history.length(); i++) {
+                                JSONObject transaction = history.getJSONObject(i);
+                                JSONObject xact = transaction.getJSONObject("transaction");
+                                String bucket = xact.getString("bucket");
+                                int amount = xact.getInt("amount");
+                                String date = xact.getString("date");
+                                Date xactDate = null;
+                                try {
+                                    xactDate = DateParseFormat.parse(date);
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                                list.add(new CreditTransaction(bucket + " : " + amount,
+                                        transaction.isNull("referrer") ? null : transaction.getString("referrer"),
+                                        transaction.isNull("referree") ? null : transaction.getString("referree"),
+                                        xactDate));
+                            }
 
-		private LayoutInflater layoutInflater;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        list.add(new CreditTransaction("None found"));
+                    }
+                    CreditHistoryArrayAdaptor adapter = new CreditHistoryArrayAdaptor(self, list);
+                    listview.setAdapter(adapter);
+                }
+            }
+        });
 
-		public CreditHistoryArrayAdaptor(Context context, ArrayList<CreditTransaction> listData) {
-			this.listData = listData;
-			layoutInflater = LayoutInflater.from(context);
-		}
+    }
 
-		@Override
-		public int getCount() {
-			return listData.size();
-		}
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
+            branch.closeSession();
+        }
+    }
 
-		@Override
-		public Object getItem(int position) {
-			return listData.get(position);
-		}
+    private class CreditHistoryArrayAdaptor extends BaseAdapter {
 
-		@Override
-		public long getItemId(int position) {
-			return position;
-		}
+        private ArrayList<CreditTransaction> listData;
 
-		public View getView(int position, View convertView, ViewGroup parent) {
-			ViewHolder holder;
-			if (convertView == null) {
-				convertView = layoutInflater.inflate(R.layout.activity_credit_transaction, parent, false);
-				holder = new ViewHolder();
-				holder.transactionView = (TextView) convertView.findViewById(R.id.transaction);
-				holder.referrerView = (TextView) convertView.findViewById(R.id.referrer);
-				holder.dateView = (TextView) convertView.findViewById(R.id.date);
-				convertView.setTag(holder);
-			} else {
-				holder = (ViewHolder) convertView.getTag();
-			}
+        private LayoutInflater layoutInflater;
 
-			holder.transactionView.setText(((CreditTransaction)listData.get(position)).getTransaction());
-			holder.referrerView.setText(((CreditTransaction)listData.get(position)).getReferInfo());
-			holder.dateView.setText(((CreditTransaction)listData.get(position)).getDate());
+        public CreditHistoryArrayAdaptor(Context context, ArrayList<CreditTransaction> listData) {
+            this.listData = listData;
+            layoutInflater = LayoutInflater.from(context);
+        }
 
-			return convertView;
-		}
+        @Override
+        public int getCount() {
+            return listData.size();
+        }
 
-		private class ViewHolder {
-			TextView transactionView;
-			TextView referrerView;
-			TextView dateView;
-		}
+        @Override
+        public Object getItem(int position) {
+            return listData.get(position);
+        }
 
-	}
-	
-	private class CreditTransaction {
-		private String transaction;
-		private String referrer;
-		private String referree;
-		private Date date;
-		
-		public CreditTransaction(String bucket) {
-			this(bucket, null, null, null);
-		}
-		
-		public CreditTransaction(String transaction, String referrer, String referree, Date date) {
-			this.transaction = transaction;
-			this.referrer = referrer;
-			this.referree = referree;
-			this.date = date;
-		}
-		
-		public String getTransaction() {
-			return this.transaction; 
-		}
-		
-		public String getReferInfo() {
-			StringBuilder sb = new StringBuilder();
-			if (this.referrer != null || this.referree != null) {
-				boolean hasReferrer = false;
-				sb.append("(");
-				if (this.referrer != null) {
-					hasReferrer = true;
-					sb.append("referrer: " + this.referrer);
-				}
-				if (this.referree != null) {
-					if (hasReferrer) {
-						sb.append(" -> ");
-					}
-					sb.append("referree: " + this.referree);
-				}
-				sb.append(")");
-			}
-			return sb.toString(); 
-		}
-		
-		public String getDate() {
-			return this.date != null ? DatePrintFormat.format(this.date) : "";
-		}
-	}
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+            if (convertView == null) {
+                convertView = layoutInflater.inflate(R.layout.activity_credit_transaction, parent, false);
+                holder = new ViewHolder();
+                holder.transactionView = (TextView) convertView.findViewById(R.id.transaction);
+                holder.referrerView = (TextView) convertView.findViewById(R.id.referrer);
+                holder.dateView = (TextView) convertView.findViewById(R.id.date);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            holder.transactionView.setText(((CreditTransaction)listData.get(position)).getTransaction());
+            holder.referrerView.setText(((CreditTransaction)listData.get(position)).getReferInfo());
+            holder.dateView.setText(((CreditTransaction)listData.get(position)).getDate());
+
+            return convertView;
+        }
+
+        private class ViewHolder {
+            TextView transactionView;
+            TextView referrerView;
+            TextView dateView;
+        }
+
+    }
+
+    private class CreditTransaction {
+        private String transaction;
+        private String referrer;
+        private String referree;
+        private Date date;
+
+        public CreditTransaction(String bucket) {
+            this(bucket, null, null, null);
+        }
+
+        public CreditTransaction(String transaction, String referrer, String referree, Date date) {
+            this.transaction = transaction;
+            this.referrer = referrer;
+            this.referree = referree;
+            this.date = date;
+        }
+
+        public String getTransaction() {
+            return this.transaction;
+        }
+
+        public String getReferInfo() {
+            StringBuilder sb = new StringBuilder();
+            if (this.referrer != null || this.referree != null) {
+                boolean hasReferrer = false;
+                sb.append("(");
+                if (this.referrer != null) {
+                    hasReferrer = true;
+                    sb.append("referrer: " + this.referrer);
+                }
+                if (this.referree != null) {
+                    if (hasReferrer) {
+                        sb.append(" -> ");
+                    }
+                    sb.append("referree: " + this.referree);
+                }
+                sb.append(")");
+            }
+            return sb.toString();
+        }
+
+        public String getDate() {
+            return this.date != null ? DatePrintFormat.format(this.date) : "";
+        }
+    }
 
 }

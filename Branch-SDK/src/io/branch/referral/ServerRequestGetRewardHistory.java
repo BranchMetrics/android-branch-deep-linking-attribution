@@ -71,7 +71,6 @@ class ServerRequestGetRewardHistory extends ServerRequest {
 
     }
 
-
     public ServerRequestGetRewardHistory(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
@@ -93,7 +92,9 @@ class ServerRequestGetRewardHistory extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            callback_.onReceivingResponse(null, new BranchError("Trouble retrieving user credit history.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            if (callback_ != null) {
+                callback_.onReceivingResponse(null, new BranchError("Trouble retrieving user credit history.", BranchError.ERR_NO_INTERNET_PERMISSION));
+            }
             return true;
         }
         return false;
