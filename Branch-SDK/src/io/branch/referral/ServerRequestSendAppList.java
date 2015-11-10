@@ -61,7 +61,7 @@ class ServerRequestSendAppList extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         //No implementation on purpose
     }
 

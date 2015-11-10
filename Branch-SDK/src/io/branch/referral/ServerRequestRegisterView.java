@@ -46,9 +46,9 @@ class ServerRequestRegisterView extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onRegisterViewFinished(false, new BranchError("Unable to register content view", statusCode));
+            callback_.onRegisterViewFinished(false, new BranchError("Unable to register content view"+ causeMsg, statusCode));
         }
     }
 

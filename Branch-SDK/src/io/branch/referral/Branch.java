@@ -935,7 +935,7 @@ public class Branch {
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
 
@@ -954,7 +954,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession( BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, isReferrable, activity);
         return uriHandled;
@@ -975,7 +975,7 @@ public class Branch {
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
         boolean uriHandled = readAndStripParam(data, activity);
         initSession(callback, isReferrable, activity);
         return uriHandled;
@@ -993,7 +993,7 @@ public class Branch {
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession( BranchUniversalReferralInitListener callback, boolean isReferrable) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
 
@@ -1009,7 +1009,7 @@ public class Branch {
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession( BranchReferralInitListener callback, boolean isReferrable) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
 
@@ -1334,7 +1334,7 @@ public class Branch {
                     prefHelper_.setExternalIntentExtra(extrasJson.toString());
                 }
             }
-        } catch (Exception ignore){
+        } catch (Exception ignore) {
 
         }
 
@@ -2859,7 +2859,7 @@ public class Branch {
     private void handleFailure(final ServerRequest req, int statusCode) {
         if (req == null)
             return;
-        req.handleFailure(statusCode);
+        req.handleFailure(statusCode, "");
     }
 
     private void updateAllRequestsInQueue() {
@@ -2989,7 +2989,7 @@ public class Branch {
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
 
             if ((req instanceof ServerRequestLogout)) {
-                req.handleFailure(BranchError.ERR_NO_SESSION);
+                req.handleFailure(BranchError.ERR_NO_SESSION, "");
                 Log.i(TAG, "Branch is not initialized, cannot logout");
                 return;
             }
@@ -3309,7 +3309,7 @@ public class Branch {
                             //Finally call the request callback with the error.
                             for (ServerRequest req : requestToFail) {
                                 if (req != null) {
-                                    req.handleFailure(status);
+                                    req.handleFailure(status, serverResponse.getFailReason());
                                     //If request need to be replayed, no need for the callbacks
                                     if (req.shouldRetryOnFail())
                                         req.clearCallbacks();

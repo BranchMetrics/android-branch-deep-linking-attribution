@@ -38,7 +38,8 @@ class RemoteInterface {
     /**
      * Required, default constructor for the class.
      */
-    public RemoteInterface() { }
+    public RemoteInterface() {
+    }
 
     /**
      * <p>A {@link PrefHelper} object that is used throughout the class to allow access to read and
@@ -59,25 +60,19 @@ class RemoteInterface {
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
      *
-     * @param inStream A generic {@link InputStream} returned as a result of a HTTP connection.
-     *
+     * @param inStream   A generic {@link InputStream} returned as a result of a HTTP connection.
      * @param statusCode An {@link Integer} value containing the HTTP response code.
-     *
-     * @param tag A {@link String} value containing the tag value to be applied to the
-     *            resultant {@link ServerResponse} object.
-     *
-     * @param log A {@link Boolean} value indicating whether or not to log the raw
-     *            content lines via the debug interface.
-     *
-     * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
-     *                 with the link subject of the original server request.
-     *
+     * @param tag        A {@link String} value containing the tag value to be applied to the
+     *                   resultant {@link ServerResponse} object.
+     * @param log        A {@link Boolean} value indicating whether or not to log the raw
+     *                   content lines via the debug interface.
+     * @param linkData   A {@link BranchLinkData} object containing the data dictionary associated
+     *                   with the link subject of the original server request.
      * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
-     *         response in Branch SDK terms.
-     *
+     * response in Branch SDK terms.
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
-    private ServerResponse processEntityForJSON (InputStream inStream, int statusCode, String tag, boolean log, BranchLinkData linkData) {
+    private ServerResponse processEntityForJSON(InputStream inStream, int statusCode, String tag, boolean log, BranchLinkData linkData) {
         ServerResponse result = new ServerResponse(tag, statusCode, linkData);
         try {
             if (inStream != null) {
@@ -95,13 +90,15 @@ class RemoteInterface {
                             JSONArray jsonArray = new JSONArray(line);
                             result.setPost(jsonArray);
                         } catch (JSONException ex2) {
-                            if (log) PrefHelper.Debug(getClass().getSimpleName(), "JSON exception: " + ex2.getMessage());
+                            if (log)
+                                PrefHelper.Debug(getClass().getSimpleName(), "JSON exception: " + ex2.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
+            if (log)
+                PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
         }
         return result;
     }
@@ -110,13 +107,10 @@ class RemoteInterface {
      * <p>Make a RESTful GET request, by calling {@link #make_restful_get(String, String, int, int, boolean)}
      * with the logging {@link Boolean} parameter pre-populated.</p>
      *
-     * @param url A {@link String} URL to request from.
-     *
-     * @param tag A {@link String} tag for logging/analytics purposes.
-     *
+     * @param url     A {@link String} URL to request from.
+     * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
-     *
      * @return A {@link ServerResponse} object containing the result of the RESTful request.
      */
     public ServerResponse make_restful_get(String url, String tag, int timeout) {
@@ -147,15 +141,11 @@ class RemoteInterface {
      * with a pre-populated logging parameter.</p>
      *
      * @param baseUrl A {@link String} URL to request from.
-     *
-     * @param tag A {@link String} tag for logging/analytics purposes.
-     *
+     * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
-     *
-     * @param log A {@link Boolean} value that specifies whether debug logging should be
-     *            enabled for this request or not.
-     *
+     * @param log     A {@link Boolean} value that specifies whether debug logging should be
+     *                enabled for this request or not.
      * @return A {@link ServerResponse} object containing the result of the RESTful request.
      */
     private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
@@ -188,20 +178,28 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
             } else {
-                return processEntityForJSON(connection.getInputStream(),
-                        connection.getResponseCode(), tag, log, null);
+                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    return processEntityForJSON(connection.getErrorStream(),
+                            connection.getResponseCode(), tag, log, null);
+                } else {
+                    return processEntityForJSON(connection.getInputStream(),
+                            connection.getResponseCode(), tag, log, null);
+                }
             }
         } catch (SocketException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+            if (log)
+                PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
         } catch (UnknownHostException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+            if (log)
+                PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
         } catch (IOException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
+            if (log)
+                PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
             return new ServerResponse(tag, 500);
         } finally {
-            if (connection != null ) {
+            if (connection != null) {
                 connection.disconnect();
             }
         }
@@ -213,17 +211,13 @@ class RemoteInterface {
      * <p>Makes a RESTful POST call with logging enabled, without an associated data dictionary;
      * passed as null.</p>
      *
-     * @param body A {@link JSONObject} containing the main data body/payload of the request.
-     *
-     * @param url A {@link String} URL to request from.
-     *
-     * @param tag A {@link String} tag for logging/analytics purposes.
-     *
+     * @param body    A {@link JSONObject} containing the main data body/payload of the request.
+     * @param url     A {@link String} URL to request from.
+     * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
-     *
      * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
-     *         response in Branch SDK terms.
+     * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
         return make_restful_post(body, url, tag, timeout, 0, true, null);
@@ -232,20 +226,15 @@ class RemoteInterface {
     /**
      * <p>Makes a RESTful POST call with logging enabled.</p>
      *
-     * @param body A {@link JSONObject} containing the main data body/payload of the request.
-     *
-     * @param url A {@link String} URL to request from.
-     *
-     * @param tag A {@link String} tag for logging/analytics purposes.
-     *
-     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
-     *                before considering a server request to have timed out.
-     *
+     * @param body     A {@link JSONObject} containing the main data body/payload of the request.
+     * @param url      A {@link String} URL to request from.
+     * @param tag      A {@link String} tag for logging/analytics purposes.
+     * @param timeout  An {@link Integer} value containing the number of milliseconds to wait
+     *                 before considering a server request to have timed out.
      * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
      *                 with the link subject of the original server request.
-     *
      * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
-     *         response in Branch SDK terms.
+     * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
         return make_restful_post(body, url, tag, timeout, 0, true, linkData);
@@ -254,20 +243,15 @@ class RemoteInterface {
     /**
      * <p>Makes a RESTful POST call without an associated data dictionary; passed as null.</p>
      *
-     * @param body A {@link JSONObject} containing the main data body/payload of the request.
-     *
-     * @param url A {@link String} URL to request from.
-     *
-     * @param tag A {@link String} tag for logging/analytics purposes.
-     *
+     * @param body    A {@link JSONObject} containing the main data body/payload of the request.
+     * @param url     A {@link String} URL to request from.
+     * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
-     *
-     * @param log A {@link Boolean} value that specifies whether debug logging should be
-     *            enabled for this request or not.
-     *
+     * @param log     A {@link Boolean} value that specifies whether debug logging should be
+     *                enabled for this request or not.
      * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
-     *         response in Branch SDK terms.
+     * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
         return make_restful_post(body, url, tag, timeout, 0, log, null);
@@ -337,15 +321,21 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
             } else {
-                return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    return processEntityForJSON(connection.getErrorStream(), connection.getResponseCode(), tag, log, linkData);
+                } else {
+                    return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                }
             }
 
 
         } catch (SocketException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+            if (log)
+                PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
         } catch (UnknownHostException ex) {
-            if (log) PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+            if (log)
+                PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
         } catch (Exception ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
@@ -370,7 +360,7 @@ class RemoteInterface {
             if (names != null) {
                 boolean first = true;
                 int size = names.length();
-                for(int i = 0; i < size; i++) {
+                for (int i = 0; i < size; i++) {
                     try {
                         String key = names.getString(i);
 

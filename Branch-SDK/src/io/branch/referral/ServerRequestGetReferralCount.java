@@ -66,9 +66,9 @@ class ServerRequestGetReferralCount extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts.", statusCode));
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving referral counts."+causeMsg, statusCode));
         }
     }
 
