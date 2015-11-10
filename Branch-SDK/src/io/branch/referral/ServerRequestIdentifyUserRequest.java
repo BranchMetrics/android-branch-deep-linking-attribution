@@ -82,7 +82,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
-            callback_.onInitFinished(obj, new BranchError("Trouble setting the user alias."+ causeMsg, statusCode));
+            callback_.onInitFinished(obj, new BranchError("Trouble setting the user alias. " + causeMsg, statusCode));
         }
     }
 

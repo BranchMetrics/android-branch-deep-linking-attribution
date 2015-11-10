@@ -66,7 +66,7 @@ class ServerRequestGetRewards extends ServerRequest {
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits."+ causeMsg, statusCode));
+            callback_.onStateChanged(false, new BranchError("Trouble retrieving user credits. " + causeMsg, statusCode));
         }
     }
 

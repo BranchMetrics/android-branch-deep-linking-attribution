@@ -135,7 +135,7 @@ class ServerRequestCreateUrl extends ServerRequest {
     public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
             String failedUrl = getLongUrl();
-            callback_.onLinkCreate(failedUrl, new BranchError("Trouble creating a URL."+causeMsg, statusCode));
+            callback_.onLinkCreate(failedUrl, new BranchError("Trouble creating a URL. " + causeMsg, statusCode));
         }
     }
 

@@ -149,7 +149,10 @@ class ServerResponse {
             if (postObj != null
                     && postObj.has("error")
                     && postObj.getJSONObject("error").has("message")) {
-                causeMsg = postObj.getJSONObject("error").getString("message") + ".";
+                causeMsg = postObj.getJSONObject("error").getString("message");
+                if (causeMsg != null && causeMsg.trim().length() > 0) {
+                    causeMsg = causeMsg + ".";
+                }
             }
         } catch (Exception ignore) {
         }

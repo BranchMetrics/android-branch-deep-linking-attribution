@@ -85,7 +85,7 @@ class ServerRequestGetRewardHistory extends ServerRequest {
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onReceivingResponse(null, new BranchError("Trouble retrieving user credit history."+causeMsg, statusCode));
+            callback_.onReceivingResponse(null, new BranchError("Trouble retrieving user credit history. " + causeMsg, statusCode));
         }
     }
 

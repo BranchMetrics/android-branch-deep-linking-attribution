@@ -111,7 +111,7 @@ class ServerRequestRedeemRewards extends ServerRequest {
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards."+ causeMsg, statusCode));
+            callback_.onStateChanged(false, new BranchError("Trouble redeeming rewards. " + causeMsg, statusCode));
         }
     }
 

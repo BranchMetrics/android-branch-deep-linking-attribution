@@ -129,7 +129,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
-            callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch."+ causeMsg, statusCode));
+            callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + causeMsg, statusCode));
         }
     }
 
