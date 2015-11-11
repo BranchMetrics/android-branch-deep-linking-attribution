@@ -68,18 +68,18 @@ In your project's manifest file, you can register activities to for App Linking 
 and `test_app_alpha_encoded_id` which you can obtain from the Branch dash board once you enable App Linking support for your application.
 
 ```xml
-  <activity android:name="com.yourapp.your_activity">
-            <!-- App Link your activity to Branch links-->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/live_app_alpha_encoded_id" /> <!-- live_app_alpha_encoded_id can be obtained from the Branch Dashboard here: https://dashboard.branch.io/#/settings/link -->
-                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/test_app_alpha_encoded_id" /> <!-- test_app_alpha_encoded_id can be obtained from the Branch Dashboard here: https://dashboard.branch.io/#/settings/link -->
-                <!-- If you set up a white label for your links in your Branch link settings then  only need to add the white label domain -->
-                <data android:scheme="https" android:host="your.app.com"/>
-            </intent-filter>
-  </activity>
+<activity android:name="com.yourapp.your_activity">
+    <!-- App Link your activity to Branch links-->
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+         <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/live_app_alpha_encoded_id" /> <!-- live_app_alpha_encoded_id can be obtained from the Branch Dashboard here: https://dashboard.branch.io/#/settings/link -->
+         <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/test_app_alpha_encoded_id" /> <!-- test_app_alpha_encoded_id can be obtained from the Branch Dashboard here: https://dashboard.branch.io/#/settings/link -->
+        <!-- If you set up a white label for your links in your Branch link settings then  only need to add the white label domain -->
+        <data android:scheme="https" android:host="your.app.com"/>
+    </intent-filter>
+</activity>
 ```
 
 That's all you need. Deep linked parameters associated with the link is passed through Branch initialization process.
@@ -132,15 +132,24 @@ If you support below 14, you'll want to skip this section and head to [this one 
 
 To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
 
+If you need to support pre 14, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/recipes/quickstart_guide/android/#initialization-to-support-android-pre-14). If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
+
 #### Initialize Branch lifecycle
 
-Starting from Branch SDK version 1.5.7, there is no need for initialising and closing session with the new _automatic session management_. Automatic session management can work only with API level 14 and above, so make sure that your `minSdkVersion` is 14 or above.
+Initialising and closing session is done automatically with our new _automatic session management_. Automatic session management can work only with API level 14 and above. Once you do any of the below, there is no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
 
-```xml
-<uses-sdk android:minSdkVersion="14"/>
+##### Alt 1: You Have A Custom Application Class
+
+If you have a custom Application class, just add this call in `onCreate`
+
+```java
+public void onCreate() {
+    super.onCreate();
+    Branch.getAutoInstance(this);
+}
 ```
 
-Once you do any of the below, there is no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
+##### Alt 2: You Don't Have A Custom Application Class
 
 If you are not creating or using an Application class throughout your project, all you need to do is declare `BranchApp` as your application class in your manifest.
 
@@ -169,7 +178,7 @@ branch.initSession(new BranchReferralInitListener(){
 
 **NOTE** if you're calling this inside a fragment, please use getActivity() instead of passing in `this`. Also, `this.getIntent().getData()` refers to the data associated with an incoming intent.
 
-Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that'd done, go to said activity and do something like the following:
+Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that is done, go to said activity and do something like the following:
 
 ```java
 @Override
@@ -178,9 +187,7 @@ public void onNewIntent(Intent intent) {
 }
 ```
 
-Side note: This is a requirement because of the new Facebook AppLinks change. Facebook doesn't open up the browser anymore and just calls the URI to open the app directly. This prevented Branch clicks from being registered. To support it, we pass that link click id through the URI scheme to Branch, and send that back to the app, creating a 'click' without actually seeing a click. Android does a very poor job of clearing out intents that were previously called, so this helps ensure that once a URI scheme is called and consumed, it won't trigger deep linking anymore.
-
-#### Branch-provided data parameters in initSession callback
+##### Branch-provided data parameters in initSession callback
 
 Previously, Branch did not return any information to the app if `initSession` was called but the user hadn't clicked on a link. Now Branch returns explicit parameters every time. Here is a list, and a description of what each represents.
 
@@ -201,83 +208,6 @@ Previously, Branch did not return any information to the app if `initSession` wa
 | +is_first_session | Denotes whether this is the first session (install) or any other session (open)
 | +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
 | +click_timestamp | Epoch timestamp of when the click occurred
-
-### Initialization to support Android pre-14 (harder)
-
-Note: There is no need to use this section if you use _automatic session management_ as described above and only support minSdkVersion >= 14. Please skip to the [next section](#retrieve-session-install-or-open-parameters) and proceed. This section is only needed if you want to support pre-14.
-
-If you choose this method, you must call initSession and closeSession in onStart and onStop of _every Activity_ in your app. If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time. Branch must know when the app opens or closes to properly handle the deep link parameters retrieval.
-
-#### Init Session
-
-**NOTE** This guide assumes that you’re familiar with the Android UI lifecycle. A single Branch object instance is used per Activity or Fragment, so declare an object at the class-level, and you can call this in every Activity or Fragment where you need to interact with Branch; if it has already be initialised elsewhere in your app, the same instance will be returned.
-
-Inside your onStart, do the following, where the variable branch is created in your base activity class (of type Branch). This will initialize a Branch session and return the deep link parameters associated with the link that was just clicked, or an empty dictionary if not.
-
-```java
-@Override
-protected void onStart() {
-    super.onStart();
-    Branch branch = Branch.getInstance(getApplicationContext());
-    branch.initSession(new BranchReferralInitListener(){
-        @Override
-        public void onInitFinished(JSONObject referringParams, BranchError error) {
-            if (error == null) {
-                // params are the deep linked params associated with the link that the user clicked -> was re-directed to this app
-                // params will be empty if no data found
-                // ... insert custom logic here ...
-            } else {
-                Log.i("MyApp", error.getMessage());
-            }
-        }
-    }, this.getIntent().getData(), this);
-}
-```
-
-**NOTE** if you're calling this inside a fragment, please use getActivity() instead of passing in `this`. Also, `this.getIntent().getData()` refers to the data associated with an incoming intent.
-
-Next, you'll need to hook into the `onNewIntent` method specified inside the Activity lifecycle and set the intent. This is required for conformity with Facebook's AppLinks. Verify that the activity you're implementing has *launchMode* set to *singleTask* inside the Manifest declaration. Once that'd done, go to said activity and do something like the following:
-
-```java
-@Override
-public void onNewIntent(Intent intent) {
-    this.setIntent(intent);
-}
-```
-
-#### Close session
-
-Note: There is no need to use this method if you use _automatic session management_ as described above and only support minSdkVersion >= 14
-
-Every activity that will use Branch in some way should include Branch SDK methods in both `onStart()` and `onStop()`. Don't forget `closeSession()` in every activity with Branch! If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
-
-```java
-@Override
-protected void onStop() {
-    super.onStop();
-    branch.closeSession();
-}
-```
-
-#### Branch-provided data parameters in initSession callback
-
-Previously, Branch did not return any information to the app if `initSession` was called but the user hadn't clicked on a link. Now Branch returns explicit parameters every time. Here is a list, and a description of what each represents.
-
-* `~` denotes analytics
-* `+` denotes information added by Branch
-* (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
-
-| **Parameter** | **Meaning**
-| ~channel | The channel on which the link was shared, specified at link creation time
-| ~feature | The feature, such as `invite` or `share`, specified at link creation time
-| ~tags | Any tags, specified at link creation time
-| ~campaign | The campaign the link is associated with, specified at link creation time
-| ~stage | The stage, specified at link creation time
-| ~creation_source | Where the link was created ('API', 'Dashboard', 'SDK', 'iOS SDK', 'Android SDK', or 'Web SDK')
-| +referrer | The referrer for the link click, if a link was clicked
-| +phone_number | The phone number of the user, if the user texted himself/herself the app
-| +is_first_session | Denotes whether this is the first session (install) or any other session (open)
-| +clicked_branch_link | Denotes whether or not the user clicked a Branch link that triggered this session
 
 #### Retrieve session (install or open) parameters
 
@@ -336,82 +266,58 @@ Some example events you might want to track:
 "finished_level_ten"
 ```
 
-## Generate Tracked, Deep Linking URLs (pass data across install and open)
+## Branch Universal Object (for deep links, content analytics and indexing)
 
-### Shortened links
+As more methods have evolved in Android, we've found that it was increasingly hard to manage them all. We abstracted as many as we could into the concept of a Branch Universal Object. This is the object that is associated with the thing you want to share (content or user). You can set all the metadata associated with the object and then call action methods on it to get a link or register a view.
 
-There are a bunch of options for creating these links. You can tag them for analytics in the dashboard, or you can even pass data to the new installs or opens that come from the link click. How awesome is that? You need to pass a callback for when you link is prepared (which should return very quickly, ~ 50 ms to process).
+### Defining the Branch Universal Object
 
-For more details on how to create links, see the [Branch link creation guide](https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/url-creation-guide.md)
+The universal object is where you define all of the custom metadata associated with the content that you want to link to or index. Please use the builder format below to create one.
 
 ```java
-// associate data with a link
-// you can access this data from any instance that installs or opens the app from this link (amazing...)
+ BranchUniversalObject branchUniversalObject = new BranchUniversalObject()
 
-JSONObject dataToInclude = new JSONObject();
-try {
-    dataToInclude.put("user", "Joe");
-    dataToInclude.put("profile_pic", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
-    dataToInclude.put("description", "Joe likes long walks on the beach...")
+ 			// The identifier is what Branch will use to de-dupe the content across many different Universal Objects
+            .setCanonicalIdentifier("item/12345")
 
-    // customize the display of the Branch link
-    dataToInclude.put("$og_title", "Joe's My App Referral");
-    dataToInclude.put("$og_image_url", "https://s3-us-west-1.amazonaws.com/myapp/joes_pic.jpg");
-    dataToInclude.put("$og_description", "Join Joe in My App - it's awesome");
+            // This is where you define the open graph structure and how the object will appear on Facebook or in a deepview
+            .setTitle("My Content Title")
+            .setContentDescription("My Content Description")
+            .setContentImageUrl("https://example.com/mycontent-12345.png")
 
-    // customize the desktop redirect location
-    dataToInclude.put("$desktop_url", "http://myapp.com/desktop_splash");
-} catch (JSONException ex) { }
+            // You use this to specify whether this content can be discovered publicly - default is public
+            .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
 
-// associate a url with a set of tags, channel, feature, and stage for better analytics.
-// tags: null or example set of tags could be "version1", "trial6", etc; each tag should not exceed 64 characters
-// channel: null or examples: "facebook", "twitter", "text_message", etc; should not exceed 128 characters
-// feature: null or examples: Branch.FEATURE_TAG_SHARE, Branch.FEATURE_TAG_REFERRAL, "unlock", etc; should not exceed 128 characters
-// stage: null or examples: "past_customer", "logged_in", "level_6"; should not exceed 128 characters
-
-ArrayList<String> tags = new ArrayList<String>();
-tags.put("version1");
-tags.put("trial6");
-
-// Link 'type' can be used for scenarios where you want the link to only deep link the first time.
-// Use _null_, _LINK_TYPE_UNLIMITED_USE_ or _LINK_TYPE_ONE_TIME_USE_
-
-// Link 'alias' can be used to label the endpoint on the link. For example: http://bnc.lt/AUSTIN28. Should not exceed 128 characters
-// Be careful about aliases: these are immutable objects permanently associated with the data and associated paramters you pass into the link. When you create one in the SDK, it's tied to that user identity as well (automatically specified by the Branch internals). If you want to retrieve the same link again, you'll need to call getShortUrl with all of the same parameters from before.
-
-Branch branch = Branch.getInstance(getApplicationContext());
-branch.getShortUrl(tags, "text_message", Branch.FEATURE_TAG_SHARE, "level_3", dataToInclude, new BranchLinkCreateListener() {
-    @Override
-    public void onLinkCreate(String url, Branch.BranchError error) {
-        if (error == null) {
-            // show the link to the user or share it immediately
-        } else {
-            Log.i("MyApp", error.getMessage());
-        }
-    }
-});
-
-// The callback will return null if the link generation fails (or if the alias specified is aleady taken.)
+     		// Here is where you can add custom keys/values to the deep link data
+            .addContentMetadata("property1", "blue")
+            .addContentMetadata("property2", "red");
 ```
 
-There are other methods which exclude tags and data if you don't want to pass those. Explore the autocomplete functionality.
+### Registering a View
 
-**Note**
-You can customize the Facebook OG tags of each URL if you want to dynamically share content by using the following _optional keys in the data dictionary_. Please use this [Facebook tool](https://developers.facebook.com/tools/debug/og/object) to debug your OG tags!
+Branch recently launched [Content Analytics](https://branch.io/content-analytics) which gives you insight into how engaging your content and how well it drives growth. You'd likely want to observe how many views each piece of content has as well. Once you've created the Universal Object, it's a simple call when the page loads.
+
+```java
+branchUniversalObject.registerView();
+```
+
+### Creating a Deep Link
+
+Once you've created your `Branch Universal Object`, which is the reference to the content you're interested in, you can then get a link back to it with the mechanisms described below. First define the properties of the link itself.
+
+```java
+LinkProperties linkProperties = new LinkProperties()
+               .setChannel("facebook")
+               .setFeature("sharing")
+               .addControlParameter("$desktop_url", "http://example.com/home")
+               .addControlParameter("$ios_url", "http://example.com/ios");
+```
+
+You do custom redirection by inserting the following _optional keys in the control params_:
 
 | Key | Value
 | --- | ---
-| "$og_title" | The title you'd like to appear for the link in social media
-| "$og_description" | The description you'd like to appear for the link in social media
-| "$og_image_url" | The URL for the image you'd like to appear for the link in social media
-| "$og_video" | The URL for the video
-| "$og_url" | The URL you'd like to appear
-| "$og_redirect" | If you want to bypass our OG tags and use your own, use this key with the URL that contains your site's metadata.
-
-Also, you do custom redirection by inserting the following _optional keys in the dictionary_:
-
-| Key | Value
-| --- | ---
+| "$fallback_url" | Where to send the user for all platforms when app is not installed.
 | "$desktop_url" | Where to send the user on a desktop or laptop. By default it is the Branch-hosted text-me service
 | "$android_url" | The replacement URL for the Play Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
 | "$ios_url" | The replacement URL for the App Store to send the user if they don't have the app. _Only necessary if you want a mobile web splash_
@@ -420,18 +326,73 @@ Also, you do custom redirection by inserting the following _optional keys in the
 | "$blackberry_url" | Same as above but for Blackberry Store
 | "$windows_phone_url" | Same as above but for Windows Store
 
-You have the ability to control the direct deep linking of each link by inserting the following _optional keys in the dictionary_:
+You have the ability to control the direct deep linking of each link by inserting the following _optional keys in the control params_:
 
 | Key | Value
 | --- | ---
 | "$deeplink_path" | The value of the deep link path that you'd like us to append to your URI. For example, you could specify "$deeplink_path": "radio/station/456" and we'll open the app with the URI "yourapp://radio/station/456?link_click_id=branch-identifier". This is primarily for supporting legacy deep linking infrastructure.
 | "$always_deeplink" | true or false. (default is not to deep link first) This key can be specified to have our linking service force try to open the app, even if we're not sure the user has the app installed. If the app is not installed, we fall back to the respective app store or $platform_url key. By default, we only open the app if we've seen a user initiate a session in your app from a Branch link (has been cookied and deep linked by Branch)
 
-### Deep link Activities
+Then, make a request to the Universal Object in order to create the URL.
+
+```java
+branchUniversalObject.generateShortUrl(this, linkProperties, new BranchLinkCreateListener() {
+    @Override
+    public void onLinkCreate(String url, BranchError error) {
+        if (error == null) {
+            Log.i("MyApp", "got my Branch link to share: " + url);
+        }
+    }
+});
+```
+
+### Showing a Custom Share Sheet
+
+We’ve realized that Android had some very poor offerings for native share sheet functionality, so we built our own and bundled it into the core SDK. This share sheet it customizable and will automatically generate a link when the user selects a channel to share to.
+
+![Android Share Sheet](https://dev.branch.io/img/ingredients/sdk_links/android_share_sheet.png)
+
+To use it, first define the custom share sheet style like so. Most of these are completely optional and we've got a great set of defaults if you don't want to spend hours customizing.
+
+```java
+ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "Check this out!", "This stuff is awesome: ")
+                .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Copy", "Added to clipboard")
+                .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
+                .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
+                .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL);
+```
+
+To show the share sheet, call the following on your Branch Universal Object. There are plenty of callback methods for you to hook into as you need for your own customizations on top of our animation.
+
+```java
+branchUniversalObject.showShareSheet(this, 
+                                      linkProperties,
+                                      shareSheetStyle,
+                                       new Branch.BranchLinkShareListener() {
+    @Override
+    public void onShareLinkDialogLaunched() {
+    }
+    @Override
+    public void onShareLinkDialogDismissed() {
+    }
+    @Override
+    public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+    }
+    @Override
+    public void onChannelSelected(String channelName) {
+    }
+});
+```
+
+### Auto Deep link Activities
 
 Branch provides a very easy and powerful automatic deep linking to Activities. You can configure Activities to be launched on clicking a link. Here is how you configure an Activity for auto deep linking.
 
-1) Configure auto deep link keys for Activity in manifest file
+**0)** Pick the key from the deep link data
+
+When you create a deep link, you'll reference a Branch Universal Object. You have the option to add a ton of custom key/values to the metadata dictionary. You must first pick one that you want to automatically launch the selected Activity in step 1. For example, you'd use `picture_id` if you Universal Objects were mapping to pictures and you stuffed that key in the metadata.
+
+**1)** Configure auto deep link keys for Activity in manifest file
 
 ```xml
 <activity android:name=".AutoDeepLinkTestActivity">
@@ -442,23 +403,23 @@ Branch provides a very easy and powerful automatic deep linking to Activities. Y
 </activity>
 ```
 
-2) Create a link with deep link keys.
+**2)** Retrieve deep link data in your auto deep link activity
 
-While you create the link you can specify the deep link keys in the JSONObject parameters you pass for creating a link.
+Your deep linked parameters are added to the intent extra with the same key you have used in the JSONObject for creating the link.
 
 ```java
-JSONObject dataToInclude = new JSONObject();
-try {
-    dataToInclude.put("name", "test name");
-    dataToInclude.put("auto_deeplink_key_1", "This is an auto deep linked key's value");
-} catch (JSONException ex) {
-    ex.printStackTrace();
-}
-String autoDeepLikedUrl = branch.getShortUrlSync(dataToInclude);
- ```
+String name = getIntent().getExtras().getString("name");
+```
 
-That's it. Now clicking on a link Branch will check for Activities which are matching for auto deep linking and Launch that Activity. Optionally you can configure a request code to launch the Activity in auto deep link mode in your manifest as
-as shown above. Do this if you want to handle something on auto deep linked Activity finish on your main activity as the example below.
+You can also get the deep linked parameters as the original JSONObject that you used for link creation
+
+```java
+JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
+```
+
+**3)** Receive deep link activity finish call in main Activity
+
+Branch will auto open the activity when it detects the specified key in the deep link dict. Do this if you want to handle something on auto-deep-linked-Activity finish on your main activity as the example below.
 
 ```java
 @Override
@@ -473,31 +434,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 }
 ```
 
-Your deep linked parameters are added to the intent extra with the same key you have used in the JSONObject for creating the link.
-
-```java
-String name = getIntent().getExtras().getString("name");
-```
-
-You can also get the deep linked parameters as the original JSONObject that you used for link creation
-
-```java
-JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
-```
-
 ## Referral system rewarding functionality
-
-In a standard referral system, you have 2 parties: the original user and the invitee. Our system is flexible enough to handle rewards for all users. Here are a couple example scenarios:
-
-1) Reward the original user for taking action (eg. inviting, purchasing, etc)
-
-2) Reward the invitee for installing the app from the original user's referral link
-
-3) Reward the original user when the invitee takes action (eg. give the original user credit when their the invitee buys something)
-
-These reward definitions are created on the dashboard, under the 'Reward Rules' section in the 'Referrals' tab on the dashboard.
-
-Warning: For a referral program, you should not use unique awards for custom events and redeem pre-identify call. This can allow users to cheat the system.
 
 ### Get reward balance
 
