@@ -196,6 +196,7 @@ Previously, Branch did not return any information to the app if `initSession` wa
 * (for the curious, `$` denotes reserved keywords used for controlling how the Branch service behaves)
 
 | **Parameter** | **Meaning**
+| --- | ---
 | ~channel | The channel on which the link was shared, specified at link creation time
 | ~feature | The feature, such as `invite` or `share`, specified at link creation time
 | ~tags | Any tags, specified at link creation time
