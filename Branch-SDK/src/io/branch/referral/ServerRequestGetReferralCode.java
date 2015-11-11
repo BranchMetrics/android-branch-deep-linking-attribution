@@ -119,9 +119,9 @@ class ServerRequestGetReferralCode extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onInitFinished(null, new BranchError("Trouble retrieving the referral code.", statusCode));
+            callback_.onInitFinished(null, new BranchError("Trouble retrieving the referral code. " + causeMsg, statusCode));
         }
     }
 

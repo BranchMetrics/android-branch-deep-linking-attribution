@@ -159,7 +159,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
             JSONObject obj = new JSONObject();
             try {
@@ -167,7 +167,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
-            callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch.", statusCode));
+            callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + causeMsg, statusCode));
         }
     }
 

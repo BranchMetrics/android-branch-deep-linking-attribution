@@ -83,9 +83,9 @@ class ServerRequestApplyReferralCode extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
-            callback_.onInitFinished(null, new BranchError("Trouble applying the referral code.", statusCode));
+            callback_.onInitFinished(null, new BranchError("Trouble applying the referral code. " + causeMsg, statusCode));
         }
     }
 

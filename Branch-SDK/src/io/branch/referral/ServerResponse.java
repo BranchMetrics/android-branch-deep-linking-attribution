@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 /**
  * Class providing the structure of a HTTP response as recieved from the Branch API.
- * 
+ * <p/>
  * Supports the following methods:
  * <ul>
  * <li>{@link ServerResponse#getTag()}</li>
@@ -46,7 +46,7 @@ class ServerResponse {
      * of a server response object as a direct result of a server call. Omits {@link BranchLinkData}
      * , so is used where that value is null or unavailable.</p>
      *
-     * @param tag A {@link String} value of the <i>Tag</i> attribute of the current link.
+     * @param tag        A {@link String} value of the <i>Tag</i> attribute of the current link.
      * @param statusCode {@link Integer} value of the HTTP status code.
      */
     public ServerResponse(String tag, int statusCode) {
@@ -57,9 +57,9 @@ class ServerResponse {
      * <p>Main constructor method for the {@link ServerResponse} class that allows for the instantiation
      * of a server response object as a direct result of a server call.</p>
      *
-     * @param tag A {@link String} value of the <i>Tag</i> attribute of the current link.
+     * @param tag        A {@link String} value of the <i>Tag</i> attribute of the current link.
      * @param statusCode {@link Integer} value of the HTTP status code.
-     * @param linkData A {@link BranchLinkData} object containing data attributes associated with a Branch link.
+     * @param linkData   A {@link BranchLinkData} object containing data attributes associated with a Branch link.
      */
     public ServerResponse(String tag, int statusCode, BranchLinkData linkData) {
         tag_ = tag;
@@ -90,7 +90,7 @@ class ServerResponse {
      * instance. This object can be type-cast by other methods within this class:</p>
      *
      * @param post Generic {@link Object} instance containing post data associated with current
-     * response.
+     *             response.
      */
     public void setPost(Object post) {
         post_ = post;
@@ -105,7 +105,7 @@ class ServerResponse {
      */
     public JSONObject getObject() {
         if (post_ instanceof JSONObject) {
-            return (JSONObject)post_;
+            return (JSONObject) post_;
         }
 
         return null;
@@ -120,7 +120,7 @@ class ServerResponse {
      */
     public JSONArray getArray() {
         if (post_ instanceof JSONArray) {
-            return (JSONArray)post_;
+            return (JSONArray) post_;
         }
 
         return null;
@@ -134,6 +134,29 @@ class ServerResponse {
      */
     public BranchLinkData getLinkData() {
         return linkData_;
+    }
+
+
+    /**
+     * Get the reason for failure if there any
+     *
+     * @return A {@link String } value with failure reason
+     */
+    public String getFailReason() {
+        String causeMsg = "";
+        try {
+            JSONObject postObj = getObject();
+            if (postObj != null
+                    && postObj.has("error")
+                    && postObj.getJSONObject("error").has("message")) {
+                causeMsg = postObj.getJSONObject("error").getString("message");
+                if (causeMsg != null && causeMsg.trim().length() > 0) {
+                    causeMsg = causeMsg + ".";
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return causeMsg;
     }
 
 }

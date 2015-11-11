@@ -74,7 +74,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
     }
 
     @Override
-    public void handleFailure(int statusCode) {
+    public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {
             JSONObject obj = new JSONObject();
             try {
@@ -82,7 +82,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
-            callback_.onInitFinished(obj, new BranchError("Trouble setting the user alias.", statusCode));
+            callback_.onInitFinished(obj, new BranchError("Trouble setting the user alias. " + causeMsg, statusCode));
         }
     }
 
