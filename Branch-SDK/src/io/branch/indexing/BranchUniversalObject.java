@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -391,36 +392,44 @@ public class BranchUniversalObject implements Parcelable {
     //------------------ Share sheet -------------------------------------//
 
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
-        JSONObject params = new JSONObject();
-        try {
-            for (String key : metadata_.keySet()) {
-                params.put(key, metadata_.get(key));
+        if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+            } else {
+                Log.e("BranchSDK", "Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
-            HashMap<String, String> controlParams = linkProperties.getControlParams();
-            for (String key : controlParams.keySet()) {
-                params.put(key, controlParams.get(key));
+        } else {
+            JSONObject params = new JSONObject();
+            try {
+                for (String key : metadata_.keySet()) {
+                    params.put(key, metadata_.get(key));
+                }
+                HashMap<String, String> controlParams = linkProperties.getControlParams();
+                for (String key : controlParams.keySet()) {
+                    params.put(key, controlParams.get(key));
+                }
+            } catch (JSONException ignore) {
             }
-        } catch (JSONException ignore) {
-        }
 
-        Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
-                .setCallback(callback)
-                .setSubject(style.getMessageTitle())
-                .setMessage(style.getMessageBody());
+            Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
+                    .setCallback(callback)
+                    .setSubject(style.getMessageTitle())
+                    .setMessage(style.getMessageBody());
 
-        if (style.getCopyUrlIcon() != null) {
-            shareLinkBuilder.setCopyUrlStyle(style.getCopyUrlIcon(), style.getCopyURlText(), style.getUrlCopiedMessage());
+            if (style.getCopyUrlIcon() != null) {
+                shareLinkBuilder.setCopyUrlStyle(style.getCopyUrlIcon(), style.getCopyURlText(), style.getUrlCopiedMessage());
+            }
+            if (style.getMoreOptionIcon() != null) {
+                shareLinkBuilder.setMoreOptionStyle(style.getMoreOptionIcon(), style.getMoreOptionText());
+            }
+            if (style.getDefaultURL() != null) {
+                shareLinkBuilder.setDefaultURL(style.getDefaultURL());
+            }
+            if (style.getPreferredOptions().size() > 0) {
+                shareLinkBuilder.addPreferredSharingOptions(style.getPreferredOptions());
+            }
+            shareLinkBuilder.shareLink();
         }
-        if (style.getMoreOptionIcon() != null) {
-            shareLinkBuilder.setMoreOptionStyle(style.getMoreOptionIcon(), style.getMoreOptionText());
-        }
-        if (style.getDefaultURL() != null) {
-            shareLinkBuilder.setDefaultURL(style.getDefaultURL());
-        }
-        if (style.getPreferredOptions().size() > 0) {
-            shareLinkBuilder.addPreferredSharingOptions(style.getPreferredOptions());
-        }
-        shareLinkBuilder.shareLink();
     }
 
     private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
