@@ -157,9 +157,9 @@ class ShareLinkManager {
                     if (callback_ != null) {
                         callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                     }
-                    invokeSharingClient((ResolveInfo) view.getTag());
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
+                    invokeSharingClient((ResolveInfo) view.getTag());
                     if (shareDlg_ != null) {
                         shareDlg_.cancel();
                     }
@@ -221,8 +221,6 @@ class ShareLinkManager {
                     }
                 }
                 isShareInProgress_ = false;
-                context_ = null;
-                builder_ = null;
             }
         });
     }
