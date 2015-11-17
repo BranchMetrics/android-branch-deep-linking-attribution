@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.10.1: Added fix for crash issues with share sheet. Added more specific error messages.
+
 - v1.10.0: Added support for the brand new BranchUniversalObject for easy tracking of views on content, easy creation of links and easy sharing
 
 - v1.9.0: Support for Android App-links. Deprecating loadActionCount API

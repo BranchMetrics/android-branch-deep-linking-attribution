@@ -60,7 +60,7 @@ task makeJar(type: Copy) {
     from('build/intermediates/bundles/release/')
     into('../')
     include('classes.jar')
-    rename ('classes.jar', 'BranchSDK-'+project.VERSION_NAME+'.jar')
+    rename ('classes.jar', 'Branch-'+project.VERSION_NAME+'.jar')
 }
 
 makeJar.dependsOn(clearJar, build)
