@@ -104,17 +104,18 @@ class RemoteInterface {
     }
 
     /**
-     * <p>Make a RESTful GET request, by calling {@link #make_restful_get(String, String, int, int, boolean)}
+     * <p>Make a RESTful GET request, by calling {@link #make_restful_get(String, JSONObject, String, int, int, boolean)}
      * with the logging {@link Boolean} parameter pre-populated.</p>
      *
      * @param url     A {@link String} URL to request from.
+     * @param params  A {@link JSONObject} with additional parameters and their values to send with the get request.
      * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
      * @return A {@link ServerResponse} object containing the result of the RESTful request.
      */
-    public ServerResponse make_restful_get(String url, String tag, int timeout) {
-        return make_restful_get(url, tag, timeout, 0, true);
+    public ServerResponse make_restful_get(String url, JSONObject params, String tag, int timeout) {
+        return make_restful_get(url, params, tag, timeout, 0, true);
     }
 
     private boolean addCommonParams(JSONObject post, int retryNumber) {
@@ -137,10 +138,11 @@ class RemoteInterface {
     }
 
     /**
-     * <p>The main RESTful GET method; the other one ({@link #make_restful_get(String, String, int)}) calls this one
+     * <p>The main RESTful GET method; the other one ({@link #make_restful_get(String, JSONObject, String, int)}) calls this one
      * with a pre-populated logging parameter.</p>
      *
      * @param baseUrl A {@link String} URL to request from.
+     * @param params  A {@link JSONObject} with additional parameters and their values to send with the get request.
      * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
@@ -148,7 +150,7 @@ class RemoteInterface {
      *                enabled for this request or not.
      * @return A {@link ServerResponse} object containing the result of the RESTful request.
      */
-    private ServerResponse make_restful_get(String baseUrl, String tag, int timeout, int retryNumber, boolean log) {
+    private ServerResponse make_restful_get(String baseUrl, JSONObject params, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
         HttpsURLConnection connection = null;
@@ -156,6 +158,16 @@ class RemoteInterface {
             timeout = DEFAULT_TIMEOUT;
         }
         if (addCommonParams(getParameters, retryNumber)) {
+            if (params != null) {
+                Iterator keys = params.keys();
+                while (keys.hasNext()) {
+                    String key = (String) keys.next();
+                    try {
+                        getParameters.put(key, params.getString(key));
+                    } catch (JSONException ignore) {
+                    }
+                }
+            }
             modifiedUrl += this.convertJSONtoString(getParameters);
         } else {
             return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
@@ -176,7 +188,7 @@ class RemoteInterface {
                     e.printStackTrace();
                 }
                 retryNumber++;
-                return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
+                return make_restful_get(baseUrl, params, tag, timeout, retryNumber, log);
             } else {
                 if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                     return processEntityForJSON(connection.getErrorStream(),

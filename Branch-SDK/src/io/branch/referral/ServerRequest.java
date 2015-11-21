@@ -10,7 +10,7 @@ import org.json.JSONObject;
 /**
  * Abstract class defining the structure of a Branch Server request.
  */
-abstract class ServerRequest {
+public abstract class ServerRequest {
 
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
@@ -22,6 +22,8 @@ abstract class ServerRequest {
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
 
+    private final JSONObject getParamObject;
+
     /**
      * <p>Creates an instance of ServerRequest.</p>
      *
@@ -31,6 +33,7 @@ abstract class ServerRequest {
     public ServerRequest(Context context, String requestPath) {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
+        getParamObject = new JSONObject();
     }
 
     /**
@@ -45,6 +48,7 @@ abstract class ServerRequest {
         requestPath_ = requestPath;
         post_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
+        getParamObject = new JSONObject();
 
     }
 
@@ -137,6 +141,28 @@ abstract class ServerRequest {
      */
     public JSONObject getPost() {
         return post_;
+    }
+
+    /**
+     * Returns a JsonObject with the parameters that needed to be set with the get request.
+     *
+     * @return A {@link JSONObject} representation of get request parameters.
+     */
+    public JSONObject getGetParams() {
+        return getParamObject;
+    }
+
+    /**
+     * Adds a param and its value to the get request
+     *
+     * @param paramKey   A {@link String} value for the get param key
+     * @param paramValue A {@link String} value for the get param value
+     */
+    public void addGetParam(String paramKey, String paramValue) {
+        try {
+            getParamObject.put(paramKey, paramValue);
+        } catch (JSONException ignore) {
+        }
     }
 
     /**

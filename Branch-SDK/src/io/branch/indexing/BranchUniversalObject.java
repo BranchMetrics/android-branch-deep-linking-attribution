@@ -483,45 +483,58 @@ public class BranchUniversalObject implements Parcelable {
     public static BranchUniversalObject getReferredBranchUniversalObject() {
         BranchUniversalObject branchUniversalObject = null;
         Branch branchInstance = Branch.getInstance();
-        if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
-            JSONObject latestParam = branchInstance.getLatestReferringParams();
-            try {
-                if (latestParam.has("+clicked_branch_link") && latestParam.getBoolean("+clicked_branch_link")) {
-                    branchUniversalObject = new BranchUniversalObject();
-
-                    if (latestParam.has(Defines.Jsonkey.ContentTitle.getKey())) {
-                        branchUniversalObject.title_ = latestParam.getString(Defines.Jsonkey.ContentTitle.getKey());
-                    }
-                    if (latestParam.has(Defines.Jsonkey.CanonicalIdentifier.getKey())) {
-                        branchUniversalObject.canonicalIdentifier_ = latestParam.getString(Defines.Jsonkey.CanonicalIdentifier.getKey());
-                    }
-                    if (latestParam.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
-                        JSONArray keywordJsonArray = latestParam.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
-                        for (int i = 0; i < keywordJsonArray.length(); i++) {
-                            branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
-                        }
-                    }
-                    if (latestParam.has(Defines.Jsonkey.ContentDesc.getKey())) {
-                        branchUniversalObject.description_ = latestParam.getString(Defines.Jsonkey.ContentDesc.getKey());
-                    }
-                    if (latestParam.has(Defines.Jsonkey.ContentImgUrl.getKey())) {
-                        branchUniversalObject.imageUrl_ = latestParam.getString(Defines.Jsonkey.ContentImgUrl.getKey());
-                    }
-                    if (latestParam.has(Defines.Jsonkey.ContentType.getKey())) {
-                        branchUniversalObject.type_ = latestParam.getString(Defines.Jsonkey.ContentType.getKey());
-                    }
-                    if (latestParam.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
-                        branchUniversalObject.expirationInMilliSec_ = latestParam.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
-                    }
-                    Iterator<String> keys = latestParam.keys();
-                    while (keys.hasNext()) {
-                        String key = keys.next();
-                        branchUniversalObject.addContentMetadata(key, latestParam.getString(key));
-                    }
+        try {
+            if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
+                if (branchInstance.getLatestReferringParams().has("+clicked_branch_link") && branchInstance.getLatestReferringParams().getBoolean("+clicked_branch_link")) {
+                    branchUniversalObject = createInstance(branchInstance.getLatestReferringParams());
                 }
-
-            } catch (Exception ignore) {
             }
+        } catch (Exception ignore) {
+        }
+        return branchUniversalObject;
+    }
+
+    /**
+     * Creates a new BranchUniversalObject with the data provided by {@link JSONObject}.
+     *
+     * @param jsonObject {@link JSONObject} to create the BranchUniversalObject
+     * @return A {@link BranchUniversalObject} corresponding to the Json data passed in
+     */
+    public static BranchUniversalObject createInstance(JSONObject jsonObject) {
+        BranchUniversalObject branchUniversalObject = null;
+        try {
+            branchUniversalObject = new BranchUniversalObject();
+
+            if (jsonObject.has(Defines.Jsonkey.ContentTitle.getKey())) {
+                branchUniversalObject.title_ = jsonObject.getString(Defines.Jsonkey.ContentTitle.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.CanonicalIdentifier.getKey())) {
+                branchUniversalObject.canonicalIdentifier_ = jsonObject.getString(Defines.Jsonkey.CanonicalIdentifier.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
+                JSONArray keywordJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
+                for (int i = 0; i < keywordJsonArray.length(); i++) {
+                    branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
+                }
+            }
+            if (jsonObject.has(Defines.Jsonkey.ContentDesc.getKey())) {
+                branchUniversalObject.description_ = jsonObject.getString(Defines.Jsonkey.ContentDesc.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ContentImgUrl.getKey())) {
+                branchUniversalObject.imageUrl_ = jsonObject.getString(Defines.Jsonkey.ContentImgUrl.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ContentType.getKey())) {
+                branchUniversalObject.type_ = jsonObject.getString(Defines.Jsonkey.ContentType.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
+                branchUniversalObject.expirationInMilliSec_ = jsonObject.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
+            }
+            Iterator<String> keys = jsonObject.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                branchUniversalObject.addContentMetadata(key, jsonObject.getString(key));
+            }
+        } catch (Exception ignore) {
         }
         return branchUniversalObject;
     }
