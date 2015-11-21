@@ -19,8 +19,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
-import javax.net.ssl.HttpsURLConnection;
-
 /**
  * <p>This class assists with RESTful calls to the Branch API, by using
  * {@link HttpURLConnection} object, and handling all restful calls via one of its GET or POST capable
@@ -153,7 +151,7 @@ class RemoteInterface {
     private ServerResponse make_restful_get(String baseUrl, JSONObject params, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
-        HttpsURLConnection connection = null;
+        HttpURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
@@ -176,7 +174,7 @@ class RemoteInterface {
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
             URL urlObject = new URL(modifiedUrl);
-            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection = (HttpURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
 
