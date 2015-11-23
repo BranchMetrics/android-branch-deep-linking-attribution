@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Iterator;
@@ -190,7 +191,22 @@ class RemoteInterface {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
-        } catch (UnknownHostException ex) {
+        }
+        catch (SocketTimeoutException ex) {
+            // On socket  time out retry the request for retryNumber of times
+            if (retryNumber < prefHelper_.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper_.getRetryInterval());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
+            } else {
+                return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+            }
+        }
+        catch (UnknownHostException ex) {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
@@ -278,8 +294,9 @@ class RemoteInterface {
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
+        JSONObject bodyCopy = new JSONObject();
         try {
-            JSONObject bodyCopy = new JSONObject();
+
             Iterator<?> keys = body.keys();
             while (keys.hasNext()) {
                 String key = (String) keys.next();
@@ -337,6 +354,19 @@ class RemoteInterface {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+        } catch (SocketTimeoutException ex) {
+            // On socket  time out retry the request for retryNumber of times
+            if (retryNumber < prefHelper_.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper_.getRetryInterval());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
+            } else {
+                return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+            }
         } catch (Exception ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
