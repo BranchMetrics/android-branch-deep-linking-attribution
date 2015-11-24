@@ -10,12 +10,12 @@ import org.json.JSONObject;
 /**
  * Abstract class defining the structure of a Branch Server request.
  */
-abstract class ServerRequest {
+public abstract class ServerRequest {
 
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
-    private JSONObject post_;
+    private JSONObject params_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
 
@@ -31,6 +31,7 @@ abstract class ServerRequest {
     public ServerRequest(Context context, String requestPath) {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
+        params_ = new JSONObject();
     }
 
     /**
@@ -43,9 +44,8 @@ abstract class ServerRequest {
      */
     protected ServerRequest(String requestPath, JSONObject post, Context context) {
         requestPath_ = requestPath;
-        post_ = post;
+        params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-
     }
 
     /**
@@ -125,7 +125,7 @@ abstract class ServerRequest {
      *             as key-value pairs.
      */
     protected void setPost(JSONObject post) {
-        post_ = post;
+        params_ = post;
     }
 
     /**
@@ -136,7 +136,29 @@ abstract class ServerRequest {
      * as key-value pairs.
      */
     public JSONObject getPost() {
-        return post_;
+        return params_;
+    }
+
+    /**
+     * Returns a JsonObject with the parameters that needed to be set with the get request.
+     *
+     * @return A {@link JSONObject} representation of get request parameters.
+     */
+    public JSONObject getGetParams() {
+        return params_;
+    }
+
+    /**
+     * Adds a param and its value to the get request
+     *
+     * @param paramKey   A {@link String} value for the get param key
+     * @param paramValue A {@link String} value for the get param value
+     */
+    protected void addGetParam(String paramKey, String paramValue) {
+        try {
+            params_.put(paramKey, paramValue);
+        } catch (JSONException ignore) {
+        }
     }
 
     /**
@@ -150,7 +172,7 @@ abstract class ServerRequest {
     public JSONObject toJSON() {
         JSONObject json = new JSONObject();
         try {
-            json.put(POST_KEY, post_);
+            json.put(POST_KEY, params_);
             json.put(POST_PATH_KEY, requestPath_);
         } catch (JSONException e) {
             return null;

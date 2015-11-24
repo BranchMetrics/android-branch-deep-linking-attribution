@@ -2984,7 +2984,7 @@ public class Branch {
      *
      * @param req The {@link ServerRequest} to execute
      */
-    private void handleNewRequest(ServerRequest req) {
+    public void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
 
@@ -3258,7 +3258,7 @@ public class Branch {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
             if (thisReq_.isGetRequest()) {
-                return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
             } else {
                 return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             }
