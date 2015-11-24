@@ -367,6 +367,9 @@ public class Branch {
     /* Sets to true when the init session params are reported to the app though call back.*/
     private boolean isInitReportedThroughCallBack = false;
 
+    /* List of session state listeners registered */
+    ArrayList<IBranchSessionStateListener> sessionStateListeners_ = new ArrayList<>();
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1285,6 +1288,7 @@ public class Branch {
                 }
             }
             initState_ = SESSION_STATE.UNINITIALISED;
+            BroadcastSessionState(initState_);
         }
     }
 
@@ -3375,10 +3379,12 @@ public class Branch {
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                 }
                             }
+                            BroadcastSessionState(initState_);
                         } else {
                             //Publish success to listeners
                             thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                         }
+
                     }
                     networkCount_ = 0;
                     if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
@@ -4065,5 +4071,76 @@ public class Branch {
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
+    }
+
+    //--------------------Session State Broadcast Methods-------------------//
+
+
+    /**
+     * Register an instance of {@link IBranchSessionStateListener} to listen to state changes
+     *
+     * @param callback An instance of  {@link IBranchSessionStateListener}
+     *                 NOTE : Unregister the listener properly inorder to garbage collect the listener instance.
+     */
+    public void registerForSessionStateChange(IBranchSessionStateListener callback) {
+        if (callback != null) {
+            sessionStateListeners_.add(callback);
+            // Broadcast current state up onregistering
+            if(initState_ == SESSION_STATE.INITIALISED){
+                callback.onSessionStarted(prefHelper_.getSessionID());
+            }
+            else{
+                callback.onSessionClosed();
+            }
+        }
+    }
+
+    /**
+     * Unregister the given {@link IBranchSessionStateListener} instance
+     *
+     * @param callback instance of {@link IBranchSessionStateListener} to unregister
+     */
+    public void unRegisterForSessionStateChange(IBranchSessionStateListener callback) {
+        sessionStateListeners_.remove(callback);
+    }
+
+    /**
+     * Broadcast current Session state to registered {@link IBranchSessionStateListener} instances
+     *
+     * @param state {@link io.branch.referral.Branch.SESSION_STATE} with current session state
+     */
+    public void BroadcastSessionState(SESSION_STATE state) {
+        if (state == SESSION_STATE.INITIALISED) {
+            String sessionId = prefHelper_.getSessionID();
+            for (IBranchSessionStateListener callback : sessionStateListeners_) {
+                if (callback != null) {
+                    callback.onSessionStarted(sessionId);
+                }
+            }
+        } else {
+            for (IBranchSessionStateListener callback : sessionStateListeners_) {
+                if (callback != null) {
+                    callback.onSessionClosed();
+                }
+            }
+        }
+    }
+
+    /**
+     * Listener for Branch session state changes.
+     * Use {@link #registerForSessionStateChange(IBranchSessionStateListener)} to subscribe session state changes
+     */
+    public interface IBranchSessionStateListener {
+        /**
+         * Called when a new session is started.
+         *
+         * @param sessionId {@link String} with value of sessionID
+         */
+        void onSessionStarted(String sessionId);
+
+        /**
+         * Called when the session closes
+         */
+        void onSessionClosed();
     }
 }
