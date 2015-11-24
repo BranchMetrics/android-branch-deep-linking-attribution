@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -537,6 +538,37 @@ public class BranchUniversalObject implements Parcelable {
         } catch (Exception ignore) {
         }
         return branchUniversalObject;
+    }
+
+    //-------------Object flattening methods--------------------//
+
+    /**
+     * Convert the given Json Object to corresponding Json representation
+     * @return A {@link JSONObject} which represent this BUO
+     */
+    public JSONObject convertToJson() {
+        JSONObject buoJsonModel = new JSONObject();
+        try {
+            buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
+            buoJsonModel.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
+            JSONArray keyWordJsonArray = new JSONArray();
+            for (String keyword : keywords_) {
+                keyWordJsonArray.put(keyword);
+            }
+            buoJsonModel.put(Defines.Jsonkey.ContentKeyWords.getKey(), keyWordJsonArray);
+            buoJsonModel.put(Defines.Jsonkey.ContentDesc.getKey(), description_);
+            buoJsonModel.put(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
+            buoJsonModel.put(Defines.Jsonkey.ContentType.getKey(), type_);
+            buoJsonModel.put(Defines.Jsonkey.ContentExpiryTime.getKey(), expirationInMilliSec_);
+
+            Set<String> metadataKeys = metadata_.keySet();
+            for (String metadataKey : metadataKeys) {
+                buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
+            }
+
+        } catch (JSONException ignore) {
+        }
+        return buoJsonModel;
     }
 
     //---------------------Marshaling and Unmarshaling----------//
