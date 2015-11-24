@@ -35,6 +35,7 @@ class RemoteInterface {
     private static final String SDK_VERSION = "1.10.1";
     private static final int DEFAULT_TIMEOUT = 3000;
 
+    private int lastRoundTripTime_ = 0;  // Round trip time taken for last server request in milli sec.
 
     /**
      * Required, default constructor for the class.
@@ -125,6 +126,9 @@ class RemoteInterface {
 
             post.put("sdk", "android" + SDK_VERSION);
             post.put("retryNumber", retryNumber);
+            if (lastRoundTripTime_ > 0) {
+                post.put(Defines.Jsonkey.Last_Round_Trip_Time.getKey(), lastRoundTripTime_);
+            }
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(BRANCH_KEY, prefHelper_.getBranchKey());
                 return true;
@@ -164,10 +168,14 @@ class RemoteInterface {
 
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
+            lastRoundTripTime_ = 0;
+            long reqStartTime = System.currentTimeMillis();
             URL urlObject = new URL(modifiedUrl);
             connection = (HttpsURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
+            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
+
 
             if (connection.getResponseCode() >= 500 &&
                     retryNumber < prefHelper_.getRetryCount()) {
@@ -324,7 +332,10 @@ class RemoteInterface {
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestMethod("POST");
 
+            lastRoundTripTime_ = 0;
+            long reqStartTime = System.currentTimeMillis();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
+            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
             outputStreamWriter.write(bodyCopy.toString());
             outputStreamWriter.flush();
 
