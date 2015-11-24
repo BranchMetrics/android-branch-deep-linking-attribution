@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ class RemoteInterface {
     private static final String SDK_VERSION = "1.10.1";
     private static final int DEFAULT_TIMEOUT = 3000;
 
+    private int lastRoundTripTime_ = 0;  // Round trip time taken for last server request in milli sec.
 
     /**
      * Required, default constructor for the class.
@@ -123,6 +125,9 @@ class RemoteInterface {
 
             post.put("sdk", "android" + SDK_VERSION);
             post.put("retryNumber", retryNumber);
+            if (lastRoundTripTime_ > 0) {
+                post.put(Defines.Jsonkey.Last_Round_Trip_Time.getKey(), lastRoundTripTime_);
+            }
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(BRANCH_KEY, prefHelper_.getBranchKey());
                 return true;
@@ -173,10 +178,14 @@ class RemoteInterface {
 
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
+            lastRoundTripTime_ = 0;
+            long reqStartTime = System.currentTimeMillis();
             URL urlObject = new URL(modifiedUrl);
             connection = (HttpURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
+            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
+
 
             if (connection.getResponseCode() >= 500 &&
                     retryNumber < prefHelper_.getRetryCount()) {
@@ -200,7 +209,22 @@ class RemoteInterface {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
-        } catch (UnknownHostException ex) {
+        }
+        catch (SocketTimeoutException ex) {
+            // On socket  time out retry the request for retryNumber of times
+            if (retryNumber < prefHelper_.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper_.getRetryInterval());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
+            } else {
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+            }
+        }
+        catch (UnknownHostException ex) {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
@@ -288,8 +312,9 @@ class RemoteInterface {
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
+        JSONObject bodyCopy = new JSONObject();
         try {
-            JSONObject bodyCopy = new JSONObject();
+
             Iterator<?> keys = body.keys();
             while (keys.hasNext()) {
                 String key = (String) keys.next();
@@ -317,7 +342,10 @@ class RemoteInterface {
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestMethod("POST");
 
+            lastRoundTripTime_ = 0;
+            long reqStartTime = System.currentTimeMillis();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
+            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
             outputStreamWriter.write(bodyCopy.toString());
             outputStreamWriter.flush();
 
@@ -347,6 +375,19 @@ class RemoteInterface {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+        } catch (SocketTimeoutException ex) {
+            // On socket  time out retry the request for retryNumber of times
+            if (retryNumber < prefHelper_.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper_.getRetryInterval());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
+            } else {
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+            }
         } catch (Exception ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {

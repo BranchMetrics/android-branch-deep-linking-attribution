@@ -78,7 +78,8 @@ public class Defines {
         Params("params"),
 
         External_Intent_URI("external_intent_uri"),
-        External_Intent_Extra("external_intent_extra");
+        External_Intent_Extra("external_intent_extra"),
+        Last_Round_Trip_Time("lrtt");
 
         
         private String key = "";
