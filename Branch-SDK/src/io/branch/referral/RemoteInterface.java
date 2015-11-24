@@ -211,7 +211,7 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
             } else {
-                return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         }
         catch (UnknownHostException ex) {
@@ -376,7 +376,7 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
             } else {
-                return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         } catch (Exception ex) {
             if (log) PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());

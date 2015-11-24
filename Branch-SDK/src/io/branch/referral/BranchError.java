@@ -27,6 +27,8 @@ public class BranchError {
     public static final int ERR_BRANCH_NOT_INSTANTIATED = -109;
     /* Error while creating share options. */
     public static final int ERR_BRANCH_NO_SHARE_OPTION = -110;
+    /* Request Branch server timed out. */
+    public static final int ERR_BRANCH_REQ_TIMED_OUT = -111;
 
     /**
      * <p>Returns the message explaining the error.</p>
@@ -87,6 +89,8 @@ public class BranchError {
                     " Make  sure your Application class is an instance of BranchLikedApp.";
         } else if (statusCode == ERR_BRANCH_NO_SHARE_OPTION) {
             errMsg = " Unable create share options. Couldn't find applications on device to share the link.";
+        } else if (statusCode == ERR_BRANCH_REQ_TIMED_OUT) {
+            errMsg = " Request to Branch server timed out. Please check your internet connectivity";
         } else if (statusCode >= 500) {
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
         } else if (statusCode == 409) {
