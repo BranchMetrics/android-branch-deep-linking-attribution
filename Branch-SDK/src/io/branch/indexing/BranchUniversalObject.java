@@ -259,6 +259,15 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
+     * Return true if this BUO is already expired.
+     *
+     * @return A {@link Boolean} whose value is true if this object is expired.
+     */
+    public boolean isExpired() {
+        return System.currentTimeMillis() > expirationInMilliSec_;
+    }
+
+    /**
      * <p>
      * Get the canonical identifier for this BranchUniversalObject
      * </p>
