@@ -209,8 +209,7 @@ class RemoteInterface {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
-        }
-        catch (SocketTimeoutException ex) {
+        } catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
             if (retryNumber < prefHelper_.getRetryCount()) {
                 try {
@@ -219,12 +218,11 @@ class RemoteInterface {
                     e.printStackTrace();
                 }
                 retryNumber++;
-                return make_restful_get(baseUrl, tag, timeout, retryNumber, log);
+                return make_restful_get(baseUrl, params, tag, timeout, retryNumber, log);
             } else {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
-        }
-        catch (UnknownHostException ex) {
+        } catch (UnknownHostException ex) {
             if (log)
                 PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             return new ServerResponse(tag, NO_CONNECTIVITY_STATUS);
