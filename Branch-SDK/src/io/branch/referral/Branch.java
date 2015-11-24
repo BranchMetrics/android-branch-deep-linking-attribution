@@ -3257,6 +3257,18 @@ public class Branch {
                     || thisReq_ instanceof ServerRequestRegisterView) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
+
+            //In case of an install request, the referrer ID may take some time to update so wait for a second and update the install ID
+            if (thisReq_ instanceof ServerRequestRegisterInstall) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    ((ServerRequestRegisterInstall) thisReq_).updateInstallID(InstallListener.getInstallationID());
+                }
+            }
+
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
             } else {

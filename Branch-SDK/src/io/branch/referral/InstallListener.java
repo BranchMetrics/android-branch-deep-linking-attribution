@@ -21,7 +21,7 @@ import java.util.HashMap;
 public class InstallListener extends BroadcastReceiver {
 
     /* Link identifier on installing app from play store. */
-    private static String installID_ =  PrefHelper.NO_STRING_VALUE;
+    private static volatile String installID_ = PrefHelper.NO_STRING_VALUE;
 
     @Override
     public void onReceive(Context context, Intent intent) {
