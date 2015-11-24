@@ -15,14 +15,12 @@ public abstract class ServerRequest {
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
-    private JSONObject post_;
+    private JSONObject params_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
-
-    private final JSONObject getParamObject;
 
     /**
      * <p>Creates an instance of ServerRequest.</p>
@@ -33,7 +31,7 @@ public abstract class ServerRequest {
     public ServerRequest(Context context, String requestPath) {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
-        getParamObject = new JSONObject();
+        params_ = new JSONObject();
     }
 
     /**
@@ -46,10 +44,8 @@ public abstract class ServerRequest {
      */
     protected ServerRequest(String requestPath, JSONObject post, Context context) {
         requestPath_ = requestPath;
-        post_ = post;
+        params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        getParamObject = new JSONObject();
-
     }
 
     /**
@@ -129,7 +125,7 @@ public abstract class ServerRequest {
      *             as key-value pairs.
      */
     protected void setPost(JSONObject post) {
-        post_ = post;
+        params_ = post;
     }
 
     /**
@@ -140,7 +136,7 @@ public abstract class ServerRequest {
      * as key-value pairs.
      */
     public JSONObject getPost() {
-        return post_;
+        return params_;
     }
 
     /**
@@ -149,7 +145,7 @@ public abstract class ServerRequest {
      * @return A {@link JSONObject} representation of get request parameters.
      */
     public JSONObject getGetParams() {
-        return getParamObject;
+        return params_;
     }
 
     /**
@@ -158,9 +154,9 @@ public abstract class ServerRequest {
      * @param paramKey   A {@link String} value for the get param key
      * @param paramValue A {@link String} value for the get param value
      */
-    public void addGetParam(String paramKey, String paramValue) {
+    protected void addGetParam(String paramKey, String paramValue) {
         try {
-            getParamObject.put(paramKey, paramValue);
+            params_.put(paramKey, paramValue);
         } catch (JSONException ignore) {
         }
     }
@@ -176,7 +172,7 @@ public abstract class ServerRequest {
     public JSONObject toJSON() {
         JSONObject json = new JSONObject();
         try {
-            json.put(POST_KEY, post_);
+            json.put(POST_KEY, params_);
             json.put(POST_PATH_KEY, requestPath_);
         } catch (JSONException e) {
             return null;
