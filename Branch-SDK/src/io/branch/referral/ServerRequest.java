@@ -7,6 +7,9 @@ import android.content.pm.PackageManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Abstract class defining the structure of a Branch Server request.
  */
@@ -262,24 +265,42 @@ public abstract class ServerRequest {
         return extendedReq;
     }
 
+    boolean skipOnTimeOut = false;
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      *
      * @param sysObserver {@link SystemObserver} instance.
      */
-    public void updateGAdsParams(SystemObserver sysObserver) {
-        try {
-            String advertisingId = sysObserver.getAdvertisingId();
-            if (advertisingId != null && getPost() != null) {
-                getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
-            }
-            int latVal = sysObserver.getLATValue();
-            if (getPost() != null) {
-                getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
-            }
+    public void updateGAdsParams(final SystemObserver sysObserver) {
+        final CountDownLatch  latch  = new CountDownLatch(1);
+        skipOnTimeOut = false;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String advertisingId = sysObserver.getAdvertisingId();
+                    if (!skipOnTimeOut && advertisingId != null && getPost() != null) {
+                        getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
+                    }
+                    int latVal = sysObserver.getLATValue();
+                    if (!skipOnTimeOut && getPost() != null) {
+                        getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
+                    }
 
-        } catch (JSONException e) {
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        try {
+            //Wait 2 sec max to receive the GAID and LAT
+            latch.await(2000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+        finally {
+            skipOnTimeOut = true;
         }
     }
 
