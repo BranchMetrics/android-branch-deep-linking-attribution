@@ -3011,9 +3011,6 @@ public class Branch {
 
         requestQueue_.enqueue(req);
         req.onRequestQueued();
-        HashMap<String, String> testMap = new HashMap<>();
-        testMap.put("Extra_data", "Userdata " + req.getRequestPath());
-        addExtraInstrumentationData(testMap);
         processNextQueueItem();
     }
 
