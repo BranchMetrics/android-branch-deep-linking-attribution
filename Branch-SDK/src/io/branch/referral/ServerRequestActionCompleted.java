@@ -26,6 +26,8 @@ class ServerRequestActionCompleted extends ServerRequest {
      */
     public ServerRequestActionCompleted(Context context, String action, JSONObject metadata) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
+        queueTimerId_ = 23;
+        requestTimerId_ = 24;
         JSONObject post = new JSONObject();
 
         try {

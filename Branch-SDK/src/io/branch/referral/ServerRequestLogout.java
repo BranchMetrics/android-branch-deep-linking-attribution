@@ -26,6 +26,8 @@ class ServerRequestLogout extends ServerRequest {
      */
     public ServerRequestLogout(Context context, Branch.LogoutStatusListener callback) {
         super(context, Defines.RequestPath.Logout.getPath());
+        queueTimerId_ = 13;
+        requestTimerId_ = 14;
         callback_ = callback;
         JSONObject post = new JSONObject();
         try {

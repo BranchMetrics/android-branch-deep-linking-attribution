@@ -25,6 +25,8 @@ class ServerRequestGetReferralCount extends ServerRequest {
      */
     public ServerRequestGetReferralCount(Context context, Branch.BranchReferralStateChangedListener callback) {
         super(context, Defines.RequestPath.Referrals.getPath());
+        queueTimerId_ = 15;
+        requestTimerId_ = 16;
         callback_ = callback;
     }
 

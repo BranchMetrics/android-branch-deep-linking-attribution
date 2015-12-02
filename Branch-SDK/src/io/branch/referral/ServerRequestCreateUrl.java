@@ -60,6 +60,8 @@ class ServerRequestCreateUrl extends ServerRequest {
 
         callback_ = callback;
         isAsync_ = async;
+        queueTimerId_ = 19;
+        requestTimerId_ = 20;
 
         linkPost_ = new BranchLinkData();
         try {

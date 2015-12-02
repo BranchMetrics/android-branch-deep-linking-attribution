@@ -29,7 +29,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                                         SystemObserver sysObserver, String installID) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
-
+        queueTimerId_ = 1;
+        requestTimerId_ = 2;
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
