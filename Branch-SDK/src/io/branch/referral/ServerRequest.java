@@ -274,7 +274,7 @@ public abstract class ServerRequest {
     public void timeRequestStart() {
         requestStartTimestamp_ = System.currentTimeMillis();
         if (queueTimerId_ != null && queueStartTimestamp_!= null) {
-            prefHelper_.addTiming(queueTimerId_, requestStartTimestamp_ - queueStartTimestamp_);
+            prefHelper_.recordTiming(queueTimerId_, requestStartTimestamp_ - queueStartTimestamp_);
         }
     }
 
@@ -283,7 +283,7 @@ public abstract class ServerRequest {
      */
     public void timeRequestEnd() {
         if (queueTimerId_ != null && requestStartTimestamp_ != null) {
-            prefHelper_.addTiming(requestTimerId_, System.currentTimeMillis() - requestStartTimestamp_);
+            prefHelper_.recordTiming(requestTimerId_, System.currentTimeMillis() - requestStartTimestamp_);
         }
     }
 

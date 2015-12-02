@@ -993,14 +993,24 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.commit();
     }
 
-    public void addTiming(int timerId, Long timerValue) {
+    /**
+     * <p>Records a length of time, associated with a duration.</p>
+     *
+     * @param timerId A value containing the id (effectively, the name) of the timer.
+     * @param duration The length of time.
+     */
+    public void recordTiming(int timerId, Long duration) {
         try {
             JSONObject existingTimings = new JSONObject(prefHelper_.appSharedPrefs_.getString(KEY_TIMINGS, "{}"));
-            existingTimings.put(Long.toString(timerId), timerValue);
+            existingTimings.put(Long.toString(timerId), duration);
             prefHelper_.prefsEditor_.putString(KEY_TIMINGS, existingTimings.toString());
         } catch (JSONException e) {}
     }
 
+    /**
+     * Get all stored up timings, and clear them out of the system.
+     * @return A map containing timing data (id -> duration).
+     */
     public JSONObject getTimings() {
         try {
             JSONObject timings = new JSONObject(prefHelper_.appSharedPrefs_.getString(KEY_TIMINGS, "{}"));

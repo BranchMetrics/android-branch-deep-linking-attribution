@@ -4077,8 +4077,8 @@ public class Branch {
     }
 
     //------------------- Hidden method for adding timings ------------------//
-    public void addTiming(int timerId, long duration) {
+    public void addTiming(int timerId, long duration) throws Exception {
         if (timerId <= 1000) { throw new Exception("Timer ID must be greater than 1000"); }
-        prefHelper_.addTiming(timerId, duration);
+        prefHelper_.recordTiming(timerId, duration);
     }
 }
