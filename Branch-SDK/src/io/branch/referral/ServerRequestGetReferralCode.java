@@ -47,6 +47,8 @@ class ServerRequestGetReferralCode extends ServerRequest {
                                         String bucket, int calculationType, int location, Branch.BranchReferralInitListener callback) {
         super(context, Defines.RequestPath.GetReferralCode.getPath());
         callback_ = callback;
+        queueTimerId_ = 17;
+        requestTimerId_ = 18;
 
         JSONObject post = new JSONObject();
         try {

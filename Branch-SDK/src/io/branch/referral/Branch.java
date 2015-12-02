@@ -367,6 +367,9 @@ public class Branch {
     /* Sets to true when the init session params are reported to the app though call back.*/
     private boolean isInitReportedThroughCallBack = false;
 
+    /* Key added to all post request to denote timings */
+    private static final String KEY_TIMINGS = "timings";
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -3257,10 +3260,15 @@ public class Branch {
                     || thisReq_ instanceof ServerRequestRegisterView) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
+            thisReq_.timeRequestStart();
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
             } else {
-                return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                JSONObject postBody = thisReq_.getPost();
+                try {
+                    postBody.put(KEY_TIMINGS, prefHelper_.getTimings());
+                } catch (JSONException e) {}
+                return kRemoteInterface_.make_restful_post(postBody, thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             }
         }
 
@@ -3268,6 +3276,7 @@ public class Branch {
         protected void onPostExecute(ServerResponse serverResponse) {
             super.onPostExecute(serverResponse);
             if (serverResponse != null) {
+                thisReq_.timeRequestEnd();
                 try {
                     int status = serverResponse.getStatusCode();
                     hasNetwork_ = true;
@@ -4065,5 +4074,11 @@ public class Branch {
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
+    }
+
+    //------------------- Hidden method for adding timings ------------------//
+    public void addTiming(int timerId, long duration) {
+        if (timerId <= 1000) { throw new Exception("Timer ID must be greater than 1000"); }
+        prefHelper_.addTiming(timerId, duration);
     }
 }

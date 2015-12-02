@@ -44,6 +44,8 @@ class ServerRequestGetRewardHistory extends ServerRequest {
 
         super(context, Defines.RequestPath.GetCreditHistory.getPath());
         callback_ = callback;
+        queueTimerId_ = 27;
+        requestTimerId_ = 28;
 
         JSONObject getCreditHistoryPost = new JSONObject();
         try {

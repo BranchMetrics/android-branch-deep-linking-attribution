@@ -26,7 +26,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     public ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback,
                                      SystemObserver sysObserver) {
         super(context, Defines.RequestPath.RegisterOpen.getPath());
-
+        queueTimerId_ = 3;
+        requestTimerId_ = 4;
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {

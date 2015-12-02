@@ -29,6 +29,8 @@ class ServerRequestGetRewards extends ServerRequest {
     public ServerRequestGetRewards(Context context, Branch.BranchReferralStateChangedListener callback) {
         super(context, Defines.RequestPath.GetCredits.getPath());
         callback_ = callback;
+        queueTimerId_ = 25;
+        requestTimerId_ = 26;
     }
 
     public ServerRequestGetRewards(String requestPath, JSONObject post, Context context) {

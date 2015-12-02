@@ -28,6 +28,8 @@ class ServerRequestValidateReferralCode extends ServerRequest {
         super(context, Defines.RequestPath.ValidateReferralCode.getPath());
 
         callback_ = callback;
+        queueTimerId_ = 7;
+        requestTimerId_ = 8;
         JSONObject post = new JSONObject();
         try {
             post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());

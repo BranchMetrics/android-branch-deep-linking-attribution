@@ -22,6 +22,11 @@ public abstract class ServerRequest {
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
 
+    protected Integer queueTimerId_ = null;
+    protected Integer requestTimerId_ = null;
+    protected Long queueStartTimestamp_ = null;
+    protected Long requestStartTimestamp_ = null;
+
     /**
      * <p>Creates an instance of ServerRequest.</p>
      *
@@ -32,6 +37,7 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
         params_ = new JSONObject();
+        queueStartTimestamp_ = System.currentTimeMillis();
     }
 
     /**
@@ -260,6 +266,25 @@ public abstract class ServerRequest {
         }
 
         return extendedReq;
+    }
+
+    /**
+     * Add queue timing, and begin counting request timing.
+     */
+    public void timeRequestStart() {
+        requestStartTimestamp_ = System.currentTimeMillis();
+        if (queueTimerId_ != null && queueStartTimestamp_!= null) {
+            prefHelper_.addTiming(queueTimerId_, requestStartTimestamp_ - queueStartTimestamp_);
+        }
+    }
+
+    /**
+     * Finish request timing.
+     */
+    public void timeRequestEnd() {
+        if (queueTimerId_ != null && requestStartTimestamp_ != null) {
+            prefHelper_.addTiming(requestTimerId_, System.currentTimeMillis() - requestStartTimestamp_);
+        }
     }
 
     /**

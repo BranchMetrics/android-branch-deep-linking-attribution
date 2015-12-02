@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.util.Log;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -105,6 +106,8 @@ public class PrefHelper {
 
     private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
+
+    private static final String KEY_TIMINGS = "bnc_timings";
 
     /**
      * {@link String} value used by {@link BranchRemoteInterface#connectToDebug()}.
@@ -988,6 +991,24 @@ public class PrefHelper {
     public void setBool(String key, Boolean value) {
         prefHelper_.prefsEditor_.putBoolean(key, value);
         prefHelper_.prefsEditor_.commit();
+    }
+
+    public void addTiming(int timerId, Long timerValue) {
+        try {
+            JSONObject existingTimings = new JSONObject(prefHelper_.appSharedPrefs_.getString(KEY_TIMINGS, "{}"));
+            existingTimings.put(Long.toString(timerId), timerValue);
+            prefHelper_.prefsEditor_.putString(KEY_TIMINGS, existingTimings.toString());
+        } catch (JSONException e) {}
+    }
+
+    public JSONObject getTimings() {
+        try {
+            JSONObject timings = new JSONObject(prefHelper_.appSharedPrefs_.getString(KEY_TIMINGS, "{}"));
+            prefHelper_.prefsEditor_.remove(KEY_TIMINGS);
+            return timings;
+        } catch (JSONException e) {
+            return null;
+        }
     }
 
     /**

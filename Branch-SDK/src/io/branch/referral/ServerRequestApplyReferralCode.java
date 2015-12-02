@@ -30,6 +30,8 @@ class ServerRequestApplyReferralCode extends ServerRequest {
         super(context, Defines.RequestPath.ApplyReferralCode.getPath());
 
         callback_ = callback;
+        queueTimerId_ = 21;
+        requestTimerId_ = 22;
         JSONObject post = new JSONObject();
         try {
             post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());

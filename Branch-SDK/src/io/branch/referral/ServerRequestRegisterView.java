@@ -28,6 +28,8 @@ class ServerRequestRegisterView extends ServerRequest {
     public ServerRequestRegisterView(Context context, BranchUniversalObject branchUniversalObject, SystemObserver sysObserver, BranchUniversalObject.RegisterViewStatusListener callback) {
         super(context, Defines.RequestPath.RegisterView.getPath());
         callback_ = callback;
+        queueTimerId_ = 5;
+        requestTimerId_ = 6;
         JSONObject registerViewPost;
         try {
             registerViewPost = createContentViewJson(branchUniversalObject, sysObserver);

@@ -23,6 +23,8 @@ class ServerRequestRegisterClose extends ServerRequest {
     public ServerRequestRegisterClose(Context context) {
         super(context, Defines.RequestPath.RegisterClose.getPath());
         JSONObject closePost = new JSONObject();
+        queueTimerId_ = 9;
+        requestTimerId_ = 10;
         try {
             closePost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             closePost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());

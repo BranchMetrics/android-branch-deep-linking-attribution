@@ -32,7 +32,8 @@ class ServerRequestRedeemRewards extends ServerRequest {
      */
     public ServerRequestRedeemRewards(Context context, String bucketName, int numOfCreditsToRedeem, Branch.BranchReferralStateChangedListener callback) {
         super(context, Defines.RequestPath.RedeemRewards.getPath());
-
+        queueTimerId_ = 11;
+        requestTimerId_ = 12;
         callback_ = callback;
 
         int availableCredits = prefHelper_.getCreditCount(bucketName);

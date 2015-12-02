@@ -30,6 +30,8 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
 
         callback_ = callback;
         userId_ = userId;
+        queueTimerId_ = 29;
+        requestTimerId_ = 30;
 
         JSONObject post = new JSONObject();
         try {
