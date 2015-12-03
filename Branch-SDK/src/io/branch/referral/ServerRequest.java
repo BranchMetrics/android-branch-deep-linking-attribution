@@ -7,6 +7,9 @@ import android.content.pm.PackageManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Abstract class defining the structure of a Branch Server request.
  */
@@ -18,6 +21,7 @@ abstract class ServerRequest {
     private JSONObject post_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
+    long queueWaitTime_ = 0;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -52,34 +56,32 @@ abstract class ServerRequest {
      * <p>Should be implemented by the child class.Specifies any error associated with request.
      * If there are errors request will not be executed.</p>
      *
+     * @param context Application context.
      * @return A {@link Boolean} which is set to true if there are errors with this request.
-     *         Child class is responsible for implementing its own logic for error check and reporting.
-     *
-     * @param context   Application context.
+     * Child class is responsible for implementing its own logic for error check and reporting.
      */
     public abstract boolean handleErrors(Context context);
 
     /**
      * <p>Called when execution of this request to server succeeds. Child class should implement
-     *  its own logic for handling the post request execution.</p>
+     * its own logic for handling the post request execution.</p>
      *
      * @param response A {@link ServerResponse} object containing server response for this request.
-     *
-     * @param branch Current {@link Branch} instance
+     * @param branch   Current {@link Branch} instance
      */
-    public abstract void onRequestSucceeded(ServerResponse response ,Branch branch);
+    public abstract void onRequestSucceeded(ServerResponse response, Branch branch);
 
     /**
      * <p>Called when there is an error on executing this request. Child class should handle the failure
      * accordingly.</p>
      *
      * @param statusCode A {@link Integer} value specifying http return code or any branch specific error defined in {@link BranchError}.
-     *
      */
     public abstract void handleFailure(int statusCode);
 
     /**
      * Specify whether the request is a GET or POST. Child class has to implement accordingly.
+     *
      * @return A {@link Boolean} value specifying if this request is a GET or not.
      */
     public abstract boolean isGetRequest();
@@ -95,7 +97,7 @@ abstract class ServerRequest {
      *
      * @return A {@link Boolean} whose values is true if request needed to retry on failure.
      */
-    public boolean shouldRetryOnFail(){
+    public boolean shouldRetryOnFail() {
         return false;
     }
 
@@ -125,7 +127,7 @@ abstract class ServerRequest {
      *
      * @return A url for executing this request against the server.
      */
-    public String getRequestUrl(){
+    public String getRequestUrl() {
         return prefHelper_.getAPIBaseUrl() + requestPath_;
     }
 
@@ -135,7 +137,7 @@ abstract class ServerRequest {
      * @param post A {@link JSONObject} containing the post data supplied with the current request
      *             as key-value pairs.
      */
-    protected void setPost(JSONObject post){
+    protected void setPost(JSONObject post) {
         post_ = post;
     }
 
@@ -144,7 +146,7 @@ abstract class ServerRequest {
      * key-value pairs.</p>
      *
      * @return A {@link JSONObject} containing the post data supplied with the current request
-     *         as key-value pairs.
+     * as key-value pairs.
      */
     public JSONObject getPost() {
         return post_;
@@ -155,14 +157,14 @@ abstract class ServerRequest {
      * {@link ServerRequest#POST_KEY} as currently configured.</p>
      *
      * @return A {@link JSONObject} corresponding to the values of {@link ServerRequest} and
-     *         {@link ServerRequest#POST_KEY} as currently configured, or <i>null</i> if
-     *         one or both of those values have not yet been set.
+     * {@link ServerRequest#POST_KEY} as currently configured, or <i>null</i> if
+     * one or both of those values have not yet been set.
      */
     public JSONObject toJSON() {
         JSONObject json = new JSONObject();
         try {
             json.put(POST_KEY, post_);
-            json.put(POST_PATH_KEY,requestPath_);
+            json.put(POST_PATH_KEY, requestPath_);
         } catch (JSONException e) {
             return null;
         }
@@ -273,7 +275,6 @@ abstract class ServerRequest {
     }
 
 
-
     /*
      * Checks if this Application has internet permissions.
      *
@@ -281,8 +282,49 @@ abstract class ServerRequest {
      *
      * @return True if application has internet permission.
      */
-    protected boolean doesAppHasInternetPermission(Context context){
+    protected boolean doesAppHasInternetPermission(Context context) {
         int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
         return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+
+    /**
+     * Called when request is added to teh queue
+     */
+    public void onRequestQueued() {
+        queueWaitTime_ = System.currentTimeMillis();
+    }
+
+    /**
+     * Returns the amount of time this request was in queque
+     *
+     * @return {@link Integer} with value of queued time in milli sec
+     */
+    public long getQueueWaitTime() {
+        long waitTime = 0;
+        if (queueWaitTime_ > 0) {
+            waitTime = System.currentTimeMillis() - queueWaitTime_;
+        }
+        return waitTime;
+    }
+
+    /**
+     * Update the request parameters with instrumentation data
+     *
+     * @param dataMap A Map containing instrumentation data
+     */
+    public void updateInstrumentationData(ConcurrentHashMap<String, String> dataMap) {
+        if (dataMap.size() > 0) {
+            JSONObject instrObj = new JSONObject();
+            Set<String> keys = dataMap.keySet();
+            try {
+                for (String key : keys) {
+                    instrObj.put(key, dataMap.get(key));
+                    dataMap.remove(key);
+                }
+                post_.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
+            } catch (JSONException ignore) {
+            }
+        }
     }
 }

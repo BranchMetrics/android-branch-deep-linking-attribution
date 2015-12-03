@@ -4,7 +4,6 @@ package io.branch.referral;
  * <p>
  * Defines all Json keys associated with branch request parameters.
  * </p>
- *
  */
 class Defines {
 
@@ -64,7 +63,10 @@ class Defines {
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),
         AndroidDeepLinkPath("$android_deeplink_path"),
-        DeepLinkPath("$deeplink_path");
+        DeepLinkPath("$deeplink_path"),
+        Last_Round_Trip_Time("lrtt"),
+        Branch_Instrumentation("instrumentation"),
+        Queue_Wait_Time("qwt");
         
         private String key = "";
 

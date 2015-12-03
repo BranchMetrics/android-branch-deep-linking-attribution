@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -274,6 +275,8 @@ public class Branch {
      */
     private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
+    private final ConcurrentHashMap<String, String> instrumentationExtraData_;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -371,6 +374,7 @@ public class Branch {
         debugHandler_ = new Handler();
         debugStarted_ = false;
         linkCache_ = new HashMap<BranchLinkData, String>();
+        instrumentationExtraData_ = new ConcurrentHashMap<>();
 
     }
 
@@ -2653,6 +2657,7 @@ public class Branch {
             }
         }
         requestQueue_.enqueue(req);
+        req.onRequestQueued();
         processNextQueueItem();
     }
 
@@ -2868,6 +2873,9 @@ public class Branch {
 
         @Override
         protected ServerResponse doInBackground(Void... voids) {
+            //Update queue wait time
+            addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
+
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
             if(thisReq_.isSessionInitRequest()){
@@ -2876,6 +2884,7 @@ public class Branch {
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             } else {
+                thisReq_.updateInstrumentationData(instrumentationExtraData_);
                 return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             }
         }
@@ -3569,6 +3578,28 @@ public class Branch {
         public String getUrlCopiedMessage() {
             return urlCopiedMessage_;
         }
+    }
+
+
+    ///-------Instrumentation additional data---------------///
+
+    /**
+     * Update the extra instrumentation data provided to Branch
+     *
+     * @param instrumentationData A {@link HashMap<String,String>} with key value pairs for instrumentation data.
+     */
+    public void addExtraInstrumentationData(HashMap<String, String> instrumentationData) {
+        instrumentationExtraData_.putAll(instrumentationData);
+    }
+
+    /**
+     * Update the extra instrumentation data provided to Branch
+     *
+     * @param key   A {@link String} Value for instrumentation data key
+     * @param value A {@link String} Value for instrumentation data value
+     */
+    public void addExtraInstrumentationData(String key, String value) {
+        instrumentationExtraData_.put(key, value);
     }
 
 }

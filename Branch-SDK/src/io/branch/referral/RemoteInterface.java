@@ -39,6 +39,7 @@ class RemoteInterface {
 
     private static final String SDK_VERSION = "1.8.11.1";
     private static final int DEFAULT_TIMEOUT = 3000;
+    private int lastRoundTripTime_ = 0;  // Round trip time taken for last server request in milli sec.
 
 
     /**
@@ -194,9 +195,15 @@ class RemoteInterface {
 
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
+            lastRoundTripTime_ = 0;
+            long reqStartTime = System.currentTimeMillis();
             HttpGet request = new HttpGet(modifiedUrl);
             httpClient = getGenericHttpClient(timeout);
             HttpResponse response = httpClient.execute(request);
+            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), "" + lastRoundTripTime_);
+            }
             if (response.getStatusLine().getStatusCode() >= 500 &&
                     retryNumber < prefHelper_.getRetryCount()) {
                 try {
@@ -338,11 +345,16 @@ class RemoteInterface {
                 PrefHelper.Debug("BranchSDK", "posting to " + url);
                 PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
             }
+            lastRoundTripTime_ = 0;
+            long reqStartTime = System.currentTimeMillis();
             HttpPost request = new HttpPost(url);
             request.setEntity(new ByteArrayEntity(bodyCopy.toString().getBytes("UTF8")));
             request.setHeader("Content-type", "application/json");
             httpClient = getGenericHttpClient(timeout);
             HttpResponse response = httpClient.execute(request);
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), "" + lastRoundTripTime_);
+            }
             if (response.getStatusLine().getStatusCode() >= 500
                     && retryNumber < prefHelper_.getRetryCount()) {
                 try {
