@@ -32,8 +32,10 @@ import io.branch.referral.util.ShareSheetStyle;
  * </p>
  */
 public class BranchUniversalObject implements Parcelable {
-    /* Canonical identifier for the content referred. Normally the canonical path for your content in the app or web */
+    /* Canonical identifier for the content referred. */
     private String canonicalIdentifier_;
+    /* Canonical url for the content referred. This would be the corresponding website URL */
+    private String canonicalUrl_;
     /* Title for the content referred by BranchUniversalObject */
     private String title_;
     /* Description for the content referred */
@@ -72,6 +74,7 @@ public class BranchUniversalObject implements Parcelable {
         metadata_ = new HashMap<>();
         keywords_ = new ArrayList<>();
         canonicalIdentifier_ = "";
+        canonicalUrl_ = "";
         title_ = "";
         description_ = "";
         type_ = "";
@@ -89,6 +92,19 @@ public class BranchUniversalObject implements Parcelable {
      */
     public BranchUniversalObject setCanonicalIdentifier(@NonNull String canonicalIdentifier) {
         this.canonicalIdentifier_ = canonicalIdentifier;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Canonical url for the content referred. This would be the corresponding website URL.
+     * </p>
+     *
+     * @param canonicalUrl A {@link String} with value for the canonical url
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchUniversalObject setCanonicalUrl(@NonNull String canonicalUrl) {
+        this.canonicalUrl_ = canonicalUrl;
         return this;
     }
 
@@ -267,6 +283,17 @@ public class BranchUniversalObject implements Parcelable {
      */
     public String getCanonicalIdentifier() {
         return canonicalIdentifier_;
+    }
+
+    /**
+     * <p>
+     * Get the canonical url for this BranchUniversalObject
+     * </p>
+     *
+     * @return A {@link String} with value for the canonical url
+     */
+    public String getCanonicalUrl() {
+        return canonicalUrl_;
     }
 
     /**
@@ -456,6 +483,7 @@ public class BranchUniversalObject implements Parcelable {
 
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentTitle.getKey(), title_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
+        shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentKeyWords.getKey(), getKeywordsJsonArray());
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentDesc.getKey(), description_);
         shortLinkBuilder.addParameters(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
@@ -512,6 +540,9 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.CanonicalIdentifier.getKey())) {
                 branchUniversalObject.canonicalIdentifier_ = jsonObject.getString(Defines.Jsonkey.CanonicalIdentifier.getKey());
             }
+            if (jsonObject.has(Defines.Jsonkey.CanonicalUrl.getKey())) {
+                branchUniversalObject.canonicalUrl_ = jsonObject.getString(Defines.Jsonkey.CanonicalUrl.getKey());
+            }
             if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
                 JSONArray keywordJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
                 for (int i = 0; i < keywordJsonArray.length(); i++) {
@@ -551,6 +582,7 @@ public class BranchUniversalObject implements Parcelable {
         try {
             buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
             buoJsonModel.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
+            buoJsonModel.put(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl_);
             JSONArray keyWordJsonArray = new JSONArray();
             for (String keyword : keywords_) {
                 keyWordJsonArray.put(keyword);
@@ -590,6 +622,7 @@ public class BranchUniversalObject implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(canonicalIdentifier_);
+        dest.writeString(canonicalUrl_);
         dest.writeString(title_);
         dest.writeString(description_);
         dest.writeString(imageUrl_);
@@ -610,6 +643,7 @@ public class BranchUniversalObject implements Parcelable {
         this();
 
         canonicalIdentifier_ = in.readString();
+        canonicalUrl_ = in.readString();
         title_ = in.readString();
         description_ = in.readString();
         imageUrl_ = in.readString();

@@ -112,6 +112,10 @@ class ServerRequestRegisterView extends ServerRequest {
         if (canonicalId != null && canonicalId.trim().length() > 0) {
             paramsObj.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalId);
         }
+        String canonicalUrl = universalObject.getCanonicalUrl();
+        if (canonicalUrl != null && canonicalUrl.trim().length() > 0) {
+            paramsObj.put(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl);
+        }
         String title = universalObject.getTitle();
         if (title != null && title.trim().length() > 0) {
             paramsObj.put(Defines.Jsonkey.ContentTitle.getKey(), universalObject.getTitle());

@@ -68,6 +68,7 @@ public class Defines {
         AndroidAppLinkURL("android_app_link_url"),
 
         CanonicalIdentifier("$canonical_identifier"),
+        CanonicalUrl("$canonical_url"),
         ContentTitle("$og_title"),
         ContentDesc("$og_description"),
         ContentImgUrl("$og_image_url"),

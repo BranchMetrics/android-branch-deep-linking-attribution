@@ -80,6 +80,7 @@ public class MainActivity extends Activity {
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
+                .setCanonicalUrl("https://branch.io/deepviews")
                 .setTitle("My Content Title")
                 .setContentDescription("My Content Description ")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
