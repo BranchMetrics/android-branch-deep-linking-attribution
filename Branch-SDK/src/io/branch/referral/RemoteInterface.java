@@ -183,7 +183,7 @@ class RemoteInterface {
             connection.setReadTimeout(timeout);
             lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
             if (Branch.getInstance() != null) {
-                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), "" + lastRoundTripTime_);
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lastRoundTripTime_));
             }
 
             if (connection.getResponseCode() >= 500 &&
@@ -344,7 +344,7 @@ class RemoteInterface {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
             lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
             if (Branch.getInstance() != null) {
-                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), "" + lastRoundTripTime_);
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lastRoundTripTime_));
             }
             outputStreamWriter.write(bodyCopy.toString());
             outputStreamWriter.flush();

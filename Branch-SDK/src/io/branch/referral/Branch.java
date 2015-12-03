@@ -3257,7 +3257,7 @@ public class Branch {
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             //Update queue wait time
-            addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), "" + thisReq_.getQueueWaitTime());
+            addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
 
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
@@ -4098,6 +4098,7 @@ public class Branch {
     public void addExtraInstrumentationData(String key, String value) {
         instrumentationExtraData_.put(key, value);
     }
+
 
 
 }
