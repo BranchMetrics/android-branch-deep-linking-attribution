@@ -14,7 +14,7 @@ This is the readme file of our open source Android SDK. There's a full demo app 
 
 ## Installation
 
-Current compiled SDK footprint is *187kb*
+**The compiled Android SDK footprint is 187kb**
 
 ### Install library project
 
