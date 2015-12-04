@@ -1289,6 +1289,28 @@ public class Branch {
     }
 
     private boolean readAndStripParam(Uri data, Activity activity) {
+
+        // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
+        try {
+            if (data != null) {
+                prefHelper_.setExternalIntentUri(data.toString());
+            }
+            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                Bundle bundle = activity.getIntent().getExtras();
+                Set<String> extraKeys = bundle.keySet();
+
+                if (extraKeys.size() > 0) {
+                    JSONObject extrasJson = new JSONObject();
+                    for (String key : extraKeys) {
+                        extrasJson.put(key, bundle.get(key));
+                    }
+                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
+
         if (data != null && data.isHierarchical() && activity != null) {
             if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                 prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
@@ -1317,26 +1339,7 @@ public class Branch {
             }
         }
 
-        // If not started by Branch then check if there is any external URI on extra params
-        try {
-            if (data != null) {
-                prefHelper_.setExternalIntentUri(data.toString());
-            }
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                Bundle bundle = activity.getIntent().getExtras();
-                Set<String> extraKeys = bundle.keySet();
 
-                if (extraKeys.size() > 0) {
-                    JSONObject extrasJson = new JSONObject();
-                    for (String key : extraKeys) {
-                        extrasJson.put(key, bundle.get(key));
-                    }
-                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
-                }
-            }
-        } catch (Exception ignore) {
-
-        }
 
 
         return false;
