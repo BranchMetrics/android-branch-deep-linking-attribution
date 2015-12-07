@@ -66,6 +66,8 @@ public class Defines {
         DeepLinkPath("$deeplink_path"),
 
         AndroidAppLinkURL("android_app_link_url"),
+        AndroidPushNotificationKey("branch"),
+        AndroidPushIdentifier("push_identifier"),
 
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle("$og_title"),
