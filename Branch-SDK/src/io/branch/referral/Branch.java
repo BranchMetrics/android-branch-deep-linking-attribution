@@ -1289,6 +1289,16 @@ public class Branch {
     }
 
     private boolean readAndStripParam(Uri data, Activity activity) {
+
+        //Check for any push identifier in case app is launched by a push notification
+        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+            String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+            if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                prefHelper_.setPushIdentifier(pushIdentifier);
+                return false;
+            }
+        }
+        //Check for link clcik id otr for app link
         if (data != null && data.isHierarchical() && activity != null) {
             if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                 prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
@@ -1313,6 +1323,7 @@ public class Branch {
                         prefHelper_.setAppLink(data.toString());
                         return false;
                     }
+
                 }
             }
         }
@@ -1337,8 +1348,6 @@ public class Branch {
         } catch (Exception ignore) {
 
         }
-
-
         return false;
     }
 

@@ -45,6 +45,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
             }
+            if (!prefHelper_.getPushIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), prefHelper_.getPushIdentifier());
+            }
             // External URI or Extras if exist
             if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
@@ -74,6 +77,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
             } else {

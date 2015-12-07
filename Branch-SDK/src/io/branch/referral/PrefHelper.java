@@ -85,6 +85,7 @@ public class PrefHelper {
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
     private static final String KEY_APP_LINK = "bnc_app_link";
+    private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
@@ -577,6 +578,24 @@ public class PrefHelper {
     }
 
     /**
+     * <p> Set the KEY_PUSH_IDENTIFIER {@link String} values that has been started the application. </p>
+     *
+     * @param pushIdentifier The Branch url with the push notification which started the app.
+     */
+    public void setPushIdentifier(String pushIdentifier) {
+        setString(KEY_PUSH_IDENTIFIER, pushIdentifier);
+    }
+
+    /**
+     * <p> Get the branch url in push payload which started the application.</p>
+     *
+     * @return A {@link String} value of push identifier
+     */
+    public String getPushIdentifier() {
+        return getString(KEY_PUSH_IDENTIFIER);
+    }
+
+    /**
      * <p>Gets the session parameters as currently set in preferences.</p>
      * <p/>
      * <p>Parameters are stored in JSON format, and must be parsed prior to access.</p>
@@ -1000,11 +1019,13 @@ public class PrefHelper {
         String linkClickID = getLinkClickID();
         String linkClickIdentifier = getLinkClickIdentifier();
         String appLink = getAppLink();
+        String pushIdentifier = getPushIdentifier();
         prefsEditor_.clear();
 
         setLinkClickID(linkClickID);
         setLinkClickIdentifier(linkClickIdentifier);
         setAppLink(appLink);
+        setPushIdentifier(pushIdentifier);
         prefHelper_.prefsEditor_.commit();
     }
 
