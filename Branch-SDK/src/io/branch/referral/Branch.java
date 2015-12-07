@@ -285,6 +285,9 @@ public class Branch {
      */
     private static final int PREVENT_CLOSE_TIMEOUT = 500;
 
+    /* Json object containing key-value pairs for debugging deep linking */
+    private JSONObject deeplinkDebugParams_;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -392,7 +395,6 @@ public class Branch {
         debugHandler_ = new Handler();
         debugStarted_ = false;
         linkCache_ = new HashMap<>();
-
     }
 
 
@@ -655,6 +657,15 @@ public class Branch {
     @Deprecated
     public void setDebug() {
         prefHelper_.setExternDebug();
+    }
+
+    /**
+     * Sets the key-value pairs for debugging the deep link. The key-value set in debug mode is given back with other deep link data on branch init session.
+     * This method should be called from onCreate() of activity which listens to Branch Init Session callbacks
+     * @param debugParams A {@link JSONObject} containing key-value pairs for debugging branch deep linking
+     */
+    public void setDeepLinkDebugMode(JSONObject debugParams){
+        deeplinkDebugParams_ = debugParams;
     }
 
     /**
@@ -1702,7 +1713,9 @@ public class Branch {
      */
     public JSONObject getFirstReferringParams() {
         String storedParam = prefHelper_.getInstallParams();
-        return convertParamsStringToDictionary(storedParam);
+        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
+        firstReferringParams = appendDebugParams(firstReferringParams);
+        return firstReferringParams;
     }
 
     /**
@@ -1717,7 +1730,33 @@ public class Branch {
      */
     public JSONObject getLatestReferringParams() {
         String storedParam = prefHelper_.getSessionParams();
-        return convertParamsStringToDictionary(storedParam);
+        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
+        latestParams = appendDebugParams(latestParams);
+        return latestParams;
+    }
+
+    /**
+     * Append the deep link debug params to the original params
+     *
+     * @param originalParams A {@link JSONObject} original referrer parameters
+     * @return A new {@link JSONObject} with debug params appended.
+     */
+    private JSONObject appendDebugParams(JSONObject originalParams) {
+        try {
+            if (originalParams != null && deeplinkDebugParams_ != null) {
+                Iterator<String> keys = deeplinkDebugParams_.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    originalParams.put(key, deeplinkDebugParams_.get(key));
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return originalParams;
+    }
+
+    public JSONObject getDeeplinkDebugParams(){
+        return deeplinkDebugParams_;
     }
 
 

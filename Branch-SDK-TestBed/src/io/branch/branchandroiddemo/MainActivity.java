@@ -305,6 +305,15 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Add optional deep link debug params
+//        try {
+//            JSONObject debugObj = new JSONObject();
+//            debugObj.put("DeeplinkTestKey1", "DeeplinkTestValue1");
+//            debugObj.put("DeeplinkTestKey2", "DeeplinkTestValue2");
+//            Branch.getInstance().setDeepLinkDebugMode(debugObj);
+//        }catch (JSONException ignore){
+//        }
+
     }
 
     @Override
