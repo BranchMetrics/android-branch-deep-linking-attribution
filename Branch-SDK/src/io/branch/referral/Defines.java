@@ -73,6 +73,9 @@ public class Defines {
         ContentTitle(Branch.OG_TITLE),
         ContentDesc(Branch.OG_DESC),
         ContentImgUrl(Branch.OG_IMAGE_URL),
+        CanonicalUrl("$canonical_url"),
+
+
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
         ContentKeyWords("$keywords"),

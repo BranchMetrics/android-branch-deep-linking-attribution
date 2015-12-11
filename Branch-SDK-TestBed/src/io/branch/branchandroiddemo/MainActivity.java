@@ -44,12 +44,13 @@ public class MainActivity extends Activity {
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
+                .setCanonicalUrl("https://branch.io/deepviews")
                 .setTitle("My Content Title")
                 .setContentDescription("My Content Description ")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
                 .setContentType("application/vnd.businessobjects")
-                .setContentExpiration(new Date(1476566432000L))
+                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
                 .addContentMetadata("Metadata_Key1", "Metadata_value1")

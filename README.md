@@ -281,6 +281,9 @@ The universal object is where you define all of the custom metadata associated w
  			// The identifier is what Branch will use to de-dupe the content across many different Universal Objects
             .setCanonicalIdentifier("item/12345")
 
+            // The canonical URL for SEO purposes (optional)
+            .setCanonicalUrl("https://branch.io/deepviews")
+
             // This is where you define the open graph structure and how the object will appear on Facebook or in a deepview
             .setTitle("My Content Title")
             .setContentDescription("My Content Description")
