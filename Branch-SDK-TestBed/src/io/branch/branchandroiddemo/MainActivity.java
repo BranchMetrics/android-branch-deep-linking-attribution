@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -27,32 +26,9 @@ import io.branch.referral.util.ShareSheetStyle;
 public class MainActivity extends Activity {
     Branch branch;
 
-    public enum SESSION_MANAGEMENT_MODE {
-        AUTO,    /* Branch SDK Manages the session for you. For this mode minimum API level should
-                 be 14 or above. Make sure to instantiate {@link BranchApp} class to use this mode. */
-
-        MANUAL  /* You are responsible for managing the session. Need to call initialiseSession() and
-                closeSession() on activity onStart() and onStop() respectively. */
-    }
-
-    /* Current mode for the Session Management */
-    public static SESSION_MANAGEMENT_MODE sessionMode = SESSION_MANAGEMENT_MODE.AUTO;
-
     EditText txtShortUrl;
-    Button cmdRefreshShortUrl;
     TextView txtInstallCount;
     TextView txtRewardBalance;
-    TextView txtEventCount;
-    Button cmdRefreshCounts;
-    Button cmdRedeemFive;
-    Button cmdRefreshReward;
-    Button cmdCommitBuy;
-    Button cmdCommitBuyMetadata;
-    Button cmdIdentifyUser;
-    Button cmdLogoutUser;
-    Button cmdPrintInstallParams;
-    Button cmdGetCreditHistory;
-    Button cmdReferralCode;
 
     BranchUniversalObject branchUniversalObject;
 
@@ -62,20 +38,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
-        cmdRefreshShortUrl = (Button) findViewById(R.id.cmdRefreshShortURL);
         txtInstallCount = (TextView) findViewById(R.id.txtInstallCount);
-        txtEventCount = (TextView) findViewById(R.id.txtEventCount);
         txtRewardBalance = (TextView) findViewById(R.id.txtRewardBalance);
-        cmdRefreshCounts = (Button) findViewById(R.id.cmdRefreshCounts);
-        cmdRedeemFive = (Button) findViewById(R.id.cmdRedeemFive);
-        cmdRefreshReward = (Button) findViewById(R.id.cmdRefreshReward);
-        cmdCommitBuy = (Button) findViewById(R.id.cmdCommitBuyAction);
-        cmdIdentifyUser = (Button) findViewById(R.id.cmdIdentifyUser);
-        cmdLogoutUser = (Button) findViewById(R.id.cmdClearUser);
-        cmdPrintInstallParams = (Button) findViewById(R.id.cmdPrintInstallParam);
-        cmdCommitBuyMetadata = (Button) findViewById(R.id.cmdCommitBuyMetadataAction);
-        cmdGetCreditHistory = (Button) findViewById(R.id.cmdGetCreditHistory);
-        cmdReferralCode = (Button) findViewById(R.id.cmdReferralCode);
 
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
@@ -92,7 +56,7 @@ public class MainActivity extends Activity {
                 .addContentMetadata("Metadata_Key2", "Metadata_value2");
 
 
-        cmdIdentifyUser.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 branch.setIdentity("test_user_10", new BranchReferralInitListener() {
@@ -108,7 +72,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        cmdLogoutUser.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdClearUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 branch.logout(new Branch.LogoutStatusListener() {
@@ -120,11 +84,10 @@ public class MainActivity extends Activity {
 
                 txtRewardBalance.setText("rewards = ");
                 txtInstallCount.setText("install count =");
-                txtEventCount.setText("buy count =");
             }
         });
 
-        cmdPrintInstallParams.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdPrintInstallParam).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 JSONObject obj = branch.getFirstReferringParams();
@@ -132,7 +95,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        cmdRefreshShortUrl.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdRefreshShortURL).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
 
@@ -160,27 +123,8 @@ public class MainActivity extends Activity {
 
         });
 
-        cmdRefreshCounts.setOnClickListener(new OnClickListener() {
-            @SuppressWarnings("deprecation")
-            @Override
-            public void onClick(View v) {
-                branch.loadActionCounts(new BranchReferralStateChangedListener() {
-                    @SuppressWarnings("deprecation")
-                    @Override
-                    public void onStateChanged(boolean changed, BranchError error) {
-                        if (error != null) {
-                            Log.i("BranchTestBed", "branch load action count failed. Caused by -" + error.getMessage());
-                        } else {
-                            Log.i("BranchTestBed", "changed = " + changed);
-                            txtInstallCount.setText("install total = " + branch.getTotalCountsForAction("install") + ", unique = " + branch.getUniqueCountsForAction("install"));
-                            txtEventCount.setText("buy total = " + branch.getTotalCountsForAction("buy") + ", unique = " + branch.getUniqueCountsForAction("buy"));
-                        }
-                    }
-                });
-            }
-        });
 
-        cmdRefreshReward.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdRefreshReward).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 branch.loadRewards(new BranchReferralStateChangedListener() {
@@ -197,7 +141,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        cmdRedeemFive.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdRedeemFive).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 branch.redeemRewards(5, new BranchReferralStateChangedListener() {
@@ -218,14 +162,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        cmdCommitBuy.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 branch.userCompletedAction("buy");
             }
         });
 
-        cmdCommitBuyMetadata.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdCommitBuyMetadataAction).setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
@@ -243,7 +187,7 @@ public class MainActivity extends Activity {
 
         });
 
-        cmdGetCreditHistory.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdGetCreditHistory).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i("BranchTestBed", "Getting credit history...");
@@ -252,7 +196,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        cmdReferralCode.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.cmdReferralCode).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i("BranchTestBed", "Navigating to Referral Code...");
@@ -261,8 +205,14 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                branchUniversalObject.registerView();
+            }
+        });
+
         findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
-            @SuppressWarnings("deprecation")
             @Override
             public void onClick(View view) {
                 JSONObject obj = new JSONObject();
@@ -277,6 +227,8 @@ public class MainActivity extends Activity {
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
 
+
+                //noinspection deprecation
                 ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
                         .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Save this URl", "Link added to clipboard")
                         .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
@@ -310,13 +262,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-
-        if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
-            branch = Branch.getInstance(this);
-        } else {
-            branch = Branch.getInstance();
-        }
-        //branch.disableTouchDebugging();
+        branch = Branch.getInstance();
 
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
@@ -341,23 +287,10 @@ public class MainActivity extends Activity {
 
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        branchUniversalObject.registerView();
-    }
 
     @Override
     public void onNewIntent(Intent intent) {
         this.setIntent(intent);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (sessionMode != SESSION_MANAGEMENT_MODE.AUTO) {
-            branch.closeSession();
-        }
     }
 
     @Override
@@ -370,7 +303,6 @@ public class MainActivity extends Activity {
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
             startActivity(i);
-
         }
     }
 }

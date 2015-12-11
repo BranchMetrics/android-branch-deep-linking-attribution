@@ -22,7 +22,6 @@ import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
 
 public class ReferralCodeActivity extends Activity {
-    Branch branch;
 
     EditText txtReferralCode;
     EditText txtAmount;
@@ -75,7 +74,7 @@ public class ReferralCodeActivity extends Activity {
                     }
                 }
 
-                branch.getReferralCode(prefix, amount, expiration, null, getCalculationType(), getLocation(), new BranchReferralInitListener() {
+                Branch.getInstance().getReferralCode(prefix, amount, expiration, null, getCalculationType(), getLocation(), new BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(JSONObject referralCode, BranchError error) {
                         if (error != null) {
@@ -103,7 +102,7 @@ public class ReferralCodeActivity extends Activity {
 
                 final String referral_code = txtReferralCode.getText().toString();
                 if (referral_code.length() > 0) {
-                    branch.validateReferralCode(referral_code, new BranchReferralInitListener() {
+                    Branch.getInstance().validateReferralCode(referral_code, new BranchReferralInitListener() {
                         @Override
                         public void onInitFinished(JSONObject referralCode, BranchError error) {
                             if (error != null) {
@@ -139,7 +138,7 @@ public class ReferralCodeActivity extends Activity {
 
                 final String referral_code = txtReferralCode.getText().toString();
                 if (referral_code.length() > 0) {
-                    branch.applyReferralCode(referral_code, new BranchReferralInitListener() {
+                    Branch.getInstance().applyReferralCode(referral_code, new BranchReferralInitListener() {
                         @Override
                         public void onInitFinished(JSONObject referralCode, BranchError error) {
                             if (error != null) {
@@ -193,23 +192,5 @@ public class ReferralCodeActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-            branch = Branch.getInstance();
-            branch.initSession(this);
-        } else {
-            branch = Branch.getInstance();
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-            branch.closeSession();
-        }
-    }
 
 }

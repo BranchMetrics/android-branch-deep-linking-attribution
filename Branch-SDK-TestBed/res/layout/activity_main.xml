@@ -19,6 +19,8 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/editReferralShortUrl"
         android:text="Refresh Short URL"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"
         />
 
     <TextView
@@ -28,7 +30,8 @@
         android:layout_marginTop="5dp"
         android:padding="5dp"
         android:text="credits = "
-        android:layout_below="@+id/cmdRefreshShortURL"/>
+        android:layout_below="@+id/cmdRefreshShortURL"
+        android:textColor="@android:color/white"/>
 
     <TextView
         android:id="@+id/txtInstallCount"
@@ -36,57 +39,44 @@
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:text="install count = "
-        android:layout_below="@+id/txtRewardBalance"/>
+        android:layout_below="@+id/txtRewardBalance"
+        android:textColor="@android:color/white"
+        />
 
-    <TextView
-        android:id="@+id/txtEventCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="buy count = "
-        android:layout_below="@+id/txtInstallCount"/>
 
-    <Button
-        android:id="@+id/cmdRefreshCounts"
-        android:layout_width="130dp"
-        android:layout_height="40dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignRight="@+id/cmdRefreshReward"
-        android:layout_below="@+id/txtEventCount"
-        android:text="Refresh Counts"
-        android:textSize="14sp" />
+
 
     <Button
         android:id="@+id/cmdIdentifyUser"
-        android:layout_width="140dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
-        android:layout_alignLeft="@+id/cmdClearUser"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/txtEventCount"
+        android:layout_below="@+id/txtInstallCount"
         android:text="Identify User"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
     <Button
         android:id="@+id/cmdRedeemFive"
-        android:layout_width="130dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignRight="@+id/cmdRefreshCounts"
-        android:layout_below="@+id/cmdRefreshCounts"
         android:layout_marginTop="5dp"
         android:text="Redeem 5"
-        android:textSize="14sp" />
+        android:layout_below="@+id/txtInstallCount"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
     <Button
         android:id="@+id/cmdClearUser"
-        android:layout_width="140dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
-        android:layout_alignLeft="@+id/cmdPrintInstallParam"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/cmdRefreshCounts"
+        android:layout_below="@+id/cmdIdentifyUser"
         android:layout_marginTop="5dp"
         android:text="Clear User"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
     <Button
         android:id="@+id/cmdRefreshReward"
@@ -96,71 +86,92 @@
         android:layout_below="@+id/cmdRedeemFive"
         android:layout_marginTop="5dp"
         android:text="Refresh Rewards"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
-    <Button
-        android:id="@+id/cmdPrintInstallParam"
-        android:layout_width="150dp"
-        android:layout_height="40dp"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/cmdRedeemFive"
-        android:layout_marginTop="5dp"
-        android:text="Print Install Param"
-        android:textSize="14sp" />
+
 
     <Button
         android:id="@+id/cmdCommitBuyAction"
-        android:layout_width="130dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignRight="@+id/cmdRefreshReward"
         android:layout_below="@+id/cmdRefreshReward"
         android:layout_marginTop="5dp"
         android:text="Execute Buy"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
     <Button
         android:id="@+id/cmdCommitBuyMetadataAction"
-        android:layout_width="140dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
-        android:layout_alignLeft="@+id/cmdPrintInstallParam"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/cmdRefreshReward"
         android:layout_marginTop="5dp"
         android:text="Buy with metadata"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
     <Button
         android:id="@+id/cmdGetCreditHistory"
-        android:layout_width="130dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignRight="@+id/cmdCommitBuyAction"
         android:layout_below="@+id/cmdCommitBuyAction"
         android:layout_marginTop="5dp"
         android:text="Get Credit History"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
     <Button
         android:id="@+id/cmdReferralCode"
-        android:layout_width="140dp"
+        android:layout_width="150dp"
         android:layout_height="40dp"
-        android:layout_alignLeft="@+id/cmdCommitBuyMetadataAction"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/cmdCommitBuyMetadataAction"
         android:layout_marginTop="5dp"
         android:text="Referral Code"
-        android:textSize="14sp" />
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
 
-    <TextView
-        android:id="@+id/share_btn"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/cmdPrintInstallParam"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/cmdReferralCode"
-        android:textSize="21sp"
+        android:text="Print Install Param"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:id="@+id/report_view_btn"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/cmdPrintInstallParam"
+        android:text="Report View"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:gravity="center"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:id="@+id/share_btn"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/report_view_btn"
         android:text="Share Link"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="5dp"
+        android:gravity="center"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"/>
+
+
 
 </RelativeLayout>
 

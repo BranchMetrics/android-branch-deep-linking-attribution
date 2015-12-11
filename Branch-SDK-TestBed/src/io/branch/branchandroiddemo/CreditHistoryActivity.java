@@ -45,15 +45,10 @@ public class CreditHistoryActivity extends Activity {
         super.onStart();
 
         final CreditHistoryActivity self = this;
+        branch = Branch.getInstance();
 
-        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-            branch = Branch.getInstance();
-            branch.initSession(this);
-        } else {
-            branch = Branch.getInstance();
-        }
         branch.getCreditHistory(new BranchListResponseListener() {
-            @SuppressLint("NewApi")
+
             public void onReceivingResponse(JSONArray history, BranchError error) {
                 ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
                 if (error != null) {
@@ -93,14 +88,6 @@ public class CreditHistoryActivity extends Activity {
             }
         });
 
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (MainActivity.sessionMode != MainActivity.SESSION_MANAGEMENT_MODE.AUTO) {
-            branch.closeSession();
-        }
     }
 
     private class CreditHistoryArrayAdaptor extends BaseAdapter {
