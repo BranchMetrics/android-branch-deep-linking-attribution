@@ -1290,6 +1290,26 @@ public class Branch {
 
     private boolean readAndStripParam(Uri data, Activity activity) {
 
+        // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
+        try {
+            if (data != null) {
+                prefHelper_.setExternalIntentUri(data.toString());
+            }
+            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                Bundle bundle = activity.getIntent().getExtras();
+                Set<String> extraKeys = bundle.keySet();
+
+                if (extraKeys.size() > 0) {
+                    JSONObject extrasJson = new JSONObject();
+                    for (String key : extraKeys) {
+                        extrasJson.put(key, bundle.get(key));
+                    }
+                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
         //Check for any push identifier in case app is launched by a push notification
         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
             String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
@@ -1298,7 +1318,8 @@ public class Branch {
                 return false;
             }
         }
-        //Check for link clcik id otr for app link
+
+        //Check for link click id or app link
         if (data != null && data.isHierarchical() && activity != null) {
             if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                 prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
@@ -1326,27 +1347,6 @@ public class Branch {
 
                 }
             }
-        }
-
-        // If not started by Branch then check if there is any external URI on extra params
-        try {
-            if (data != null) {
-                prefHelper_.setExternalIntentUri(data.toString());
-            }
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                Bundle bundle = activity.getIntent().getExtras();
-                Set<String> extraKeys = bundle.keySet();
-
-                if (extraKeys.size() > 0) {
-                    JSONObject extrasJson = new JSONObject();
-                    for (String key : extraKeys) {
-                        extrasJson.put(key, bundle.get(key));
-                    }
-                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
-                }
-            }
-        } catch (Exception ignore) {
-
         }
         return false;
     }
