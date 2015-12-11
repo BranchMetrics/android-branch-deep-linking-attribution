@@ -1744,6 +1744,9 @@ public class Branch {
     private JSONObject appendDebugParams(JSONObject originalParams) {
         try {
             if (originalParams != null && deeplinkDebugParams_ != null) {
+                if (deeplinkDebugParams_.length() > 0) {
+                    Log.w(TAG, "You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+                }
                 Iterator<String> keys = deeplinkDebugParams_.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
@@ -1755,7 +1758,10 @@ public class Branch {
         return originalParams;
     }
 
-    public JSONObject getDeeplinkDebugParams(){
+    public JSONObject getDeeplinkDebugParams() {
+        if (deeplinkDebugParams_ != null && deeplinkDebugParams_.length() > 0) {
+            Log.w(TAG, "You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+        }
         return deeplinkDebugParams_;
     }
 
