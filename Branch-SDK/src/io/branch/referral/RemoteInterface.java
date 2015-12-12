@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -196,12 +197,20 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_get(baseUrl, params, tag, timeout, retryNumber, log);
             } else {
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                    return processEntityForJSON(connection.getErrorStream(),
-                            connection.getResponseCode(), tag, log, null);
-                } else {
-                    return processEntityForJSON(connection.getInputStream(),
-                            connection.getResponseCode(), tag, log, null);
+                try {
+                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                        return processEntityForJSON(connection.getErrorStream(),
+                                connection.getResponseCode(), tag, log, null);
+                    } else {
+                        return processEntityForJSON(connection.getInputStream(),
+                                connection.getResponseCode(), tag, log, null);
+                    }
+                } catch (FileNotFoundException ex) {
+                    // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
+                    if (log) {
+                        PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
+                    }
+                    return processEntityForJSON(null, connection.getResponseCode(), tag, log, null);
                 }
             }
         } catch (SocketException ex) {
@@ -359,10 +368,18 @@ class RemoteInterface {
                 retryNumber++;
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
             } else {
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                    return processEntityForJSON(connection.getErrorStream(), connection.getResponseCode(), tag, log, linkData);
-                } else {
-                    return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                try {
+                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                        return processEntityForJSON(connection.getErrorStream(), connection.getResponseCode(), tag, log, linkData);
+                    } else {
+                        return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                    }
+                } catch (FileNotFoundException ex) {
+                    // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
+                    if (log) {
+                        PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
+                    }
+                    return processEntityForJSON(null, connection.getResponseCode(), tag, log, linkData);
                 }
             }
 
