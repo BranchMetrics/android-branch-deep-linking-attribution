@@ -6,9 +6,11 @@ import android.content.pm.PackageManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -21,6 +23,7 @@ public abstract class ServerRequest {
     private JSONObject params_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
+    long queueWaitTime_ = 0;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -315,5 +318,45 @@ public abstract class ServerRequest {
     protected boolean doesAppHasInternetPermission(Context context) {
         int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
         return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * Called when request is added to teh queue
+     */
+    public void onRequestQueued() {
+        queueWaitTime_ = System.currentTimeMillis();
+    }
+
+    /**
+     * Returns the amount of time this request was in queque
+     *
+     * @return {@link Integer} with value of queued time in milli sec
+     */
+    public long getQueueWaitTime() {
+        long waitTime = 0;
+        if (queueWaitTime_ > 0) {
+            waitTime = System.currentTimeMillis() - queueWaitTime_;
+        }
+        return waitTime;
+    }
+
+    /**
+     * Update the request parameters with instrumentation data
+     *
+     * @param dataMap A Map containing instrumentation data
+     */
+    public void updateInstrumentationData(ConcurrentHashMap<String, String> dataMap) {
+        if (dataMap.size() > 0) {
+            JSONObject instrObj = new JSONObject();
+            Set<String> keys = dataMap.keySet();
+            try {
+                for (String key : keys) {
+                    instrObj.put(key, dataMap.get(key));
+                    dataMap.remove(key);
+                }
+                params_.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
+            } catch (JSONException ignore) {
+            }
+        }
     }
 }

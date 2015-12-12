@@ -125,9 +125,6 @@ class RemoteInterface {
 
             post.put("sdk", "android" + SDK_VERSION);
             post.put("retryNumber", retryNumber);
-            if (lastRoundTripTime_ > 0) {
-                post.put(Defines.Jsonkey.Last_Round_Trip_Time.getKey(), lastRoundTripTime_);
-            }
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(BRANCH_KEY, prefHelper_.getBranchKey());
                 return true;
@@ -185,7 +182,9 @@ class RemoteInterface {
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
             lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
-
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lastRoundTripTime_));
+            }
 
             if (connection.getResponseCode() >= 500 &&
                     retryNumber < prefHelper_.getRetryCount()) {
@@ -344,6 +343,9 @@ class RemoteInterface {
             long reqStartTime = System.currentTimeMillis();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
             lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lastRoundTripTime_));
+            }
             outputStreamWriter.write(bodyCopy.toString());
             outputStreamWriter.flush();
 
