@@ -7,7 +7,7 @@ This is a repository of our open source Android SDK, and the information present
 This is the readme file of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
 
 ## Additional Resources
-- [Integration guide](https://dev.branch.io/recipes/quickstart_guide/android/) *Start Here*
+- [Integration guide](https://dev.branch.io/recipes/add_the_sdk/android/) *Start Here*
 - [Changelog](https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/ChangeLog.md)
 - [Testing](https://dev.branch.io/recipes/testing_your_integration/android/)
 - [Support portal, FAQ](http://support.branch.io)
