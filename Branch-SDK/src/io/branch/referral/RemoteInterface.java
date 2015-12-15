@@ -352,6 +352,7 @@ class RemoteInterface {
             request.setHeader("Content-type", "application/json");
             httpClient = getGenericHttpClient(timeout);
             HttpResponse response = httpClient.execute(request);
+            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
             if (Branch.getInstance() != null) {
                 Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), "" + lastRoundTripTime_);
             }
