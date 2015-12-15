@@ -6,7 +6,6 @@ import android.content.Intent;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.HashMap;
 
 /**
  * <p> Class for listening installation referrer params. Add this class to your manifest in order to get a referrer info </p>
@@ -29,23 +28,28 @@ public class InstallListener extends BroadcastReceiver {
         if(rawReferrerString != null) {
             try {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
-                HashMap<String, String> referrerMap = new HashMap<String, String>();
                 String[] referralParams = rawReferrerString.split("&");
 
                 for (String referrerParam : referralParams) {
-                    String[] keyValue  =  referrerParam.split("=");
-                    if (keyValue.length > 1) { // To make sure that there is one key value pair in referrer
-                        referrerMap.put(URLDecoder.decode(keyValue[0], "UTF-8"), URLDecoder.decode(keyValue[1], "UTF-8"));
+                    // Check for "link_click_id-123456" format
+                    if(referrerParam.startsWith(Defines.Jsonkey.LinkClickIDNonEncoded.getKey())){
+                        installID_ = referrerParam.replace(Defines.Jsonkey.LinkClickIDNonEncoded.getKey(),"");
+                        installID_ =  URLDecoder.decode(installID_, "UTF-8");
+                        break;
                     }
-                }
+                    // Check for "link_click_id=123456" format
+                    else {
+                        String[] keyValue = referrerParam.split("=");
+                        if (keyValue.length > 1 && keyValue[0].equalsIgnoreCase(Defines.Jsonkey.LinkClickID.getKey())) {
+                            installID_ = URLDecoder.decode(keyValue[1], "UTF-8");
+                            break;
+                        }
+                    }
 
-                if(referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())){
-                    installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
         }
     }
 

@@ -14,6 +14,7 @@ public class Defines {
         DeviceFingerprintID("device_fingerprint_id"),
         SessionID("session_id"),
         LinkClickID("link_click_id"),
+        LinkClickIDNonEncoded("link_click_id-"),
 
         Bucket("bucket"),
         DefaultBucket("default"),
