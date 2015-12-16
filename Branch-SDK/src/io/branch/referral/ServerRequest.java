@@ -282,10 +282,12 @@ public abstract class ServerRequest {
             public void run() {
                 try {
                     String advertisingId = sysObserver.getAdvertisingId();
+                    int latVal = sysObserver.getLATValue();
+                    latch.countDown();
                     if (!skipOnTimeOut && advertisingId != null && getPost() != null) {
                         getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
                     }
-                    int latVal = sysObserver.getLATValue();
+
                     if (!skipOnTimeOut && getPost() != null) {
                         getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
                     }
@@ -297,8 +299,8 @@ public abstract class ServerRequest {
         }).start();
 
         try {
-            //Wait 2 sec max to receive the GAID and LAT
-            latch.await(2000, TimeUnit.MILLISECONDS);
+            //Wait 1.5 sec max to receive the GAID and LAT
+            latch.await(1500, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

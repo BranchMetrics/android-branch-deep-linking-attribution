@@ -579,7 +579,7 @@ public class BranchUniversalObject implements Parcelable {
     //-------------Object flattening methods--------------------//
 
     /**
-     * Convert the given Json Object to corresponding Json representation
+     * Convert the BUO to  corresponding Json representation
      * @return A {@link JSONObject} which represent this BUO
      */
     public JSONObject convertToJson() {
