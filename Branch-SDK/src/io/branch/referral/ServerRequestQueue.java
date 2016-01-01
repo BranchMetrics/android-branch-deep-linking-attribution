@@ -1,19 +1,19 @@
 package io.branch.referral;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
 
 /**
  *<p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
@@ -66,24 +66,29 @@ class ServerRequestQueue {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                JSONArray jsonArr = new JSONArray();
-                synchronized(queue) {
+                synchronized (queue) {
+                    JSONArray jsonArr = new JSONArray();
                     for (ServerRequest aQueue : queue) {
                         JSONObject json = aQueue.toJSON();
                         if (json != null) {
-                            jsonArr.put( json );
+                            jsonArr.put(json);
+                        }
+                    }
+                    boolean succeeded = false;
+                    try {
+                        editor.putString(PREF_KEY, jsonArr.toString()).commit();
+                        succeeded = true;
+                    } catch (ConcurrentModificationException ex) {
+                        PrefHelper.Debug("Persisting Queue: ", "Failed to persit queue " + ex.getMessage());
+                    } finally {
+                        if (!succeeded) {
+                            try {
+                                editor.putString(PREF_KEY, jsonArr.toString()).commit();
+                            } catch (ConcurrentModificationException ignored) {
+                            }
                         }
                     }
 
-                    try {
-                        editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                    } catch (ConcurrentModificationException ex) {
-                        PrefHelper.Debug("Persisting Queue: ", jsonArr.toString());
-                    } finally {
-                        try {
-                            editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                        } catch (ConcurrentModificationException ignored) {}
-                    }
                 }
             }
         }).start();
