@@ -3324,8 +3324,7 @@ public class Branch {
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
             } else {
-                thisReq_.updateInstrumentationData(instrumentationExtraData_);
-                return kRemoteInterface_.make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                return kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             }
         }
 
