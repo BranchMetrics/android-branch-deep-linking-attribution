@@ -1355,11 +1355,14 @@ public class Branch {
                 String scheme = data.getScheme();
                 if (scheme != null) {
                     if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                            && data.getHost() != null && data.getHost().length() > 0) {
+                            && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
                         prefHelper_.setAppLink(data.toString());
+                        String uriString = data.toString();
+                        uriString += uriString.contains("?") ? "&" : "?";
+                        uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
+                        activity.getIntent().setData(Uri.parse(uriString));
                         return false;
                     }
-
                 }
             }
         }
