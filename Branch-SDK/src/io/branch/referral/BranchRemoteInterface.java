@@ -95,7 +95,7 @@ public class BranchRemoteInterface extends RemoteInterface {
                     post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
                 }
                 callback_.finished(make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, PrefHelper.REQ_TAG_DEBUG_CONNECT, prefHelper_.getTimeout(), true));
-            } catch (JSONException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
