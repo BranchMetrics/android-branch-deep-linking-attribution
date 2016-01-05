@@ -7,6 +7,7 @@ import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
+import android.support.annotation.StyleRes;
 
 import java.util.ArrayList;
 
@@ -35,6 +36,7 @@ public class ShareSheetStyle {
     private final ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
     private String defaultURL_;
 
+    private int styleResourceID_ = -1;
     final Context context_;
 
     public ShareSheetStyle(@NonNull Context context,@NonNull String messageTitle, @NonNull String messageBody) {
@@ -138,6 +140,15 @@ public class ShareSheetStyle {
         return this;
     }
 
+    /**
+     * <p> Set the given style to the List View showing the share sheet</p>
+     * @param styleResourceID A Styleable resource to be applied to the share sheet list view
+     */
+    public ShareSheetStyle setStyleResourceID(@StyleRes int styleResourceID){
+        styleResourceID_ = styleResourceID;
+        return this;
+    }
+
     public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
         return preferredOptions_;
     }
@@ -183,4 +194,7 @@ public class ShareSheetStyle {
         }
     }
 
+    public int getStyleResourceID() {
+        return styleResourceID_;
+    }
 }

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -44,6 +45,8 @@ class ShareLinkManager {
     private static int viewItemMinHeight_ = 100;
     /* Indicates whether a sharing is in progress*/
     private boolean isShareInProgress_ = false;
+    /* Styleable resource for share sheet.*/
+    private int shareDialogThemeID_ = -1;
 
     private Branch.ShareLinkBuilder builder_;
 
@@ -60,7 +63,7 @@ class ShareLinkManager {
         callback_ = builder.getCallback();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
-
+        shareDialogThemeID_ = builder.getStyleResourceID();
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
@@ -140,9 +143,13 @@ class ShareLinkManager {
         }
 
         /* Copy link option will be always there for sharing. */
-
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
-        final ListView shareOptionListView = new ListView(context_);
+        final ListView shareOptionListView;
+        if (shareDialogThemeID_ > 1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            shareOptionListView = new ListView(context_, null, 0, shareDialogThemeID_);
+        } else {
+            shareOptionListView = new ListView(context_);
+        }
         shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
