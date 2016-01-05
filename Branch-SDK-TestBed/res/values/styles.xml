@@ -1,3 +1,10 @@
 <resources>
+    <style name="Share_Sheet_Style" parent="android:style/Widget.ListView">
+        <item name="android:divider">@android:color/holo_red_dark</item>
+        <item name="android:dividerHeight">1dp</item>
+        <item name="android:listSelector">@android:drawable/ic_menu_share</item>
+        <item name="android:drawSelectorOnTop">false</item>
+        <item name="android:cacheColorHint">#FF00FF00</item>
+    </style>
 
 </resources>
