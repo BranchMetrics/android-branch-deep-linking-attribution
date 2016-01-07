@@ -327,7 +327,7 @@ class SystemObserver {
             if (bluetoothAdapter != null) {
                 return bluetoothAdapter.isEnabled();
             }
-        } catch (SecurityException ignored ) {
+        } catch (Exception ignore) {
         }
         return false;
     }
@@ -353,13 +353,16 @@ class SystemObserver {
      * </ul>
      */
     public String getBluetoothVersion() {
-        if (android.os.Build.VERSION.SDK_INT >= 8) {
-            if (android.os.Build.VERSION.SDK_INT >= 18 &&
-                    context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                return "ble";
-            } else if (context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
-                return "classic";
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 8) {
+                if (android.os.Build.VERSION.SDK_INT >= 18 &&
+                        context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+                    return "ble";
+                } else if (context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
+                    return "classic";
+                }
             }
+        } catch (Exception ignore) {
         }
         return BLANK;
     }
