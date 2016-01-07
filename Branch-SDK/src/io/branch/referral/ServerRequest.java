@@ -6,6 +6,8 @@ import android.content.pm.PackageManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.Set;
@@ -143,6 +145,44 @@ public abstract class ServerRequest {
      */
     public JSONObject getPost() {
         return params_;
+    }
+
+    /**
+     * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
+     * key-value pairs appended with the instrumentation data.</p>
+     * <p/>
+     * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
+     *
+     * @return A {@link JSONObject} containing the post data supplied with the current request
+     * as key-value pairs and the instrumentation meta data.
+     */
+    public JSONObject getPostWithInstrumentationValues(ConcurrentHashMap<String, String> instrumentationData) {
+        JSONObject extendedPost = new JSONObject();
+        try {
+            //Add original parameters
+            if (params_ != null) {
+                Iterator<String> keys = params_.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    extendedPost.put(key, params_.get(key));
+                }
+            }
+            // Append instrumentation metadata
+            if (instrumentationData.size() > 0) {
+                JSONObject instrObj = new JSONObject();
+                Set<String> keys = instrumentationData.keySet();
+                try {
+                    for (String key : keys) {
+                        instrObj.put(key, instrumentationData.get(key));
+                        instrumentationData.remove(key);
+                    }
+                    extendedPost.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
+                } catch (JSONException ignore) {
+                }
+            }
+        } catch (JSONException ignore) {
+        }
+        return extendedPost;
     }
 
     /**
@@ -340,25 +380,5 @@ public abstract class ServerRequest {
             waitTime = System.currentTimeMillis() - queueWaitTime_;
         }
         return waitTime;
-    }
-
-    /**
-     * Update the request parameters with instrumentation data
-     *
-     * @param dataMap A Map containing instrumentation data
-     */
-    public void updateInstrumentationData(ConcurrentHashMap<String, String> dataMap) {
-        if (dataMap.size() > 0) {
-            JSONObject instrObj = new JSONObject();
-            Set<String> keys = dataMap.keySet();
-            try {
-                for (String key : keys) {
-                    instrObj.put(key, dataMap.get(key));
-                    dataMap.remove(key);
-                }
-                params_.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
-            } catch (JSONException ignore) {
-            }
-        }
     }
 }
