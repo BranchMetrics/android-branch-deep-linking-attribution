@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StyleRes;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.ActionMode;
@@ -3791,7 +3792,7 @@ public class Branch {
         private Drawable copyUrlIcon_;
         private String copyURlText_;
         private String urlCopiedMessage_;
-
+        private int styleResourceID_;
 
         BranchShortLinkBuilder shortLinkBuilder_;
 
@@ -4065,6 +4066,14 @@ public class Branch {
             return this;
         }
 
+        /**
+         * <p> Set the given style to the List View showing the share sheet</p>
+         * @param resourceID A Styleable resource to be applied to the share sheet list view
+         */
+        public void setStyleResourceID(@StyleRes int resourceID) {
+            styleResourceID_ = resourceID;
+        }
+
         public void setShortLinkBuilderInternal(BranchShortLinkBuilder shortLinkBuilder) {
             this.shortLinkBuilder_ = shortLinkBuilder;
         }
@@ -4127,6 +4136,10 @@ public class Branch {
 
         public BranchShortLinkBuilder getShortLinkBuilder() {
             return shortLinkBuilder_;
+        }
+
+        public int getStyleResourceID() {
+            return styleResourceID_;
         }
     }
 
