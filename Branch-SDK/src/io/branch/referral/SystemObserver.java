@@ -604,7 +604,7 @@ class SystemObserver {
         if (PackageManager.PERMISSION_GRANTED == context_.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             ConnectivityManager connManager = (ConnectivityManager) context_.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            return wifiInfo.isConnected();
+            return ((wifiInfo != null) && wifiInfo.isConnected());
         }
         return false;
     }
