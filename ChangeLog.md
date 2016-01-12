@@ -1,5 +1,9 @@
 Branch Android SDK change log
 
+- v1.10.3: Fix for incorrect params on init with app-links. Fix for concurrent modification error and few other bugs. Added error codes for Branch errors.
+
+- v1.10.2: Added instrumentation support and deep link debug feature.
+
 - v1.10.1: Added fix for crash issues with share sheet. Added more specific error messages.
 
 - v1.10.0: Added support for the brand new BranchUniversalObject for easy tracking of views on content, easy creation of links and easy sharing
