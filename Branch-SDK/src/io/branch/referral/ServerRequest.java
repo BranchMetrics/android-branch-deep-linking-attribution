@@ -162,8 +162,7 @@ public abstract class ServerRequest {
         try {
             //Add original parameters
             if (params_ != null) {
-                String paramsString = params_.toString();
-                JSONObject originalParams = new JSONObject(paramsString);
+                JSONObject originalParams = new JSONObject(params_.toString());
                 Iterator<String> keys = originalParams.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
@@ -184,8 +183,7 @@ public abstract class ServerRequest {
                 }
             }
         } catch (JSONException ignore) {
-        }
-        catch (ConcurrentModificationException ex){
+        } catch (ConcurrentModificationException ex) {
             extendedPost = params_;
         }
         return extendedPost;
