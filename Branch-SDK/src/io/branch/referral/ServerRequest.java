@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -161,10 +162,11 @@ public abstract class ServerRequest {
         try {
             //Add original parameters
             if (params_ != null) {
-                Iterator<String> keys = params_.keys();
+                JSONObject originalParams = new JSONObject(params_.toString());
+                Iterator<String> keys = originalParams.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    extendedPost.put(key, params_.get(key));
+                    extendedPost.put(key, originalParams.get(key));
                 }
             }
             // Append instrumentation metadata
@@ -181,6 +183,8 @@ public abstract class ServerRequest {
                 }
             }
         } catch (JSONException ignore) {
+        } catch (ConcurrentModificationException ex) {
+            extendedPost = params_;
         }
         return extendedPost;
     }
