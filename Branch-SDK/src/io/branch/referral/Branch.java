@@ -26,6 +26,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SearchEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
@@ -2818,7 +2819,7 @@ public class Branch {
     private void generateShortLinkAsync(final ServerRequest req) {
         handleNewRequest(req);
     }
-    
+
     private JSONObject convertParamsStringToDictionary(String paramString) {
         if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
             return new JSONObject();
@@ -3751,6 +3752,12 @@ public class Branch {
             return callback_.onSearchRequested();
         }
 
+        @TargetApi(Build.VERSION_CODES.M)
+        @Override
+        public boolean onSearchRequested(SearchEvent searchEvent) {
+            return callback_.onSearchRequested(searchEvent);
+        }
+
         @Override
         public void onWindowAttributesChanged(WindowManager.LayoutParams attrs) {
             callback_.onWindowAttributesChanged(attrs);
@@ -3767,6 +3774,12 @@ public class Branch {
             return callback_.onWindowStartingActionMode(callback);
         }
 
+        @TargetApi(Build.VERSION_CODES.M)
+        @Nullable
+        @Override
+        public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int type) {
+            return callback_.onWindowStartingActionMode(callback, type);
+        }
     }
 
     //-------------------------- Branch Builders--------------------------------------//
