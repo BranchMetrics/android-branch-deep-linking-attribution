@@ -21,16 +21,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.ActionMode;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnTouchListener;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.accessibility.AccessibilityEvent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -314,10 +304,6 @@ public class Branch {
     private int networkCount_;
 
     private boolean hasNetwork_;
-    private SparseArray<String> debugListenerInitHistory_;
-    private OnTouchListener debugOnTouchListener_;
-    private Handler debugHandler_;
-    private boolean debugStarted_;
 
     private Map<BranchLinkData, String> linkCache_;
 
@@ -394,10 +380,6 @@ public class Branch {
         keepAlive_ = false;
         networkCount_ = 0;
         hasNetwork_ = true;
-        debugListenerInitHistory_ = new SparseArray<>();
-        debugOnTouchListener_ = retrieveOnTouchListener();
-        debugHandler_ = new Handler();
-        debugStarted_ = false;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
     }
@@ -679,15 +661,6 @@ public class Branch {
      */
     public void disableAppList() {
         prefHelper_.disableExternAppListing();
-    }
-
-
-    /**
-     * <p>Calls the {@link PrefHelper#disableTouchDebugging()} ()} on the local instance to prevent
-     * touch debugging feature.</p>
-     */
-    public void disableTouchDebugging() {
-        prefHelper_.disableTouchDebugging();
     }
 
     /**
@@ -1113,107 +1086,8 @@ public class Branch {
                 initializeSession(callback);
             }
         }
-
-        if (prefHelper_.getTouchDebugging()) {
-            if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
-                debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-                View view = activity.getWindow().getDecorView().findViewById(android.R.id.content);
-                if (view != null) {
-                    view.setOnTouchListener(debugOnTouchListener_);
-                }
-            }
-        }
     }
 
-    /**
-     * <p>Set the current activity window for the debug touch events. Only for internal usage.</p>
-     *
-     * @param activity The current activity.
-     */
-    private void setTouchDebugInternal(Activity activity) {
-        if (activity != null && debugListenerInitHistory_.get(System.identityHashCode(activity)) == null) {
-            debugListenerInitHistory_.put(System.identityHashCode(activity), "init");
-            activity.getWindow().setCallback(new BranchWindowCallback(activity.getWindow().getCallback()));
-        }
-    }
-
-    private void clearTouchDebugInternal(Activity activity) {
-        if (activity.getWindow().getCallback() instanceof BranchWindowCallback) {
-            Window.Callback originalCallback =
-                    ((BranchWindowCallback) activity.getWindow().getCallback()).callback_;
-            activity.getWindow().setCallback(originalCallback);
-            debugListenerInitHistory_.remove(System.identityHashCode(activity));
-
-            //Remove the pending threads on the handler inorder to prevent any leak.
-            if (debugHandler_ != null) {
-                debugHandler_.removeCallbacksAndMessages(null);
-            }
-        }
-    }
-
-    private OnTouchListener retrieveOnTouchListener() {
-        if (debugOnTouchListener_ == null) {
-            debugOnTouchListener_ = new OnTouchListener() {
-                class KeepDebugConnectionTask extends TimerTask {
-                    public void run() {
-                        if (!prefHelper_.keepDebugConnection()) {
-                            debugHandler_.post(_longPressed);
-                        }
-                    }
-                }
-
-                Runnable _longPressed = new Runnable() {
-                    private boolean started = false;
-                    private Timer timer;
-
-                    public void run() {
-                        debugHandler_.removeCallbacks(_longPressed);
-                        if (!started) {
-                            Log.i("Branch Debug", "======= Start Debug Session =======");
-                            prefHelper_.setDebug();
-                            timer = new Timer();
-                            timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
-                        } else {
-                            Log.i("Branch Debug", "======= End Debug Session =======");
-                            prefHelper_.clearDebug();
-                            timer.cancel();
-                            timer = null;
-                        }
-                        this.started = !this.started;
-                    }
-                };
-
-                @Override
-                public boolean onTouch(View v, MotionEvent ev) {
-                    int pointerCount = ev.getPointerCount();
-                    final int actionPerformed = ev.getAction();
-                    switch (actionPerformed & MotionEvent.ACTION_MASK) {
-                        case MotionEvent.ACTION_DOWN:
-                            if (systemObserver_.isSimulator()) {
-                                debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-                            }
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            break;
-                        case MotionEvent.ACTION_CANCEL:
-                            debugHandler_.removeCallbacks(_longPressed);
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            v.performClick();
-                            debugHandler_.removeCallbacks(_longPressed);
-                            break;
-                        case MotionEvent.ACTION_POINTER_DOWN:
-                            if (pointerCount == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
-                                debugHandler_.postDelayed(_longPressed, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-                            }
-                            break;
-                    }
-                    return true;
-                }
-            };
-        }
-        return debugOnTouchListener_;
-    }
 
     /**
      * <p>Closes the current session, dependent on the state of the
@@ -2818,7 +2692,7 @@ public class Branch {
     private void generateShortLinkAsync(final ServerRequest req) {
         handleNewRequest(req);
     }
-    
+
     private JSONObject convertParamsStringToDictionary(String paramString) {
         if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
             return new JSONObject();
@@ -3131,14 +3005,10 @@ public class Branch {
         public void onActivityResumed(Activity activity) {
             currentActivity_ = activity;
             //Set the activity for touch debug
-            if (prefHelper_.getTouchDebugging()) {
-                setTouchDebugInternal(activity);
-            }
         }
 
         @Override
         public void onActivityPaused(Activity activity) {
-            clearTouchDebugInternal(activity);
             /* Close any opened sharing dialog.*/
             if (shareLinkManager_ != null) {
                 shareLinkManager_.cancelShareLinkDialog(true);
@@ -3588,185 +3458,6 @@ public class Branch {
             }
         }
         return matched;
-    }
-
-    //--------------------Window callback handling for touch debug feature-----------------------//
-
-
-    public class BranchWindowCallback implements Window.Callback {
-        private Runnable longPressed_;
-        private Window.Callback callback_;
-
-        public BranchWindowCallback(Window.Callback callback) {
-            callback_ = callback;
-
-            if (longPressed_ == null) {
-                longPressed_ = new Runnable() {
-                    private Timer timer;
-
-                    public void run() {
-                        debugHandler_.removeCallbacks(longPressed_);
-                        if (!debugStarted_) {
-                            Log.i("Branch Debug", "======= Start Debug Session =======");
-                            prefHelper_.setDebug();
-                            timer = new Timer();
-                            timer.scheduleAtFixedRate(new KeepDebugConnectionTask(), new Date(), 20000);
-                        } else {
-                            Log.i("Branch Debug", "======= End Debug Session =======");
-                            prefHelper_.clearDebug();
-                            if (timer != null) {
-                                timer.cancel();
-                                timer = null;
-                            }
-                        }
-                        debugStarted_ = !debugStarted_;
-                    }
-                };
-            }
-        }
-
-        class KeepDebugConnectionTask extends TimerTask {
-            public void run() {
-                if (debugStarted_ && !prefHelper_.keepDebugConnection() && longPressed_ != null) {
-                    debugHandler_.post(longPressed_);
-                }
-            }
-        }
-
-        @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
-        @Override
-        public boolean dispatchGenericMotionEvent(MotionEvent event) {
-            return callback_.dispatchGenericMotionEvent(event);
-        }
-
-        @Override
-        public boolean dispatchKeyEvent(KeyEvent event) {
-            return callback_.dispatchKeyEvent(event);
-        }
-
-        @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-        @Override
-        public boolean dispatchKeyShortcutEvent(KeyEvent event) {
-            return callback_.dispatchKeyShortcutEvent(event);
-        }
-
-        @Override
-        public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent event) {
-            return callback_.dispatchPopulateAccessibilityEvent(event);
-        }
-
-        @Override
-        public boolean dispatchTouchEvent(MotionEvent event) {
-            switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                case MotionEvent.ACTION_DOWN:
-                    if (systemObserver_.isSimulator()) {
-                        debugHandler_.postDelayed(longPressed_, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-                    }
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    break;
-                case MotionEvent.ACTION_CANCEL:
-                    debugHandler_.removeCallbacks(longPressed_);
-                    break;
-                case MotionEvent.ACTION_UP:
-                    debugHandler_.removeCallbacks(longPressed_);
-                    break;
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    if (event.getPointerCount() == PrefHelper.DEBUG_TRIGGER_NUM_FINGERS) {
-                        debugHandler_.postDelayed(longPressed_, PrefHelper.DEBUG_TRIGGER_PRESS_TIME);
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            return callback_.dispatchTouchEvent(event);
-        }
-
-        @Override
-        public boolean dispatchTrackballEvent(MotionEvent event) {
-            return callback_.dispatchTrackballEvent(event);
-        }
-
-        @SuppressLint("NewApi")
-        @Override
-        public void onActionModeFinished(ActionMode mode) {
-            callback_.onActionModeFinished(mode);
-        }
-
-        @SuppressLint("NewApi")
-        @Override
-        public void onActionModeStarted(ActionMode mode) {
-            callback_.onActionModeStarted(mode);
-        }
-
-        @Override
-        public void onAttachedToWindow() {
-            callback_.onAttachedToWindow();
-        }
-
-        @Override
-        public void onContentChanged() {
-            callback_.onContentChanged();
-        }
-
-        @Override
-        public boolean onCreatePanelMenu(int featureId, Menu menu) {
-            return callback_.onCreatePanelMenu(featureId, menu);
-        }
-
-        @Override
-        public View onCreatePanelView(int featureId) {
-            return callback_.onCreatePanelView(featureId);
-        }
-
-        @SuppressLint("MissingSuperCall")
-        @Override
-        public void onDetachedFromWindow() {
-            callback_.onDetachedFromWindow();
-        }
-
-        @Override
-        public boolean onMenuItemSelected(int featureId, MenuItem item) {
-            return callback_.onMenuItemSelected(featureId, item);
-        }
-
-        @Override
-        public boolean onMenuOpened(int featureId, Menu menu) {
-            return callback_.onMenuOpened(featureId, menu);
-        }
-
-        @Override
-        public void onPanelClosed(int featureId, Menu menu) {
-            callback_.onPanelClosed(featureId, menu);
-        }
-
-        @Override
-        public boolean onPreparePanel(int featureId, View view, Menu menu) {
-            return callback_.onPreparePanel(featureId, view, menu);
-        }
-
-        @Override
-        public boolean onSearchRequested() {
-            return callback_.onSearchRequested();
-        }
-
-        @Override
-        public void onWindowAttributesChanged(WindowManager.LayoutParams attrs) {
-            callback_.onWindowAttributesChanged(attrs);
-        }
-
-        @Override
-        public void onWindowFocusChanged(boolean hasFocus) {
-            callback_.onWindowFocusChanged(hasFocus);
-        }
-
-        @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-        @Override
-        public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
-            return callback_.onWindowStartingActionMode(callback);
-        }
-
     }
 
     //-------------------------- Branch Builders--------------------------------------//
