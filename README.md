@@ -88,7 +88,7 @@ Note: While using App Links please make sure you have registered the Activity fo
 (which does not support App Links).
 
 ### Deeplink via push notification
-You can deep link to content from push notifications just by adding Branch link to your result intent. Simply pass the a Branch link with gcm payload and add it to your resultIntent with key `branch`.
+You can deep link to content from push notifications just by adding a Branch link to your result intent. Simply pass the a Branch link with gcm payload and add it to your resultIntent with key `branch`.
 
 ```java
         Intent resultIntent = new Intent(this, TargetClass.class);
