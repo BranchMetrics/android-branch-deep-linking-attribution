@@ -87,6 +87,16 @@ That's all you need. Deep linked parameters associated with the link is passed t
 Note: While using App Links please make sure you have registered the Activity for deep linking using Branch URI scheme as discussed in the previous session inorder to get deep link work on previous versions of Android
 (which does not support App Links).
 
+### Deeplink via push notification
+You can deep link to content from push notifications just by adding Branch link to your result intent. Add Branch link with key `branch` to your resultIntent intent.
+
+```java
+        Intent resultIntent = new Intent(this, TargetClass.class);
+        intent.putExtra("branch","http://bnc.lt/testlink");
+        .....
+       PendingIntent resultPendingIntent =  PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+```
+
 ### Configure your AndroidManifest.xml
 
 Note: Provide internet permission. Branch SDK need internet access to talk to Branch APIs.
