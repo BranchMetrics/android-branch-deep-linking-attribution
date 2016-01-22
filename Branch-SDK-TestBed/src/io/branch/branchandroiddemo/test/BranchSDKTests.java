@@ -253,14 +253,6 @@ public class BranchSDKTests extends InstrumentationTestCase {
         signalApply.await(1, TimeUnit.SECONDS);
     }
 
-    public void testYDebuggerConnect() {
-        BranchRemoteInterface remoteInterface = new BranchRemoteInterface(getInstrumentation().getContext());
-        DebugNetworkCallback callback = new DebugNetworkCallback();
-        remoteInterface.setNetworkCallbackListener(callback);
-        remoteInterface.connectToDebug();
-        assertTrue(callback.getConnectionStatus() == 465 || callback.getConnectionStatus() == 200);
-    }
-
     public void testZLoad() throws InterruptedException {
         initSession();
 
