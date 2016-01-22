@@ -27,11 +27,6 @@ public class PrefHelper {
     private static boolean BNC_Dev_Debug = false;
 
     /**
-     * {@link Boolean} value that enables/disables Branch general debug mode.
-     */
-    private static boolean BNC_Debug = false;
-
-    /**
      * {@link Boolean} value that determines whether external App Listing is enabled or not.
      *
      * @see {@link Branch#scheduleListOfApps()}
@@ -1025,7 +1020,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Gets the {@link Boolean} value of {@link #BNC_Debug}, which indicates whether or not
+     * <p>Gets the {@link Boolean} value of {@link #BNC_Dev_Debug}, which indicates whether or not
      * debugging is enabled.</p>
      *
      * @return A {@link Boolean} value indicating current debug state:
@@ -1036,7 +1031,7 @@ public class PrefHelper {
      * </ul>
      */
     public boolean isDebug() {
-        return BNC_Debug;
+        return BNC_Dev_Debug;
     }
 
     /**
@@ -1046,7 +1041,7 @@ public class PrefHelper {
      * @param message A {@link String} value containing the logging message to record.
      */
     public void log(final String tag, final String message) {
-        if (BNC_Debug || BNC_Dev_Debug) {
+        if (BNC_Dev_Debug) {
             Log.i(tag, message);
         }
     }
@@ -1061,7 +1056,7 @@ public class PrefHelper {
         if (prefHelper_ != null) {
             prefHelper_.log(tag, message);
         } else {
-            if (BNC_Debug || BNC_Dev_Debug) {
+            if (BNC_Dev_Debug) {
                 Log.i(tag, message);
             }
         }
