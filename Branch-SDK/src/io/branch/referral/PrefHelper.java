@@ -15,8 +15,8 @@ import java.util.Calendar;
 import java.util.Collections;
 
 /**
- * <p>A class that uses the helper pattern to provide regularly referenced static values and 
- * logging capabilities used in various other parts of the SDK, and that are related to globally set  
+ * <p>A class that uses the helper pattern to provide regularly referenced static values and
+ * logging capabilities used in various other parts of the SDK, and that are related to globally set
  * preference values.</p>
  */
 public class PrefHelper {
@@ -27,34 +27,12 @@ public class PrefHelper {
     private static boolean BNC_Dev_Debug = false;
 
     /**
-     * {@link Boolean} value that enables/disables Branch general debug mode.
-     */
-    private static boolean BNC_Debug = false;
-
-    /**
-     * {@link Boolean} value that indicates whether debugger is in transitional connecting state.
-     */
-    private static boolean BNC_Debug_Connecting = false;
-
-    /**
-     * {@link Boolean} value that enables/disables remote debugging via the server.
-     */
-    private static boolean BNC_Remote_Debug = false;
-
-    /**
      * {@link Boolean} value that determines whether external App Listing is enabled or not.
      *
      * @see {@link Branch#scheduleListOfApps()}
      * @see {@link SystemObserver#getListOfApps()}
      */
     private static boolean BNC_App_Listing = true;
-
-    /**
-     * {@link Boolean} value that determines whether Touch debugging is enabled or not.
-     *
-     * @see {@link Branch#setTouchDebugInternal(Activity)}
-     */
-    private static boolean BNC_Touch_Debugging = true;
 
     private static boolean BNC_Smart_Session = true;
 
@@ -107,44 +85,6 @@ public class PrefHelper {
     private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
 
-    /**
-     * {@link String} value used by {@link BranchRemoteInterface#connectToDebug()}.
-     */
-    public static final String REQ_TAG_DEBUG_CONNECT = "t_debug_connect";
-
-    /**
-     * {@link String} value used by {@link BranchRemoteInterface#sendLog(String log)}.
-     */
-    public static final String REQ_TAG_DEBUG_LOG = "t_debug_log";
-
-    /**
-     * {@link String} value used by {@link BranchRemoteInterface}.
-     *
-     * @see BranchRemoteInterface
-     */
-    public static final String REQ_TAG_DEBUG_SCREEN = "t_debug_screen";
-
-    /**
-     * {@link String} value used by {@link BranchRemoteInterface#disconnectFromDebug()}.
-     *
-     * @see BranchRemoteInterface
-     * @see BranchRemoteInterface#disconnectFromDebug()
-     */
-    public static final String REQ_TAG_DEBUG_DISCONNECT = "t_debug_disconnect";
-
-    /**
-     * The debug action is triggered by holding a multi-touch gesture. This {@link Integer} value
-     * defines how many multi-touch points need to be held on the screen in order for the debug
-     * action to be triggered.
-     */
-    public static final int DEBUG_TRIGGER_NUM_FINGERS = 4;
-
-    /**
-     * The debug action is triggered by holding a multi-touch gesture. This {@link Integer} value
-     * defines how many milliseconds the gesture must be held in order for the debug action to be
-     * triggered.
-     */
-    public static final int DEBUG_TRIGGER_PRESS_TIME = 3000;
 
     private static String Branch_Key = null;
     /**
@@ -1065,24 +1005,6 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the {@link Boolean} value that is checked prior to setting touch debugging feature.
-     * <i>false</i>.</p>
-     */
-    public void disableTouchDebugging() {
-        BNC_Touch_Debugging = false;
-    }
-
-    /**
-     * <p>Sets the {@link Boolean} value that is checked prior to setting touch debugging feature .</p>
-     *
-     * @return A {@link Boolean} value containing the current value of the
-     * {@link #BNC_Touch_Debugging} boolean.
-     */
-    public boolean getTouchDebugging() {
-        return BNC_Touch_Debugging;
-    }
-
-    /**
      * {@link Branch#disableSmartSession()}
      */
     public void disableSmartSession() {
@@ -1098,52 +1020,7 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Enable debugging, by setting the {@link Boolean} debug flags {@link #BNC_Debug} and
-     * {@link #BNC_Debug_Connecting} to true.</p>
-     */
-    public void setDebug() {
-        BNC_Debug = true;
-        BNC_Debug_Connecting = true;
-
-        if (!BNC_Remote_Debug) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (remoteInterface_ == null) {
-                        remoteInterface_ = new BranchRemoteInterface(context_);
-                        remoteInterface_
-                                .setNetworkCallbackListener(new DebugNetworkCallback());
-                    }
-                    remoteInterface_.connectToDebug();
-                }
-            }).start();
-        }
-    }
-
-    /**
-     * <p>Disable debugging, by setting the {@link Boolean} debug flags {@link #BNC_Debug} and
-     * {@link #BNC_Debug_Connecting} to false.</p>
-     */
-    public void clearDebug() {
-        BNC_Debug = false;
-        BNC_Debug_Connecting = false;
-
-        if (BNC_Remote_Debug) {
-            BNC_Remote_Debug = false;
-
-            if (remoteInterface_ != null) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        remoteInterface_.disconnectFromDebug();
-                    }
-                }).start();
-            }
-        }
-    }
-
-    /**
-     * <p>Gets the {@link Boolean} value of {@link #BNC_Debug}, which indicates whether or not
+     * <p>Gets the {@link Boolean} value of {@link #BNC_Dev_Debug}, which indicates whether or not
      * debugging is enabled.</p>
      *
      * @return A {@link Boolean} value indicating current debug state:
@@ -1154,7 +1031,7 @@ public class PrefHelper {
      * </ul>
      */
     public boolean isDebug() {
-        return BNC_Debug;
+        return BNC_Dev_Debug;
     }
 
     /**
@@ -1164,17 +1041,8 @@ public class PrefHelper {
      * @param message A {@link String} value containing the logging message to record.
      */
     public void log(final String tag, final String message) {
-        if (BNC_Debug || BNC_Dev_Debug) {
+        if (BNC_Dev_Debug) {
             Log.i(tag, message);
-
-            if (BNC_Remote_Debug && remoteInterface_ != null) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        remoteInterface_.sendLog(tag + "\t" + message);
-                    }
-                }).start();
-            }
         }
     }
 
@@ -1188,35 +1056,10 @@ public class PrefHelper {
         if (prefHelper_ != null) {
             prefHelper_.log(tag, message);
         } else {
-            if (BNC_Debug || BNC_Dev_Debug) {
+            if (BNC_Dev_Debug) {
                 Log.i(tag, message);
             }
         }
-    }
-
-    /**
-     * <p>Sends an empty logging message to keep the debugger connection alive.</p>
-     *
-     * @return A {@link Boolean} value indicating the debug connection state:
-     * <p/>
-     * <ul>
-     * <li><i>true</i> - If the debug connection has been kept alive.</li>
-     * <li><i>false</i> - If the debug connection has not been kept alive, if
-     * {@link #BNC_Remote_Debug} is false, or if there is no current remote connection.</li>
-     * </ul>
-     */
-    public boolean keepDebugConnection() {
-        if (BNC_Remote_Debug && remoteInterface_ != null) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    remoteInterface_.sendLog("");
-                }
-            }).start();
-            return true;
-        }
-
-        return BNC_Debug_Connecting;
     }
 
     /**
@@ -1256,11 +1099,7 @@ public class PrefHelper {
                     connectionStatus = serverResponse.getStatusCode();
                     String requestTag = serverResponse.getTag();
 
-                    if (connectionStatus == 465) {
-                        BNC_Remote_Debug = false;
-                        Log.i("Branch Debug",
-                                "======= Server is not listening =======");
-                    } else if (connectionStatus >= 400
+                    if (connectionStatus >= 400
                             && connectionStatus < 500) {
                         if (serverResponse.getObject() != null
                                 && serverResponse.getObject().has("error")
@@ -1280,13 +1119,7 @@ public class PrefHelper {
                             Log.i("BranchSDK",
                                     "Trouble reaching server. Please try again in a few minutes.");
                         }
-                    } else if (requestTag.equals(REQ_TAG_DEBUG_CONNECT)) {
-                        BNC_Remote_Debug = true;
-                        Log.i("Branch Debug",
-                                "======= Connected to Branch Remote Debugger =======");
                     }
-
-                    BNC_Debug_Connecting = false;
                 } catch (JSONException ex) {
                     ex.printStackTrace();
                 }
