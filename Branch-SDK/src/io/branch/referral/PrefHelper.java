@@ -274,7 +274,7 @@ public class PrefHelper {
             if (ai.metaData != null) {
                 appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
             }
-        } catch (final PackageManager.NameNotFoundException e) {
+        } catch (final PackageManager.NameNotFoundException ignore) {
         }
 
         if (appKey == null) {
@@ -321,7 +321,7 @@ public class PrefHelper {
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
             }
-        } catch (final PackageManager.NameNotFoundException e) {
+        } catch (final PackageManager.NameNotFoundException ignore) {
         }
 
         if (branchKey == null) {
@@ -663,7 +663,7 @@ public class PrefHelper {
     private ArrayList<String> getBuckets() {
         String bucketList = getString(KEY_BUCKETS);
         if (bucketList.equals(NO_STRING_VALUE)) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         } else {
             return deserializeString(bucketList);
         }
@@ -741,7 +741,7 @@ public class PrefHelper {
     private ArrayList<String> getActions() {
         String actionList = getString(KEY_ACTIONS);
         if (actionList.equals(NO_STRING_VALUE)) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         } else {
             return deserializeString(actionList);
         }
@@ -824,7 +824,7 @@ public class PrefHelper {
     }
 
     private ArrayList<String> deserializeString(String list) {
-        ArrayList<String> strings = new ArrayList<String>();
+        ArrayList<String> strings = new ArrayList<>();
         String[] stringArr = list.split(",");
         Collections.addAll(strings, stringArr);
         return strings;
