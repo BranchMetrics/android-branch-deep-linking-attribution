@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;

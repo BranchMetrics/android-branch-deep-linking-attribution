@@ -1,10 +1,8 @@
 package io.branch.referral;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+
+import org.json.JSONObject;
 
 public class BranchRemoteInterface extends RemoteInterface {
 
@@ -17,12 +15,6 @@ public class BranchRemoteInterface extends RemoteInterface {
      */
     private SystemObserver sysObserver_;
 
-    /**
-     * <p>A class-level {@link NetworkCallback} instance.</p>
-     *
-     * @see NetworkCallback
-     */
-    private NetworkCallback callback_;
 
     /**
      * <p>Required, but empty constructor method.</p>
@@ -42,15 +34,7 @@ public class BranchRemoteInterface extends RemoteInterface {
         sysObserver_ = new SystemObserver(context);
     }
 
-    /**
-     * <p>Sets a callback listener to handle network events received during this app session.</p>
-     *
-     * @param callback A {@link NetworkCallback} object instance that will be triggered for
-     *                 each network event that occurs during this app session.
-     */
-    public void setNetworkCallbackListener(NetworkCallback callback) {
-        callback_ = callback;
-    }
+
 
     /**
      * <p>Create custom URL, and return the server response for use elsewhere within the app.</p>
