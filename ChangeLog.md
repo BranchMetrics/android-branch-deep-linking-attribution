@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.10.5: Removing touch debug feature and some deprecated methods
+
 - v1.10.4: Fix for corner case concurrent modification error present in 1.10.3
 
 - v1.10.3: Fix for incorrect params on init with app-links. Fix for concurrent modification error and few other bugs. Added error codes for Branch errors.
