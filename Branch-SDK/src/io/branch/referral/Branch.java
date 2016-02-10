@@ -646,9 +646,10 @@ public class Branch {
     /**
      * Sets the key-value pairs for debugging the deep link. The key-value set in debug mode is given back with other deep link data on branch init session.
      * This method should be called from onCreate() of activity which listens to Branch Init Session callbacks
+     *
      * @param debugParams A {@link JSONObject} containing key-value pairs for debugging branch deep linking
      */
-    public void setDeepLinkDebugMode(JSONObject debugParams){
+    public void setDeepLinkDebugMode(JSONObject debugParams) {
         deeplinkDebugParams_ = debugParams;
     }
 
@@ -3192,8 +3193,7 @@ public class Branch {
 
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
-            if (thisReq_ instanceof ServerRequestInitSession
-                    || thisReq_ instanceof ServerRequestRegisterView) {
+            if (thisReq_.isGAdsParamsRequired()) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
 
@@ -3755,6 +3755,7 @@ public class Branch {
 
         /**
          * <p> Set the given style to the List View showing the share sheet</p>
+         *
          * @param resourceID A Styleable resource to be applied to the share sheet list view
          */
         public void setStyleResourceID(@StyleRes int resourceID) {

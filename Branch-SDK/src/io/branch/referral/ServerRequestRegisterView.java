@@ -150,4 +150,9 @@ class ServerRequestRegisterView extends ServerRequest {
 
         return contentObject;
     }
+
+    @Override
+    public boolean isGAdsParamsRequired() {
+        return true;
+    }
 }
