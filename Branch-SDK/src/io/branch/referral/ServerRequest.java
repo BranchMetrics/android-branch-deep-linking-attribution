@@ -149,6 +149,18 @@ public abstract class ServerRequest {
     }
 
     /**
+     * <p>
+     * Specifies whether this request need to be updated with Google Ads Id and LAT value
+     * By default update GAds params update is turned off. Override this on request which need to have GAds params
+     * </p>
+     *
+     * @return A {@link Boolean} with value true if this reuest need GAds params
+     */
+    public boolean isGAdsParamsRequired() {
+        return false;
+    }
+
+    /**
      * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
      * key-value pairs appended with the instrumentation data.</p>
      * <p/>
@@ -313,13 +325,14 @@ public abstract class ServerRequest {
     }
 
     boolean skipOnTimeOut = false;
+
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      *
      * @param sysObserver {@link SystemObserver} instance.
      */
     public void updateGAdsParams(final SystemObserver sysObserver) {
-        final CountDownLatch  latch  = new CountDownLatch(1);
+        final CountDownLatch latch = new CountDownLatch(1);
         skipOnTimeOut = false;
         new Thread(new Runnable() {
             @Override
@@ -347,8 +360,7 @@ public abstract class ServerRequest {
             latch.await(1500, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             skipOnTimeOut = true;
         }
     }
