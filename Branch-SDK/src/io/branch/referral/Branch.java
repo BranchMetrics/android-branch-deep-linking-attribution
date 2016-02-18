@@ -2673,8 +2673,8 @@ public class Branch {
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
                     url = response.getObject().getString("url");
-                    if (response.getLinkData() != null) {
-                        linkCache_.put(response.getLinkData(), url);
+                    if (req.getLinkPost() != null) {
+                        linkCache_.put(req.getLinkPost(), url);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -3265,7 +3265,7 @@ public class Branch {
                             if (serverResponse.getObject() != null) {
                                 final String url = serverResponse.getObject().getString("url");
                                 // cache the link
-                                linkCache_.put(serverResponse.getLinkData(), url);
+                                linkCache_.put(((ServerRequestCreateUrl) thisReq_).getLinkPost(), url);
                             }
                         }
                         //On Logout clear the link cache and all pending requests
