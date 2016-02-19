@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -29,7 +30,7 @@ public class InstallListener extends BroadcastReceiver {
         if(rawReferrerString != null) {
             try {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
-                HashMap<String, String> referrerMap = new HashMap<String, String>();
+                HashMap<String, String> referrerMap = new HashMap<>();
                 String[] referralParams = rawReferrerString.split("&");
 
                 for (String referrerParam : referralParams) {
@@ -44,6 +45,9 @@ public class InstallListener extends BroadcastReceiver {
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
+            } catch (IllegalArgumentException e){
+                e.printStackTrace();
+                Log.w("BranchSDK", "Illegal characters in url encoded string");
             }
 
         }

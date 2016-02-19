@@ -18,11 +18,12 @@ public class BranchRemoteInterface extends RemoteInterface {
 
     /**
      * <p>Required, but empty constructor method.</p>
-     *
+     * <p/>
      * <p>Use {@link #BranchRemoteInterface(Context)} instead, as it instantiates the class
      * {@link PrefHelper} and {@link SystemObserver} handles for the class.</p>
      */
-    public BranchRemoteInterface() {}
+    public BranchRemoteInterface() {
+    }
 
     /**
      * <p>The main constructor of the BranchRemoteInterface class.</p>
@@ -35,7 +36,6 @@ public class BranchRemoteInterface extends RemoteInterface {
     }
 
 
-
     /**
      * <p>Create custom URL, and return the server response for use elsewhere within the app.</p>
      *
@@ -45,12 +45,7 @@ public class BranchRemoteInterface extends RemoteInterface {
      */
     public ServerResponse createCustomUrlSync(JSONObject post) {
         String urlExtend = "v1/url";
-        BranchLinkData linkData = null;
-        if (post instanceof BranchLinkData) {
-            linkData = (BranchLinkData) post;
-        }
-
-        return make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getTimeout(), linkData);
+        return make_restful_post(post, prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getTimeout());
     }
 
     public SystemObserver getSystemObserver() {

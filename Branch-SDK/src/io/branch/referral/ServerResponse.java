@@ -13,7 +13,6 @@ import org.json.JSONObject;
  * <li>{@link ServerResponse#setPost(Object)}</li>
  * <li>{@link ServerResponse#getObject()}</li>
  * <li>{@link ServerResponse#getArray()}</li>
- * <li>{@link ServerResponse#getLinkData()}</li>
  * </ul>
  */
 public class ServerResponse {
@@ -34,24 +33,6 @@ public class ServerResponse {
      */
     private Object post_;
 
-    /**
-     * Data associated with the deep link that has been requested.
-     *
-     * @see BranchLinkData
-     */
-    private BranchLinkData linkData_;
-
-    /**
-     * <p>Constructor method for the {@link ServerResponse} class that allows for the instantiation
-     * of a server response object as a direct result of a server call. Omits {@link BranchLinkData}
-     * , so is used where that value is null or unavailable.</p>
-     *
-     * @param tag        A {@link String} value of the <i>Tag</i> attribute of the current link.
-     * @param statusCode {@link Integer} value of the HTTP status code.
-     */
-    public ServerResponse(String tag, int statusCode) {
-        this(tag, statusCode, null);
-    }
 
     /**
      * <p>Main constructor method for the {@link ServerResponse} class that allows for the instantiation
@@ -59,12 +40,10 @@ public class ServerResponse {
      *
      * @param tag        A {@link String} value of the <i>Tag</i> attribute of the current link.
      * @param statusCode {@link Integer} value of the HTTP status code.
-     * @param linkData   A {@link BranchLinkData} object containing data attributes associated with a Branch link.
      */
-    public ServerResponse(String tag, int statusCode, BranchLinkData linkData) {
+    public ServerResponse(String tag, int statusCode) {
         tag_ = tag;
         statusCode_ = statusCode;
-        linkData_ = linkData;
     }
 
     /**
@@ -124,16 +103,6 @@ public class ServerResponse {
         }
 
         return null;
-    }
-
-    /**
-     * <p>Gets a {@link BranchLinkData} object containing the data associated with the current Branch
-     * link.</p>
-     *
-     * @return a {@link BranchLinkData} object containing data attributes associated with a Branch link.
-     */
-    public BranchLinkData getLinkData() {
-        return linkData_;
     }
 
 

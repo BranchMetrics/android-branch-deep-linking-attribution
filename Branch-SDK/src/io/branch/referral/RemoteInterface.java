@@ -67,14 +67,12 @@ class RemoteInterface {
      *                   resultant {@link ServerResponse} object.
      * @param log        A {@link Boolean} value indicating whether or not to log the raw
      *                   content lines via the debug interface.
-     * @param linkData   A {@link BranchLinkData} object containing the data dictionary associated
-     *                   with the link subject of the original server request.
      * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      * response in Branch SDK terms.
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
-    private ServerResponse processEntityForJSON(InputStream inStream, int statusCode, String tag, boolean log, BranchLinkData linkData) {
-        ServerResponse result = new ServerResponse(tag, statusCode, linkData);
+    private ServerResponse processEntityForJSON(InputStream inStream, int statusCode, String tag, boolean log) {
+        ServerResponse result = new ServerResponse(tag, statusCode);
         try {
             if (inStream != null) {
                 BufferedReader rd = new BufferedReader(new InputStreamReader(inStream));
@@ -200,17 +198,17 @@ class RemoteInterface {
                 try {
                     if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         return processEntityForJSON(connection.getErrorStream(),
-                                connection.getResponseCode(), tag, log, null);
+                                connection.getResponseCode(), tag, log);
                     } else {
                         return processEntityForJSON(connection.getInputStream(),
-                                connection.getResponseCode(), tag, log, null);
+                                connection.getResponseCode(), tag, log);
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     if (log) {
                         PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
                     }
-                    return processEntityForJSON(null, connection.getResponseCode(), tag, log, null);
+                    return processEntityForJSON(null, connection.getResponseCode(), tag, log);
                 }
             }
         } catch (SocketException ex) {
@@ -260,25 +258,9 @@ class RemoteInterface {
      * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
-        return make_restful_post(body, url, tag, timeout, 0, true, null);
+        return make_restful_post(body, url, tag, timeout, 0, true);
     }
 
-    /**
-     * <p>Makes a RESTful POST call with logging enabled.</p>
-     *
-     * @param body     A {@link JSONObject} containing the main data body/payload of the request.
-     * @param url      A {@link String} URL to request from.
-     * @param tag      A {@link String} tag for logging/analytics purposes.
-     * @param timeout  An {@link Integer} value containing the number of milliseconds to wait
-     *                 before considering a server request to have timed out.
-     * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
-     *                 with the link subject of the original server request.
-     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
-     * response in Branch SDK terms.
-     */
-    public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, BranchLinkData linkData) {
-        return make_restful_post(body, url, tag, timeout, 0, true, linkData);
-    }
 
     /**
      * <p>Makes a RESTful POST call without an associated data dictionary; passed as null.</p>
@@ -294,26 +276,24 @@ class RemoteInterface {
      * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
-        return make_restful_post(body, url, tag, timeout, 0, log, null);
+        return make_restful_post(body, url, tag, timeout, 0, log);
     }
 
     /**
      * <p>The main RESTful POST method. The others call this one with pre-populated parameters.</p>
      *
-     * @param body     A {@link JSONObject} containing the main data body/payload of the request.
-     * @param url      A {@link String} URL to request from.
-     * @param tag      A {@link String} tag for logging/analytics purposes.
-     * @param timeout  An {@link Integer} value containing the number of milliseconds to wait
-     *                 before considering a server request to have timed out.
-     * @param log      A {@link Boolean} value that specifies whether debug logging should be
-     *                 enabled for this request or not.
-     * @param linkData A {@link BranchLinkData} object containing the data dictionary associated
-     *                 with the link subject of the original server request.
+     * @param body    A {@link JSONObject} containing the main data body/payload of the request.
+     * @param url     A {@link String} URL to request from.
+     * @param tag     A {@link String} tag for logging/analytics purposes.
+     * @param timeout An {@link Integer} value containing the number of milliseconds to wait
+     *                before considering a server request to have timed out.
+     * @param log     A {@link Boolean} value that specifies whether debug logging should be
+     *                enabled for this request or not.
      * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
      * response in Branch SDK terms.
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
-                                             int retryNumber, boolean log, BranchLinkData linkData) {
+                                             int retryNumber, boolean log) {
         HttpURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
@@ -366,20 +346,20 @@ class RemoteInterface {
                     e.printStackTrace();
                 }
                 retryNumber++;
-                return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
+                return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log);
             } else {
                 try {
                     if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                        return processEntityForJSON(connection.getErrorStream(), connection.getResponseCode(), tag, log, linkData);
+                        return processEntityForJSON(connection.getErrorStream(), connection.getResponseCode(), tag, log);
                     } else {
-                        return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log, linkData);
+                        return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log);
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     if (log) {
                         PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
                     }
-                    return processEntityForJSON(null, connection.getResponseCode(), tag, log, linkData);
+                    return processEntityForJSON(null, connection.getResponseCode(), tag, log);
                 }
             }
 
@@ -401,7 +381,7 @@ class RemoteInterface {
                     e.printStackTrace();
                 }
                 retryNumber++;
-                return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log, linkData);
+                return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log);
             } else {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
