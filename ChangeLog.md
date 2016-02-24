@@ -1,4 +1,5 @@
 Branch Android SDK change log
+- v1.10.6: Few enhancements to cached link data matching before making a create url call
 
 - v1.10.5: Removing touch debug feature and some deprecated methods
 
