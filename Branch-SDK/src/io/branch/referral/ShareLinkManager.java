@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -20,6 +21,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
+import java.nio.channels.NonWritableChannelException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +43,7 @@ class ShareLinkManager {
     /* Background color for the list view in disabled state. */
     private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
     /* Current activity context.*/
-    Context context_;
+    private WeakReference <Activity> context_;
     /* Default height for the list item.*/
     private static int viewItemMinHeight_ = 100;
     /* Indicates whether a sharing is in progress*/
@@ -59,7 +62,7 @@ class ShareLinkManager {
      */
     public Dialog shareLink(Branch.ShareLinkBuilder builder) {
         builder_ = builder;
-        context_ = builder.getActivity();
+        context_ = new WeakReference<>(builder.getActivity());
         callback_ = builder.getCallback();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
@@ -105,7 +108,7 @@ class ShareLinkManager {
      * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
      */
     private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final PackageManager packageManager = context_.getPackageManager();
+        final PackageManager packageManager = context_.get().getPackageManager();
         final List<ResolveInfo> preferredApps = new ArrayList<>();
         final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
         ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
@@ -146,9 +149,9 @@ class ShareLinkManager {
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
         final ListView shareOptionListView;
         if (shareDialogThemeID_ > 1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            shareOptionListView = new ListView(context_, null, 0, shareDialogThemeID_);
+            shareOptionListView = new ListView(context_.get(), null, 0, shareDialogThemeID_);
         } else {
-            shareOptionListView = new ListView(context_);
+            shareOptionListView = new ListView(context_.get());
         }
         shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
@@ -162,7 +165,7 @@ class ShareLinkManager {
                     adapter.notifyDataSetChanged();
                 } else {
                     if (callback_ != null) {
-                        callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                        callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.get().getPackageManager()).toString());
                     }
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
@@ -174,7 +177,7 @@ class ShareLinkManager {
             }
         });
 
-        shareDlg_ = new AnimatedDialog(context_);
+        shareDlg_ = new AnimatedDialog(context_.get());
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {
@@ -205,7 +208,7 @@ class ShareLinkManager {
      */
     private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
         isShareInProgress_ = true;
-        final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
+        final String channelName = selectedResolveInfo.loadLabel(context_.get().getPackageManager()).toString();
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
         shortLinkBuilder.setChannel(channelName);
 
@@ -247,7 +250,7 @@ class ShareLinkManager {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
             shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
-            context_.startActivity(shareLinkIntent_);
+            context_.get().startActivity(shareLinkIntent_);
         }
     }
 
@@ -262,14 +265,14 @@ class ShareLinkManager {
     private void addLinkToClipBoard(String url, String label) {
         int sdk = android.os.Build.VERSION.SDK_INT;
         if (sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
-            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context_.getSystemService(Context.CLIPBOARD_SERVICE);
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context_.get().getSystemService(Context.CLIPBOARD_SERVICE);
             clipboard.setText(url);
         } else {
-            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context_.getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context_.get().getSystemService(Context.CLIPBOARD_SERVICE);
             android.content.ClipData clip = android.content.ClipData.newPlainText(label, url);
             clipboard.setPrimaryClip(clip);
         }
-        Toast.makeText(context_, builder_.getUrlCopiedMessage(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(context_.get(), builder_.getUrlCopiedMessage(), Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -297,13 +300,13 @@ class ShareLinkManager {
         public View getView(int position, View convertView, ViewGroup parent) {
             ShareItemView itemView;
             if (convertView == null) {
-                itemView = new ShareItemView(context_);
+                itemView = new ShareItemView(context_.get());
             } else {
                 itemView = (ShareItemView) convertView;
             }
             ResolveInfo resolveInfo = appList_.get(position);
             boolean setSelected = position == selectedPos;
-            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(), resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
+            itemView.setLabel(resolveInfo.loadLabel(context_.get().getPackageManager()).toString(), resolveInfo.loadIcon(context_.get().getPackageManager()), setSelected);
             itemView.setTag(resolveInfo);
             itemView.setClickable(false);
             return itemView;
@@ -319,31 +322,31 @@ class ShareLinkManager {
      * Class for sharing item view to be displayed in the list with Application icon and Name.
      */
     private class ShareItemView extends TextView {
-        Context context_;
+        WeakReference<Context> context_;
         final int padding = 5;
         final int leftMargin = 100;
 
         public ShareItemView(Context context) {
             super(context);
-            context_ = context;
+            context_ = new WeakReference<>(context);
             this.setPadding(leftMargin, padding, padding, padding);
             this.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-            this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
+            this.setMinWidth(context_.get().getResources().getDisplayMetrics().widthPixels);
         }
 
         public void setLabel(String appName, Drawable appIcon, boolean isEnabled) {
             this.setText("\t" + appName);
             this.setTag(appName);
             if (appIcon == null) {
-                this.setTextAppearance(context_, android.R.style.TextAppearance_Large);
+                this.setTextAppearance(context_.get(), android.R.style.TextAppearance_Large);
                 this.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             } else {
-                this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
+                this.setTextAppearance(context_.get(), android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
                 viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
             this.setMinHeight(viewItemMinHeight_);
-            this.setTextColor(context_.getResources().getColor(android.R.color.black));
+            this.setTextColor(context_.get().getResources().getColor(android.R.color.black));
             if (isEnabled) {
                 this.setBackgroundColor(BG_COLOR_ENABLED);
             } else {

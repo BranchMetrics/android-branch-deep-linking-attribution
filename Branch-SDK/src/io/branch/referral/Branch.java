@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -324,7 +325,7 @@ public class Branch {
     private ShareLinkManager shareLinkManager_;
 
     /* The current activity instance for the application.*/
-    private Activity currentActivity_;
+    private WeakReference <Activity> currentActivity_;
 
     /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
     private enum CUSTOM_REFERRABLE_SETTINGS {
@@ -1043,7 +1044,7 @@ public class Branch {
     }
 
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
-        currentActivity_ = activity;
+        currentActivity_ = new WeakReference<>(activity);
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null) {
@@ -2938,10 +2939,10 @@ public class Branch {
                 return;
             } else {
                 if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_, true);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_.get(), true);
                 } else {
                     boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_, isReferrable);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_.get(), isReferrable);
                 }
             }
         }
@@ -3001,7 +3002,7 @@ public class Branch {
 
         @Override
         public void onActivityResumed(Activity activity) {
-            currentActivity_ = activity;
+            currentActivity_ = new WeakReference<>(activity);
         }
 
         @Override
@@ -3027,7 +3028,7 @@ public class Branch {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-            if (currentActivity_ == activity) {
+            if (currentActivity_.get() == activity) {
                 currentActivity_ = null;
             }
         }
@@ -3381,8 +3382,8 @@ public class Branch {
                         }
                     }
                 }
-                if (deepLinkActivity != null && currentActivity_ != null) {
-                    Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
+                if (deepLinkActivity != null && currentActivity_.get() != null) {
+                    Intent intent = new Intent(currentActivity_.get(), Class.forName(deepLinkActivity));
                     intent.putExtra(AUTO_DEEP_LINKED, "true");
 
                     // Put the raw JSON params as extra in case need to get the deep link params as JSON String
@@ -3394,7 +3395,7 @@ public class Branch {
                         String key = (String) keys.next();
                         intent.putExtra(key, latestParams.getString(key));
                     }
-                    currentActivity_.startActivityForResult(intent, deepLinkActivityReqCode);
+                    currentActivity_.get().startActivityForResult(intent, deepLinkActivityReqCode);
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
@@ -3835,7 +3836,7 @@ public class Branch {
 
     public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         ServerRequest req;
-        req = new ServerRequestRegisterView(currentActivity_, branchUniversalObject, systemObserver_, callback);
+        req = new ServerRequestRegisterView(currentActivity_.get(), branchUniversalObject, systemObserver_, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
