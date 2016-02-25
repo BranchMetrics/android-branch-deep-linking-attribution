@@ -228,6 +228,8 @@ class ShareLinkManager {
                     }
                 }
                 isShareInProgress_ = false;
+                // Cancel the dialog and context is released on dialog cancel
+                cancelShareLinkDialog(false);
             }
         });
     }

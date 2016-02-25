@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -324,7 +325,7 @@ public class Branch {
     private ShareLinkManager shareLinkManager_;
 
     /* The current activity instance for the application.*/
-    private Activity currentActivity_;
+    private WeakReference<Activity> currentActivityReference_;
 
     /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
     private enum CUSTOM_REFERRABLE_SETTINGS {
@@ -1043,7 +1044,7 @@ public class Branch {
     }
 
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
-        currentActivity_ = activity;
+        currentActivityReference_ = new WeakReference<>(activity);
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null) {
@@ -1119,14 +1120,18 @@ public class Branch {
                     @Override
                     public void run() {
                         //Since non auto session has no lifecycle callback enabled free up the currentActivity_
-                        currentActivity_ = null;
+                        if (currentActivityReference_ != null) {
+                            currentActivityReference_.clear();
+                        }
                         executeClose();
                     }
                 }, PREVENT_CLOSE_TIMEOUT);
             }
         } else {
             //Since non auto session has no lifecycle callback enabled free up the currentActivity_
-            currentActivity_ = null;
+            if (currentActivityReference_ != null) {
+                currentActivityReference_.clear();
+            }
             executeClose();
         }
 
@@ -2938,10 +2943,10 @@ public class Branch {
                 return;
             } else {
                 if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_, true);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivityReference_.get(), true);
                 } else {
                     boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity_, isReferrable);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivityReference_.get(), isReferrable);
                 }
             }
         }
@@ -3001,7 +3006,7 @@ public class Branch {
 
         @Override
         public void onActivityResumed(Activity activity) {
-            currentActivity_ = activity;
+            currentActivityReference_ = new WeakReference<>(activity);
         }
 
         @Override
@@ -3027,8 +3032,8 @@ public class Branch {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-            if (currentActivity_ == activity) {
-                currentActivity_ = null;
+            if (currentActivityReference_ != null) {
+                currentActivityReference_.clear();
             }
         }
 
@@ -3381,20 +3386,26 @@ public class Branch {
                         }
                     }
                 }
-                if (deepLinkActivity != null && currentActivity_ != null) {
-                    Intent intent = new Intent(currentActivity_, Class.forName(deepLinkActivity));
-                    intent.putExtra(AUTO_DEEP_LINKED, "true");
+                if (deepLinkActivity != null && currentActivityReference_ != null) {
+                    Activity currentActivity = currentActivityReference_.get();
+                    if (currentActivity != null) {
+                        Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
+                        intent.putExtra(AUTO_DEEP_LINKED, "true");
 
-                    // Put the raw JSON params as extra in case need to get the deep link params as JSON String
-                    intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
+                        // Put the raw JSON params as extra in case need to get the deep link params as JSON String
+                        intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
 
-                    // Add individual parameters in the data
-                    Iterator<?> keys = latestParams.keys();
-                    while (keys.hasNext()) {
-                        String key = (String) keys.next();
-                        intent.putExtra(key, latestParams.getString(key));
+                        // Add individual parameters in the data
+                        Iterator<?> keys = latestParams.keys();
+                        while (keys.hasNext()) {
+                            String key = (String) keys.next();
+                            intent.putExtra(key, latestParams.getString(key));
+                        }
+                        currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
+                    } else {
+                        // This case should not happen. Adding a safe handling for any corner case
+                        Log.w(TAG, "No activity reference to launch deep linked activity");
                     }
-                    currentActivity_.startActivityForResult(intent, deepLinkActivityReqCode);
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
@@ -3834,10 +3845,12 @@ public class Branch {
     //------------------------ Content Indexing methods----------------------//
 
     public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
-        ServerRequest req;
-        req = new ServerRequestRegisterView(currentActivity_, branchUniversalObject, systemObserver_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
+        if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
+            ServerRequest req;
+            req = new ServerRequestRegisterView(currentActivityReference_.get(), branchUniversalObject, systemObserver_, callback);
+            if (!req.constructError_ && !req.handleErrors(context_)) {
+                handleNewRequest(req);
+            }
         }
     }
 
