@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -20,6 +21,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,7 @@ class ShareLinkManager {
     /* Background color for the list view in disabled state. */
     private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
     /* Current activity context.*/
-    Context context_;
+    private Activity context_;
     /* Default height for the list item.*/
     private static int viewItemMinHeight_ = 100;
     /* Indicates whether a sharing is in progress*/
@@ -228,6 +230,8 @@ class ShareLinkManager {
                     }
                 }
                 isShareInProgress_ = false;
+                // Cancel the dialog and context is released on dialog cancel
+                cancelShareLinkDialog(false);
             }
         });
     }
@@ -319,31 +323,31 @@ class ShareLinkManager {
      * Class for sharing item view to be displayed in the list with Application icon and Name.
      */
     private class ShareItemView extends TextView {
-        Context context_;
+        WeakReference<Context> context_;
         final int padding = 5;
         final int leftMargin = 100;
 
         public ShareItemView(Context context) {
             super(context);
-            context_ = context;
+            context_ = new WeakReference<>(context);
             this.setPadding(leftMargin, padding, padding, padding);
             this.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-            this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
+            this.setMinWidth(context_.get().getResources().getDisplayMetrics().widthPixels);
         }
 
         public void setLabel(String appName, Drawable appIcon, boolean isEnabled) {
             this.setText("\t" + appName);
             this.setTag(appName);
             if (appIcon == null) {
-                this.setTextAppearance(context_, android.R.style.TextAppearance_Large);
+                this.setTextAppearance(context_.get(), android.R.style.TextAppearance_Large);
                 this.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             } else {
-                this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
+                this.setTextAppearance(context_.get(), android.R.style.TextAppearance_Medium);
                 this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
                 viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
             this.setMinHeight(viewItemMinHeight_);
-            this.setTextColor(context_.getResources().getColor(android.R.color.black));
+            this.setTextColor(context_.get().getResources().getColor(android.R.color.black));
             if (isEnabled) {
                 this.setBackgroundColor(BG_COLOR_ENABLED);
             } else {
