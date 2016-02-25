@@ -22,7 +22,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
-import java.nio.channels.NonWritableChannelException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +42,7 @@ class ShareLinkManager {
     /* Background color for the list view in disabled state. */
     private final int BG_COLOR_DISABLED = Color.argb(20, 17, 4, 56);
     /* Current activity context.*/
-    private WeakReference <Activity> context_;
+    private Activity context_;
     /* Default height for the list item.*/
     private static int viewItemMinHeight_ = 100;
     /* Indicates whether a sharing is in progress*/
@@ -62,7 +61,7 @@ class ShareLinkManager {
      */
     public Dialog shareLink(Branch.ShareLinkBuilder builder) {
         builder_ = builder;
-        context_ = new WeakReference<>(builder.getActivity());
+        context_ = builder.getActivity();
         callback_ = builder.getCallback();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
@@ -108,7 +107,7 @@ class ShareLinkManager {
      * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
      */
     private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final PackageManager packageManager = context_.get().getPackageManager();
+        final PackageManager packageManager = context_.getPackageManager();
         final List<ResolveInfo> preferredApps = new ArrayList<>();
         final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
         ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
@@ -149,9 +148,9 @@ class ShareLinkManager {
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
         final ListView shareOptionListView;
         if (shareDialogThemeID_ > 1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            shareOptionListView = new ListView(context_.get(), null, 0, shareDialogThemeID_);
+            shareOptionListView = new ListView(context_, null, 0, shareDialogThemeID_);
         } else {
-            shareOptionListView = new ListView(context_.get());
+            shareOptionListView = new ListView(context_);
         }
         shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
@@ -165,7 +164,7 @@ class ShareLinkManager {
                     adapter.notifyDataSetChanged();
                 } else {
                     if (callback_ != null) {
-                        callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.get().getPackageManager()).toString());
+                        callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                     }
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
@@ -177,7 +176,7 @@ class ShareLinkManager {
             }
         });
 
-        shareDlg_ = new AnimatedDialog(context_.get());
+        shareDlg_ = new AnimatedDialog(context_);
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {
@@ -208,7 +207,7 @@ class ShareLinkManager {
      */
     private void invokeSharingClient(final ResolveInfo selectedResolveInfo) {
         isShareInProgress_ = true;
-        final String channelName = selectedResolveInfo.loadLabel(context_.get().getPackageManager()).toString();
+        final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
         shortLinkBuilder.setChannel(channelName);
 
@@ -231,6 +230,8 @@ class ShareLinkManager {
                     }
                 }
                 isShareInProgress_ = false;
+                // Cancel the dialog and context is released on dialog cancel
+                cancelShareLinkDialog(false);
             }
         });
     }
@@ -250,7 +251,7 @@ class ShareLinkManager {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
             shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
-            context_.get().startActivity(shareLinkIntent_);
+            context_.startActivity(shareLinkIntent_);
         }
     }
 
@@ -265,14 +266,14 @@ class ShareLinkManager {
     private void addLinkToClipBoard(String url, String label) {
         int sdk = android.os.Build.VERSION.SDK_INT;
         if (sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
-            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context_.get().getSystemService(Context.CLIPBOARD_SERVICE);
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context_.getSystemService(Context.CLIPBOARD_SERVICE);
             clipboard.setText(url);
         } else {
-            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context_.get().getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context_.getSystemService(Context.CLIPBOARD_SERVICE);
             android.content.ClipData clip = android.content.ClipData.newPlainText(label, url);
             clipboard.setPrimaryClip(clip);
         }
-        Toast.makeText(context_.get(), builder_.getUrlCopiedMessage(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(context_, builder_.getUrlCopiedMessage(), Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -300,13 +301,13 @@ class ShareLinkManager {
         public View getView(int position, View convertView, ViewGroup parent) {
             ShareItemView itemView;
             if (convertView == null) {
-                itemView = new ShareItemView(context_.get());
+                itemView = new ShareItemView(context_);
             } else {
                 itemView = (ShareItemView) convertView;
             }
             ResolveInfo resolveInfo = appList_.get(position);
             boolean setSelected = position == selectedPos;
-            itemView.setLabel(resolveInfo.loadLabel(context_.get().getPackageManager()).toString(), resolveInfo.loadIcon(context_.get().getPackageManager()), setSelected);
+            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(), resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
             itemView.setTag(resolveInfo);
             itemView.setClickable(false);
             return itemView;
