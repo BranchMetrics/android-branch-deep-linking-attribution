@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.10.8: Hot fix for NPE caused by 1.10.7.
+
 - v1.10.7: Hot fix for a possible memory leak caused by holding strong reference to context.
 
 - v1.10.6: Few enhancements to cached link data matching before making a create url call.
