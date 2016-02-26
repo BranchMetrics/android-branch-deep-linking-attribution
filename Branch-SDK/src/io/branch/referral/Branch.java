@@ -1044,7 +1044,9 @@ public class Branch {
     }
 
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
-        currentActivityReference_ = new WeakReference<>(activity);
+        if (activity != null) {
+            currentActivityReference_ = new WeakReference<>(activity);
+        }
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null) {
@@ -2942,11 +2944,15 @@ public class Branch {
                 Log.i(TAG, "Branch is not initialized, cannot close session");
                 return;
             } else {
+                Activity currentActivity = null;
+                if (currentActivityReference_ != null) {
+                    currentActivity = currentActivityReference_.get();
+                }
                 if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivityReference_.get(), true);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity, true);
                 } else {
                     boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivityReference_.get(), isReferrable);
+                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity, isReferrable);
                 }
             }
         }
@@ -3032,7 +3038,7 @@ public class Branch {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-            if (currentActivityReference_ != null) {
+            if (currentActivityReference_ != null && currentActivityReference_.get() == activity) {
                 currentActivityReference_.clear();
             }
         }
@@ -3845,9 +3851,9 @@ public class Branch {
     //------------------------ Content Indexing methods----------------------//
 
     public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
-        if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
+        if (context_ != null) {
             ServerRequest req;
-            req = new ServerRequestRegisterView(currentActivityReference_.get(), branchUniversalObject, systemObserver_, callback);
+            req = new ServerRequestRegisterView(context_, branchUniversalObject, systemObserver_, callback);
             if (!req.constructError_ && !req.handleErrors(context_)) {
                 handleNewRequest(req);
             }
