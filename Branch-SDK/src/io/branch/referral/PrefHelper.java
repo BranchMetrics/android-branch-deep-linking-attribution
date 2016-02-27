@@ -483,15 +483,15 @@ public class PrefHelper {
     /**
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
-     * @param identifer A {@link String} value containing the identifier of the associated
+     * @param identifier A {@link String} value containing the identifier of the associated
      *                  link.
      */
-    public void setLinkClickIdentifier(String identifer) {
-        setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
+    public void setLinkClickIdentifier(String identifier) {
+        setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
     }
 
     /**
-     * <p>Gets the KEY_LINK_CLICK_IDENTIFER {@link String} value that has been set via the Branch API.</p>
+     * <p>Gets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
      * @return A {@link String} value containing the identifier of the associated link.
      */

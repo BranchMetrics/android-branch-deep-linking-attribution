@@ -1,16 +1,5 @@
 package io.branch.referral;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.UUID;
-import java.util.jar.JarFile;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -28,6 +17,17 @@ import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.UUID;
+import java.util.jar.JarFile;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
@@ -49,10 +49,7 @@ class SystemObserver {
     private Context context_;
 
     /**
-     * <p>Indicates whether or not a real device ID is in use, or if a debug value is in use. This
-     * value is referred to by the {@link SystemObserver#hasRealHardwareId()}, and querying of its
-     * value allows debug ANDROID_ID values to be ignored from analytics by the Branch class and any
-     * other analytics libraries.</p>
+     * <p>Indicates whether or not a real device ID is in use, or if a debug value is in use.</p>
      */
     private boolean isRealHardwareId;
 
@@ -60,7 +57,7 @@ class SystemObserver {
      * <p>Sole constructor method of the {@link SystemObserver} class. Instantiates the value of
      * <i>isRealHardware</i> {@link Boolean} value as <i>true</i>.</p>
      *
-     * @param context
+     * @param context Current application context
      */
     public SystemObserver(Context context) {
         context_ = context;
@@ -71,14 +68,13 @@ class SystemObserver {
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
      * immutable value is generated upon initial device setup, and re-used throughout the life of
      * the device.</p>
-     *
+     * <p/>
      * <p>If <i>true</i> is provided as a parameter, the method will return a different,
      * randomly-generated value each time that it is called. This allows you to simulate many different
      * user devices with different ANDROID_ID values with a single physical device or emulator.</p>
      *
      * @param debug A {@link Boolean} value indicating whether to run in <i>real</i> or <i>debug mode</i>.
-     * @return
-     * <p>A {@link String} value representing the unique ANDROID_ID of the device, or a randomly-generated
+     * @return <p>A {@link String} value representing the unique ANDROID_ID of the device, or a randomly-generated
      * debug value in place of a real identifier.</p>
      */
     public String getUniqueID(boolean debug) {
@@ -98,11 +94,10 @@ class SystemObserver {
 
     /**
      * <p>Checks the value of the <i>isRealHardWareId</i> {@link Boolean} value within the current
-     * instance of the class. If not set by the {@link SystemObserver#hasRealHardwareId()}
+     * instance of the class. If not set by the {@link SystemObserver#isRealHardwareId}
      * or will default to true upon class instantiation.</p>
      *
-     * @return
-     * <p>A {@link Boolean} value indicating whether or not the current device has a hardware
+     * @return <p>A {@link Boolean} value indicating whether or not the current device has a hardware
      * identifier; {@link Secure#ANDROID_ID}</p>
      */
     public boolean hasRealHardwareId() {
@@ -113,7 +108,7 @@ class SystemObserver {
      * <p>Provides the package name of the current app, and passes it to the
      * {@link SystemObserver#getURIScheme(String)} method to enable the call without a {@link String}
      * parameter.</p>
-     *
+     * <p/>
      * <p>This method should be used for retrieving the URI scheme of the current application.</p>
      *
      * @return A {@link String} value containing the response from {@link SystemObserver#getURIScheme(String)}.
@@ -124,13 +119,12 @@ class SystemObserver {
 
     /**
      * <p>Gets the URI scheme of the specified package from its AndroidManifest.xml file.</p>
-     *
+     * <p/>
      * <p>This method should be used for retrieving the URI scheme of the another application of
      * which the package name is known.</p>
      *
      * @param packageName A {@link String} containing the full package name of the app to check.
-     * @return
-     * <p>A {@link String} containing the output of {@link ApkParser#decompressXML(byte[])}.</p>
+     * @return <p>A {@link String} containing the output of {@link ApkParser#decompressXML(byte[])}.</p>
      */
     public String getURIScheme(String packageName) {
         String scheme = BLANK;
@@ -141,7 +135,7 @@ class SystemObserver {
                 String sourceApk = ai.publicSourceDir;
                 JarFile jf = null;
                 InputStream is = null;
-                byte[] xml = null;
+                byte[] xml;
                 try {
                     jf = new JarFile(sourceApk);
                     is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
@@ -150,19 +144,18 @@ class SystemObserver {
                     is.read(xml);
                     scheme = new ApkParser().decompressXML(xml);
                 } catch (Exception ignored) {
-                } catch (OutOfMemoryError ignored) {
                 } finally {
-                    xml = null;
                     try {
                         if (is != null) {
                             is.close();
+                            // noinspection unused
                             is = null;
                         }
                         if (jf != null) {
                             jf.close();
-                            jf = null;
                         }
-                    } catch (IOException ignored) {}
+                    } catch (IOException ignored) {
+                    }
                 }
             } catch (NameNotFoundException ignored) {
             }
@@ -174,9 +167,8 @@ class SystemObserver {
      * <p>Checks the current device's {@link ActivityManager} system service and returns the value
      * of the lowMemory flag.</p>
      *
-     * @return
-     * <p>A {@link Boolean} value representing the low memory flag of the current device.</p>
-     *
+     * @return <p>A {@link Boolean} value representing the low memory flag of the current device.</p>
+     * <p/>
      * <ul>
      * <li><i>true</i> - the free memory on the current device is below the system-defined threshold
      * that triggers the low memory flag.</li>
@@ -193,16 +185,16 @@ class SystemObserver {
     /**
      * <p>Gets a {@link JSONArray} object containing a list of the applications that are installed
      * on the current device.</p>
-     *
+     * <p/>
      * <p>The method gets a handle on the {@link PackageManager} and calls the
      * {@link PackageManager#getInstalledApplications(int)} method to retrieve a {@link List} of
      * {@link ApplicationInfo} objects, each representing a single application that is installed on
      * the current device.</p>
-     *
+     * <p/>
      * <p>For each of these items, the method gets the attributes shown below, and constructs a
      * {@link JSONArray} representation of the list, which can be consumed by a JSON parser on the
      * server.</p>
-     *
+     * <p/>
      * <ul>
      * <li>loadLabel</li>
      * <li>packageName</li>
@@ -212,8 +204,7 @@ class SystemObserver {
      * <li>uriScheme</li>
      * </ul>
      *
-     * @return
-     * <p>A {@link JSONArray} containing information about all of the applications installed on the
+     * @return <p>A {@link JSONArray} containing information about all of the applications installed on the
      * current device.</p>
      */
     @SuppressLint("NewApi")
@@ -258,8 +249,7 @@ class SystemObserver {
                         packObj.put(Defines.Jsonkey.OS.getKey(), this.getOS());
 
                         arr.put(packObj);
-                    } catch(JSONException ignore) {
-                    } catch(NameNotFoundException ignore) {
+                    } catch (JSONException | NameNotFoundException ignore) {
                     }
                 }
             }
@@ -270,20 +260,19 @@ class SystemObserver {
     /**
      * <p>Gets the package name of the current application that the SDK is integrated with.</p>
      *
-     * @return
-     * <p>A {@link String} value containing the full package name of the application that the SDK is
+     * @return <p>A {@link String} value containing the full package name of the application that the SDK is
      * currently integrated into.</p>
      */
     public String getAppVersion() {
-         try {
-             PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-             if (packageInfo.versionName != null)
-                 return packageInfo.versionName;
-             else
-                 return BLANK;
-         } catch (NameNotFoundException ignored ) {
-         }
-         return BLANK;
+        try {
+            PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+            if (packageInfo.versionName != null)
+                return packageInfo.versionName;
+            else
+                return BLANK;
+        } catch (NameNotFoundException ignored) {
+        }
+        return BLANK;
     }
 
     /**
@@ -291,8 +280,7 @@ class SystemObserver {
      * connected to.
      * </p>
      *
-     * @return
-     * <p>A {@link String} value containing the network-provided name of the telephony carrier that
+     * @return <p>A {@link String} value containing the network-provided name of the telephony carrier that
      * the current device is connected to.</p>
      */
     public String getCarrier() {
@@ -312,10 +300,9 @@ class SystemObserver {
      * returned as a result.
      * </p>
      *
-     * @return
-     * <p>A {@link Boolean} value indicating whether or not Bluetooth is supported <b>and enabled</b>
+     * @return <p>A {@link Boolean} value indicating whether or not Bluetooth is supported <b>and enabled</b>
      * on the current device.</p>
-     *
+     * <p/>
      * <ul>
      * <li><i>true</i> - the device supports Bluetooth, and the adapter is enabled.</li>
      * <li><i>false</i> - the device does not support Bluetooth, or the adapter is disabled.</li>
@@ -325,6 +312,7 @@ class SystemObserver {
         try {
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (bluetoothAdapter != null) {
+                //noinspection ResourceType
                 return bluetoothAdapter.isEnabled();
             }
         } catch (Exception ignore) {
@@ -337,16 +325,15 @@ class SystemObserver {
      * <a href="https://developer.android.com/guide/topics/connectivity/bluetooth-le.html">
      * Bluetooth Low Energy (LE)</a>.
      * </p>
-     *
+     * <p/>
      * <p>This is determined by checking the SDK version available on the current device. BTLE was
      * introduced in Android 4.3 (API Level 18), so if the current device reports that it supports
      * the highest platform version that is 17 or lower, the device does not support the required
      * platform hooks to communicate with capable devices via the Bluetooth Low-Energy profile.</p>
      *
-     * @return
-     * <p>A {@link Boolean} value indicating whether or not Bluetooth LE is available on the current
+     * @return <p>A {@link Boolean} value indicating whether or not Bluetooth LE is available on the current
      * device.</p>
-     *
+     * <p/>
      * <ul>
      * <li><i>true</i> - this device supports Bluetooth LE.</li>
      * <li><i>false</i> - this device does not support Bluetooth LE.</li>
@@ -370,19 +357,18 @@ class SystemObserver {
     /**
      * <p>Checks whether or not the current device has near-field communication capabilities.</p>
      *
-     * @return
-     * <p>A {@link Boolean} value indicating whether or not NFC capabilities exist in the current
+     * @return <p>A {@link Boolean} value indicating whether or not NFC capabilities exist in the current
      * device.</p>
-     *
+     * <p/>
      * <ul>
-     *     <li><i>true</i> - Current device has NFC capabilities.</li>
-     *     <li><i>false</i> - Current device has no NFC capabilities.</li>
+     * <li><i>true</i> - Current device has NFC capabilities.</li>
+     * <li><i>false</i> - Current device has no NFC capabilities.</li>
      * </ul>
      */
     public boolean getNFCPresent() {
         try {
             return context_.getPackageManager().hasSystemFeature("android.hardware.nfc");
-        } catch (Exception ignored ) {
+        } catch (Exception ignored) {
         }
         return false;
     }
@@ -393,19 +379,18 @@ class SystemObserver {
      * and or make calls.
      * </p>
      *
-     * @return
-     * <p>A {@link Boolean} value indicating whether telephony capabilities exist on the
+     * @return <p>A {@link Boolean} value indicating whether telephony capabilities exist on the
      * current device.</p>
-     *
+     * <p/>
      * <ul>
-     *     <li><i>true</i> - the device has telephony capabilities; is a phone or phablet.</li>
-     *     <li><i>false</i> - the device has telephony capabilities; is a WiFi tablet or other non-phone device.</li>
+     * <li><i>true</i> - the device has telephony capabilities; is a phone or phablet.</li>
+     * <li><i>false</i> - the device has telephony capabilities; is a WiFi tablet or other non-phone device.</li>
      * </ul>
      */
     public boolean getTelephonePresent() {
         try {
             return context_.getPackageManager().hasSystemFeature("android.hardware.telephony");
-        } catch (Exception ignored ) {
+        } catch (Exception ignored) {
         }
         return false;
     }
@@ -414,11 +399,9 @@ class SystemObserver {
      * <p>Returns the hardware manufacturer of the current device, as defined by the manufacturer.
      * </p>
      *
-     * @see
-     * <a href="http://developer.android.com/reference/android/os/Build.html#MANUFACTURER">
-     * Build.MANUFACTURER</a>
-     *
      * @return A {@link String} value containing the hardware manufacturer of the current device.
+     * @see <a href="http://developer.android.com/reference/android/os/Build.html#MANUFACTURER">
+     * Build.MANUFACTURER</a>
      */
     public String getPhoneBrand() {
         return android.os.Build.MANUFACTURER;
@@ -427,12 +410,10 @@ class SystemObserver {
     /**
      * <p>Returns the hardware model of the current device, as defined by the manufacturer.</p>
      *
-     * @see
-     * <a href="http://developer.android.com/reference/android/os/Build.html#MODEL">
+     * @return A {@link String} value containing the hardware model of the current device.
+     * @see <a href="http://developer.android.com/reference/android/os/Build.html#MODEL">
      * Build.MODEL
      * </a>
-     *
-     * @return A {@link String} value containing the hardware model of the current device.
      */
     public String getPhoneModel() {
         return android.os.Build.MODEL;
@@ -441,7 +422,7 @@ class SystemObserver {
     /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android
      * SDK versions.</p>
-     *
+     * <p/>
      * <p>Not of practical use in your application.</p>
      *
      * @return A {@link String} value that indicates the broad OS type that is in use on the device.
@@ -452,7 +433,7 @@ class SystemObserver {
 
     /**
      * Returns the Android API version of the current device as an {@link Integer}.
-     *
+     * <p/>
      * Common values:
      * <ul>
      * <li>22 - Android 5.1, Lollipop MR1</li>
@@ -464,12 +445,10 @@ class SystemObserver {
      * <li>10 - Android 2.3.4, Gingerbread MR1</li>
      * </ul>
      *
-     * @see
-     * <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels">
-     * Android Developers - API Level and Platform Version</a>
-     *
      * @return An {@link Integer} value representing the SDK/Platform Version of the OS of the
      * current device.
+     * @see <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels">
+     * Android Developers - API Level and Platform Version</a>
      */
     public int getOSVersion() {
         return android.os.Build.VERSION.SDK_INT;
@@ -479,21 +458,20 @@ class SystemObserver {
      * <p>As the Build fingerprint is determined by the OS fingerprint, this will identify whether a
      * an emulator is being used where the developer of said emulator has followed convention and
      * used <b>generic</b> as the first segment of the virtual device fingerprint.</p>
-     *
-     * <p>
+     * <p/>
+     * <p/>
      * Example of a <u>real device</u> (Google Nexus 5, Android 5.1):
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * <b>google</b>/hammerhead/hammerhead:5.1/LMY47D/1743759:user/release-keys</pre>
-     *
-     * <p>
+     * <p/>
+     * <p/>
      * Example of an <u>emulator</u> (Genymotion Nexus 6 AVD, Android 5.0):
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * <b>generic</b>/vbox86p/vbox86p:5.0/LRX21M/buildbot12160004:userdebug/test-keys</pre>
      *
-     * @return
-     * <p>A {@link Boolean} value indicating whether the device upon which the app is being run is
+     * @return <p>A {@link Boolean} value indicating whether the device upon which the app is being run is
      * a simulated platform, i.e. an emulator. Or a real, hardware device.</p>
-     *
+     * <p/>
      * <ul>
      * <li><i>true</i> - the app is running on an emulator</li>
      * <li><i>false</i> - the app is running on a physical device (or a badly configured AVD)</li>
@@ -507,31 +485,29 @@ class SystemObserver {
      * <p>This method returns an {@link Integer} value dependent on whether the application has been
      * updated since its installation on the device. If the application has just been installed and
      * launched immediately, this will always return 1.</p>
-     *
+     * <p/>
      * <p>If however the application has already been installed for more than the duration of a
      * single update cycle, and has received one or more updates, the time in
      * {@link PackageInfo#firstInstallTime} will be different from that in
      * {@link PackageInfo#lastUpdateTime} so the return value will be 0; indicative of an update
      * having occurred whilst the app has been installed.</p>
-     *
+     * <p/>
      * <p>This is useful to know when the manner of handling of deep-link data has changed betwen
      * application versions and where migration of SharedPrefs may be required. This method provides
      * a condition upon which a consistency check or migration validation operation can be carried
      * out.</p>
-     *
+     * <p/>
      * <p>This will not work on Android SDK versions lower than 9, as the {@link PackageInfo#firstInstallTime}
      * and {@link PackageInfo#lastUpdateTime} values did not exist in older versions of the
      * {@link PackageInfo} class.</p>
      *
-     * @return
-     * <p>A {@link Integer} value indicating the update state of the application package.</p>
+     * @param updatePrefs A {@link Boolean} value indicating whether or not current App version
+     *                    number should be updated in preferences.
+     * @return <p>A {@link Integer} value indicating the update state of the application package.</p>
      * <ul>
      * <li><i>1</i> - App not updated since install.</li>
      * <li><i>0</i> - App has been updated since initial install.</li>
      * </ul>
-     *
-     * @param updatePrefs A {@link Boolean} value indicating whether or not current App version
-     *                    number should be updated in preferences.
      */
     @SuppressLint("NewApi")
     public int getUpdateState(boolean updatePrefs) {
@@ -550,7 +526,8 @@ class SystemObserver {
                         return STATE_UPDATE;
                     }
                     return STATE_FRESH_INSTALL;
-                } catch (NameNotFoundException ignored ) { }
+                } catch (NameNotFoundException ignored) {
+                }
             }
             // otherwise, just register an install
             return STATE_FRESH_INSTALL;
@@ -570,14 +547,12 @@ class SystemObserver {
      * default display of the device that the SDK is running on. Use this when you need to know the
      * dimensions of the screen, density of pixels on the display or any other information that
      * relates to the device screen.</p>
-     *
+     * <p/>
      * <p>Especially useful when operating without an Activity context, e.g. from a background
      * service.</p>
      *
+     * @return <p>A {@link DisplayMetrics} object representing the default display of the device.</p>
      * @see DisplayMetrics
-     *
-     * @return
-     * <p>A {@link DisplayMetrics} object representing the default display of the device.</p>
      */
     public DisplayMetrics getScreenDisplay() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -589,13 +564,12 @@ class SystemObserver {
     /**
      * <p>Use this method to query the system state to determine whether a WiFi connection is
      * available for use by applications installed on the device.</p>
-     *
+     * <p/>
      * This applies only to WiFi connections, and does not indicate whether there is
      * a viable Internet connection available; if connected to an offline WiFi router for instance,
      * the boolean will still return <i>true</i>.
      *
-     * @return
-     * <p>
+     * @return <p>
      * A {@link boolean} value that indicates whether a WiFi connection exists and is open.
      * </p>
      * <ul>
@@ -615,16 +589,14 @@ class SystemObserver {
     /**
      * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
      * actions within Android apps.</p>
-     *
+     * <p/>
      * <p>The Google Play services APIs expose the advertising tracking ID as UUID such as this:</p>
-     *
+     * <p/>
      * <pre>38400000-8cf0-11bd-b23e-10b96e40000d</pre>
      *
+     * @return <p>A {@link String} value containing the client ad UUID as supplied by Google Play.</p>
      * @see <a href="https://developer.android.com/google/play-services/id.html">
      * Android Developers - Advertising ID</a>
-     *
-     * @return
-     * <p>A {@link String} value containing the client ad UUID as supplied by Google Play.</p>
      */
     public String getAdvertisingId() {
         String advertisingId = null;
@@ -635,9 +607,9 @@ class SystemObserver {
             Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
             Method getIdMethod = adInfoObj.getClass().getMethod("getId");
             advertisingId = (String) getIdMethod.invoke(adInfoObj);
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             ex.printStackTrace();
-        } catch(Exception ignore) {
+        } catch (Exception ignore) {
         }
 
         return advertisingId;
@@ -647,12 +619,9 @@ class SystemObserver {
      * <p>Get the limit-ad-tracking status of the advertising identifier.</p>
      * <p>Check the Google Play services to for LAT enabled or disabled and return the LAT value as an integer.</p>
      *
-     * @return
-     * <p> 0 if LAT is disabled else 1.</p>
-     *
+     * @return <p> 0 if LAT is disabled else 1.</p>
      * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
      * Android Developers - Limit Ad Tracking</a>
-     *
      */
     public int getLATValue() {
         int latVal = 0;
@@ -665,7 +634,8 @@ class SystemObserver {
             latVal = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
         } catch (IllegalStateException ex) {
             ex.printStackTrace();
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
 
         return latVal;
     }
