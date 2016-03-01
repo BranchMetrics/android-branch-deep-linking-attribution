@@ -162,4 +162,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     public boolean hasCallBack() {
         return callback_ != null;
     }
+
+    @Override
+    public String getPromoActonName() {
+        return ACTION_OPEN;
+    }
 }

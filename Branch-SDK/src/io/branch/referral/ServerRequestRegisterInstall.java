@@ -195,4 +195,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     public void clearCallbacks() {
         callback_ = null;
     }
+
+    @Override
+    public String getPromoActonName() {
+        return ACTION_INSTALL;
+    }
 }

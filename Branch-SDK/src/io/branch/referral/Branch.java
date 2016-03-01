@@ -47,6 +47,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.PromoViewHandler;
 
 /**
  * <p>
@@ -64,7 +65,7 @@ import io.branch.referral.util.LinkProperties;
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
  */
-public class Branch {
+public class Branch implements PromoViewHandler.IPromoViewEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -312,6 +313,8 @@ public class Branch {
 
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
+
+
 
     /* Enumeration for defining session initialisation state. */
     private enum SESSION_STATE {
@@ -3312,9 +3315,17 @@ public class Branch {
                                     initState_ = SESSION_STATE.INITIALISED;
                                     // Publish success to listeners
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
-                                    checkForAutoDeepLinkConfiguration();
+
+                                    PromoViewHandler promoViewHandler = PromoViewHandler.getInstance();
+                                    promoViewHandler.saveAppPromoViews();
+                                    boolean isPromoViewShowing = promoViewHandler.showPromoView(((ServerRequestInitSession) thisReq_).getPromoActonName(),
+                                                    currentActivityReference_.get(), Branch.this);
+
+                                    if(!isPromoViewShowing) {
+                                        checkForAutoDeepLinkConfiguration();
+                                    }
+
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
@@ -3466,7 +3477,6 @@ public class Branch {
         }
         return matched;
     }
-
     //-------------------------- Branch Builders--------------------------------------//
 
     /**
@@ -3873,5 +3883,39 @@ public class Branch {
      */
     public void addExtraInstrumentationData(String key, String value) {
         instrumentationExtraData_.put(key, value);
+    }
+
+
+    //-------------------- Promo view handling--------------------//
+
+    public JSONArray getPromoViewData() {
+        JSONArray promoViewArray  =null;
+        String previewArrayObj = "{\"app_promo_data\":[{"
+                + " \"app_promo_id\":\"promo_id_01\","
+                + " \"app_promo_action\" : \"open\","
+                + " \"num_of_use\":1,"
+                + " \"expiry\":123456778 },{"
+                + " \"app_promo_id\":\"promo_id_02\","
+                + " \"app_promo_action\" : \"created_link\","
+                + "  \"num_of_use\":1,"
+                + " \"expiry\":123456778}]}";
+        try {
+            JSONObject jsonObject = new JSONObject(previewArrayObj);
+            promoViewArray = jsonObject.getJSONArray("app_promo_data");
+        } catch (JSONException ignore) {
+        }
+        return promoViewArray;
+    }
+
+    @Override
+    public void onPromoViewVisible(String action) {
+
+    }
+
+    @Override
+    public void onPromoViewDismissed(String action) {
+        if(ServerRequestInitSession.isInitSessionAction(action)){
+            checkForAutoDeepLinkConfiguration();
+        }
     }
 }

@@ -10,6 +10,9 @@ import org.json.JSONObject;
  * </p>
  */
 abstract class ServerRequestInitSession extends ServerRequest {
+    protected static final String ACTION_OPEN = "open";
+    protected static final String ACTION_INSTALL = "install";
+
     public ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
     }
@@ -28,5 +31,15 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     public boolean isGAdsParamsRequired() {
         return true; //Session start requests need GAds params
+    }
+
+    public abstract String getPromoActonName();
+
+    public static boolean isInitSessionAction(String actionName){
+        boolean isInitSessionAction = false;
+        if(actionName != null){
+            isInitSessionAction = (actionName.equalsIgnoreCase(ACTION_OPEN) || actionName.equalsIgnoreCase(ACTION_INSTALL));
+        }
+        return isInitSessionAction;
     }
 }

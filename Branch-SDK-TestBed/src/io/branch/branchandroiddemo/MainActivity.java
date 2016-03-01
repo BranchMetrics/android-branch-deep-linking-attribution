@@ -12,8 +12,6 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
-
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -287,6 +285,7 @@ public class MainActivity extends Activity {
                         Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
                         Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
                         Log.i("ContentMetaData", "metadata " + branchUniversalObject.getMetadata());
+
                     }
 
                     if (linkProperties != null) {
