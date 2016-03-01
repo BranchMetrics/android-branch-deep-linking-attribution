@@ -1577,7 +1577,9 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
     public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
         if (metadata != null)
             metadata = BranchUtil.filterOutBadCharacters(metadata);
-
+        if (currentActivityReference_ != null && currentActivityReference_.get() != null ) {
+            PromoViewHandler.getInstance().showPromoView(action, currentActivityReference_.get(), null);
+        }
         ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -2988,6 +2990,9 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
+            if(PromoViewHandler.getInstance().isInstallOrOpenPromoPending()){
+                PromoViewHandler.getInstance().showPendingPromoView(activity);
+            }
         }
 
         @Override
@@ -3317,11 +3322,20 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
 
+                                    boolean isActivityEnabledForPromoView = true;
+                                    boolean isPromoViewShowing = false;
                                     PromoViewHandler promoViewHandler = PromoViewHandler.getInstance();
                                     promoViewHandler.saveAppPromoViews();
-                                    boolean isPromoViewShowing = promoViewHandler.showPromoView(((ServerRequestInitSession) thisReq_).getPromoActonName(),
-                                                    currentActivityReference_.get(), Branch.this);
-
+                                    if(currentActivityReference_.get() instanceof IPromoViewControl){
+                                        isActivityEnabledForPromoView = !((IPromoViewControl)currentActivityReference_.get()).skipPromoViewsOnThisActivity();
+                                    }
+                                    if(isActivityEnabledForPromoView) {
+                                        isPromoViewShowing = promoViewHandler.showPromoView(((ServerRequestInitSession) thisReq_).getPromoActonName(),
+                                                currentActivityReference_.get(), Branch.this);
+                                    }
+                                    else{
+                                        promoViewHandler.markInstallOrOpenPromoViewPending(((ServerRequestInitSession) thisReq_).getPromoActonName());
+                                    }
                                     if(!isPromoViewShowing) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
@@ -3888,28 +3902,10 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
 
     //-------------------- Promo view handling--------------------//
 
-    public JSONArray getPromoViewData() {
-        JSONArray promoViewArray  =null;
-        String previewArrayObj = "{\"app_promo_data\":[{"
-                + " \"app_promo_id\":\"promo_id_01\","
-                + " \"app_promo_action\" : \"open\","
-                + " \"num_of_use\":1,"
-                + " \"expiry\":123456778 },{"
-                + " \"app_promo_id\":\"promo_id_02\","
-                + " \"app_promo_action\" : \"created_link\","
-                + "  \"num_of_use\":1,"
-                + " \"expiry\":123456778}]}";
-        try {
-            JSONObject jsonObject = new JSONObject(previewArrayObj);
-            promoViewArray = jsonObject.getJSONArray("app_promo_data");
-        } catch (JSONException ignore) {
-        }
-        return promoViewArray;
-    }
 
     @Override
     public void onPromoViewVisible(String action) {
-
+        //No Implementation on purpose
     }
 
     @Override
@@ -3917,5 +3913,47 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
         if(ServerRequestInitSession.isInitSessionAction(action)){
             checkForAutoDeepLinkConfiguration();
         }
+    }
+
+    @Override
+    public void onPromoViewError(int errorCode, String errorMsg) {
+
+    }
+
+    /**
+     * Interface for defining optional promo view behaviour for Activities
+     */
+    public interface IPromoViewControl{
+        /**
+         * Defines if an activity is interested to show promo views or not.
+         * By default activities are considered as promo view enabled. In case of activities which are not interested to show a promo view (Splash screen for example)
+         * should implement this and return false. The pending promo view will be shown with the very next promo view activity
+         *
+         * @return A {@link Boolean} whose value is true if the activity don't want to show any promo view.
+         */
+        boolean skipPromoViewsOnThisActivity();
+    }
+
+    //--------- Test data to simulate Promo view------------//
+    //TODO should be part of initSession JsonObj. Delete as back end implement this feature.
+    public JSONArray getPromoViewData() {
+        JSONArray promoViewArray  = null;
+        String previewArrayObj = "{\"app_promo_data\":[{"
+                + " \"app_promo_id\":\"promo_id_01\","
+                + " \"app_promo_action\" : \"open\","
+                + " \"num_of_use\":1,"
+                + " \"promo_view_url\":\"https://branch.io\","
+                + " \"expiry\":123456778 },{"
+                + " \"app_promo_id\":\"promo_id_02\","
+                + " \"app_promo_action\" : \"created_link\","
+                + "  \"num_of_use\":1,"
+                + " \"promo_view_url\":\"https://branch.io\","
+                + " \"expiry\":123456778}]}";
+        try {
+            JSONObject jsonObject = new JSONObject(previewArrayObj);
+            promoViewArray = jsonObject.getJSONArray("app_promo_data");
+        } catch (JSONException ignore) {
+        }
+        return promoViewArray;
     }
 }
