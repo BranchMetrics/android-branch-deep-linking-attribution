@@ -315,7 +315,6 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
 
 
-
     /* Enumeration for defining session initialisation state. */
     private enum SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
@@ -1577,7 +1576,7 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
     public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
         if (metadata != null)
             metadata = BranchUtil.filterOutBadCharacters(metadata);
-        if (currentActivityReference_ != null && currentActivityReference_.get() != null ) {
+        if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
             PromoViewHandler.getInstance().showPromoView(action, currentActivityReference_.get(), null);
         }
         ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
@@ -2990,7 +2989,7 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
-            if(PromoViewHandler.getInstance().isInstallOrOpenPromoPending()){
+            if (PromoViewHandler.getInstance().isInstallOrOpenPromoPending()) {
                 PromoViewHandler.getInstance().showPendingPromoView(activity);
             }
         }
@@ -3326,17 +3325,16 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
                                     boolean isPromoViewShowing = false;
                                     PromoViewHandler promoViewHandler = PromoViewHandler.getInstance();
                                     promoViewHandler.saveAppPromoViews();
-                                    if(currentActivityReference_.get() instanceof IPromoViewControl){
-                                        isActivityEnabledForPromoView = !((IPromoViewControl)currentActivityReference_.get()).skipPromoViewsOnThisActivity();
+                                    if (currentActivityReference_.get() instanceof IPromoViewControl) {
+                                        isActivityEnabledForPromoView = !((IPromoViewControl) currentActivityReference_.get()).skipPromoViewsOnThisActivity();
                                     }
-                                    if(isActivityEnabledForPromoView) {
-                                        isPromoViewShowing = promoViewHandler.showPromoView(((ServerRequestInitSession) thisReq_).getPromoActonName(),
+                                    if (isActivityEnabledForPromoView) {
+                                        isPromoViewShowing = promoViewHandler.showPromoView(((ServerRequestInitSession) thisReq_).getPromoActionName(),
                                                 currentActivityReference_.get(), Branch.this);
+                                    } else {
+                                        promoViewHandler.markInstallOrOpenPromoViewPending(((ServerRequestInitSession) thisReq_).getPromoActionName());
                                     }
-                                    else{
-                                        promoViewHandler.markInstallOrOpenPromoViewPending(((ServerRequestInitSession) thisReq_).getPromoActonName());
-                                    }
-                                    if(!isPromoViewShowing) {
+                                    if (!isPromoViewShowing) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
 
@@ -3910,7 +3908,7 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
 
     @Override
     public void onPromoViewDismissed(String action) {
-        if(ServerRequestInitSession.isInitSessionAction(action)){
+        if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
@@ -3923,7 +3921,7 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
     /**
      * Interface for defining optional promo view behaviour for Activities
      */
-    public interface IPromoViewControl{
+    public interface IPromoViewControl {
         /**
          * Defines if an activity is interested to show promo views or not.
          * By default activities are considered as promo view enabled. In case of activities which are not interested to show a promo view (Splash screen for example)
@@ -3934,26 +3932,4 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
         boolean skipPromoViewsOnThisActivity();
     }
 
-    //--------- Test data to simulate Promo view------------//
-    //TODO should be part of initSession JsonObj. Delete as back end implement this feature.
-    public JSONArray getPromoViewData() {
-        JSONArray promoViewArray  = null;
-        String previewArrayObj = "{\"app_promo_data\":[{"
-                + " \"app_promo_id\":\"promo_id_01\","
-                + " \"app_promo_action\" : \"open\","
-                + " \"num_of_use\":1,"
-                + " \"promo_view_url\":\"https://branch.io\","
-                + " \"expiry\":123456778 },{"
-                + " \"app_promo_id\":\"promo_id_02\","
-                + " \"app_promo_action\" : \"buy\","
-                + "  \"num_of_use\":1,"
-                + " \"promo_view_url\":\"https://branch.io\","
-                + " \"expiry\":123456778}]}";
-        try {
-            JSONObject jsonObject = new JSONObject(previewArrayObj);
-            promoViewArray = jsonObject.getJSONArray("app_promo_data");
-        } catch (JSONException ignore) {
-        }
-        return promoViewArray;
-    }
 }

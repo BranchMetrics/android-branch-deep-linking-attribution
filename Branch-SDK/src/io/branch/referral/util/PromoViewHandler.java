@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.referral.Branch;
+import io.branch.referral.Defines;
 
 /**
  * <p>
@@ -173,16 +174,23 @@ public class PromoViewHandler {
     }
 
     public void saveAppPromoViews() {
-        JSONArray promoViewArray = Branch.getInstance().getPromoViewData();
-        if(promoViewArray != null) {
-            for (int i = 0; i < promoViewArray.length(); i++) {
-                try {
-                    AppPromoView appPromoView = new AppPromoView(promoViewArray.getJSONObject(i));
-                    promoViewMap_.put(appPromoView.promoAction_, appPromoView);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        if (Branch.getInstance().getLatestReferringParams().has(Defines.Jsonkey.AppPromoData.getKey())) {
+            JSONArray promoViewArray;
+            try {
+                promoViewArray = Branch.getInstance().getLatestReferringParams().getJSONArray(Defines.Jsonkey.AppPromoData.getKey());
+                if (promoViewArray != null) {
+                    for (int i = 0; i < promoViewArray.length(); i++) {
+                        try {
+                            AppPromoView appPromoView = new AppPromoView(promoViewArray.getJSONObject(i));
+                            promoViewMap_.put(appPromoView.promoAction_, appPromoView);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
+            } catch (JSONException ignore) {
             }
+
         }
     }
 

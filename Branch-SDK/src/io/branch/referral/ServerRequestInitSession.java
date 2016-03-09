@@ -33,7 +33,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         return true; //Session start requests need GAds params
     }
 
-    public abstract String getPromoActonName();
+    public abstract String getPromoActionName();
 
     public static boolean isInitSessionAction(String actionName){
         boolean isInitSessionAction = false;

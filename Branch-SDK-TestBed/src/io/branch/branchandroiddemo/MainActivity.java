@@ -9,6 +9,7 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,6 +18,7 @@ import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
@@ -48,7 +50,7 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
                 .setContentType("application/vnd.businessobjects")
-                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
                 .addContentMetadata("Metadata_Key1", "Metadata_value1")
@@ -235,8 +237,8 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER);
-                        // Define custom styel for the share sheet list view
-                        //.setStyleResourceID(R.style.Share_Sheet_Style);
+                // Define custom styel for the share sheet list view
+                //.setStyleResourceID(R.style.Share_Sheet_Style);
 
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
                     @Override
@@ -267,6 +269,17 @@ public class MainActivity extends Activity {
 //        }catch (JSONException ignore){
 //        }
 
+        // Test code for testing App promo views
+        try {
+            JSONObject debugObj = new JSONObject();
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"open\",\"num_of_use\":1, \"promo_view_url\":\"https://branch.io\", \"expiry\":123456778 }"));
+            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_02\",\"app_promo_action\":\"buy\",\"num_of_use\":2, \"promo_view_url\":\"https://branch.io\", \"expiry\":123456778 }"));
+            debugObj.put(Defines.Jsonkey.AppPromoData.getKey(), jsonArray);
+            Branch.getInstance().setDeepLinkDebugMode(debugObj);
+        } catch (JSONException ignore) {
+
+        }
     }
 
     @Override
