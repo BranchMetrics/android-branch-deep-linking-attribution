@@ -3945,7 +3945,7 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
                 + " \"promo_view_url\":\"https://branch.io\","
                 + " \"expiry\":123456778 },{"
                 + " \"app_promo_id\":\"promo_id_02\","
-                + " \"app_promo_action\" : \"created_link\","
+                + " \"app_promo_action\" : \"buy\","
                 + "  \"num_of_use\":1,"
                 + " \"promo_view_url\":\"https://branch.io\","
                 + " \"expiry\":123456778}]}";
