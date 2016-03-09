@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Build;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -91,7 +92,6 @@ public class PromoViewHandler {
 
         if (currentActivity != null && promoView != null) {
             showPromoView(promoView, currentActivity, callback);
-            isPromoDialogShowing = true;
         }
 
         return isPromoDialogShowing;
@@ -100,7 +100,6 @@ public class PromoViewHandler {
     private void showPromoView(final AppPromoView promoView, Activity currentActivity, final IPromoViewEvents callback) {
         if (currentActivity != null && promoView != null) {
             promoView.updateUsageCount();
-            isPromoDialogShowing = true;
             WebView webView = new WebView(currentActivity);
 
             final RelativeLayout layout = new RelativeLayout(currentActivity);
@@ -112,44 +111,55 @@ public class PromoViewHandler {
             layout.addView(webView, layoutParams);
             layout.setBackgroundColor(Color.parseColor("#11FEFEFE"));
 
-            final TextView confirmTxt = new TextView(currentActivity);
-            confirmTxt.setVisibility(View.GONE);
-            confirmTxt.setBackgroundColor(Color.RED);
-            confirmTxt.setText("Confirm");
-            confirmTxt.setGravity(Gravity.CENTER);
-            confirmTxt.setTextAppearance(currentActivity, android.R.style.TextAppearance_Large);
-            RelativeLayout.LayoutParams txtViewLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            txtViewLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-            txtViewLayoutParams.setMargins(40, 0, 40, 30);
-            confirmTxt.setPadding(30, 30, 30, 30);
-            layout.addView(confirmTxt, txtViewLayoutParams);
-
-            final Dialog dialog = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            dialog.setContentView(layout);
-            dialog.show();
-            if (callback != null) {
-                callback.onPromoViewVisible(promoView.promoAction_);
-            }
 
             if (Build.VERSION.SDK_INT >= 19) {
                 webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
 
+            if (!TextUtils.isEmpty(promoView.webViewUrl_)) {
+                webView.loadUrl(promoView.webViewUrl_);
+            } else if (!TextUtils.isEmpty(promoView.webViewHtml_)) {
+                webView.loadDataWithBaseURL(null, promoView.webViewHtml_, "text/html", "utf-8", null);
+            } else {
+                return; // Error no url or Html
+            }
+            isPromoDialogShowing = true;
+            final Dialog dialog = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            if (promoView.isDebug_) {
+                final TextView confirmTxt = new TextView(currentActivity);
+                confirmTxt.setVisibility(View.VISIBLE);
+                confirmTxt.setBackgroundColor(Color.RED);
+                confirmTxt.setText("Close");
+                confirmTxt.setGravity(Gravity.CENTER);
+                confirmTxt.setTextAppearance(currentActivity, android.R.style.TextAppearance_Large);
+                RelativeLayout.LayoutParams txtViewLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                txtViewLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                txtViewLayoutParams.setMargins(40, 0, 40, 30);
+                confirmTxt.setPadding(30, 30, 30, 30);
+                layout.addView(confirmTxt, txtViewLayoutParams);
 
-            webView.loadUrl(promoView.webViewUrl_);
-            webView.setBackgroundColor(Color.parseColor("#00FE0000"));
+                confirmTxt.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+            }
+            dialog.setContentView(layout);
+            dialog.show();
 
+            if (callback != null) {
+                callback.onPromoViewVisible(promoView.promoAction_);
+            }
 
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
                     layout.setVisibility(View.VISIBLE);
-                    confirmTxt.setVisibility(View.VISIBLE);
                     view.setVisibility(View.VISIBLE);
                     dialog.show();
                     showViewWithAlphaTweening(layout);
-                    showViewWithAlphaTweening(confirmTxt);
                     showViewWithAlphaTweening(view);
                 }
             });
@@ -164,12 +174,7 @@ public class PromoViewHandler {
                 }
             });
 
-            confirmTxt.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dialog.dismiss();
-                }
-            });
+
         }
     }
 
@@ -230,25 +235,33 @@ public class PromoViewHandler {
         private int num_of_use_ = 1;
         private long expiry_date_ = 0;
         private String webViewUrl_ = "";
+        private String webViewHtml_ = "";
+        private boolean isDebug_;
         /* This promo view can be used for any number of times in a session. */
         private static final int USAGE_UNLIMITED = -1;
 
         private AppPromoView(JSONObject promoViewJson) {
             try {
-                if (promoViewJson.has("app_promo_id")) {
-                    promoID_ = promoViewJson.getString("app_promo_id");
+                if (promoViewJson.has(Defines.Jsonkey.AppPromoID.getKey())) {
+                    promoID_ = promoViewJson.getString(Defines.Jsonkey.AppPromoID.getKey());
                 }
-                if (promoViewJson.has("app_promo_action")) {
-                    promoAction_ = promoViewJson.getString("app_promo_action");
+                if (promoViewJson.has(Defines.Jsonkey.AppPromoAction.getKey())) {
+                    promoAction_ = promoViewJson.getString(Defines.Jsonkey.AppPromoAction.getKey());
                 }
-                if (promoViewJson.has("num_of_use")) {
-                    num_of_use_ = promoViewJson.getInt("num_of_use");
+                if (promoViewJson.has(Defines.Jsonkey.AppPromoNumOfUse.getKey())) {
+                    num_of_use_ = promoViewJson.getInt(Defines.Jsonkey.AppPromoNumOfUse.getKey());
                 }
-                if (promoViewJson.has("expiry")) {
-                    expiry_date_ = promoViewJson.getLong("expiry");
+                if (promoViewJson.has(Defines.Jsonkey.AppPromoExpiry.getKey())) {
+                    expiry_date_ = promoViewJson.getLong(Defines.Jsonkey.AppPromoExpiry.getKey());
                 }
-                if (promoViewJson.has("promo_view_url")) {
-                    webViewUrl_ = promoViewJson.getString("promo_view_url");
+                if (promoViewJson.has(Defines.Jsonkey.AppPromoViewUrl.getKey())) {
+                    webViewUrl_ = promoViewJson.getString(Defines.Jsonkey.AppPromoViewUrl.getKey());
+                }
+                if (promoViewJson.has(Defines.Jsonkey.AppPromoViewHtml.getKey())) {
+                    webViewHtml_ = promoViewJson.getString(Defines.Jsonkey.AppPromoViewHtml.getKey());
+                }
+                if (promoViewJson.has(Defines.Jsonkey.Debug.getKey())) {
+                    isDebug_ = promoViewJson.getBoolean(Defines.Jsonkey.Debug.getKey());
                 }
             } catch (Exception ignore) {
 

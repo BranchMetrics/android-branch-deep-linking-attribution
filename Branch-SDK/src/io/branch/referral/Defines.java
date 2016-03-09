@@ -90,7 +90,13 @@ public class Defines {
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
 
-        AppPromoData("app_promo_data");
+        AppPromoData("app_promo_data"),
+        AppPromoID("app_promo_id"),
+        AppPromoAction("app_promo_action"),
+        AppPromoNumOfUse("num_of_use"),
+        AppPromoExpiry("expiry"),
+        AppPromoViewUrl("promo_view_url"),
+        AppPromoViewHtml("promo_view_html");
 
         
         private String key = "";

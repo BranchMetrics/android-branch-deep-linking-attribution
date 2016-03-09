@@ -273,8 +273,19 @@ public class MainActivity extends Activity {
         try {
             JSONObject debugObj = new JSONObject();
             JSONArray jsonArray = new JSONArray();
-            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"open\",\"num_of_use\":1, \"promo_view_url\":\"https://branch.io\", \"expiry\":123456778 }"));
-            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_02\",\"app_promo_action\":\"buy\",\"num_of_use\":2, \"promo_view_url\":\"https://branch.io\", \"expiry\":123456778 }"));
+            String webViewHtml = "<!DOCTYPE html>\n" +
+                    "<html>\n" +
+                    "<body>\n" +
+                    "\n" +
+                    "<h1>App Pramo View Test</h1>\n" +
+                    "\n" +
+                    "<p>App promo view test</p>\n" +
+                    "\n" +
+                    "</body>\n" +
+                    "</html>";
+            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"open\",\"num_of_use\":1,\"promo_view_html\": \"" + webViewHtml + "\"," +
+                    " \"expiry\":123456778, \"debug\" : true }"));
+            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_02\",\"app_promo_action\":\"buy\",\"num_of_use\":2, \"promo_view_url\":\"https://branch.io\", \"expiry\":123456778 , \"debug\" : true}"));
             debugObj.put(Defines.Jsonkey.AppPromoData.getKey(), jsonArray);
             Branch.getInstance().setDeepLinkDebugMode(debugObj);
         } catch (JSONException ignore) {
