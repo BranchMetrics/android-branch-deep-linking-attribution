@@ -21,6 +21,7 @@ import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.PromoViewHandler;
 import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
@@ -166,7 +167,27 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.userCompletedAction("buy");
+                branch.userCompletedAction("buy", new PromoViewHandler.IPromoViewEvents() {
+                    @Override
+                    public void onPromoViewVisible(String action) {
+                        Log.i("BranchTestBed", "onPromoViewVisible");
+                    }
+
+                    @Override
+                    public void onPromoViewAccepted(String action) {
+                        Log.i("BranchTestBed", "onPromoViewAccepted");
+                    }
+
+                    @Override
+                    public void onPromoViewCancelled(String action) {
+                        Log.i("BranchTestBed", "onPromoViewCancelled");
+                    }
+
+                    @Override
+                    public void onPromoViewError(int errorCode, String errorMsg) {
+                        Log.i("BranchTestBed", "onPromoViewError");
+                    }
+                });
             }
         });
 
@@ -270,22 +291,22 @@ public class MainActivity extends Activity {
 //        }
 
         // Test code for testing App promo views
+        //TODO  Remove before adding updating test bed
         try {
             JSONObject debugObj = new JSONObject();
             JSONArray jsonArray = new JSONArray();
-            String webViewHtml = "<!DOCTYPE html>\n" +
-                    "<html>\n" +
-                    "<body>\n" +
-                    "\n" +
-                    "<h1>App Pramo View Test</h1>\n" +
-                    "\n" +
-                    "<p>App promo view test</p>\n" +
-                    "\n" +
-                    "</body>\n" +
+            String webViewHtml = "<!DOCTYPE html>" +
+                    "<html>" +
+                    "<body>" +
+                    "<h1>App Promo View Test</h1>" +
+                    "<p>App Promo View Test.</p>" +
+                    "\n\n\n<button onclick=\\\"window.location.href='branch-cta://accept'\\\">Accept Promo </button>\n\n\n" +
+                    "\t\t<button onclick=\\\"window.location.href='branch-cta://cancel'\\\">Cancel Promo </button>\n" +
+                    "</body>" +
                     "</html>";
-            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"open\",\"num_of_use\":1,\"promo_view_html\": \"" + webViewHtml + "\"," +
-                    " \"expiry\":123456778, \"debug\" : true }"));
-            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_02\",\"app_promo_action\":\"buy\",\"num_of_use\":2, \"promo_view_url\":\"https://branch.io\", \"expiry\":123456778 , \"debug\" : true}"));
+
+            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"open\",\"num_of_use\":1,\"promo_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778, \"debug\" : true }"));
+            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"buy\",\"num_of_use\":3,\"promo_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778, \"debug\" : true }"));
             debugObj.put(Defines.Jsonkey.AppPromoData.getKey(), jsonArray);
             Branch.getInstance().setDeepLinkDebugMode(debugObj);
         } catch (JSONException ignore) {

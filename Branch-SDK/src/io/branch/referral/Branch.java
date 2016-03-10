@@ -1574,15 +1574,7 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
      *                 user action that has just been completed.
      */
     public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
-        if (metadata != null)
-            metadata = BranchUtil.filterOutBadCharacters(metadata);
-        if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
-            PromoViewHandler.getInstance().showPromoView(action, currentActivityReference_.get(), null);
-        }
-        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
+        userCompletedAction(action, metadata, null);
     }
 
     /**
@@ -1593,7 +1585,41 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
      *               out. For example "registered" or "logged in".
      */
     public void userCompletedAction(final String action) {
-        userCompletedAction(action, null);
+        userCompletedAction(action, null, null);
+    }
+
+    /**
+     * <p>A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API.</p>
+     *
+     * @param action   A {@link String} value to be passed as an action that the user has carried
+     *                 out. For example "registered" or "logged in".
+     * @param callback instance of {@link io.branch.referral.util.PromoViewHandler.IPromoViewEvents} to listen promo view events
+     */
+    public void userCompletedAction(final String action, PromoViewHandler.IPromoViewEvents callback) {
+        userCompletedAction(action, null, callback);
+    }
+
+    /**
+     * <p>A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
+     *
+     * @param action   A {@link String} value to be passed as an action that the user has carried
+     *                 out. For example "registered" or "logged in".
+     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
+     *                 user action that has just been completed.
+     * @param callback instance of {@link io.branch.referral.util.PromoViewHandler.IPromoViewEvents} to listen promo view events
+     */
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata, PromoViewHandler.IPromoViewEvents callback) {
+        if (metadata != null)
+            metadata = BranchUtil.filterOutBadCharacters(metadata);
+        if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
+            PromoViewHandler.getInstance().showPromoView(action, currentActivityReference_.get(), callback);
+        }
+        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
     }
 
     /**
@@ -3907,7 +3933,14 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
     }
 
     @Override
-    public void onPromoViewDismissed(String action) {
+    public void onPromoViewAccepted(String action) {
+        if (ServerRequestInitSession.isInitSessionAction(action)) {
+            checkForAutoDeepLinkConfiguration();
+        }
+    }
+
+    @Override
+    public void onPromoViewCancelled(String action) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }

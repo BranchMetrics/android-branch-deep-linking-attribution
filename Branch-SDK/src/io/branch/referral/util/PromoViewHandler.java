@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Build;
 import android.text.TextUtils;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
@@ -15,12 +14,13 @@ import android.view.animation.DecelerateInterpolator;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.referral.Branch;
@@ -36,8 +36,13 @@ import io.branch.referral.Defines;
 public class PromoViewHandler {
     private static PromoViewHandler thisInstance_;
     private ConcurrentHashMap<String, AppPromoView> promoViewMap_;
-    private boolean isPromoDialogShowing;
-    private AppPromoView openOrInstallPendingPromo = null;
+    private boolean isPromoDialogShowing_;
+    private boolean isPromoAccepted_;
+    private AppPromoView openOrInstallPendingPromo_ = null;
+
+    private static final String APP_PROMO_REDIRECT_SCHEME = "branch-cta";
+    private static final String APP_PROMO_REDIRECT_ACTION_ACCEPT = "accept";
+    private static final String APP_PROMO_REDIRECT_ACTION_CANCEL = "cancel";
 
     public static final int PROMO_VIEW_ERR_ALREADY_SHOWING = -200;
 
@@ -75,26 +80,27 @@ public class PromoViewHandler {
     }
 
     public boolean showPendingPromoView(Activity currentActivity) {
-        showPromoView(openOrInstallPendingPromo, currentActivity, null);
+        showPromoView(openOrInstallPendingPromo_, currentActivity, null);
         return true;
     }
 
     public boolean showPromoView(final String action, Activity currentActivity, final IPromoViewEvents callback) {
-        if (isPromoDialogShowing) {
+        if (isPromoDialogShowing_) {
             if (callback != null) {
                 callback.onPromoViewError(PROMO_VIEW_ERR_ALREADY_SHOWING, "Unable to create a promo view. A promo view is already showing");
             }
             return false;
         }
 
-        isPromoDialogShowing = false;
+        isPromoDialogShowing_ = false;
+        isPromoAccepted_ = false;
         AppPromoView promoView = getPromoView(action);
 
         if (currentActivity != null && promoView != null) {
             showPromoView(promoView, currentActivity, callback);
         }
 
-        return isPromoDialogShowing;
+        return isPromoDialogShowing_;
     }
 
     private void showPromoView(final AppPromoView promoView, Activity currentActivity, final IPromoViewEvents callback) {
@@ -123,28 +129,8 @@ public class PromoViewHandler {
             } else {
                 return; // Error no url or Html
             }
-            isPromoDialogShowing = true;
+            isPromoDialogShowing_ = true;
             final Dialog dialog = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            if (promoView.isDebug_) {
-                final TextView confirmTxt = new TextView(currentActivity);
-                confirmTxt.setVisibility(View.VISIBLE);
-                confirmTxt.setBackgroundColor(Color.RED);
-                confirmTxt.setText("Close");
-                confirmTxt.setGravity(Gravity.CENTER);
-                confirmTxt.setTextAppearance(currentActivity, android.R.style.TextAppearance_Large);
-                RelativeLayout.LayoutParams txtViewLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                txtViewLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-                txtViewLayoutParams.setMargins(40, 0, 40, 30);
-                confirmTxt.setPadding(30, 30, 30, 30);
-                layout.addView(confirmTxt, txtViewLayoutParams);
-
-                confirmTxt.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                    }
-                });
-            }
             dialog.setContentView(layout);
             dialog.show();
 
@@ -152,31 +138,68 @@ public class PromoViewHandler {
                 callback.onPromoViewVisible(promoView.promoAction_);
             }
 
+            webView.getSettings().setJavaScriptEnabled(true);
+
             webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    boolean isHandled = handleUserActionRedirect(url);
+                    if (!isHandled) {
+                        view.loadUrl(url);
+                    } else {
+                        dialog.dismiss();
+                    }
+                    return isHandled;
+                }
+
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
                     layout.setVisibility(View.VISIBLE);
                     view.setVisibility(View.VISIBLE);
                     dialog.show();
-                    showViewWithAlphaTweening(layout);
-                    showViewWithAlphaTweening(view);
+                    showViewWithAlphaAnimation(layout);
+                    showViewWithAlphaAnimation(view);
                 }
             });
 
             dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    isPromoDialogShowing = false;
+                    isPromoDialogShowing_ = false;
                     if (callback != null) {
-                        callback.onPromoViewDismissed(promoView.promoAction_);
+                        if (isPromoAccepted_) {
+                            callback.onPromoViewAccepted(promoView.promoAction_);
+                        } else {
+                            callback.onPromoViewCancelled(promoView.promoAction_);
+                        }
                     }
                 }
             });
 
-
         }
     }
+
+    private boolean handleUserActionRedirect(String url) {
+        boolean isRedirectionHandled = false;
+        try {
+            URI uri = new URI(url);
+            //Check if this is a App Promo accept or reject redirect
+            if (uri.getScheme().equalsIgnoreCase(APP_PROMO_REDIRECT_SCHEME)) {
+                //Check for actions
+                if (uri.getHost().equalsIgnoreCase(APP_PROMO_REDIRECT_ACTION_ACCEPT)) {
+                    isPromoAccepted_ = true;
+                    isRedirectionHandled = true;
+                } else if (uri.getHost().equalsIgnoreCase(APP_PROMO_REDIRECT_ACTION_CANCEL)) {
+                    isPromoAccepted_ = false;
+                    isRedirectionHandled = true;
+                }
+            }
+        } catch (URISyntaxException ignore) {
+        }
+        return isRedirectionHandled;
+    }
+
 
     public void saveAppPromoViews() {
         if (Branch.getInstance().getLatestReferringParams().has(Defines.Jsonkey.AppPromoData.getKey())) {
@@ -200,7 +223,7 @@ public class PromoViewHandler {
     }
 
 
-    public static void showViewWithAlphaTweening(View view) {
+    private void showViewWithAlphaAnimation(View view) {
         AlphaAnimation animation1 = new AlphaAnimation(0.1f, 1.0f);
         animation1.setDuration(500);
         animation1.setStartOffset(10);
@@ -210,7 +233,7 @@ public class PromoViewHandler {
         view.startAnimation(animation1);
     }
 
-    public static void hideViewWithAlphaTweening(View view) {
+    private void hideViewWithAlphaAnimation(View view) {
         AlphaAnimation animation1 = new AlphaAnimation(1.0f, 0.0f);
         animation1.setDuration(500);
         animation1.setStartOffset(10);
@@ -222,11 +245,11 @@ public class PromoViewHandler {
 
 
     public void markInstallOrOpenPromoViewPending(String action) {
-        openOrInstallPendingPromo = getPromoView(action);
+        openOrInstallPendingPromo_ = getPromoView(action);
     }
 
     public boolean isInstallOrOpenPromoPending() {
-        return openOrInstallPendingPromo != null && openOrInstallPendingPromo.num_of_use_ > 0;
+        return openOrInstallPendingPromo_ != null && openOrInstallPendingPromo_.num_of_use_ > 0;
     }
 
     private class AppPromoView {
@@ -236,7 +259,6 @@ public class PromoViewHandler {
         private long expiry_date_ = 0;
         private String webViewUrl_ = "";
         private String webViewHtml_ = "";
-        private boolean isDebug_;
         /* This promo view can be used for any number of times in a session. */
         private static final int USAGE_UNLIMITED = -1;
 
@@ -260,9 +282,6 @@ public class PromoViewHandler {
                 if (promoViewJson.has(Defines.Jsonkey.AppPromoViewHtml.getKey())) {
                     webViewHtml_ = promoViewJson.getString(Defines.Jsonkey.AppPromoViewHtml.getKey());
                 }
-                if (promoViewJson.has(Defines.Jsonkey.Debug.getKey())) {
-                    isDebug_ = promoViewJson.getBoolean(Defines.Jsonkey.Debug.getKey());
-                }
             } catch (Exception ignore) {
 
             }
@@ -284,6 +303,7 @@ public class PromoViewHandler {
      * Interface for calling back methods on promo dialog lifecycle events
      */
     public interface IPromoViewEvents {
+
         /**
          * Called when a promotion view dialog is shown
          *
@@ -292,11 +312,18 @@ public class PromoViewHandler {
         void onPromoViewVisible(String action);
 
         /**
-         * Called when a promotion view dialog is dismissed
+         * Called when user click the positive button on app promo view
+         *
+         * @param action action name associated with the AppPromo item
+         */
+        void onPromoViewAccepted(String action);
+
+        /**
+         * Called when user click the negative button on app promo view
          *
          * @param action action name associated with the Promo view
          */
-        void onPromoViewDismissed(String action);
+        void onPromoViewCancelled(String action);
 
         /**
          * Called when there is an error on creating or showing Promo view
