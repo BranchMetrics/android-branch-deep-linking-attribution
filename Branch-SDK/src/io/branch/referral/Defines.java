@@ -95,8 +95,8 @@ public class Defines {
         BranchViewAction("branch_view_action"),
         BranchViewNumOfUse("num_of_use"),
         BranchViewExpiry("expiry"),
-        BranchViewViewUrl("branch_view_url"),
-        BranchViewViewHtml("branch_view_html");
+        BranchViewUrl("branch_view_url"),
+        BranchViewHtml("branch_view_html");
 
         
         private String key = "";

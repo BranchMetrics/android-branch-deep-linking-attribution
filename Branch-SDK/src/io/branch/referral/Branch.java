@@ -3015,7 +3015,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
-            if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending()) {
+            if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
         }

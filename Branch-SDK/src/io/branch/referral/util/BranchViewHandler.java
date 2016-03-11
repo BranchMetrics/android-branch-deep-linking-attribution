@@ -2,6 +2,7 @@ package io.branch.referral.util;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Build;
@@ -25,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Defines;
+import io.branch.referral.PrefHelper;
 
 /**
  * <p>
@@ -71,12 +73,7 @@ public class BranchViewHandler {
      */
     public BranchView getBranchView(String branchViewAction) {
         boolean isBranchViewAvailable = false;
-        BranchView branchView = branchViewMap_.get(branchViewAction);
-        if (branchView != null && branchView.isAvailable()) {
-            return branchView;
-        } else {
-            return null;
-        }
+        return branchViewMap_.get(branchViewAction);
     }
 
     public boolean showPendingBranchView(Activity currentActivity) {
@@ -96,7 +93,7 @@ public class BranchViewHandler {
         isBranchViewAccepted_ = false;
         BranchView branchView = getBranchView(action);
 
-        if (currentActivity != null && branchView != null) {
+        if (currentActivity != null && branchView != null && branchView.isAvailable(currentActivity.getApplicationContext())) {
             showBranchView(branchView, currentActivity, callback);
         }
 
@@ -105,7 +102,7 @@ public class BranchViewHandler {
 
     private void showBranchView(final BranchView branchView, Activity currentActivity, final IBranchViewEvents callback) {
         if (currentActivity != null && branchView != null) {
-            branchView.updateUsageCount();
+            branchView.updateUsageCount(currentActivity.getApplicationContext(), branchView.branchViewID_);
             WebView webView = new WebView(currentActivity);
 
             final RelativeLayout layout = new RelativeLayout(currentActivity);
@@ -248,8 +245,8 @@ public class BranchViewHandler {
         openOrInstallPendingBranchView_ = getBranchView(action);
     }
 
-    public boolean isInstallOrOpenBranchViewPending() {
-        return openOrInstallPendingBranchView_ != null && openOrInstallPendingBranchView_.num_of_use_ > 0;
+    public boolean isInstallOrOpenBranchViewPending(Context context) {
+        return openOrInstallPendingBranchView_ != null && openOrInstallPendingBranchView_.isAvailable(context);
     }
 
     private class BranchView {
@@ -276,26 +273,25 @@ public class BranchViewHandler {
                 if (branchViewJson.has(Defines.Jsonkey.BranchViewExpiry.getKey())) {
                     expiry_date_ = branchViewJson.getLong(Defines.Jsonkey.BranchViewExpiry.getKey());
                 }
-                if (branchViewJson.has(Defines.Jsonkey.BranchViewViewUrl.getKey())) {
-                    webViewUrl_ = branchViewJson.getString(Defines.Jsonkey.BranchViewViewUrl.getKey());
+                if (branchViewJson.has(Defines.Jsonkey.BranchViewUrl.getKey())) {
+                    webViewUrl_ = branchViewJson.getString(Defines.Jsonkey.BranchViewUrl.getKey());
                 }
-                if (branchViewJson.has(Defines.Jsonkey.BranchViewViewHtml.getKey())) {
-                    webViewHtml_ = branchViewJson.getString(Defines.Jsonkey.BranchViewViewHtml.getKey());
+                if (branchViewJson.has(Defines.Jsonkey.BranchViewHtml.getKey())) {
+                    webViewHtml_ = branchViewJson.getString(Defines.Jsonkey.BranchViewHtml.getKey());
                 }
             } catch (Exception ignore) {
 
             }
         }
 
-        private boolean isAvailable() {
+        private boolean isAvailable(Context context) {
+            int usedCount = PrefHelper.getInstance(context).getBranchViewUsageCount(branchViewID_);
             return (System.currentTimeMillis() > expiry_date_)
-                    && ((num_of_use_ > 0) || (num_of_use_ == USAGE_UNLIMITED));
+                    && ((num_of_use_ > usedCount) || (num_of_use_ == USAGE_UNLIMITED));
         }
 
-        public void updateUsageCount() {
-            if (num_of_use_ > 0) {
-                num_of_use_--;
-            }
+        public void updateUsageCount(Context context, String branchViewID) {
+            PrefHelper.getInstance(context).updateBranchViewUsageCount(branchViewID);
         }
     }
 
