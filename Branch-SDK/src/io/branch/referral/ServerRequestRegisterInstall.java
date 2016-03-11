@@ -197,7 +197,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     }
 
     @Override
-    public String getPromoActionName() {
+    public String getRequestActionName() {
         return ACTION_INSTALL;
     }
 }

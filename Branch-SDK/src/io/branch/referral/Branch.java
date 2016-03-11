@@ -46,8 +46,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.util.BranchViewHandler;
 import io.branch.referral.util.LinkProperties;
-import io.branch.referral.util.PromoViewHandler;
 
 /**
  * <p>
@@ -65,7 +65,7 @@ import io.branch.referral.util.PromoViewHandler;
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
  */
-public class Branch implements PromoViewHandler.IPromoViewEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -1594,9 +1594,9 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
      *
      * @param action   A {@link String} value to be passed as an action that the user has carried
      *                 out. For example "registered" or "logged in".
-     * @param callback instance of {@link io.branch.referral.util.PromoViewHandler.IPromoViewEvents} to listen promo view events
+     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(final String action, PromoViewHandler.IPromoViewEvents callback) {
+    public void userCompletedAction(final String action, BranchViewHandler.IBranchViewEvents callback) {
         userCompletedAction(action, null, callback);
     }
 
@@ -1608,13 +1608,13 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
      *                 out. For example "registered" or "logged in".
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
-     * @param callback instance of {@link io.branch.referral.util.PromoViewHandler.IPromoViewEvents} to listen promo view events
+     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata, PromoViewHandler.IPromoViewEvents callback) {
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
         if (metadata != null)
             metadata = BranchUtil.filterOutBadCharacters(metadata);
         if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
-            PromoViewHandler.getInstance().showPromoView(action, currentActivityReference_.get(), callback);
+            BranchViewHandler.getInstance().showBranchView(action, currentActivityReference_.get(), callback);
         }
         ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -3015,8 +3015,8 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
-            if (PromoViewHandler.getInstance().isInstallOrOpenPromoPending()) {
-                PromoViewHandler.getInstance().showPendingPromoView(activity);
+            if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending()) {
+                BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
         }
 
@@ -3347,20 +3347,20 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
 
-                                    boolean isActivityEnabledForPromoView = true;
-                                    boolean isPromoViewShowing = false;
-                                    PromoViewHandler promoViewHandler = PromoViewHandler.getInstance();
-                                    promoViewHandler.saveAppPromoViews();
-                                    if (currentActivityReference_.get() instanceof IPromoViewControl) {
-                                        isActivityEnabledForPromoView = !((IPromoViewControl) currentActivityReference_.get()).skipPromoViewsOnThisActivity();
+                                    boolean isActivityEnabledForBranchView = true;
+                                    boolean isBranchViewShowing = false;
+                                    BranchViewHandler branchViewHandler = BranchViewHandler.getInstance();
+                                    branchViewHandler.saveBranchViews();
+                                    if (currentActivityReference_.get() instanceof IBranchViewControl) {
+                                        isActivityEnabledForBranchView = !((IBranchViewControl) currentActivityReference_.get()).skipBranchViewsOnThisActivity();
                                     }
-                                    if (isActivityEnabledForPromoView) {
-                                        isPromoViewShowing = promoViewHandler.showPromoView(((ServerRequestInitSession) thisReq_).getPromoActionName(),
+                                    if (isActivityEnabledForBranchView) {
+                                        isBranchViewShowing = branchViewHandler.showBranchView(((ServerRequestInitSession) thisReq_).getRequestActionName(),
                                                 currentActivityReference_.get(), Branch.this);
                                     } else {
-                                        promoViewHandler.markInstallOrOpenPromoViewPending(((ServerRequestInitSession) thisReq_).getPromoActionName());
+                                        branchViewHandler.markInstallOrOpenBranchViewPending(((ServerRequestInitSession) thisReq_).getRequestActionName());
                                     }
-                                    if (!isPromoViewShowing) {
+                                    if (!isBranchViewShowing) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
 
@@ -3924,45 +3924,45 @@ public class Branch implements PromoViewHandler.IPromoViewEvents {
     }
 
 
-    //-------------------- Promo view handling--------------------//
+    //-------------------- Branch view handling--------------------//
 
 
     @Override
-    public void onPromoViewVisible(String action) {
+    public void onBranchViewVisible(String action) {
         //No Implementation on purpose
     }
 
     @Override
-    public void onPromoViewAccepted(String action) {
+    public void onBranchViewAccepted(String action) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
 
     @Override
-    public void onPromoViewCancelled(String action) {
+    public void onBranchViewCancelled(String action) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
 
     @Override
-    public void onPromoViewError(int errorCode, String errorMsg) {
+    public void onBranchViewError(int errorCode, String errorMsg) {
 
     }
 
     /**
-     * Interface for defining optional promo view behaviour for Activities
+     * Interface for defining optional Branch view behaviour for Activities
      */
-    public interface IPromoViewControl {
+    public interface IBranchViewControl {
         /**
-         * Defines if an activity is interested to show promo views or not.
-         * By default activities are considered as promo view enabled. In case of activities which are not interested to show a promo view (Splash screen for example)
-         * should implement this and return false. The pending promo view will be shown with the very next promo view activity
+         * Defines if an activity is interested to show Branch views or not.
+         * By default activities are considered as Branch view enabled. In case of activities which are not interested to show a Branch view (Splash screen for example)
+         * should implement this and return false. The pending Branch view will be shown with the very next Branch view enabled activity
          *
-         * @return A {@link Boolean} whose value is true if the activity don't want to show any promo view.
+         * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
          */
-        boolean skipPromoViewsOnThisActivity();
+        boolean skipBranchViewsOnThisActivity();
     }
 
 }

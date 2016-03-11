@@ -20,8 +20,8 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.BranchViewHandler;
 import io.branch.referral.util.LinkProperties;
-import io.branch.referral.util.PromoViewHandler;
 import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
@@ -167,25 +167,25 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.userCompletedAction("buy", new PromoViewHandler.IPromoViewEvents() {
+                branch.userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
                     @Override
-                    public void onPromoViewVisible(String action) {
-                        Log.i("BranchTestBed", "onPromoViewVisible");
+                    public void onBranchViewVisible(String action) {
+                        Log.i("BranchTestBed", "onBranchViewVisible");
                     }
 
                     @Override
-                    public void onPromoViewAccepted(String action) {
-                        Log.i("BranchTestBed", "onPromoViewAccepted");
+                    public void onBranchViewAccepted(String action) {
+                        Log.i("BranchTestBed", "onBranchViewAccepted");
                     }
 
                     @Override
-                    public void onPromoViewCancelled(String action) {
-                        Log.i("BranchTestBed", "onPromoViewCancelled");
+                    public void onBranchViewCancelled(String action) {
+                        Log.i("BranchTestBed", "onBranchViewCancelled");
                     }
 
                     @Override
-                    public void onPromoViewError(int errorCode, String errorMsg) {
-                        Log.i("BranchTestBed", "onPromoViewError");
+                    public void onBranchViewError(int errorCode, String errorMsg) {
+                        Log.i("BranchTestBed", "onBranchViewError");
                     }
                 });
             }
@@ -290,7 +290,7 @@ public class MainActivity extends Activity {
 //        }catch (JSONException ignore){
 //        }
 
-        // Test code for testing App promo views
+        // Test code for testing Branch  views
         //TODO  Remove before adding updating test bed
         try {
             JSONObject debugObj = new JSONObject();
@@ -298,16 +298,16 @@ public class MainActivity extends Activity {
             String webViewHtml = "<!DOCTYPE html>" +
                     "<html>" +
                     "<body>" +
-                    "<h1>App Promo View Test</h1>" +
-                    "<p>App Promo View Test.</p>" +
-                    "\n\n\n<button onclick=\\\"window.location.href='branch-cta://accept'\\\">Accept Promo </button>\n\n\n" +
-                    "\t\t<button onclick=\\\"window.location.href='branch-cta://cancel'\\\">Cancel Promo </button>\n" +
+                    "<h1>Branch View Test</h1>" +
+                    "<p>Branch view Test.</p>" +
+                    "\n\n\n<button onclick=\\\"window.location.href='branch-cta://accept'\\\">Accept </button>\n\n\n" +
+                    "\t\t<button onclick=\\\"window.location.href='branch-cta://cancel'\\\">Cancel </button>\n" +
                     "</body>" +
                     "</html>";
 
-            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"open\",\"num_of_use\":1,\"promo_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778, \"debug\" : true }"));
-            jsonArray.put(new JSONObject("{ \"app_promo_id\":\"promo_id_01\",\"app_promo_action\":\"buy\",\"num_of_use\":3,\"promo_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778, \"debug\" : true }"));
-            debugObj.put(Defines.Jsonkey.AppPromoData.getKey(), jsonArray);
+            jsonArray.put(new JSONObject("{ \"branch_view_id\":\"branch_view_id_01\",\"branch_view_action\":\"open\",\"num_of_use\":1,\"branch_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
+            jsonArray.put(new JSONObject("{ \"branch_view_id\":\"branch_view_id_02\",\"branch_view_action\":\"buy\",\"num_of_use\":3,\"branch_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
+            debugObj.put(Defines.Jsonkey.BranchViewData.getKey(), jsonArray);
             Branch.getInstance().setDeepLinkDebugMode(debugObj);
         } catch (JSONException ignore) {
 

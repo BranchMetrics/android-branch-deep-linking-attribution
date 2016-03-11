@@ -90,13 +90,13 @@ public class Defines {
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
 
-        AppPromoData("app_promo_data"),
-        AppPromoID("app_promo_id"),
-        AppPromoAction("app_promo_action"),
-        AppPromoNumOfUse("num_of_use"),
-        AppPromoExpiry("expiry"),
-        AppPromoViewUrl("promo_view_url"),
-        AppPromoViewHtml("promo_view_html");
+        BranchViewData("branch_view_data"),
+        BranchViewID("branch_view_id"),
+        BranchViewAction("branch_view_action"),
+        BranchViewNumOfUse("num_of_use"),
+        BranchViewExpiry("expiry"),
+        BranchViewViewUrl("branch_view_url"),
+        BranchViewViewHtml("branch_view_html");
 
         
         private String key = "";

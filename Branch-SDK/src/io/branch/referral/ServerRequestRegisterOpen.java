@@ -164,7 +164,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     }
 
     @Override
-    public String getPromoActionName() {
+    public String getRequestActionName() {
         return ACTION_OPEN;
     }
 }
