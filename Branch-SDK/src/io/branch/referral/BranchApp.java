@@ -14,7 +14,7 @@ import android.app.Application;
  * <pre style="background:#fff;padding:10px;border:2px solid silver;">
  *      &lt;application
  *      -----
- *      android:name="io.branch.referal.BranchApp"&gt;
+ *      android:name="io.branch.referral.BranchApp"&gt;
  *</pre>
  * <p>
  * Add your Branch keys to the manifest file.Use io.branch.sdk.
