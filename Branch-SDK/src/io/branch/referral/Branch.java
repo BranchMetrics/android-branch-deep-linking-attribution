@@ -1611,8 +1611,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
     public void userCompletedAction(@NonNull final String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
-        if (metadata != null)
+        if (metadata != null) {
             metadata = BranchUtil.filterOutBadCharacters(metadata);
+        }
         if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
             BranchViewHandler.getInstance().showBranchView(action, currentActivityReference_.get(), callback);
         }
