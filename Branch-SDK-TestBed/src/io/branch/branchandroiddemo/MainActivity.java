@@ -169,22 +169,22 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 branch.userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
                     @Override
-                    public void onBranchViewVisible(String action) {
+                    public void onBranchViewVisible(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewVisible");
                     }
 
                     @Override
-                    public void onBranchViewAccepted(String action) {
+                    public void onBranchViewAccepted(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewAccepted");
                     }
 
                     @Override
-                    public void onBranchViewCancelled(String action) {
+                    public void onBranchViewCancelled(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewCancelled");
                     }
 
                     @Override
-                    public void onBranchViewError(int errorCode, String errorMsg) {
+                    public void onBranchViewError(int errorCode, String errorMsg, String action) {
                         Log.i("BranchTestBed", "onBranchViewError");
                     }
                 });
@@ -305,8 +305,8 @@ public class MainActivity extends Activity {
                     "</body>" +
                     "</html>";
 
-            jsonArray.put(new JSONObject("{ \"branch_view_id\":\"branch_view_id_01\",\"branch_view_action\":\"open\",\"num_of_use\":1,\"branch_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
-            jsonArray.put(new JSONObject("{ \"branch_view_id\":\"branch_view_id_02\",\"branch_view_action\":\"buy\",\"num_of_use\":3,\"branch_view_html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
+            jsonArray.put(new JSONObject("{ \"id\":\"id_01\",\"action\":\"open\",\"num_of_use\":1,\"html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
+            jsonArray.put(new JSONObject("{ \"id\":\"id_02\",\"action\":\"buy\",\"num_of_use\":3,\"html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
             debugObj.put(Defines.Jsonkey.BranchViewData.getKey(), jsonArray);
             Branch.getInstance().setDeepLinkDebugMode(debugObj);
         } catch (JSONException ignore) {

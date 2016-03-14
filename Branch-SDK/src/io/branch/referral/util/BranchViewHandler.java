@@ -84,7 +84,7 @@ public class BranchViewHandler {
     public boolean showBranchView(final String action, Activity currentActivity, final IBranchViewEvents callback) {
         if (isBranchViewDialogShowing_) {
             if (callback != null) {
-                callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing");
+                callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", action);
             }
             return false;
         }
@@ -132,7 +132,7 @@ public class BranchViewHandler {
             dialog.show();
 
             if (callback != null) {
-                callback.onBranchViewVisible(branchView.branchViewAction_);
+                callback.onBranchViewVisible(branchView.branchViewAction_, branchView.branchViewID_);
             }
 
             webView.getSettings().setJavaScriptEnabled(true);
@@ -166,9 +166,9 @@ public class BranchViewHandler {
                     isBranchViewDialogShowing_ = false;
                     if (callback != null) {
                         if (isBranchViewAccepted_) {
-                            callback.onBranchViewAccepted(branchView.branchViewAction_);
+                            callback.onBranchViewAccepted(branchView.branchViewAction_, branchView.branchViewID_);
                         } else {
-                            callback.onBranchViewCancelled(branchView.branchViewAction_);
+                            callback.onBranchViewCancelled(branchView.branchViewAction_,  branchView.branchViewID_);
                         }
                     }
                 }
@@ -304,30 +304,35 @@ public class BranchViewHandler {
          * Called when a Branch view shown
          *
          * @param action action name associated with the Branch view item
+         * @param branchViewID ID for the Branch view displayed
          */
-        void onBranchViewVisible(String action);
+        void onBranchViewVisible(String action, String branchViewID);
 
         /**
          * Called when user click the positive button on Branch view
          *
          * @param action action name associated with the App Branch item
+         * @param branchViewID ID for the Branch view accepted
          */
-        void onBranchViewAccepted(String action);
+        void onBranchViewAccepted(String action, String branchViewID);
 
         /**
          * Called when user click the negative button app Branch view
          *
          * @param action action name associated with the Branch view
+         * @param branchViewID ID for the Branch view cancelled
          */
-        void onBranchViewCancelled(String action);
+        void onBranchViewCancelled(String action, String branchViewID);
 
         /**
          * Called when there is an error on creating or showing Branch view
          *
          * @param errorCode {@link Integer} with error code for the issue
          * @param errorMsg  {@link String} with value error message
+         * @param action action name for the Branch view failed to display
+         *
          */
-        void onBranchViewError(int errorCode, String errorMsg);
+        void onBranchViewError(int errorCode, String errorMsg,String action);
     }
 
 

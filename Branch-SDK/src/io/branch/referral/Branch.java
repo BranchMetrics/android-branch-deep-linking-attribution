@@ -3935,26 +3935,26 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
 
     @Override
-    public void onBranchViewVisible(String action) {
+    public void onBranchViewVisible(String action, String branchViewID) {
         //No Implementation on purpose
     }
 
     @Override
-    public void onBranchViewAccepted(String action) {
+    public void onBranchViewAccepted(String action, String branchViewID) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
 
     @Override
-    public void onBranchViewCancelled(String action) {
+    public void onBranchViewCancelled(String action, String branchViewID) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
 
     @Override
-    public void onBranchViewError(int errorCode, String errorMsg) {
+    public void onBranchViewError(int errorCode, String errorMsg, String action) {
 
     }
 

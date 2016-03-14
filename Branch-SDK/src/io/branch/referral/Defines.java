@@ -91,12 +91,12 @@ public class Defines {
         Queue_Wait_Time("qwt"),
 
         BranchViewData("branch_view_data"),
-        BranchViewID("branch_view_id"),
-        BranchViewAction("branch_view_action"),
+        BranchViewID("id"),
+        BranchViewAction("action"),
         BranchViewNumOfUse("num_of_use"),
         BranchViewExpiry("expiry"),
-        BranchViewUrl("branch_view_url"),
-        BranchViewHtml("branch_view_html");
+        BranchViewUrl("url"),
+        BranchViewHtml("html");
 
         
         private String key = "";
