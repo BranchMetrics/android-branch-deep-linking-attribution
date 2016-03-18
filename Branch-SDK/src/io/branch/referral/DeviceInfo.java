@@ -19,11 +19,11 @@ class DeviceInfo {
     /**
      * Status for test vs real hardware ID
      */
-    private final boolean isHardWareIDReal_;
+    private final boolean isHardwareIDReal_;
     /**
-     * Career name for the device if available
+     * Carrier name for the device if available
      */
-    private final String careerName_;
+    private final String carrierName_;
     /**
      * Status for BlueTooth available or not
      */
@@ -90,8 +90,8 @@ class DeviceInfo {
 
     private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver) {
         hardwareID_ = sysObserver.getUniqueID(isExternalDebug);
-        isHardWareIDReal_ = sysObserver.hasRealHardwareId();
-        careerName_ = sysObserver.getCarrier();
+        isHardwareIDReal_ = sysObserver.hasRealHardwareId();
+        carrierName_ = sysObserver.getCarrier();
         isBlueToothPresent_ = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB && sysObserver.getBluetoothPresent();
         blueToothVersion_ = sysObserver.getBluetoothVersion();
         isNFCPresent_ = sysObserver.getNFCPresent();
@@ -120,10 +120,10 @@ class DeviceInfo {
         try {
             if (!hardwareID_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID_);
-                requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardWareIDReal_);
+                requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
             }
-            if (!careerName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.Carrier.getKey(), careerName_);
+            if (!carrierName_.equals(SystemObserver.BLANK)) {
+                requestObj.put(Defines.Jsonkey.Carrier.getKey(), carrierName_);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
                 requestObj.put(Defines.Jsonkey.Bluetooth.getKey(), isBlueToothPresent_);
