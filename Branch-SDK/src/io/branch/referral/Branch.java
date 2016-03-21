@@ -327,7 +327,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     private ShareLinkManager shareLinkManager_;
 
     /* The current activity instance for the application.*/
-    private WeakReference<Activity> currentActivityReference_;
+    WeakReference<Activity> currentActivityReference_;
 
     /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
     private enum CUSTOM_REFERRABLE_SETTINGS {
@@ -1616,10 +1616,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         if (metadata != null) {
             metadata = BranchUtil.filterOutBadCharacters(metadata);
         }
-        if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
-            BranchViewHandler.getInstance().showBranchView(action, currentActivityReference_.get(), callback);
-        }
-        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
+        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
@@ -3353,21 +3350,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                                     // Publish success to listeners
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
-
-                                    boolean isActivityEnabledForBranchView = true;
-                                    boolean isBranchViewShowing = false;
-                                    BranchViewHandler branchViewHandler = BranchViewHandler.getInstance();
-                                    branchViewHandler.saveBranchViews();
-                                    if (currentActivityReference_.get() instanceof IBranchViewControl) {
-                                        isActivityEnabledForBranchView = !((IBranchViewControl) currentActivityReference_.get()).skipBranchViewsOnThisActivity();
-                                    }
-                                    if (isActivityEnabledForBranchView) {
-                                        isBranchViewShowing = branchViewHandler.showBranchView(((ServerRequestInitSession) thisReq_).getRequestActionName(),
-                                                currentActivityReference_.get(), Branch.this);
-                                    } else {
-                                        branchViewHandler.markInstallOrOpenBranchViewPending(((ServerRequestInitSession) thisReq_).getRequestActionName());
-                                    }
-                                    if (!isBranchViewShowing) {
+                                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
 

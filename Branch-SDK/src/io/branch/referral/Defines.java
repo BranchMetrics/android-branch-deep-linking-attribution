@@ -94,7 +94,6 @@ public class Defines {
         BranchViewID("id"),
         BranchViewAction("action"),
         BranchViewNumOfUse("num_of_use"),
-        BranchViewExpiry("expiry"),
         BranchViewUrl("url"),
         BranchViewHtml("html");
 

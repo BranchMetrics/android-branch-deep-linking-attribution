@@ -9,7 +9,6 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,7 +17,6 @@ import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
-import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BranchViewHandler;
 import io.branch.referral.util.LinkProperties;
@@ -290,28 +288,6 @@ public class MainActivity extends Activity {
 //        }catch (JSONException ignore){
 //        }
 
-        // Test code for testing Branch  views
-        //TODO  Remove before adding updating test bed
-        try {
-            JSONObject debugObj = new JSONObject();
-            JSONArray jsonArray = new JSONArray();
-            String webViewHtml = "<!DOCTYPE html>" +
-                    "<html>" +
-                    "<body>" +
-                    "<h1>Branch View Test</h1>" +
-                    "<p>Branch view Test.</p>" +
-                    "\n\n\n<button onclick=\\\"window.location.href='branch-cta://accept'\\\">Accept </button>\n\n\n" +
-                    "\t\t<button onclick=\\\"window.location.href='branch-cta://cancel'\\\">Cancel </button>\n" +
-                    "</body>" +
-                    "</html>";
-
-            jsonArray.put(new JSONObject("{ \"id\":\"id_01\",\"action\":\"open\",\"num_of_use\":1,\"html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
-            jsonArray.put(new JSONObject("{ \"id\":\"id_02\",\"action\":\"buy\",\"num_of_use\":3,\"html\": \"" + webViewHtml + "\", \"expiry\":123456778 }"));
-            debugObj.put(Defines.Jsonkey.BranchViewData.getKey(), jsonArray);
-            Branch.getInstance().setDeepLinkDebugMode(debugObj);
-        } catch (JSONException ignore) {
-
-        }
     }
 
     @Override

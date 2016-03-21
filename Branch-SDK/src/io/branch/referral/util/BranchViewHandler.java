@@ -16,15 +16,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.ConcurrentHashMap;
 
-import io.branch.referral.Branch;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 
@@ -37,7 +33,6 @@ import io.branch.referral.PrefHelper;
  */
 public class BranchViewHandler {
     private static BranchViewHandler thisInstance_;
-    private ConcurrentHashMap<String, BranchView> branchViewMap_;
     private boolean isBranchViewDialogShowing_;
     private boolean isBranchViewAccepted_;
     private BranchView openOrInstallPendingBranchView_ = null;
@@ -47,10 +42,10 @@ public class BranchViewHandler {
     private static final String BRANCH_VIEW_REDIRECT_ACTION_CANCEL = "cancel";
 
     public static final int BRANCH_VIEW_ERR_ALREADY_SHOWING = -200;
+    public static final int BRANCH_VIEW_ERR_INVALID_VIEW = -201;
 
 
     private BranchViewHandler() {
-        branchViewMap_ = new ConcurrentHashMap<>();
     }
 
     /**
@@ -65,42 +60,39 @@ public class BranchViewHandler {
         return thisInstance_;
     }
 
-    /**
-     * Returns branch view associated with the action specified. Null if there is no Branch view available for action name
-     *
-     * @param branchViewAction action name
-     * @return {@link BranchViewHandler.BranchView} associated with specified action name
-     */
-    public BranchView getBranchView(String branchViewAction) {
-        boolean isBranchViewAvailable = false;
-        return branchViewMap_.get(branchViewAction);
-    }
-
     public boolean showPendingBranchView(Activity currentActivity) {
-        showBranchView(openOrInstallPendingBranchView_, currentActivity, null);
-        return true;
+        boolean isBranchViewShowed = showBranchView(openOrInstallPendingBranchView_, currentActivity, null);
+        if (isBranchViewShowed) {
+            openOrInstallPendingBranchView_ = null;
+        }
+        return isBranchViewShowed;
     }
 
-    public boolean showBranchView(final String action, Activity currentActivity, final IBranchViewEvents callback) {
+    public boolean showBranchView(JSONObject branchViewObj, String actionName, Activity currentActivity, final IBranchViewEvents callback) {
+        BranchView branchView = new BranchView(branchViewObj, actionName);
+        return showBranchView(branchView, currentActivity, callback);
+    }
+
+    private boolean showBranchView(BranchView branchView, Activity currentActivity, final IBranchViewEvents callback) {
         if (isBranchViewDialogShowing_) {
             if (callback != null) {
-                callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", action);
+                callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", branchView.branchViewAction_);
             }
             return false;
         }
 
         isBranchViewDialogShowing_ = false;
         isBranchViewAccepted_ = false;
-        BranchView branchView = getBranchView(action);
+
 
         if (currentActivity != null && branchView != null && branchView.isAvailable(currentActivity.getApplicationContext())) {
-            showBranchView(branchView, currentActivity, callback);
+            createAndShowBranchView(branchView, currentActivity, callback);
         }
 
         return isBranchViewDialogShowing_;
     }
 
-    private void showBranchView(final BranchView branchView, Activity currentActivity, final IBranchViewEvents callback) {
+    private void createAndShowBranchView(final BranchView branchView, Activity currentActivity, final IBranchViewEvents callback) {
         if (currentActivity != null && branchView != null) {
             branchView.updateUsageCount(currentActivity.getApplicationContext(), branchView.branchViewID_);
             WebView webView = new WebView(currentActivity);
@@ -168,7 +160,7 @@ public class BranchViewHandler {
                         if (isBranchViewAccepted_) {
                             callback.onBranchViewAccepted(branchView.branchViewAction_, branchView.branchViewID_);
                         } else {
-                            callback.onBranchViewCancelled(branchView.branchViewAction_,  branchView.branchViewID_);
+                            callback.onBranchViewCancelled(branchView.branchViewAction_, branchView.branchViewID_);
                         }
                     }
                 }
@@ -197,29 +189,6 @@ public class BranchViewHandler {
         return isRedirectionHandled;
     }
 
-
-    public void saveBranchViews() {
-        if (Branch.getInstance().getLatestReferringParams().has(Defines.Jsonkey.BranchViewData.getKey())) {
-            JSONArray branchViewArray;
-            try {
-                branchViewArray = Branch.getInstance().getLatestReferringParams().getJSONArray(Defines.Jsonkey.BranchViewData.getKey());
-                if (branchViewArray != null) {
-                    for (int i = 0; i < branchViewArray.length(); i++) {
-                        try {
-                            BranchView branchView = new BranchView(branchViewArray.getJSONObject(i));
-                            branchViewMap_.put(branchView.branchViewAction_, branchView);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            } catch (JSONException ignore) {
-            }
-
-        }
-    }
-
-
     private void showViewWithAlphaAnimation(View view) {
         AlphaAnimation animation1 = new AlphaAnimation(0.1f, 1.0f);
         animation1.setDuration(500);
@@ -241,8 +210,8 @@ public class BranchViewHandler {
     }
 
 
-    public void markInstallOrOpenBranchViewPending(String action) {
-        openOrInstallPendingBranchView_ = getBranchView(action);
+    public void markInstallOrOpenBranchViewPending(JSONObject branchViewObj, String action) {
+        openOrInstallPendingBranchView_ = new BranchView(branchViewObj, action);
     }
 
     public boolean isInstallOrOpenBranchViewPending(Context context) {
@@ -253,25 +222,19 @@ public class BranchViewHandler {
         private String branchViewID_ = "";
         private String branchViewAction_ = "";
         private int num_of_use_ = 1;
-        private long expiry_date_ = 0;
         private String webViewUrl_ = "";
         private String webViewHtml_ = "";
         /* This Branch view can be used for any number of times in a session. */
         private static final int USAGE_UNLIMITED = -1;
 
-        private BranchView(JSONObject branchViewJson) {
+        private BranchView(JSONObject branchViewJson, String actionName) {
             try {
+                branchViewAction_ = actionName;
                 if (branchViewJson.has(Defines.Jsonkey.BranchViewID.getKey())) {
                     branchViewID_ = branchViewJson.getString(Defines.Jsonkey.BranchViewID.getKey());
                 }
-                if (branchViewJson.has(Defines.Jsonkey.BranchViewAction.getKey())) {
-                    branchViewAction_ = branchViewJson.getString(Defines.Jsonkey.BranchViewAction.getKey());
-                }
                 if (branchViewJson.has(Defines.Jsonkey.BranchViewNumOfUse.getKey())) {
                     num_of_use_ = branchViewJson.getInt(Defines.Jsonkey.BranchViewNumOfUse.getKey());
-                }
-                if (branchViewJson.has(Defines.Jsonkey.BranchViewExpiry.getKey())) {
-                    expiry_date_ = branchViewJson.getLong(Defines.Jsonkey.BranchViewExpiry.getKey());
                 }
                 if (branchViewJson.has(Defines.Jsonkey.BranchViewUrl.getKey())) {
                     webViewUrl_ = branchViewJson.getString(Defines.Jsonkey.BranchViewUrl.getKey());
@@ -286,8 +249,7 @@ public class BranchViewHandler {
 
         private boolean isAvailable(Context context) {
             int usedCount = PrefHelper.getInstance(context).getBranchViewUsageCount(branchViewID_);
-            return (System.currentTimeMillis() > expiry_date_)
-                    && ((num_of_use_ > usedCount) || (num_of_use_ == USAGE_UNLIMITED));
+            return ((num_of_use_ > usedCount) || (num_of_use_ == USAGE_UNLIMITED));
         }
 
         public void updateUsageCount(Context context, String branchViewID) {
@@ -303,7 +265,7 @@ public class BranchViewHandler {
         /**
          * Called when a Branch view shown
          *
-         * @param action action name associated with the Branch view item
+         * @param action       action name associated with the Branch view item
          * @param branchViewID ID for the Branch view displayed
          */
         void onBranchViewVisible(String action, String branchViewID);
@@ -311,7 +273,7 @@ public class BranchViewHandler {
         /**
          * Called when user click the positive button on Branch view
          *
-         * @param action action name associated with the App Branch item
+         * @param action       action name associated with the App Branch item
          * @param branchViewID ID for the Branch view accepted
          */
         void onBranchViewAccepted(String action, String branchViewID);
@@ -319,7 +281,7 @@ public class BranchViewHandler {
         /**
          * Called when user click the negative button app Branch view
          *
-         * @param action action name associated with the Branch view
+         * @param action       action name associated with the Branch view
          * @param branchViewID ID for the Branch view cancelled
          */
         void onBranchViewCancelled(String action, String branchViewID);
@@ -329,10 +291,9 @@ public class BranchViewHandler {
          *
          * @param errorCode {@link Integer} with error code for the issue
          * @param errorMsg  {@link String} with value error message
-         * @param action action name for the Branch view failed to display
-         *
+         * @param action    action name for the Branch view failed to display
          */
-        void onBranchViewError(int errorCode, String errorMsg,String action);
+        void onBranchViewError(int errorCode, String errorMsg, String action);
     }
 
 
