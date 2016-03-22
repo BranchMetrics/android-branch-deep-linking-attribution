@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.util.Log;
@@ -7,12 +8,16 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.referral.util.BranchViewHandler;
+
 /**
- * * <p>
+ * <p>
  * The server request for Action completed event. Handles request creation and execution.
  * </p>
  */
 class ServerRequestActionCompleted extends ServerRequest {
+
+    private final BranchViewHandler.IBranchViewEvents callback_;
 
     /**
      * <p>Creates an ActionCompleteRequest instance. This request take care of reporting specific user
@@ -24,8 +29,9 @@ class ServerRequestActionCompleted extends ServerRequest {
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public ServerRequestActionCompleted(Context context, String action, JSONObject metadata) {
+    public ServerRequestActionCompleted(Context context, String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
+        callback_ = callback;
         JSONObject post = new JSONObject();
 
         try {
@@ -48,11 +54,30 @@ class ServerRequestActionCompleted extends ServerRequest {
 
     public ServerRequestActionCompleted(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        callback_ = null;
     }
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
-        //No implementation on purpose
+        // Check for any Branch view associated with this request.
+        if (resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
+            if ((Branch.getInstance().currentActivityReference_ != null && Branch.getInstance().currentActivityReference_.get() != null)) {
+                String actionName = "";
+                try {
+                    JSONObject post = getPost();
+                    if (post != null && post.has(Defines.Jsonkey.Event.getKey())) {
+                        actionName = post.getString(Defines.Jsonkey.Event.getKey());
+                    }
+                    Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
+                    JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
+                    BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, callback_);
+                } catch (JSONException exception) {
+                    if (callback_ != null) {
+                        callback_.onBranchViewError(BranchViewHandler.BRANCH_VIEW_ERR_INVALID_VIEW, "Unable to show branch view. Branch view received is invalid ", actionName);
+                    }
+                }
+            }
+        }
     }
 
     @Override

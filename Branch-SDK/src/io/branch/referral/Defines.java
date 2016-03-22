@@ -83,11 +83,19 @@ public class Defines {
         ContentExpiryTime("$exp_date"),
         Params("params"),
 
+
         External_Intent_URI("external_intent_uri"),
         External_Intent_Extra("external_intent_extra"),
         Last_Round_Trip_Time("lrtt"),
         Branch_Instrumentation("instrumentation"),
-        Queue_Wait_Time("qwt");
+        Queue_Wait_Time("qwt"),
+
+        BranchViewData("branch_view_data"),
+        BranchViewID("id"),
+        BranchViewAction("action"),
+        BranchViewNumOfUse("num_of_use"),
+        BranchViewUrl("url"),
+        BranchViewHtml("html");
 
         
         private String key = "";
