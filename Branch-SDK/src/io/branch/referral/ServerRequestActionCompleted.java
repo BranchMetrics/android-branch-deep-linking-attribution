@@ -59,26 +59,6 @@ class ServerRequestActionCompleted extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
-
-        ///////TODO  Remove before merging to production. Test code for simulating Branch views on custom events
-        try {
-            JSONObject debugObj = new JSONObject();
-            String webViewHtml = "<!DOCTYPE html>" +
-                    "<html>" +
-                    "<body>" +
-                    "<h1>Branch View Test User action</h1>" +
-                    "<p>Branch view Test.</p>" +
-                    "\n\n\n<button onclick=\\\"window.location.href='branch-cta://accept'\\\">Accept </button>\n\n\n" +
-                    "\t\t<button onclick=\\\"window.location.href='branch-cta://cancel'\\\">Cancel </button>\n" +
-                    "</body>" +
-                    "</html>";
-
-            resp.getObject().put(Defines.Jsonkey.BranchViewData.getKey(), new JSONObject("{ \"id\":\"id_012\",\"num_of_use\":2,\"html\": \"" + webViewHtml + "\" }"));
-        } catch (JSONException ignore) {
-
-        }
-        //////////////////
-
         // Check for any Branch view associated with this request.
         if (resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
             if ((Branch.getInstance().currentActivityReference_ != null && Branch.getInstance().currentActivityReference_.get() != null)) {

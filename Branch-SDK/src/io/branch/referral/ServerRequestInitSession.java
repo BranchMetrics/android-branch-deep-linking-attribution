@@ -48,27 +48,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     public boolean handleBranchViewIfAvailable(ServerResponse resp) {
-        //////TODO  Remove before merging to production. Test code for simulating Branch views on Open/Install events
-        try {
-            JSONObject debugObj = new JSONObject();
-            String webViewHtml = "<!DOCTYPE html>" +
-                    "<html>" +
-                    "<body>" +
-                    "<h1>Branch View Test</h1>" +
-                    "<p>Branch view Test.</p>" +
-                    "\n\n\n<button onclick=\\\"window.location.href='branch-cta://accept'\\\">Accept </button>\n\n\n" +
-                    "\t\t<button onclick=\\\"window.location.href='branch-cta://cancel'\\\">Cancel </button>\n" +
-                    "</body>" +
-                    "</html>";
-
-            resp.getObject().put(Defines.Jsonkey.BranchViewData.getKey(), new JSONObject("{ \"id\":\"id_011\",\"num_of_use\":-1,\"html\": \"" + webViewHtml + "\" }"));
-        } catch (JSONException ignore) {
-
-        }
-        ///////////////////////
-
         boolean isBranchViewShowing = false;
-        if (resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
+        if (resp != null && resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
             try {
                 JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
                 String actionName = getRequestActionName();

@@ -101,7 +101,7 @@ public class BranchViewHandler {
             layout.setVisibility(View.GONE);
 
             RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            layoutParams.setMargins(40, 80, 40, 80);
+            layoutParams.setMargins(3, 3, 3, 3);
 
             layout.addView(webView, layoutParams);
             layout.setBackgroundColor(Color.parseColor("#11FEFEFE"));
@@ -273,7 +273,7 @@ public class BranchViewHandler {
         /**
          * Called when user click the positive button on Branch view
          *
-         * @param action       action name associated with the App Branch item
+         * @param actionaction name associated with the App Branch item
          * @param branchViewID ID for the Branch view accepted
          */
         void onBranchViewAccepted(String action, String branchViewID);
