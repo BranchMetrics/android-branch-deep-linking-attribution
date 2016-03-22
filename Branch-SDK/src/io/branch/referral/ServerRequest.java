@@ -26,6 +26,7 @@ public abstract class ServerRequest {
     private JSONObject params_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
+    private SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
@@ -40,6 +41,7 @@ public abstract class ServerRequest {
     public ServerRequest(Context context, String requestPath) {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
+        systemObserver_ = new SystemObserver(context);
         params_ = new JSONObject();
     }
 
@@ -55,6 +57,7 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
+        systemObserver_ = new SystemObserver(context);
     }
 
     /**
@@ -135,6 +138,7 @@ public abstract class ServerRequest {
      */
     protected void setPost(JSONObject post) {
         params_ = post;
+        DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_).updateRequestWithDeviceParams(params_);
     }
 
     /**

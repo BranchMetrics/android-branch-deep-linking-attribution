@@ -40,8 +40,6 @@ class ServerRequestSendAppList extends ServerRequest {
         SystemObserver sysObserver = new SystemObserver(context);
         JSONObject post = new JSONObject();
         try {
-            if (!sysObserver.getOS().equals(SystemObserver.BLANK))
-                post.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
             post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             post.put("apps_data", sysObserver.getListOfApps());
             setPost(post);
