@@ -93,7 +93,7 @@ public class Defines {
         BranchViewData("branch_view_data"),
         BranchViewID("id"),
         BranchViewAction("action"),
-        BranchViewNumOfUse("num_of_use"),
+        BranchViewNumOfUse("number_of_use"),
         BranchViewUrl("url"),
         BranchViewHtml("html");
 
