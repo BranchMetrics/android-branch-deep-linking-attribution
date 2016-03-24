@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- *<p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
- *complete. This allows you to start sending requests to the Branch API as soon as your app is
- *opened.</p>
+ * <p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
+ * complete. This allows you to start sending requests to the Branch API as soon as your app is
+ * opened.</p>
  */
 class ServerRequestQueue {
     private static final String PREF_KEY = "BNCServerRequestQueue";
@@ -33,10 +33,9 @@ class ServerRequestQueue {
      * object of the type {@link ServerRequestQueue}.</p>
      *
      * @param c A {@link Context} from which this call was made.
-     *
      * @return An initialised {@link ServerRequestQueue} object, either fetched from a
-     *         pre-initialised instance within the singleton class, or a newly instantiated
-     *         object where one was not already requested during the current app lifecycle.
+     * pre-initialised instance within the singleton class, or a newly instantiated
+     * object where one was not already requested during the current app lifecycle.
      */
     public static ServerRequestQueue getInstance(Context c) {
         if (SharedInstance == null) {
@@ -55,7 +54,7 @@ class ServerRequestQueue {
      *
      * @param c A {@link Context} from which this call was made.
      */
-    @SuppressLint( "CommitPrefEdits" )
+    @SuppressLint("CommitPrefEdits")
     private ServerRequestQueue(Context c) {
         sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
@@ -105,7 +104,10 @@ class ServerRequestQueue {
                     JSONObject json = jsonArr.getJSONObject(i);
                     ServerRequest req = ServerRequest.fromJSON(json, context);
                     if (req != null) {
-                        result.add(req);
+                        // No need to retrieve close or logout from previous session
+                        if (!(req instanceof ServerRequestRegisterClose || req instanceof ServerRequestLogout)) {
+                            result.add(req);
+                        }
                     }
                 }
             } catch (JSONException ignored) {
@@ -120,7 +122,7 @@ class ServerRequestQueue {
      * the Branch API.</p>
      *
      * @return An {@link Integer} value indicating the current size of the {@link List} object
-     *         that forms the logical queue for the class.
+     * that forms the logical queue for the class.
      */
     public int getSize() {
         return queue.size();
@@ -152,8 +154,7 @@ class ServerRequestQueue {
         try {
             req = queue.remove(0);
             persist();
-        } catch (IndexOutOfBoundsException ignored) {
-        } catch (NoSuchElementException ignored) {
+        } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
         }
         return req;
     }
@@ -168,8 +169,7 @@ class ServerRequestQueue {
         ServerRequest req = null;
         try {
             req = queue.get(0);
-        } catch (IndexOutOfBoundsException ignored) {
-        } catch (NoSuchElementException ignored) {
+        } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
         }
         return req;
     }
@@ -180,17 +180,15 @@ class ServerRequestQueue {
      *
      * @param index An {@link Integer} that specifies the position within the queue from which to
      *              pull the {@link ServerRequest} object.
-     *
      * @return The {@link ServerRequest} object at the specified index. Returns null if no
-     *         request exists at that position, or if the index supplied is not valid, for
-     *         instance if {@link #getSize()} is 6 and index 6 is called.
+     * request exists at that position, or if the index supplied is not valid, for
+     * instance if {@link #getSize()} is 6 and index 6 is called.
      */
     public ServerRequest peekAt(int index) {
         ServerRequest req = null;
         try {
             req = queue.get(index);
-        } catch (IndexOutOfBoundsException ignored) {
-        } catch (NoSuchElementException ignored) {
+        } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
         }
         return req;
     }
@@ -200,10 +198,9 @@ class ServerRequestQueue {
      * position specified.</p>
      *
      * @param request The {@link ServerRequest} to insert into the queue.
-     *
-     * @param index An {@link Integer} value specifying the index at which to insert the
-     *              supplied {@link ServerRequest} object. Fails silently if the index
-     *              supplied is invalid.
+     * @param index   An {@link Integer} value specifying the index at which to insert the
+     *                supplied {@link ServerRequest} object. Fails silently if the index
+     *                supplied is invalid.
      */
     public void insert(ServerRequest request, int index) {
         try {
@@ -262,6 +259,7 @@ class ServerRequestQueue {
         } catch (UnsupportedOperationException ignored) {
         }
     }
+
     /**
      * <p>Determines whether the queue contains a session/app close request.</p>
      *
@@ -307,7 +305,7 @@ class ServerRequestQueue {
      * @param request      A {@link ServerRequest} of type open or install which need to be moved to the front of the queue.
      * @param networkCount An {@link Integer} value that indicates whether or not to insert the
      *                     request at the front of the queue or not.
-     * @param networkCount A {Branch.BranchReferralInitListener} instance for open or install callback.
+     * @param callback     A {Branch.BranchReferralInitListener} instance for open or install callback.
      */
     public void moveInstallOrOpenToFront(ServerRequest request, int networkCount, Branch.BranchReferralInitListener callback) {
 
