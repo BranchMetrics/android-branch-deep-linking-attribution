@@ -1221,21 +1221,28 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                 prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
                 String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                String uriString = activity.getIntent().getDataString();
+                String uriString = null;
+                if (activity.getIntent() != null) {
+                    uriString = activity.getIntent().getDataString();
+                }
                 if (data.getQuery().length() == paramString.length()) {
                     paramString = "\\?" + paramString;
-                } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
+                } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
                     paramString = "&" + paramString;
                 } else {
                     paramString = paramString + "&";
                 }
-                Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
-                activity.getIntent().setData(newData);
+                if (uriString != null) {
+                    Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
+                    activity.getIntent().setData(newData);
+                } else {
+                    Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
+                }
                 return true;
             } else {
                 // Check if the clicked url is an app link pointing to this app
                 String scheme = data.getScheme();
-                if (scheme != null) {
+                if (scheme != null && activity.getIntent() != null) {
                     // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
                     // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
                     if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
@@ -1248,8 +1255,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                             activity.getIntent().setData(Uri.parse(uriString));
                             return false;
                         }
-                        Log.d("LaunchTEst", "Launched Directly");
-
                     }
                 }
             }
