@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.DisplayMetrics;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,44 +32,20 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
-            if (!installID.equals(PrefHelper.NO_STRING_VALUE))
+            if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
-            String uniqId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
-            if (!uniqId.equals(SystemObserver.BLANK)) {
-                installPost.put(Defines.Jsonkey.HardwareID.getKey(), uniqId);
-                installPost.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), sysObserver.hasRealHardwareId());
             }
-            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK))
+            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
-            if (!sysObserver.getCarrier().equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.Carrier.getKey(), sysObserver.getCarrier());
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                installPost.put(Defines.Jsonkey.Bluetooth.getKey(), sysObserver.getBluetoothPresent());
             }
-            if (!sysObserver.getBluetoothVersion().equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.BluetoothVersion.getKey(), sysObserver.getBluetoothVersion());
-            installPost.put(Defines.Jsonkey.HasNfc.getKey(), sysObserver.getNFCPresent());
-            installPost.put(Defines.Jsonkey.HasTelephone.getKey(), sysObserver.getTelephonePresent());
-            if (!sysObserver.getPhoneBrand().equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.Brand.getKey(), sysObserver.getPhoneBrand());
-            if (!sysObserver.getPhoneModel().equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.Model.getKey(), sysObserver.getPhoneModel());
-            if (!sysObserver.getOS().equals(SystemObserver.BLANK))
-                installPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
+
             // Read and update the URI scheme only if running in debug mode
-            if(prefHelper_.isDebug()) {
+            if (prefHelper_.isDebug()) {
                 String uriScheme = sysObserver.getURIScheme();
                 if (!uriScheme.equals(SystemObserver.BLANK))
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             }
-            installPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
-            DisplayMetrics dMetrics = sysObserver.getScreenDisplay();
-            installPost.put(Defines.Jsonkey.ScreenDpi.getKey(), dMetrics.densityDpi);
-            installPost.put(Defines.Jsonkey.ScreenHeight.getKey(), dMetrics.heightPixels);
-            installPost.put(Defines.Jsonkey.ScreenWidth.getKey(), dMetrics.widthPixels);
-            installPost.put(Defines.Jsonkey.WiFi.getKey(), sysObserver.getWifiConnected());
-            installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
+
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
@@ -87,6 +62,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
+
+            installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
+            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
 
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
             setPost(installPost);
@@ -157,7 +135,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        if(callback != null) {  // Update callback if set with valid callback instance.
+        if (callback != null) {  // Update callback if set with valid callback instance.
             callback_ = callback;
         }
     }
@@ -194,5 +172,10 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     @Override
     public void clearCallbacks() {
         callback_ = null;
+    }
+
+    @Override
+    public String getRequestActionName() {
+        return ACTION_INSTALL;
     }
 }

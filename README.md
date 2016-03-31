@@ -136,13 +136,11 @@ If your Application is enabled with proguard, add the following instruction to y
 
 Branch must be notified when the app opens and when it closes, so that we know when to query the API for a new deep link. We recently discovered an Android mechanism that was exposed in version 14, that allows us to track behind-the-scenes when the app is opened and closed. It makes the integration **a lot** easier, so we've split it out from the legacy integration.
 
-If you support below 14, you'll want to skip this section and head to [this one right below](initialization-to-support-android-pre-14-harder).
+If you need to support pre 14, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/getting-started/sdk-integration-guide/advanced/android/#supporting-pre-14-android). Basically, if you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
 
 ### Initialization to support Android 14+ (4.0+) (easy)
 
 To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
-
-If you need to support pre 14, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/recipes/quickstart_guide/android/#initialization-to-support-android-pre-14). If you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
 
 #### Initialize Branch lifecycle
 

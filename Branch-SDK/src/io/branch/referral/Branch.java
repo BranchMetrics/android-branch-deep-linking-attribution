@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.util.BranchViewHandler;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -64,7 +65,7 @@ import io.branch.referral.util.LinkProperties;
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
  */
-public class Branch {
+public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -313,6 +314,7 @@ public class Branch {
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
 
+
     /* Enumeration for defining session initialisation state. */
     private enum SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
@@ -325,7 +327,7 @@ public class Branch {
     private ShareLinkManager shareLinkManager_;
 
     /* The current activity instance for the application.*/
-    private WeakReference<Activity> currentActivityReference_;
+    WeakReference<Activity> currentActivityReference_;
 
     /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
     private enum CUSTOM_REFERRABLE_SETTINGS {
@@ -1574,13 +1576,7 @@ public class Branch {
      *                 user action that has just been completed.
      */
     public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
-        if (metadata != null)
-            metadata = BranchUtil.filterOutBadCharacters(metadata);
-
-        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
+        userCompletedAction(action, metadata, null);
     }
 
     /**
@@ -1591,7 +1587,39 @@ public class Branch {
      *               out. For example "registered" or "logged in".
      */
     public void userCompletedAction(final String action) {
-        userCompletedAction(action, null);
+        userCompletedAction(action, null, null);
+    }
+
+    /**
+     * <p>A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API.</p>
+     *
+     * @param action   A {@link String} value to be passed as an action that the user has carried
+     *                 out. For example "registered" or "logged in".
+     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
+     */
+    public void userCompletedAction(final String action, BranchViewHandler.IBranchViewEvents callback) {
+        userCompletedAction(action, null, callback);
+    }
+
+    /**
+     * <p>A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
+     *
+     * @param action   A {@link String} value to be passed as an action that the user has carried
+     *                 out. For example "registered" or "logged in".
+     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
+     *                 user action that has just been completed.
+     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
+     */
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
+        if (metadata != null) {
+            metadata = BranchUtil.filterOutBadCharacters(metadata);
+        }
+        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata, callback);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
     }
 
     /**
@@ -2991,6 +3019,9 @@ public class Branch {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
+            if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
+                BranchViewHandler.getInstance().showPendingBranchView(activity);
+            }
         }
 
         @Override
@@ -3318,9 +3349,11 @@ public class Branch {
                                     initState_ = SESSION_STATE.INITIALISED;
                                     // Publish success to listeners
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
-                                    checkForAutoDeepLinkConfiguration();
+                                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
+                                        checkForAutoDeepLinkConfiguration();
+                                    }
+
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
@@ -3472,7 +3505,6 @@ public class Branch {
         }
         return matched;
     }
-
     //-------------------------- Branch Builders--------------------------------------//
 
     /**
@@ -3880,4 +3912,47 @@ public class Branch {
     public void addExtraInstrumentationData(String key, String value) {
         instrumentationExtraData_.put(key, value);
     }
+
+
+    //-------------------- Branch view handling--------------------//
+
+
+    @Override
+    public void onBranchViewVisible(String action, String branchViewID) {
+        //No Implementation on purpose
+    }
+
+    @Override
+    public void onBranchViewAccepted(String action, String branchViewID) {
+        if (ServerRequestInitSession.isInitSessionAction(action)) {
+            checkForAutoDeepLinkConfiguration();
+        }
+    }
+
+    @Override
+    public void onBranchViewCancelled(String action, String branchViewID) {
+        if (ServerRequestInitSession.isInitSessionAction(action)) {
+            checkForAutoDeepLinkConfiguration();
+        }
+    }
+
+    @Override
+    public void onBranchViewError(int errorCode, String errorMsg, String action) {
+
+    }
+
+    /**
+     * Interface for defining optional Branch view behaviour for Activities
+     */
+    public interface IBranchViewControl {
+        /**
+         * Defines if an activity is interested to show Branch views or not.
+         * By default activities are considered as Branch view enabled. In case of activities which are not interested to show a Branch view (Splash screen for example)
+         * should implement this and return false. The pending Branch view will be shown with the very next Branch view enabled activity
+         *
+         * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
+         */
+        boolean skipBranchViewsOnThisActivity();
+    }
+
 }

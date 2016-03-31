@@ -33,12 +33,10 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             openPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
             openPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK))
+
+            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
-            openPost.put(Defines.Jsonkey.OSVersion.getKey(), sysObserver.getOSVersion());
-            openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
-            if (!sysObserver.getOS().equals(SystemObserver.BLANK))
-                openPost.put(Defines.Jsonkey.OS.getKey(), sysObserver.getOS());
+            }
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
             }
@@ -56,6 +54,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 openPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
 
+            openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
 
             setPost(openPost);
@@ -161,5 +160,10 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     @Override
     public boolean hasCallBack() {
         return callback_ != null;
+    }
+
+    @Override
+    public String getRequestActionName() {
+        return ACTION_OPEN;
     }
 }

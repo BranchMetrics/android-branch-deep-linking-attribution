@@ -85,6 +85,7 @@ public class PrefHelper {
     private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
 
+    private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
 
     private static String Branch_Key = null;
     /**
@@ -312,7 +313,9 @@ public class PrefHelper {
     public String readBranchKey(boolean isLive) {
         String branchKey = null;
         String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
-        if (!isLive) { setExternDebug(); }
+        if (!isLive) {
+            setExternDebug();
+        }
         try {
             final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
@@ -447,7 +450,6 @@ public class PrefHelper {
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_URI} with value with given intent URI String.</p>
      *
      * @param uri A {@link String} value containing intent URI to set
-     *
      */
     public void setExternalIntentUri(String uri) {
         setString(KEY_EXTERNAL_INTENT_URI, uri);
@@ -455,6 +457,7 @@ public class PrefHelper {
 
     /**
      * <p>Gets the {@link #KEY_EXTERNAL_INTENT_URI} {@link String} value that has been set via the Branch API.</p>
+     *
      * @return A {@link String} value containing external URI set.
      */
     public String getExternalIntentUri() {
@@ -466,7 +469,6 @@ public class PrefHelper {
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_EXTRA} with value with given intent extras in string format.</p>
      *
      * @param extras A {@link String} value containing intent URI extra to set
-     *
      */
     public void setExternalIntentExtra(String extras) {
         setString(KEY_EXTERNAL_INTENT_EXTRA, extras);
@@ -474,6 +476,7 @@ public class PrefHelper {
 
     /**
      * <p>Gets the {@link #KEY_EXTERNAL_INTENT_EXTRA} {@link String} value that has been set via the Branch API.</p>
+     *
      * @return A {@link String} value containing external intent extra set.
      */
     public String getExternalIntentExtra() {
@@ -483,15 +486,15 @@ public class PrefHelper {
     /**
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
-     * @param identifer A {@link String} value containing the identifier of the associated
+     * @param identifier A {@link String} value containing the identifier of the associated
      *                  link.
      */
-    public void setLinkClickIdentifier(String identifer) {
-        setString(KEY_LINK_CLICK_IDENTIFIER, identifer);
+    public void setLinkClickIdentifier(String identifier) {
+        setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
     }
 
     /**
-     * <p>Gets the KEY_LINK_CLICK_IDENTIFER {@link String} value that has been set via the Branch API.</p>
+     * <p>Gets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
      * @return A {@link String} value containing the identifier of the associated link.
      */
@@ -777,7 +780,7 @@ public class PrefHelper {
      * <p>Sets the count of the unique number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
      *
-     * @param action  A {@link String} value containing the name of the action to return the
+     * @param action A {@link String} value containing the name of the action to return the
      *               count for.
      * @param count  An {@link Integer} value containing the total number of times that the
      *               specified action has been carried out during the current session.
@@ -949,6 +952,17 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.commit();
     }
 
+    public void updateBranchViewUsageCount(String branchViewId) {
+        String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
+        int currentUsage = getBranchViewUsageCount(branchViewId) + 1;
+        setInteger(key, currentUsage);
+    }
+
+    public int getBranchViewUsageCount(String branchViewId) {
+        String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
+        return getInteger(key, 0);
+    }
+
     /**
      * <p>Clears all the Branch referral shared preferences related to the current key.
      * Should be called before setting an new Branch-Key. </p>
@@ -988,7 +1002,6 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps to
      * <i>false</i>.</p>
-     *
      */
     public void disableExternAppListing() {
         BNC_App_Listing = false;
@@ -1070,16 +1083,14 @@ public class PrefHelper {
         private int connectionStatus;
 
         /**
-         *
          * @return {@link Integer} value containing the HTTP Status code of the current connection.
-         *
+         * <p/>
          * <ul>
-         *     <li>200 - The request has succeeded.</li>
-         *     <li>400 - Request cannot be fulfilled due to bad syntax</li>
-         *     <li>465 - Server is not listening.</li>
-         *     <li>500 - The server encountered an unexpected condition which prevented it from fulfilling the request.</li>
+         * <li>200 - The request has succeeded.</li>
+         * <li>400 - Request cannot be fulfilled due to bad syntax</li>
+         * <li>465 - Server is not listening.</li>
+         * <li>500 - The server encountered an unexpected condition which prevented it from fulfilling the request.</li>
          * </ul>
-         *
          * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1 - Status Code Definitions</a>
          */
         public int getConnectionStatus() {
@@ -1104,12 +1115,12 @@ public class PrefHelper {
                         if (serverResponse.getObject() != null
                                 && serverResponse.getObject().has("error")
                                 && serverResponse.getObject()
-                                        .getJSONObject("error").has("message")) {
+                                .getJSONObject("error").has("message")) {
                             Log.i("BranchSDK",
                                     "Branch API Error: "
                                             + serverResponse.getObject()
-                                                    .getJSONObject("error")
-                                                    .getString("message"));
+                                            .getJSONObject("error")
+                                            .getString("message"));
                         }
                     } else if (connectionStatus != 200) {
                         if (connectionStatus == RemoteInterface.NO_CONNECTIVITY_STATUS) {

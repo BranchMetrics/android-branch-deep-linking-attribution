@@ -89,7 +89,6 @@ class ServerRequestRegisterView extends ServerRequest {
         String os_Info = "Android " + Build.VERSION.SDK_INT;
         String sessionID = prefHelper_.getSessionID();
 
-        contentObject.put(Defines.Jsonkey.OS.getKey(), os_Info);
         contentObject.put(Defines.Jsonkey.SessionID.getKey(), sessionID);
         contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 

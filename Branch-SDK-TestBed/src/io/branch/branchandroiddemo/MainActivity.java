@@ -12,14 +12,13 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
-
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.BranchViewHandler;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 
@@ -50,7 +49,7 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
                 .setContentType("application/vnd.businessobjects")
-                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
                 .addContentMetadata("Metadata_Key1", "Metadata_value1")
@@ -166,7 +165,27 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.userCompletedAction("buy");
+                branch.userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
+                    @Override
+                    public void onBranchViewVisible(String action, String branchViewID) {
+                        Log.i("BranchTestBed", "onBranchViewVisible");
+                    }
+
+                    @Override
+                    public void onBranchViewAccepted(String action, String branchViewID) {
+                        Log.i("BranchTestBed", "onBranchViewAccepted");
+                    }
+
+                    @Override
+                    public void onBranchViewCancelled(String action, String branchViewID) {
+                        Log.i("BranchTestBed", "onBranchViewCancelled");
+                    }
+
+                    @Override
+                    public void onBranchViewError(int errorCode, String errorMsg, String action) {
+                        Log.i("BranchTestBed", "onBranchViewError");
+                    }
+                });
             }
         });
 
@@ -237,8 +256,8 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER);
-                        // Define custom styel for the share sheet list view
-                        //.setStyleResourceID(R.style.Share_Sheet_Style);
+                // Define custom styel for the share sheet list view
+                //.setStyleResourceID(R.style.Share_Sheet_Style);
 
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
                     @Override
@@ -287,6 +306,7 @@ public class MainActivity extends Activity {
                         Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
                         Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
                         Log.i("ContentMetaData", "metadata " + branchUniversalObject.getMetadata());
+
                     }
 
                     if (linkProperties != null) {
