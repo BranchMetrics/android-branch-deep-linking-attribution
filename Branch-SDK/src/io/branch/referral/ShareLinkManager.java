@@ -31,6 +31,7 @@ class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
     AnimatedDialog shareDlg_;
     Branch.BranchLinkShareListener callback_;
+    Branch.BranchLinkShareListener2 callback2_;
     /* List of apps available for sharing. */
     private List<ResolveInfo> appList_;
     /* Intent for sharing with selected application.*/
@@ -50,6 +51,9 @@ class ShareLinkManager {
 
     private Branch.ShareLinkBuilder builder_;
 
+    private String customMessage_;
+    private String customTitle_;
+
 
     /**
      * Creates an application selector and shares a link on user selecting the application.
@@ -61,16 +65,23 @@ class ShareLinkManager {
         builder_ = builder;
         context_ = builder.getActivity();
         callback_ = builder.getCallback();
+        callback2_ = builder.getCallback2();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
         shareDialogThemeID_ = builder.getStyleResourceID();
+        customMessage_ = null;
+        customTitle_ = null;
+
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
             e.printStackTrace();
             if (callback_ != null) {
                 callback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
-            } else {
+            } else if (callback2_ != null) {
+                callback2_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
+            }
+            else {
                 Log.i("BranchSDK", "Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
@@ -164,6 +175,11 @@ class ShareLinkManager {
                     if (callback_ != null) {
                         callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                     }
+                    if (callback2_ != null) {
+                        callback2_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                        customMessage_ = callback2_.getSharingMessageForChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                        customTitle_ = callback2_.getSharingTitleForChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                    }
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
                     invokeSharingClient((ResolveInfo) view.getTag());
@@ -180,12 +196,19 @@ class ShareLinkManager {
         if (callback_ != null) {
             callback_.onShareLinkDialogLaunched();
         }
+        else if (callback2_ != null) {
+            callback2_.onShareLinkDialogLaunched();
+        }
         shareDlg_.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
                 if (callback_ != null) {
                     callback_.onShareLinkDialogDismissed();
                     callback_ = null;
+                }
+                else if (callback2_ != null) {
+                    callback2_.onShareLinkDialogDismissed();
+                    callback2_ = null;
                 }
                 // Release  context to prevent leaks
                 if (!isShareInProgress_) {
@@ -222,7 +245,11 @@ class ShareLinkManager {
                     } else {
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, error);
-                        } else {
+                        }
+                        else if (callback2_ != null) {
+                            callback2_.onLinkShareResponse(url, channelName, error);
+                        }
+                        else {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
                     }
@@ -236,20 +263,27 @@ class ShareLinkManager {
 
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {
         if (selectedResolveInfo instanceof CopyLinkItem) {
-            addLinkToClipBoard(url, builder_.getShareMsg());
+            addLinkToClipBoard(url, customTitle_ != null ? customTitle_ : builder_.getShareMsg());
         } else {
             if (callback_ != null) {
                 callback_.onLinkShareResponse(url, channelName, null);
+            } else if (callback2_ != null) {
+                callback2_.onLinkShareResponse(url, channelName, null);
             } else {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
-            String shareSub = builder_.getShareSub();
+            String shareSub = customTitle_ != null ? customTitle_ : builder_.getShareSub();
             if (shareSub != null && shareSub.trim().length() > 0) {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
-            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
+            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, customMessage_ != null ? customMessage_ + " " + url : builder_.getShareMsg() + "\n" + url);
             context_.startActivity(shareLinkIntent_);
+
+            //clear custom title&message
+            customTitle_ = null;
+            customMessage_ = null;
+
         }
     }
 
