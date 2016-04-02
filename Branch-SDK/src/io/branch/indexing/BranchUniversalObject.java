@@ -463,6 +463,50 @@ public class BranchUniversalObject implements Parcelable {
         }
     }
 
+    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener2 callback) {
+        if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+            } else {
+                Log.e("BranchSDK", "Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
+            }
+        } else {
+            JSONObject params = new JSONObject();
+            try {
+                for (String key : metadata_.keySet()) {
+                    params.put(key, metadata_.get(key));
+                }
+                HashMap<String, String> controlParams = linkProperties.getControlParams();
+                for (String key : controlParams.keySet()) {
+                    params.put(key, controlParams.get(key));
+                }
+            } catch (JSONException ignore) {
+            }
+
+            Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
+                    .setCallback2(callback)
+                    .setSubject(style.getMessageTitle())
+                    .setMessage(style.getMessageBody());
+
+            if (style.getCopyUrlIcon() != null) {
+                shareLinkBuilder.setCopyUrlStyle(style.getCopyUrlIcon(), style.getCopyURlText(), style.getUrlCopiedMessage());
+            }
+            if (style.getMoreOptionIcon() != null) {
+                shareLinkBuilder.setMoreOptionStyle(style.getMoreOptionIcon(), style.getMoreOptionText());
+            }
+            if (style.getDefaultURL() != null) {
+                shareLinkBuilder.setDefaultURL(style.getDefaultURL());
+            }
+            if (style.getPreferredOptions().size() > 0) {
+                shareLinkBuilder.addPreferredSharingOptions(style.getPreferredOptions());
+            }
+            if (style.getStyleResourceID() > 0) {
+                shareLinkBuilder.setStyleResourceID(style.getStyleResourceID());
+            }
+            shareLinkBuilder.shareLink();
+        }
+    }
+
     private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         if (linkProperties.getTags() != null) {
