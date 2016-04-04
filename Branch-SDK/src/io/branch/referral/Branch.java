@@ -3169,6 +3169,53 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     /**
      * <p>An Interface class that is implemented by all classes that make use of
+<<<<<<< Updated upstream
+=======
+     * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
+     */
+    public interface BranchLinkShareListener2 {
+        /**
+         * <p> Callback method to update when share link dialog is launched.</p>
+         */
+        void onShareLinkDialogLaunched();
+
+        /**
+         * <p> Callback method to update when sharing dialog is dismissed.</p>
+         */
+        void onShareLinkDialogDismissed();
+
+        /**
+         * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
+         *
+         * @param sharedLink    The link shared to the channel.
+         * @param sharedChannel Channel selected for sharing.
+         * @param error         A {@link BranchError} to update errors, if there is any.
+         */
+        void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
+
+        /**
+         * <p>Called when user select a channel for sharing a deep link.
+         * Branch will create a deep link for the selected channel and share with it after calling this
+         * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
+         * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
+         * and sharing complete.</p>
+         *
+         * @param channelName Name of the selected application to share the link.
+         */
+        void onChannelSelected(String channelName);
+
+        String getSharingTitleForChannel(String channel);
+        String getSharingMessageForChannel(String channel);
+    }
+
+    public interface IChannelProperties {
+        String getSharingTitleForChannel(String channel);
+        String getSharingMessageForChannel(String channel);
+    }
+
+    /**
+     * <p>An Interface class that is implemented by all classes that make use of
+>>>>>>> Stashed changes
      * {@link BranchListResponseListener}, defining a single method that takes a list of
      * {@link JSONArray} format, and an error message of {@link BranchError} format that will be
      * returned on failure of the request response.</p>
@@ -3519,6 +3566,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         private String shareMsg_;
         private String shareSub_;
         private Branch.BranchLinkShareListener callback_ = null;
+        private Branch.IChannelProperties channelPropertiesCallback_ = null;
+
         private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
         private String defaultURL_;
 
@@ -3553,6 +3602,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
             shareMsg_ = "";
             callback_ = null;
+            channelPropertiesCallback_ = null;
             preferredOptions_ = new ArrayList<>();
             defaultURL_ = null;
 
@@ -3656,6 +3706,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          */
         public ShareLinkBuilder setCallback(BranchLinkShareListener callback) {
             this.callback_ = callback;
+            return this;
+        }
+
+        public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) {
+            this.channelPropertiesCallback_ = channelPropertiesCallback;
             return this;
         }
 
@@ -3845,6 +3900,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         public BranchLinkShareListener getCallback() {
             return callback_;
+        }
+
+        public IChannelProperties getChannelPropertiesCallback() {
+            return channelPropertiesCallback_;
         }
 
         public String getDefaultURL() {
