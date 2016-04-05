@@ -223,8 +223,7 @@ class ShareLinkManager {
                     } else {
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, error);
-                        }
-                        else {
+                        } else {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
                     }
@@ -242,8 +241,7 @@ class ShareLinkManager {
         } else {
             if (callback_ != null) {
                 callback_.onLinkShareResponse(url, channelName, null);
-            }
-            else {
+            } else {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
 
@@ -251,17 +249,16 @@ class ShareLinkManager {
             String shareSub = builder_.getShareSub();
             String shareMsg = builder_.getShareMsg();
 
-            if ( channelPropertiesCallback_ != null ) {
+            if (channelPropertiesCallback_ != null) {
                 String customShareSub = channelPropertiesCallback_.getSharingTitleForChannel(channelName);
                 String customShareMsg = channelPropertiesCallback_.getSharingMessageForChannel(channelName);
-                if ( TextUtils.isEmpty(customShareSub) == false ) {
+                if (!TextUtils.isEmpty(customShareSub)) {
                     shareSub = customShareSub;
                 }
-                if ( TextUtils.isEmpty(customShareMsg) == false ) {
+                if (!TextUtils.isEmpty(customShareMsg)) {
                     shareMsg = customShareMsg;
                 }
             }
-
             if (shareSub != null && shareSub.trim().length() > 0) {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
