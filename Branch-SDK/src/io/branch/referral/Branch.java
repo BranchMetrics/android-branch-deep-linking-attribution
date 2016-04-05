@@ -3167,8 +3167,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         void onChannelSelected(String channelName);
     }
 
+    /**
+     * <p>An interface class for customizing sharing properties with selected channel.</p>
+     */
     public interface IChannelProperties {
+        /**
+         * @param channel The name of the channel selected for sharing.
+         * @return {@link String} with value for the message title for sharing the link with the selected channel
+         */
         String getSharingTitleForChannel(String channel);
+
+        /**
+         * @param channel The name of the channel selected for sharing.
+         * @return {@link String} with value for the message body for sharing the link with the selected channel
+         */
         String getSharingMessageForChannel(String channel);
     }
 
@@ -3667,6 +3679,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             return this;
         }
 
+        /**
+         * @param channelPropertiesCallback A {@link io.branch.referral.Branch.IChannelProperties} instance for customizing sharing properties for channels.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
         public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) {
             this.channelPropertiesCallback_ = channelPropertiesCallback;
             return this;
