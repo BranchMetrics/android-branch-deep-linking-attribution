@@ -280,15 +280,15 @@ public class MainActivity extends Activity {
                         new Branch.IChannelProperties() {
                             @Override
                             public String getSharingTitleForChannel(String channel) {
-                                return channel.contains("messenger") ? "title for messenger" :
-                                        channel.contains("slack") ? "title for slack" :
+                                return channel.contains("Messaging") ? "title for SMS" :
+                                        channel.contains("Slack") ? "title for slack" :
                                                 channel.contains("Gmail") ? "title for gmail" : null;
                             }
 
                             @Override
                             public String getSharingMessageForChannel(String channel) {
-                                return channel.contains("messenger") ? "message for messenger" :
-                                        channel.contains("slack") ? "message for slack" :
+                                return channel.contains("Messaging") ? "message for SMS" :
+                                        channel.contains("Slack") ? "message for slack" :
                                                 channel.contains("Gmail") ? "message for gmail" : null;
                             }
                         });
