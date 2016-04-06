@@ -247,7 +247,6 @@ public class MainActivity extends Activity {
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
 
-
                 //noinspection deprecation
                 ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
                         .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Save this URl", "Link added to clipboard")
@@ -260,33 +259,51 @@ public class MainActivity extends Activity {
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
-                    @Override
-                    public void onShareLinkDialogLaunched() {
-                    }
 
-                    @Override
-                    public void onShareLinkDialogDismissed() {
-                    }
+                            @Override
+                            public void onShareLinkDialogLaunched() {
+                            }
 
-                    @Override
-                    public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-                    }
+                            @Override
+                            public void onShareLinkDialogDismissed() {
+                            }
 
-                    @Override
-                    public void onChannelSelected(String channelName) {
-                    }
-                });
+                            @Override
+                            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+                            }
+
+                            @Override
+                            public void onChannelSelected(String channelName) {
+                            }
+
+                        },
+                        new Branch.IChannelProperties() {
+                            @Override
+                            public String getSharingTitleForChannel(String channel) {
+                                return channel.contains("messenger") ? "title for messenger" :
+                                        channel.contains("slack") ? "title for slack" :
+                                                channel.contains("Gmail") ? "title for gmail" : null;
+                            }
+
+                            @Override
+                            public String getSharingMessageForChannel(String channel) {
+                                return channel.contains("messenger") ? "message for messenger" :
+                                        channel.contains("slack") ? "message for slack" :
+                                                channel.contains("Gmail") ? "message for gmail" : null;
+                            }
+                        });
+
             }
         });
 
         // Add optional deep link debug params
-//        try {
-//            JSONObject debugObj = new JSONObject();
-//            debugObj.put("DeeplinkTestKey1", "DeeplinkTestValue1");
-//            debugObj.put("DeeplinkTestKey2", "DeeplinkTestValue2");
-//            Branch.getInstance().setDeepLinkDebugMode(debugObj);
-//        }catch (JSONException ignore){
-//        }
+        //        try {
+        //            JSONObject debugObj = new JSONObject();
+        //            debugObj.put("DeeplinkTestKey1", "DeeplinkTestValue1");
+        //            debugObj.put("DeeplinkTestKey2", "DeeplinkTestValue2");
+        //            Branch.getInstance().setDeepLinkDebugMode(debugObj);
+        //        }catch (JSONException ignore){
+        //        }
 
     }
 

@@ -10,6 +10,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -31,6 +32,8 @@ class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
     AnimatedDialog shareDlg_;
     Branch.BranchLinkShareListener callback_;
+    Branch.IChannelProperties channelPropertiesCallback_;
+
     /* List of apps available for sharing. */
     private List<ResolveInfo> appList_;
     /* Intent for sharing with selected application.*/
@@ -61,6 +64,7 @@ class ShareLinkManager {
         builder_ = builder;
         context_ = builder.getActivity();
         callback_ = builder.getCallback();
+        channelPropertiesCallback_ = builder.getChannelPropertiesCallback();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
         shareDialogThemeID_ = builder.getStyleResourceID();
@@ -74,7 +78,6 @@ class ShareLinkManager {
                 Log.i("BranchSDK", "Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
-
         return shareDlg_;
     }
 
@@ -95,9 +98,7 @@ class ShareLinkManager {
                 shareDlg_.dismiss();
             }
         }
-
     }
-
 
     /**
      * Create a custom chooser dialog with available share options.
@@ -243,12 +244,25 @@ class ShareLinkManager {
             } else {
                 Log.i("BranchSDK", "Shared link with " + channelName);
             }
+
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
             String shareSub = builder_.getShareSub();
+            String shareMsg = builder_.getShareMsg();
+
+            if (channelPropertiesCallback_ != null) {
+                String customShareSub = channelPropertiesCallback_.getSharingTitleForChannel(channelName);
+                String customShareMsg = channelPropertiesCallback_.getSharingMessageForChannel(channelName);
+                if (!TextUtils.isEmpty(customShareSub)) {
+                    shareSub = customShareSub;
+                }
+                if (!TextUtils.isEmpty(customShareMsg)) {
+                    shareMsg = customShareMsg;
+                }
+            }
             if (shareSub != null && shareSub.trim().length() > 0) {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
-            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, builder_.getShareMsg() + "\n" + url);
+            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg + "\n" + url);
             context_.startActivity(shareLinkIntent_);
         }
     }

@@ -3168,6 +3168,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     }
 
     /**
+     * <p>An interface class for customizing sharing properties with selected channel.</p>
+     */
+    public interface IChannelProperties {
+        /**
+         * @param channel The name of the channel selected for sharing.
+         * @return {@link String} with value for the message title for sharing the link with the selected channel
+         */
+        String getSharingTitleForChannel(String channel);
+
+        /**
+         * @param channel The name of the channel selected for sharing.
+         * @return {@link String} with value for the message body for sharing the link with the selected channel
+         */
+        String getSharingMessageForChannel(String channel);
+    }
+
+    /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchListResponseListener}, defining a single method that takes a list of
      * {@link JSONArray} format, and an error message of {@link BranchError} format that will be
@@ -3519,6 +3536,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         private String shareMsg_;
         private String shareSub_;
         private Branch.BranchLinkShareListener callback_ = null;
+        private Branch.IChannelProperties channelPropertiesCallback_ = null;
+
         private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
         private String defaultURL_;
 
@@ -3553,6 +3572,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
             shareMsg_ = "";
             callback_ = null;
+            channelPropertiesCallback_ = null;
             preferredOptions_ = new ArrayList<>();
             defaultURL_ = null;
 
@@ -3656,6 +3676,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          */
         public ShareLinkBuilder setCallback(BranchLinkShareListener callback) {
             this.callback_ = callback;
+            return this;
+        }
+
+        /**
+         * @param channelPropertiesCallback A {@link io.branch.referral.Branch.IChannelProperties} instance for customizing sharing properties for channels.
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) {
+            this.channelPropertiesCallback_ = channelPropertiesCallback;
             return this;
         }
 
@@ -3845,6 +3874,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         public BranchLinkShareListener getCallback() {
             return callback_;
+        }
+
+        public IChannelProperties getChannelPropertiesCallback() {
+            return channelPropertiesCallback_;
         }
 
         public String getDefaultURL() {
