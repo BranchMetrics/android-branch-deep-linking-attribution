@@ -298,7 +298,7 @@ public class BranchViewHandler {
         void onBranchViewError(int errorCode, String errorMsg, String action);
     }
 
-    public void onActivityDestroyed(Activity activity) {
+    public void onCurrentActivityDestroyed(Activity activity) {
         if (parentActivityClassName_ != null && parentActivityClassName_.equalsIgnoreCase(activity.getClass().getName())) {
             //In case of dialog destroyed due to orientation change dialog won't provide a dismiss event
             isBranchViewDialogShowing_ = false;
