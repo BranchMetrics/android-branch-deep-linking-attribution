@@ -43,6 +43,7 @@ public class BranchViewHandler {
 
     public static final int BRANCH_VIEW_ERR_ALREADY_SHOWING = -200;
     public static final int BRANCH_VIEW_ERR_INVALID_VIEW = -201;
+    private String parentActivityClassName_;
 
 
     private BranchViewHandler() {
@@ -119,6 +120,7 @@ public class BranchViewHandler {
                 return; // Error no url or Html
             }
             isBranchViewDialogShowing_ = true;
+            parentActivityClassName_ = currentActivity.getClass().getName();
             final Dialog dialog = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             dialog.setContentView(layout);
             dialog.show();
@@ -273,7 +275,7 @@ public class BranchViewHandler {
         /**
          * Called when user click the positive button on Branch view
          *
-         * @param actionaction name associated with the App Branch item
+         * @param action action name associated with the App Branch item
          * @param branchViewID ID for the Branch view accepted
          */
         void onBranchViewAccepted(String action, String branchViewID);
@@ -294,6 +296,13 @@ public class BranchViewHandler {
          * @param action    action name for the Branch view failed to display
          */
         void onBranchViewError(int errorCode, String errorMsg, String action);
+    }
+
+    public void onCurrentActivityDestroyed(Activity activity) {
+        if (parentActivityClassName_ != null && parentActivityClassName_.equalsIgnoreCase(activity.getClass().getName())) {
+            //In case of dialog destroyed due to orientation change dialog won't provide a dismiss event
+            isBranchViewDialogShowing_ = false;
+        }
     }
 
 

@@ -3077,6 +3077,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             if (currentActivityReference_ != null && currentActivityReference_.get() == activity) {
                 currentActivityReference_.clear();
             }
+            BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
 
     }
