@@ -1,0 +1,113 @@
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="20dp">
+
+<RelativeLayout
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+        android:id="@+id/editBranchKey"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:hint="branch key"
+        />
+
+    <Button
+        android:id="@+id/cmdSetBranchKey"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/editBranchKey"
+        android:text="Save"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/keyValueLin"
+        android:layout_below="@+id/cmdSetBranchKey">
+
+    <EditText
+        android:id="@+id/editKey"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:hint="debug key"
+        android:singleLine="true"
+        android:nextFocusDown="@+id/editValue"/>
+
+    <EditText
+        android:id="@+id/editValue"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="40dp"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:hint="debug value"
+        android:layout_below="@+id/editKey"
+        android:singleLine="true"
+        android:imeOptions="actionDone"
+        />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/cmdSetDebugValue"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/keyValueLin"
+        android:text="Add"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"
+        />
+
+    <TextView
+        android:id="@+id/txtDebugKeyValues"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:padding="5dp"
+        android:hint="debug key : debug value"
+        android:layout_below="@+id/cmdSetDebugValue"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        />
+
+    <Button
+        android:id="@+id/cmdClearSettings"
+        android:layout_width="180dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/txtDebugKeyValues"
+        android:text="Clear Settings"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:textColor="@android:color/white"
+        />
+
+    <TextView
+        android:id="@+id/txtRewardBalance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:padding="5dp"
+        android:text="credits = "
+        android:layout_below="@+id/cmdRefreshShortURL"
+        android:textColor="@android:color/white"
+        android:visibility="gone"/>
+
+</RelativeLayout>
+
+ </ScrollView>

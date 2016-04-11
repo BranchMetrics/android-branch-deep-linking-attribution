@@ -296,6 +296,16 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.share_btn).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Log.i("BranchTestBed", "Loading settings...");
+                Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(i);
+                return true;
+            }
+        });
+
         // Add optional deep link debug params
         //        try {
         //            JSONObject debugObj = new JSONObject();
