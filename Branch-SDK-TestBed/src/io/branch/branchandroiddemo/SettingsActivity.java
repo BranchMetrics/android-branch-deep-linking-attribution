@@ -74,7 +74,8 @@ public class SettingsActivity extends Activity {
         findViewById(R.id.cmdClearSettings).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                prefHelper.setBranchKey("");
+                prefHelper.setBranchKey(prefHelper.getBranchKey());
+                txtEditBranchKey.setText(prefHelper.getBranchKey());
                 Branch.getInstance().setDeepLinkDebugMode(null);
                 txtDebugKeyValues.setText("");
                 Toast.makeText(getApplicationContext(), "Cleared Settings", Toast.LENGTH_LONG).show();
