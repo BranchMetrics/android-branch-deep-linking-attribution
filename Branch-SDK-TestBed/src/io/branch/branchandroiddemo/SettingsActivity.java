@@ -128,7 +128,6 @@ public class SettingsActivity extends Activity {
     private void fillDebugParams() {
         JSONObject debugKeyValues = Branch.getInstance().getDeeplinkDebugParams();
         if (debugKeyValues != null) {
-            txtDebugKeyValues.setText("");
             for (Iterator<String> iter = debugKeyValues.keys(); iter.hasNext(); ) {
                 String key = iter.next();
                 try {
@@ -136,7 +135,6 @@ public class SettingsActivity extends Activity {
                     if (!TextUtils.isEmpty(key) && !TextUtils.isEmpty(value)) {
                         String addText = key + " : " + value + "\n";
                         txtDebugKeyValues.append(addText);
-                        Log.d("Debug", "adding: " + addText);
                     }
                 } catch (JSONException e) {
 
