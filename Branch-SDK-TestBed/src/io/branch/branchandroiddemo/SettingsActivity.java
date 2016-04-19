@@ -1,6 +1,9 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -74,8 +77,9 @@ public class SettingsActivity extends Activity {
         findViewById(R.id.cmdClearSettings).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                prefHelper.setBranchKey(prefHelper.getBranchKey());
-                txtEditBranchKey.setText(prefHelper.getBranchKey());
+                prefHelper.setBranchKey(null);
+                prefHelper.setBranchKey(prefHelper.readBranchKey(!isTestModeEnabled(getApplicationContext())));
+                txtEditBranchKey.setText(prefHelper.readBranchKey(!isTestModeEnabled(getApplicationContext())));
                 Branch.getInstance().setDeepLinkDebugMode(null);
                 txtDebugKeyValues.setText("");
                 Toast.makeText(getApplicationContext(), "Cleared Settings", Toast.LENGTH_LONG).show();
@@ -141,5 +145,20 @@ public class SettingsActivity extends Activity {
                 }
             }
         }
+    }
+
+    private boolean isTestModeEnabled(Context context) {
+        boolean isTestMode_ = false;
+        String testModeKey = "io.branch.sdk.TestMode";
+        try {
+            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null) {
+                isTestMode_ = ai.metaData.getBoolean(testModeKey, false);
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return isTestMode_;
     }
 }
