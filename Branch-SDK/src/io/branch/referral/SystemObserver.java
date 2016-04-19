@@ -4,7 +4,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -13,7 +12,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
-import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
@@ -273,126 +271,6 @@ class SystemObserver {
         } catch (NameNotFoundException ignored) {
         }
         return BLANK;
-    }
-
-    /**
-     * <p>Gets the name of the network operator that the current telephony-capable device is
-     * connected to.
-     * </p>
-     *
-     * @return <p>A {@link String} value containing the network-provided name of the telephony carrier that
-     * the current device is connected to.</p>
-     */
-    public String getCarrier() {
-        TelephonyManager telephonyManager = (TelephonyManager) context_.getSystemService(Context.TELEPHONY_SERVICE);
-        if (telephonyManager != null) {
-            String ret = telephonyManager.getNetworkOperatorName();
-            if (ret != null)
-                return ret;
-        }
-        return BLANK;
-    }
-
-    /**
-     * <p>Checks whether the current device has Bluetooth capability of any kind by attempting to
-     * instantiate a {@link BluetoothAdapter} object that points to the default Bluetooth adapter
-     * of the device. If Bluetooth is not supported, the assignment will be null and false will be
-     * returned as a result.
-     * </p>
-     *
-     * @return <p>A {@link Boolean} value indicating whether or not Bluetooth is supported <b>and enabled</b>
-     * on the current device.</p>
-     * <p/>
-     * <ul>
-     * <li><i>true</i> - the device supports Bluetooth, and the adapter is enabled.</li>
-     * <li><i>false</i> - the device does not support Bluetooth, or the adapter is disabled.</li>
-     * </ul>
-     */
-    public boolean getBluetoothPresent() {
-        try {
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (bluetoothAdapter != null) {
-                //noinspection ResourceType
-                return bluetoothAdapter.isEnabled();
-            }
-        } catch (Exception ignore) {
-        }
-        return false;
-    }
-
-    /**
-     * <p>Checks whether the current device supports
-     * <a href="https://developer.android.com/guide/topics/connectivity/bluetooth-le.html">
-     * Bluetooth Low Energy (LE)</a>.
-     * </p>
-     * <p/>
-     * <p>This is determined by checking the SDK version available on the current device. BTLE was
-     * introduced in Android 4.3 (API Level 18), so if the current device reports that it supports
-     * the highest platform version that is 17 or lower, the device does not support the required
-     * platform hooks to communicate with capable devices via the Bluetooth Low-Energy profile.</p>
-     *
-     * @return <p>A {@link Boolean} value indicating whether or not Bluetooth LE is available on the current
-     * device.</p>
-     * <p/>
-     * <ul>
-     * <li><i>true</i> - this device supports Bluetooth LE.</li>
-     * <li><i>false</i> - this device does not support Bluetooth LE.</li>
-     * </ul>
-     */
-    public String getBluetoothVersion() {
-        try {
-            if (android.os.Build.VERSION.SDK_INT >= 8) {
-                if (android.os.Build.VERSION.SDK_INT >= 18 &&
-                        context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                    return "ble";
-                } else if (context_.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
-                    return "classic";
-                }
-            }
-        } catch (Exception ignore) {
-        }
-        return BLANK;
-    }
-
-    /**
-     * <p>Checks whether or not the current device has near-field communication capabilities.</p>
-     *
-     * @return <p>A {@link Boolean} value indicating whether or not NFC capabilities exist in the current
-     * device.</p>
-     * <p/>
-     * <ul>
-     * <li><i>true</i> - Current device has NFC capabilities.</li>
-     * <li><i>false</i> - Current device has no NFC capabilities.</li>
-     * </ul>
-     */
-    public boolean getNFCPresent() {
-        try {
-            return context_.getPackageManager().hasSystemFeature("android.hardware.nfc");
-        } catch (Exception ignored) {
-        }
-        return false;
-    }
-
-    /**
-     * <p>Checks whether or not the current device has telephone capabilities; i.e. whether or not
-     * it is able to connect to a mobile or cellphone network and send or recieve SMS messages,
-     * and or make calls.
-     * </p>
-     *
-     * @return <p>A {@link Boolean} value indicating whether telephony capabilities exist on the
-     * current device.</p>
-     * <p/>
-     * <ul>
-     * <li><i>true</i> - the device has telephony capabilities; is a phone or phablet.</li>
-     * <li><i>false</i> - the device has telephony capabilities; is a WiFi tablet or other non-phone device.</li>
-     * </ul>
-     */
-    public boolean getTelephonePresent() {
-        try {
-            return context_.getPackageManager().hasSystemFeature("android.hardware.telephony");
-        } catch (Exception ignored) {
-        }
-        return false;
     }
 
     /**

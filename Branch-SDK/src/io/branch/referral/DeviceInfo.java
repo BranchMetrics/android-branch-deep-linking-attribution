@@ -20,26 +20,6 @@ class DeviceInfo {
      * Status for test vs real hardware ID
      */
     private final boolean isHardwareIDReal_;
-    /**
-     * Carrier name for the device if available
-     */
-    private final String carrierName_;
-    /**
-     * Status for BlueTooth available or not
-     */
-    private final boolean isBlueToothPresent_;
-    /**
-     * BlueTooth hardware version
-     */
-    private final String blueToothVersion_;
-    /**
-     * Status for NFC available or not
-     */
-    private final boolean isNFCPresent_;
-    /**
-     * Status for Telephony available or not
-     */
-    private final boolean isTelephonyPresent_;
     /*
      * Device manufacturer name
      */
@@ -91,11 +71,6 @@ class DeviceInfo {
     private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver) {
         hardwareID_ = sysObserver.getUniqueID(isExternalDebug);
         isHardwareIDReal_ = sysObserver.hasRealHardwareId();
-        carrierName_ = sysObserver.getCarrier();
-        isBlueToothPresent_ = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB && sysObserver.getBluetoothPresent();
-        blueToothVersion_ = sysObserver.getBluetoothVersion();
-        isNFCPresent_ = sysObserver.getNFCPresent();
-        isTelephonyPresent_ = sysObserver.getTelephonePresent();
         brandName_ = sysObserver.getPhoneBrand();
         modelName_ = sysObserver.getPhoneModel();
 
@@ -122,25 +97,12 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID_);
                 requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
             }
-            if (!carrierName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.Carrier.getKey(), carrierName_);
-            }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                requestObj.put(Defines.Jsonkey.Bluetooth.getKey(), isBlueToothPresent_);
-            }
-            if (!blueToothVersion_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.BluetoothVersion.getKey(), blueToothVersion_);
-            }
-
             if (!brandName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName_);
             }
             if (!modelName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.Model.getKey(), modelName_);
             }
-
-            requestObj.put(Defines.Jsonkey.HasNfc.getKey(), isNFCPresent_);
-            requestObj.put(Defines.Jsonkey.HasTelephone.getKey(), isTelephonyPresent_);
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
