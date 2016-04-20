@@ -66,7 +66,7 @@ class ServerRequestActionCompleted extends ServerRequest {
                     if (post != null && post.has(Defines.Jsonkey.Event.getKey())) {
                         actionName = post.getString(Defines.Jsonkey.Event.getKey());
                     }
-                    if(Branch.getInstance().currentActivityReference_ != null) {
+                    if (Branch.getInstance().currentActivityReference_ != null) {
                         Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
                         JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
                         BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, callback_);
