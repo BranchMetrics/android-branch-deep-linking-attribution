@@ -1,9 +1,10 @@
-package io.branch.referral.util;
+package io.branch.referral;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.text.TextUtils;
@@ -12,6 +13,9 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.DecelerateInterpolator;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
@@ -20,9 +24,6 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
 
 /**
  * <p>
@@ -43,7 +44,11 @@ public class BranchViewHandler {
 
     public static final int BRANCH_VIEW_ERR_ALREADY_SHOWING = -200;
     public static final int BRANCH_VIEW_ERR_INVALID_VIEW = -201;
+    public static final int BRANCH_VIEW_ERR_TEMP_UNAVAILABLE = -202;
     private String parentActivityClassName_;
+
+    private boolean webViewLoadError_;
+    private Dialog branchViewDialog_;
 
 
     private BranchViewHandler() {
@@ -61,20 +66,20 @@ public class BranchViewHandler {
         return thisInstance_;
     }
 
-    public boolean showPendingBranchView(Activity currentActivity) {
-        boolean isBranchViewShowed = showBranchView(openOrInstallPendingBranchView_, currentActivity, null);
+    public boolean showPendingBranchView(Context appContext) {
+        boolean isBranchViewShowed = showBranchView(openOrInstallPendingBranchView_, appContext, null);
         if (isBranchViewShowed) {
             openOrInstallPendingBranchView_ = null;
         }
         return isBranchViewShowed;
     }
 
-    public boolean showBranchView(JSONObject branchViewObj, String actionName, Activity currentActivity, final IBranchViewEvents callback) {
+    public boolean showBranchView(JSONObject branchViewObj, String actionName, Context appContext, final IBranchViewEvents callback) {
         BranchView branchView = new BranchView(branchViewObj, actionName);
-        return showBranchView(branchView, currentActivity, callback);
+        return showBranchView(branchView, appContext, callback);
     }
 
-    private boolean showBranchView(BranchView branchView, Activity currentActivity, final IBranchViewEvents callback) {
+    private boolean showBranchView(BranchView branchView, Context appContext, final IBranchViewEvents callback) {
         if (isBranchViewDialogShowing_) {
             if (callback != null) {
                 callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", branchView.branchViewAction_);
@@ -85,33 +90,20 @@ public class BranchViewHandler {
         isBranchViewDialogShowing_ = false;
         isBranchViewAccepted_ = false;
 
-
-        if (currentActivity != null && branchView != null && branchView.isAvailable(currentActivity.getApplicationContext())) {
-            createAndShowBranchView(branchView, currentActivity, callback);
+        if (appContext != null && branchView != null && branchView.isAvailable(appContext)) {
+            createAndShowBranchView(branchView, appContext, callback);
         }
-
         return isBranchViewDialogShowing_;
     }
 
-    private void createAndShowBranchView(final BranchView branchView, Activity currentActivity, final IBranchViewEvents callback) {
-        if (currentActivity != null && branchView != null) {
-            branchView.updateUsageCount(currentActivity.getApplicationContext(), branchView.branchViewID_);
-            WebView webView = new WebView(currentActivity);
-
-            final RelativeLayout layout = new RelativeLayout(currentActivity);
-            layout.setVisibility(View.GONE);
-
-            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            layoutParams.setMargins(3, 3, 3, 3);
-
-            layout.addView(webView, layoutParams);
-            layout.setBackgroundColor(Color.parseColor("#11FEFEFE"));
-
-
+    private void createAndShowBranchView(final BranchView branchView, Context appContext, final IBranchViewEvents callback) {
+        if (appContext != null && branchView != null) {
+            final WebView webView = new WebView(appContext);
+            webView.getSettings().setJavaScriptEnabled(true);
             if (Build.VERSION.SDK_INT >= 19) {
                 webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
-
+            webViewLoadError_ = false;
             if (!TextUtils.isEmpty(branchView.webViewUrl_)) {
                 webView.loadUrl(branchView.webViewUrl_);
             } else if (!TextUtils.isEmpty(branchView.webViewHtml_)) {
@@ -120,16 +112,6 @@ public class BranchViewHandler {
                 return; // Error no url or Html
             }
             isBranchViewDialogShowing_ = true;
-            parentActivityClassName_ = currentActivity.getClass().getName();
-            final Dialog dialog = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            dialog.setContentView(layout);
-            dialog.show();
-
-            if (callback != null) {
-                callback.onBranchViewVisible(branchView.branchViewAction_, branchView.branchViewID_);
-            }
-
-            webView.getSettings().setJavaScriptEnabled(true);
 
             webView.setWebViewClient(new WebViewClient() {
                 @Override
@@ -138,36 +120,88 @@ public class BranchViewHandler {
                     if (!isHandled) {
                         view.loadUrl(url);
                     } else {
-                        dialog.dismiss();
+                        if (branchViewDialog_ != null) {
+                            branchViewDialog_.dismiss();
+                        }
                     }
                     return isHandled;
                 }
 
                 @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    super.onPageStarted(view, url, favicon);
+                }
+
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    super.onReceivedError(view, request, error);
+                    webViewLoadError_ = true;
+                }
+
+                @Override
+                public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+                    super.onReceivedHttpError(view, request, errorResponse);
+                    webViewLoadError_ = true;
+                }
+
+                @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
-                    layout.setVisibility(View.VISIBLE);
-                    view.setVisibility(View.VISIBLE);
-                    dialog.show();
-                    showViewWithAlphaAnimation(layout);
-                    showViewWithAlphaAnimation(view);
+                    openBranchViewDialog(branchView, callback, webView);
                 }
             });
+        }
+    }
 
-            dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    isBranchViewDialogShowing_ = false;
-                    if (callback != null) {
-                        if (isBranchViewAccepted_) {
-                            callback.onBranchViewAccepted(branchView.branchViewAction_, branchView.branchViewID_);
-                        } else {
-                            callback.onBranchViewCancelled(branchView.branchViewAction_, branchView.branchViewID_);
+    private void openBranchViewDialog(final BranchView branchView, final IBranchViewEvents callback, WebView webView) {
+        if (!webViewLoadError_ && Branch.getInstance() != null && Branch.getInstance().currentActivityReference_ != null) {
+            Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
+            if (currentActivity != null) {
+                branchView.updateUsageCount(currentActivity.getApplicationContext(), branchView.branchViewID_);
+                parentActivityClassName_ = currentActivity.getClass().getName();
+
+                RelativeLayout layout = new RelativeLayout(currentActivity);
+                layout.setVisibility(View.GONE);
+                RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                layoutParams.setMargins(3, 3, 3, 3);
+
+                layout.addView(webView, layoutParams);
+                layout.setBackgroundColor(Color.parseColor("#11FEFEFE"));
+
+                branchViewDialog_ = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+                branchViewDialog_.setContentView(layout);
+
+                layout.setVisibility(View.VISIBLE);
+                webView.setVisibility(View.VISIBLE);
+                branchViewDialog_.show();
+                showViewWithAlphaAnimation(layout);
+                showViewWithAlphaAnimation(webView);
+                isBranchViewDialogShowing_ = true;
+                if (callback != null) {
+                    callback.onBranchViewVisible(branchView.branchViewAction_, branchView.branchViewID_);
+                }
+
+                branchViewDialog_.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        isBranchViewDialogShowing_ = false;
+                        branchViewDialog_ = null;
+
+                        if (callback != null) {
+                            if (isBranchViewAccepted_) {
+                                callback.onBranchViewAccepted(branchView.branchViewAction_, branchView.branchViewID_);
+                            } else {
+                                callback.onBranchViewCancelled(branchView.branchViewAction_, branchView.branchViewID_);
+                            }
                         }
                     }
-                }
-            });
-
+                });
+            }
+        } else {
+            isBranchViewDialogShowing_ = false;
+            if (callback != null) {
+                callback.onBranchViewError(BRANCH_VIEW_ERR_TEMP_UNAVAILABLE, "Unable to create a Branch view due to a temporary network error", branchView.branchViewAction_);
+            }
         }
     }
 
@@ -275,7 +309,7 @@ public class BranchViewHandler {
         /**
          * Called when user click the positive button on Branch view
          *
-         * @param action action name associated with the App Branch item
+         * @param action       action name associated with the App Branch item
          * @param branchViewID ID for the Branch view accepted
          */
         void onBranchViewAccepted(String action, String branchViewID);

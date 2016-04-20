@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.util.BranchViewHandler;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -3977,7 +3976,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     @Override
     public void onBranchViewError(int errorCode, String errorMsg, String action) {
-
+        if (ServerRequestInitSession.isInitSessionAction(action)) {
+            checkForAutoDeepLinkConfiguration();
+        }
     }
 
     /**

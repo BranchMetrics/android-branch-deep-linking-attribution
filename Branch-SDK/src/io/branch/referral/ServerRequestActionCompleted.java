@@ -8,8 +8,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.util.BranchViewHandler;
-
 /**
  * <p>
  * The server request for Action completed event. Handles request creation and execution.
@@ -68,9 +66,11 @@ class ServerRequestActionCompleted extends ServerRequest {
                     if (post != null && post.has(Defines.Jsonkey.Event.getKey())) {
                         actionName = post.getString(Defines.Jsonkey.Event.getKey());
                     }
-                    Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
-                    JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
-                    BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, callback_);
+                    if(Branch.getInstance().currentActivityReference_ != null) {
+                        Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
+                        JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
+                        BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, callback_);
+                    }
                 } catch (JSONException exception) {
                     if (callback_ != null) {
                         callback_.onBranchViewError(BranchViewHandler.BRANCH_VIEW_ERR_INVALID_VIEW, "Unable to show branch view. Branch view received is invalid ", actionName);

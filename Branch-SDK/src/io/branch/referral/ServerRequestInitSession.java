@@ -6,8 +6,6 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.referral.util.BranchViewHandler;
-
 /**
  * <p>
  * Abstract for Session init request. All request which do initilaise session should extend from this.
