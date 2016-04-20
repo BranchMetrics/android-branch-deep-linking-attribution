@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.11.2: Removing unnecessary device param capture.
+
 - v1.11.1: Adding support for customising share sheet messages.
 
 - v1.11.0: Adding SDK support for application landing pages.
