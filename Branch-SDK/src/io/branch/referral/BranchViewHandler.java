@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.DecelerateInterpolator;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
@@ -48,8 +47,9 @@ public class BranchViewHandler {
     public static final int BRANCH_VIEW_ERR_ALREADY_SHOWING = -200;
     public static final int BRANCH_VIEW_ERR_INVALID_VIEW = -201;
     public static final int BRANCH_VIEW_ERR_TEMP_UNAVAILABLE = -202;
-    private String parentActivityClassName_;
+    public static final int BRANCH_VIEW_ERR_REACHED_LIMIT = -203;
 
+    private String parentActivityClassName_;
     private boolean webViewLoadError_;
     private Dialog branchViewDialog_;
 
@@ -93,14 +93,22 @@ public class BranchViewHandler {
         isBranchViewDialogShowing_ = false;
         isBranchViewAccepted_ = false;
 
-        if (appContext != null && branchView != null && branchView.isAvailable(appContext)) {
-            // Check if the web view Html is present. If html is present load the view directly.
-            if (TextUtils.isEmpty(branchView.webViewHtml_)) {
-                createAndShowBranchView(branchView, appContext, callback);
-            }
-            // If web view html is not present load the branch view with html obtained from url.
+        if (appContext != null && branchView != null) {
+            // Check for maximum usage
+            if (branchView.isAvailable(appContext)) {
+                // Check if the web view Html is present. If html is present load the view directly.
+                if (!TextUtils.isEmpty(branchView.webViewHtml_)) {
+                    createAndShowBranchView(branchView, appContext, callback);
+                }
+                // If web view html is not present load the branch view with html obtained from url.
+                else {
+                    new loadBranchViewTask(branchView, appContext, callback).execute();
+                }
+            } // If reached maximum limit
             else {
-                new loadBranchViewTask(branchView, appContext, callback).execute();
+                if (callback != null) {
+                    callback.onBranchViewError(BRANCH_VIEW_ERR_REACHED_LIMIT, "Unable to create this Branch view. Reached maximum usage limit ", branchView.branchViewAction_);
+                }
             }
 
         }
@@ -120,7 +128,6 @@ public class BranchViewHandler {
             } else {
                 return; // Error no url or Html
             }
-            isBranchViewDialogShowing_ = true;
 
             webView.setWebViewClient(new WebViewClient() {
                 @Override
@@ -166,10 +173,8 @@ public class BranchViewHandler {
                 RelativeLayout layout = new RelativeLayout(currentActivity);
                 layout.setVisibility(View.GONE);
                 RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-                layoutParams.setMargins(3, 3, 3, 3);
-
                 layout.addView(webView, layoutParams);
-                layout.setBackgroundColor(Color.parseColor("#11FEFEFE"));
+                layout.setBackgroundColor(Color.TRANSPARENT);
 
                 branchViewDialog_ = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
                 branchViewDialog_.setContentView(layout);

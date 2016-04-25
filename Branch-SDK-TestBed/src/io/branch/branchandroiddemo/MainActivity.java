@@ -183,7 +183,7 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onBranchViewError(int errorCode, String errorMsg, String action) {
-                        Log.i("BranchTestBed", "onBranchViewError");
+                        Log.i("BranchTestBed", "onBranchViewError "+errorMsg);
                     }
                 });
             }
