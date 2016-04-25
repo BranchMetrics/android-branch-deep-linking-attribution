@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.text.TextUtils;
 import android.view.View;
@@ -13,17 +14,19 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.DecelerateInterpolator;
-import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * <p>
@@ -91,7 +94,15 @@ public class BranchViewHandler {
         isBranchViewAccepted_ = false;
 
         if (appContext != null && branchView != null && branchView.isAvailable(appContext)) {
-            createAndShowBranchView(branchView, appContext, callback);
+            // Check if the web view Html is present. If html is present load the view directly.
+            if (TextUtils.isEmpty(branchView.webViewHtml_)) {
+                createAndShowBranchView(branchView, appContext, callback);
+            }
+            // If web view html is not present load the branch view with html obtained from url.
+            else {
+                new loadBranchViewTask(branchView, appContext, callback).execute();
+            }
+
         }
         return isBranchViewDialogShowing_;
     }
@@ -104,9 +115,7 @@ public class BranchViewHandler {
                 webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
             webViewLoadError_ = false;
-            if (!TextUtils.isEmpty(branchView.webViewUrl_)) {
-                webView.loadUrl(branchView.webViewUrl_);
-            } else if (!TextUtils.isEmpty(branchView.webViewHtml_)) {
+            if (!TextUtils.isEmpty(branchView.webViewHtml_)) {
                 webView.loadDataWithBaseURL(null, branchView.webViewHtml_, "text/html", "utf-8", null);
             } else {
                 return; // Error no url or Html
@@ -133,14 +142,8 @@ public class BranchViewHandler {
                 }
 
                 @Override
-                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                    super.onReceivedError(view, request, error);
-                    webViewLoadError_ = true;
-                }
-
-                @Override
-                public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                    super.onReceivedHttpError(view, request, errorResponse);
+                public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                    super.onReceivedError(view, errorCode, description, failingUrl);
                     webViewLoadError_ = true;
                 }
 
@@ -252,6 +255,59 @@ public class BranchViewHandler {
 
     public boolean isInstallOrOpenBranchViewPending(Context context) {
         return openOrInstallPendingBranchView_ != null && openOrInstallPendingBranchView_.isAvailable(context);
+    }
+
+
+    private class loadBranchViewTask extends AsyncTask<Void, Void, Boolean> {
+        private final BranchView branchView;
+        private final Context context;
+        private final IBranchViewEvents callback;
+        private String htmlString;
+
+        public loadBranchViewTask(BranchView branchView, Context context, IBranchViewEvents callback) {
+            this.branchView = branchView;
+            this.context = context;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            int code = -1;
+            try {
+                URL url = new URL(branchView.webViewUrl_);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
+
+                code = connection.getResponseCode();
+                if (code == HttpURLConnection.HTTP_OK) {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    InputStream inputStream = connection.getInputStream();
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, length);
+                    }
+                    branchView.webViewHtml_ = outputStream.toString("UTF-8");
+                    outputStream.close();
+                    inputStream.close();
+                }
+            } catch (Exception ignore) {
+            }
+            return code == HttpURLConnection.HTTP_OK;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean loadHtml) {
+            super.onPostExecute(loadHtml);
+            if (loadHtml) {
+                createAndShowBranchView(branchView, context, callback);
+            } else {
+                if (callback != null) {
+                    callback.onBranchViewError(BRANCH_VIEW_ERR_TEMP_UNAVAILABLE, "Unable to create a Branch view due to a temporary network error", branchView.branchViewAction_);
+                }
+            }
+        }
     }
 
     private class BranchView {
