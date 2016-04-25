@@ -104,6 +104,7 @@ public class BranchViewHandler {
                 else {
                     new loadBranchViewTask(branchView, appContext, callback).execute();
                 }
+                return  true;
             } // If reached maximum limit
             else {
                 if (callback != null) {
@@ -112,7 +113,7 @@ public class BranchViewHandler {
             }
 
         }
-        return isBranchViewDialogShowing_;
+        return false;
     }
 
     private void createAndShowBranchView(final BranchView branchView, Context appContext, final IBranchViewEvents callback) {
