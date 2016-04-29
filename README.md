@@ -362,7 +362,7 @@ branchUniversalObject.generateShortUrl(this, linkProperties, new BranchLinkCreat
 
 We’ve realized that Android had some very poor offerings for native share sheet functionality, so we built our own and bundled it into the core SDK. This share sheet it customizable and will automatically generate a link when the user selects a channel to share to.
 
-![Android Share Sheet](https://dev.branch.io/img/ingredients/sdk_links/android_share_sheet.png)
+![Android Share Sheet](https://dev.branch.io/img/pages/getting-started/branch-universal-object/android_share_sheet.png)
 
 To use it, first define the custom share sheet style like so. Most of these are completely optional and we've got a great set of defaults if you don't want to spend hours customizing.
 
