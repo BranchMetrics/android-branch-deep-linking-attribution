@@ -104,7 +104,7 @@ public class BranchViewHandler {
                 else {
                     new loadBranchViewTask(branchView, appContext, callback).execute();
                 }
-                return  true;
+                return true;
             } // If reached maximum limit
             else {
                 if (callback != null) {
@@ -255,8 +255,17 @@ public class BranchViewHandler {
     }
 
 
-    public void markInstallOrOpenBranchViewPending(JSONObject branchViewObj, String action) {
-        openOrInstallPendingBranchView_ = new BranchView(branchViewObj, action);
+    public boolean markInstallOrOpenBranchViewPending(JSONObject branchViewObj, String action) {
+        boolean isMarked = false;
+        BranchView branchView = new BranchView(branchViewObj, action);
+        if (branchView != null && Branch.getInstance().currentActivityReference_ != null) {
+            Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
+            if (currentActivity != null && branchView.isAvailable(currentActivity)) {
+                openOrInstallPendingBranchView_ = new BranchView(branchViewObj, action);
+                isMarked = true;
+            }
+        }
+        return isMarked;
     }
 
     public boolean isInstallOrOpenBranchViewPending(Context context) {
