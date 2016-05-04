@@ -32,7 +32,7 @@ import java.net.URL;
  * Class for managing Branch Views on application. Keeps track of Branch views and their states
  * Displays the web view and handle the Branch View dialog life cycle.
  * </p>
- * Class for Managing
+ *
  */
 public class BranchViewHandler {
     private static BranchViewHandler thisInstance_;

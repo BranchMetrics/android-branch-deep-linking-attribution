@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.11.3: Adding more client side error handling for BranchViews.
+
 - v1.11.2: Removing unnecessary device param capture.
 
 - v1.11.1: Adding support for customising share sheet messages.
