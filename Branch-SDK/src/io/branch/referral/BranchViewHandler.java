@@ -39,6 +39,7 @@ public class BranchViewHandler {
     private boolean isBranchViewDialogShowing_;
     private boolean isBranchViewAccepted_;
     private BranchView openOrInstallPendingBranchView_ = null;
+    private boolean loadingHtmlInBackGround_  = false;
 
     private static final String BRANCH_VIEW_REDIRECT_SCHEME = "branch-cta";
     private static final String BRANCH_VIEW_REDIRECT_ACTION_ACCEPT = "accept";
@@ -83,7 +84,7 @@ public class BranchViewHandler {
     }
 
     private boolean showBranchView(BranchView branchView, Context appContext, final IBranchViewEvents callback) {
-        if (isBranchViewDialogShowing_) {
+        if (isBranchViewDialogShowing_ || loadingHtmlInBackGround_) {
             if (callback != null) {
                 callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", branchView.branchViewAction_);
             }
@@ -102,6 +103,7 @@ public class BranchViewHandler {
                 }
                 // If web view html is not present load the branch view with html obtained from url.
                 else {
+                    loadingHtmlInBackGround_ = true;
                     new loadBranchViewTask(branchView, appContext, callback).execute();
                 }
                 return true;
@@ -177,6 +179,12 @@ public class BranchViewHandler {
                 layout.addView(webView, layoutParams);
                 layout.setBackgroundColor(Color.TRANSPARENT);
 
+                if(branchViewDialog_ != null && branchViewDialog_.isShowing()){
+                    if (callback != null) {
+                        callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", branchView.branchViewAction_);
+                    }
+                    return;
+                }
                 branchViewDialog_ = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
                 branchViewDialog_.setContentView(layout);
 
@@ -322,6 +330,7 @@ public class BranchViewHandler {
                     callback.onBranchViewError(BRANCH_VIEW_ERR_TEMP_UNAVAILABLE, "Unable to create a Branch view due to a temporary network error", branchView.branchViewAction_);
                 }
             }
+            loadingHtmlInBackGround_ = false;
         }
     }
 
