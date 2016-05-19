@@ -20,7 +20,7 @@ class AppIndexingHelper {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String urlForAppIndexing = buo.getShortUrl(context, new LinkProperties());
+                String urlForAppIndexing = buo.getShortUrl(context, new LinkProperties().setChannel("google_search"));
                 if (!TextUtils.isEmpty(urlForAppIndexing)) {
                     try {
                         listOnGoogleSearch(urlForAppIndexing, context, buo);

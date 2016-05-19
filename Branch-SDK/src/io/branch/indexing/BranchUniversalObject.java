@@ -243,7 +243,7 @@ public class BranchUniversalObject implements Parcelable {
 
     /**
      * <p/>
-     * Publish this BUO with Google app indexing so that the contents will be available with gooole search
+     * Publish this BUO with Google app indexing so that the contents will be available with google search
      * with branch link pointing to the app.
      * </p?>
      *
