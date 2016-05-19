@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import io.branch.referral.PrefHelper;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -24,7 +25,8 @@ class AppIndexingHelper {
                 if (!TextUtils.isEmpty(urlForAppIndexing)) {
                     try {
                         listOnGoogleSearch(urlForAppIndexing, context, buo);
-                    } catch (Exception ignore) {
+                    } catch (Exception e) {
+                        PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in google search. Please make sure you have the latest google play libs added to your project");
                     }
                 }
             }
