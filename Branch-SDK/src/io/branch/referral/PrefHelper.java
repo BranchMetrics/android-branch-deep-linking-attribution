@@ -1032,7 +1032,15 @@ public class PrefHelper {
         BNC_Smart_Session = false;
     }
 
-    public void setRequestMetadata(@NonNull String key, Object value) {
+    public void setRequestMetadata(@NonNull String key, @NonNull String value) {
+        if (key == null) {
+            return;
+        }
+
+        if (this.requestMetadata.has(key) && value == null) {
+            this.requestMetadata.remove(key);
+        }
+
         try {
             this.requestMetadata.put(key, value);
         } catch (JSONException e) {
