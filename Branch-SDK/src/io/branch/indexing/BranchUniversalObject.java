@@ -242,6 +242,18 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
+     * <p/>
+     * Publish this BUO with Google app indexing so that the contents will be available with gooole search
+     * with branch link pointing to the app.
+     * </p?>
+     *
+     * @param context Application context
+     */
+    public void listOnGoogleSearch(Context context) {
+        AppIndexingHelper.addToAppIndex(context, this);
+    }
+
+    /**
      * <p>
      * Specifies whether the contents referred by this object is publically indexable
      * </p>
@@ -420,7 +432,7 @@ public class BranchUniversalObject implements Parcelable {
     //------------------ Share sheet -------------------------------------//
 
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
-       showShareSheet(activity, linkProperties, style, callback, null);
+        showShareSheet(activity, linkProperties, style, callback, null);
     }
 
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback, Branch.IChannelProperties channelProperties) {

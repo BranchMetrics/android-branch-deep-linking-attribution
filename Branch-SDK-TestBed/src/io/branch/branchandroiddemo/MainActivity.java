@@ -1,6 +1,7 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -229,6 +230,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 branchUniversalObject.registerView();
+                // List on google search
+                branchUniversalObject.listOnGoogleSearch(MainActivity.this);
             }
         });
 
