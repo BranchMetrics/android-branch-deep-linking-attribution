@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -2935,7 +2936,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         processNextQueueItem();
     }
 
-    private void initializeSession(BranchReferralInitListener callback) {
+    private void initializeSession(final BranchReferralInitListener callback) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
                 && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             initState_ = SESSION_STATE.UNINITIALISED;
@@ -2950,9 +2951,35 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
 
         if (hasUser()) {
+            // If there is user this is open
             registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
         } else {
-            registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
+            // If no user this is a Install
+            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+                registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
+            } else {
+                // If there is no external intent this could an install through FB app link.
+                // Get the deferred app link params in that case and update the request
+                boolean appLinkRqSucceeded = false;
+                appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
+                    @Override
+                    public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
+                        if (nativeAppLinkUrl != null) {
+                            Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
+                            String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                            if (!TextUtils.isEmpty(bncLinkClickId)) {
+                                prefHelper_.setLinkClickIdentifier(bncLinkClickId);
+                                prefHelper_.setIsAppLinkTriggeredInit(true);
+                            }
+                        }
+                        registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
+                    }
+                });
+
+                if (!appLinkRqSucceeded) {
+                    registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
+                }
+            }
         }
     }
 

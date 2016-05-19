@@ -8,6 +8,9 @@ dependencies {
     compile ('com.google.android.gms:play-services:6.5.87'){
         exclude module: 'support-v4'
     }
+    compile ('com.facebook.android:facebook-android-sdk:[4,5)'){
+        exclude module: 'support-v4'
+    }
 }
 
 android {
@@ -15,7 +18,8 @@ android {
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
     
     defaultConfig {
-        minSdkVersion 14
+        applicationId "io.branch.branchandroiddemo"
+        minSdkVersion 15
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
