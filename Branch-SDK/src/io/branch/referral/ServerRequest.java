@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -137,6 +138,11 @@ public abstract class ServerRequest {
      *             as key-value pairs.
      */
     protected void setPost(JSONObject post) {
+        try {
+            post.put("metadata", prefHelper_.getRequestMetadata());
+        } catch (JSONException e) {
+            Log.e("BRANCH", "couldn't add metadata to request, ignoring");
+        }
         params_ = post;
         DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_).updateRequestWithDeviceParams(params_);
     }
