@@ -679,7 +679,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     /**
      * <p>Add key value pairs to all requests</p>
      */
-    public void addMetadataToRequests(@NonNull String key, JSONObject value) {
+    public void addMetadataToRequests(@NonNull String key, Object value) {
         prefHelper_.setRequestMetadata(key, value);
     }
 
