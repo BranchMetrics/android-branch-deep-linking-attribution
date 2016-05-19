@@ -2,7 +2,6 @@ package io.branch.indexing;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.text.TextUtils;
 
 import java.lang.reflect.Constructor;
@@ -17,39 +16,19 @@ import io.branch.referral.util.LinkProperties;
  * </p>
  */
 class AppIndexingHelper {
-    public static void addToAppIndex(Context context, BranchUniversalObject buo) {
-        new AppIndexTask(context,buo).execute();
-    }
-
-    private static class AppIndexTask extends AsyncTask<Void, Void, String> {
-        Context context_;
-        BranchUniversalObject branchUniversalObject_;
-
-        public AppIndexTask(Context context, BranchUniversalObject buo) {
-            context_ = context;
-            branchUniversalObject_ = buo;
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            String urlForAppIndexing = "";
-            try {
-                urlForAppIndexing = branchUniversalObject_.getShortUrl(context_, new LinkProperties());
-            } catch (Exception ignore) {
-            }
-            return urlForAppIndexing;
-        }
-
-        @Override
-        protected void onPostExecute(String urlForAppIndexing) {
-            super.onPostExecute(urlForAppIndexing);
-            if (!TextUtils.isEmpty(urlForAppIndexing)) {
-                try {
-                    listOnGoogleSearch(urlForAppIndexing, context_, branchUniversalObject_);
-                } catch (Exception ignore) {
+    public static void addToAppIndex(final Context context, final BranchUniversalObject buo) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String urlForAppIndexing = buo.getShortUrl(context, new LinkProperties());
+                if (!TextUtils.isEmpty(urlForAppIndexing)) {
+                    try {
+                        listOnGoogleSearch(urlForAppIndexing, context, buo);
+                    } catch (Exception ignore) {
+                    }
                 }
             }
-        }
+        }).run();
     }
 
     private static void listOnGoogleSearch(String shortLink, Context context, BranchUniversalObject branchUniversalObject) throws Exception {
