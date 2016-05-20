@@ -677,6 +677,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     }
 
     /**
+     * <p>Add key value pairs to all requests</p>
+     */
+    public void setRequestMetadata(@NonNull String key, @NonNull String value) {
+        prefHelper_.setRequestMetadata(key, value);
+    }
+
+    /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
      * to perform an action upon successful initialisation.</p>
      *
