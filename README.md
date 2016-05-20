@@ -357,7 +357,17 @@ branchUniversalObject.generateShortUrl(this, linkProperties, new BranchLinkCreat
     }
 });
 ```
+### List links in Google Search with App Indexing
+Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google search via their App Indexing API.
+Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
 
+```java
+branchUniversalObject.listOnGoogleSearch(context);
+```
+Note : Please make sure you have added the following to your gradle dependency
+```java
+'com.google.android.gms:play-services-appindexing:9.+'
+```
 ### Showing a Custom Share Sheet
 
 We’ve realized that Android had some very poor offerings for native share sheet functionality, so we built our own and bundled it into the core SDK. This share sheet it customizable and will automatically generate a link when the user selects a channel to share to.
