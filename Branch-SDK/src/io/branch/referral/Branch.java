@@ -1215,54 +1215,60 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         //Check for any push identifier in case app is launched by a push notification
         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-            String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
-            if (pushIdentifier != null && pushIdentifier.length() > 0) {
-                prefHelper_.setPushIdentifier(pushIdentifier);
-                return false;
+            try {
+                String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
+                if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                    prefHelper_.setPushIdentifier(pushIdentifier);
+                    return false;
+                }
+            } catch (Exception ignore) {
             }
         }
 
         //Check for link click id or app link
         if (data != null && data.isHierarchical() && activity != null) {
-            if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
-                prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
-                String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                String uriString = null;
-                if (activity.getIntent() != null) {
-                    uriString = activity.getIntent().getDataString();
-                }
-                if (data.getQuery().length() == paramString.length()) {
-                    paramString = "\\?" + paramString;
-                } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
-                    paramString = "&" + paramString;
+            try {
+                if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
+                    prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
+                    String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                    String uriString = null;
+                    if (activity.getIntent() != null) {
+                        uriString = activity.getIntent().getDataString();
+                    }
+                    if (data.getQuery().length() == paramString.length()) {
+                        paramString = "\\?" + paramString;
+                    } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
+                        paramString = "&" + paramString;
+                    } else {
+                        paramString = paramString + "&";
+                    }
+                    if (uriString != null) {
+                        Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
+                        activity.getIntent().setData(newData);
+                    } else {
+                        Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
+                    }
+                    return true;
                 } else {
-                    paramString = paramString + "&";
-                }
-                if (uriString != null) {
-                    Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
-                    activity.getIntent().setData(newData);
-                } else {
-                    Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
-                }
-                return true;
-            } else {
-                // Check if the clicked url is an app link pointing to this app
-                String scheme = data.getScheme();
-                if (scheme != null && activity.getIntent() != null) {
-                    // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
-                    // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                    if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
-                        if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
-                            prefHelper_.setAppLink(data.toString());
-                            String uriString = data.toString();
-                            uriString += uriString.contains("?") ? "&" : "?";
-                            uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
-                            activity.getIntent().setData(Uri.parse(uriString));
-                            return false;
+                    // Check if the clicked url is an app link pointing to this app
+                    String scheme = data.getScheme();
+                    if (scheme != null && activity.getIntent() != null) {
+                        // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
+                        // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
+                        if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+                            if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                                    && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
+                                prefHelper_.setAppLink(data.toString());
+                                String uriString = data.toString();
+                                uriString += uriString.contains("?") ? "&" : "?";
+                                uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
+                                activity.getIntent().setData(Uri.parse(uriString));
+                                return false;
+                            }
                         }
                     }
                 }
+            } catch (Exception ignore) {
             }
         }
         return false;
