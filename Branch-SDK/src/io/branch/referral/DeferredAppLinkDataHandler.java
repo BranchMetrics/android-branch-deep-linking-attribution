@@ -1,10 +1,8 @@
 package io.branch.referral;
 
 import android.content.Context;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.os.Bundle;
+import android.text.TextUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -36,21 +34,10 @@ class DeferredAppLinkDataHandler {
                         String appLinkUrl = null;
                         Object appLinkDataClass = AppLinkDataClass.cast(args[0]);
                         Method getArgumentBundleMethod = AppLinkDataClass.getMethod("getArgumentBundle");
-                        String appLinkDataStr = String.class.cast(getArgumentBundleMethod.invoke(appLinkDataClass));
+                        Bundle appLinkDataBundle = Bundle.class.cast(getArgumentBundleMethod.invoke(appLinkDataClass));
 
-                        if (appLinkDataStr != null) {
-                            try {
-                                JSONArray jsonArray = new JSONArray(appLinkDataStr);
-                                for (int i = 0; i < jsonArray.length(); i++) {
-                                    JSONObject innerObj = jsonArray.getJSONObject(i);
-                                    if (innerObj.has(NATIVE_URL_KEY)) {
-                                        appLinkUrl = innerObj.getString(NATIVE_URL_KEY);
-                                        break;
-                                    }
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
+                        if (appLinkDataBundle != null) {
+                            appLinkUrl = appLinkDataBundle.getString(NATIVE_URL_KEY);
                         }
 
                         if (callback != null) {
@@ -70,7 +57,12 @@ class DeferredAppLinkDataHandler {
                     , new Class<?>[]{AppLinkDataCompletionHandlerClass}
                     , ALDataCompletionHandler);
 
-            fetchDeferredAppLinkDataMethod.invoke(null, context, context.getApplicationContext().getPackageName(), completionListenerInterface);
+            String fbAppID = context.getString(context.getResources().getIdentifier("facebook_app_id", "string", context.getPackageName()));
+            if (TextUtils.isEmpty(fbAppID)) {
+                isRequestSucceeded = false;
+            } else {
+                fetchDeferredAppLinkDataMethod.invoke(null, context, fbAppID, completionListenerInterface);
+            }
 
         } catch (Exception ex) {
             isRequestSucceeded = false;

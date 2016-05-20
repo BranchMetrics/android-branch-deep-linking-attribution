@@ -8,9 +8,6 @@ dependencies {
     compile ('com.google.android.gms:play-services:6.5.87'){
         exclude module: 'support-v4'
     }
-    compile ('com.facebook.android:facebook-android-sdk:[4,5)'){
-        exclude module: 'support-v4'
-    }
 }
 
 android {

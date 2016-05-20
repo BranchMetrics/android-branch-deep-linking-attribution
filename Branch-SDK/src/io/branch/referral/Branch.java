@@ -360,6 +360,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
 
+    private WeakReference<BranchReferralInitListener> deferredInitListener_;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1081,6 +1083,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
+                deferredInitListener_ = new WeakReference<>(callback);
                 requestQueue_.setInstallOrOpenCallback(callback);
             }
             //if Uninitialised move request to the front if there is an existing request or create a new request.
@@ -2929,6 +2932,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
             // Update the callback to the latest one in initsession call
+            deferredInitListener_ = new WeakReference<>(callback);
             requestQueue_.setInstallOrOpenCallback(callback);
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
@@ -2950,36 +2954,44 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
+        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+            registerAppInit(callback);
+        } else {
+            // Check if opened by facebook with deferred install data
+            boolean appLinkRqSucceeded = false;
+            deferredInitListener_ = new WeakReference<>(callback);
+            appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
+                @Override
+                public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
+                    if (nativeAppLinkUrl != null) {
+                        Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
+                        String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                        if (!TextUtils.isEmpty(bncLinkClickId)) {
+                            prefHelper_.setLinkClickIdentifier(bncLinkClickId);
+                            prefHelper_.setIsAppLinkTriggeredInit(true);
+                        }
+                    }
+                    BranchReferralInitListener deferredCallback = null;
+                    if (deferredInitListener_ != null) {
+                        deferredCallback = deferredInitListener_.get();
+                    }
+                    registerAppInit(deferredCallback);
+                }
+            });
+            if (!appLinkRqSucceeded) {
+                registerAppInit(callback);
+                deferredInitListener_ = null;
+            }
+        }
+    }
+    
+    private void registerAppInit(BranchReferralInitListener callback) {
         if (hasUser()) {
             // If there is user this is open
             registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
         } else {
-            // If no user this is a Install
-            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
-                registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
-            } else {
-                // If there is no external intent this could an install through FB app link.
-                // Get the deferred app link params in that case and update the request
-                boolean appLinkRqSucceeded = false;
-                appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
-                    @Override
-                    public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
-                        if (nativeAppLinkUrl != null) {
-                            Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
-                            String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                            if (!TextUtils.isEmpty(bncLinkClickId)) {
-                                prefHelper_.setLinkClickIdentifier(bncLinkClickId);
-                                prefHelper_.setIsAppLinkTriggeredInit(true);
-                            }
-                        }
-                        registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
-                    }
-                });
-
-                if (!appLinkRqSucceeded) {
-                    registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
-                }
-            }
+            // If no user this is an Install
+            registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
         }
     }
 
