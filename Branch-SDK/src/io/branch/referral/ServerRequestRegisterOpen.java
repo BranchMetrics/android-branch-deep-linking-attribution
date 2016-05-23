@@ -53,7 +53,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
-            openPost.put(Defines.Jsonkey.FaceBookAppLinkClicked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
+            openPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
 

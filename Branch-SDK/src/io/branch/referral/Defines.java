@@ -14,7 +14,7 @@ public class Defines {
         DeviceFingerprintID("device_fingerprint_id"),
         SessionID("session_id"),
         LinkClickID("link_click_id"),
-        FaceBookAppLinkClicked("facebook_app_link_checked"),
+        FaceBookAppLinkChecked("facebook_app_link_checked"),
         AppLinkUsed("branch_used"),
 
         Bucket("bucket"),

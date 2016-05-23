@@ -2963,12 +2963,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
                 @Override
                 public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
+                    prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
                     if (nativeAppLinkUrl != null) {
                         Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
                         String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
                         if (!TextUtils.isEmpty(bncLinkClickId)) {
                             prefHelper_.setLinkClickIdentifier(bncLinkClickId);
-                            prefHelper_.setIsAppLinkTriggeredInit(true);
                         }
                     }
                     BranchReferralInitListener deferredCallback = null;
