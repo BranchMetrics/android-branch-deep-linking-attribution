@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.12.0: Added check for Facebook App Links on client side. Added support for list BUO in Google search. Support for adding metadata to Branch requests.
+
 - v1.11.3: Adding more client side error handling for BranchViews.
 
 - v1.11.2: Removing unnecessary device param capture.
