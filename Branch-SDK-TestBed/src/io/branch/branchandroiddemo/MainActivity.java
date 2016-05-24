@@ -229,6 +229,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 branchUniversalObject.registerView();
+                // List on google search
+                branchUniversalObject.listOnGoogleSearch(MainActivity.this);
             }
         });
 

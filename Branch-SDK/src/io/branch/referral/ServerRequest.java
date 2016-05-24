@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -137,6 +138,27 @@ public abstract class ServerRequest {
      *             as key-value pairs.
      */
     protected void setPost(JSONObject post) {
+        // Take event level metadata, merge with top level metadata
+        // event level metadata takes precedence
+        try {
+            JSONObject metadata = new JSONObject();
+            Iterator<String> i = prefHelper_.getRequestMetadata().keys();
+            while (i.hasNext()) {
+                String k = i.next();
+                metadata.put(k, prefHelper_.getRequestMetadata().get(k));
+            }
+            if (post.has(Defines.Jsonkey.Metadata.getKey())) {
+                Iterator<String> postIter = post.getJSONObject(Defines.Jsonkey.Metadata.getKey()).keys();
+                while (postIter.hasNext()) {
+                    String key = postIter.next();
+                    // override keys from above
+                    metadata.put(key, post.getJSONObject(Defines.Jsonkey.Metadata.getKey()).get(key));
+                }
+            }
+            post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
+        } catch (JSONException e) {
+            Log.e("BranchSDK", "Could not merge metadatas, ignoring user metadata.");
+        }
         params_ = post;
         DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_).updateRequestWithDeviceParams(params_);
     }

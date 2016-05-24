@@ -6,9 +6,11 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -114,6 +116,11 @@ public class PrefHelper {
     private BranchRemoteInterface remoteInterface_;
 
     /**
+     * Arbitrary key values added to all requests.
+     */
+    private JSONObject requestMetadata;
+
+    /**
      * Reference of application {@link Context}, normally the base context of the application.
      */
     private Context context_;
@@ -136,6 +143,7 @@ public class PrefHelper {
                 Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
         this.context_ = context;
+        this.requestMetadata = new JSONObject();
     }
 
     /**
@@ -1040,6 +1048,26 @@ public class PrefHelper {
      */
     public void disableSmartSession() {
         BNC_Smart_Session = false;
+    }
+
+    public void setRequestMetadata(@NonNull String key, @NonNull String value) {
+        if (key == null) {
+            return;
+        }
+
+        if (this.requestMetadata.has(key) && value == null) {
+            this.requestMetadata.remove(key);
+        }
+
+        try {
+            this.requestMetadata.put(key, value);
+        } catch (JSONException e) {
+            // no-op
+        }
+    }
+
+    public JSONObject getRequestMetadata() {
+        return this.requestMetadata;
     }
 
     /**
