@@ -63,6 +63,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 installPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
 
+            installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
 
@@ -94,6 +95,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setIsAppLinkTriggeredInit(false);
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));

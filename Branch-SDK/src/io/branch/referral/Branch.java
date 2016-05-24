@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -358,6 +359,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     private boolean isInitReportedThroughCallBack = false;
 
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
+
+    private WeakReference<BranchReferralInitListener> deferredInitListener_;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1087,6 +1090,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
+                deferredInitListener_ = new WeakReference<>(callback);
                 requestQueue_.setInstallOrOpenCallback(callback);
             }
             //if Uninitialised move request to the front if there is an existing request or create a new request.
@@ -2941,6 +2945,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
             // Update the callback to the latest one in initsession call
+            deferredInitListener_ = new WeakReference<>(callback);
             requestQueue_.setInstallOrOpenCallback(callback);
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
@@ -2948,7 +2953,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         processNextQueueItem();
     }
 
-    private void initializeSession(BranchReferralInitListener callback) {
+    private void initializeSession(final BranchReferralInitListener callback) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
                 && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             initState_ = SESSION_STATE.UNINITIALISED;
@@ -2962,9 +2967,43 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
+        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+            registerAppInit(callback);
+        } else {
+            // Check if opened by facebook with deferred install data
+            boolean appLinkRqSucceeded = false;
+            deferredInitListener_ = new WeakReference<>(callback);
+            appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
+                @Override
+                public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
+                    prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
+                    if (nativeAppLinkUrl != null) {
+                        Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
+                        String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                        if (!TextUtils.isEmpty(bncLinkClickId)) {
+                            prefHelper_.setLinkClickIdentifier(bncLinkClickId);
+                        }
+                    }
+                    BranchReferralInitListener deferredCallback = null;
+                    if (deferredInitListener_ != null) {
+                        deferredCallback = deferredInitListener_.get();
+                    }
+                    registerAppInit(deferredCallback);
+                }
+            });
+            if (!appLinkRqSucceeded) {
+                registerAppInit(callback);
+                deferredInitListener_ = null;
+            }
+        }
+    }
+    
+    private void registerAppInit(BranchReferralInitListener callback) {
         if (hasUser()) {
+            // If there is user this is open
             registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
         } else {
+            // If no user this is an Install
             registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
         }
     }

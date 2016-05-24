@@ -64,6 +64,7 @@ public class PrefHelper {
     private static final String KEY_IDENTITY = "bnc_identity";
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
+    private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
@@ -455,6 +456,22 @@ public class PrefHelper {
     }
 
     /**
+     * Set the value to specify if the current init is triggered by an FB app link
+     * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
+     */
+    public void setIsAppLinkTriggeredInit (Boolean isAppLinkTriggered) {
+        setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
+    }
+
+    /**
+     * Specifies the value to specify if the current init is triggered by an FB app link
+     * @return {@link Boolean} with value true if the init is triggered by an FB app link
+     */
+    public boolean getIsAppLinkTriggeredInit() {
+        return getBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK);
+    }
+
+    /**
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_URI} with value with given intent URI String.</p>
      *
      * @param uri A {@link String} value containing intent URI to set
@@ -509,6 +526,7 @@ public class PrefHelper {
     public String getLinkClickIdentifier() {
         return getString(KEY_LINK_CLICK_IDENTIFIER);
     }
+
 
     /**
      * <p> Set the KEY_APP_LINK {@link String} values that has been started the application. </p>
