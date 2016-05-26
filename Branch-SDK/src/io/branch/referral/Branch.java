@@ -1090,8 +1090,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
-                deferredInitListener_ = new WeakReference<>(callback);
-                requestQueue_.setInstallOrOpenCallback(callback);
+                if (callback != null) {
+                    deferredInitListener_ = new WeakReference<>(callback);
+                    requestQueue_.setInstallOrOpenCallback(callback);
+                }
             }
             //if Uninitialised move request to the front if there is an existing request or create a new request.
             else {
@@ -2945,8 +2947,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
             // Update the callback to the latest one in initsession call
-            deferredInitListener_ = new WeakReference<>(callback);
-            requestQueue_.setInstallOrOpenCallback(callback);
+            if (callback != null) {
+                deferredInitListener_ = new WeakReference<>(callback);
+                requestQueue_.setInstallOrOpenCallback(callback);
+            }
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
 
@@ -2972,7 +2976,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         } else {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded = false;
-            deferredInitListener_ = new WeakReference<>(callback);
+            if (callback != null) {
+                deferredInitListener_ = new WeakReference<>(callback);
+            }
             appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
                 @Override
                 public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
