@@ -1092,8 +1092,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             if (initState_ == SESSION_STATE.INITIALISING) {
                 if (callback != null) {
                     deferredInitListener_ = new WeakReference<>(callback);
+                    requestQueue_.setInstallOrOpenCallback(callback);
                 }
-                requestQueue_.setInstallOrOpenCallback(callback);
             }
             //if Uninitialised move request to the front if there is an existing request or create a new request.
             else {
@@ -2949,8 +2949,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             // Update the callback to the latest one in initsession call
             if (callback != null) {
                 deferredInitListener_ = new WeakReference<>(callback);
+                requestQueue_.setInstallOrOpenCallback(callback);
             }
-            requestQueue_.setInstallOrOpenCallback(callback);
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
 
