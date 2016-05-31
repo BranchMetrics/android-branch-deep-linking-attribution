@@ -19,6 +19,7 @@ import java.util.Iterator;
  */
 class BranchUtil {
 
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest.
      *
@@ -38,27 +39,6 @@ class BranchUtil {
         }
 
         return isTestMode_;
-    }
-
-    /**
-     * Get the value of "io.branch.sdk.DisableDeviceIDCapture" entry in application manifest.
-     *
-     * @return value of "io.branch.sdk.DisableDeviceIDCapture" entry in application manifest.
-     * false if "io.branch.sdk.DisableDeviceIDCapture" is not added in the manifest.
-     */
-    public static boolean isDeviceIDFetchDisabled(Context context) {
-        boolean isDeviceIDDisabled_ = false;
-        String deviceIDCaptureKey = "io.branch.sdk.DisableDeviceIDCapture";
-        try {
-            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                isDeviceIDDisabled_ = ai.metaData.getBoolean(deviceIDCaptureKey, false);
-            }
-        } catch (final PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return isDeviceIDDisabled_;
     }
 
     /**

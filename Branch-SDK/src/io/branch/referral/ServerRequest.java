@@ -45,7 +45,7 @@ public abstract class ServerRequest {
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
         params_ = new JSONObject();
-        disableAndroidIDFetch_ = BranchUtil.isDeviceIDFetchDisabled(context);
+        disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
     }
 
     /**
@@ -61,7 +61,7 @@ public abstract class ServerRequest {
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
-        disableAndroidIDFetch_ = BranchUtil.isDeviceIDFetchDisabled(context);
+        disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
     }
 
     /**
