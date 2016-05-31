@@ -41,6 +41,27 @@ class BranchUtil {
     }
 
     /**
+     * Get the value of "io.branch.sdk.DisableDeviceIDCapture" entry in application manifest.
+     *
+     * @return value of "io.branch.sdk.DisableDeviceIDCapture" entry in application manifest.
+     * false if "io.branch.sdk.DisableDeviceIDCapture" is not added in the manifest.
+     */
+    public static boolean isDeviceIDFetchDisabled(Context context) {
+        boolean isDeviceIDDisabled_ = false;
+        String deviceIDCaptureKey = "io.branch.sdk.DisableDeviceIDCapture";
+        try {
+            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null) {
+                isDeviceIDDisabled_ = ai.metaData.getBoolean(deviceIDCaptureKey, false);
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return isDeviceIDDisabled_;
+    }
+
+    /**
      * Converts a given link param as {@link JSONObject} to string after adding the source param and removes replaces any illegal characters.
      *
      * @param params Link param JSONObject.
