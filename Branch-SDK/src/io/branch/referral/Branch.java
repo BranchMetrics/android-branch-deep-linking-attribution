@@ -279,6 +279,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
 
+    private static boolean disableDeviceIDFetch_;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -646,6 +648,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     @Deprecated
     public void setDebug() {
         prefHelper_.setExternDebug();
+    }
+
+    /**
+     * Method to control reading Android ID from device. Set this to true to disable reading the device id.
+     * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param deviceIdFetch {@link Boolean with value true to disable reading the Android id from device}
+     */
+    public static void disableDeviceIDFetch(Boolean deviceIdFetch) {
+        disableDeviceIDFetch_ = deviceIdFetch;
+    }
+
+    /**
+     * Returns true if reading device id is disabled
+     *
+     * @return {@link Boolean} with value true to disable reading Andoid ID
+     */
+    public static boolean isDeviceIDFetchDisabled() {
+        return disableDeviceIDFetch_;
     }
 
     /**

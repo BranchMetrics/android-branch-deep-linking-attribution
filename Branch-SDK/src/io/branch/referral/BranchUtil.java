@@ -19,6 +19,7 @@ import java.util.Iterator;
  */
 class BranchUtil {
 
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest.
      *

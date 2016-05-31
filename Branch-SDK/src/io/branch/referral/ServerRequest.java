@@ -29,6 +29,7 @@ public abstract class ServerRequest {
     protected PrefHelper prefHelper_;
     private SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
+    private boolean disableAndroidIDFetch_;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -44,6 +45,7 @@ public abstract class ServerRequest {
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
         params_ = new JSONObject();
+        disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
     }
 
     /**
@@ -59,6 +61,7 @@ public abstract class ServerRequest {
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
+        disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
     }
 
     /**
@@ -160,7 +163,7 @@ public abstract class ServerRequest {
             Log.e("BranchSDK", "Could not merge metadatas, ignoring user metadata.");
         }
         params_ = post;
-        DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_).updateRequestWithDeviceParams(params_);
+        DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
     }
 
     /**

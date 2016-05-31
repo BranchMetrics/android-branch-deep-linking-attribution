@@ -61,15 +61,19 @@ class DeviceInfo {
      * @param sysObserver {@link SystemObserver} instance to get device info
      * @return {@link DeviceInfo} global instance
      */
-    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver) {
+    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
         if (thisInstance_ == null) {
-            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver);
+            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch);
         }
         return thisInstance_;
     }
 
-    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver) {
-        hardwareID_ = sysObserver.getUniqueID(isExternalDebug);
+    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
+        if (disableAndroidIDFetch) {
+            hardwareID_ = SystemObserver.BLANK;
+        } else {
+            hardwareID_ = sysObserver.getUniqueID(isExternalDebug);
+        }
         isHardwareIDReal_ = sysObserver.hasRealHardwareId();
         brandName_ = sysObserver.getPhoneBrand();
         modelName_ = sysObserver.getPhoneModel();
