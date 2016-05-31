@@ -31,7 +31,7 @@ class RemoteInterface {
     public static final int NO_CONNECTIVITY_STATUS = -1009;
     public static final int NO_BRANCH_KEY_STATUS = -1234;
 
-    private static final String SDK_VERSION = "1.12.1";
+    private static final String SDK_VERSION = "1.13.0";
     private static final int DEFAULT_TIMEOUT = 3000;
 
     private int lastRoundTripTime_ = 0;  // Round trip time taken for last server request in milli sec.
