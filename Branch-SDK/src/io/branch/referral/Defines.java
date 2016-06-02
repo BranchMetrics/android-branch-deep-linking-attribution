@@ -15,6 +15,7 @@ public class Defines {
         SessionID("session_id"),
         LinkClickID("link_click_id"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
+        AppOrigin("app_origin"),
         AppLinkUsed("branch_used"),
 
         Bucket("bucket"),
