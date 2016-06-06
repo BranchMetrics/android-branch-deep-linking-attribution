@@ -18,6 +18,8 @@ public class Defines {
         AppOrigin("app_origin"),
         AppLinkUsed("branch_used"),
 
+        AppOriginTwitterFabric("Twitter Fabric"),
+
         Bucket("bucket"),
         DefaultBucket("default"),
         Amount("amount"),
