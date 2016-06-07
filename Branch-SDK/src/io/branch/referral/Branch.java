@@ -363,6 +363,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
 
     private WeakReference<BranchReferralInitListener> deferredInitListener_;
+    BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper_;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1071,8 +1072,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
 
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
-        BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
-        initUserSessionInternal(branchUniversalReferralInitWrapper, activity, isReferrable);
+        branchUniversalReferralInitWrapper_ = new BranchUniversalReferralInitWrapper(callback);
+        initUserSessionInternal(branchUniversalReferralInitWrapper_, activity, isReferrable);
     }
 
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
@@ -3472,7 +3473,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 } catch (JSONException ex) {
                     ex.printStackTrace();
                 }
+                if (thisReq_ instanceof ServerRequestInitSession) {
+                    branchUniversalReferralInitWrapper_ = null;
+                }
             }
+
         }
     }
 
