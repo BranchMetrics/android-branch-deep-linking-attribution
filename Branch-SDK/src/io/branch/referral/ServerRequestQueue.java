@@ -360,9 +360,7 @@ class ServerRequestQueue {
             while (iter.hasNext()) {
                 ServerRequest req = iter.next();
                 if (req != null) {
-                    if (req instanceof ServerRequestRegisterInstall) {
-                        req.setProcessWaitLockEnabled(false);
-                    } else if (req instanceof ServerRequestRegisterOpen) {
+                    if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
                         req.setProcessWaitLockEnabled(false);
                     }
                 }
