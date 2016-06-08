@@ -2836,23 +2836,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 ServerRequest req = requestQueue_.peek();
 
                 serverSema_.release();
-                if (req != null && !req.isProcessWaitLockEnabled()) {
-                    //All request except Install request need a valid IdentityID
-                    if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                        Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
-                        networkCount_ = 0;
-                        handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
-                    }
-                    //All request except open and install need a session to execute
-                    else if (!(req instanceof ServerRequestInitSession) && (!hasSession() || !hasDeviceFingerPrint())) {
-                        networkCount_ = 0;
-                        handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                if (req != null) {
+                    if (!req.isProcessWaitLockEnabled()) {
+                        // All request except Install request need a valid IdentityID
+                        if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
+                            Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
+                            networkCount_ = 0;
+                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                        }
+                        //All request except open and install need a session to execute
+                        else if (!(req instanceof ServerRequestInitSession) && (!hasSession() || !hasDeviceFingerPrint())) {
+                            networkCount_ = 0;
+                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                        } else {
+                            BranchPostTask postTask = new BranchPostTask(req);
+                            postTask.execute();
+                        }
                     } else {
-                        BranchPostTask postTask = new BranchPostTask(req);
-                        postTask.execute();
+                        networkCount_ = 0;
                     }
                 } else {
-                    requestQueue_.remove(null); //Inc ase there is any request nullified remove it.
+                    requestQueue_.remove(null); //In case there is any request nullified remove it.
                 }
             } else {
                 serverSema_.release();
