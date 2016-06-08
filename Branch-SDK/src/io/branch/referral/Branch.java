@@ -362,8 +362,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
 
-    private WeakReference<BranchReferralInitListener> deferredInitListener_;
-
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1112,7 +1110,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
                 if (callback != null) {
-                    deferredInitListener_ = new WeakReference<>(callback);
                     requestQueue_.setInstallOrOpenCallback(callback);
                 }
             }
@@ -2839,7 +2836,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 ServerRequest req = requestQueue_.peek();
 
                 serverSema_.release();
-                if (req != null) {
+                if (req != null && !req.isProcessWaitLockEnabled()) {
                     //All request except Install request need a valid IdentityID
                     if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                         Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
@@ -2958,6 +2955,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
     }
 
+
     private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
@@ -2969,7 +2967,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         else {
             // Update the callback to the latest one in initsession call
             if (callback != null) {
-                deferredInitListener_ = new WeakReference<>(callback);
                 requestQueue_.setInstallOrOpenCallback(callback);
             }
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
@@ -2993,13 +2990,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
 
         if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
-            registerAppInit(callback);
+            registerAppInit(callback, false);
         } else {
             // Check if opened by facebook with deferred install data
-            boolean appLinkRqSucceeded = false;
-            if (callback != null) {
-                deferredInitListener_ = new WeakReference<>(callback);
-            }
+            boolean appLinkRqSucceeded;
             appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
                 @Override
                 public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
@@ -3011,28 +3005,26 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                             prefHelper_.setLinkClickIdentifier(bncLinkClickId);
                         }
                     }
-                    BranchReferralInitListener deferredCallback = null;
-                    if (deferredInitListener_ != null) {
-                        deferredCallback = deferredInitListener_.get();
-                    }
-                    registerAppInit(deferredCallback);
+                    requestQueue_.unlockInstallOrOpenProcessWait();
+                    processNextQueueItem();
                 }
             });
-            if (!appLinkRqSucceeded) {
-                registerAppInit(callback);
-                deferredInitListener_ = null;
-            }
+
+            registerAppInit(callback, appLinkRqSucceeded);
         }
     }
     
-    private void registerAppInit(BranchReferralInitListener callback) {
+    private void registerAppInit(BranchReferralInitListener callback, boolean isWaitingOnOperationToFinish) {
+        ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
-            registerInstallOrOpen(new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver()), callback);
+            request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
         } else {
             // If no user this is an Install
-            registerInstallOrOpen(new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID()), callback);
+            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
         }
+        request.setProcessWaitLockEnabled(isWaitingOnOperationToFinish);
+        registerInstallOrOpen(request, callback);
     }
 
     /**
@@ -3331,6 +3323,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         @Override
         protected ServerResponse doInBackground(Void... voids) {
+            if (thisReq_ instanceof ServerRequestInitSession) {
+                ((ServerRequestInitSession) thisReq_).updateLinkClickIdentifier();
+            }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
 
