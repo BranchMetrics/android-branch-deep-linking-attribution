@@ -71,6 +71,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
+        super.onRequestSucceeded(resp, branch);
         try {
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
@@ -84,13 +85,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
-
-            if (resp.getObject().has(Defines.Jsonkey.AppOrigin.getKey())) {
-                if (resp.getObject().get(Defines.Jsonkey.AppOrigin.getKey()).equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey())) {
-                    prefHelper_.setIsFabricEnabled(true);
-                }
-            }
-
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
                 // If Clicked on a branch link

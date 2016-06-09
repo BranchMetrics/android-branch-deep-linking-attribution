@@ -72,3 +72,10 @@ if (propFile.exists()) {
 } else {
         android.buildTypes.release.signingConfig = null
 }
+
+repositories{
+    flatDir{
+        dirs 'libs'
+    }
+}
+

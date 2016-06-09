@@ -166,7 +166,8 @@ public class Defines {
         Channel("channel"),
         Feature("feature"),
         Stage("stage"),
-        Data("data");
+        Data("data"),
+        URL("url");
 
         private String key = "";
 

@@ -129,10 +129,15 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     }
 
     protected void generateUrl(Branch.BranchLinkCreateListener callback) {
+        generateUrl(callback, false);
+    }
+
+    protected void generateUrl(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_,
                     BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
+            req.setIsReqStartedFromBranchShareSheet(isFromShareSheet);
             branchReferral_.generateShortLinkInternal(req);
         } else {
             if (callback != null) {

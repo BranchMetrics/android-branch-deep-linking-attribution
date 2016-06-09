@@ -70,4 +70,18 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isBranchViewShowing;
     }
+
+    @Override
+    public void onRequestSucceeded(ServerResponse response, Branch branch) {
+        // Check for any Third party SDK for data handling
+        String appOrigin = "";
+        try {
+            if (response.getObject().has(Defines.Jsonkey.AppOrigin.getKey())) {
+                appOrigin = response.getObject().getString(Defines.Jsonkey.AppOrigin.getKey());
+            }
+            prefHelper_.setIsFabricEnabled(appOrigin.equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey()));
+        } catch (JSONException ignore) {
+        }
+        extendedDataProvider_.provideData(this, response);
+    }
 }

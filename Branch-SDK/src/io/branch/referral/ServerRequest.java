@@ -30,6 +30,7 @@ public abstract class ServerRequest {
     private SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
+    protected  final ExtendedDataProvider extendedDataProvider_;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -46,6 +47,7 @@ public abstract class ServerRequest {
         systemObserver_ = new SystemObserver(context);
         params_ = new JSONObject();
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
+        extendedDataProvider_ = ExtendedDataProvider.getInstance(context);
     }
 
     /**
@@ -62,6 +64,7 @@ public abstract class ServerRequest {
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
+        extendedDataProvider_ = ExtendedDataProvider.getInstance(context);
     }
 
     /**

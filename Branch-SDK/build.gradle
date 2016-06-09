@@ -6,6 +6,7 @@ def jarFileName
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile 'com.android.support:support-annotations:22.2.0'
+    compile(name:'answers-shim', ext:'jar')
 }
 
 android {
@@ -61,6 +62,11 @@ task makeJar(type: Copy) {
     into('../')
     include('classes.jar')
     rename ('classes.jar', 'Branch-'+project.VERSION_NAME+'.jar')
+}
+repositories{
+    flatDir{
+        dirs 'libs'
+    }
 }
 
 makeJar.dependsOn(clearJar, build)
