@@ -43,7 +43,7 @@ class ExtendedAnswerProvider {
         KitEvent kitEvent = new KitEvent(eventName);
         try{
             if (eventData != null) {
-                addJsonObjectToKitEvent(kitEvent, eventData, "data");
+                addJsonObjectToKitEvent(kitEvent, eventData, "data.");
                 AnswersOptionalLogger.get().logKitEvent(kitEvent);
             }
         } catch (JSONException ignore) {
