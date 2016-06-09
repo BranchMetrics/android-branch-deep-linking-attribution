@@ -364,6 +364,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private WeakReference<BranchReferralInitListener> deferredInitListener_;
 
+    private boolean scanForContent_;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -3105,6 +3107,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
+
         }
 
         @Override
@@ -3127,6 +3130,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
+            if (scanForContent_) {
+                BranchContentScanner.getInstance().scanForContent(activity);
+            }
         }
 
         @Override
@@ -4072,6 +4078,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
          */
         boolean skipBranchViewsOnThisActivity();
+    }
+
+
+    void enableContentScanning(){
+        if(!scanForContent_) {
+            scanForContent_ = true;
+            if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
+                BranchContentScanner.getInstance().scanForContent(currentActivityReference_.get());
+            }
+        }
     }
 
 }

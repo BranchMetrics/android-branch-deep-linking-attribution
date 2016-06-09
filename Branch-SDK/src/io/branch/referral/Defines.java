@@ -91,7 +91,9 @@ public class Defines {
         BranchViewAction("action"),
         BranchViewNumOfUse("number_of_use"),
         BranchViewUrl("url"),
-        BranchViewHtml("html");
+        BranchViewHtml("html"),
+
+        ScanForContent("scan_for_content");
 
         
         private String key = "";

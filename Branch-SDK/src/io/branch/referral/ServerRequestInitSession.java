@@ -70,4 +70,18 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isBranchViewShowing;
     }
+
+
+    @Override
+    public void onRequestSucceeded(ServerResponse resp, Branch branch) {
+        branch.enableContentScanning();
+//        if (resp.getObject().has(Defines.Jsonkey.ScanForContent.getKey())) {
+//            try {
+//                if (resp.getObject().getBoolean(Defines.Jsonkey.ScanForContent.getKey())) {
+//                    branch.enableContentScanning();
+//                }
+//            } catch (JSONException ignore) {
+//            }
+//        }
+    }
 }

@@ -71,6 +71,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
+        super.onRequestSucceeded(resp, branch);
         try {
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);

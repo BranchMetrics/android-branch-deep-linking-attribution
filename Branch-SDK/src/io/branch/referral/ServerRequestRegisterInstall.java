@@ -88,6 +88,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
+        super.onRequestSucceeded(resp, branch);
         try {
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
