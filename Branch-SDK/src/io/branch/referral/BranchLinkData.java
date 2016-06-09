@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.annotation.SuppressLint;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -407,16 +408,23 @@ class BranchLinkData extends JSONObject {
         try {
             if (has(Defines.Jsonkey.Data.getKey())) {
                 linkDataJson = new JSONObject(getString(Defines.Jsonkey.Data.getKey()));
-
-                linkDataJson.put("~" + Defines.LinkParam.Channel.getKey(), getChannel());
-                linkDataJson.put("~" + Defines.LinkParam.Alias.getKey(), getAlias());
-                linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), getType());
-                linkDataJson.put("~" + Defines.LinkParam.Feature.getKey(), getFeature());
-                linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), getDuration());
-                linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), getStage());
+                if (!TextUtils.isEmpty(channel)) {
+                    linkDataJson.put("~" + Defines.LinkParam.Channel.getKey(), channel);
+                }
+                if (!TextUtils.isEmpty(alias)) {
+                    linkDataJson.put("~" + Defines.LinkParam.Alias.getKey(), alias);
+                }
+                if (!TextUtils.isEmpty(feature)) {
+                    linkDataJson.put("~" + Defines.LinkParam.Feature.getKey(), feature);
+                }
+                if (!TextUtils.isEmpty(stage)) {
+                    linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), stage);
+                }
                 if (has(Defines.LinkParam.Tags.getKey())) {
                     linkDataJson.put(Defines.LinkParam.Tags.getKey(), getJSONArray(Defines.LinkParam.Tags.getKey()));
                 }
+                linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), type);
+                linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), duration);
             }
         } catch (JSONException ignore) {
         }
