@@ -115,10 +115,14 @@ class ServerRequestCreateUrl extends ServerRequest {
             if (callback_ != null) {
                 callback_.onLinkCreate(url, null);
             }
+            if (isReqStartedFromBranchShareSheet() && prefHelper_.getIsFabricEnabled() && linkPost_.getLinkDataJsonObject() != null) {
+                JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();
+                linkDataJsonObj.put("~" + Defines.Jsonkey.Link.getKey(), url);
+                new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        extendedDataProvider_.provideData(this, resp);
     }
 
     /**

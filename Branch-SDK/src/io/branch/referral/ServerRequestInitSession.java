@@ -79,10 +79,16 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if (response.getObject().has(Defines.Jsonkey.AppOrigin.getKey())) {
                 appOrigin = response.getObject().getString(Defines.Jsonkey.AppOrigin.getKey());
             }
-            prefHelper_.setIsFabricEnabled(appOrigin.equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey()));
+            boolean isFabricEnabled = true;//appOrigin.equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey());
+            prefHelper_.setIsFabricEnabled(isFabricEnabled);
+            // Provide data to Fabric answers if enabled
+            if (isFabricEnabled && response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
+                JSONObject linkDataJsonObj = new JSONObject(response.getObject().getString(Defines.Jsonkey.Data.getKey()));
+                new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj);
+            }
         } catch (JSONException ignore) {
         }
-        extendedDataProvider_.provideData(this, response);
     }
 
     public void updateLinkClickIdentifier() {

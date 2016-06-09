@@ -397,4 +397,30 @@ class BranchLinkData extends JSONObject {
         return result;
     }
 
+    /**
+     * Creates the Json object with link params and link properties.
+     *
+     * @return {@link JSONObject} with link params and link properties
+     */
+    public JSONObject getLinkDataJsonObject() {
+        JSONObject linkDataJson = null;
+        try {
+            if (has(Defines.Jsonkey.Data.getKey())) {
+                linkDataJson = new JSONObject(getString(Defines.Jsonkey.Data.getKey()));
+
+                linkDataJson.put("~" + Defines.LinkParam.Channel.getKey(), getChannel());
+                linkDataJson.put("~" + Defines.LinkParam.Alias.getKey(), getAlias());
+                linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), getType());
+                linkDataJson.put("~" + Defines.LinkParam.Feature.getKey(), getFeature());
+                linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), getDuration());
+                linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), getStage());
+                if (has(Defines.LinkParam.Tags.getKey())) {
+                    linkDataJson.put(Defines.LinkParam.Tags.getKey(), getJSONArray(Defines.LinkParam.Tags.getKey()));
+                }
+            }
+        } catch (JSONException ignore) {
+        }
+        return linkDataJson;
+    }
+
 }
