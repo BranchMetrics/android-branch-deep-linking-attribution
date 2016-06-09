@@ -30,6 +30,7 @@ public abstract class ServerRequest {
     private SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
+    private boolean isWaitLockEnabled_;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -425,5 +426,24 @@ public abstract class ServerRequest {
             waitTime = System.currentTimeMillis() - queueWaitTime_;
         }
         return waitTime;
+    }
+
+    /**
+     * Set a wait lock before processing this request. Setting true will wait processing this request
+     * from the request queue.
+     *
+     * @param enable {@link Boolean} with true to enable the request process wait lock else false
+     */
+    public void setProcessWaitLockEnabled(boolean enable) {
+        isWaitLockEnabled_ = enable;
+    }
+
+    /**
+     * Check if this request is waiting on any operation to finish before processing
+     *
+     * @return True if this request if any pre processing operation pending
+     */
+    public boolean isProcessWaitLockEnabled() {
+        return isWaitLockEnabled_;
     }
 }
