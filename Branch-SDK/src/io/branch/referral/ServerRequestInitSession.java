@@ -79,7 +79,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if (response.getObject().has(Defines.Jsonkey.AppOrigin.getKey())) {
                 appOrigin = response.getObject().getString(Defines.Jsonkey.AppOrigin.getKey());
             }
-            boolean isFabricEnabled = true;//appOrigin.equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey());
+            boolean isFabricEnabled = appOrigin.equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey());
             prefHelper_.setIsFabricEnabled(isFabricEnabled);
             // Provide data to Fabric answers if enabled
             if (isFabricEnabled && response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
