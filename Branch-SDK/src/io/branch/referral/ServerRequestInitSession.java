@@ -84,4 +84,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         extendedDataProvider_.provideData(this, response);
     }
+
+    public void updateLinkClickIdentifier() {
+        if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+            } catch (JSONException ignore) {
+            }
+        }
+    }
 }
