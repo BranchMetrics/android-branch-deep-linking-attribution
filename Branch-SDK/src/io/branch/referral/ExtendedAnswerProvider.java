@@ -46,7 +46,7 @@ class ExtendedAnswerProvider {
                 addJsonObjectToKitEvent(kitEvent, eventData, "data.");
                 AnswersOptionalLogger.get().logKitEvent(kitEvent);
             }
-        } catch (Exception ignore) {
+        } catch (Throwable ignore) {
         }
     }
 
