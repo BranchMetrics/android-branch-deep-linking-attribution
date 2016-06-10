@@ -3,8 +3,8 @@ package io.branch.referral;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.crashlytics.sdk.android.answersshim.AnswersOptionalLogger;
-import com.crashlytics.sdk.android.answersshim.KitEvent;
+import com.crashlytics.android.answers.shim.AnswersOptionalLogger;
+import com.crashlytics.android.answers.shim.KitEvent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,13 +40,13 @@ class ExtendedAnswerProvider {
      * @param eventData {@link JSONObject} JsonObject containing the event data
      */
     public void provideData(String eventName, JSONObject eventData) {
-        KitEvent kitEvent = new KitEvent(eventName);
         try{
+            KitEvent kitEvent = new KitEvent(eventName);
             if (eventData != null) {
                 addJsonObjectToKitEvent(kitEvent, eventData, "data.");
                 AnswersOptionalLogger.get().logKitEvent(kitEvent);
             }
-        } catch (JSONException ignore) {
+        } catch (Exception ignore) {
         }
     }
 
