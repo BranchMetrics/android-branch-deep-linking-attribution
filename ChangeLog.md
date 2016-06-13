@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.13.1: Hot Fix : Design changes to ensure init callbacks are always called. Relocating fabric properties file.
+
 - v1.13.0: Adding feature to turn on/off collecting device id.
 
 - v1.12.1: Hot fix : initSession is not called back on some scenarios with the new feature added on 1.12.0.
