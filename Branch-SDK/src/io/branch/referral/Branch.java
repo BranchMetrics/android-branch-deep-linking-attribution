@@ -603,7 +603,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      *                   up and declaring defeat.
      */
     public void setRetryCount(int retryCount) {
-        if (prefHelper_ != null && retryCount > 0) {
+        if (prefHelper_ != null && retryCount >= 0) {
             prefHelper_.setRetryCount(retryCount);
         }
     }
