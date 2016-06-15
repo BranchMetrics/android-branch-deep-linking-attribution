@@ -22,9 +22,9 @@ import java.util.Iterator;
  */
 class ExtendedAnswerProvider {
     // Event Name for Kit Event
-    public static final String KIT_EVENT_INSTALL = "install";
-    public static final String KIT_EVENT_OPEN = "open";
-    public static final String KIT_EVENT_SHARE = "share";
+    public static final String KIT_EVENT_INSTALL = "Branch Install";
+    public static final String KIT_EVENT_OPEN = "Branch Open";
+    public static final String KIT_EVENT_SHARE = "Branch Share";
 
     private static final String EXTRA_PARAM_NOTATION = "+";
     private static final String CTRL_PARAM_NOTATION = "~";
