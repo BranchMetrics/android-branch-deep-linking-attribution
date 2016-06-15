@@ -71,7 +71,6 @@ public class PrefHelper {
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
     private static final String KEY_IS_REFERRABLE = "bnc_is_referrable";
-    private static final String KEY_FABRIC_ENABLED = "bnc_fabric_enabled";
 
     private static final String KEY_BUCKETS = "bnc_buckets";
     private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
@@ -470,22 +469,6 @@ public class PrefHelper {
      */
     public boolean getIsAppLinkTriggeredInit() {
         return getBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK);
-    }
-
-    /**
-     * Set the value to specify whether Fabric is enabled for this app
-     * @param isFabricEnabled {@link Boolean} with value for whether Fabric is enabled
-     */
-    public void setIsFabricEnabled (Boolean isFabricEnabled) {
-        setBool(KEY_FABRIC_ENABLED, isFabricEnabled);
-    }
-
-    /**
-     * Specifies whether Fabric is enabled for this app
-     * @return {@link Boolean} with value true if Fabric is enabled
-     */
-    public boolean getIsFabricEnabled() {
-        return getBool(KEY_FABRIC_ENABLED);
     }
 
     /**

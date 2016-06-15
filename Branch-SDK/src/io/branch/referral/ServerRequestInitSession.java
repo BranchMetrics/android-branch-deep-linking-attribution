@@ -74,17 +74,14 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         // Check for any Third party SDK for data handling
-        String appOrigin = "";
         try {
-            if (response.getObject().has(Defines.Jsonkey.AppOrigin.getKey())) {
-                appOrigin = response.getObject().getString(Defines.Jsonkey.AppOrigin.getKey());
-            }
-            boolean isFabricEnabled = appOrigin.equals(Defines.Jsonkey.AppOriginTwitterFabric.getKey());
-            prefHelper_.setIsFabricEnabled(isFabricEnabled);
-            // Provide data to Fabric answers if enabled
-            if (isFabricEnabled && response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
+            // Provide data to Fabric answers
+            if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
                 JSONObject linkDataJsonObj = new JSONObject(response.getObject().getString(Defines.Jsonkey.Data.getKey()));
+                if (linkDataJsonObj.has("~" + Defines.Jsonkey.ReferringLink.getKey())) {
+                    linkDataJsonObj.remove("~" + Defines.Jsonkey.ReferringLink.getKey());
+                }
                 new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj);
             }
         } catch (JSONException ignore) {

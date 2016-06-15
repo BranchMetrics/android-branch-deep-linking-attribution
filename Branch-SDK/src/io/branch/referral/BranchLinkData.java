@@ -404,28 +404,25 @@ class BranchLinkData extends JSONObject {
      * @return {@link JSONObject} with link params and link properties
      */
     public JSONObject getLinkDataJsonObject() {
-        JSONObject linkDataJson = null;
+        JSONObject linkDataJson = new JSONObject();
         try {
-            if (has(Defines.Jsonkey.Data.getKey())) {
-                linkDataJson = new JSONObject(getString(Defines.Jsonkey.Data.getKey()));
-                if (!TextUtils.isEmpty(channel)) {
-                    linkDataJson.put("~" + Defines.LinkParam.Channel.getKey(), channel);
-                }
-                if (!TextUtils.isEmpty(alias)) {
-                    linkDataJson.put("~" + Defines.LinkParam.Alias.getKey(), alias);
-                }
-                if (!TextUtils.isEmpty(feature)) {
-                    linkDataJson.put("~" + Defines.LinkParam.Feature.getKey(), feature);
-                }
-                if (!TextUtils.isEmpty(stage)) {
-                    linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), stage);
-                }
-                if (has(Defines.LinkParam.Tags.getKey())) {
-                    linkDataJson.put(Defines.LinkParam.Tags.getKey(), getJSONArray(Defines.LinkParam.Tags.getKey()));
-                }
-                linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), type);
-                linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), duration);
+            if (!TextUtils.isEmpty(channel)) {
+                linkDataJson.put("~" + Defines.LinkParam.Channel.getKey(), channel);
             }
+            if (!TextUtils.isEmpty(alias)) {
+                linkDataJson.put("~" + Defines.LinkParam.Alias.getKey(), alias);
+            }
+            if (!TextUtils.isEmpty(feature)) {
+                linkDataJson.put("~" + Defines.LinkParam.Feature.getKey(), feature);
+            }
+            if (!TextUtils.isEmpty(stage)) {
+                linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), stage);
+            }
+            if (has(Defines.LinkParam.Tags.getKey())) {
+                linkDataJson.put(Defines.LinkParam.Tags.getKey(), getJSONArray(Defines.LinkParam.Tags.getKey()));
+            }
+            linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), type);
+            linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), duration);
         } catch (JSONException ignore) {
         }
         return linkDataJson;

@@ -15,10 +15,9 @@ public class Defines {
         SessionID("session_id"),
         LinkClickID("link_click_id"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
-        AppOrigin("app_origin"),
         AppLinkUsed("branch_used"),
+        BranchIdentity("branch_identity"),
 
-        AppOriginTwitterFabric("Twitter Fabric"),
 
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -39,6 +38,7 @@ public class Defines {
         BeginAfterID("begin_after_id"),
         Link("link"),
         ReferringData("referring_data"),
+        ReferringLink("referring_link"),
         Data("data"),
         OS("os"),
         HardwareID("hardware_id"),

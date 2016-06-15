@@ -36,14 +36,14 @@ class ExtendedAnswerProvider {
      * Method create a Json Object to flatten and create the {@link KitEvent} with key-values
      * </p>
      *
-     * @param eventName  {@link String} name of the KitEvent
+     * @param eventName {@link String} name of the KitEvent
      * @param eventData {@link JSONObject} JsonObject containing the event data
      */
     public void provideData(String eventName, JSONObject eventData) {
-        try{
+        try {
             KitEvent kitEvent = new KitEvent(eventName);
             if (eventData != null) {
-                addJsonObjectToKitEvent(kitEvent, eventData, "data.");
+                addJsonObjectToKitEvent(kitEvent, eventData, "");
                 AnswersOptionalLogger.get().logKitEvent(kitEvent);
             }
         } catch (Throwable ignore) {
@@ -90,19 +90,22 @@ class ExtendedAnswerProvider {
      */
     private void addJsonArrayToKitEvent(KitEvent kitEvent, JSONArray jsonArray, String keyPathPrepend) throws JSONException {
         for (int i = 0; i < jsonArray.length(); i++) {
-            addBranchAttributes(kitEvent, keyPathPrepend, Integer.toString(i), jsonArray.getString(i));
+            addBranchAttributes(kitEvent, keyPathPrepend, CTRL_PARAM_NOTATION + Integer.toString(i), jsonArray.getString(i));
         }
     }
 
-    private void addBranchAttributes(KitEvent kitEvent,String keyPathPrepend, String key, String value) {
+    private void addBranchAttributes(KitEvent kitEvent, String keyPathPrepend, String key, String value) {
         if (!TextUtils.isEmpty(value)) {
-            String modifiedKey = keyPathPrepend + key;
             if (key.startsWith(CTRL_PARAM_NOTATION)) {
-                modifiedKey = key.replaceFirst(CTRL_PARAM_NOTATION, "");
-            } else if (modifiedKey.startsWith(CTRL_PARAM_NOTATION)) {
-                modifiedKey = modifiedKey.replaceFirst(CTRL_PARAM_NOTATION, "");
+                String modifiedKey = keyPathPrepend.replaceFirst(CTRL_PARAM_NOTATION, "") + key.replaceFirst(CTRL_PARAM_NOTATION, "");
+                kitEvent.putAttribute(modifiedKey, value);
+                Log.d("KitEventTest", modifiedKey + " : " + value);
+            } else if (key.equals("$" + Defines.Jsonkey.IdentityID.getKey())) {
+                kitEvent.putAttribute(Defines.Jsonkey.BranchIdentity.getKey(), value);
+                Log.d("KitEventTest", Defines.Jsonkey.BranchIdentity.getKey() + " : " + value);
             }
-            kitEvent.putAttribute(modifiedKey, value);
+
+
         }
     }
 }

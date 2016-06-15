@@ -236,13 +236,9 @@ class ServerRequestCreateUrl extends ServerRequest {
     }
 
     private void updateShareEventToFabric(String url) {
-        try {
-            if (isReqStartedFromBranchShareSheet() && prefHelper_.getIsFabricEnabled() && linkPost_.getLinkDataJsonObject() != null) {
-                JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();
-                linkDataJsonObj.put("~" + Defines.Jsonkey.Link.getKey(), url);
-                new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj);
-            }
-        } catch (JSONException ignore) {
+        JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();
+        if (isReqStartedFromBranchShareSheet() && linkDataJsonObj != null) {
+            new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj);
         }
     }
 }
