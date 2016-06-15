@@ -99,13 +99,9 @@ class ExtendedAnswerProvider {
             if (key.startsWith(CTRL_PARAM_NOTATION)) {
                 String modifiedKey = keyPathPrepend.replaceFirst(CTRL_PARAM_NOTATION, "") + key.replaceFirst(CTRL_PARAM_NOTATION, "");
                 kitEvent.putAttribute(modifiedKey, value);
-                Log.d("KitEventTest", modifiedKey + " : " + value);
             } else if (key.equals("$" + Defines.Jsonkey.IdentityID.getKey())) {
                 kitEvent.putAttribute(Defines.Jsonkey.BranchIdentity.getKey(), value);
-                Log.d("KitEventTest", Defines.Jsonkey.BranchIdentity.getKey() + " : " + value);
             }
-
-
         }
     }
 }
