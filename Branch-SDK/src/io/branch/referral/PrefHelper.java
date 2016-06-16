@@ -43,7 +43,8 @@ public class PrefHelper {
      */
     public static final String NO_STRING_VALUE = "bnc_no_value";
 
-    private static final int INTERVAL_RETRY = 0;
+    // We should keep this non-zero to give the connection time to recover after a failure
+    private static final int INTERVAL_RETRY = 1000;
 
     /**
      * Number of times to reattempt connection to the Branch server before giving up and throwing an
