@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -362,6 +363,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
 
+    /* Name of the key for getting Fabric Branch API key from string resource */
+    private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -446,8 +450,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
             boolean isNewBranchKeySet;
             if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-                Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
-                isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+                // If Branch key is not available check for Fabric provided Branch key
+                String fabricBranchApiKey = null;
+                try {
+                    Resources resources = context.getResources();
+                    fabricBranchApiKey = resources.getString(resources.getIdentifier(FABRIC_BRANCH_API_KEY, "string", context.getPackageName()));
+                } catch (Exception ignore) {
+                }
+                if (!TextUtils.isEmpty(fabricBranchApiKey)) {
+                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(fabricBranchApiKey);
+                } else {
+                    Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
+                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+                }
             } else {
                 isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             }
