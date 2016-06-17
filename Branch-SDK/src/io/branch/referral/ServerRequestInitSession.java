@@ -79,9 +79,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
                 JSONObject linkDataJsonObj = new JSONObject(response.getObject().getString(Defines.Jsonkey.Data.getKey()));
-                if (linkDataJsonObj.has("~" + Defines.Jsonkey.ReferringLink.getKey())) {
-                    linkDataJsonObj.remove("~" + Defines.Jsonkey.ReferringLink.getKey());
-                }
                 new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
             }
         } catch (JSONException ignore) {
