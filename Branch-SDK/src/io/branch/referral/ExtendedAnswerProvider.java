@@ -39,11 +39,12 @@ class ExtendedAnswerProvider {
      * @param eventName {@link String} name of the KitEvent
      * @param eventData {@link JSONObject} JsonObject containing the event data
      */
-    public void provideData(String eventName, JSONObject eventData) {
+    public void provideData(String eventName, JSONObject eventData, String identityID) {
         try {
             KitEvent kitEvent = new KitEvent(eventName);
             if (eventData != null) {
                 addJsonObjectToKitEvent(kitEvent, eventData, "");
+                kitEvent.putAttribute(Defines.Jsonkey.BranchIdentity.getKey(), identityID);
                 AnswersOptionalLogger.get().logKitEvent(kitEvent);
             }
         } catch (Throwable ignore) {
@@ -100,7 +101,7 @@ class ExtendedAnswerProvider {
                 String modifiedKey = keyPathPrepend.replaceFirst(CTRL_PARAM_NOTATION, "") + key.replaceFirst(CTRL_PARAM_NOTATION, "");
                 kitEvent.putAttribute(modifiedKey, value);
             } else if (key.equals("$" + Defines.Jsonkey.IdentityID.getKey())) {
-                kitEvent.putAttribute(Defines.Jsonkey.BranchIdentity.getKey(), value);
+                kitEvent.putAttribute(Defines.Jsonkey.ReferringBranchIdentity.getKey(), value);
             }
         }
     }

@@ -82,7 +82,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 if (linkDataJsonObj.has("~" + Defines.Jsonkey.ReferringLink.getKey())) {
                     linkDataJsonObj.remove("~" + Defines.Jsonkey.ReferringLink.getKey());
                 }
-                new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj);
+                new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
             }
         } catch (JSONException ignore) {
         }

@@ -238,7 +238,7 @@ class ServerRequestCreateUrl extends ServerRequest {
     private void updateShareEventToFabric(String url) {
         JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();
         if (isReqStartedFromBranchShareSheet() && linkDataJsonObj != null) {
-            new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj);
+            new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj, prefHelper_.getIdentityID());
         }
     }
 }
