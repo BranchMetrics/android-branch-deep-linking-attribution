@@ -15,17 +15,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
 
 /**
  * <p>This class assists with RESTful calls to the Branch API, by using
@@ -179,7 +175,6 @@ class RemoteInterface {
         }
 
         try {
-            modifiedUrl = getResolvedApiUrl(modifiedUrl);
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
             lastRoundTripTime_ = 0;
             long reqStartTime = System.currentTimeMillis();
@@ -187,13 +182,7 @@ class RemoteInterface {
             connection = (HttpsURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
-            // Default host verifier will provide SSL error on host verification since ip used in request is not mapped to a certificate
-            connection.setHostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true; // intentionally skipping host verification here
-                }
-            });
+
 
             lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
             if (Branch.getInstance() != null) {
@@ -329,7 +318,6 @@ class RemoteInterface {
             if (!addCommonParams(bodyCopy, retryNumber)) {
                 return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
             }
-            url = getResolvedApiUrl(url);
             if (log) {
                 PrefHelper.Debug("BranchSDK", "posting to " + url);
                 PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
@@ -343,14 +331,6 @@ class RemoteInterface {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestMethod("POST");
-
-            // Default host verifier will provide SSL error on host verification since ip used in request is not mapped to a certificate
-            connection.setHostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true; // intentionally skipping host verification here
-                }
-            });
 
 
             lastRoundTripTime_ = 0;
@@ -457,17 +437,4 @@ class RemoteInterface {
         return result.toString();
     }
 
-
-    private String getResolvedApiUrl( String url) throws MalformedURLException, UnknownHostException {
-        // If the hostname resolves to multiple IP addresses, URL connection will attempt to connect the next if one connection fails
-        // This may result is multiple timeouts elapse before the connect attempt throws an exception. In order to make sure the
-        // Branch callback is called with in the timeout specified we resolve the host first and then try only with first resolved ip
-
-        String apiHost = new URL(url).getHost();
-        InetAddress inetAddress = InetAddress.getByName(apiHost);
-        if (inetAddress != null && inetAddress.getHostAddress() != null) {
-            url = url.replace(apiHost, inetAddress.getHostAddress());
-        }
-        return url;
-    }
 }
