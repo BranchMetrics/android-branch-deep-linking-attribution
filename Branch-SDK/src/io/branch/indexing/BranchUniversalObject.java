@@ -568,12 +568,6 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.CanonicalUrl.getKey())) {
                 branchUniversalObject.canonicalUrl_ = jsonObject.getString(Defines.Jsonkey.CanonicalUrl.getKey());
             }
-            if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
-                JSONArray keywordJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
-                for (int i = 0; i < keywordJsonArray.length(); i++) {
-                    branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
-                }
-            }
             if (jsonObject.has(Defines.Jsonkey.ContentDesc.getKey())) {
                 branchUniversalObject.description_ = jsonObject.getString(Defines.Jsonkey.ContentDesc.getKey());
             }
@@ -590,6 +584,18 @@ public class BranchUniversalObject implements Parcelable {
             while (keys.hasNext()) {
                 String key = keys.next();
                 branchUniversalObject.addContentMetadata(key, jsonObject.getString(key));
+            }
+
+            if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
+                JSONArray keywordJsonArray;
+                try {
+                    keywordJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
+                } catch (JSONException ex) {  // In case key word json array is added as a string
+                    keywordJsonArray = new JSONArray(jsonObject.getString(Defines.Jsonkey.ContentKeyWords.getKey()));
+                }
+                for (int i = 0; i < keywordJsonArray.length(); i++) {
+                    branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
+                }
             }
         } catch (Exception ignore) {
         }
