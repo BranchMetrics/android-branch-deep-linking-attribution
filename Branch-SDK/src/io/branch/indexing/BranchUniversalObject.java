@@ -587,14 +587,17 @@ public class BranchUniversalObject implements Parcelable {
             }
 
             if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
-                JSONArray keywordJsonArray;
-                try {
-                    keywordJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
-                } catch (JSONException ex) {  // In case key word json array is added as a string
-                    keywordJsonArray = new JSONArray(jsonObject.getString(Defines.Jsonkey.ContentKeyWords.getKey()));
+                JSONArray keywordJsonArray = null;
+                Object keyWordArrayObject = jsonObject.get(Defines.Jsonkey.ContentKeyWords.getKey());
+                if (keyWordArrayObject instanceof JSONArray) {
+                    keywordJsonArray = (JSONArray) keyWordArrayObject;
+                } else if (keyWordArrayObject instanceof String) {
+                    keywordJsonArray = new JSONArray((String) keyWordArrayObject);
                 }
-                for (int i = 0; i < keywordJsonArray.length(); i++) {
-                    branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
+                if (keywordJsonArray != null) {
+                    for (int i = 0; i < keywordJsonArray.length(); i++) {
+                        branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
+                    }
                 }
             }
         } catch (Exception ignore) {
@@ -606,6 +609,7 @@ public class BranchUniversalObject implements Parcelable {
 
     /**
      * Convert the BUO to  corresponding Json representation
+     *
      * @return A {@link JSONObject} which represent this BUO
      */
     public JSONObject convertToJson() {
