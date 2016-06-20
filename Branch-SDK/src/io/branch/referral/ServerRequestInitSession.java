@@ -71,6 +71,20 @@ abstract class ServerRequestInitSession extends ServerRequest {
         return isBranchViewShowing;
     }
 
+    @Override
+    public void onRequestSucceeded(ServerResponse response, Branch branch) {
+        // Check for any Third party SDK for data handling
+        try {
+            // Provide data to Fabric answers
+            if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
+                JSONObject linkDataJsonObj = new JSONObject(response.getObject().getString(Defines.Jsonkey.Data.getKey()));
+                new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
+            }
+        } catch (JSONException ignore) {
+        }
+    }
+
     public void updateLinkClickIdentifier() {
         if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
             try {
@@ -79,5 +93,4 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
     }
-
 }

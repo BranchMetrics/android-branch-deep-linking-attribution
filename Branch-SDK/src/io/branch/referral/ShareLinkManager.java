@@ -232,7 +232,7 @@ class ShareLinkManager {
                 // Cancel the dialog and context is released on dialog cancel
                 cancelShareLinkDialog(false);
             }
-        });
+        }, true);
     }
 
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {

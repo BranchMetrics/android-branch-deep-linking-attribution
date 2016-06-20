@@ -16,6 +16,9 @@ public class Defines {
         LinkClickID("link_click_id"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         AppLinkUsed("branch_used"),
+        ReferringBranchIdentity("referring_branch_identity"),
+        BranchIdentity("branch_identity"),
+
 
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -36,6 +39,7 @@ public class Defines {
         BeginAfterID("begin_after_id"),
         Link("link"),
         ReferringData("referring_data"),
+        ReferringLink("referring_link"),
         Data("data"),
         OS("os"),
         HardwareID("hardware_id"),
@@ -163,7 +167,8 @@ public class Defines {
         Channel("channel"),
         Feature("feature"),
         Stage("stage"),
-        Data("data");
+        Data("data"),
+        URL("url");
 
         private String key = "";
 
