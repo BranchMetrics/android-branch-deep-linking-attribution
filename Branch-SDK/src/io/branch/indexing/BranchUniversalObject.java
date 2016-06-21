@@ -568,12 +568,6 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.CanonicalUrl.getKey())) {
                 branchUniversalObject.canonicalUrl_ = jsonObject.getString(Defines.Jsonkey.CanonicalUrl.getKey());
             }
-            if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
-                JSONArray keywordJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ContentKeyWords.getKey());
-                for (int i = 0; i < keywordJsonArray.length(); i++) {
-                    branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
-                }
-            }
             if (jsonObject.has(Defines.Jsonkey.ContentDesc.getKey())) {
                 branchUniversalObject.description_ = jsonObject.getString(Defines.Jsonkey.ContentDesc.getKey());
             }
@@ -591,6 +585,21 @@ public class BranchUniversalObject implements Parcelable {
                 String key = keys.next();
                 branchUniversalObject.addContentMetadata(key, jsonObject.getString(key));
             }
+
+            if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
+                JSONArray keywordJsonArray = null;
+                Object keyWordArrayObject = jsonObject.get(Defines.Jsonkey.ContentKeyWords.getKey());
+                if (keyWordArrayObject instanceof JSONArray) {
+                    keywordJsonArray = (JSONArray) keyWordArrayObject;
+                } else if (keyWordArrayObject instanceof String) {
+                    keywordJsonArray = new JSONArray((String) keyWordArrayObject);
+                }
+                if (keywordJsonArray != null) {
+                    for (int i = 0; i < keywordJsonArray.length(); i++) {
+                        branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
+                    }
+                }
+            }
         } catch (Exception ignore) {
         }
         return branchUniversalObject;
@@ -600,6 +609,7 @@ public class BranchUniversalObject implements Parcelable {
 
     /**
      * Convert the BUO to  corresponding Json representation
+     *
      * @return A {@link JSONObject} which represent this BUO
      */
     public JSONObject convertToJson() {
