@@ -1,5 +1,9 @@
 Branch Android SDK change log
 
+- v1.14.2: HotFix: Build version not updated issue .
+
+- v1.14.1: adding update option for Answers-Shim SDK.
+
 - v1.14.0: Fabric Answers integration.
 
 - v1.13.1: Hot Fix : Design changes to ensure init callbacks are always called. Relocating fabric properties file.
