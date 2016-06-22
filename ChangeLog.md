@@ -1,6 +1,8 @@
 Branch Android SDK change log
 
-- v1.14.2: HotFix: Build version not updated issue .
+- v1.14.3: Cleaner fix for jcenter dependency issue.
+
+- v1.14.2: HotFix: Build version not updated issue.
 
 - v1.14.1: adding update option for Answers-Shim SDK.
 
