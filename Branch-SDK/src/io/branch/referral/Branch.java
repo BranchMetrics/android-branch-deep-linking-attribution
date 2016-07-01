@@ -361,7 +361,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     private boolean isInitReportedThroughCallBack = false;
 
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
-    private boolean scanForContent_;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1208,9 +1207,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 }
             } else {
                 if (!requestQueue_.containsClose()) {
+                    BranchAnalyticsRunner.getInstance().onBranchClosing(context_);
                     ServerRequest req = new ServerRequestRegisterClose(context_);
                     handleNewRequest(req);
                 }
+
             }
             initState_ = SESSION_STATE.UNINITIALISED;
         }
@@ -3107,6 +3108,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         @Override
         public void onActivityStarted(Activity activity) {
+            BranchAnalyticsRunner.getInstance().scanForContent(activity, activityCnt_ < 1);
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -3125,9 +3127,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
-            if (scanForContent_) {
-                BranchContentScanner.getInstance().scanForContent(activity);
-            }
+
         }
 
         @Override
@@ -3140,6 +3140,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         @Override
         public void onActivityStopped(Activity activity) {
+            BranchAnalyticsRunner.getInstance().onActivityStopped(activity);
             activityCnt_--; // Check if this is the last activity.If so stop
             // session.
             if (activityCnt_ < 1) {
@@ -4076,16 +4077,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
          */
         boolean skipBranchViewsOnThisActivity();
-    }
-
-
-    void enableContentScanning(){
-        if(!scanForContent_) {
-            scanForContent_ = true;
-            if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
-                BranchContentScanner.getInstance().scanForContent(currentActivityReference_.get());
-            }
-        }
     }
 
 }

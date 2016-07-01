@@ -7,8 +7,10 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -89,6 +91,7 @@ public class PrefHelper {
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
 
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
+    private static final String KEY_BRANCH_ANALYTICAL_DATA = "bnc_branch_analytical_data";
 
     private static String Branch_Key = null;
     /**
@@ -457,14 +460,16 @@ public class PrefHelper {
 
     /**
      * Set the value to specify if the current init is triggered by an FB app link
+     *
      * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
      */
-    public void setIsAppLinkTriggeredInit (Boolean isAppLinkTriggered) {
+    public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
         setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
     }
 
     /**
      * Specifies the value to specify if the current init is triggered by an FB app link
+     *
      * @return {@link Boolean} with value true if the init is triggered by an FB app link
      */
     public boolean getIsAppLinkTriggeredInit() {
@@ -512,7 +517,7 @@ public class PrefHelper {
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
      * @param identifier A {@link String} value containing the identifier of the associated
-     *                  link.
+     *                   link.
      */
     public void setLinkClickIdentifier(String identifier) {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
@@ -987,6 +992,29 @@ public class PrefHelper {
     public int getBranchViewUsageCount(String branchViewId) {
         String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
         return getInteger(key, 0);
+    }
+
+
+    public JSONArray getBranchAnalyticsData() {
+        String savedAnalyticsData = getString(KEY_BRANCH_ANALYTICAL_DATA);
+        JSONArray savedAnalyticsArray = new JSONArray();
+        if (!TextUtils.isEmpty(savedAnalyticsData) && !savedAnalyticsData.equals(NO_STRING_VALUE)) {
+            try {
+                savedAnalyticsArray = new JSONArray(savedAnalyticsData);
+            } catch (JSONException ignore) {
+            }
+        }
+        return savedAnalyticsArray;
+    }
+
+    public void clearBranchAnalyticsData() {
+        setString(KEY_BRANCH_ANALYTICAL_DATA, "");
+    }
+
+    public void saveBranchAnalyticsData(JSONObject analyticsData) {
+        JSONArray savedAnalyticsArray = getBranchAnalyticsData();
+        savedAnalyticsArray.put(analyticsData);
+        setString(KEY_BRANCH_ANALYTICAL_DATA, savedAnalyticsArray.toString());
     }
 
     /**

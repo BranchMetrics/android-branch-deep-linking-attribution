@@ -73,7 +73,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
-        branch.enableContentScanning();
+        BranchAnalyticsRunner.getInstance().onBranchInitialised(Defines.ContentAnalyticMode.Basic);
 //        if (resp.getObject().has(Defines.Jsonkey.ScanForContent.getKey())) {
 //            try {
 //                if (resp.getObject().getBoolean(Defines.Jsonkey.ScanForContent.getKey())) {

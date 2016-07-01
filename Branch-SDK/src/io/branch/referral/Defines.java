@@ -93,7 +93,15 @@ public class Defines {
         BranchViewUrl("url"),
         BranchViewHtml("html"),
 
-        ScanForContent("scan_for_content");
+        Path("plath"),
+        ViewList("view_list"),
+        ContentActionView("view"),
+        ContentPath("content_path"),
+        ContentNavPath("content_nav_path"),
+        ReferralLink("referral_link"),
+        ContentData("content_data"),
+        ContentEvents("events"),
+        ContentAnalyticsMode("content_analytics_mode");
 
         
         private String key = "";
@@ -134,7 +142,8 @@ public class Defines {
         GetReferralCode("v1/referralcode"),
         ValidateReferralCode("v1/referralcode/"),
         ApplyReferralCode("v1/applycode/"),
-        DebugConnect("v1/debug/connect");
+        DebugConnect("v1/debug/connect"),
+        ContentEvent("v1/content-events");
 
         private String key = "";
 
@@ -182,6 +191,26 @@ public class Defines {
             return key;
         }
 
+    }
+
+    public enum ContentAnalyticMode {
+        Basic("basic"),
+        Deep("deep"),
+        Off("off");
+        private String key = "";
+
+        ContentAnalyticMode(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
     }
 
 }
