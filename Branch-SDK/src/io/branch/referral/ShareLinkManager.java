@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +52,8 @@ class ShareLinkManager {
     private int shareDialogThemeID_ = -1;
 
     private Branch.ShareLinkBuilder builder_;
+    final int padding = 5;
+    final int leftMargin = 100;
 
 
     /**
@@ -155,6 +156,20 @@ class ShareLinkManager {
         shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
+
+        if (builder_.getSharingTitleView() != null) {
+            shareOptionListView.addHeaderView(builder_.getSharingTitleView());
+        } else if (!TextUtils.isEmpty(builder_.getSharingTitle())) {
+            TextView textView = new TextView(context_);
+            textView.setText(builder_.getSharingTitle());
+            textView.setBackgroundColor(BG_COLOR_DISABLED);
+            textView.setTextColor(BG_COLOR_DISABLED);
+            textView.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
+            textView.setTextColor(context_.getResources().getColor(android.R.color.darker_gray));
+            textView.setPadding(leftMargin, padding, padding, padding);
+            shareOptionListView.addHeaderView(textView);
+        }
+
 
         if (builder_.getDividerHeight() >= 0) { //User set height
             shareOptionListView.setDividerHeight(builder_.getDividerHeight());
@@ -343,8 +358,6 @@ class ShareLinkManager {
      */
     private class ShareItemView extends TextView {
         Context context_;
-        final int padding = 5;
-        final int leftMargin = 100;
 
         public ShareItemView(Context context) {
             super(context);

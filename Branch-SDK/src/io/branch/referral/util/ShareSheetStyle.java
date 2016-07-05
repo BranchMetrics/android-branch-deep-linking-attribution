@@ -8,6 +8,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.annotation.StyleRes;
+import android.view.View;
 
 import java.util.ArrayList;
 
@@ -39,7 +40,10 @@ public class ShareSheetStyle {
     private int styleResourceID_ = -1;
     final Context context_;
     private boolean setFullWidthStyle_;
-    private int dividerHeight = -1;
+    private int dividerHeight_ = -1;
+
+    private String sharingTitle_ = null;
+    private View sharingTitleView_ = null;
 
     public ShareSheetStyle(@NonNull Context context, @NonNull String messageTitle, @NonNull String messageBody) {
         context_ = context;
@@ -172,7 +176,29 @@ public class ShareSheetStyle {
      * @return his Builder object to allow for chaining of calls to set methods.
      */
     public ShareSheetStyle setDividerHeight(int height) {
-        this.dividerHeight = height;
+        this.dividerHeight_ = height;
+        return this;
+    }
+
+    /**
+     * Set the title for the sharing dialog
+     *
+     * @param title {@link String} containing the value for the title text.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
+    public ShareSheetStyle setSharingTitle(String title) {
+        this.sharingTitle_ = title;
+        return this;
+    }
+
+    /**
+     * Set the title for the sharing dialog
+     *
+     * @param titleView {@link View} for setting the title.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
+    public ShareSheetStyle setSharingTitle(View titleView) {
+        this.sharingTitleView_ = titleView;
         return this;
     }
 
@@ -213,7 +239,15 @@ public class ShareSheetStyle {
     }
 
     public int getDividerHeight() {
-        return dividerHeight;
+        return dividerHeight_;
+    }
+
+    public String getSharingTitle() {
+        return sharingTitle_;
+    }
+
+    public View getSharingTitleView() {
+        return sharingTitleView_;
     }
 
     public boolean getIsFullWidthStyle() {

@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -3648,6 +3649,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         private int styleResourceID_;
         private boolean setFullWidthStyle_;
         private int dividerHeight = -1;
+        private String sharingTitle = null;
+        private View sharingTitleView = null;
 
         BranchShortLinkBuilder shortLinkBuilder_;
 
@@ -3948,10 +3951,32 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
          *
          * @param height The new height of the divider in pixels.
-         * @return his Builder object to allow for chaining of calls to set methods.
+         * @return this Builder object to allow for chaining of calls to set methods.
          */
         public ShareLinkBuilder setDividerHeight(int height) {
             this.dividerHeight = height;
+            return this;
+        }
+
+        /**
+         * Set the title for the sharing dialog
+         *
+         * @param title {@link String} containing the value for the title text.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setSharingTitle(String title) {
+            this.sharingTitle = title;
+            return this;
+        }
+
+        /**
+         * Set the title for the sharing dialog
+         *
+         * @param titleView {@link View} for setting the title.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setSharingTitle(View titleView) {
+            this.sharingTitleView = titleView;
             return this;
         }
 
@@ -4039,6 +4064,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         public int getDividerHeight() {
             return dividerHeight;
+        }
+
+        public String getSharingTitle() {
+            return sharingTitle;
+        }
+
+        public View getSharingTitleView() {
+            return sharingTitleView;
         }
 
         public int getStyleResourceID() {

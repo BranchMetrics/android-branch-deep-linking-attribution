@@ -257,7 +257,8 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
-                        .setFullWidthStyle(true);
+                        .setFullWidthStyle(true)
+                        .setSharingTitle("Share With");
                 // Define custom styel for the share sheet list view
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 
