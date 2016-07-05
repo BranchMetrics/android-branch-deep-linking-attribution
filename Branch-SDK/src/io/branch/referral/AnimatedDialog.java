@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.ViewGroup;
@@ -20,19 +21,29 @@ import android.view.animation.TranslateAnimation;
  */
 public class AnimatedDialog extends Dialog {
     private boolean isClosing_ = false;
-    public AnimatedDialog(Context context) {
+    private final boolean isFullWidthStyle_;
+
+    public AnimatedDialog(Context context, boolean isFullWidthStyle) {
         super(context);
+        isFullWidthStyle_ = isFullWidthStyle;
         init(context);
     }
 
     public AnimatedDialog(Context context, int theme) {
         super(context, theme);
+        isFullWidthStyle_ = false; // Since the theme is already specified
         init(context);
     }
 
-    public AnimatedDialog(Context context, boolean cancelable, OnCancelListener cancelListener) {
-        super(context, cancelable, cancelListener);
-        init(context);
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (isFullWidthStyle_) {
+            WindowManager.LayoutParams params = getWindow().getAttributes();
+            params.width = WindowManager.LayoutParams.MATCH_PARENT;
+            getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
+        }
     }
 
     //--------------------- Public  methods -------------//

@@ -38,8 +38,10 @@ public class ShareSheetStyle {
 
     private int styleResourceID_ = -1;
     final Context context_;
+    private boolean setFullWidthStyle_;
+    private int dividerHeight = -1;
 
-    public ShareSheetStyle(@NonNull Context context,@NonNull String messageTitle, @NonNull String messageBody) {
+    public ShareSheetStyle(@NonNull Context context, @NonNull String messageTitle, @NonNull String messageBody) {
         context_ = context;
         moreOptionIcon_ = null;
         moreOptionText_ = null;
@@ -142,10 +144,35 @@ public class ShareSheetStyle {
 
     /**
      * <p> Set the given style to the List View showing the share sheet</p>
+     *
      * @param styleResourceID A Styleable resource to be applied to the share sheet list view
      */
-    public ShareSheetStyle setStyleResourceID(@StyleRes int styleResourceID){
+    public ShareSheetStyle setStyleResourceID(@StyleRes int styleResourceID) {
         styleResourceID_ = styleResourceID;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Sets the share dialog to full width mode. Full width mode will show a non modal sheet with entire screen width.
+     * </p>
+     *
+     * @param setFullWidthStyle {@link Boolean} With value true if a full width style share sheet is desired.
+     * @return This Builder object to allow for chaining of calls to set methods.
+     */
+    public ShareSheetStyle setFullWidthStyle(boolean setFullWidthStyle) {
+        this.setFullWidthStyle_ = setFullWidthStyle;
+        return this;
+    }
+
+    /**
+     * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
+     *
+     * @param height The new height of the divider in pixels.
+     * @return his Builder object to allow for chaining of calls to set methods.
+     */
+    public ShareSheetStyle setDividerHeight(int height) {
+        this.dividerHeight = height;
         return this;
     }
 
@@ -183,6 +210,14 @@ public class ShareSheetStyle {
 
     public String getUrlCopiedMessage() {
         return urlCopiedMessage_;
+    }
+
+    public int getDividerHeight() {
+        return dividerHeight;
+    }
+
+    public boolean getIsFullWidthStyle() {
+        return setFullWidthStyle_;
     }
 
     private Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {

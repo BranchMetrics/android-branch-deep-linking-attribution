@@ -3646,6 +3646,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         private String copyURlText_;
         private String urlCopiedMessage_;
         private int styleResourceID_;
+        private boolean setFullWidthStyle_;
+        private int dividerHeight = -1;
 
         BranchShortLinkBuilder shortLinkBuilder_;
 
@@ -3930,6 +3932,31 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
 
         /**
+         * <p>
+         * Sets the share dialog to full width mode. Full width mode will show a non modal sheet with entire screen width.
+         * </p>
+         *
+         * @param setFullWidthStyle {@link Boolean} With value true if a full width style share sheet is desired.
+         * @return This Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setFullWidthStyle(boolean setFullWidthStyle) {
+            this.setFullWidthStyle_ = setFullWidthStyle;
+            return this;
+        }
+
+        /**
+         * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
+         *
+         * @param height The new height of the divider in pixels.
+         * @return his Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setDividerHeight(int height) {
+            this.dividerHeight = height;
+            return this;
+        }
+
+
+        /**
          * <p> Set the given style to the List View showing the share sheet</p>
          *
          * @param resourceID A Styleable resource to be applied to the share sheet list view
@@ -4004,6 +4031,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         public BranchShortLinkBuilder getShortLinkBuilder() {
             return shortLinkBuilder_;
+        }
+
+        public boolean getIsFullWidthStyle() {
+            return setFullWidthStyle_;
+        }
+
+        public int getDividerHeight() {
+            return dividerHeight;
         }
 
         public int getStyleResourceID() {

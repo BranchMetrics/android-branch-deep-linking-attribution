@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -155,6 +156,12 @@ class ShareLinkManager {
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
 
+        if (builder_.getDividerHeight() >= 0) { //User set height
+            shareOptionListView.setDividerHeight(builder_.getDividerHeight());
+        } else if (builder_.getIsFullWidthStyle()) {
+            shareOptionListView.setDividerHeight(0); // Default no divider for full width dialog
+        }
+
         shareOptionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -175,7 +182,7 @@ class ShareLinkManager {
             }
         });
 
-        shareDlg_ = new AnimatedDialog(context_);
+        shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {
