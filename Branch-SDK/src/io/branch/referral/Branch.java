@@ -720,11 +720,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * <p>
      *  Enable Facebook app link check operation during Branch initialisation.
      * </p>
-     *
-     * @param enableFacebookAppLinkCheck Set with true to enable Facebook app link check operation
      */
-    public void enableFacebookAppLinkCheck(boolean enableFacebookAppLinkCheck) {
-        enableFacebookAppLinkCheck_ = enableFacebookAppLinkCheck;
+    public void enableFacebookAppLinkCheck() {
+        enableFacebookAppLinkCheck_ = true;
     }
 
     /**
