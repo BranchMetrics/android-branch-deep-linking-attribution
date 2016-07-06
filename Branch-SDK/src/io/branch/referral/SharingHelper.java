@@ -11,6 +11,7 @@ public class SharingHelper {
      */
     public enum SHARE_WITH {
         FACEBOOK("com.facebook.katana"),
+        FACEBOOK_MESSENGER("com.facebook.orca"),
         TWITTER("com.twitter.android"),
         MESSAGE(".mms"),
         EMAIL("com.google.android.email"),
