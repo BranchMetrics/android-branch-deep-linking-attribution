@@ -52,6 +52,8 @@ class ShareLinkManager {
     private int shareDialogThemeID_ = -1;
 
     private Branch.ShareLinkBuilder builder_;
+    final int padding = 5;
+    final int leftMargin = 100;
 
 
     /**
@@ -151,9 +153,30 @@ class ShareLinkManager {
         } else {
             shareOptionListView = new ListView(context_);
         }
-        shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
+
+        if (builder_.getSharingTitleView() != null) {
+            shareOptionListView.addHeaderView(builder_.getSharingTitleView());
+        } else if (!TextUtils.isEmpty(builder_.getSharingTitle())) {
+            TextView textView = new TextView(context_);
+            textView.setText(builder_.getSharingTitle());
+            textView.setBackgroundColor(BG_COLOR_DISABLED);
+            textView.setTextColor(BG_COLOR_DISABLED);
+            textView.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
+            textView.setTextColor(context_.getResources().getColor(android.R.color.darker_gray));
+            textView.setPadding(leftMargin, padding, padding, padding);
+            shareOptionListView.addHeaderView(textView);
+        }
+
+        shareOptionListView.setAdapter(adapter);
+
+
+        if (builder_.getDividerHeight() >= 0) { //User set height
+            shareOptionListView.setDividerHeight(builder_.getDividerHeight());
+        } else if (builder_.getIsFullWidthStyle()) {
+            shareOptionListView.setDividerHeight(0); // Default no divider for full width dialog
+        }
 
         shareOptionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -175,7 +198,7 @@ class ShareLinkManager {
             }
         });
 
-        shareDlg_ = new AnimatedDialog(context_);
+        shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {
@@ -336,8 +359,6 @@ class ShareLinkManager {
      */
     private class ShareItemView extends TextView {
         Context context_;
-        final int padding = 5;
-        final int leftMargin = 100;
 
         public ShareItemView(Context context) {
             super(context);

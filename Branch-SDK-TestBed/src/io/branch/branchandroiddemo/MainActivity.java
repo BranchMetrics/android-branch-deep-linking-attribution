@@ -183,7 +183,7 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onBranchViewError(int errorCode, String errorMsg, String action) {
-                        Log.i("BranchTestBed", "onBranchViewError "+errorMsg);
+                        Log.i("BranchTestBed", "onBranchViewError " + errorMsg);
                     }
                 });
             }
@@ -256,7 +256,9 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
-                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER);
+                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
+                        .setAsFullWidthStyle(true)
+                        .setSharingTitle("Share With");
                 // Define custom styel for the share sheet list view
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 

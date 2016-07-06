@@ -476,6 +476,10 @@ public class BranchUniversalObject implements Parcelable {
             if (style.getStyleResourceID() > 0) {
                 shareLinkBuilder.setStyleResourceID(style.getStyleResourceID());
             }
+            shareLinkBuilder.setDividerHeight(style.getDividerHeight());
+            shareLinkBuilder.setAsFullWidthStyle(style.getIsFullWidthStyle());
+            shareLinkBuilder.setSharingTitle(style.getSharingTitle());
+            shareLinkBuilder.setSharingTitle(style.getSharingTitleView());
             shareLinkBuilder.shareLink();
         }
     }
