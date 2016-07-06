@@ -282,7 +282,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static boolean disableDeviceIDFetch_;
 
-    private boolean disableFacebookAppLinkCheck_;
+    private boolean enableFacebookAppLinkCheck_;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -718,13 +718,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     /**
      * <p>
-     * Skip the Facebook app link check operation during Branch initialisation.
+     *  Enable Facebook app link check operation during Branch initialisation.
      * </p>
      *
-     * @param disableFacebookAppLinkCheck Set with true to skip Facebook app link check operation
+     * @param enableFacebookAppLinkCheck Set with true to enable Facebook app link check operation
      */
-    public void disableFacebookAppLinkCheck(boolean disableFacebookAppLinkCheck) {
-        disableFacebookAppLinkCheck_ = disableFacebookAppLinkCheck;
+    public void enableFacebookAppLinkCheck(boolean enableFacebookAppLinkCheck) {
+        enableFacebookAppLinkCheck_ = enableFacebookAppLinkCheck;
     }
 
     /**
@@ -3022,7 +3022,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
-        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || disableFacebookAppLinkCheck_) {
+        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || !enableFacebookAppLinkCheck_) {
             registerAppInit(callback, false);
         } else {
             // Check if opened by facebook with deferred install data
