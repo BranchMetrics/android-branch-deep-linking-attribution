@@ -153,7 +153,6 @@ class ShareLinkManager {
         } else {
             shareOptionListView = new ListView(context_);
         }
-        shareOptionListView.setAdapter(adapter);
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
 
@@ -169,6 +168,8 @@ class ShareLinkManager {
             textView.setPadding(leftMargin, padding, padding, padding);
             shareOptionListView.addHeaderView(textView);
         }
+
+        shareOptionListView.setAdapter(adapter);
 
 
         if (builder_.getDividerHeight() >= 0) { //User set height
