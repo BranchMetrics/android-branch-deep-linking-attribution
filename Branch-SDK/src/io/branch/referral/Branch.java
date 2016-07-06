@@ -3942,7 +3942,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          * @param setFullWidthStyle {@link Boolean} With value true if a full width style share sheet is desired.
          * @return This Builder object to allow for chaining of calls to set methods.
          */
-        public ShareLinkBuilder setFullWidthStyle(boolean setFullWidthStyle) {
+        public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) {
             this.setFullWidthStyle_ = setFullWidthStyle;
             return this;
         }

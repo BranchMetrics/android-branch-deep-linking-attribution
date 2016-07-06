@@ -164,7 +164,7 @@ public class ShareSheetStyle {
      * @param setFullWidthStyle {@link Boolean} With value true if a full width style share sheet is desired.
      * @return This Builder object to allow for chaining of calls to set methods.
      */
-    public ShareSheetStyle setFullWidthStyle(boolean setFullWidthStyle) {
+    public ShareSheetStyle setAsFullWidthStyle(boolean setFullWidthStyle) {
         this.setFullWidthStyle_ = setFullWidthStyle;
         return this;
     }
