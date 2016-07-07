@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.14.4: Adding more styling options to Share Sheet. Disabling Facebook App-Link check by default.
+
 - v1.14.3: Cleaner fix for jcenter dependency issue.
 
 - v1.14.2: HotFix: Build version not updated issue.
