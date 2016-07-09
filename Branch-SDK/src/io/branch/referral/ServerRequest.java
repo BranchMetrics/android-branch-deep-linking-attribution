@@ -3,6 +3,9 @@ package io.branch.referral;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.*;
+import android.os.Process;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -362,36 +365,46 @@ public abstract class ServerRequest {
      * @param sysObserver {@link SystemObserver} instance.
      */
     public void updateGAdsParams(final SystemObserver sysObserver) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        skipOnTimeOut = false;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String advertisingId = sysObserver.getAdvertisingId();
-                    int latVal = sysObserver.getLATValue();
-                    latch.countDown();
-                    if (!skipOnTimeOut && advertisingId != null && getPost() != null) {
-                        getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
-                    }
-
-                    if (!skipOnTimeOut && getPost() != null) {
-                        getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
-                    }
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+        if (!TextUtils.isEmpty(sysObserver.GAIDString_)) {
+            try {
+                params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
+                params_.put(Defines.Jsonkey.LATVal.getKey(), sysObserver.LATVal_);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        }).start();
 
-        try {
-            //Wait 1.5 sec max to receive the GAID and LAT
-            latch.await(1500, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            skipOnTimeOut = true;
+        } else {
+            final CountDownLatch latch = new CountDownLatch(1);
+            skipOnTimeOut = false;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+                    try {
+                        Object adInfoObj = sysObserver.getAdInfoObject();
+                        String advertisingId = sysObserver.getAdvertisingId(adInfoObj);
+                        int latVal = sysObserver.getLATValue(adInfoObj);
+                        latch.countDown();
+                        if (!skipOnTimeOut && advertisingId != null && getPost() != null) {
+                            params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
+                            params_.put(Defines.Jsonkey.LATVal.getKey(), latVal);
+                        }
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+
+            try {
+                //Wait 1.5 sec max to receive the GAID and LAT
+                latch.await(1500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                skipOnTimeOut = true;
+            }
         }
     }
 
