@@ -44,6 +44,10 @@ class SystemObserver {
     private static final int STATE_UPDATE = 2;
     private static final int STATE_NO_CHANGE = 1;
 
+    String GAIDString_ = null;
+    int LATVal_ = 0;
+
+
     private Context context_;
 
     /**
@@ -464,6 +468,25 @@ class SystemObserver {
         return false;
     }
 
+
+    /**
+     * Returns an instance of com.google.android.gms.ads.identifier.AdvertisingIdClient class  to be used
+     * for getting GAId and LAT value
+     *
+     * @return {@link Object} instance of AdvertisingIdClient class
+     */
+    public Object getAdInfoObject() {
+        Object adInfoObj = null;
+        try {
+            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+            adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
+        } catch (Throwable t) {
+        }
+        return adInfoObj;
+    }
+
+
     /**
      * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
      * actions within Android apps.</p>
@@ -476,21 +499,13 @@ class SystemObserver {
      * @see <a href="https://developer.android.com/google/play-services/id.html">
      * Android Developers - Advertising ID</a>
      */
-    public String getAdvertisingId() {
-        String advertisingId = null;
-
+    public String getAdvertisingId(Object adInfoObj) {
         try {
-            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-            Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
             Method getIdMethod = adInfoObj.getClass().getMethod("getId");
-            advertisingId = (String) getIdMethod.invoke(adInfoObj);
-        } catch (IllegalStateException ex) {
-            ex.printStackTrace();
+            GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
         } catch (Exception ignore) {
         }
-
-        return advertisingId;
+        return GAIDString_;
     }
 
     /**
@@ -501,20 +516,12 @@ class SystemObserver {
      * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
      * Android Developers - Limit Ad Tracking</a>
      */
-    public int getLATValue() {
-        int latVal = 0;
+    public int getLATValue(Object adInfoObj) {
         try {
-            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-            Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
             Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
-
-            latVal = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
-        } catch (IllegalStateException ex) {
-            ex.printStackTrace();
+            LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
         } catch (Exception ignore) {
         }
-
-        return latVal;
+        return LATVal_;
     }
 }
