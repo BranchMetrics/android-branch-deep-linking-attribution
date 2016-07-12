@@ -67,7 +67,7 @@ import io.branch.referral.util.LinkProperties;
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -283,7 +283,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static boolean disableDeviceIDFetch_;
 
-    private boolean enableFacebookAppLinkCheck_;
+    private boolean enableFacebookAppLinkCheck_ = true;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -369,6 +369,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     /* Name of the key for getting Fabric Branch API key from string resource */
     private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
 
+    private boolean isGAParamsFetchInProgress_ = false;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -391,6 +393,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
+
+        isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
     }
 
 
@@ -719,7 +723,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     /**
      * <p>
-     *  Enable Facebook app link check operation during Branch initialisation.
+     * Enable Facebook app link check operation during Branch initialisation.
      * </p>
      */
     public void enableFacebookAppLinkCheck() {
@@ -1324,6 +1328,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
         }
         return false;
+    }
+
+    @Override
+    public void onGAdsFetchFinished() {
+        isGAParamsFetchInProgress_ = false;
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        processNextQueueItem();
     }
 
     /**
@@ -2865,7 +2876,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                 serverSema_.release();
                 if (req != null) {
-                    if (!req.isProcessWaitLockEnabled()) {
+                    if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid IdentityID
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
@@ -3022,7 +3033,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
 
         if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || !enableFacebookAppLinkCheck_) {
-            registerAppInit(callback, false);
+            registerAppInit(callback, null);
         } else {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded;
@@ -3037,16 +3048,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                             prefHelper_.setLinkClickIdentifier(bncLinkClickId);
                         }
                     }
-                    requestQueue_.unlockInstallOrOpenProcessWait();
+                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
                     processNextQueueItem();
                 }
             });
-
-            registerAppInit(callback, appLinkRqSucceeded);
+            if (appLinkRqSucceeded) {
+                registerAppInit(callback, ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
+            } else {
+                registerAppInit(callback, null);
+            }
         }
     }
     
-    private void registerAppInit(BranchReferralInitListener callback, boolean isWaitingOnOperationToFinish) {
+    private void registerAppInit(BranchReferralInitListener callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
@@ -3055,7 +3069,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             // If no user this is an Install
             request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
         }
-        request.setProcessWaitLockEnabled(isWaitingOnOperationToFinish);
+        request.addProcessWaitLock(lock);
+        if (isGAParamsFetchInProgress_) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        }
         registerInstallOrOpen(request, callback);
     }
 

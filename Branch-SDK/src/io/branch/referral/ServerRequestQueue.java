@@ -354,15 +354,13 @@ class ServerRequestQueue {
     /**
      * Set Process wait lock to false for any open / install request in the queue
      */
-    public void unlockInstallOrOpenProcessWait() {
+    public void unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK lock) {
         synchronized (queue) {
             Iterator<ServerRequest> iter = queue.iterator();
             while (iter.hasNext()) {
                 ServerRequest req = iter.next();
                 if (req != null) {
-                    if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
-                        req.setProcessWaitLockEnabled(false);
-                    }
+                    req.removeProcessWaitLock(lock);
                 }
             }
         }
