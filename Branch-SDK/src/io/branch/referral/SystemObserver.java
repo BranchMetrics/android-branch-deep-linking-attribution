@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.*;
 import android.provider.Settings.Secure;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -542,7 +541,7 @@ class SystemObserver {
         boolean isPrefetchStarted = false;
         if (TextUtils.isEmpty(GAIDString_)) {
             isPrefetchStarted = true;
-            new GAdsPrefetchTask(callback).execute();
+            new GAdsPrefetchTask(callback).executeTask();
         }
         return isPrefetchStarted;
     }
@@ -554,7 +553,7 @@ class SystemObserver {
      * After GAID_FETCH_TIME_OUT
      * </p>
      */
-    private class GAdsPrefetchTask extends AsyncTask<Void, Void, Void> {
+    private class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
         private final GAdsParamsFetchEvents callBack_;
 
         public GAdsPrefetchTask(GAdsParamsFetchEvents callBack) {

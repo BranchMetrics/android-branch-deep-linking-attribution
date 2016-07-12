@@ -2889,7 +2889,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         } else {
                             BranchPostTask postTask = new BranchPostTask(req);
-                            postTask.execute();
+                            postTask.executeTask();
                         }
                     } else {
                         networkCount_ = 0;
@@ -3361,7 +3361,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
      * published in the main thread.
      */
-    private class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
+    private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
         int timeOut_ = 0;
         ServerRequest thisReq_;
 
