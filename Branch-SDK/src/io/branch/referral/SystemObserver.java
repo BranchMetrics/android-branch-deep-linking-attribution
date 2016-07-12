@@ -554,10 +554,10 @@ class SystemObserver {
      * </p>
      */
     private class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
-        private final GAdsParamsFetchEvents callBack_;
+        private final GAdsParamsFetchEvents callback_;
 
-        public GAdsPrefetchTask(GAdsParamsFetchEvents callBack) {
-            callBack_ = callBack;
+        public GAdsPrefetchTask(GAdsParamsFetchEvents callback) {
+            callback_ = callback;
         }
 
         @Override
@@ -588,8 +588,8 @@ class SystemObserver {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            if (callBack_ != null) {
-                callBack_.onGAdsFetchFinished();
+            if (callback_ != null) {
+                callback_.onGAdsFetchFinished();
             }
         }
     }
