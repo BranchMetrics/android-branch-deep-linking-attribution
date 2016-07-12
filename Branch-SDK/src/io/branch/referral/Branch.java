@@ -2925,17 +2925,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         try {
             for (int i = 0; i < requestQueue_.getSize(); i++) {
                 ServerRequest req = requestQueue_.peekAt(i);
-                if (req.getPost() != null) {
-                    Iterator<?> keys = req.getPost().keys();
-                    while (keys.hasNext()) {
-                        String key = (String) keys.next();
-                        if (key.equals(Defines.Jsonkey.SessionID.getKey())) {
-                            req.getPost().put(key, prefHelper_.getSessionID());
-                        } else if (key.equals(Defines.Jsonkey.IdentityID.getKey())) {
-                            req.getPost().put(key, prefHelper_.getIdentityID());
-                        } else if (key.equals(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                            req.getPost().put(key, prefHelper_.getDeviceFingerPrintID());
-                        }
+                JSONObject reqJson = req.getPost();
+                if (reqJson != null) {
+                    if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                        req.getPost().put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                    }
+                    if (reqJson.has(Defines.Jsonkey.IdentityID.getKey())) {
+                        req.getPost().put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                    }
+                    if (reqJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                        req.getPost().put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
                     }
                 }
             }
@@ -3466,23 +3465,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (thisReq_ instanceof ServerRequestInitSession
                                 || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                             // Immediately set session and Identity and update the pending request with the params
-                            if (serverResponse.getObject() != null) {
+                            JSONObject respJson = serverResponse.getObject();
+                            if (respJson != null) {
                                 boolean updateRequestsInQueue = false;
-                                if (serverResponse.getObject().has(Defines.Jsonkey.SessionID.getKey())) {
-                                    prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                                    prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
                                     updateRequestsInQueue = true;
                                 }
-                                if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                                if (respJson.has(Defines.Jsonkey.IdentityID.getKey())) {
+                                    String new_Identity_Id = respJson.getString(Defines.Jsonkey.IdentityID.getKey());
                                     if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
                                         //On setting a new identity Id clear the link cache
                                         linkCache_.clear();
-                                        prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                        prefHelper_.setIdentityID(respJson.getString(Defines.Jsonkey.IdentityID.getKey()));
                                         updateRequestsInQueue = true;
                                     }
                                 }
-                                if (serverResponse.getObject().has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                                    prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
+                                if (respJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                                    prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
                                     updateRequestsInQueue = true;
                                 }
 
