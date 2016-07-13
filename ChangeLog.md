@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v1.14.5: Using Thread Pool to execute Branch request in parallel to improve Branch API response time. Optimizations for performance improvements
+
 - v1.14.4: Adding more styling options to Share Sheet. Disabling Facebook App-Link check by default.
 
 - v1.14.3: Cleaner fix for jcenter dependency issue.
