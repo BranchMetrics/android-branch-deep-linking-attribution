@@ -932,7 +932,7 @@ public class PrefHelper {
      */
     public void setInteger(String key, int value) {
         prefHelper_.prefsEditor_.putInt(key, value);
-        prefHelper_.prefsEditor_.commit();
+        prefHelper_.prefsEditor_.apply();
     }
 
     /**
@@ -943,7 +943,7 @@ public class PrefHelper {
      */
     public void setLong(String key, long value) {
         prefHelper_.prefsEditor_.putLong(key, value);
-        prefHelper_.prefsEditor_.commit();
+        prefHelper_.prefsEditor_.apply();
     }
 
     /**
@@ -954,7 +954,7 @@ public class PrefHelper {
      */
     public void setFloat(String key, float value) {
         prefHelper_.prefsEditor_.putFloat(key, value);
-        prefHelper_.prefsEditor_.commit();
+        prefHelper_.prefsEditor_.apply();
     }
 
     /**
@@ -965,7 +965,7 @@ public class PrefHelper {
      */
     public void setString(String key, String value) {
         prefHelper_.prefsEditor_.putString(key, value);
-        prefHelper_.prefsEditor_.commit();
+        prefHelper_.prefsEditor_.apply();
     }
 
     /**
@@ -976,7 +976,7 @@ public class PrefHelper {
      */
     public void setBool(String key, Boolean value) {
         prefHelper_.prefsEditor_.putBoolean(key, value);
-        prefHelper_.prefsEditor_.commit();
+        prefHelper_.prefsEditor_.apply();
     }
 
     public void updateBranchViewUsageCount(String branchViewId) {
@@ -1007,7 +1007,7 @@ public class PrefHelper {
         setLinkClickIdentifier(linkClickIdentifier);
         setAppLink(appLink);
         setPushIdentifier(pushIdentifier);
-        prefHelper_.prefsEditor_.commit();
+        prefHelper_.prefsEditor_.apply();
     }
 
     /**
