@@ -1,22 +1,21 @@
 package io.branch.branchandroiddemo.test;
 
-import io.branch.referral.Branch;
-import io.branch.referral.Branch.BranchLinkCreateListener;
-import io.branch.referral.Branch.BranchReferralInitListener;
-import io.branch.referral.Branch.BranchReferralStateChangedListener;
-import io.branch.referral.BranchError;
-import io.branch.referral.BranchRemoteInterface;
-import io.branch.referral.PrefHelper;
-import io.branch.referral.PrefHelper.DebugNetworkCallback;
+import android.test.InstrumentationTestCase;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.test.InstrumentationTestCase;
+import io.branch.referral.Branch;
+import io.branch.referral.Branch.BranchLinkCreateListener;
+import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.Branch.BranchReferralStateChangedListener;
+import io.branch.referral.BranchError;
+import io.branch.referral.BranchShortLinkBuilder;
+import io.branch.referral.PrefHelper;
 
 public class BranchSDKTests extends InstrumentationTestCase {
 
@@ -54,7 +53,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
     }
 
     public void test00GetShortUrlSyncFailure() {
-        String url = branch.getShortUrlSync();
+        String url = new BranchShortLinkBuilder(getInstrumentation().getContext()).getShortUrl();
         assertNull(url);
     }
 
@@ -62,17 +61,19 @@ public class BranchSDKTests extends InstrumentationTestCase {
         initSession();
 
         final CountDownLatch signal = new CountDownLatch(1);
-        branch.getShortUrl("facebook", null, null, null, new BranchLinkCreateListener() {
-            @Override
-            public void onLinkCreate(String url, BranchError error) {
-                assertNull(error);
-                assertNotNull(url);
-                assertTrue(url.startsWith("https://bnc.lt/l/"));
-                urlFB = url;
+        new BranchShortLinkBuilder(getInstrumentation().getContext())
+                .setChannel("facebook")
+                .generateShortUrl(new BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        assertNull(error);
+                        assertNotNull(url);
+                        assertTrue(url.startsWith("https://bnc.lt/l/"));
+                        urlFB = url;
 
-                signal.countDown();
-            }
-        });
+                        signal.countDown();
+                    }
+                });
         signal.await(1, TimeUnit.SECONDS);
     }
 
@@ -80,16 +81,18 @@ public class BranchSDKTests extends InstrumentationTestCase {
         initSession();
 
         final CountDownLatch signal = new CountDownLatch(1);
-        branch.getShortUrl("facebook", null, null, null, new BranchLinkCreateListener() {
-            @Override
-            public void onLinkCreate(String url, BranchError error) {
-                assertNull(error);
-                assertNotNull(url);
-                assertSame(url, urlFB);
+        new BranchShortLinkBuilder(getInstrumentation().getContext())
+                .setChannel("facebook")
+                .generateShortUrl(new BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        assertNull(error);
+                        assertNotNull(url);
+                        assertSame(url, urlFB);
 
-                signal.countDown();
-            }
-        });
+                        signal.countDown();
+                    }
+                });
         signal.await(1, TimeUnit.SECONDS);
     }
 
@@ -97,26 +100,32 @@ public class BranchSDKTests extends InstrumentationTestCase {
         initSession();
 
         final CountDownLatch signal = new CountDownLatch(1);
-        branch.getShortUrl("twitter", null, null, null, new BranchLinkCreateListener() {
-            @Override
-            public void onLinkCreate(String url, BranchError error) {
-                assertNull(error);
-                assertNotNull(url);
-                assertFalse(url.equals(urlFB));
+        new BranchShortLinkBuilder(getInstrumentation().getContext())
+                .setChannel("twitter")
+                .generateShortUrl(new BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        assertNull(error);
+                        assertNotNull(url);
+                        assertSame(url, urlFB);
 
-                signal.countDown();
-            }
-        });
+                        signal.countDown();
+                    }
+                });
         signal.await(1, TimeUnit.SECONDS);
     }
 
     public void test04GetShortURLSync() throws InterruptedException {
         initSession();
+        String url = new BranchShortLinkBuilder(getInstrumentation().getContext())
+                .setChannel("facebook")
+                .getShortUrl();
 
-        String url = branch.getShortUrlSync("facebook", null, null, null);
         assertSame(url, urlFB);
 
-        url = branch.getShortUrlSync("linkedin", null, null, null);
+        url = new BranchShortLinkBuilder(getInstrumentation().getContext())
+                .setChannel("linkedin")
+                .getShortUrl();
         assertFalse(url.equals(urlFB));
     }
 
@@ -188,28 +197,33 @@ public class BranchSDKTests extends InstrumentationTestCase {
         final CountDownLatch signal = new CountDownLatch(1);
         for (int i = 0; i < 100; i++) {
             final int idx = i;
-            branch.getShortUrl(i + "", null, null, null, new BranchLinkCreateListener() {
-                @Override
-                public void onLinkCreate(String url, BranchError error) {
-                    assertNull(error);
-                    assertNotNull(url);
-                    if (idx == 99) {
-                        signal.countDown();
-                    }
-                }
-            });
+            new BranchShortLinkBuilder(getInstrumentation().getContext())
+                    .setChannel(i + "")
+                    .generateShortUrl(new BranchLinkCreateListener() {
+                        @Override
+                        public void onLinkCreate(String url, BranchError error) {
+                            assertNull(error);
+                            assertNotNull(url);
+                            if (idx == 99) {
+                                signal.countDown();
+                            }
+                        }
+                    });
             Thread.sleep(50);
         }
         signal.await(10, TimeUnit.SECONDS);
 
-        branch.getShortUrl(null, "loadTest", null, null, new BranchLinkCreateListener() {
-            @Override
-            public void onLinkCreate(String url, BranchError error) {
-                assertNull(error);
-                assertNotNull(url);
-                signalFinal.countDown();
-            }
-        });
+        new BranchShortLinkBuilder(getInstrumentation().getContext())
+                .setFeature("loadTest")
+                .generateShortUrl(new BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        assertNull(error);
+                        assertNotNull(url);
+                        signalFinal.countDown();
+                    }
+                });
+
         signalFinal.await(1, TimeUnit.SECONDS);
     }
 }
