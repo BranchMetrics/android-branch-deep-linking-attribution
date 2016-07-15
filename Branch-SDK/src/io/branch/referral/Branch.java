@@ -1402,39 +1402,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * <p>Fire-and-forget retrieval of action count for the current session. Without a callback.</p>
-     *
-     * @deprecated This method has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
-     * Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
-     * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">advanced referral rewards</a>.
-     */
-    @Deprecated
-    public void loadActionCounts() {
-        //noinspection deprecation
-        loadActionCounts(null);
-    }
-
-    /**
-     * <p>Gets the total action count, with a callback to perform a predefined
-     * action following successful report of state change. You'll then need to
-     * call getUniqueActions or getTotalActions in the callback to update the
-     * totals in your UX.</p>
-     *
-     * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon a referral state change.
-     * @deprecated This method has been deprecated. Instead, you can set up reward rules that reward referring and/or referred users for driving/taking certain actions.
-     * Then you can examine credit history with {@link #getCreditHistory(BranchListResponseListener)} to see referred events.
-     * For more on reward rules, please visit <a href="https://dev.branch.io/recipes/advanced_referral_incentives/android/">Advanced referral rewards</a>.
-     */
-    @Deprecated
-    public void loadActionCounts(BranchReferralStateChangedListener callback) {
-        ServerRequest req = new ServerRequestGetReferralCount(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-
-    /**
      * <p>Fire-and-forget retrieval of rewards for the current session. Without a callback.</p>
      */
     public void loadRewards() {
