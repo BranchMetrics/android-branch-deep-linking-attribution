@@ -184,8 +184,8 @@ class RemoteInterface {
             if (Branch.getInstance() != null) {
                 Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lrtt));
             }
-
-            if (connection.getResponseCode() >= 500 &&
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 500 &&
                     retryNumber < prefHelper_.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper_.getRetryInterval());
@@ -196,19 +196,19 @@ class RemoteInterface {
                 return make_restful_get(baseUrl, params, tag, timeout, retryNumber, log);
             } else {
                 try {
-                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    if (responseCode != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         return processEntityForJSON(connection.getErrorStream(),
-                                connection.getResponseCode(), tag, log);
+                                responseCode, tag, log);
                     } else {
                         return processEntityForJSON(connection.getInputStream(),
-                                connection.getResponseCode(), tag, log);
+                                responseCode, tag, log);
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     if (log) {
                         PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
                     }
-                    return processEntityForJSON(null, connection.getResponseCode(), tag, log);
+                    return processEntityForJSON(null, responseCode, tag, log);
                 }
             }
         } catch (SocketException ex) {
@@ -342,7 +342,8 @@ class RemoteInterface {
             outputStreamWriter.write(bodyCopy.toString());
             outputStreamWriter.flush();
 
-            if (connection.getResponseCode() >= HttpURLConnection.HTTP_INTERNAL_ERROR
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= HttpURLConnection.HTTP_INTERNAL_ERROR
                     && retryNumber < prefHelper_.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper_.getRetryInterval());
@@ -353,17 +354,17 @@ class RemoteInterface {
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log);
             } else {
                 try {
-                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                        return processEntityForJSON(connection.getErrorStream(), connection.getResponseCode(), tag, log);
+                    if (responseCode != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                        return processEntityForJSON(connection.getErrorStream(), responseCode, tag, log);
                     } else {
-                        return processEntityForJSON(connection.getInputStream(), connection.getResponseCode(), tag, log);
+                        return processEntityForJSON(connection.getInputStream(), responseCode, tag, log);
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     if (log) {
                         PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + tag);
                     }
-                    return processEntityForJSON(null, connection.getResponseCode(), tag, log);
+                    return processEntityForJSON(null, responseCode, tag, log);
                 }
             }
 
