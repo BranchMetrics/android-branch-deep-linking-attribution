@@ -216,14 +216,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.cmdReferralCode).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.i("BranchTestBed", "Navigating to Referral Code...");
-                Intent i = new Intent(getApplicationContext(), ReferralCodeActivity.class);
-                startActivity(i);
-            }
-        });
 
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
