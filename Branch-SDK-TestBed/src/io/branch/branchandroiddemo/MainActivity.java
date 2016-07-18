@@ -328,7 +328,7 @@ public class MainActivity extends Activity {
                     }
                 }
             }
-        }, this.getIntent().getData(), this);
+        });
 
     }
 

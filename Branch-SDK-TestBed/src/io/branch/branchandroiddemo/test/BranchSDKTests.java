@@ -1,5 +1,6 @@
 package io.branch.branchandroiddemo.test;
 
+import android.app.Application;
 import android.test.InstrumentationTestCase;
 
 import org.json.JSONException;
@@ -30,9 +31,8 @@ public class BranchSDKTests extends InstrumentationTestCase {
     public void setUp() throws Exception {
         super.setUp();
 
-        branch = Branch.getInstance(getInstrumentation().getContext());
+        branch = Branch.getInstance((Application) getInstrumentation().getContext());
         prefHelper = PrefHelper.getInstance(getInstrumentation().getContext());
-        prefHelper.disableSmartSession();
     }
 
     public void tearDown() throws Exception {

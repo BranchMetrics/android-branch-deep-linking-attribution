@@ -37,8 +37,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -263,21 +261,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static final int LINK_TYPE_ONE_TIME_USE = 1;
 
-    /**
-     * <p>An {@link Integer} variable specifying the amount of time in milliseconds to keep a
-     * connection alive before assuming a timeout condition.</p>
-     *
-     * @see <a href="http://developer.android.com/reference/java/util/Timer.html#schedule(java.util.TimerTask, long)">
-     * Timer.schedule (TimerTask task, long delay)</a>
-     */
-    private static final int SESSION_KEEPALIVE = 2000;
-
-    /**
-     * <p>An {@link Integer} value defining the timeout period in milliseconds to wait during a
-     * looping task before triggering an actual connection close during a session close action.</p>
-     */
-    private static final int PREVENT_CLOSE_TIMEOUT = 500;
-
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
 
@@ -298,9 +281,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     final Object lock;
 
-    private Timer closeTimer;
-    private Timer rotateCloseTimer;
-    private boolean keepAlive_;
 
     private Semaphore serverSema_;
 
@@ -314,8 +294,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private ScheduledFuture<?> appListingSchedule_;
 
-    /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
-    private static boolean isAutoSessionMode_ = false;
 
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
@@ -335,7 +313,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
 
-    /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
+    /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. */
     private enum CUSTOM_REFERRABLE_SETTINGS {
         USE_DEFAULT, REFERRABLE, NON_REFERRABLE
     }
@@ -375,7 +353,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
      * <p/>
-     * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
+     * <p>Use {@link #getInstance(Application)} or {@link #getTestInstance(Application)}  method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
@@ -385,10 +363,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         systemObserver_ = new SystemObserver(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         serverSema_ = new Semaphore(1);
-        closeTimer = new Timer();
-        rotateCloseTimer = new Timer();
         lock = new Object();
-        keepAlive_ = false;
         networkCount_ = 0;
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
@@ -408,10 +383,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getInstance() {
         /* Check if BranchApp is instantiated. */
-        if (branchReferral_ == null) {
-            Log.e("BranchSDK", "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
-        } else if (isAutoSessionMode_) {
-            /* Check if Activity life cycle callbacks are set if in auto session mode. */
+        if (branchReferral_ == null || !isActivityLifeCycleCallbackRegistered_) {
+            /* Check if Activity life cycle callbacks are set. */
             if (!isActivityLifeCycleCallbackRegistered_) {
                 Log.e("BranchSDK", "Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
                         "If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
@@ -420,39 +393,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchReferral_;
     }
 
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey Your Branch key as a {@link String}.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
-     * Adding your app key to your project</a>
-     */
-    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) {
-        if (branchReferral_ == null) {
-            branchReferral_ = Branch.initInstance(context);
-        }
-        branchReferral_.context_ = context.getApplicationContext();
-        if (branchKey.startsWith("key_")) {
-            boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
-            //on setting a new key clear link cache and pending requests
-            if (isNewBranchKeySet) {
-                branchReferral_.linkCache_.clear();
-                branchReferral_.requestQueue_.clear();
-            }
-        } else {
-            branchReferral_.prefHelper_.setAppKey(branchKey);
-        }
-        return branchReferral_;
-    }
 
-    private static Branch getBranchInstance(@NonNull Context context, boolean isLive) {
+    private static Branch getBranchInstance(@NonNull Application application, boolean isLive) {
         if (branchReferral_ == null) {
-            branchReferral_ = Branch.initInstance(context);
+            branchReferral_ = new Branch(application);
 
             String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
             boolean isNewBranchKeySet;
@@ -460,8 +404,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 // If Branch key is not available check for Fabric provided Branch key
                 String fabricBranchApiKey = null;
                 try {
-                    Resources resources = context.getResources();
-                    fabricBranchApiKey = resources.getString(resources.getIdentifier(FABRIC_BRANCH_API_KEY, "string", context.getPackageName()));
+                    Resources resources = application.getResources();
+                    fabricBranchApiKey = resources.getString(resources.getIdentifier(FABRIC_BRANCH_API_KEY, "string", application.getPackageName()));
                 } catch (Exception ignore) {
                 }
                 if (!TextUtils.isEmpty(fabricBranchApiKey)) {
@@ -479,62 +423,29 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.requestQueue_.clear();
             }
         }
-        branchReferral_.context_ = context.getApplicationContext();
+        branchReferral_.context_ = application;
+        branchReferral_.setActivityLifeCycleObserver(application);
 
-        /* If {@link Application} is instantiated register for activity life cycle events. */
-        if (context instanceof BranchApp) {
-            isAutoSessionMode_ = true;
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
-        }
 
         return branchReferral_;
     }
 
-
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
      * <p/>
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getInstance(@NonNull Context context) {
-        return getBranchInstance(context, true);
-    }
-
-    /**
-     * <p>If you configured the your Strings file according to the guide, you'll be able to use
-     * the test version of your app by just calling this static method before calling initSession.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object.
-     */
-    public static Branch getTestInstance(@NonNull Context context) {
-        return getBranchInstance(context, false);
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p/>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
+     * @param application A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object, either fetched from a pre-initialised
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(@NonNull Context context) {
-        isAutoSessionMode_ = true;
+    public static Branch getInstance(@NonNull Application application) {
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-        boolean isLive = !BranchUtil.isTestModeEnabled(context);
-        getBranchInstance(context, isLive);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
+        boolean isLive = !BranchUtil.isTestModeEnabled(application);
+        getBranchInstance(application, isLive);
         return branchReferral_;
     }
 
@@ -544,7 +455,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p/>
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
-     * @param context      A {@link Context} from which this call was made.
+     * @param application      A {@link Context} from which this call was made.
      * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
      *                     should be considered as potentially referrable or not. By default, a user is only referrable
      *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
@@ -553,12 +464,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
-        isAutoSessionMode_ = true;
+    public static Branch getInstance(@NonNull Application application, boolean isReferrable) {
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
-        boolean isDebug = BranchUtil.isTestModeEnabled(context);
-        getBranchInstance(context, !isDebug);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
+        boolean isDebug = BranchUtil.isTestModeEnabled(application);
+        getBranchInstance(application, !isDebug);
         return branchReferral_;
     }
 
@@ -566,16 +475,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>If you configured the your Strings file according to the guide, you'll be able to use
      * the test version of your app by just calling this static method before calling initSession.</p>
      *
-     * @param context A {@link Context} from which this call was made.
+     * @param application A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoTestInstance(@NonNull Context context) {
-        isAutoSessionMode_ = true;
+    public static Branch getTestInstance(@NonNull Application application) {
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-        getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
+        getBranchInstance(application, false);
         return branchReferral_;
     }
 
@@ -583,7 +490,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>If you configured the your Strings file according to the guide, you'll be able to use
      * the test version of your app by just calling this static method before calling initSession.</p>
      *
-     * @param context      A {@link Context} from which this call was made.
+     * @param application      A {@link Context} from which this call was made.
      * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
      *                     should be considered as potentially referrable or not. By default, a user is only referrable
      *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
@@ -591,22 +498,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
-        isAutoSessionMode_ = true;
+    public static Branch getTestInstance(@NonNull Application application, boolean isReferrable) {
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
-        getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
+        getBranchInstance(application, false);
         return branchReferral_;
-    }
-
-    /**
-     * <p>Initialises an instance of the Branch object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object.
-     */
-    private static Branch initInstance(@NonNull Context context) {
-        return new Branch(context.getApplicationContext());
     }
 
     /**
@@ -661,7 +556,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * Method to control reading Android ID from device. Set this to true to disable reading the device id.
-     * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getInstance(Application)}
      *
      * @param deviceIdFetch {@link Boolean with value true to disable reading the Android id from device}
      */
@@ -697,20 +592,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * <p>If there's further Branch API call happening within the two seconds, we then don't close
-     * the session; otherwise, we close the session after two seconds.</p>
-     * <p/>
-     * <p>Call this method if you don't want this smart session feature and would rather manage
-     * the session yourself.</p>
-     * <p/>
-     * <p><b>Note:</b>  smart session - we keep session alive for two seconds</p>
-     */
-    public void disableSmartSession() {
-        prefHelper_.disableSmartSession();
-    }
-
-
-    /**
      * <p>
      * Enable Facebook app link check operation during Branch initialisation.
      * </p>
@@ -727,50 +608,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
-     * to perform an action upon successful initialisation.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called following
-     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     */
-    public boolean initSession(BranchUniversalReferralInitListener callback) {
-        initSession(callback, (Activity) null);
-        return false;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
-     * to perform an action upon successful initialisation.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called following
-     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     */
-    public boolean initSession(BranchReferralInitListener callback) {
-        initSession(callback, (Activity) null);
-        return false;
-    }
-
-    /**
      * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a
      * {@link BranchUniversalReferralInitListener} to perform an action upon successful initialisation.</p>
      *
      * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
      *                 following successful (or unsuccessful) initialisation of the session
      *                 with the Branch API.
-     * @param activity The calling {@link Activity} for context.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback) {
         if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-            initUserSessionInternal(callback, activity, true);
+            initUserSessionInternal(callback, true);
         } else {
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-            initUserSessionInternal(callback, activity, isReferrable);
+            initUserSessionInternal(callback, isReferrable);
         }
         return false;
     }
@@ -782,243 +634,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchReferralInitListener} instance that will be called
      *                 following successful (or unsuccessful) initialisation of the session
      *                 with the Branch API.
-     * @param activity The calling {@link Activity} for context.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback) {
         if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-            initUserSessionInternal(callback, activity, true);
+            initUserSessionInternal(callback, true);
         } else {
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-            initUserSessionInternal(callback, activity, isReferrable);
+            initUserSessionInternal(callback, isReferrable);
         }
         return false;
     }
 
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     */
-    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data) {
-        return initSession(callback, data, null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     */
-    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data) {
-        return initSession(callback, data, null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     */
-    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, activity);
-        return uriHandled;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     */
-    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, activity);
-        return uriHandled;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
-     *
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession() {
-        return initSession((Activity) null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
-     *
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(Activity activity) {
-        return initSession((BranchReferralInitListener) null, activity);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, with associated data from the supplied
-     * {@link Uri}.</p>
-     *
-     * @param data A {@link  Uri} variable containing the details of the source link that
-     *             led to this
-     *             initialisation action.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSessionWithData(@NonNull Uri data) {
-        return initSessionWithData(data, null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, with associated data from the supplied
-     * {@link Uri}.</p>
-     *
-     * @param data     A {@link  Uri} variable containing the details of the source link that led to this
-     *                 initialisation action.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSessionWithData(Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession((BranchReferralInitListener) null, activity);
-        return uriHandled;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, specifying whether the initialisation can count
-     * as a referrable action.</p>
-     *
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(boolean isReferrable) {
-        return initSession((BranchReferralInitListener) null, isReferrable, (Activity) null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, specifying whether the initialisation can count
-     * as a referrable action, and supplying the calling {@link Activity} for context.</p>
-     *
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
-        return initSession((BranchReferralInitListener) null, isReferrable, activity);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {
-        return initSession(callback, isReferrable, data, null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
-        return initSession(callback, isReferrable, data, null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, isReferrable, activity);
-        return uriHandled;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, isReferrable, activity);
-        return uriHandled;
-    }
 
     /**
      * <p>Initialises a session with the Branch API.</p>
@@ -1033,7 +661,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
-        return initSession(callback, isReferrable, (Activity) null);
+        initUserSessionInternal(callback, isReferrable);
+        return false;
     }
 
     /**
@@ -1049,78 +678,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
-        return initSession(callback, isReferrable, (Activity) null);
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
-        initUserSessionInternal(callback, activity, isReferrable);
-        return false;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-        initUserSessionInternal(callback, activity, isReferrable);
+        initUserSessionInternal(callback, isReferrable);
         return false;
     }
 
 
-    private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
+    private void initUserSessionInternal(BranchUniversalReferralInitListener callback, boolean isReferrable) {
         BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
-        initUserSessionInternal(branchUniversalReferralInitWrapper, activity, isReferrable);
+        initUserSessionInternal(branchUniversalReferralInitWrapper, isReferrable);
     }
 
-    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
-        if (activity != null) {
-            currentActivityReference_ = new WeakReference<>(activity);
-        }
+    private void initUserSessionInternal(BranchReferralInitListener callback, boolean isReferrable) {
         //If already initialised
         if (hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED) {
             if (callback != null) {
-                if (isAutoSessionMode_) {
-                    // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
-                    // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
-                    if (!isInitReportedThroughCallBack) { //Check if session params are reported already in case user call initsession form a different activity(not a noraml case)
-                        callback.onInitFinished(getLatestReferringParams(), null);
-                        isInitReportedThroughCallBack = true;
-                    } else {
-                        callback.onInitFinished(new JSONObject(), null);
-                    }
+                // Since initSession is called on creating  the first activity, we need to provide user
+                // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
+                if (!isInitReportedThroughCallBack) { //Check if session params are reported already in case user call initSession form a different activity(not a normal case)
+                    callback.onInitFinished(getLatestReferringParams(), null);
+                    isInitReportedThroughCallBack = true;
                 } else {
-                    // Since user will do init session per activity in non auto session mode , we don't want to repeat the referring params with each initSession()call.
                     callback.onInitFinished(new JSONObject(), null);
                 }
             }
-            clearCloseTimer();
-            keepAlive();
         }
         //If uninitialised or initialising
         else {
-            // In case of Auto session init will be called from Branch before user. So initialising
+            // Session init will be called from Branch before user call initSession. So initialising
             // State also need to look for isReferrable value
             if (isReferrable) {
                 this.prefHelper_.setIsReferrable();
@@ -1137,67 +721,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //if Uninitialised move request to the front if there is an existing request or create a new request.
             else {
                 initState_ = SESSION_STATE.INITIALISING;
+                Uri intentData = null;
+                if (currentActivityReference_ != null && currentActivityReference_.get() != null) {
+                    Activity activity = currentActivityReference_.get();
+                    if (activity.getIntent() != null) {
+                        boolean uriHandled = readAndStripParam(activity.getIntent().getData(), activity);
+                    }
+                }
                 initializeSession(callback);
             }
-        }
-    }
-
-
-    /**
-     * <p>Closes the current session, dependent on the state of the
-     * {@link PrefHelper#getSmartSession()} {@link Boolean} value. If <i>true</i>, take no action.
-     * If false, close the sesion via the {@link #executeClose()} method.</p>
-     * <p>Note that if smartSession is enabled, closeSession cannot be called within
-     * a 2 second time span of another Branch action. This has to do with the method that
-     * Branch uses to keep a session alive during Activity transitions</p>
-     */
-    public void closeSession() {
-        if (isAutoSessionMode_) {
-            /*
-             * Ignore any session close request from user if session is managed
-             * automatically.This is handle situation of closeSession() in
-             * closed by developer by error while running in auto session mode.
-             */
-            return;
-        }
-
-
-        if (prefHelper_.getSmartSession()) {
-            if (keepAlive_) {
-                return;
-            }
-
-
-            // else, real close
-            synchronized (lock) {
-                clearCloseTimer();
-                rotateCloseTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        //Since non auto session has no lifecycle callback enabled free up the currentActivity_
-                        if (currentActivityReference_ != null) {
-                            currentActivityReference_.clear();
-                        }
-                        executeClose();
-                    }
-                }, PREVENT_CLOSE_TIMEOUT);
-            }
-        } else {
-            //Since non auto session has no lifecycle callback enabled free up the currentActivity_
-            if (currentActivityReference_ != null) {
-                currentActivityReference_.clear();
-            }
-            executeClose();
-        }
-
-        if (prefHelper_.getExternAppListing()) {
-            if (appListingSchedule_ == null) {
-                scheduleListOfApps();
-            }
-        }
-        /* Close any opened sharing dialog.*/
-        if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog(true);
         }
     }
 
@@ -1205,7 +737,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
      */
-    private void closeSessionInternal() {
+    private void closeSession() {
         executeClose();
         if (prefHelper_.getExternAppListing()) {
             if (appListingSchedule_ == null) {
@@ -1923,40 +1455,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void clearCloseTimer() {
-        if (rotateCloseTimer == null)
-            return;
-        rotateCloseTimer.cancel();
-        rotateCloseTimer.purge();
-        rotateCloseTimer = new Timer();
-    }
-
-    private void clearTimer() {
-        if (closeTimer == null)
-            return;
-        closeTimer.cancel();
-        closeTimer.purge();
-        closeTimer = new Timer();
-    }
-
-    private void keepAlive() {
-        keepAlive_ = true;
-        synchronized (lock) {
-            clearTimer();
-            closeTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            keepAlive_ = false;
-                        }
-                    }).start();
-                }
-            }, SESSION_KEEPALIVE);
-        }
-    }
-
     private boolean hasSession() {
         return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
     }
@@ -2075,15 +1573,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 Log.i(TAG, "Branch is not initialized, cannot close session");
                 return;
             } else {
-                Activity currentActivity = null;
-                if (currentActivityReference_ != null) {
-                    currentActivity = currentActivityReference_.get();
-                }
                 if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity, true);
+                    initUserSessionInternal((BranchReferralInitListener) null, true);
                 } else {
                     boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity, isReferrable);
+                    initUserSessionInternal((BranchReferralInitListener) null, isReferrable);
                 }
             }
         }
@@ -2105,9 +1599,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
-            isAutoSessionMode_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
             Log.w(TAG, new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+        }
+    }
+
+    private void initSessionIfNeeded(int activityCnt) {
+        if (activityCnt < 1 && initState_ == SESSION_STATE.UNINITIALISED) {
+            // Check if debug mode is set in manifest. If so enable debug.
+            if (BranchUtil.isTestModeEnabled(context_)) {
+                prefHelper_.setExternDebug();
+            }
+            initSession((BranchReferralInitListener) null); // indicate  starting of session.
         }
     }
 
@@ -2122,25 +1625,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
+            currentActivityReference_ = new WeakReference<>(activity);
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
+            initSessionIfNeeded(activityCnt_);
         }
 
         @Override
         public void onActivityStarted(Activity activity) {
-            if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
-                // Check if debug mode is set in manifest. If so enable debug.
-                if (BranchUtil.isTestModeEnabled(context_)) {
-                    prefHelper_.setExternDebug();
-                }
-                Uri intentData = null;
-                if (activity.getIntent() != null) {
-                    intentData = activity.getIntent().getData();
-                }
-                initSessionWithData(intentData, activity); // indicate  starting of session.
-            }
+            currentActivityReference_ = new WeakReference<>(activity);
+            initSessionIfNeeded(activityCnt_);
             activityCnt_++;
+
         }
 
         @Override
@@ -2161,7 +1658,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             activityCnt_--; // Check if this is the last activity.If so stop
             // session.
             if (activityCnt_ < 1) {
-                closeSessionInternal();
+                closeSession();
             }
         }
 

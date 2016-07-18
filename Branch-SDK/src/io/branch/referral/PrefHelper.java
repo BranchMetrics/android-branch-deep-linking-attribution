@@ -36,7 +36,6 @@ public class PrefHelper {
      */
     private static boolean BNC_App_Listing = true;
 
-    private static boolean BNC_Smart_Session = true;
 
     /**
      * A {@link String} value used where no string value is available.
@@ -458,14 +457,16 @@ public class PrefHelper {
 
     /**
      * Set the value to specify if the current init is triggered by an FB app link
+     *
      * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
      */
-    public void setIsAppLinkTriggeredInit (Boolean isAppLinkTriggered) {
+    public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
         setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
     }
 
     /**
      * Specifies the value to specify if the current init is triggered by an FB app link
+     *
      * @return {@link Boolean} with value true if the init is triggered by an FB app link
      */
     public boolean getIsAppLinkTriggeredInit() {
@@ -513,7 +514,7 @@ public class PrefHelper {
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
      * @param identifier A {@link String} value containing the identifier of the associated
-     *                  link.
+     *                   link.
      */
     public void setLinkClickIdentifier(String identifier) {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
@@ -1044,13 +1045,6 @@ public class PrefHelper {
         return BNC_App_Listing;
     }
 
-    /**
-     * {@link Branch#disableSmartSession()}
-     */
-    public void disableSmartSession() {
-        BNC_Smart_Session = false;
-    }
-
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         if (key == null) {
             return;
@@ -1069,14 +1063,6 @@ public class PrefHelper {
 
     public JSONObject getRequestMetadata() {
         return this.requestMetadata;
-    }
-
-    /**
-     * <p>Gets the state of the {@link Boolean} value indicating whether or not the <i>Smart Session</i>
-     * feature is enabled or not.</p>
-     */
-    public boolean getSmartSession() {
-        return BNC_Smart_Session;
     }
 
     /**
