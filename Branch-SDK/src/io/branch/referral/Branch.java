@@ -445,7 +445,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.requestQueue_.clear();
             }
         } else {
-            branchReferral_.prefHelper_.setAppKey(branchKey);
+            Log.e("BranchSDK", "Branch key specified is invalid. Please check the Branch Key (io.branch.sdk.BranchKey) added in your manifest");
         }
         return branchReferral_;
     }
@@ -1998,8 +1998,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void initializeSession(final BranchReferralInitListener callback) {
-        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
-                && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
+        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             initState_ = SESSION_STATE.UNINITIALISED;
             //Report Key error on callback
             if (callback != null) {

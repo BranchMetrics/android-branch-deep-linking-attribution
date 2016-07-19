@@ -120,15 +120,11 @@ class RemoteInterface {
     private boolean addCommonParams(JSONObject post, int retryNumber) {
         try {
             String branch_key = prefHelper_.getBranchKey();
-            String app_key = prefHelper_.getAppKey();
 
             post.put("sdk", "android" + SDK_VERSION);
             post.put("retryNumber", retryNumber);
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(BRANCH_KEY, prefHelper_.getBranchKey());
-                return true;
-            } else if (!app_key.equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put("app_id", prefHelper_.getAppKey());
                 return true;
             }
         } catch (JSONException ignore) {

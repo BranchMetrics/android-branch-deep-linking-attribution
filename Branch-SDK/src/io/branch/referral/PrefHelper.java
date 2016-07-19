@@ -56,7 +56,6 @@ public class PrefHelper {
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
-    private static final String KEY_APP_KEY = "bnc_app_key";
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
     private static final String KEY_APP_VERSION = "bnc_app_version";
     private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
@@ -255,44 +254,6 @@ public class PrefHelper {
      */
     public String getAppVersion() {
         return getString(KEY_APP_VERSION);
-    }
-
-    /**
-     * <p>Sets the Branch App Key in preferences programmatically.</p>
-     * <p/>
-     * <p><b>Note: </b> This is a deprecated method, you should configure your <i>App Key</i> as an XML
-     * String value instead.</p>
-     *
-     * @param key A {@link String} value containing the App Key for the current App.
-     * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
-     * Branch Quick-Start Guide for Android</a>
-     * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/2cb4f05fd8f67bce1019456f26b7f384a39abb2c/README.md#add-your-app-key-to-your-project">
-     * Adding your app key to your project</a>
-     */
-    public void setAppKey(String key) {
-        setString(KEY_APP_KEY, key);
-    }
-
-    /**
-     * <p>Gets the Branch App Key in preferences programmatically.</p>
-     *
-     * @return A {@link String} value containing the current App Key as configured.
-     */
-    public String getAppKey() {
-        String appKey = null;
-        try {
-            final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
-            }
-        } catch (final PackageManager.NameNotFoundException ignore) {
-        }
-
-        if (appKey == null) {
-            appKey = getString(KEY_APP_KEY);
-        }
-
-        return appKey;
     }
 
     /**
