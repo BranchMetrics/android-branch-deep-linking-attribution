@@ -660,17 +660,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
-     * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
-     *
-     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
-     */
-    @Deprecated
-    public void setDebug() {
-        prefHelper_.setExternDebug();
-    }
-
-    /**
      * Method to control reading Android ID from device. Set this to true to disable reading the device id.
      * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getAutoInstance(Context)}
      *
@@ -2142,8 +2131,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
-                    //noinspection deprecation
-                    setDebug();
+                    prefHelper_.setExternDebug();
                 }
                 Uri intentData = null;
                 if (activity.getIntent() != null) {
