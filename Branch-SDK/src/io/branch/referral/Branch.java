@@ -445,7 +445,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.requestQueue_.clear();
             }
         } else {
-            Log.e("BranchSDK", "Branch key specified is invalid. Please check the Branch Key (io.branch.sdk.BranchKey) added in your manifest");
+            Log.e("BranchSDK", "Branch Key is invalid.Please check your BranchKey");
         }
         return branchReferral_;
     }
@@ -657,6 +657,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (prefHelper_ != null && timeout > 0) {
             prefHelper_.setTimeout(timeout);
         }
+    }
+
+    /**
+     * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
+     * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
+     *
+     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
+     */
+    @Deprecated
+    public void setDebug() {
+        prefHelper_.setExternDebug();
     }
 
     /**
@@ -2131,7 +2142,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
-                    prefHelper_.setExternDebug();
+                    //noinspection deprecation
+                    setDebug();
                 }
                 Uri intentData = null;
                 if (activity.getIntent() != null) {
