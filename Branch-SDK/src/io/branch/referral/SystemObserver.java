@@ -12,6 +12,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
@@ -25,6 +26,8 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 
 /**
@@ -43,6 +46,11 @@ class SystemObserver {
     private static final int STATE_FRESH_INSTALL = 0;
     private static final int STATE_UPDATE = 2;
     private static final int STATE_NO_CHANGE = 1;
+
+    private static final int GAID_FETCH_TIME_OUT = 1500;
+    String GAIDString_ = null;
+    int LATVal_ = 0;
+
 
     private Context context_;
 
@@ -464,6 +472,25 @@ class SystemObserver {
         return false;
     }
 
+
+    /**
+     * Returns an instance of com.google.android.gms.ads.identifier.AdvertisingIdClient class  to be used
+     * for getting GAId and LAT value
+     *
+     * @return {@link Object} instance of AdvertisingIdClient class
+     */
+    public Object getAdInfoObject() {
+        Object adInfoObj = null;
+        try {
+            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+            adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
+        } catch (Throwable ignore) {
+        }
+        return adInfoObj;
+    }
+
+
     /**
      * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
      * actions within Android apps.</p>
@@ -476,21 +503,13 @@ class SystemObserver {
      * @see <a href="https://developer.android.com/google/play-services/id.html">
      * Android Developers - Advertising ID</a>
      */
-    public String getAdvertisingId() {
-        String advertisingId = null;
-
+    public String getAdvertisingId(Object adInfoObj) {
         try {
-            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-            Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
             Method getIdMethod = adInfoObj.getClass().getMethod("getId");
-            advertisingId = (String) getIdMethod.invoke(adInfoObj);
-        } catch (IllegalStateException ex) {
-            ex.printStackTrace();
+            GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
         } catch (Exception ignore) {
         }
-
-        return advertisingId;
+        return GAIDString_;
     }
 
     /**
@@ -501,20 +520,81 @@ class SystemObserver {
      * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
      * Android Developers - Limit Ad Tracking</a>
      */
-    public int getLATValue() {
-        int latVal = 0;
+    public int getLATValue(Object adInfoObj) {
         try {
-            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-            Object adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
             Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
-
-            latVal = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
-        } catch (IllegalStateException ex) {
-            ex.printStackTrace();
+            LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
         } catch (Exception ignore) {
         }
+        return LATVal_;
+    }
 
-        return latVal;
+    /**
+     * <p>
+     * Method to prefetch the GAID and LAT values
+     * </p>
+     *
+     * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion
+     * @return {@link Boolean} with true if GAID fetch process started.
+     */
+    public boolean prefetchGAdsParams(GAdsParamsFetchEvents callback) {
+        boolean isPrefetchStarted = false;
+        if (TextUtils.isEmpty(GAIDString_)) {
+            isPrefetchStarted = true;
+            new GAdsPrefetchTask(callback).executeTask();
+        }
+        return isPrefetchStarted;
+    }
+
+    /**
+     * <p>
+     * Async task to fetch GAID and LAT value
+     * This task fetch the GAID and LAT in background. The Background task times out
+     * After GAID_FETCH_TIME_OUT
+     * </p>
+     */
+    private class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
+        private final GAdsParamsFetchEvents callback_;
+
+        public GAdsPrefetchTask(GAdsParamsFetchEvents callback) {
+            callback_ = callback;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            final CountDownLatch latch = new CountDownLatch(1);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+                    Object adInfoObj = getAdInfoObject();
+                    getAdvertisingId(adInfoObj);
+                    getLATValue(adInfoObj);
+                    latch.countDown();
+                }
+            }).start();
+
+            try {
+                //Wait GAID_FETCH_TIME_OUT milli sec max to receive the GAID and LAT
+                latch.await(GAID_FETCH_TIME_OUT, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (callback_ != null) {
+                callback_.onGAdsFetchFinished();
+            }
+        }
+    }
+
+    interface GAdsParamsFetchEvents {
+        void onGAdsFetchFinished();
     }
 }

@@ -126,8 +126,10 @@ After you register your app, your Branch key can be retrieved on the [Settings](
 </manifest>
 ```
 
-### Proguard settings
-If your Application is enabled with proguard, add the following instruction to your proguard.cfg file:
+### Proguard settings for leveraging Branch's pooled matching
+
+To collect the Google Advertising ID, you must ensure that proguard doesn't remove the necessary Google Ads class. The surest way to do this is add it to your proguard rules. If your Application is enabled with proguard, add the following instruction to your `proguard.cfg` or `proguard-rules.pro` file:
+
 ```bash
 -keep class com.google.android.gms.ads.identifier.** { *; }
 ```
@@ -381,7 +383,9 @@ ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "Check 
                 .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Copy", "Added to clipboard")
                 .setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
                 .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
-                .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL);
+                .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
+                .setAsFullWidthStyle(true)
+                .setSharingTitle("Share With");
 ```
 
 To show the share sheet, call the following on your Branch Universal Object. There are plenty of callback methods for you to hook into as you need for your own customizations on top of our animation.

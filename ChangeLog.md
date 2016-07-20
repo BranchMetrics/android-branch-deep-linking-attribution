@@ -1,5 +1,19 @@
 Branch Android SDK change log
 
+- v1.14.5: Using Thread Pool to execute Branch request in parallel to improve Branch API response time. Optimizations for performance improvements
+
+- v1.14.4: Adding more styling options to Share Sheet. Disabling Facebook App-Link check by default.
+
+- v1.14.3: Cleaner fix for jcenter dependency issue.
+
+- v1.14.2: HotFix: Build version not updated issue.
+
+- v1.14.1: adding update option for Answers-Shim SDK.
+
+- v1.14.0: Fabric Answers integration.
+
+- v1.13.1: Hot Fix : Design changes to ensure init callbacks are always called. Relocating fabric properties file.
+
 - v1.13.0: Adding feature to turn on/off collecting device id.
 
 - v1.12.1: Hot fix : initSession is not called back on some scenarios with the new feature added on 1.12.0.

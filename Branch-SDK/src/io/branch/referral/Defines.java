@@ -16,6 +16,9 @@ public class Defines {
         LinkClickID("link_click_id"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         AppLinkUsed("branch_used"),
+        ReferringBranchIdentity("referring_branch_identity"),
+        BranchIdentity("branch_identity"),
+
 
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -36,6 +39,7 @@ public class Defines {
         BeginAfterID("begin_after_id"),
         Link("link"),
         ReferringData("referring_data"),
+        ReferringLink("referring_link"),
         Data("data"),
         OS("os"),
         HardwareID("hardware_id"),
@@ -83,6 +87,7 @@ public class Defines {
         External_Intent_URI("external_intent_uri"),
         External_Intent_Extra("external_intent_extra"),
         Last_Round_Trip_Time("lrtt"),
+        Branch_Round_Trip_Time("brtt"),
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
 
@@ -174,7 +179,8 @@ public class Defines {
         Channel("channel"),
         Feature("feature"),
         Stage("stage"),
-        Data("data");
+        Data("data"),
+        URL("url");
 
         private String key = "";
 

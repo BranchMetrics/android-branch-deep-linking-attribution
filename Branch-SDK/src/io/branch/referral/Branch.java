@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -19,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,7 +67,7 @@ import io.branch.referral.util.LinkProperties;
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -281,6 +283,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static boolean disableDeviceIDFetch_;
 
+    private boolean enableFacebookAppLinkCheck_ = true;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -362,6 +366,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
 
+    /* Name of the key for getting Fabric Branch API key from string resource */
+    private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
+
+    private boolean isGAParamsFetchInProgress_ = false;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -384,6 +393,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
+
+        isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
     }
 
 
@@ -446,8 +457,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
             boolean isNewBranchKeySet;
             if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-                Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
-                isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+                // If Branch key is not available check for Fabric provided Branch key
+                String fabricBranchApiKey = null;
+                try {
+                    Resources resources = context.getResources();
+                    fabricBranchApiKey = resources.getString(resources.getIdentifier(FABRIC_BRANCH_API_KEY, "string", context.getPackageName()));
+                } catch (Exception ignore) {
+                }
+                if (!TextUtils.isEmpty(fabricBranchApiKey)) {
+                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(fabricBranchApiKey);
+                } else {
+                    Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
+                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+                }
             } else {
                 isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             }
@@ -603,7 +625,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      *                   up and declaring defeat.
      */
     public void setRetryCount(int retryCount) {
-        if (prefHelper_ != null && retryCount > 0) {
+        if (prefHelper_ != null && retryCount >= 0) {
             prefHelper_.setRetryCount(retryCount);
         }
     }
@@ -696,6 +718,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     public void disableSmartSession() {
         prefHelper_.disableSmartSession();
+    }
+
+
+    /**
+     * <p>
+     * Enable Facebook app link check operation during Branch initialisation.
+     * </p>
+     */
+    public void enableFacebookAppLinkCheck() {
+        enableFacebookAppLinkCheck_ = true;
     }
 
     /**
@@ -1298,6 +1330,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
         }
         return false;
+    }
+
+    @Override
+    public void onGAdsFetchFinished() {
+        isGAParamsFetchInProgress_ = false;
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        processNextQueueItem();
     }
 
     /**
@@ -2839,7 +2878,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                 serverSema_.release();
                 if (req != null) {
-                    if (!req.isProcessWaitLockEnabled()) {
+                    if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid IdentityID
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
@@ -2852,7 +2891,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                             handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         } else {
                             BranchPostTask postTask = new BranchPostTask(req);
-                            postTask.execute();
+                            postTask.executeTask();
                         }
                     } else {
                         networkCount_ = 0;
@@ -2888,17 +2927,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         try {
             for (int i = 0; i < requestQueue_.getSize(); i++) {
                 ServerRequest req = requestQueue_.peekAt(i);
-                if (req.getPost() != null) {
-                    Iterator<?> keys = req.getPost().keys();
-                    while (keys.hasNext()) {
-                        String key = (String) keys.next();
-                        if (key.equals(Defines.Jsonkey.SessionID.getKey())) {
-                            req.getPost().put(key, prefHelper_.getSessionID());
-                        } else if (key.equals(Defines.Jsonkey.IdentityID.getKey())) {
-                            req.getPost().put(key, prefHelper_.getIdentityID());
-                        } else if (key.equals(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                            req.getPost().put(key, prefHelper_.getDeviceFingerPrintID());
-                        }
+                JSONObject reqJson = req.getPost();
+                if (reqJson != null) {
+                    if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                        req.getPost().put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                    }
+                    if (reqJson.has(Defines.Jsonkey.IdentityID.getKey())) {
+                        req.getPost().put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                    }
+                    if (reqJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                        req.getPost().put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
                     }
                 }
             }
@@ -2995,8 +3033,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
-        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
-            registerAppInit(callback, false);
+        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || !enableFacebookAppLinkCheck_) {
+            registerAppInit(callback, null);
         } else {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded;
@@ -3011,16 +3049,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                             prefHelper_.setLinkClickIdentifier(bncLinkClickId);
                         }
                     }
-                    requestQueue_.unlockInstallOrOpenProcessWait();
+                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
                     processNextQueueItem();
                 }
             });
-
-            registerAppInit(callback, appLinkRqSucceeded);
+            if (appLinkRqSucceeded) {
+                registerAppInit(callback, ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
+            } else {
+                registerAppInit(callback, null);
+            }
         }
     }
     
-    private void registerAppInit(BranchReferralInitListener callback, boolean isWaitingOnOperationToFinish) {
+    private void registerAppInit(BranchReferralInitListener callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
@@ -3029,7 +3070,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             // If no user this is an Install
             request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
         }
-        request.setProcessWaitLockEnabled(isWaitingOnOperationToFinish);
+        request.addProcessWaitLock(lock);
+        if (isGAParamsFetchInProgress_) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        }
         registerInstallOrOpen(request, callback);
     }
 
@@ -3322,7 +3366,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
      * published in the main thread.
      */
-    private class BranchPostTask extends AsyncTask<Void, Void, ServerResponse> {
+    private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
         int timeOut_ = 0;
         ServerRequest thisReq_;
 
@@ -3427,23 +3471,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                         if (thisReq_ instanceof ServerRequestInitSession
                                 || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                             // Immediately set session and Identity and update the pending request with the params
-                            if (serverResponse.getObject() != null) {
+                            JSONObject respJson = serverResponse.getObject();
+                            if (respJson != null) {
                                 boolean updateRequestsInQueue = false;
-                                if (serverResponse.getObject().has(Defines.Jsonkey.SessionID.getKey())) {
-                                    prefHelper_.setSessionID(serverResponse.getObject().getString(Defines.Jsonkey.SessionID.getKey()));
+                                if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                                    prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
                                     updateRequestsInQueue = true;
                                 }
-                                if (serverResponse.getObject().has(Defines.Jsonkey.IdentityID.getKey())) {
-                                    String new_Identity_Id = serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey());
+                                if (respJson.has(Defines.Jsonkey.IdentityID.getKey())) {
+                                    String new_Identity_Id = respJson.getString(Defines.Jsonkey.IdentityID.getKey());
                                     if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
                                         //On setting a new identity Id clear the link cache
                                         linkCache_.clear();
-                                        prefHelper_.setIdentityID(serverResponse.getObject().getString(Defines.Jsonkey.IdentityID.getKey()));
+                                        prefHelper_.setIdentityID(respJson.getString(Defines.Jsonkey.IdentityID.getKey()));
                                         updateRequestsInQueue = true;
                                     }
                                 }
-                                if (serverResponse.getObject().has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                                    prefHelper_.setDeviceFingerPrintID(serverResponse.getObject().getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
+                                if (respJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                                    prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
                                     updateRequestsInQueue = true;
                                 }
 
@@ -3637,6 +3682,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         private String copyURlText_;
         private String urlCopiedMessage_;
         private int styleResourceID_;
+        private boolean setFullWidthStyle_;
+        private int dividerHeight = -1;
+        private String sharingTitle = null;
+        private View sharingTitleView = null;
 
         BranchShortLinkBuilder shortLinkBuilder_;
 
@@ -3921,6 +3970,53 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
 
         /**
+         * <p>
+         * Sets the share dialog to full width mode. Full width mode will show a non modal sheet with entire screen width.
+         * </p>
+         *
+         * @param setFullWidthStyle {@link Boolean} With value true if a full width style share sheet is desired.
+         * @return This Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) {
+            this.setFullWidthStyle_ = setFullWidthStyle;
+            return this;
+        }
+
+        /**
+         * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
+         *
+         * @param height The new height of the divider in pixels.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setDividerHeight(int height) {
+            this.dividerHeight = height;
+            return this;
+        }
+
+        /**
+         * Set the title for the sharing dialog
+         *
+         * @param title {@link String} containing the value for the title text.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setSharingTitle(String title) {
+            this.sharingTitle = title;
+            return this;
+        }
+
+        /**
+         * Set the title for the sharing dialog
+         *
+         * @param titleView {@link View} for setting the title.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setSharingTitle(View titleView) {
+            this.sharingTitleView = titleView;
+            return this;
+        }
+
+
+        /**
          * <p> Set the given style to the List View showing the share sheet</p>
          *
          * @param resourceID A Styleable resource to be applied to the share sheet list view
@@ -3995,6 +4091,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
         public BranchShortLinkBuilder getShortLinkBuilder() {
             return shortLinkBuilder_;
+        }
+
+        public boolean getIsFullWidthStyle() {
+            return setFullWidthStyle_;
+        }
+
+        public int getDividerHeight() {
+            return dividerHeight;
+        }
+
+        public String getSharingTitle() {
+            return sharingTitle;
+        }
+
+        public View getSharingTitleView() {
+            return sharingTitleView;
         }
 
         public int getStyleResourceID() {

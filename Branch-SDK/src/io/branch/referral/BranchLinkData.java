@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.annotation.SuppressLint;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -395,6 +396,36 @@ class BranchLinkData extends JSONObject {
         }
 
         return result;
+    }
+
+    /**
+     * Creates the Json object with link params and link properties.
+     *
+     * @return {@link JSONObject} with link params and link properties
+     */
+    public JSONObject getLinkDataJsonObject() {
+        JSONObject linkDataJson = new JSONObject();
+        try {
+            if (!TextUtils.isEmpty(channel)) {
+                linkDataJson.put("~" + Defines.LinkParam.Channel.getKey(), channel);
+            }
+            if (!TextUtils.isEmpty(alias)) {
+                linkDataJson.put("~" + Defines.LinkParam.Alias.getKey(), alias);
+            }
+            if (!TextUtils.isEmpty(feature)) {
+                linkDataJson.put("~" + Defines.LinkParam.Feature.getKey(), feature);
+            }
+            if (!TextUtils.isEmpty(stage)) {
+                linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), stage);
+            }
+            if (has(Defines.LinkParam.Tags.getKey())) {
+                linkDataJson.put(Defines.LinkParam.Tags.getKey(), getJSONArray(Defines.LinkParam.Tags.getKey()));
+            }
+            linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), type);
+            linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), duration);
+        } catch (JSONException ignore) {
+        }
+        return linkDataJson;
     }
 
 }

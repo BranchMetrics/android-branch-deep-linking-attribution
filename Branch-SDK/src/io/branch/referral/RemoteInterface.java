@@ -21,6 +21,8 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
+import javax.net.ssl.HttpsURLConnection;
+
 /**
  * <p>This class assists with RESTful calls to the Branch API, by using
  * {@link HttpURLConnection} object, and handling all restful calls via one of its GET or POST capable
@@ -31,10 +33,8 @@ class RemoteInterface {
     public static final int NO_CONNECTIVITY_STATUS = -1009;
     public static final int NO_BRANCH_KEY_STATUS = -1234;
 
-    private static final String SDK_VERSION = "1.13.0";
+    private static final String SDK_VERSION = "1.14.5";
     private static final int DEFAULT_TIMEOUT = 3000;
-
-    private int lastRoundTripTime_ = 0;  // Round trip time taken for last server request in milli sec.
 
     /**
      * Required, default constructor for the class.
@@ -152,7 +152,7 @@ class RemoteInterface {
     private ServerResponse make_restful_get(String baseUrl, JSONObject params, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
@@ -172,17 +172,17 @@ class RemoteInterface {
             return new ServerResponse(tag, NO_BRANCH_KEY_STATUS);
         }
 
+        long reqStartTime = System.currentTimeMillis();
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
-            lastRoundTripTime_ = 0;
-            long reqStartTime = System.currentTimeMillis();
             URL urlObject = new URL(modifiedUrl);
-            connection = (HttpURLConnection) urlObject.openConnection();
+            connection = (HttpsURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
-            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
+
+            int lrtt = (int) (System.currentTimeMillis() - reqStartTime);
             if (Branch.getInstance() != null) {
-                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lastRoundTripTime_));
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lrtt));
             }
 
             if (connection.getResponseCode() >= 500 &&
@@ -237,6 +237,11 @@ class RemoteInterface {
                 PrefHelper.Debug(getClass().getSimpleName(), "IO exception: " + ex.getMessage());
             return new ServerResponse(tag, 500);
         } finally {
+            // Add total round trip time
+            if (Branch.getInstance() != null) {
+                int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+            }
             if (connection != null) {
                 connection.disconnect();
             }
@@ -294,11 +299,12 @@ class RemoteInterface {
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
                                              int retryNumber, boolean log) {
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
         JSONObject bodyCopy = new JSONObject();
+        long reqStartTime = System.currentTimeMillis();
         try {
 
             Iterator<?> keys = body.keys();
@@ -319,7 +325,7 @@ class RemoteInterface {
                 PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
             }
             URL urlObject = new URL(url);
-            connection = (HttpURLConnection) urlObject.openConnection();
+            connection = (HttpsURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);
@@ -328,12 +334,10 @@ class RemoteInterface {
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestMethod("POST");
 
-            lastRoundTripTime_ = 0;
-            long reqStartTime = System.currentTimeMillis();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
-            lastRoundTripTime_ = (int) (System.currentTimeMillis() - reqStartTime);
+            int lrtt = (int) (System.currentTimeMillis() - reqStartTime);
             if (Branch.getInstance() != null) {
-                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lastRoundTripTime_));
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Last_Round_Trip_Time.getKey(), String.valueOf(lrtt));
             }
             outputStreamWriter.write(bodyCopy.toString());
             outputStreamWriter.flush();
@@ -393,6 +397,10 @@ class RemoteInterface {
             }
             return new ServerResponse(tag, 500);
         } finally {
+            if (Branch.getInstance() != null) {
+                int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
+                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+            }
             if (connection != null) {
                 connection.disconnect();
             }
@@ -431,4 +439,5 @@ class RemoteInterface {
 
         return result.toString();
     }
+
 }

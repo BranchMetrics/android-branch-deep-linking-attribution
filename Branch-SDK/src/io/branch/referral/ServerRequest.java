@@ -3,15 +3,15 @@ package io.branch.referral;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,7 +30,15 @@ public abstract class ServerRequest {
     private SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
-    private boolean isWaitLockEnabled_;
+    private int waitLockCnt = 0;
+
+    // Various process wait locks for Branch server request
+    enum PROCESS_WAIT_LOCK {
+        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK
+    }
+
+    // Set for holding any active wait locks
+    final Set<PROCESS_WAIT_LOCK> locks_;
 
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -47,6 +55,7 @@ public abstract class ServerRequest {
         systemObserver_ = new SystemObserver(context);
         params_ = new JSONObject();
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
+        locks_ = new HashSet<>();
     }
 
     /**
@@ -63,6 +72,7 @@ public abstract class ServerRequest {
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
+        locks_ = new HashSet<>();
     }
 
     /**
@@ -362,36 +372,13 @@ public abstract class ServerRequest {
      * @param sysObserver {@link SystemObserver} instance.
      */
     public void updateGAdsParams(final SystemObserver sysObserver) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        skipOnTimeOut = false;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String advertisingId = sysObserver.getAdvertisingId();
-                    int latVal = sysObserver.getLATValue();
-                    latch.countDown();
-                    if (!skipOnTimeOut && advertisingId != null && getPost() != null) {
-                        getPost().put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), advertisingId);
-                    }
-
-                    if (!skipOnTimeOut && getPost() != null) {
-                        getPost().put(Defines.Jsonkey.LATVal.getKey(), latVal);
-                    }
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+        if (!TextUtils.isEmpty(sysObserver.GAIDString_)) {
+            try {
+                params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
+                params_.put(Defines.Jsonkey.LATVal.getKey(), sysObserver.LATVal_);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        }).start();
-
-        try {
-            //Wait 1.5 sec max to receive the GAID and LAT
-            latch.await(1500, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            skipOnTimeOut = true;
         }
     }
 
@@ -429,21 +416,35 @@ public abstract class ServerRequest {
     }
 
     /**
-     * Set a wait lock before processing this request. Setting true will wait processing this request
-     * from the request queue.
+     * <p>
+     * Set the specified process wait lock for this request. This request will not be blocked from
+     * Execution until the waiting process finishes     *
+     * </p>
      *
-     * @param enable {@link Boolean} with true to enable the request process wait lock else false
+     * @param lock {@link PROCESS_WAIT_LOCK} type of lock
      */
-    public void setProcessWaitLockEnabled(boolean enable) {
-        isWaitLockEnabled_ = enable;
+    public void addProcessWaitLock(PROCESS_WAIT_LOCK lock) {
+        if (lock != null) {
+            locks_.add(lock);
+        }
     }
+
+    /**
+     * Unlock the specified lock from the request. Call this when the locked process finishes
+     *
+     * @param lock {@link PROCESS_WAIT_LOCK} type of lock
+     */
+    public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
+        locks_.remove(lock);
+    }
+
 
     /**
      * Check if this request is waiting on any operation to finish before processing
      *
      * @return True if this request if any pre processing operation pending
      */
-    public boolean isProcessWaitLockEnabled() {
-        return isWaitLockEnabled_;
+    public boolean isWaitingOnProcessToFinish() {
+        return locks_.size() > 0;
     }
 }

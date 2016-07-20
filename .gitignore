@@ -24,3 +24,5 @@ gen/
 Branch-SDK-TestBed/gradle/wrapper/gradle-wrapper.jar
 Branch-SDK-TestBed/gradlew
 Branch-SDK-TestBed/gradlew.bat
+
+Branch-SDK-TestBed/gradle/wrapper/gradle-wrapper.properties
