@@ -32,7 +32,6 @@ public class BranchSDKTests extends InstrumentationTestCase {
 
         branch = Branch.getInstance(getInstrumentation().getContext());
         prefHelper = PrefHelper.getInstance(getInstrumentation().getContext());
-        prefHelper.disableSmartSession();
     }
 
     public void tearDown() throws Exception {
@@ -145,7 +144,7 @@ public class BranchSDKTests extends InstrumentationTestCase {
                 try {
                     assertTrue(installParams.getString("name").equals("test name"));
                     assertTrue(installParams.getString("message").equals("hello there with short url"));
-                } catch (JSONException e) {
+                } catch (JSONException ignore) {
                 }
 
                 signal.countDown();

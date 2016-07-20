@@ -37,8 +37,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -298,10 +296,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     final Object lock;
 
-    private Timer closeTimer;
-    private Timer rotateCloseTimer;
-    private boolean keepAlive_;
-
     private Semaphore serverSema_;
 
     private ServerRequestQueue requestQueue_;
@@ -385,10 +379,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         systemObserver_ = new SystemObserver(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         serverSema_ = new Semaphore(1);
-        closeTimer = new Timer();
-        rotateCloseTimer = new Timer();
         lock = new Object();
-        keepAlive_ = false;
         networkCount_ = 0;
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
@@ -695,20 +686,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void disableAppList() {
         prefHelper_.disableExternAppListing();
     }
-
-    /**
-     * <p>If there's further Branch API call happening within the two seconds, we then don't close
-     * the session; otherwise, we close the session after two seconds.</p>
-     * <p/>
-     * <p>Call this method if you don't want this smart session feature and would rather manage
-     * the session yourself.</p>
-     * <p/>
-     * <p><b>Note:</b>  smart session - we keep session alive for two seconds</p>
-     */
-    public void disableSmartSession() {
-        prefHelper_.disableSmartSession();
-    }
-
 
     /**
      * <p>
@@ -1115,8 +1092,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     callback.onInitFinished(new JSONObject(), null);
                 }
             }
-            clearCloseTimer();
-            keepAlive();
         }
         //If uninitialised or initialising
         else {
@@ -1145,60 +1120,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>Closes the current session, dependent on the state of the
-     * {@link PrefHelper#getSmartSession()} {@link Boolean} value. If <i>true</i>, take no action.
-     * If false, close the sesion via the {@link #executeClose()} method.</p>
+     * PrefHelper#getSmartSession() {@link Boolean} value. If <i>true</i>, take no action.
+     * If false, close the session via the {@link #executeClose()} method.</p>
      * <p>Note that if smartSession is enabled, closeSession cannot be called within
      * a 2 second time span of another Branch action. This has to do with the method that
      * Branch uses to keep a session alive during Activity transitions</p>
+     *
+     * @deprecated This method is deprecated from SDK v1.14.6. Session Start and close are  automatically handled by Branch.
+     * In case you need to handle sessions manually inorder to support minimum sdk version less than 14 please consider using
+     * SDK version 1.14.5
      */
     public void closeSession() {
-        if (isAutoSessionMode_) {
-            /*
-             * Ignore any session close request from user if session is managed
-             * automatically.This is handle situation of closeSession() in
-             * closed by developer by error while running in auto session mode.
-             */
-            return;
-        }
-
-
-        if (prefHelper_.getSmartSession()) {
-            if (keepAlive_) {
-                return;
-            }
-
-
-            // else, real close
-            synchronized (lock) {
-                clearCloseTimer();
-                rotateCloseTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        //Since non auto session has no lifecycle callback enabled free up the currentActivity_
-                        if (currentActivityReference_ != null) {
-                            currentActivityReference_.clear();
-                        }
-                        executeClose();
-                    }
-                }, PREVENT_CLOSE_TIMEOUT);
-            }
-        } else {
-            //Since non auto session has no lifecycle callback enabled free up the currentActivity_
-            if (currentActivityReference_ != null) {
-                currentActivityReference_.clear();
-            }
-            executeClose();
-        }
-
-        if (prefHelper_.getExternAppListing()) {
-            if (appListingSchedule_ == null) {
-                scheduleListOfApps();
-            }
-        }
-        /* Close any opened sharing dialog.*/
-        if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog(true);
-        }
+        Log.w("BranchSDK", "closeSession() method is deprecated from SDK v1.14.6.Session is  automatically handled by Branch." +
+                "In case you need to handle sessions manually inorder to support minimum sdk version less than 14 please consider using " +
+                " SDK version 1.14.5");
     }
 
     /*
@@ -1920,40 +1855,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         } catch (JSONException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void clearCloseTimer() {
-        if (rotateCloseTimer == null)
-            return;
-        rotateCloseTimer.cancel();
-        rotateCloseTimer.purge();
-        rotateCloseTimer = new Timer();
-    }
-
-    private void clearTimer() {
-        if (closeTimer == null)
-            return;
-        closeTimer.cancel();
-        closeTimer.purge();
-        closeTimer = new Timer();
-    }
-
-    private void keepAlive() {
-        keepAlive_ = true;
-        synchronized (lock) {
-            clearTimer();
-            closeTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            keepAlive_ = false;
-                        }
-                    }).start();
-                }
-            }, SESSION_KEEPALIVE);
         }
     }
 

@@ -38,8 +38,6 @@ public class PrefHelper {
      */
     private static boolean BNC_App_Listing = true;
 
-    private static boolean BNC_Smart_Session = true;
-
     /**
      * A {@link String} value used where no string value is available.
      */
@@ -1018,12 +1016,6 @@ public class PrefHelper {
         return BNC_App_Listing;
     }
 
-    /**
-     * {@link Branch#disableSmartSession()}
-     */
-    public void disableSmartSession() {
-        BNC_Smart_Session = false;
-    }
 
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         if (key == null) {
@@ -1045,13 +1037,6 @@ public class PrefHelper {
         return this.requestMetadata;
     }
 
-    /**
-     * <p>Gets the state of the {@link Boolean} value indicating whether or not the <i>Smart Session</i>
-     * feature is enabled or not.</p>
-     */
-    public boolean getSmartSession() {
-        return BNC_Smart_Session;
-    }
 
     /**
      * <p>Gets the {@link Boolean} value of {@link #BNC_Dev_Debug}, which indicates whether or not
