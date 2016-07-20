@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -287,6 +289,7 @@ public class PrefHelper {
         if (!isLive) {
             setExternDebug();
         }
+
         try {
             final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
@@ -298,6 +301,14 @@ public class PrefHelper {
         } catch (final PackageManager.NameNotFoundException ignore) {
         }
 
+        // If Branch key is not specified in the manifest check String resource
+        if (TextUtils.isEmpty(branchKey)) {
+            try {
+                Resources resources = context_.getResources();
+                branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context_.getPackageName()));
+            } catch (Exception ignore) {
+            }
+        }
         if (branchKey == null) {
             branchKey = NO_STRING_VALUE;
         }
@@ -419,14 +430,16 @@ public class PrefHelper {
 
     /**
      * Set the value to specify if the current init is triggered by an FB app link
+     *
      * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
      */
-    public void setIsAppLinkTriggeredInit (Boolean isAppLinkTriggered) {
+    public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
         setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
     }
 
     /**
      * Specifies the value to specify if the current init is triggered by an FB app link
+     *
      * @return {@link Boolean} with value true if the init is triggered by an FB app link
      */
     public boolean getIsAppLinkTriggeredInit() {
@@ -474,7 +487,7 @@ public class PrefHelper {
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
      * @param identifier A {@link String} value containing the identifier of the associated
-     *                  link.
+     *                   link.
      */
     public void setLinkClickIdentifier(String identifier) {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
