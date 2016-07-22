@@ -46,23 +46,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             }
 
-            if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
-            }
-            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
-            }
-            if (!prefHelper_.getPushIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), prefHelper_.getPushIdentifier());
-            }
-            // External URI or Extras if exist
-            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
-            }
-            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
-            }
-
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));

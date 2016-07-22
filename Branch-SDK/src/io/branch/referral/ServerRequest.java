@@ -34,7 +34,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK
+        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK
     }
 
     // Set for holding any active wait locks
@@ -446,5 +446,12 @@ public abstract class ServerRequest {
      */
     public boolean isWaitingOnProcessToFinish() {
         return locks_.size() > 0;
+    }
+
+    /**
+     * Called on UI thread just before executing a request. Do any final updates to the request here
+     */
+    public void onPreExecute() {
+
     }
 }

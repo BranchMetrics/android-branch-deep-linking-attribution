@@ -320,6 +320,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         INITIALISED, INITIALISING, UNINITIALISED
     }
 
+
+    private enum INTENT_STATE {
+        PENDING,
+        READY
+    }
+
+    private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
+
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
@@ -1173,82 +1181,84 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean readAndStripParam(Uri data, Activity activity) {
 
-        // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
-        try {
-            if (data != null) {
-                prefHelper_.setExternalIntentUri(data.toString());
-            }
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                Bundle bundle = activity.getIntent().getExtras();
-                Set<String> extraKeys = bundle.keySet();
-
-                if (extraKeys.size() > 0) {
-                    JSONObject extrasJson = new JSONObject();
-                    for (String key : extraKeys) {
-                        extrasJson.put(key, bundle.get(key));
-                    }
-                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
-                }
-            }
-        } catch (Exception ignore) {
-        }
-
-        //Check for any push identifier in case app is launched by a push notification
-        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+        if (intentState_ == INTENT_STATE.READY) {
+            // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
             try {
-                String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
-                if (pushIdentifier != null && pushIdentifier.length() > 0) {
-                    prefHelper_.setPushIdentifier(pushIdentifier);
-                    return false;
+                if (data != null) {
+                    prefHelper_.setExternalIntentUri(data.toString());
+                }
+                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                    Bundle bundle = activity.getIntent().getExtras();
+                    Set<String> extraKeys = bundle.keySet();
+
+                    if (extraKeys.size() > 0) {
+                        JSONObject extrasJson = new JSONObject();
+                        for (String key : extraKeys) {
+                            extrasJson.put(key, bundle.get(key));
+                        }
+                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                    }
                 }
             } catch (Exception ignore) {
             }
-        }
 
-        //Check for link click id or app link
-        if (data != null && data.isHierarchical() && activity != null) {
-            try {
-                if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
-                    prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
-                    String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                    String uriString = null;
-                    if (activity.getIntent() != null) {
-                        uriString = activity.getIntent().getDataString();
+            //Check for any push identifier in case app is launched by a push notification
+            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                try {
+                    String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
+                    if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                        prefHelper_.setPushIdentifier(pushIdentifier);
+                        return false;
                     }
-                    if (data.getQuery().length() == paramString.length()) {
-                        paramString = "\\?" + paramString;
-                    } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
-                        paramString = "&" + paramString;
+                } catch (Exception ignore) {
+                }
+            }
+
+            //Check for link click id or app link
+            if (data != null && data.isHierarchical() && activity != null) {
+                try {
+                    if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
+                        prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
+                        String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                        String uriString = null;
+                        if (activity.getIntent() != null) {
+                            uriString = activity.getIntent().getDataString();
+                        }
+                        if (data.getQuery().length() == paramString.length()) {
+                            paramString = "\\?" + paramString;
+                        } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
+                            paramString = "&" + paramString;
+                        } else {
+                            paramString = paramString + "&";
+                        }
+                        if (uriString != null) {
+                            Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
+                            activity.getIntent().setData(newData);
+                        } else {
+                            Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
+                        }
+                        return true;
                     } else {
-                        paramString = paramString + "&";
-                    }
-                    if (uriString != null) {
-                        Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
-                        activity.getIntent().setData(newData);
-                    } else {
-                        Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
-                    }
-                    return true;
-                } else {
-                    // Check if the clicked url is an app link pointing to this app
-                    String scheme = data.getScheme();
-                    if (scheme != null && activity.getIntent() != null) {
-                        // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
-                        // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                        if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
-                            if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                    && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
-                                prefHelper_.setAppLink(data.toString());
-                                String uriString = data.toString();
-                                uriString += uriString.contains("?") ? "&" : "?";
-                                uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
-                                activity.getIntent().setData(Uri.parse(uriString));
-                                return false;
+                        // Check if the clicked url is an app link pointing to this app
+                        String scheme = data.getScheme();
+                        if (scheme != null && activity.getIntent() != null) {
+                            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
+                            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
+                            if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+                                if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
+                                    prefHelper_.setAppLink(data.toString());
+                                    String uriString = data.toString();
+                                    uriString += uriString.contains("?") ? "&" : "?";
+                                    uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
+                                    activity.getIntent().setData(Uri.parse(uriString));
+                                    return false;
+                                }
                             }
                         }
                     }
+                } catch (Exception ignore) {
                 }
-            } catch (Exception ignore) {
             }
         }
         return false;
@@ -1952,7 +1962,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (isGAParamsFetchInProgress_) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
+        if (intentState_ != INTENT_STATE.READY) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        }
         registerInstallOrOpen(request, callback);
+    }
+
+    private void onIntentReady(Activity activity) {
+        Log.d("BranchSDK", "onIntentReady");
+        if (activity.getIntent() != null) {
+            Uri intentData = activity.getIntent().getData();
+            readAndStripParam(intentData, activity);
+        }
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        processNextQueueItem();
     }
 
     /**
@@ -2022,6 +2045,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
+            intentState_ = INTENT_STATE.PENDING;
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
@@ -2029,6 +2053,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStarted(Activity activity) {
+            intentState_ = INTENT_STATE.PENDING;
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -2046,6 +2071,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
+            intentState_ = INTENT_STATE.READY;
+            onIntentReady(activity);
         }
 
         @Override
@@ -2246,6 +2273,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
             timeOut_ = prefHelper_.getTimeout();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            thisReq_.onPreExecute();
         }
 
         @Override

@@ -93,4 +93,30 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
     }
+
+    @Override
+    public void onPreExecute() {
+        JSONObject post = getPost();
+        try {
+            if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+            }
+            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
+            }
+            if (!prefHelper_.getPushIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), prefHelper_.getPushIdentifier());
+            }
+            // External URI or Extras if exist
+            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
+            }
+            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
+        } catch (JSONException ignore) {
+
+        }
+
+    }
 }
