@@ -2778,12 +2778,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
         if (initState_ == SESSION_STATE.INITIALISED) {
-            ServerResponse response = null;
-            try {
-                int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-                response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
-            }
+            ServerResponse response = kRemoteInterface_.createCustomUrlSync(req.getPost());;
             String url = req.getLongUrl();
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
