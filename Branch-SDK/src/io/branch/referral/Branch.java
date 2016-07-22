@@ -1969,7 +1969,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void onIntentReady(Activity activity) {
-        Log.d("BranchSDK", "onIntentReady");
         if (activity.getIntent() != null) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
