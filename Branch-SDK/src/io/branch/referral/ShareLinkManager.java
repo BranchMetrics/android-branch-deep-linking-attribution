@@ -186,7 +186,11 @@ class ShareLinkManager {
                     adapter.notifyDataSetChanged();
                 } else {
                     if (callback_ != null) {
-                        callback_.onChannelSelected(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                        String selectedChannelName = "";
+                        if (view.getTag() != null && context_ != null && ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()) != null) {
+                            selectedChannelName = ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString();
+                        }
+                        callback_.onChannelSelected(selectedChannelName);
                     }
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
