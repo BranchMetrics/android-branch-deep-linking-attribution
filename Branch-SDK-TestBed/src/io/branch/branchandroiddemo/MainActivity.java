@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
@@ -30,6 +31,9 @@ public class MainActivity extends Activity {
     TextView txtRewardBalance;
 
     BranchUniversalObject branchUniversalObject;
+
+    int count = 0;
+    long startMillis = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -358,4 +362,29 @@ public class MainActivity extends Activity {
             startActivity(i);
         }
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int eventaction = event.getAction();
+        if (eventaction == MotionEvent.ACTION_UP) {
+
+            long time = System.currentTimeMillis();
+
+            if (startMillis == 0 || (time - startMillis > 3000)) {
+                startMillis = time;
+                count = 1;
+            }
+            else {
+                count++;
+            }
+
+            if (count == 5) {
+                Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(i);
+            }
+            return true;
+        }
+        return false;
+    }
+
 }

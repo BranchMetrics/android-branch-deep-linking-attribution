@@ -45,6 +45,8 @@
 
         <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity"/>
 
+        <activity android:name="io.branch.branchandroiddemo.SettingsActivity"/>
+
         <activity android:name="io.branch.branchandroiddemo.ReferralCodeActivity"/>
 
         <activity android:name=".AutoDeepLinkTestActivity">
