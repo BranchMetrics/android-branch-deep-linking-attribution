@@ -747,8 +747,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback) {
-        initSession(callback, (Activity) null);
-        return false;
+        return initSession(callback, (Activity) null);
     }
 
     /**
@@ -761,8 +760,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback) {
-        initSession(callback, (Activity) null);
-        return false;
+        return initSession(callback, (Activity) null);
     }
 
     /**
@@ -783,7 +781,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
             initUserSessionInternal(callback, activity, isReferrable);
         }
-        return false;
+        return true;
     }
 
     /**
@@ -804,7 +802,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
             initUserSessionInternal(callback, activity, isReferrable);
         }
-        return false;
+        return true;
     }
 
     /**
@@ -853,9 +851,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * valid URI format.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
+        readAndStripParam(data, activity);
         initSession(callback, activity);
-        return uriHandled;
+        return true;
     }
 
     /**
@@ -872,9 +870,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * valid URI format.
      */
     public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession(callback, activity);
     }
 
     /**
@@ -919,9 +916,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSessionWithData(Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession((BranchReferralInitListener) null, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession((BranchReferralInitListener) null, activity);
     }
 
     /**
@@ -1005,9 +1001,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, isReferrable, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession(callback, isReferrable, activity);
     }
 
     /**
@@ -1026,9 +1021,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, isReferrable, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession(callback, isReferrable, activity);
     }
 
     /**
@@ -1078,7 +1072,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
         initUserSessionInternal(callback, activity, isReferrable);
-        return false;
+        return true;
     }
 
     /**
@@ -1096,7 +1090,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
         initUserSessionInternal(callback, activity, isReferrable);
-        return false;
+        return true;
     }
 
 
