@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -36,8 +38,6 @@ public class PrefHelper {
      */
     private static boolean BNC_App_Listing = true;
 
-    private static boolean BNC_Smart_Session = true;
-
     /**
      * A {@link String} value used where no string value is available.
      */
@@ -56,7 +56,6 @@ public class PrefHelper {
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
 
-    private static final String KEY_APP_KEY = "bnc_app_key";
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
     private static final String KEY_APP_VERSION = "bnc_app_version";
     private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
@@ -258,44 +257,6 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the Branch App Key in preferences programmatically.</p>
-     * <p/>
-     * <p><b>Note: </b> This is a deprecated method, you should configure your <i>App Key</i> as an XML
-     * String value instead.</p>
-     *
-     * @param key A {@link String} value containing the App Key for the current App.
-     * @see <a href="https://github.com/BranchMetrics/Branch-Integration-Guides/blob/master/android-quick-start.md">
-     * Branch Quick-Start Guide for Android</a>
-     * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/2cb4f05fd8f67bce1019456f26b7f384a39abb2c/README.md#add-your-app-key-to-your-project">
-     * Adding your app key to your project</a>
-     */
-    public void setAppKey(String key) {
-        setString(KEY_APP_KEY, key);
-    }
-
-    /**
-     * <p>Gets the Branch App Key in preferences programmatically.</p>
-     *
-     * @return A {@link String} value containing the current App Key as configured.
-     */
-    public String getAppKey() {
-        String appKey = null;
-        try {
-            final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                appKey = ai.metaData.getString("io.branch.sdk.ApplicationId");
-            }
-        } catch (final PackageManager.NameNotFoundException ignore) {
-        }
-
-        if (appKey == null) {
-            appKey = getString(KEY_APP_KEY);
-        }
-
-        return appKey;
-    }
-
-    /**
      * Set the given Branch Key to preference. Clears the preference data if the key is a new key.
      *
      * @param key A {@link String} representing Branch Key.
@@ -326,6 +287,7 @@ public class PrefHelper {
         if (!isLive) {
             setExternDebug();
         }
+
         try {
             final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
@@ -337,6 +299,14 @@ public class PrefHelper {
         } catch (final PackageManager.NameNotFoundException ignore) {
         }
 
+        // If Branch key is not specified in the manifest check String resource
+        if (TextUtils.isEmpty(branchKey)) {
+            try {
+                Resources resources = context_.getResources();
+                branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context_.getPackageName()));
+            } catch (Exception ignore) {
+            }
+        }
         if (branchKey == null) {
             branchKey = NO_STRING_VALUE;
         }
@@ -458,14 +428,16 @@ public class PrefHelper {
 
     /**
      * Set the value to specify if the current init is triggered by an FB app link
+     *
      * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
      */
-    public void setIsAppLinkTriggeredInit (Boolean isAppLinkTriggered) {
+    public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
         setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
     }
 
     /**
      * Specifies the value to specify if the current init is triggered by an FB app link
+     *
      * @return {@link Boolean} with value true if the init is triggered by an FB app link
      */
     public boolean getIsAppLinkTriggeredInit() {
@@ -513,7 +485,7 @@ public class PrefHelper {
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
      * @param identifier A {@link String} value containing the identifier of the associated
-     *                  link.
+     *                   link.
      */
     public void setLinkClickIdentifier(String identifier) {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
@@ -1044,12 +1016,6 @@ public class PrefHelper {
         return BNC_App_Listing;
     }
 
-    /**
-     * {@link Branch#disableSmartSession()}
-     */
-    public void disableSmartSession() {
-        BNC_Smart_Session = false;
-    }
 
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         if (key == null) {
@@ -1071,13 +1037,6 @@ public class PrefHelper {
         return this.requestMetadata;
     }
 
-    /**
-     * <p>Gets the state of the {@link Boolean} value indicating whether or not the <i>Smart Session</i>
-     * feature is enabled or not.</p>
-     */
-    public boolean getSmartSession() {
-        return BNC_Smart_Session;
-    }
 
     /**
      * <p>Gets the {@link Boolean} value of {@link #BNC_Dev_Debug}, which indicates whether or not
