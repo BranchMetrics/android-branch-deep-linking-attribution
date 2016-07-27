@@ -7,13 +7,10 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -27,9 +24,9 @@ import java.util.Set;
 /**
  * Created by sojanpr on 5/31/16.
  */
-class BranchAnalyticsRunner {
-    private static final String TAG = "BranchAnalyticsRunner";
-    private static BranchAnalyticsRunner thisInstance_;
+class CIScanner {
+    private static final String TAG = "CIScanner";
+    private static CIScanner thisInstance_;
     private final String TRIGGER_URI_KEY = "trigger_uri";
     private final String CONTENT_PATH_KEY = "content_path";
 
@@ -44,32 +41,41 @@ class BranchAnalyticsRunner {
     private final int APP_LAUNCH_DELAY = 1300; /* Time for an app to do initial pages like splash or logo */
     private String contentNavPath_; // User navigation path for the content.
 
+    private static final String TIME_STAMP_KEY = "ts";
+    private static final String ACTION_KEY = "a";
+    private static final String NAV_PATH_KEY = "n";
+    private static final String REFERRAL_LINK_KEY = "rl";
+    private static final String CONTENT_LINK_KEY = "cl";
+    private static final String CONTENT_META_DATA_KEY = "cm";
+    private static final String VIEW_KEY = "v";
+    private static final String CONTENT_DATA_KEY = "cd";
+    private static final String CONTENT_KEYS_KEY = "ck";
+    private static final String PACKAGE_NAME_KEY = "p";
+    private static final String ENTITIES_KEY = "e";
+
 
     private Defines.ContentAnalyticMode content_analytic_mode_ = Defines.ContentAnalyticMode.Off;
 
-    static BranchAnalyticsRunner getInstance() {
+    static CIScanner getInstance() {
         if (thisInstance_ == null) {
-            thisInstance_ = new BranchAnalyticsRunner();
+            thisInstance_ = new CIScanner();
         }
         return thisInstance_;
     }
 
-    private BranchAnalyticsRunner() {
+    private CIScanner() {
         handler_ = new Handler();
 
     }
 
     //------------------------- Public methods---------------------------------//
-    public void onBranchInitialised(Defines.ContentAnalyticMode mode) {
-        content_analytic_mode_ = mode;
-    }
 
     public void onBranchClosing(Context context) {
-        content_analytic_mode_ = Defines.ContentAnalyticMode.Off;
-        if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
-            ServerRequest request = new ServerRequestUpdateContentEvents(context);
-            Branch.getInstance().handleNewRequest(request);
-        }
+//        content_analytic_mode_ = Defines.ContentAnalyticMode.Off;
+//        if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
+//            ServerRequest request = new ServerRequestUpdateContentEvents(context);
+//            Branch.getInstance().handleNewRequest(request);
+//        }
     }
 
     public void scanForContent(final Activity activity, boolean isSessionStart) {
@@ -88,8 +94,10 @@ class BranchAnalyticsRunner {
                 }
             }
         }
+        triggerUri_ = "https://bnc.lt/Ojqd/pfXJMApyav";
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
-        if (triggerUri_ != null || BranchAnalyticsPathCache.getInstance(activity).isContentPathAvailable(activity)) {
+        CIManifest.CIPathProperties pathProperties = CIManifest.getInstance(activity).getCIPathProperties(activity);
+        if (triggerUri_ != null || pathProperties != null) {
             handler_.removeCallbacks(readContentRunnable);
             lastActivityReference_ = new WeakReference<>(activity);
             contentPath_ = getContentPath(activity);
@@ -98,7 +106,7 @@ class BranchAnalyticsRunner {
     }
 
     public void onActivityStarted(Activity activity, boolean isSessionStart) {
-        scanForContent(activity, isSessionStart);
+        //scanForContent(activity, isSessionStart);
     }
 
     public void onActivityStopped(Activity activity) {
@@ -115,23 +123,28 @@ class BranchAnalyticsRunner {
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
-            if (content_analytic_mode_ != Defines.ContentAnalyticMode.Off) {
+//            if (content_analytic_mode_ != Defines.ContentAnalyticMode.Off) {
                 try {
                     if (lastActivityReference_ != null && lastActivityReference_.get() != null) {
                         Activity activity = lastActivityReference_.get();
                         JSONObject contentEvent = new JSONObject();
-                        contentEvent.put(Defines.Jsonkey.ContentAnalyticsMode.getKey(), content_analytic_mode_.toString());
-                        contentEvent.put(Defines.Jsonkey.BranchViewAction.getKey(), Defines.Jsonkey.ContentActionView.toString());
-                        contentEvent.put(Defines.Jsonkey.ContentPath.getKey(), contentPath_);
-                        contentEvent.put(Defines.Jsonkey.ContentNavPath.getKey(), contentNavPath_);
-                        contentEvent.put(Defines.Jsonkey.ReferralLink.getKey(), triggerUri_);
+                        contentEvent.put(TIME_STAMP_KEY, System.currentTimeMillis());
+                        contentEvent.put(ACTION_KEY, "v");
+                        contentEvent.put(NAV_PATH_KEY, contentNavPath_);
+                        contentEvent.put(REFERRAL_LINK_KEY, triggerUri_);
+                        contentEvent.put(CONTENT_LINK_KEY, "");
+                        contentEvent.put(CONTENT_META_DATA_KEY, new JSONObject());
+                        contentEvent.put(VIEW_KEY, contentPath_);
 
-                        JSONArray viewMetaDataJson = new JSONArray();
-                        contentEvent.put(Defines.Jsonkey.ContentData.getKey(), viewMetaDataJson);
+                        JSONArray contentDataArray = new JSONArray();
+                        contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+
+                        JSONArray contentKeysArray = new JSONArray();
+                        contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
 
                         ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-                        readThroughChildViews(rootView, viewMetaDataJson, activity.getResources());
-                        BranchAnalyticsPathCache.getInstance(activity).addContentPath(contentPath_);
+                        readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources());
+                        //CIManifest.getInstance(activity).addContentPath(contentPath_);
 
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
@@ -143,44 +156,42 @@ class BranchAnalyticsRunner {
                 } catch (JSONException ignore) {
                 }
             }
-        }
+//        }
     };
 
-    private void readThroughChildViews(ViewGroup view, JSONArray contentDataArray, Resources res) {
+    private void readThroughChildViews(ViewGroup view, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res) {
         ViewGroup viewGroup = ((ViewGroup) view);
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             View childView = viewGroup.getChildAt(i);
             if (childView.getVisibility() == View.VISIBLE) {
                 if (childView instanceof ViewGroup) {
-                    readThroughChildViews((ViewGroup) childView, contentDataArray, res);
+                    readThroughChildViews((ViewGroup) childView, contentDataArray, contentKeysArray, res);
                 } else {
                     String viewId = res.getResourceEntryName(childView.getId());
                     String viewVal = null;
-                    try {
-                        if (childView instanceof EditText) {
-                            EditText editText = (EditText) childView;
-                            viewVal = editText.getText().toString();
-                        } else if (childView instanceof TextView) {
-                            TextView txtView = (TextView) childView;
-                            viewVal = txtView.getText().toString();
-                        } else if (content_analytic_mode_ != Defines.ContentAnalyticMode.Deep) {
-                            if (childView instanceof ImageView && !(childView instanceof ImageButton)) {
-                                childView.setDrawingCacheEnabled(true);
-                                Bitmap bmp = Bitmap.createBitmap(childView.getDrawingCache());
-                                if (bmp != null) {
-                                    viewVal = BitMapToString(bmp);
-                                    bmp.recycle();
-                                }
-                            }
-                        }
-
-                        JSONObject contentData = new JSONObject();
-                        contentData.put(viewId, viewVal);
-                        contentData.put(Defines.Jsonkey.Type.getKey(), childView.getClass().getSimpleName());
-                        contentDataArray.put(contentData);
-                    } catch (JSONException ex) {
-                        ex.printStackTrace();
+//                    try {
+                    if (childView instanceof EditText) {
+                        EditText editText = (EditText) childView;
+                        viewVal = editText.getText().toString();
+                    } else if (childView instanceof TextView) {
+                        TextView txtView = (TextView) childView;
+                        viewVal = txtView.getText().toString();
                     }
+//                        else if (content_analytic_mode_ != Defines.ContentAnalyticMode.Deep) {
+//                            if (childView instanceof ImageView && !(childView instanceof ImageButton)) {
+//                                childView.setDrawingCacheEnabled(true);
+//                                Bitmap bmp = Bitmap.createBitmap(childView.getDrawingCache());
+//                                if (bmp != null) {
+//                                    viewVal = BitMapToString(bmp);
+//                                    bmp.recycle();
+//                                }
+//                            }
+//                        }
+                    contentDataArray.put(viewVal);
+                    contentKeysArray.put(viewId);
+//                    } catch (JSONException ex) {
+//                        ex.printStackTrace();
+//                    }
                 }
             }
         }
@@ -198,7 +209,7 @@ class BranchAnalyticsRunner {
 
 
     private String getContentPath(Activity activity) {
-        String path = "android-app://" + activity.getPackageName() + "/" + activity.getClass().getSimpleName();
+        String path = /*"android-app://" + activity.getPackageName() + */ "/" + activity.getClass().getSimpleName();
         return path;
     }
 
@@ -219,6 +230,24 @@ class BranchAnalyticsRunner {
             }
         }
         return contentUrl;
+    }
+
+
+    public JSONObject getCIDataForCloseRequest(Context context) {
+        JSONObject ciObj = new JSONObject();
+        try {
+            CIManifest ciManifest = CIManifest.getInstance(context);
+            ciObj.put(CIManifest.MANIFEST_VERSION_KEY, ciManifest.getManifestVersion());
+            ciObj.put(CIManifest.HASH_MODE_KEY, ciManifest.isCLearTextRequested());
+            ciObj.put(PACKAGE_NAME_KEY, context.getPackageName());
+            ciObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
+            PrefHelper.getInstance(context).clearBranchAnalyticsData();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return ciObj;
+
     }
 
 }

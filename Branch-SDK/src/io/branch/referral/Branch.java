@@ -1239,7 +1239,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } else {
                 if (!requestQueue_.containsClose()) {
-                    BranchAnalyticsRunner.getInstance().onBranchClosing(context_);
+                    CIScanner.getInstance().onBranchClosing(context_);
                     ServerRequest req = new ServerRequestRegisterClose(context_);
                     handleNewRequest(req);
                 }
@@ -3152,7 +3152,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStarted(Activity activity) {
-            BranchAnalyticsRunner.getInstance().scanForContent(activity, activityCnt_ < 1);
+            CIScanner.getInstance().scanForContent(activity, activityCnt_ < 1);
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -3184,7 +3184,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStopped(Activity activity) {
-            BranchAnalyticsRunner.getInstance().onActivityStopped(activity);
+            CIScanner.getInstance().onActivityStopped(activity);
             activityCnt_--; // Check if this is the last activity.If so stop
             // session.
             if (activityCnt_ < 1) {

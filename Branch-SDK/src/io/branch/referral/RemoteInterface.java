@@ -152,7 +152,7 @@ class RemoteInterface {
     private ServerResponse make_restful_get(String baseUrl, JSONObject params, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
-        HttpsURLConnection connection = null;
+        HttpURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
@@ -176,7 +176,7 @@ class RemoteInterface {
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
             URL urlObject = new URL(modifiedUrl);
-            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection = (HttpURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
 
@@ -299,7 +299,7 @@ class RemoteInterface {
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
                                              int retryNumber, boolean log) {
-        HttpsURLConnection connection = null;
+        HttpURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
@@ -325,7 +325,7 @@ class RemoteInterface {
                 PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
             }
             URL urlObject = new URL(url);
-            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection = (HttpURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);

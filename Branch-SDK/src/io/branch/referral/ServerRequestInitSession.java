@@ -14,13 +14,15 @@ import org.json.JSONObject;
 abstract class ServerRequestInitSession extends ServerRequest {
     protected static final String ACTION_OPEN = "open";
     protected static final String ACTION_INSTALL = "install";
-
+    private final Context context_;
     public ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
+        context_ = context;
     }
 
     protected ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        context_ = context;
     }
 
     /**
@@ -74,7 +76,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
 
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        BranchAnalyticsRunner.getInstance().onBranchInitialised(Defines.ContentAnalyticMode.Basic);
+       CIManifest.getInstance(context_).onBranchInitialised(response.getObject());
 
         // Check for any Third party SDK for data handling
         try {

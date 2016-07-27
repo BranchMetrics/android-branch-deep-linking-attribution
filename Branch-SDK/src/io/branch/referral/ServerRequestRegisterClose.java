@@ -30,6 +30,7 @@ class ServerRequestRegisterClose extends ServerRequest {
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 closePost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
+            closePost.put("ci",CIScanner.getInstance().getCIDataForCloseRequest(context));
             setPost(closePost);
         } catch (JSONException ex) {
             ex.printStackTrace();

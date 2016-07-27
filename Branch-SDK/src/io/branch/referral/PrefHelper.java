@@ -173,7 +173,8 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
-        return "https://api.branch.io/";
+        //return "https://api.branch.io/";
+        return "http://chandra.branch.io:8080/";
     }
 
     /**
