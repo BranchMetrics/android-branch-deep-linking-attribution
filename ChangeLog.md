@@ -1,5 +1,10 @@
 Branch Android SDK change log
 
+- v2.0.0: Removing support for Manual session handling. This version onwards only Auto session management is supported. This requires minimum API level set to 14 or above.
+  If not using auto session already please call "Branch.getAutoInstance(application)" from your Application Classes "onCreate()" method.
+  If your application doesn't have an Application class just use "BranchApp" as your application class by adding it in manifest(add "android:name="BranchApp" in application tag")
+  There is not need to call "closeSession()" API explicitly. If you want to support minimum API level less than 9 please consider using SDK version 1.14.5 (support minimum sdk version 9)
+
 - v1.14.5: Using Thread Pool to execute Branch request in parallel to improve Branch API response time. Optimizations for performance improvements
 
 - v1.14.4: Adding more styling options to Share Sheet. Disabling Facebook App-Link check by default.

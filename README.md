@@ -2,15 +2,52 @@
 
 This is a repository of our open source Android SDK, and the information presented here serves as a reference manual for our Android SDK. See the table of contents below for a complete list of the content featured in this document.
 
+___
+
+## Android Reference
+
+1. External resources
+  + [Full integration guide](https://dev.branch.io/getting-started/sdk-integration-guide/guide/android/)
+  + [Change log](https://github.com/BranchMetrics/android-branch-deep-linking/blob/master/ChangeLog.md)
+  + [Testing resources](https://dev.branch.io/getting-started/integration-testing/guide/android/)
+  + [Support portal](http://support.branch.io)
+  + [Test app resources](#get-the-demo-app)
+
+2. Getting started
+  + [Library installation](#installation)
+  + [Register for Branch key](#register-your-app)
+  + [Register a activity for deep linking](#register-an-activity-for-direct-deep-linking-optional-but-recommended)
+  + [Leverage Android App Links for deep linking](#leverage-android-app-links-for-deep-linking)
+  + [Deep link from push notifications](#deeplink-via-push-notification)
+  + [Add Branch key to your manifest](#configure-your-androidmanifestxml)
+
+3. Branch general methods
+  + [Initialize Branch and register deep link router](#initialization)
+  + [Auto deep link functionality](#auto-deep-link-activities)
+  + [Retrieve latest deep linking params](#retrieve-session-install-or-open-parameters)
+  + [Retrieve the user's first deep linking params](#retrieve-install-install-only-parameters)
+  + [Setting the user id for tracking influencers](#persistent-identities)
+  + [Logging a user out](#logout)
+  + [Tracking custom events](#register-custom-events)
+
+4. Branch Universal Objects
+  + [Instantiate a Branch Universal Object](#defining-the-branch-universal-object)
+  + [Register views for content analytics](#registering-a-view)
+  + [List content on Spotlight](#list-links-in-google-search-with-app-indexing)
+  + [Creating a short link referencing the object](#creating-a-deep-link)
+  + [Triggering a share sheet to share a link](#showing-a-custom-share-sheet)
+
+5. Referral rewards methods
+  + [Get reward balance](#get-reward-balance)
+  + [Redeem rewards](#redeem-all-or-some-of-the-reward-balance-store-state)
+  + [Get credit history](#get-credit-history)
+
+___
+
+
 ## Get the Demo App
 
 This is the readme file of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
-
-## Additional Resources
-- [Integration guide](https://dev.branch.io/recipes/add_the_sdk/android/) *Start Here*
-- [Changelog](https://github.com/BranchMetrics/Android-Deferred-Deep-Linking-SDK/blob/master/ChangeLog.md)
-- [Testing](https://dev.branch.io/recipes/testing_your_integration/android/)
-- [Support portal, FAQ](http://support.branch.io)
 
 ## Installation
 
@@ -63,9 +100,28 @@ Typically, you would register some sort of splash activitiy that handles routing
 ```
 ### Leverage Android App Links for deep linking
 
-If you are building applications targeting for Android M or above, Branch make it really easy to configure your app for deep linking using App Links.
-In your project's manifest file, you can register activities to for App Linking by adding an intent filter as follows. You only need to know `live_app_alpha_encoded_id`
-and `test_app_alpha_encoded_id` which you can obtain from the Branch dash board once you enable App Linking support for your application.
+If you are building applications targeting for Android M or above, Branch make it really easy to configure your app for deep linking using App Links. In your project's manifest file, you can register activities to for App Linking by adding an intent filter as follows.
+
+#### If using app.link
+
+With app.link, there's no need to use the encoded id and you just need to list the domains.
+
+```xml
+<activity android:name="com.yourapp.your_activity">
+    <!-- App Link your activity to Branch links-->
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+         <data android:scheme="https" android:host="yourapp-alternate.app.link" />
+         <data android:scheme="https" android:host="yourapp.app.link" />
+    </intent-filter>
+</activity>
+```
+
+#### If using bnc.lt or a custom domain
+
+You only need to know `live_app_alpha_encoded_id` and `test_app_alpha_encoded_id` which you can obtain from the Branch dash board once you enable App Linking support for your application.
 
 ```xml
 <activity android:name="com.yourapp.your_activity">
