@@ -29,8 +29,8 @@ class CIScanner {
     private String triggerUri_;
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
-    private static final int VIEW_SETTLE_TIME = 2000; /* Time for a view to load its components */
-    private static final int APP_LAUNCH_DELAY = 1500; /* Time for an app to do initial pages like splash or logo */
+    private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
+    private static final int APP_LAUNCH_DELAY = 2500; /* Time for an app to do initial pages like splash or logo */
     private String contentNavPath_; // User navigation path for the content.
 
     private static final String TIME_STAMP_KEY = "ts";
@@ -63,6 +63,8 @@ class CIScanner {
     //------------------------- Public methods---------------------------------//
 
     public void scanForContent(final Activity activity, boolean isSessionStart) {
+        ciManifest_ = CIManifest.getInstance(activity);
+
         int viewRenderWait = VIEW_SETTLE_TIME;
         if (isSessionStart) {
             triggerUri_ = null;
@@ -78,7 +80,7 @@ class CIScanner {
                 }
             }
         }
-        ciManifest_ = CIManifest.getInstance(activity);
+
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
         CIManifest.CIPathProperties pathProperties = ciManifest_.getCIPathProperties(activity);
 
@@ -105,7 +107,7 @@ class CIScanner {
         public void run() {
 
             try {
-                if (lastActivityReference_ != null && lastActivityReference_.get() != null) {
+                if (ciManifest_.isCIEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
                     JSONObject contentEvent = new JSONObject();
                     contentEvent.put(TIME_STAMP_KEY, System.currentTimeMillis());
@@ -125,8 +127,9 @@ class CIScanner {
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
                     boolean isClearText = CIManifest.getInstance(activity).isClearTextRequested();
 
-                    JSONArray filteredElements = ciManifest_.getCIPathProperties(activity).getFilteredElements();
-                    if (filteredElements.length() > 0) {
+                    CIManifest.CIPathProperties ciPathProperties = ciManifest_.getCIPathProperties(activity);
+                    JSONArray filteredElements = ciPathProperties != null ? ciPathProperties.getFilteredElements(): null;
+                    if (filteredElements != null && filteredElements.length() > 0) {
                         readThroughFilteredChildViews(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
                     } else {
                         readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
@@ -161,24 +164,22 @@ class CIScanner {
     private void readThroughChildViews(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             View childView = viewGroup.getChildAt(i);
-            if (childView.getVisibility() == View.VISIBLE) {
-                if (childView instanceof ViewGroup) {
-                    readThroughChildViews((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
-                } else {
-                    String viewName = res.getResourceEntryName(childView.getId());
-                    updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
-                }
+            if (childView.getVisibility() == View.VISIBLE) if (childView instanceof ViewGroup) {
+                readThroughChildViews((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
+            } else {
+                String viewName = res.getResourceEntryName(childView.getId());
+                updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
             }
         }
     }
 
     private void updateElementData(String viewName, View view, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
-        String viewVal = null;
+        String viewVal;
         if (view instanceof TextView) {
             TextView txtView = (TextView) view;
             viewVal = null;
             if (txtView.getText() != null) {
-                viewVal = txtView.getText().toString().substring(0, Math.min(viewVal.length(), ciManifest_.getMaxTextLen()));
+                viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), ciManifest_.getMaxTextLen()));
                 viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
             }
             contentDataArray.put(viewVal);
