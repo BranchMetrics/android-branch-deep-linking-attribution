@@ -199,24 +199,4 @@ public class Defines {
 
     }
 
-    public enum ContentAnalyticMode {
-        Basic("basic"),
-        Deep("deep"),
-        Off("off");
-        private String key = "";
-
-        ContentAnalyticMode(String key) {
-            this.key = key;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public String toString() {
-            return key;
-        }
-    }
-
 }

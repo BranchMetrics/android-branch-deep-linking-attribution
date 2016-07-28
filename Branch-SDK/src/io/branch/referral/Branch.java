@@ -1157,7 +1157,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } else {
                 if (!requestQueue_.containsClose()) {
-                    CIScanner.getInstance().onBranchClosing(context_);
                     ServerRequest req = new ServerRequestRegisterClose(context_);
                     handleNewRequest(req);
                 }

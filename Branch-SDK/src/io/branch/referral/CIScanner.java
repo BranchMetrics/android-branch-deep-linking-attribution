@@ -4,41 +4,33 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
-import java.util.Set;
 
 /**
- * Created by sojanpr on 5/31/16.
+ * <p>
+ * Class for handling content indexing for the views.
+ * App views with relevant content are indexed by branch for content analytics.
+ * </p>
  */
 class CIScanner {
     private static final String TAG = "CIScanner";
     private static CIScanner thisInstance_;
-    private final String TRIGGER_URI_KEY = "trigger_uri";
-    private final String CONTENT_PATH_KEY = "content_path";
-
-    private final String EXTENDED_INTENT_URI_KEY = "external_intent_uri";
-    private final String VIEW_METADATA_KEY = "view_metadata";
 
     private String triggerUri_;
-    private String contentPath_;
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
-    private final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
-    private final int APP_LAUNCH_DELAY = 1300; /* Time for an app to do initial pages like splash or logo */
+    private static final int VIEW_SETTLE_TIME = 2000; /* Time for a view to load its components */
+    private static final int APP_LAUNCH_DELAY = 1500; /* Time for an app to do initial pages like splash or logo */
     private String contentNavPath_; // User navigation path for the content.
 
     private static final String TIME_STAMP_KEY = "ts";
@@ -54,8 +46,6 @@ class CIScanner {
     private static final String ENTITIES_KEY = "e";
 
 
-    private Defines.ContentAnalyticMode content_analytic_mode_ = Defines.ContentAnalyticMode.Off;
-
     static CIScanner getInstance() {
         if (thisInstance_ == null) {
             thisInstance_ = new CIScanner();
@@ -69,14 +59,6 @@ class CIScanner {
     }
 
     //------------------------- Public methods---------------------------------//
-
-    public void onBranchClosing(Context context) {
-//        content_analytic_mode_ = Defines.ContentAnalyticMode.Off;
-//        if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
-//            ServerRequest request = new ServerRequestUpdateContentEvents(context);
-//            Branch.getInstance().handleNewRequest(request);
-//        }
-    }
 
     public void scanForContent(final Activity activity, boolean isSessionStart) {
         int viewRenderWait = VIEW_SETTLE_TIME;
@@ -94,20 +76,16 @@ class CIScanner {
                 }
             }
         }
-        triggerUri_ = "https://bnc.lt/Ojqd/pfXJMApyav";
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
         CIManifest.CIPathProperties pathProperties = CIManifest.getInstance(activity).getCIPathProperties(activity);
+
         if (triggerUri_ != null || pathProperties != null) {
             handler_.removeCallbacks(readContentRunnable);
             lastActivityReference_ = new WeakReference<>(activity);
-            contentPath_ = getContentPath(activity);
             handler_.postDelayed(readContentRunnable, viewRenderWait);
         }
     }
 
-    public void onActivityStarted(Activity activity, boolean isSessionStart) {
-        //scanForContent(activity, isSessionStart);
-    }
 
     public void onActivityStopped(Activity activity) {
         if (lastActivityReference_ != null && lastActivityReference_.get() != null
@@ -119,135 +97,100 @@ class CIScanner {
 
     // ---------------Private methods----------------------//
 
-
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
-//            if (content_analytic_mode_ != Defines.ContentAnalyticMode.Off) {
-                try {
-                    if (lastActivityReference_ != null && lastActivityReference_.get() != null) {
-                        Activity activity = lastActivityReference_.get();
-                        JSONObject contentEvent = new JSONObject();
-                        contentEvent.put(TIME_STAMP_KEY, System.currentTimeMillis());
-                        contentEvent.put(ACTION_KEY, "v");
-                        contentEvent.put(NAV_PATH_KEY, contentNavPath_);
-                        contentEvent.put(REFERRAL_LINK_KEY, triggerUri_);
-                        contentEvent.put(CONTENT_LINK_KEY, "");
-                        contentEvent.put(CONTENT_META_DATA_KEY, new JSONObject());
-                        contentEvent.put(VIEW_KEY, contentPath_);
 
-                        JSONArray contentDataArray = new JSONArray();
-                        contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+            try {
+                if (lastActivityReference_ != null && lastActivityReference_.get() != null) {
+                    Activity activity = lastActivityReference_.get();
+                    JSONObject contentEvent = new JSONObject();
+                    contentEvent.put(TIME_STAMP_KEY, System.currentTimeMillis());
+                    contentEvent.put(ACTION_KEY, "v");
+                    contentEvent.put(NAV_PATH_KEY, contentNavPath_);
+                    contentEvent.put(REFERRAL_LINK_KEY, triggerUri_);
+                    contentEvent.put(CONTENT_LINK_KEY, "");
+                    contentEvent.put(CONTENT_META_DATA_KEY, new JSONObject());
+                    contentEvent.put(VIEW_KEY, "/" + activity.getClass().getSimpleName());
 
-                        JSONArray contentKeysArray = new JSONArray();
-                        contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
+                    JSONArray contentDataArray = new JSONArray();
+                    contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
 
-                        ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-                        readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources());
-                        //CIManifest.getInstance(activity).addContentPath(contentPath_);
+                    JSONArray contentKeysArray = new JSONArray();
+                    contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
 
-                        // Cache the analytics data for future use
-                        PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
-                        lastActivityReference_ = null;
-                        triggerUri_ = null;
-                        Log.d(TAG, "Scanned Result is " + contentEvent);
-                    }
+                    ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
+                    boolean isClearText = CIManifest.getInstance(activity).isClearTextRequested();
+                    readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
 
-                } catch (JSONException ignore) {
+                    // Cache the analytics data for future use
+                    PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
+                    lastActivityReference_ = null;
+                    triggerUri_ = null;
+                    Log.d(TAG, "Scanned Result is " + contentEvent);
                 }
+
+            } catch (JSONException ignore) {
             }
+        }
 //        }
     };
 
-    private void readThroughChildViews(ViewGroup view, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res) {
-        ViewGroup viewGroup = ((ViewGroup) view);
+
+    private void readThroughFilteredChildViews(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
+        try {
+            for (int i = 0; i < viewIDArray.length(); i++) {
+                String viewName = viewIDArray.getString(i);
+                int id = activity.getResources().getIdentifier(viewIDArray.getString(i), "id", activity.getPackageName());
+                View childView = activity.findViewById(id);
+                updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
+            }
+        } catch (JSONException ignore) {
+
+        }
+    }
+
+    private void readThroughChildViews(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             View childView = viewGroup.getChildAt(i);
             if (childView.getVisibility() == View.VISIBLE) {
                 if (childView instanceof ViewGroup) {
-                    readThroughChildViews((ViewGroup) childView, contentDataArray, contentKeysArray, res);
+                    readThroughChildViews((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
                 } else {
-                    String viewId = res.getResourceEntryName(childView.getId());
-                    String viewVal = null;
-//                    try {
-                    if (childView instanceof EditText) {
-                        EditText editText = (EditText) childView;
-                        viewVal = editText.getText().toString();
-                    } else if (childView instanceof TextView) {
-                        TextView txtView = (TextView) childView;
-                        viewVal = txtView.getText().toString();
-                    }
-//                        else if (content_analytic_mode_ != Defines.ContentAnalyticMode.Deep) {
-//                            if (childView instanceof ImageView && !(childView instanceof ImageButton)) {
-//                                childView.setDrawingCacheEnabled(true);
-//                                Bitmap bmp = Bitmap.createBitmap(childView.getDrawingCache());
-//                                if (bmp != null) {
-//                                    viewVal = BitMapToString(bmp);
-//                                    bmp.recycle();
-//                                }
-//                            }
-//                        }
-                    contentDataArray.put(viewVal);
-                    contentKeysArray.put(viewId);
-//                    } catch (JSONException ex) {
-//                        ex.printStackTrace();
-//                    }
+                    String viewName = res.getResourceEntryName(childView.getId());
+                    updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
                 }
             }
         }
-
     }
 
-    private String BitMapToString(Bitmap bitmap) {
-        bitmap = Bitmap.createScaledBitmap(bitmap, 50, 50, false);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        byte[] b = baos.toByteArray();
-        String bmpStr = Base64.encodeToString(b, Base64.DEFAULT);
-        return bmpStr;
-    }
-
-
-    private String getContentPath(Activity activity) {
-        String path = /*"android-app://" + activity.getPackageName() + */ "/" + activity.getClass().getSimpleName();
-        return path;
-    }
-
-    private String getContentUrl(Activity activity) {
-        String contentUrl = getContentPath(activity);
-        if (activity.getIntent() != null) {
-            String paramPrepender = "?";
-            Bundle bundle = activity.getIntent().getExtras();
-            if (bundle != null) {
-                Set<String> keySet = bundle.keySet();
-                for (String key : keySet) {
-                    contentUrl = contentUrl + paramPrepender + key + "=" + bundle.get(key);
-                    paramPrepender = "&";
-                }
-            }
-            if (activity.getIntent().getData() != null) {
-                contentUrl = contentUrl + paramPrepender + EXTENDED_INTENT_URI_KEY + "=" + activity.getIntent().getData();
-            }
+    private void updateElementData(String viewName, View view, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
+        String viewVal = null;
+        if (view instanceof TextView) {
+            TextView txtView = (TextView) view;
+            viewVal = txtView.getText().toString();
         }
-        return contentUrl;
+        contentDataArray.put(viewVal);
+        contentKeysArray.put(viewName);
     }
-
 
     public JSONObject getCIDataForCloseRequest(Context context) {
-        JSONObject ciObj = new JSONObject();
-        try {
-            CIManifest ciManifest = CIManifest.getInstance(context);
-            ciObj.put(CIManifest.MANIFEST_VERSION_KEY, ciManifest.getManifestVersion());
-            ciObj.put(CIManifest.HASH_MODE_KEY, ciManifest.isCLearTextRequested());
-            ciObj.put(PACKAGE_NAME_KEY, context.getPackageName());
-            ciObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
-            PrefHelper.getInstance(context).clearBranchAnalyticsData();
+        JSONObject ciObj = null;
+        if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
+            ciObj = new JSONObject();
+            try {
+                CIManifest ciManifest = CIManifest.getInstance(context);
+                ciObj.put(CIManifest.MANIFEST_VERSION_KEY, ciManifest.getManifestVersion());
+                ciObj.put(CIManifest.HASH_MODE_KEY, !ciManifest.isClearTextRequested());
+                ciObj.put(PACKAGE_NAME_KEY, context.getPackageName());
+                ciObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
+                PrefHelper.getInstance(context).clearBranchAnalyticsData();
 
-        } catch (JSONException e) {
-            e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         return ciObj;
-
     }
 
 }

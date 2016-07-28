@@ -8,8 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
-
 /**
  * Created by sojanpr on 6/14/16.
  * <p>
@@ -20,12 +18,10 @@ import java.util.List;
 class CIManifest {
     private static CIManifest thisInstance_;
 
-    private static final int CAPTURE_MODE_HASH = 0;
-    private static final int CAPTURE_MODE_CLEAR_TEXT = 1;
 
     private JSONObject CIManifestObject_;
     private String manifestVersion_;
-    private int captureMode_ = CAPTURE_MODE_HASH;
+    private boolean hashContent_ = true;
     private int maxTextLen_ = 0;
     private int maxPacketSize_ = 0;
     private boolean isBncDevice_ = false;
@@ -94,7 +90,7 @@ class CIManifest {
                     manifestVersion_ = CIObj.getString(MANIFEST_VERSION_KEY);
                 }
                 if (CIObj.has(HASH_MODE_KEY)) {
-                    captureMode_ = CIObj.getInt(HASH_MODE_KEY);
+                    hashContent_ = CIObj.getBoolean(HASH_MODE_KEY);
                 }
                 if (CIObj.has(MANIFEST_KEY)) {
                     JSONArray newContentPaths = CIObj.getJSONArray(MANIFEST_KEY);
@@ -145,8 +141,8 @@ class CIManifest {
         return isCIEnabled_;
     }
 
-    public boolean isCLearTextRequested() {
-        return (captureMode_ == CAPTURE_MODE_CLEAR_TEXT);
+    public boolean isClearTextRequested() {
+        return hashContent_;
     }
 
     public boolean isBncDevice() {

@@ -2,6 +2,9 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -30,7 +33,20 @@ class ServerRequestRegisterClose extends ServerRequest {
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 closePost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            closePost.put("ci",CIScanner.getInstance().getCIDataForCloseRequest(context));
+            JSONObject ciObject = CIScanner.getInstance().getCIDataForCloseRequest(context);
+            if (ciObject != null) {
+                closePost.put("ci", ciObject);
+            }
+            try {
+                PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                String packageName = info.packageName;
+                //int versionCode = info.versionCode;
+                if(!TextUtils.isEmpty(info.versionName)) {
+                    closePost.put("app_version", info.versionName );
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                // TODO Auto-generated catch block
+            }
             setPost(closePost);
         } catch (JSONException ex) {
             ex.printStackTrace();
