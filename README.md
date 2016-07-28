@@ -55,7 +55,9 @@ This is the readme file of our open source Android SDK. There's a full demo app 
 
 ### Install library project
 
-Just add `compile 'io.branch.sdk.android:library:1.+'` to the dependencies section of your `build.gradle` file.
+Just add `compile 'io.branch.sdk.android:library:2.+'` to the dependencies section of your `build.gradle` file.
+
+This supports minimum sdk level 14. If you want to support minimum sdk level 9 please consider using version 1.14.5
 
 Or download the JAR file from here:
 https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
@@ -192,13 +194,8 @@ To collect the Google Advertising ID, you must ensure that proguard doesn't remo
 
 ## Initialization
 
-Branch must be notified when the app opens and when it closes, so that we know when to query the API for a new deep link. We recently discovered an Android mechanism that was exposed in version 14, that allows us to track behind-the-scenes when the app is opened and closed. It makes the integration **a lot** easier, so we've split it out from the legacy integration.
-
+If your minimum sdk level is 14+, To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
 If you need to support pre 14, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/getting-started/sdk-integration-guide/advanced/android/#supporting-pre-14-android). Basically, if you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
-
-### Initialization to support Android 14+ (4.0+) (easy)
-
-To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
 
 #### Initialize Branch lifecycle
 
