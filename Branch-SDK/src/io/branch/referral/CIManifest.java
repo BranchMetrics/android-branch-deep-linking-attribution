@@ -18,14 +18,21 @@ import org.json.JSONObject;
 class CIManifest {
     private static CIManifest thisInstance_;
 
-
+    /* JsonObject representation for the CI manifest */
     private JSONObject CIManifestObject_;
+    /* Manifest version number */
     private String manifestVersion_;
+    /* Specifies whether the content values should be hashed or not*/
     private boolean hashContent_ = true;
+    /* Max length for an individual text item */
     private int maxTextLen_ = 0;
+    /* Maximum size of CI data payload per requests updating CI data to server*/
     private int maxPacketSize_ = 0;
+    /* Specifies if the current device is a Branch Device */
     private boolean isBncDevice_ = false;
+    /* Specifies if CI is enabled for this session */
     private boolean isCIEnabled_ = false;
+    /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
     public static final String MANIFEST_VERSION_KEY = "mv";
@@ -142,7 +149,7 @@ class CIManifest {
     }
 
     public boolean isClearTextRequested() {
-        return hashContent_;
+        return !hashContent_;
     }
 
     public boolean isBncDevice() {
@@ -156,6 +163,11 @@ class CIManifest {
     public int getMaxPacketSize() {
         return maxPacketSize_;
     }
+
+    public String getManifestVersion() {
+        return manifestVersion_;
+    }
+
 
     class CIPathProperties extends JSONObject {
         final JSONObject pathInfo_;
@@ -176,9 +188,5 @@ class CIManifest {
             return elementArray;
         }
 
-    }
-
-    public String getManifestVersion() {
-        return manifestVersion_;
     }
 }

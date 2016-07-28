@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -15,6 +14,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * <p>
@@ -23,7 +24,6 @@ import java.lang.ref.WeakReference;
  * </p>
  */
 class CIScanner {
-    private static final String TAG = "CIScanner";
     private static CIScanner thisInstance_;
 
     private String triggerUri_;
@@ -45,6 +45,8 @@ class CIScanner {
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
 
+    private final HashHelper hashHelper_;
+    private CIManifest ciManifest_;
 
     static CIScanner getInstance() {
         if (thisInstance_ == null) {
@@ -55,7 +57,7 @@ class CIScanner {
 
     private CIScanner() {
         handler_ = new Handler();
-
+        hashHelper_ = new HashHelper();
     }
 
     //------------------------- Public methods---------------------------------//
@@ -76,8 +78,9 @@ class CIScanner {
                 }
             }
         }
+        ciManifest_ = CIManifest.getInstance(activity);
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
-        CIManifest.CIPathProperties pathProperties = CIManifest.getInstance(activity).getCIPathProperties(activity);
+        CIManifest.CIPathProperties pathProperties = ciManifest_.getCIPathProperties(activity);
 
         if (triggerUri_ != null || pathProperties != null) {
             handler_.removeCallbacks(readContentRunnable);
@@ -121,13 +124,18 @@ class CIScanner {
 
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
                     boolean isClearText = CIManifest.getInstance(activity).isClearTextRequested();
-                    readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
+
+                    JSONArray filteredElements = ciManifest_.getCIPathProperties(activity).getFilteredElements();
+                    if (filteredElements.length() > 0) {
+                        readThroughFilteredChildViews(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
+                    } else {
+                        readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
+                    }
 
                     // Cache the analytics data for future use
                     PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
                     lastActivityReference_ = null;
                     triggerUri_ = null;
-                    Log.d(TAG, "Scanned Result is " + contentEvent);
                 }
 
             } catch (JSONException ignore) {
@@ -168,10 +176,15 @@ class CIScanner {
         String viewVal = null;
         if (view instanceof TextView) {
             TextView txtView = (TextView) view;
-            viewVal = txtView.getText().toString();
+            viewVal = null;
+            if (txtView.getText() != null) {
+                viewVal = txtView.getText().toString().substring(0, Math.min(viewVal.length(), ciManifest_.getMaxTextLen()));
+                viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
+            }
+            contentDataArray.put(viewVal);
+            contentKeysArray.put(viewName);
         }
-        contentDataArray.put(viewVal);
-        contentKeysArray.put(viewName);
+
     }
 
     public JSONObject getCIDataForCloseRequest(Context context) {
@@ -191,6 +204,32 @@ class CIScanner {
             }
         }
         return ciObj;
+    }
+
+
+    /**
+     * Helper class for
+     */
+    private class HashHelper {
+        MessageDigest messageDigest_;
+
+        public HashHelper() {
+            try {
+                messageDigest_ = MessageDigest.getInstance("MD5");
+            } catch (NoSuchAlgorithmException ignore) {
+            }
+        }
+
+        public String hashContent(String content) {
+            String hashedVal = "";
+            if (messageDigest_ != null) {
+                messageDigest_.reset();
+                messageDigest_.update(content.getBytes());
+                // No need to worry about char set here since CI use this only to check uniqueness
+                hashedVal = new String(messageDigest_.digest());
+            }
+            return hashedVal;
+        }
     }
 
 }
