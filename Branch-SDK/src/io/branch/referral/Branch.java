@@ -2025,7 +2025,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStarted(Activity activity) {
-            CIScanner.getInstance().scanForContent(activity, activityCnt_ < 1);
+            try {
+                ContentDiscoverer.getInstance().discoverContent(activity, activityCnt_ < 1);
+            } catch (Exception ignore) {
+            }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -2056,7 +2059,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStopped(Activity activity) {
-            CIScanner.getInstance().onActivityStopped(activity);
+            ContentDiscoverer.getInstance().onActivityStopped(activity);
             activityCnt_--; // Check if this is the last activity.If so stop
             // session.
             if (activityCnt_ < 1) {

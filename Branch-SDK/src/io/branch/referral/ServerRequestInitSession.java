@@ -76,7 +76,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
 
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-       CIManifest.getInstance(context_).onBranchInitialised(response.getObject());
+       ContentDiscoverManifest.getInstance(context_).onBranchInitialised(response.getObject());
 
         // Check for any Third party SDK for data handling
         try {

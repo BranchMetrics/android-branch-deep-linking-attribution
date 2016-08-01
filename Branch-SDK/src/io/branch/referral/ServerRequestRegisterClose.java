@@ -33,19 +33,17 @@ class ServerRequestRegisterClose extends ServerRequest {
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 closePost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            JSONObject ciObject = CIScanner.getInstance().getCIDataForCloseRequest(context);
+            JSONObject ciObject = ContentDiscoverer.getInstance().getContentDiscoverDataForCloseRequest(context);
             if (ciObject != null) {
-                closePost.put("ci", ciObject);
+                closePost.put(Defines.Jsonkey.ContentDiscovery.getKey(), ciObject);
             }
             try {
                 PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 String packageName = info.packageName;
-                //int versionCode = info.versionCode;
-                if(!TextUtils.isEmpty(info.versionName)) {
-                    closePost.put("app_version", info.versionName );
+                if (!TextUtils.isEmpty(info.versionName)) {
+                    closePost.put(Defines.Jsonkey.AppVersion.getKey(), info.versionName);
                 }
-            } catch (PackageManager.NameNotFoundException e) {
-                // TODO Auto-generated catch block
+            } catch (PackageManager.NameNotFoundException ignore) {
             }
             setPost(closePost);
         } catch (JSONException ex) {

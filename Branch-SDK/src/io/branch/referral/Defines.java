@@ -106,7 +106,8 @@ public class Defines {
         ReferralLink("referral_link"),
         ContentData("content_data"),
         ContentEvents("events"),
-        ContentAnalyticsMode("content_analytics_mode");
+        ContentAnalyticsMode("content_analytics_mode"),
+        ContentDiscovery("cd");
 
         
         private String key = "";

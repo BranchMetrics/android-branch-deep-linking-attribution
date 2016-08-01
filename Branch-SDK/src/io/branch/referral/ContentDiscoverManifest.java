@@ -12,26 +12,26 @@ import org.json.JSONObject;
  * Created by sojanpr on 6/14/16.
  * <p>
  * Class for representing a Branch content Intelligence Manifest
- * Parses and persist the CI manifest. Manifest is retrieved each time class is instantiated.
+ * Parses and persist the CD manifest. Manifest is retrieved each time class is instantiated.
  * </p>
  */
-class CIManifest {
-    private static CIManifest thisInstance_;
+class ContentDiscoverManifest {
+    private static ContentDiscoverManifest thisInstance_;
 
-    /* JsonObject representation for the CI manifest */
-    private JSONObject CIManifestObject_;
+    /* JsonObject representation for the CD manifest */
+    private JSONObject cdManifestObject_;
     /* Manifest version number */
     private String manifestVersion_;
     /* Specifies whether the content values should be hashed or not*/
     private boolean hashContent_ = true;
     /* Max length for an individual text item */
     private int maxTextLen_ = 0;
-    /* Maximum size of CI data payload per requests updating CI data to server*/
+    /* Maximum size of CD data payload per requests updating CD data to server*/
     private int maxPacketSize_ = 0;
     /* Specifies if the current device is a Branch Device */
-    private boolean isBncDevice_ = false;
-    /* Specifies if CI is enabled for this session */
-    private boolean isCIEnabled_ = false;
+    private boolean isUserDevice = true;
+    /* Specifies if CD is enabled for this session */
+    private boolean isCDEnabled_ = false;
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
@@ -40,67 +40,67 @@ class CIManifest {
     private static final String MANIFEST_KEY = "m";
     private static final String PATH_KEY = "p";
     private static final String ELEMENT_KEY = "e";
-    private static final String BRANCH_DEVICE_KEY = "branch_device";
+    private static final String USER_DEVICE_KEY = "user_device";
     private static final String MAX_TEXT_LEN_KEY = "mtl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
-    private static final String CONTENT_INTELLIGENCE_KEY = "ci";
+    private static final String CONTENT_DISCOVER_KEY = "cd";
 
 
     private SharedPreferences sharedPref;
-    private final String PREF_KEY = "CI_MANIFEST";
+    private final String PREF_KEY = "CD_MANIFEST";
 
-    private CIManifest(Context context) {
+    private ContentDiscoverManifest(Context context) {
         sharedPref = context.getSharedPreferences("BNC_ContentPath_Array", Context.MODE_PRIVATE);
         retrieve(context);
     }
 
-    public static CIManifest getInstance(Context context) {
+    public static ContentDiscoverManifest getInstance(Context context) {
         if (thisInstance_ == null) {
-            thisInstance_ = new CIManifest(context);
+            thisInstance_ = new ContentDiscoverManifest(context);
         }
         return thisInstance_;
     }
 
     private void persist() {
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(PREF_KEY, CIManifestObject_.toString()).apply();
+        editor.putString(PREF_KEY, cdManifestObject_.toString()).apply();
     }
 
     private void retrieve(Context context) {
         String jsonStr = sharedPref.getString(PREF_KEY, null);
         if (jsonStr != null) {
             try {
-                CIManifestObject_ = new JSONObject(jsonStr);
-                if (CIManifestObject_.has(MANIFEST_VERSION_KEY)) {
-                    manifestVersion_ = CIManifestObject_.getString(MANIFEST_VERSION_KEY);
+                cdManifestObject_ = new JSONObject(jsonStr);
+                if (cdManifestObject_.has(MANIFEST_VERSION_KEY)) {
+                    manifestVersion_ = cdManifestObject_.getString(MANIFEST_VERSION_KEY);
                 }
-                if (CIManifestObject_.has(MANIFEST_KEY)) {
-                    contentPaths_ = CIManifestObject_.getJSONArray(MANIFEST_KEY);
+                if (cdManifestObject_.has(MANIFEST_KEY)) {
+                    contentPaths_ = cdManifestObject_.getJSONArray(MANIFEST_KEY);
                 }
             } catch (JSONException ignored) {
-                CIManifestObject_ = new JSONObject();
+                cdManifestObject_ = new JSONObject();
             }
         } else {
-            CIManifestObject_ = new JSONObject();
+            cdManifestObject_ = new JSONObject();
         }
     }
 
     public void onBranchInitialised(JSONObject branchInitResp) {
-        if (branchInitResp.has(CONTENT_INTELLIGENCE_KEY)) {
-            isCIEnabled_ = true;
+        if (branchInitResp.has(CONTENT_DISCOVER_KEY)) {
+            isCDEnabled_ = true;
             try {
-                JSONObject CIObj = branchInitResp.getJSONObject(CONTENT_INTELLIGENCE_KEY);
-                if (CIObj.has(BRANCH_DEVICE_KEY)) {
-                    isBncDevice_ = CIObj.getBoolean(BRANCH_DEVICE_KEY);
+                JSONObject cdObj = branchInitResp.getJSONObject(CONTENT_DISCOVER_KEY);
+                if (cdObj.has(USER_DEVICE_KEY)) {
+                    isUserDevice = cdObj.getBoolean(USER_DEVICE_KEY);
                 }
-                if (CIObj.has(MANIFEST_VERSION_KEY)) {
-                    manifestVersion_ = CIObj.getString(MANIFEST_VERSION_KEY);
+                if (cdObj.has(MANIFEST_VERSION_KEY)) {
+                    manifestVersion_ = cdObj.getString(MANIFEST_VERSION_KEY);
                 }
-                if (CIObj.has(HASH_MODE_KEY)) {
-                    hashContent_ = CIObj.getBoolean(HASH_MODE_KEY);
+                if (cdObj.has(HASH_MODE_KEY)) {
+                    hashContent_ = cdObj.getBoolean(HASH_MODE_KEY);
                 }
-                if (CIObj.has(MANIFEST_KEY)) {
-                    JSONArray newContentPaths = CIObj.getJSONArray(MANIFEST_KEY);
+                if (cdObj.has(MANIFEST_KEY)) {
+                    JSONArray newContentPaths = cdObj.getJSONArray(MANIFEST_KEY);
                     if (contentPaths_ == null) {
                         contentPaths_ = new JSONArray();
                         for (int i = 0; i < newContentPaths.length(); i++) {
@@ -108,32 +108,32 @@ class CIManifest {
                         }
                     }
                 }
-                if (CIObj.has(MAX_TEXT_LEN_KEY)) {
-                    maxTextLen_ = CIObj.getInt(MAX_TEXT_LEN_KEY);
+                if (cdObj.has(MAX_TEXT_LEN_KEY)) {
+                    maxTextLen_ = cdObj.getInt(MAX_TEXT_LEN_KEY);
                 }
-                if (CIObj.has(MAX_PACKET_SIZE_KEY)) {
-                    maxPacketSize_ = CIObj.getInt(MAX_PACKET_SIZE_KEY);
+                if (cdObj.has(MAX_PACKET_SIZE_KEY)) {
+                    maxPacketSize_ = cdObj.getInt(MAX_PACKET_SIZE_KEY);
                 }
-                CIManifestObject_.put(MANIFEST_VERSION_KEY, manifestVersion_);
-                CIManifestObject_.put(MANIFEST_KEY, contentPaths_);
+                cdManifestObject_.put(MANIFEST_VERSION_KEY, manifestVersion_);
+                cdManifestObject_.put(MANIFEST_KEY, contentPaths_);
                 persist();
             } catch (JSONException ignore) {
 
             }
         } else {
-            isCIEnabled_ = false;
+            isCDEnabled_ = false;
         }
     }
 
-    public CIPathProperties getCIPathProperties(Activity activity) {
-        CIPathProperties pathProperties = null;
+    public CDPathProperties getCDPathProperties(Activity activity) {
+        CDPathProperties pathProperties = null;
         if (contentPaths_ != null) {
             String viewPath = "/" + activity.getClass().getSimpleName();
             try {
                 for (int i = 0; i < contentPaths_.length(); i++) {
                     JSONObject pathObj = contentPaths_.getJSONObject(i);
                     if (pathObj.has(PATH_KEY) && pathObj.getString(PATH_KEY).equals(viewPath)) {
-                        pathProperties = new CIPathProperties(pathObj);
+                        pathProperties = new CDPathProperties(pathObj);
                         break;
                     }
                 }
@@ -144,16 +144,16 @@ class CIManifest {
         return pathProperties;
     }
 
-    public boolean isCIEnabled() {
-        return isCIEnabled_;
+    public boolean isCDEnabled() {
+        return isCDEnabled_;
     }
 
     public boolean isClearTextRequested() {
         return !hashContent_;
     }
 
-    public boolean isBncDevice() {
-        return isBncDevice_;
+    public boolean isUserDevice() {
+        return isUserDevice;
     }
 
     public int getMaxTextLen() {
@@ -169,10 +169,10 @@ class CIManifest {
     }
 
 
-    class CIPathProperties extends JSONObject {
+    class CDPathProperties extends JSONObject {
         final JSONObject pathInfo_;
 
-        CIPathProperties(JSONObject pathInfo) {
+        CDPathProperties(JSONObject pathInfo) {
             pathInfo_ = pathInfo;
         }
 

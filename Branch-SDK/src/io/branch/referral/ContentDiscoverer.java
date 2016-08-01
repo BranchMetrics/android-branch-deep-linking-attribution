@@ -23,8 +23,8 @@ import java.security.NoSuchAlgorithmException;
  * App views with relevant content are indexed by branch for content analytics.
  * </p>
  */
-class CIScanner {
-    private static CIScanner thisInstance_;
+class ContentDiscoverer {
+    private static ContentDiscoverer thisInstance_;
 
     private String triggerUri_;
     private Handler handler_;
@@ -46,24 +46,25 @@ class CIScanner {
     private static final String ENTITIES_KEY = "e";
 
     private final HashHelper hashHelper_;
-    private CIManifest ciManifest_;
+    private ContentDiscoverManifest cdManifest_;
 
-    static CIScanner getInstance() {
+    static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
-            thisInstance_ = new CIScanner();
+            thisInstance_ = new ContentDiscoverer();
         }
         return thisInstance_;
     }
 
-    private CIScanner() {
+    private ContentDiscoverer() {
         handler_ = new Handler();
         hashHelper_ = new HashHelper();
     }
 
+
     //------------------------- Public methods---------------------------------//
 
-    public void scanForContent(final Activity activity, boolean isSessionStart) {
-        ciManifest_ = CIManifest.getInstance(activity);
+    public void discoverContent(final Activity activity, boolean isSessionStart) {
+        cdManifest_ = ContentDiscoverManifest.getInstance(activity);
 
         int viewRenderWait = VIEW_SETTLE_TIME;
         if (isSessionStart) {
@@ -82,7 +83,7 @@ class CIScanner {
         }
 
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
-        CIManifest.CIPathProperties pathProperties = ciManifest_.getCIPathProperties(activity);
+        ContentDiscoverManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
 
         if (triggerUri_ != null || pathProperties != null) {
             handler_.removeCallbacks(readContentRunnable);
@@ -107,7 +108,7 @@ class CIScanner {
         public void run() {
 
             try {
-                if (ciManifest_.isCIEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
+                if (cdManifest_.isCDEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
                     JSONObject contentEvent = new JSONObject();
                     contentEvent.put(TIME_STAMP_KEY, System.currentTimeMillis());
@@ -125,14 +126,17 @@ class CIScanner {
                     contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
 
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-                    boolean isClearText = CIManifest.getInstance(activity).isClearTextRequested();
+                    boolean isClearText = ContentDiscoverManifest.getInstance(activity).isClearTextRequested();
 
-                    CIManifest.CIPathProperties ciPathProperties = ciManifest_.getCIPathProperties(activity);
-                    JSONArray filteredElements = ciPathProperties != null ? ciPathProperties.getFilteredElements(): null;
+                    ContentDiscoverManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
+                    JSONArray filteredElements = cdPathProperties != null ? cdPathProperties.getFilteredElements() : null;
                     if (filteredElements != null && filteredElements.length() > 0) {
-                        readThroughFilteredChildViews(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
+                        discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
                     } else {
-                        readThroughChildViews(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
+                        // Do not do  deep content discovery on user device
+                        if (!cdManifest_.isUserDevice()) {
+                            discoverViewContents(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
+                        }
                     }
 
                     // Cache the analytics data for future use
@@ -144,11 +148,10 @@ class CIScanner {
             } catch (JSONException ignore) {
             }
         }
-//        }
     };
 
 
-    private void readThroughFilteredChildViews(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
+    private void discoverFilteredViewContents(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
         try {
             for (int i = 0; i < viewIDArray.length(); i++) {
                 String viewName = viewIDArray.getString(i);
@@ -161,11 +164,11 @@ class CIScanner {
         }
     }
 
-    private void readThroughChildViews(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
+    private void discoverViewContents(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             View childView = viewGroup.getChildAt(i);
             if (childView.getVisibility() == View.VISIBLE) if (childView instanceof ViewGroup) {
-                readThroughChildViews((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
+                discoverViewContents((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
             } else {
                 String viewName = res.getResourceEntryName(childView.getId());
                 updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
@@ -179,7 +182,7 @@ class CIScanner {
             TextView txtView = (TextView) view;
             viewVal = null;
             if (txtView.getText() != null) {
-                viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), ciManifest_.getMaxTextLen()));
+                viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
                 viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
             }
             contentDataArray.put(viewVal);
@@ -188,23 +191,23 @@ class CIScanner {
 
     }
 
-    public JSONObject getCIDataForCloseRequest(Context context) {
-        JSONObject ciObj = null;
+    public JSONObject getContentDiscoverDataForCloseRequest(Context context) {
+        JSONObject cdObj = null;
         if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
-            ciObj = new JSONObject();
+            cdObj = new JSONObject();
             try {
-                CIManifest ciManifest = CIManifest.getInstance(context);
-                ciObj.put(CIManifest.MANIFEST_VERSION_KEY, ciManifest.getManifestVersion());
-                ciObj.put(CIManifest.HASH_MODE_KEY, !ciManifest.isClearTextRequested());
-                ciObj.put(PACKAGE_NAME_KEY, context.getPackageName());
-                ciObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
+                ContentDiscoverManifest cdManifest = ContentDiscoverManifest.getInstance(context);
+                cdObj.put(ContentDiscoverManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion());
+                cdObj.put(ContentDiscoverManifest.HASH_MODE_KEY, !cdManifest.isClearTextRequested());
+                cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
+                cdObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
                 PrefHelper.getInstance(context).clearBranchAnalyticsData();
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-        return ciObj;
+        return cdObj;
     }
 
 
@@ -226,7 +229,7 @@ class CIScanner {
             if (messageDigest_ != null) {
                 messageDigest_.reset();
                 messageDigest_.update(content.getBytes());
-                // No need to worry about char set here since CI use this only to check uniqueness
+                // No need to worry about char set here since CD use this only to check uniqueness
                 hashedVal = new String(messageDigest_.digest());
             }
             return hashedVal;
