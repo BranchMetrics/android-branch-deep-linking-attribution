@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -365,6 +366,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean isGAParamsFetchInProgress_ = false;
 
+    private List<String> externalUriWhiteList_;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -386,6 +389,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         instrumentationExtraData_ = new ConcurrentHashMap<>();
 
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+        externalUriWhiteList_ = new ArrayList<>();
     }
 
 
@@ -1171,7 +1175,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
         try {
             if (data != null) {
-                prefHelper_.setExternalIntentUri(data.toString());
+                if (externalUriWhiteList_.size() > 0) {
+                    String externalIntentScheme = Uri.parse(data.toString()).getScheme();
+                    if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+                        prefHelper_.setExternalIntentUri(data.toString());
+                    }
+                } else {
+                    prefHelper_.setExternalIntentUri(data.toString());
+                }
             }
             if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                 Bundle bundle = activity.getIntent().getExtras();
@@ -1254,6 +1265,34 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         processNextQueueItem();
+    }
+
+    /**
+     * Add the given URI Scheme to the external Uri white list. Branch will collect
+     * external intent uri only for Uris added to the white list.
+     * If no URI is added to the white list branch will collect all external intent uris.
+     * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addWhiteListedScheme(String uriScheme) {
+        externalUriWhiteList_.add(uriScheme);
+        return this;
+    }
+
+    /**
+     * Set the given list of URI Scheme as the external Uri white list. Branch will collect
+     * external intent uri only for Uris in white list.
+     * If no URI is added to the white list branch will collect all external intent uris
+     * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch setWhiteListedSchemes(List<String> uriSchemes) {
+        externalUriWhiteList_ = uriSchemes;
+        return this;
     }
 
     /**
