@@ -327,6 +327,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
+    private boolean handleDelayedNewIntents_ = false;
 
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
@@ -394,6 +395,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         instrumentationExtraData_ = new ConcurrentHashMap<>();
 
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+
+        // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            handleDelayedNewIntents_ = true;
+            intentState_ = INTENT_STATE.PENDING;
+        } else {
+            handleDelayedNewIntents_ = false;
+            intentState_ = INTENT_STATE.READY;
+        }
     }
 
 
@@ -2044,7 +2054,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
-            intentState_ = INTENT_STATE.PENDING;
+            intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
@@ -2052,7 +2062,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStarted(Activity activity) {
-            intentState_ = INTENT_STATE.PENDING;
+            intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -2070,8 +2080,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
-            intentState_ = INTENT_STATE.READY;
-            onIntentReady(activity);
+            if (handleDelayedNewIntents_) {
+                intentState_ = INTENT_STATE.READY;
+                onIntentReady(activity);
+            }
         }
 
         @Override
