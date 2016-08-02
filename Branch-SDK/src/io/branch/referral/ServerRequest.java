@@ -331,14 +331,8 @@ public abstract class ServerRequest {
 
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
             extendedReq = new ServerRequestActionCompleted(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.ApplyReferralCode.getPath())) {
-            extendedReq = new ServerRequestApplyReferralCode(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetReferralCode.getPath())) {
-            extendedReq = new ServerRequestGetReferralCode(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Referrals.getPath())) {
-            extendedReq = new ServerRequestGetReferralCount(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())) {
             extendedReq = new ServerRequestGetRewardHistory(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())) {
@@ -357,8 +351,6 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())) {
             extendedReq = new ServerRequestSendAppList(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.ValidateReferralCode.getPath())) {
-            extendedReq = new ServerRequestValidateReferralCode(requestPath, post, context);
         }
 
         return extendedReq;
