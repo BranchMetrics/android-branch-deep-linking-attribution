@@ -98,7 +98,7 @@ public class Defines {
         BranchViewUrl("url"),
         BranchViewHtml("html"),
 
-        Path("plath"),
+        Path("path"),
         ViewList("view_list"),
         ContentActionView("view"),
         ContentPath("content_path"),

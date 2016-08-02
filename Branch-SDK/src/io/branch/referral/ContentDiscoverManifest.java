@@ -11,8 +11,11 @@ import org.json.JSONObject;
 /**
  * Created by sojanpr on 6/14/16.
  * <p>
- * Class for representing a Branch content Intelligence Manifest
- * Parses and persist the CD manifest. Manifest is retrieved each time class is instantiated.
+ * The content discovery manifest is the instruction set for how the Branch SDK will *optionally* and automatically discover content
+ * within your app. It parses the configuration from the server, which will tell the client whether it's eligible for content discovery.
+ * This manifest is then used to inform the ContentDiscover class's behavior.
+ *
+ * Note that this behavior can be controlled from the dashboard.
  * </p>
  */
 class ContentDiscoverManifest {
@@ -26,7 +29,7 @@ class ContentDiscoverManifest {
     private boolean hashContent_ = true;
     /* Max length for an individual text item */
     private int maxTextLen_ = 0;
-    /* Maximum size of CD data payload per requests updating CD data to server*/
+    /* Maximum size of CD data payload per requests updating CD data to server */
     private int maxPacketSize_ = 0;
     /* Specifies if the current device is a Branch Device */
     private boolean isUserDevice = true;
@@ -47,10 +50,10 @@ class ContentDiscoverManifest {
 
 
     private SharedPreferences sharedPref;
-    private final String PREF_KEY = "CD_MANIFEST";
+    private final String PREF_KEY = "BNC_CD_MANIFEST";
 
     private ContentDiscoverManifest(Context context) {
-        sharedPref = context.getSharedPreferences("BNC_ContentPath_Array", Context.MODE_PRIVATE);
+        sharedPref = context.getSharedPreferences("bnc_content_discovery_manifest_storage", Context.MODE_PRIVATE);
         retrieve(context);
     }
 

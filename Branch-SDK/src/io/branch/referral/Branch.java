@@ -2064,10 +2064,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStarted(Activity activity) {
+            // If configured on dashboard, trigger content discovery runnable
             try {
                 ContentDiscoverer.getInstance().discoverContent(activity, activityCnt_ < 1);
-            } catch (Exception ignore) {
-            }
+            } catch (Exception ignore) { }
+
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -2085,7 +2086,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
-
         }
 
         @Override
@@ -2099,8 +2099,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityStopped(Activity activity) {
             ContentDiscoverer.getInstance().onActivityStopped(activity);
-            activityCnt_--; // Check if this is the last activity.If so stop
-            // session.
+            activityCnt_--; // Check if this is the last activity. If so, stop the session.
             if (activityCnt_ < 1) {
                 closeSessionInternal();
             }
