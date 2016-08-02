@@ -118,8 +118,6 @@ class ContentDiscoverer {
                     contentEvent.put(ACTION_KEY, "v");
                     contentEvent.put(NAV_PATH_KEY, contentNavPath_);
                     contentEvent.put(REFERRAL_LINK_KEY, triggerUri_);
-                    contentEvent.put(CONTENT_LINK_KEY, "");
-                    contentEvent.put(CONTENT_META_DATA_KEY, new JSONObject());
                     contentEvent.put(VIEW_KEY, "/" + activity.getClass().getSimpleName());
 
                     JSONArray contentDataArray = new JSONArray();
