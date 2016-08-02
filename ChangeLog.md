@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.0.2 Support for delayed "onNewIntent()" call on certain Android versions. Clean up for unused server requests.
+
 - v2.0.1 Adding an option to white list the Uri schemes that should be collected by Branch SDK when app is opened with an external intent.
 
 - v2.0.0: Removing support for Manual session handling. This version onwards only Auto session management is supported. This requires minimum API level set to 14 or above.

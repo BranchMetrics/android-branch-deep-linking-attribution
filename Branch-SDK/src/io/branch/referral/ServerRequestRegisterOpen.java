@@ -37,22 +37,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             }
-            if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
-            }
-            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
-            }
-            if (!prefHelper_.getPushIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), prefHelper_.getPushIdentifier());
-            }
-            // External URI or Extras if exist
-            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
-            }
-            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
-            }
+
             openPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
