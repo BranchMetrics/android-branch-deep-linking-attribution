@@ -22,7 +22,7 @@ import java.security.NoSuchAlgorithmException;
  * *Once content discovery is enabled* through Branch, this class is responsible for discovering content entities within an app.
  * It will crawl the view hierarchy and read through text on pages similar to the functionality of a web crawler. The primary
  * uses of the data are for app indexing, content analytics, content recommendation and future content-based products.
- *
+ * <p/>
  * Note that this feature can be controlled from the dashboard.
  * </p>
  */
@@ -49,7 +49,7 @@ class ContentDiscoverer {
     private static final String ENTITIES_KEY = "e";
 
     private final HashHelper hashHelper_;
-    private ContentDiscoverManifest cdManifest_;
+    private ContentDiscoveryManifest cdManifest_;
 
     static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
@@ -67,7 +67,7 @@ class ContentDiscoverer {
     //------------------------- Public methods---------------------------------//
 
     public void discoverContent(final Activity activity, boolean isSessionStart) {
-        cdManifest_ = ContentDiscoverManifest.getInstance(activity);
+        cdManifest_ = ContentDiscoveryManifest.getInstance(activity);
 
         int viewRenderWait = VIEW_SETTLE_TIME;
         if (isSessionStart) {
@@ -86,7 +86,7 @@ class ContentDiscoverer {
         }
 
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
-        ContentDiscoverManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
+        ContentDiscoveryManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
 
         if (triggerUri_ != null || pathProperties != null) {
             handler_.removeCallbacks(readContentRunnable);
@@ -129,9 +129,9 @@ class ContentDiscoverer {
                     contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
 
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-                    boolean isClearText = ContentDiscoverManifest.getInstance(activity).isClearTextRequested();
+                    boolean isClearText = ContentDiscoveryManifest.getInstance(activity).isClearTextRequested();
 
-                    ContentDiscoverManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
+                    ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
                     JSONArray filteredElements = cdPathProperties != null ? cdPathProperties.getFilteredElements() : null;
                     if (filteredElements != null && filteredElements.length() > 0) {
                         discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
@@ -199,12 +199,14 @@ class ContentDiscoverer {
         if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
             cdObj = new JSONObject();
             try {
-                ContentDiscoverManifest cdManifest = ContentDiscoverManifest.getInstance(context);
-                cdObj.put(ContentDiscoverManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion());
-                cdObj.put(ContentDiscoverManifest.HASH_MODE_KEY, !cdManifest.isClearTextRequested());
-                cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
+                ContentDiscoveryManifest cdManifest = ContentDiscoveryManifest.getInstance(context);
+                cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion());
+                cdObj.put(ContentDiscoveryManifest.HASH_MODE_KEY, !cdManifest.isClearTextRequested());
                 cdObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
                 PrefHelper.getInstance(context).clearBranchAnalyticsData();
+                if (DeviceInfo.getInstance() != null) {
+                    cdObj.put(PACKAGE_NAME_KEY, DeviceInfo.getInstance().getPackageName());
+                }
 
             } catch (JSONException e) {
                 e.printStackTrace();

@@ -37,13 +37,8 @@ class ServerRequestRegisterClose extends ServerRequest {
             if (ciObject != null) {
                 closePost.put(Defines.Jsonkey.ContentDiscovery.getKey(), ciObject);
             }
-            try {
-                PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                String packageName = info.packageName;
-                if (!TextUtils.isEmpty(info.versionName)) {
-                    closePost.put(Defines.Jsonkey.AppVersion.getKey(), info.versionName);
-                }
-            } catch (PackageManager.NameNotFoundException ignore) {
+            if (DeviceInfo.getInstance() != null) {
+                closePost.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
             }
             setPost(closePost);
         } catch (JSONException ex) {

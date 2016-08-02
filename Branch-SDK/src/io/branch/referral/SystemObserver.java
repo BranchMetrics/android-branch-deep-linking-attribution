@@ -111,6 +111,22 @@ class SystemObserver {
     }
 
     /**
+     * Get the package name for this application
+     *
+     * @return {@link String} with value as package name. Empty String in case of error
+     */
+    public String getPackageName() {
+        String packageName = "";
+        try {
+            PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+            packageName = info.packageName;
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return packageName;
+    }
+
+    /**
      * <p>Provides the package name of the current app, and passes it to the
      * {@link SystemObserver#getURIScheme(String)} method to enable the call without a {@link String}
      * parameter.</p>

@@ -15,6 +15,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     protected static final String ACTION_OPEN = "open";
     protected static final String ACTION_INSTALL = "install";
     private final Context context_;
+
     public ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
         context_ = context;
@@ -76,7 +77,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
 
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-       ContentDiscoverManifest.getInstance(context_).onBranchInitialised(response.getObject());
+        ContentDiscoveryManifest.getInstance(context_).onBranchInitialised(response.getObject());
 
         // Check for any Third party SDK for data handling
         try {

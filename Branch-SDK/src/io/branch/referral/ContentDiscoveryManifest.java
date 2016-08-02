@@ -14,12 +14,12 @@ import org.json.JSONObject;
  * The content discovery manifest is the instruction set for how the Branch SDK will *optionally* and automatically discover content
  * within your app. It parses the configuration from the server, which will tell the client whether it's eligible for content discovery.
  * This manifest is then used to inform the ContentDiscover class's behavior.
- *
+ * <p/>
  * Note that this behavior can be controlled from the dashboard.
  * </p>
  */
-class ContentDiscoverManifest {
-    private static ContentDiscoverManifest thisInstance_;
+class ContentDiscoveryManifest {
+    private static ContentDiscoveryManifest thisInstance_;
 
     /* JsonObject representation for the CD manifest */
     private JSONObject cdManifestObject_;
@@ -52,14 +52,14 @@ class ContentDiscoverManifest {
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
 
-    private ContentDiscoverManifest(Context context) {
+    private ContentDiscoveryManifest(Context context) {
         sharedPref = context.getSharedPreferences("bnc_content_discovery_manifest_storage", Context.MODE_PRIVATE);
         retrieve(context);
     }
 
-    public static ContentDiscoverManifest getInstance(Context context) {
+    public static ContentDiscoveryManifest getInstance(Context context) {
         if (thisInstance_ == null) {
-            thisInstance_ = new ContentDiscoverManifest(context);
+            thisInstance_ = new ContentDiscoveryManifest(context);
         }
         return thisInstance_;
     }
