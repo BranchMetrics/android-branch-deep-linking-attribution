@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -374,6 +375,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean isGAParamsFetchInProgress_ = false;
 
+    private List<String> externalUriWhiteList_;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -393,9 +396,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
-
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
-
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             handleDelayedNewIntents_ = true;
@@ -404,6 +405,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleDelayedNewIntents_ = false;
             intentState_ = INTENT_STATE.READY;
         }
+        externalUriWhiteList_ = new ArrayList<>();
     }
 
 
@@ -731,8 +733,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback) {
-        initSession(callback, (Activity) null);
-        return false;
+        return initSession(callback, (Activity) null);
     }
 
     /**
@@ -745,8 +746,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback) {
-        initSession(callback, (Activity) null);
-        return false;
+        return initSession(callback, (Activity) null);
     }
 
     /**
@@ -767,7 +767,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
             initUserSessionInternal(callback, activity, isReferrable);
         }
-        return false;
+        return true;
     }
 
     /**
@@ -788,7 +788,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
             initUserSessionInternal(callback, activity, isReferrable);
         }
-        return false;
+        return true;
     }
 
     /**
@@ -837,9 +837,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * valid URI format.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
+        readAndStripParam(data, activity);
         initSession(callback, activity);
-        return uriHandled;
+        return true;
     }
 
     /**
@@ -856,9 +856,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * valid URI format.
      */
     public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession(callback, activity);
     }
 
     /**
@@ -903,9 +902,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSessionWithData(Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession((BranchReferralInitListener) null, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession((BranchReferralInitListener) null, activity);
     }
 
     /**
@@ -989,9 +987,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, isReferrable, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession(callback, isReferrable, activity);
     }
 
     /**
@@ -1010,9 +1007,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
-        boolean uriHandled = readAndStripParam(data, activity);
-        initSession(callback, isReferrable, activity);
-        return uriHandled;
+        readAndStripParam(data, activity);
+        return initSession(callback, isReferrable, activity);
     }
 
     /**
@@ -1062,7 +1058,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
         initUserSessionInternal(callback, activity, isReferrable);
-        return false;
+        return true;
     }
 
     /**
@@ -1080,7 +1076,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
         initUserSessionInternal(callback, activity, isReferrable);
-        return false;
+        return true;
     }
 
 
@@ -1195,7 +1191,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
             try {
                 if (data != null) {
-                    prefHelper_.setExternalIntentUri(data.toString());
+                    if (externalUriWhiteList_.size() > 0) {
+                        String externalIntentScheme = Uri.parse(data.toString()).getScheme();
+                        if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+                            prefHelper_.setExternalIntentUri(data.toString());
+                        }
+                    } else {
+                        prefHelper_.setExternalIntentUri(data.toString());
+                    }
                 }
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     Bundle bundle = activity.getIntent().getExtras();
@@ -1205,6 +1208,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         JSONObject extrasJson = new JSONObject();
                         for (String key : extraKeys) {
                             extrasJson.put(key, bundle.get(key));
+
                         }
                         prefHelper_.setExternalIntentExtra(extrasJson.toString());
                     }
@@ -1282,6 +1286,34 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * Add the given URI Scheme to the external Uri white list. Branch will collect
+     * external intent uri only for Uris added to the white list.
+     * If no URI is added to the white list branch will collect all external intent uris.
+     * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addWhiteListedScheme(String uriScheme) {
+        externalUriWhiteList_.add(uriScheme);
+        return this;
+    }
+
+    /**
+     * Set the given list of URI Scheme as the external Uri white list. Branch will collect
+     * external intent uri only for Uris in white list.
+     * If no URI is added to the white list branch will collect all external intent uris
+     * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch setWhiteListedSchemes(List<String> uriSchemes) {
+        externalUriWhiteList_ = uriSchemes;
+        return this;
+    }
+
+    /**
      * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
      * {@link String} value. No callback.</p>
      *
@@ -1300,7 +1332,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
+    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
+            callback) {
         ServerRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1442,7 +1475,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
      *                 trigger actions defined therein upon a executing redeem rewards.
      */
-    public void redeemRewards(@NonNull final String bucket, final int count, BranchReferralStateChangedListener callback) {
+    public void redeemRewards(@NonNull final String bucket,
+                              final int count, BranchReferralStateChangedListener callback) {
         ServerRequestRedeemRewards req = new ServerRequestRedeemRewards(context_, bucket, count, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1469,7 +1503,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener
+            callback) {
         getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
     }
 
@@ -1494,7 +1529,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(@NonNull final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String afterId, final int length,
+                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         getCreditHistory(null, afterId, length, order, callback);
     }
 
@@ -1521,7 +1557,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String bucket, final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(final String bucket, final String afterId, final int length,
+                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         ServerRequest req = new ServerRequestGetRewardHistory(context_, bucket, afterId, length, order, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1560,7 +1597,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 out. For example "registered" or "logged in".
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(final String action, BranchViewHandler.IBranchViewEvents callback) {
+    public void userCompletedAction(final String action, BranchViewHandler.
+            IBranchViewEvents callback) {
         userCompletedAction(action, null, callback);
     }
 
@@ -1574,7 +1612,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 user action that has just been completed.
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
+    public void userCompletedAction(@NonNull final String action, JSONObject
+            metadata, BranchViewHandler.IBranchViewEvents callback) {
         if (metadata != null) {
             metadata = BranchUtil.filterOutBadCharacters(metadata);
         }
@@ -1958,8 +1997,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-    
-    private void registerAppInit(BranchReferralInitListener callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
+
+    private void registerAppInit(BranchReferralInitListener
+                                         callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
@@ -2203,7 +2243,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
          * and sharing complete.</p>
          *
-         * @param channelName Name of the selected application to share the link.
+         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
         void onChannelSelected(String channelName);
     }
@@ -3033,7 +3073,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     //------------------------ Content Indexing methods----------------------//
 
-    public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
+    public void registerView(BranchUniversalObject
+                                     branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
             ServerRequest req;
             req = new ServerRequestRegisterView(context_, branchUniversalObject, systemObserver_, callback);
