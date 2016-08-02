@@ -321,6 +321,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         INITIALISED, INITIALISING, UNINITIALISED
     }
 
+
+    private enum INTENT_STATE {
+        PENDING,
+        READY
+    }
+
+    private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
+    private boolean handleDelayedNewIntents_ = false;
+
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
@@ -387,8 +396,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
-
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+        // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            handleDelayedNewIntents_ = true;
+            intentState_ = INTENT_STATE.PENDING;
+        } else {
+            handleDelayedNewIntents_ = false;
+            intentState_ = INTENT_STATE.READY;
+        }
         externalUriWhiteList_ = new ArrayList<>();
     }
 
@@ -1171,89 +1187,92 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean readAndStripParam(Uri data, Activity activity) {
 
-        // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
-        try {
-            if (data != null) {
-                if (externalUriWhiteList_.size() > 0) {
-                    String externalIntentScheme = Uri.parse(data.toString()).getScheme();
-                    if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+        if (intentState_ == INTENT_STATE.READY) {
+            // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
+            try {
+                if (data != null) {
+                    if (externalUriWhiteList_.size() > 0) {
+                        String externalIntentScheme = Uri.parse(data.toString()).getScheme();
+                        if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+                            prefHelper_.setExternalIntentUri(data.toString());
+                        }
+                    } else {
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
-                } else {
-                    prefHelper_.setExternalIntentUri(data.toString());
                 }
-            }
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                Bundle bundle = activity.getIntent().getExtras();
-                Set<String> extraKeys = bundle.keySet();
+                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                    Bundle bundle = activity.getIntent().getExtras();
+                    Set<String> extraKeys = bundle.keySet();
 
-                if (extraKeys.size() > 0) {
-                    JSONObject extrasJson = new JSONObject();
-                    for (String key : extraKeys) {
-                        extrasJson.put(key, bundle.get(key));
+                    if (extraKeys.size() > 0) {
+                        JSONObject extrasJson = new JSONObject();
+                        for (String key : extraKeys) {
+                            extrasJson.put(key, bundle.get(key));
+
+                        }
+                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
                     }
-                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
-                }
-            }
-        } catch (Exception ignore) {
-        }
-
-        //Check for any push identifier in case app is launched by a push notification
-        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-            try {
-                String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
-                if (pushIdentifier != null && pushIdentifier.length() > 0) {
-                    prefHelper_.setPushIdentifier(pushIdentifier);
-                    return false;
                 }
             } catch (Exception ignore) {
             }
-        }
 
-        //Check for link click id or app link
-        if (data != null && data.isHierarchical() && activity != null) {
-            try {
-                if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
-                    prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
-                    String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                    String uriString = null;
-                    if (activity.getIntent() != null) {
-                        uriString = activity.getIntent().getDataString();
+            //Check for any push identifier in case app is launched by a push notification
+            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                try {
+                    String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
+                    if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                        prefHelper_.setPushIdentifier(pushIdentifier);
+                        return false;
                     }
-                    if (data.getQuery().length() == paramString.length()) {
-                        paramString = "\\?" + paramString;
-                    } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
-                        paramString = "&" + paramString;
+                } catch (Exception ignore) {
+                }
+            }
+
+            //Check for link click id or app link
+            if (data != null && data.isHierarchical() && activity != null) {
+                try {
+                    if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
+                        prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
+                        String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                        String uriString = null;
+                        if (activity.getIntent() != null) {
+                            uriString = activity.getIntent().getDataString();
+                        }
+                        if (data.getQuery().length() == paramString.length()) {
+                            paramString = "\\?" + paramString;
+                        } else if (uriString != null && (uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
+                            paramString = "&" + paramString;
+                        } else {
+                            paramString = paramString + "&";
+                        }
+                        if (uriString != null) {
+                            Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
+                            activity.getIntent().setData(newData);
+                        } else {
+                            Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
+                        }
+                        return true;
                     } else {
-                        paramString = paramString + "&";
-                    }
-                    if (uriString != null) {
-                        Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
-                        activity.getIntent().setData(newData);
-                    } else {
-                        Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
-                    }
-                    return true;
-                } else {
-                    // Check if the clicked url is an app link pointing to this app
-                    String scheme = data.getScheme();
-                    if (scheme != null && activity.getIntent() != null) {
-                        // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
-                        // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                        if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
-                            if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                    && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
-                                prefHelper_.setAppLink(data.toString());
-                                String uriString = data.toString();
-                                uriString += uriString.contains("?") ? "&" : "?";
-                                uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
-                                activity.getIntent().setData(Uri.parse(uriString));
-                                return false;
+                        // Check if the clicked url is an app link pointing to this app
+                        String scheme = data.getScheme();
+                        if (scheme != null && activity.getIntent() != null) {
+                            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
+                            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
+                            if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+                                if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
+                                    prefHelper_.setAppLink(data.toString());
+                                    String uriString = data.toString();
+                                    uriString += uriString.contains("?") ? "&" : "?";
+                                    uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
+                                    activity.getIntent().setData(Uri.parse(uriString));
+                                    return false;
+                                }
                             }
                         }
                     }
+                } catch (Exception ignore) {
                 }
-            } catch (Exception ignore) {
             }
         }
         return false;
@@ -1313,7 +1332,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
+    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
+            callback) {
         ServerRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1455,7 +1475,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
      *                 trigger actions defined therein upon a executing redeem rewards.
      */
-    public void redeemRewards(@NonNull final String bucket, final int count, BranchReferralStateChangedListener callback) {
+    public void redeemRewards(@NonNull final String bucket,
+                              final int count, BranchReferralStateChangedListener callback) {
         ServerRequestRedeemRewards req = new ServerRequestRedeemRewards(context_, bucket, count, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1482,7 +1503,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener
+            callback) {
         getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
     }
 
@@ -1507,7 +1529,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(@NonNull final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(@NonNull final String afterId, final int length,
+                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         getCreditHistory(null, afterId, length, order, callback);
     }
 
@@ -1534,7 +1557,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback A {@link BranchListResponseListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      */
-    public void getCreditHistory(final String bucket, final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
+    public void getCreditHistory(final String bucket, final String afterId, final int length,
+                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         ServerRequest req = new ServerRequestGetRewardHistory(context_, bucket, afterId, length, order, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1573,7 +1597,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 out. For example "registered" or "logged in".
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(final String action, BranchViewHandler.IBranchViewEvents callback) {
+    public void userCompletedAction(final String action, BranchViewHandler.
+            IBranchViewEvents callback) {
         userCompletedAction(action, null, callback);
     }
 
@@ -1587,7 +1612,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 user action that has just been completed.
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
+    public void userCompletedAction(@NonNull final String action, JSONObject
+            metadata, BranchViewHandler.IBranchViewEvents callback) {
         if (metadata != null) {
             metadata = BranchUtil.filterOutBadCharacters(metadata);
         }
@@ -1971,8 +1997,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-    
-    private void registerAppInit(BranchReferralInitListener callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
+
+    private void registerAppInit(BranchReferralInitListener
+                                         callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
@@ -1985,7 +2012,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (isGAParamsFetchInProgress_) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
+        if (intentState_ != INTENT_STATE.READY) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        }
         registerInstallOrOpen(request, callback);
+    }
+
+    private void onIntentReady(Activity activity) {
+        if (activity.getIntent() != null) {
+            Uri intentData = activity.getIntent().getData();
+            readAndStripParam(intentData, activity);
+        }
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        processNextQueueItem();
     }
 
     /**
@@ -2055,6 +2094,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
+            intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
@@ -2062,6 +2102,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStarted(Activity activity) {
+            intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -2079,6 +2120,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
+            if (handleDelayedNewIntents_) {
+                intentState_ = INTENT_STATE.READY;
+                onIntentReady(activity);
+            }
         }
 
         @Override
@@ -2279,6 +2324,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
             timeOut_ = prefHelper_.getTimeout();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            thisReq_.onPreExecute();
         }
 
         @Override
@@ -3022,7 +3073,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     //------------------------ Content Indexing methods----------------------//
 
-    public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
+    public void registerView(BranchUniversalObject
+                                     branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
             ServerRequest req;
             req = new ServerRequestRegisterView(context_, branchUniversalObject, systemObserver_, callback);
