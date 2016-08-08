@@ -25,14 +25,12 @@ class ContentDiscoveryManifest {
     private JSONObject cdManifestObject_;
     /* Manifest version number */
     private String manifestVersion_;
-    /* Specifies whether the content values should be hashed or not*/
-    private boolean hashContent_ = true;
     /* Max length for an individual text item */
     private int maxTextLen_ = 0;
+    /* Max num of views to do content discovery in a session */
+    private int maxViewHistoryLength_ = 1;
     /* Maximum size of CD data payload per requests updating CD data to server */
     private int maxPacketSize_ = 0;
-    /* Specifies if the current device is a Branch Device */
-    private boolean isUserDevice = true;
     /* Specifies if CD is enabled for this session */
     private boolean isCDEnabled_ = false;
     /* Json Array for the content path object and the filtered views for this application */
@@ -43,8 +41,8 @@ class ContentDiscoveryManifest {
     private static final String MANIFEST_KEY = "m";
     private static final String PATH_KEY = "p";
     private static final String ELEMENT_KEY = "e";
-    private static final String USER_DEVICE_KEY = "user_device";
     private static final String MAX_TEXT_LEN_KEY = "mtl";
+    private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     private static final String CONTENT_DISCOVER_KEY = "cd";
 
@@ -93,14 +91,12 @@ class ContentDiscoveryManifest {
             isCDEnabled_ = true;
             try {
                 JSONObject cdObj = branchInitResp.getJSONObject(CONTENT_DISCOVER_KEY);
-                if (cdObj.has(USER_DEVICE_KEY)) {
-                    isUserDevice = cdObj.getBoolean(USER_DEVICE_KEY);
-                }
+
                 if (cdObj.has(MANIFEST_VERSION_KEY)) {
                     manifestVersion_ = cdObj.getString(MANIFEST_VERSION_KEY);
                 }
-                if (cdObj.has(HASH_MODE_KEY)) {
-                    hashContent_ = cdObj.getBoolean(HASH_MODE_KEY);
+                if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
+                    maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
                 }
                 if (cdObj.has(MANIFEST_KEY)) {
                     JSONArray newContentPaths = cdObj.getJSONArray(MANIFEST_KEY);
@@ -151,13 +147,6 @@ class ContentDiscoveryManifest {
         return isCDEnabled_;
     }
 
-    public boolean isClearTextRequested() {
-        return !hashContent_;
-    }
-
-    public boolean isUserDevice() {
-        return isUserDevice;
-    }
 
     public int getMaxTextLen() {
         return maxTextLen_;
@@ -167,6 +156,10 @@ class ContentDiscoveryManifest {
         return maxPacketSize_;
     }
 
+    public int getMaxViewHistorySize() {
+        return maxViewHistoryLength_;
+    }
+
     public String getManifestVersion() {
         return manifestVersion_;
     }
@@ -174,13 +167,21 @@ class ContentDiscoveryManifest {
 
     class CDPathProperties extends JSONObject {
         final JSONObject pathInfo_;
+        private boolean isClearText_;
 
         CDPathProperties(JSONObject pathInfo) {
             pathInfo_ = pathInfo;
+            if (pathInfo.has(HASH_MODE_KEY)) {
+                try {
+                    isClearText_ = !pathInfo.getBoolean(HASH_MODE_KEY);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         public JSONArray getFilteredElements() {
-            JSONArray elementArray = new JSONArray();
+            JSONArray elementArray = null;
             if (pathInfo_.has(ELEMENT_KEY)) {
                 try {
                     elementArray = pathInfo_.getJSONArray(ELEMENT_KEY);
@@ -190,6 +191,11 @@ class ContentDiscoveryManifest {
             }
             return elementArray;
         }
+
+        public boolean isClearTextRequested() {
+            return isClearText_;
+        }
+
 
     }
 }

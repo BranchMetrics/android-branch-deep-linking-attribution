@@ -368,6 +368,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private List<String> externalUriWhiteList_;
 
+    String sessionReferredLink_; // Link which opened this application session if opened by a link click.
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1140,6 +1142,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void closeSessionInternal() {
         executeClose();
+        sessionReferredLink_ = null;
         if (prefHelper_.getExternAppListing()) {
             if (appListingSchedule_ == null) {
                 scheduleListOfApps();
@@ -1178,9 +1181,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (externalUriWhiteList_.size() > 0) {
                     String externalIntentScheme = Uri.parse(data.toString()).getScheme();
                     if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+                        sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
                 } else {
+                    sessionReferredLink_ = data.toString();
                     prefHelper_.setExternalIntentUri(data.toString());
                 }
             }
@@ -2065,10 +2070,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityStarted(Activity activity) {
             // If configured on dashboard, trigger content discovery runnable
-            try {
-                ContentDiscoverer.getInstance().discoverContent(activity, activityCnt_ < 1);
-            } catch (Exception ignore) { }
-
+            if (initState_ == SESSION_STATE.INITIALISED) {
+                try {
+                    ContentDiscoverer.getInstance().discoverContent(activity, sessionReferredLink_);
+                } catch (Exception ignore) {
+                }
+            }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {

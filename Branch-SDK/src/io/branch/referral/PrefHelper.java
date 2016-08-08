@@ -92,6 +92,7 @@ public class PrefHelper {
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
     private static final String KEY_BRANCH_ANALYTICAL_DATA = "bnc_branch_analytical_data";
 
+
     private static String Branch_Key = null;
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
@@ -126,6 +127,11 @@ public class PrefHelper {
      * Reference of application {@link Context}, normally the base context of the application.
      */
     private Context context_;
+
+    /**
+     * Branch Content discovery data
+     */
+    private static JSONObject savedAnalyticsData_;
 
     /**
      * <p>Empty, but required constructor for the {@link PrefHelper} {@link SharedPreferences}
@@ -965,26 +971,48 @@ public class PrefHelper {
     }
 
 
-    public JSONArray getBranchAnalyticsData() {
-        String savedAnalyticsData = getString(KEY_BRANCH_ANALYTICAL_DATA);
-        JSONArray savedAnalyticsArray = new JSONArray();
-        if (!TextUtils.isEmpty(savedAnalyticsData) && !savedAnalyticsData.equals(NO_STRING_VALUE)) {
-            try {
-                savedAnalyticsArray = new JSONArray(savedAnalyticsData);
-            } catch (JSONException ignore) {
+    public JSONObject getBranchAnalyticsData() {
+        JSONObject analyticsDataObject;
+        if (savedAnalyticsData_ != null) {
+            analyticsDataObject = savedAnalyticsData_;
+        } else {
+            String savedAnalyticsData = getString(KEY_BRANCH_ANALYTICAL_DATA);
+            analyticsDataObject = new JSONObject();
+            if (!TextUtils.isEmpty(savedAnalyticsData) && !savedAnalyticsData.equals(NO_STRING_VALUE)) {
+                try {
+                    analyticsDataObject = new JSONObject(savedAnalyticsData);
+                } catch (JSONException ignore) {
+                }
             }
         }
-        return savedAnalyticsArray;
+        return analyticsDataObject;
     }
 
     public void clearBranchAnalyticsData() {
         setString(KEY_BRANCH_ANALYTICAL_DATA, "");
     }
 
+
     public void saveBranchAnalyticsData(JSONObject analyticsData) {
-        JSONArray savedAnalyticsArray = getBranchAnalyticsData();
-        savedAnalyticsArray.put(analyticsData);
-        setString(KEY_BRANCH_ANALYTICAL_DATA, savedAnalyticsArray.toString());
+        String sessionID = getSessionID();
+        if (!sessionID.equals(NO_STRING_VALUE)) {
+            if (savedAnalyticsData_ == null) {
+                savedAnalyticsData_ = getBranchAnalyticsData();
+            }
+            try {
+                JSONArray viewDataArray;
+                if (savedAnalyticsData_.has(sessionID)) {
+                    viewDataArray = savedAnalyticsData_.getJSONArray(sessionID);
+
+                } else {
+                    viewDataArray = new JSONArray();
+                    savedAnalyticsData_.put(sessionID, viewDataArray);
+                }
+                viewDataArray.put(analyticsData);
+                setString(KEY_BRANCH_ANALYTICAL_DATA, savedAnalyticsData_.toString());
+            } catch (JSONException ignore) {
+            }
+        }
     }
 
     /**

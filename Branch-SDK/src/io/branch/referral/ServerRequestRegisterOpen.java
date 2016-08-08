@@ -73,13 +73,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         super.onRequestSucceeded(resp, branch);
         try {
-            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setIsAppLinkTriggeredInit(false);
-
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
             } else {
@@ -116,7 +109,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
+        onInitSessionCompleted(resp, branch);
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {

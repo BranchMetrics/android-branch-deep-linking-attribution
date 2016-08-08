@@ -77,10 +77,14 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
 
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        ContentDiscoveryManifest.getInstance(context_).onBranchInitialised(response.getObject());
-
         // Check for any Third party SDK for data handling
         try {
+            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setIsAppLinkTriggeredInit(false);
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
@@ -88,6 +92,16 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
             }
         } catch (JSONException ignore) {
+        }
+    }
+
+    protected void onInitSessionCompleted(ServerResponse response, Branch branch) {
+        ContentDiscoveryManifest.getInstance(context_).onBranchInitialised(response.getObject());
+        if (branch.currentActivityReference_ != null) {
+            try {
+                ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+            } catch (Exception ignore) {
+            }
         }
     }
 
