@@ -79,15 +79,15 @@ public class ServerResponse {
      * <p>Checks whether the post data associated with the current request is an instance of a
      * {@link JSONObject} object, and if so type-casts it to the corresponding class type.</p>
      *
-     * @return A {@link JSONObject} containing the post data sent with a server request, or a null
-     * value if the post data is not of the {@link JSONObject} type.
+     * @return A {@link JSONObject} containing the post data sent with a server request, or an empty JsonObject
+     * if the post data is not of the {@link JSONObject} type or null.
      */
     public JSONObject getObject() {
         if (post_ instanceof JSONObject) {
             return (JSONObject) post_;
         }
 
-        return null;
+        return new JSONObject();
     }
 
     /**
