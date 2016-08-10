@@ -34,7 +34,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK
+        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK
     }
 
     // Set for holding any active wait locks
@@ -331,14 +331,8 @@ public abstract class ServerRequest {
 
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
             extendedReq = new ServerRequestActionCompleted(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.ApplyReferralCode.getPath())) {
-            extendedReq = new ServerRequestApplyReferralCode(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetReferralCode.getPath())) {
-            extendedReq = new ServerRequestGetReferralCode(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Referrals.getPath())) {
-            extendedReq = new ServerRequestGetReferralCount(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())) {
             extendedReq = new ServerRequestGetRewardHistory(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())) {
@@ -357,8 +351,6 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())) {
             extendedReq = new ServerRequestSendAppList(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.ValidateReferralCode.getPath())) {
-            extendedReq = new ServerRequestValidateReferralCode(requestPath, post, context);
         }
 
         return extendedReq;
@@ -446,5 +438,12 @@ public abstract class ServerRequest {
      */
     public boolean isWaitingOnProcessToFinish() {
         return locks_.size() > 0;
+    }
+
+    /**
+     * Called on UI thread just before executing a request. Do any final updates to the request here
+     */
+    public void onPreExecute() {
+
     }
 }
