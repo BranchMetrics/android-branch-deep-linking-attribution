@@ -76,10 +76,13 @@ class ContentDiscoverer {
         ContentDiscoveryManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
 
         if (pathProperties != null) { // Check if view is available in CD manifest
-            if (pathProperties.getFilteredElements() != null) {  // Discover content only if element array is present for a path
+            // Discover content only if element array is not empty json array
+            if (pathProperties.getFilteredElements() == null || pathProperties.getFilteredElements().length() > 0) {
                 discoverContent(activity);
             }
         } else if (!TextUtils.isEmpty(referredUrl_)) {
+            discoverContent(activity);
+        } else if (cdManifest_.isDebugEnabled()) {
             discoverContent(activity);
         }
     }
@@ -126,8 +129,7 @@ class ContentDiscoverer {
 
                     // Check if the view is already discovered. If already discovered non need to get view content again
                     if (discoveredViewList_.contains(viewName) == false) {
-                        JSONArray contentDataArray = new JSONArray();
-                        contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+
 
                         JSONArray contentKeysArray = new JSONArray();
                         contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
@@ -142,10 +144,16 @@ class ContentDiscoverer {
                             contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
                             filteredElements = cdPathProperties.getFilteredElements();
                         }
-                        if (filteredElements != null && filteredElements.length() > 0) {
+                        if (cdManifest_.isDebugEnabled()) { // In debug mode discove all TextView keys and values
+                            JSONArray contentDataArray = new JSONArray();
+                            contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+                            discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
+                        } else if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
+                            JSONArray contentDataArray = new JSONArray();
+                            contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
                             discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
-                        } else {
-                            discoverViewContents(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
+                        } else { // If filter is absent discover all text field keys
+                            discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
                         }
                         discoveredViewList_.add(viewName);
                     }
@@ -190,12 +198,14 @@ class ContentDiscoverer {
         String viewVal;
         if (view instanceof TextView) {
             TextView txtView = (TextView) view;
-            viewVal = null;
-            if (txtView.getText() != null) {
-                viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
-                viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
+            if (contentDataArray != null) { // Will be non null in case of discovering the values
+                viewVal = null;
+                if (txtView.getText() != null) {
+                    viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
+                    viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
+                }
+                contentDataArray.put(viewVal);
             }
-            contentDataArray.put(viewVal);
             contentKeysArray.put(viewName);
         }
 

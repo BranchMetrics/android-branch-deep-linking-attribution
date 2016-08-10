@@ -36,6 +36,8 @@ class ContentDiscoveryManifest {
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
+    private boolean isDebug_;
+
     public static final String MANIFEST_VERSION_KEY = "mv";
     public static final String HASH_MODE_KEY = "h";
     private static final String MANIFEST_KEY = "m";
@@ -45,6 +47,8 @@ class ContentDiscoveryManifest {
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     private static final String CONTENT_DISCOVER_KEY = "cd";
+    private static final String DEBUG_KEY = "debug";
+
 
 
     private SharedPreferences sharedPref;
@@ -97,6 +101,9 @@ class ContentDiscoveryManifest {
                 }
                 if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
                     maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
+                }
+                if(cdObj.has(DEBUG_KEY)) {
+                    isDebug_ = cdObj.getBoolean(DEBUG_KEY);
                 }
                 if (cdObj.has(MANIFEST_KEY)) {
                     JSONArray newContentPaths = cdObj.getJSONArray(MANIFEST_KEY);
@@ -164,6 +171,9 @@ class ContentDiscoveryManifest {
         return manifestVersion_;
     }
 
+    public boolean isDebugEnabled() {
+        return isDebug_;
+    }
 
     class CDPathProperties extends JSONObject {
         final JSONObject pathInfo_;
@@ -195,7 +205,6 @@ class ContentDiscoveryManifest {
         public boolean isClearTextRequested() {
             return isClearText_;
         }
-
 
     }
 }
