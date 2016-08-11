@@ -1,4 +1,4 @@
-package io.branch.referral;
+package io.branch.indexing;
 
 import android.app.Activity;
 import android.content.Context;
@@ -18,7 +18,7 @@ import org.json.JSONObject;
  * Note that this behavior can be controlled from the dashboard.
  * </p>
  */
-class ContentDiscoveryManifest {
+public class ContentDiscoveryManifest {
     private static ContentDiscoveryManifest thisInstance_;
 
     /* JsonObject representation for the CD manifest */
@@ -42,13 +42,12 @@ class ContentDiscoveryManifest {
     public static final String HASH_MODE_KEY = "h";
     private static final String MANIFEST_KEY = "m";
     private static final String PATH_KEY = "p";
-    private static final String ELEMENT_KEY = "e";
+    private static final String FILTERED_KEYS = "ck";
     private static final String MAX_TEXT_LEN_KEY = "mtl";
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     private static final String CONTENT_DISCOVER_KEY = "cd";
     private static final String DEBUG_KEY = "debug";
-
 
 
     private SharedPreferences sharedPref;
@@ -102,7 +101,7 @@ class ContentDiscoveryManifest {
                 if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
                     maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
                 }
-                if(cdObj.has(DEBUG_KEY)) {
+                if (cdObj.has(DEBUG_KEY)) {
                     isDebug_ = cdObj.getBoolean(DEBUG_KEY);
                 }
                 if (cdObj.has(MANIFEST_KEY)) {
@@ -192,9 +191,9 @@ class ContentDiscoveryManifest {
 
         public JSONArray getFilteredElements() {
             JSONArray elementArray = null;
-            if (pathInfo_.has(ELEMENT_KEY)) {
+            if (pathInfo_.has(FILTERED_KEYS)) {
                 try {
-                    elementArray = pathInfo_.getJSONArray(ELEMENT_KEY);
+                    elementArray = pathInfo_.getJSONArray(FILTERED_KEYS);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
 
 /**

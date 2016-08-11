@@ -2,13 +2,12 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import io.branch.indexing.ContentDiscoverer;
 
 /**
  * * <p>

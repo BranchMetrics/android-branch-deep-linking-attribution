@@ -1,4 +1,4 @@
-package io.branch.referral;
+package io.branch.indexing;
 
 import android.app.Activity;
 import android.content.Context;
@@ -18,6 +18,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+import io.branch.referral.PrefHelper;
+
 /**
  * <p>
  * *Once content discovery is enabled* through Branch, this class is responsible for discovering content entities within an app.
@@ -27,7 +29,7 @@ import java.util.ArrayList;
  * Note that this feature can be controlled from the dashboard.
  * </p>
  */
-class ContentDiscoverer {
+public class ContentDiscoverer {
     private static ContentDiscoverer thisInstance_;
 
     private Handler handler_;
@@ -51,7 +53,7 @@ class ContentDiscoverer {
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
 
-    static ContentDiscoverer getInstance() {
+    public static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
             thisInstance_ = new ContentDiscoverer();
         }
@@ -128,7 +130,7 @@ class ContentDiscoverer {
                     contentEvent.put(VIEW_KEY, viewName);
 
                     // Check if the view is already discovered. If already discovered non need to get view content again
-                    if (discoveredViewList_.contains(viewName) == false) {
+                    if (!discoveredViewList_.contains(viewName)) {
 
 
                         JSONArray contentKeysArray = new JSONArray();
@@ -137,7 +139,7 @@ class ContentDiscoverer {
                         ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
 
                         ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
-                        boolean isClearText = false;
+                        boolean isClearText = cdManifest_.isCDEnabled()|| false;
                         JSONArray filteredElements = null;
                         if (cdPathProperties != null) {
                             isClearText = cdPathProperties.isClearTextRequested();
@@ -147,7 +149,7 @@ class ContentDiscoverer {
                         if (cdManifest_.isDebugEnabled()) { // In debug mode discove all TextView keys and values
                             JSONArray contentDataArray = new JSONArray();
                             contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
-                            discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
+                            discoverViewContents(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
                         } else if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                             JSONArray contentDataArray = new JSONArray();
                             contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
@@ -220,8 +222,8 @@ class ContentDiscoverer {
                 cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion());
                 cdObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
                 PrefHelper.getInstance(context).clearBranchAnalyticsData();
-                if (DeviceInfo.getInstance() != null) {
-                    cdObj.put(PACKAGE_NAME_KEY, DeviceInfo.getInstance().getPackageName());
+                if (context != null) {
+                    cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                 }
 
             } catch (JSONException e) {
