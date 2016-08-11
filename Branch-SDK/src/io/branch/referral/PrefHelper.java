@@ -989,6 +989,7 @@ public class PrefHelper {
     }
 
     public void clearBranchAnalyticsData() {
+        savedAnalyticsData_ = null;
         setString(KEY_BRANCH_ANALYTICAL_DATA, "");
     }
 

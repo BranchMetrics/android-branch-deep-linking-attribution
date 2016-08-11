@@ -36,7 +36,6 @@ public class ContentDiscoveryManifest {
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
-    private boolean isDebug_;
 
     public static final String MANIFEST_VERSION_KEY = "mv";
     public static final String HASH_MODE_KEY = "h";
@@ -47,8 +46,6 @@ public class ContentDiscoveryManifest {
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     private static final String CONTENT_DISCOVER_KEY = "cd";
-    private static final String DEBUG_KEY = "debug";
-
 
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
@@ -101,17 +98,9 @@ public class ContentDiscoveryManifest {
                 if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
                     maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
                 }
-                if (cdObj.has(DEBUG_KEY)) {
-                    isDebug_ = cdObj.getBoolean(DEBUG_KEY);
-                }
+
                 if (cdObj.has(MANIFEST_KEY)) {
-                    JSONArray newContentPaths = cdObj.getJSONArray(MANIFEST_KEY);
-                    if (contentPaths_ == null) {
-                        contentPaths_ = new JSONArray();
-                        for (int i = 0; i < newContentPaths.length(); i++) {
-                            contentPaths_.put(newContentPaths.getJSONObject(i));
-                        }
-                    }
+                    contentPaths_ = cdObj.getJSONArray(MANIFEST_KEY);
                 }
                 if (cdObj.has(MAX_TEXT_LEN_KEY)) {
                     maxTextLen_ = cdObj.getInt(MAX_TEXT_LEN_KEY);
@@ -170,11 +159,7 @@ public class ContentDiscoveryManifest {
         return manifestVersion_;
     }
 
-    public boolean isDebugEnabled() {
-        return isDebug_;
-    }
-
-    class CDPathProperties extends JSONObject {
+    class CDPathProperties {
         final JSONObject pathInfo_;
         private boolean isClearText_;
 
@@ -203,6 +188,11 @@ public class ContentDiscoveryManifest {
 
         public boolean isClearTextRequested() {
             return isClearText_;
+        }
+
+        public boolean isSkipContentDiscovery() {
+            JSONArray filteredElements = getFilteredElements();
+            return filteredElements != null && filteredElements.length() == 0;
         }
 
     }

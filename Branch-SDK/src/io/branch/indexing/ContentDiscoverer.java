@@ -79,12 +79,10 @@ public class ContentDiscoverer {
 
         if (pathProperties != null) { // Check if view is available in CD manifest
             // Discover content only if element array is not empty json array
-            if (pathProperties.getFilteredElements() == null || pathProperties.getFilteredElements().length() > 0) {
+            if (!pathProperties.isSkipContentDiscovery()) {
                 discoverContent(activity);
             }
         } else if (!TextUtils.isEmpty(referredUrl_)) {
-            discoverContent(activity);
-        } else if (cdManifest_.isDebugEnabled()) {
             discoverContent(activity);
         }
     }
@@ -139,18 +137,14 @@ public class ContentDiscoverer {
                         ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
 
                         ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
-                        boolean isClearText = cdManifest_.isCDEnabled()|| false;
+                        boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
                         JSONArray filteredElements = null;
                         if (cdPathProperties != null) {
                             isClearText = cdPathProperties.isClearTextRequested();
                             contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
                             filteredElements = cdPathProperties.getFilteredElements();
                         }
-                        if (cdManifest_.isDebugEnabled()) { // In debug mode discove all TextView keys and values
-                            JSONArray contentDataArray = new JSONArray();
-                            contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
-                            discoverViewContents(rootView, contentDataArray, contentKeysArray, activity.getResources(), isClearText);
-                        } else if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
+                        if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                             JSONArray contentDataArray = new JSONArray();
                             contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
                             discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
@@ -219,8 +213,8 @@ public class ContentDiscoverer {
             cdObj = new JSONObject();
             try {
                 ContentDiscoveryManifest cdManifest = ContentDiscoveryManifest.getInstance(context);
-                cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion());
-                cdObj.put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
+                cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion())
+                        .put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
                 PrefHelper.getInstance(context).clearBranchAnalyticsData();
                 if (context != null) {
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
