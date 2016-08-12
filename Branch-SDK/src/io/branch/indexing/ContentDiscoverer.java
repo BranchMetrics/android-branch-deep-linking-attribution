@@ -127,32 +127,32 @@ public class ContentDiscoverer {
                     String viewName = "/" + activity.getClass().getSimpleName();
                     contentEvent.put(VIEW_KEY, viewName);
 
-                    // Check if the view is already discovered. If already discovered non need to get view content again
-                    if (!discoveredViewList_.contains(viewName)) {
 
+                    ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
 
+                    ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
+                    boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
+                    JSONArray filteredElements = null;
+                    if (cdPathProperties != null) {
+                        isClearText = cdPathProperties.isClearTextRequested();
+                        contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
+                        filteredElements = cdPathProperties.getFilteredElements();
+                    }
+                    if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                         JSONArray contentKeysArray = new JSONArray();
                         contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
 
-                        ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-
-                        ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
-                        boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
-                        JSONArray filteredElements = null;
-                        if (cdPathProperties != null) {
-                            isClearText = cdPathProperties.isClearTextRequested();
-                            contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
-                            filteredElements = cdPathProperties.getFilteredElements();
-                        }
-                        if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
-                            JSONArray contentDataArray = new JSONArray();
-                            contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
-                            discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
-                        } else { // If filter is absent discover all text field keys
+                        JSONArray contentDataArray = new JSONArray();
+                        contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+                        discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
+                    } else { // If filter is absent discover all text field keys
+                        if (!discoveredViewList_.contains(viewName)) {  // Check if the view is already discovered. If already discovered no need to get view content keys again
+                            JSONArray contentKeysArray = new JSONArray();
+                            contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
                             discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
                         }
-                        discoveredViewList_.add(viewName);
                     }
+                    discoveredViewList_.add(viewName);
 
                     // Cache the analytics data for future use
                     PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
