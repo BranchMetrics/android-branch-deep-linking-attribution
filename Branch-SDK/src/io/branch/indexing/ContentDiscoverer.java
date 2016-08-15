@@ -35,7 +35,6 @@ public class ContentDiscoverer {
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
     private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
-    //private static final int APP_LAUNCH_DELAY = 2500; /* Time for an app to do initial pages like splash or logo */
     private String contentNavPath_; // User navigation path for the content.
     private String referredUrl_; // The url which opened this app session
 
@@ -130,33 +129,35 @@ public class ContentDiscoverer {
 
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
 
-                    ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
-                    boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
-                    JSONArray filteredElements = null;
-                    if (cdPathProperties != null) {
-                        isClearText = cdPathProperties.isClearTextRequested();
-                        contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
-                        filteredElements = cdPathProperties.getFilteredElements();
-                    }
-                    if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
-                        JSONArray contentKeysArray = new JSONArray();
-                        contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
-
-                        JSONArray contentDataArray = new JSONArray();
-                        contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
-                        discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
-                    } else { // If filter is absent discover all text field keys
-                        if (!discoveredViewList_.contains(viewName)) {  // Check if the view is already discovered. If already discovered no need to get view content keys again
+                    if (rootView != null) {
+                        ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
+                        boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
+                        JSONArray filteredElements = null;
+                        if (cdPathProperties != null) {
+                            isClearText = cdPathProperties.isClearTextRequested();
+                            contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
+                            filteredElements = cdPathProperties.getFilteredElements();
+                        }
+                        if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                             JSONArray contentKeysArray = new JSONArray();
                             contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
-                            discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
-                        }
-                    }
-                    discoveredViewList_.add(viewName);
 
-                    // Cache the analytics data for future use
-                    PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
-                    lastActivityReference_ = null;
+                            JSONArray contentDataArray = new JSONArray();
+                            contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+                            discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
+                        } else { // If filter is absent discover all text field keys
+                            if (!discoveredViewList_.contains(viewName)) {  // Check if the view is already discovered. If already discovered no need to get view content keys again
+                                JSONArray contentKeysArray = new JSONArray();
+                                contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
+                                discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
+                            }
+                        }
+                        discoveredViewList_.add(viewName);
+
+                        // Cache the analytics data for future use
+                        PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
+                        lastActivityReference_ = null;
+                    }
                 }
 
             } catch (JSONException ignore) {
