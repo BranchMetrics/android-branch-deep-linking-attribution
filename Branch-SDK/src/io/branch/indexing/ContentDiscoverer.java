@@ -37,8 +37,10 @@ public class ContentDiscoverer {
     private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
     private String contentNavPath_; // User navigation path for the content.
     private String referredUrl_; // The url which opened this app session
+    private JSONObject contentEvent_;
 
     private static final String TIME_STAMP_KEY = "ts";
+    private static final String TIME_STAMP_CLOSE_KEY = "tc";
     private static final String NAV_PATH_KEY = "n";
     private static final String REFERRAL_LINK_KEY = "rl";
     private static final String CONTENT_LINK_KEY = "cl";
@@ -86,14 +88,6 @@ public class ContentDiscoverer {
         }
     }
 
-    private void discoverContent(Activity activity) {
-        if (discoveredViewList_.size() < cdManifest_.getMaxViewHistorySize()) { // check if max discovery views reached
-            handler_.removeCallbacks(readContentRunnable);
-            lastActivityReference_ = new WeakReference<>(activity);
-            handler_.postDelayed(readContentRunnable, VIEW_SETTLE_TIME);
-        }
-    }
-
 
     public void onActivityStopped(Activity activity) {
         if (lastActivityReference_ != null && lastActivityReference_.get() != null
@@ -101,6 +95,7 @@ public class ContentDiscoverer {
             handler_.removeCallbacks(readContentRunnable);
             lastActivityReference_ = null;
         }
+        updateLastViewTimeStampIfNeeded();
     }
 
     public void onSessionStarted(final Activity activity, String referredUrl) {
@@ -110,6 +105,23 @@ public class ContentDiscoverer {
 
     // ---------------Private methods----------------------//
 
+    private void discoverContent(Activity activity) {
+        if (discoveredViewList_.size() < cdManifest_.getMaxViewHistorySize()) { // check if max discovery views reached
+            handler_.removeCallbacks(readContentRunnable);
+            lastActivityReference_ = new WeakReference<>(activity);
+            handler_.postDelayed(readContentRunnable, VIEW_SETTLE_TIME);
+        }
+    }
+
+    private void updateLastViewTimeStampIfNeeded() {
+        try {
+            if (contentEvent_ != null) {
+                contentEvent_.put(TIME_STAMP_CLOSE_KEY, System.currentTimeMillis());
+            }
+        } catch (JSONException ignore) {
+        }
+    }
+
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
@@ -117,14 +129,14 @@ public class ContentDiscoverer {
             try {
                 if (cdManifest_.isCDEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
-                    JSONObject contentEvent = new JSONObject();
-                    contentEvent.put(TIME_STAMP_KEY, System.currentTimeMillis());
-                    contentEvent.put(NAV_PATH_KEY, contentNavPath_);
+                    contentEvent_ = new JSONObject();
+                    contentEvent_.put(TIME_STAMP_KEY, System.currentTimeMillis());
+                    contentEvent_.put(NAV_PATH_KEY, contentNavPath_);
                     if (!TextUtils.isEmpty(referredUrl_)) {
-                        contentEvent.put(REFERRAL_LINK_KEY, referredUrl_);
+                        contentEvent_.put(REFERRAL_LINK_KEY, referredUrl_);
                     }
                     String viewName = "/" + activity.getClass().getSimpleName();
-                    contentEvent.put(VIEW_KEY, viewName);
+                    contentEvent_.put(VIEW_KEY, viewName);
 
 
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
@@ -135,27 +147,27 @@ public class ContentDiscoverer {
                         JSONArray filteredElements = null;
                         if (cdPathProperties != null) {
                             isClearText = cdPathProperties.isClearTextRequested();
-                            contentEvent.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
+                            contentEvent_.put(ContentDiscoveryManifest.HASH_MODE_KEY, !isClearText);
                             filteredElements = cdPathProperties.getFilteredElements();
                         }
                         if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                             JSONArray contentKeysArray = new JSONArray();
-                            contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
+                            contentEvent_.put(CONTENT_KEYS_KEY, contentKeysArray);
 
                             JSONArray contentDataArray = new JSONArray();
-                            contentEvent.put(CONTENT_DATA_KEY, contentDataArray);
+                            contentEvent_.put(CONTENT_DATA_KEY, contentDataArray);
                             discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
                         } else { // If filter is absent discover all text field keys
                             if (!discoveredViewList_.contains(viewName)) {  // Check if the view is already discovered. If already discovered no need to get view content keys again
                                 JSONArray contentKeysArray = new JSONArray();
-                                contentEvent.put(CONTENT_KEYS_KEY, contentKeysArray);
+                                contentEvent_.put(CONTENT_KEYS_KEY, contentKeysArray);
                                 discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
                             }
                         }
                         discoveredViewList_.add(viewName);
 
                         // Cache the analytics data for future use
-                        PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent);
+                        PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
                         lastActivityReference_ = null;
                     }
                 }
