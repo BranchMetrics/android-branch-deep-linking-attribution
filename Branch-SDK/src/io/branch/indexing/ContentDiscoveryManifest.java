@@ -3,6 +3,7 @@ package io.branch.indexing;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +39,7 @@ public class ContentDiscoveryManifest {
 
 
     public static final String MANIFEST_VERSION_KEY = "mv";
+    public static final String PACKAGE_NAME_KEY = "pn";
     public static final String HASH_MODE_KEY = "h";
     private static final String MANIFEST_KEY = "m";
     private static final String PATH_KEY = "p";
@@ -45,7 +47,7 @@ public class ContentDiscoveryManifest {
     private static final String MAX_TEXT_LEN_KEY = "mtl";
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
-    private static final String CONTENT_DISCOVER_KEY = "cd";
+    public static final String CONTENT_DISCOVER_KEY = "cd";
 
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
@@ -156,6 +158,9 @@ public class ContentDiscoveryManifest {
     }
 
     public String getManifestVersion() {
+        if (TextUtils.isEmpty(manifestVersion_)) {
+            return "-1";
+        }
         return manifestVersion_;
     }
 

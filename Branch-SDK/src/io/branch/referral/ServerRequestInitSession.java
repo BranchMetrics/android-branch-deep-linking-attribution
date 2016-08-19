@@ -18,15 +18,18 @@ abstract class ServerRequestInitSession extends ServerRequest {
     protected static final String ACTION_OPEN = "open";
     protected static final String ACTION_INSTALL = "install";
     private final Context context_;
+    private final ContentDiscoveryManifest contentDiscoveryManifest_;
 
     public ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
         context_ = context;
+        contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     protected ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
+        contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     /**
@@ -99,11 +102,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     protected void onInitSessionCompleted(ServerResponse response, Branch branch) {
-        ContentDiscoveryManifest.getInstance(context_).onBranchInitialised(response.getObject());
-        if (branch.currentActivityReference_ != null) {
-            try {
-                ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
-            } catch (Exception ignore) {
+        if (contentDiscoveryManifest_ != null) {
+            contentDiscoveryManifest_.onBranchInitialised(response.getObject());
+            if (branch.currentActivityReference_ != null) {
+                try {
+                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+                } catch (Exception ignore) {
+                }
             }
         }
     }
@@ -136,6 +141,12 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
+            if (contentDiscoveryManifest_ != null) {
+                JSONObject cdObj = new JSONObject();
+                cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, contentDiscoveryManifest_.getManifestVersion());
+                cdObj.put(ContentDiscoveryManifest.PACKAGE_NAME_KEY, context_.getPackageName());
+                post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
             }
         } catch (JSONException ignore) {
 
