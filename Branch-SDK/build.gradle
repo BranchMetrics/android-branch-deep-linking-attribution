@@ -6,7 +6,7 @@ def jarFileName
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile 'com.android.support:support-annotations:22.2.0'
-    compile 'io.branch.external.answersshim:answers-shim:0.0.4'
+    compile 'com.crashlytics.sdk.android:answers-shim:0.0.6'
 
 }
 
