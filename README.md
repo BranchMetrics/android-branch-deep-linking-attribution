@@ -57,15 +57,17 @@ This is the readme file of our open source Android SDK. There's a full demo app 
 
 Just add `compile 'io.branch.sdk.android:library:2.+'` to the dependencies section of your `build.gradle` file.
 
-This supports minimum sdk level 14. If you want to support minimum sdk level 9 please consider using version 1.14.5
+#### Some notes:
 
-Or download the JAR file from here:
-https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-SDK.zip
-
-The testbed project:
-https://s3-us-west-1.amazonaws.com/branchhost/Branch-Android-TestBed.zip
-
-Or just clone this project!
+- If you don't plan to use the `Fabric Answers` integration, and don't want to import the `answers-shim`, just import your project as follows:
+```
+compile ('io.branch.sdk.android:library:2.+') {
+  exclude module: 'answers-shim'
+}
+```
+- This supports minimum sdk level 14. If you want to support minimum sdk level 9 please consider using version 1.14.5
+- If you want to import the JAR directly, you can find the build in the root of this repository. 
+- Or you can clone this repo and import the source as a library into your project
 
 ### Register Your App
 
