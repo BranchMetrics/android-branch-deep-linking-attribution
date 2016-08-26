@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -147,7 +148,7 @@ class RemoteInterface {
     private ServerResponse make_restful_get(String baseUrl, JSONObject params, String tag, int timeout, int retryNumber, boolean log) {
         String modifiedUrl = baseUrl;
         JSONObject getParameters = new JSONObject();
-        HttpsURLConnection connection = null;
+        HttpURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
@@ -171,7 +172,7 @@ class RemoteInterface {
         try {
             if (log) PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
             URL urlObject = new URL(modifiedUrl);
-            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection = (HttpURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
 
@@ -191,7 +192,7 @@ class RemoteInterface {
                 return make_restful_get(baseUrl, params, tag, timeout, retryNumber, log);
             } else {
                 try {
-                    if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    if (responseCode != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         return processEntityForJSON(connection.getErrorStream(),
                                 responseCode, tag, log);
                     } else {
@@ -294,7 +295,7 @@ class RemoteInterface {
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
                                              int retryNumber, boolean log) {
-        HttpsURLConnection connection = null;
+        HttpURLConnection connection = null;
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
@@ -320,7 +321,7 @@ class RemoteInterface {
                 PrefHelper.Debug("BranchSDK", "Post value = " + bodyCopy.toString(4));
             }
             URL urlObject = new URL(url);
-            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection = (HttpURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);
@@ -338,7 +339,7 @@ class RemoteInterface {
             outputStreamWriter.flush();
 
             int responseCode = connection.getResponseCode();
-            if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
+            if (responseCode >= HttpURLConnection.HTTP_INTERNAL_ERROR
                     && retryNumber < prefHelper_.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper_.getRetryInterval());
@@ -349,7 +350,7 @@ class RemoteInterface {
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log);
             } else {
                 try {
-                    if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    if (responseCode != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         return processEntityForJSON(connection.getErrorStream(), responseCode, tag, log);
                     } else {
                         return processEntityForJSON(connection.getInputStream(), responseCode, tag, log);

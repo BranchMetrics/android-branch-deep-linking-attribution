@@ -35,7 +35,6 @@ public class ContentDiscoverer {
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
     private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
-    private String contentNavPath_; // User navigation path for the content.
     private String referredUrl_; // The url which opened this app session
     private JSONObject contentEvent_;
 
@@ -131,7 +130,6 @@ public class ContentDiscoverer {
                     Activity activity = lastActivityReference_.get();
                     contentEvent_ = new JSONObject();
                     contentEvent_.put(TIME_STAMP_KEY, System.currentTimeMillis());
-                    contentEvent_.put(NAV_PATH_KEY, contentNavPath_);
                     if (!TextUtils.isEmpty(referredUrl_)) {
                         contentEvent_.put(REFERRAL_LINK_KEY, referredUrl_);
                     }
@@ -230,6 +228,7 @@ public class ContentDiscoverer {
                         .put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
                 PrefHelper.getInstance(context).clearBranchAnalyticsData();
                 if (context != null) {
+                    cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                 }
 
