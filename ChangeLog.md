@@ -1,5 +1,9 @@
 Branch Android SDK change log
 
+- v2.1.0 Replacing answers-shim dependency with Crashlytics answers shim to fix build conflict when Branch is used along with Digits.
+
+- v2.0.3 Hot fix for NPE with get request when Branch API services is down.
+
 - v2.0.2 Support for delayed "onNewIntent()" call on certain Android versions. Clean up for unused server requests.
 
 - v2.0.1 Adding an option to white list the Uri schemes that should be collected by Branch SDK when app is opened with an external intent.
