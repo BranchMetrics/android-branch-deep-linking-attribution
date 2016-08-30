@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -376,6 +377,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isGAParamsFetchInProgress_ = false;
 
     private List<String> externalUriWhiteList_;
+
+    String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1156,6 +1159,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void closeSessionInternal() {
         executeClose();
+        sessionReferredLink_ = null;
         if (prefHelper_.getExternAppListing()) {
             if (appListingSchedule_ == null) {
                 scheduleListOfApps();
@@ -1180,6 +1184,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     ServerRequest req = new ServerRequestRegisterClose(context_);
                     handleNewRequest(req);
                 }
+
             }
             initState_ = SESSION_STATE.UNINITIALISED;
         }
@@ -1194,11 +1199,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (externalUriWhiteList_.size() > 0) {
                         String externalIntentScheme = Uri.parse(data.toString()).getScheme();
                         if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+                            sessionReferredLink_ = data.toString();
                             prefHelper_.setExternalIntentUri(data.toString());
                         }
                     } else {
+                        sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
+
                 }
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     Bundle bundle = activity.getIntent().getExtras();
@@ -2098,11 +2106,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
+
         }
 
         @Override
         public void onActivityStarted(Activity activity) {
             intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
+            // If configured on dashboard, trigger content discovery runnable
+            if (initState_ == SESSION_STATE.INITIALISED) {
+                try {
+                    ContentDiscoverer.getInstance().discoverContent(activity, sessionReferredLink_);
+                } catch (Exception ignore) {
+                }
+            }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
@@ -2136,8 +2152,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         public void onActivityStopped(Activity activity) {
-            activityCnt_--; // Check if this is the last activity.If so stop
-            // session.
+            ContentDiscoverer.getInstance().onActivityStopped(activity);
+            activityCnt_--; // Check if this is the last activity. If so, stop the session.
             if (activityCnt_ < 1) {
                 closeSessionInternal();
             }

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -25,7 +24,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 /**
  * <p>This class assists with RESTful calls to the Branch API, by using
- * {@link HttpURLConnection} object, and handling all restful calls via one of its GET or POST capable
+ * {@link HttpsURLConnection} object, and handling all restful calls via one of its GET or POST capable
  * methods.</p>
  */
 class RemoteInterface {
@@ -33,7 +32,7 @@ class RemoteInterface {
     public static final int NO_CONNECTIVITY_STATUS = -1009;
     public static final int NO_BRANCH_KEY_STATUS = -1234;
 
-    private static final String SDK_VERSION = "2.1.0";
+    private static final String SDK_VERSION = "2.2.0";
     private static final int DEFAULT_TIMEOUT = 3000;
 
     /**
@@ -56,7 +55,7 @@ class RemoteInterface {
 
 
     /**
-     * <p>Converts {@link HttpURLConnection} resultant output object into a {@link ServerResponse} object by
+     * <p>Converts {@link HttpsURLConnection} resultant output object into a {@link ServerResponse} object by
      * reading the content supplied in the raw server response, and creating a {@link JSONObject}
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
@@ -67,7 +66,7 @@ class RemoteInterface {
      *                   resultant {@link ServerResponse} object.
      * @param log        A {@link Boolean} value indicating whether or not to log the raw
      *                   content lines via the debug interface.
-     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
+     * @return A {@link ServerResponse} object representing the {@link HttpsURLConnection}
      * response in Branch SDK terms.
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
@@ -192,7 +191,7 @@ class RemoteInterface {
                 return make_restful_get(baseUrl, params, tag, timeout, retryNumber, log);
             } else {
                 try {
-                    if (responseCode != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         return processEntityForJSON(connection.getErrorStream(),
                                 responseCode, tag, log);
                     } else {
@@ -255,7 +254,7 @@ class RemoteInterface {
      * @param tag     A {@link String} tag for logging/analytics purposes.
      * @param timeout An {@link Integer} value containing the number of milliseconds to wait
      *                before considering a server request to have timed out.
-     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
+     * @return A {@link ServerResponse} object representing the {@link HttpsURLConnection}
      * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout) {
@@ -273,7 +272,7 @@ class RemoteInterface {
      *                before considering a server request to have timed out.
      * @param log     A {@link Boolean} value that specifies whether debug logging should be
      *                enabled for this request or not.
-     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
+     * @return A {@link ServerResponse} object representing the {@link HttpsURLConnection}
      * response in Branch SDK terms.
      */
     public ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout, boolean log) {
@@ -290,7 +289,7 @@ class RemoteInterface {
      *                before considering a server request to have timed out.
      * @param log     A {@link Boolean} value that specifies whether debug logging should be
      *                enabled for this request or not.
-     * @return A {@link ServerResponse} object representing the {@link HttpURLConnection}
+     * @return A {@link ServerResponse} object representing the {@link HttpsURLConnection}
      * response in Branch SDK terms.
      */
     private ServerResponse make_restful_post(JSONObject body, String url, String tag, int timeout,
@@ -339,7 +338,7 @@ class RemoteInterface {
             outputStreamWriter.flush();
 
             int responseCode = connection.getResponseCode();
-            if (responseCode >= HttpURLConnection.HTTP_INTERNAL_ERROR
+            if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
                     && retryNumber < prefHelper_.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper_.getRetryInterval());
@@ -350,7 +349,7 @@ class RemoteInterface {
                 return make_restful_post(bodyCopy, url, tag, timeout, retryNumber, log);
             } else {
                 try {
-                    if (responseCode != HttpURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                    if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         return processEntityForJSON(connection.getErrorStream(), responseCode, tag, log);
                     } else {
                         return processEntityForJSON(connection.getInputStream(), responseCode, tag, log);
