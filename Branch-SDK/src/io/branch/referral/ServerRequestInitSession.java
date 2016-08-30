@@ -6,6 +6,9 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.indexing.ContentDiscoverer;
+import io.branch.indexing.ContentDiscoveryManifest;
+
 /**
  * <p>
  * Abstract for Session init request. All request which do initilaise session should extend from this.
@@ -14,13 +17,19 @@ import org.json.JSONObject;
 abstract class ServerRequestInitSession extends ServerRequest {
     protected static final String ACTION_OPEN = "open";
     protected static final String ACTION_INSTALL = "install";
+    private final Context context_;
+    private final ContentDiscoveryManifest contentDiscoveryManifest_;
 
     public ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
+        context_ = context;
+        contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     protected ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        context_ = context;
+        contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     /**
@@ -72,9 +81,16 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     @Override
+
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         // Check for any Third party SDK for data handling
         try {
+            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setIsAppLinkTriggeredInit(false);
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
@@ -82,6 +98,18 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
             }
         } catch (JSONException ignore) {
+        }
+    }
+
+    protected void onInitSessionCompleted(ServerResponse response, Branch branch) {
+        if (contentDiscoveryManifest_ != null) {
+            contentDiscoveryManifest_.onBranchInitialised(response.getObject());
+            if (branch.currentActivityReference_ != null) {
+                try {
+                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+                } catch (Exception ignore) {
+                }
+            }
         }
     }
 
@@ -113,6 +141,12 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
+            if (contentDiscoveryManifest_ != null) {
+                JSONObject cdObj = new JSONObject();
+                cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, contentDiscoveryManifest_.getManifestVersion());
+                cdObj.put(ContentDiscoveryManifest.PACKAGE_NAME_KEY, context_.getPackageName());
+                post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
             }
         } catch (JSONException ignore) {
 

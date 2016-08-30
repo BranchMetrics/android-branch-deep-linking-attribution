@@ -53,7 +53,11 @@ class DeviceInfo {
      */
     private final int osVersion_;
 
+    private final String packageName_;
+    private final String appVersion_;
+
     private static DeviceInfo thisInstance_ = null;
+
 
     /**
      * Get the singleton instance for deviceInfo class
@@ -65,6 +69,24 @@ class DeviceInfo {
         if (thisInstance_ == null) {
             thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch);
         }
+        return thisInstance_;
+    }
+
+    /**
+     * Get the singleton instance for this class
+     *
+     * @return {@link DeviceInfo} instance if already initialised or null
+     */
+    public static DeviceInfo getInstance() {
+        return thisInstance_;
+    }
+
+    /**
+     * Get the singleton object for Device info
+     *
+     * @return {@link DeviceInfo} instance if initialised else null
+     */
+    public static DeviceInfo getThisInstance() {
         return thisInstance_;
     }
 
@@ -88,6 +110,8 @@ class DeviceInfo {
         osName_ = sysObserver.getOS();
         osVersion_ = sysObserver.getOSVersion();
 
+        packageName_ = sysObserver.getPackageName();
+        appVersion_ = sysObserver.getAppVersion();
     }
 
     /**
@@ -120,5 +144,23 @@ class DeviceInfo {
         } catch (JSONException ignore) {
 
         }
+    }
+
+    /**
+     * get the package name for the this application
+     *
+     * @return {@link String} with package name value
+     */
+    public String getPackageName() {
+        return packageName_;
+    }
+
+    /**
+     * Gets the version name for this application
+     *
+     * @return {@link String} with app version value
+     */
+    public String getAppVersion() {
+        return appVersion_;
     }
 }

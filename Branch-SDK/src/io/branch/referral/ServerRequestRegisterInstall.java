@@ -58,6 +58,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             constructError_ = true;
         }
 
+
     }
 
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
@@ -74,12 +75,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         super.onRequestSucceeded(resp, branch);
         try {
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
-            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setIsAppLinkTriggeredInit(false);
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
@@ -117,7 +112,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
+        onInitSessionCompleted(resp, branch);
     }
 
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {

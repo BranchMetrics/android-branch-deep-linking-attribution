@@ -96,7 +96,18 @@ public class Defines {
         BranchViewAction("action"),
         BranchViewNumOfUse("number_of_use"),
         BranchViewUrl("url"),
-        BranchViewHtml("html");
+        BranchViewHtml("html"),
+
+        Path("path"),
+        ViewList("view_list"),
+        ContentActionView("view"),
+        ContentPath("content_path"),
+        ContentNavPath("content_nav_path"),
+        ReferralLink("referral_link"),
+        ContentData("content_data"),
+        ContentEvents("events"),
+        ContentAnalyticsMode("content_analytics_mode"),
+        ContentDiscovery("cd");
 
         
         private String key = "";
@@ -137,7 +148,8 @@ public class Defines {
         GetReferralCode("v1/referralcode"),
         ValidateReferralCode("v1/referralcode/"),
         ApplyReferralCode("v1/applycode/"),
-        DebugConnect("v1/debug/connect");
+        DebugConnect("v1/debug/connect"),
+        ContentEvent("v1/content-events");
 
         private String key = "";
 

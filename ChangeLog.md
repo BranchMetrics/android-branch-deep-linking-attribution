@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.2.0 Adding Branch Content Discovery feature.
+
 - v2.1.0 Replacing answers-shim dependency with Crashlytics answers shim to fix build conflict when Branch is used along with Digits.
 
 - v2.0.3 Hot fix for NPE with get request when Branch API services is down.
