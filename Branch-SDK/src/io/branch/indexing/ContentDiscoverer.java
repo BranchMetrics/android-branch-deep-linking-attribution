@@ -220,13 +220,13 @@ public class ContentDiscoverer {
 
     public JSONObject getContentDiscoverDataForCloseRequest(Context context) {
         JSONObject cdObj = null;
-        if (PrefHelper.getInstance(context).getBranchAnalyticsData().length() > 0) {
+        JSONObject branchAnalyticalData = PrefHelper.getInstance(context).getBranchAnalyticsData();
+        if (branchAnalyticalData.length() > 0 && branchAnalyticalData.toString().length() < cdManifest_.getMaxPacketSize()) {
             cdObj = new JSONObject();
             try {
                 ContentDiscoveryManifest cdManifest = ContentDiscoveryManifest.getInstance(context);
                 cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, cdManifest.getManifestVersion())
-                        .put(ENTITIES_KEY, PrefHelper.getInstance(context).getBranchAnalyticsData());
-                PrefHelper.getInstance(context).clearBranchAnalyticsData();
+                        .put(ENTITIES_KEY, branchAnalyticalData);
                 if (context != null) {
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
@@ -236,6 +236,7 @@ public class ContentDiscoverer {
                 e.printStackTrace();
             }
         }
+        PrefHelper.getInstance(context).clearBranchAnalyticsData();
         return cdObj;
     }
 

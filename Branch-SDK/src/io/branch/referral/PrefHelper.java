@@ -177,8 +177,7 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
-        //return "https://api.branch.io/";
-        return "http://chandra.branch.io:8080/";
+        return "https://api.branch.io/";
     }
 
     /**
@@ -990,12 +989,10 @@ public class PrefHelper {
     }
 
 
-
     public void clearBranchAnalyticsData() {
         savedAnalyticsData_ = null;
         setString(KEY_BRANCH_ANALYTICAL_DATA, "");
     }
-
 
 
     public void saveBranchAnalyticsData(JSONObject analyticsData) {
