@@ -180,6 +180,7 @@ public class Defines {
         Channel("channel"),
         Feature("feature"),
         Stage("stage"),
+        Campaign("campaign"),
         Data("data"),
         URL("url");
 

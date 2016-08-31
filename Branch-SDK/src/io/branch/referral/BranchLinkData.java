@@ -106,6 +106,19 @@ class BranchLinkData extends JSONObject {
     private String stage;
 
     /**
+     * <p>A {@link String} denoting the campaign that the link belongs to.</p>
+     * <b>Example values:</b>
+     * <p/>
+     * <ul>
+     * <li><i>null</i></li>
+     * <li>"Your campaign name"</li>
+     * </ul>
+     *
+     * @see {@link #putCampaign} - to set this value.
+     */
+    private String campaign;
+
+    /**
      * <p>A {@link String} value containing params are the deep linked params associated with the
      * link that the user clicked before showing up.</p>
      *
@@ -275,6 +288,24 @@ class BranchLinkData extends JSONObject {
     }
 
     /**
+     * <b>A string value that represents the campaign associated with this link.</b>
+     *
+     * @param campaign A {@link String} value specifying the campaign.
+     * @throws JSONException The parameter value must be in valid JSON format, or a
+     *                       {@link JSONException} will be thrown.
+     */
+    public void putCampaign(String campaign) throws JSONException {
+        if (campaign != null) {
+            this.campaign = campaign;
+            this.put(Defines.LinkParam.Campaign.getKey(), campaign);
+        }
+    }
+
+    public String getCampaign() {
+        return campaign;
+    }
+
+    /**
      * <p>Any other params to be added; you can define your own.</p>
      *
      * @param params A {@link String} containing other params in JSON format.
@@ -333,6 +364,11 @@ class BranchLinkData extends JSONObject {
                 return false;
         } else if (!stage.equals(other.stage))
             return false;
+        if (campaign == null) {
+            if (other.campaign != null)
+                return false;
+        } else if (!campaign.equals(other.campaign))
+            return false;
         if (type != other.type)
             return false;
         if (duration != other.duration)
@@ -386,6 +422,8 @@ class BranchLinkData extends JSONObject {
         result = prime * result
                 + ((stage == null) ? 0 : stage.toLowerCase().hashCode());
         result = prime * result
+                + ((campaign == null) ? 0 : campaign.toLowerCase().hashCode());
+        result = prime * result
                 + ((params == null) ? 0 : params.toLowerCase().hashCode());
         result = prime * result + this.duration;
 
@@ -417,6 +455,9 @@ class BranchLinkData extends JSONObject {
             }
             if (!TextUtils.isEmpty(stage)) {
                 linkDataJson.put("~" + Defines.LinkParam.Stage.getKey(), stage);
+            }
+            if (!TextUtils.isEmpty(campaign)) {
+                linkDataJson.put("~" + Defines.LinkParam.Campaign.getKey(), campaign);
             }
             if (has(Defines.LinkParam.Tags.getKey())) {
                 linkDataJson.put(Defines.LinkParam.Tags.getKey(), getJSONArray(Defines.LinkParam.Tags.getKey()));

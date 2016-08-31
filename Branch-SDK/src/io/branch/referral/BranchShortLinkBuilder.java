@@ -93,6 +93,18 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
     }
 
     /**
+     * <p> Sets the campaign that the link belongs to. </p>
+     *
+     * @param campaign A {@link String} denoting the campaign that the link belongs to. Should not
+     *                 exceed 128 characters.
+     * @return This Builder object to allow for chaining of calls to set methods.
+     */
+    public BranchShortLinkBuilder setCampaign(String campaign) {
+        this.campaign_ = campaign;
+        return this;
+    }
+
+    /**
      * <p>Sets an {@link int} that can be used for scenarios where you want the link to
      * only deep link the first time or unlimited times</p>
      *
