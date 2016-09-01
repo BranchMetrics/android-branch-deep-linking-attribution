@@ -260,6 +260,7 @@ public class MainActivity extends Activity {
 
                             @Override
                             public void onShareLinkDialogLaunched() {
+                                branchUniversalObject.userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED);
                             }
 
                             @Override
@@ -273,7 +274,6 @@ public class MainActivity extends Activity {
 
                             @Override
                             public void onChannelSelected(String channelName) {
-                                branchUniversalObject.userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED);
                             }
 
                         },

@@ -107,7 +107,7 @@ class ServerRequestRegisterView extends ServerRequest {
 
         paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeywordsJsonArray());
         paramsObj.put(Defines.Jsonkey.PublicallyIndexable.getKey(), universalObject.isPublicallyIndexable());
-        if (!universalObject.getCurrencyType().equals(CURRENCY_TYPE.NONE.toString())) {
+        if (universalObject.getPrice() > 0) {
             paramsObj.put(Defines.Jsonkey.PurchaseAmount.getKey(), universalObject.getPrice());
             paramsObj.put(Defines.Jsonkey.PurchaseCurrency.getKey(), universalObject.getCurrencyType());
         }

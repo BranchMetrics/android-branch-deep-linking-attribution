@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -54,7 +55,7 @@ public class BranchUniversalObject implements Parcelable {
     /* Expiry date for the content and any associated links. Represented as epoch milli second */
     private long expirationInMilliSec_;
     /* Price associated with the content of this BUO */
-    private double price_;
+    private Double price_;
     /* Type of the currency associated with the price */
     private CURRENCY_TYPE currency_;
 
@@ -105,8 +106,7 @@ public class BranchUniversalObject implements Parcelable {
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         expirationInMilliSec_ = 0L;
-        price_ = 0.0;
-        currency_ = CURRENCY_TYPE.NONE;
+        currency_ = CURRENCY_TYPE.USD;
     }
 
     /**
@@ -423,7 +423,7 @@ public class BranchUniversalObject implements Parcelable {
      * @return A {@link Double} with value for price of the content of BUO
      */
     public double getPrice() {
-        return price_;
+        return price_ != null ? price_ : 0.0;
     }
 
     /**
@@ -434,11 +434,7 @@ public class BranchUniversalObject implements Parcelable {
      * @return {@link String} with ISO 4217 for this currency. Empty string if there is no currency type set
      */
     public String getCurrencyType() {
-        String currencyName = "";
-        if (currency_ != CURRENCY_TYPE.NONE) {
-            currencyName = currency_.toString();
-        }
-        return currencyName;
+        return currency_.toString();
     }
 
     /**
@@ -593,19 +589,36 @@ public class BranchUniversalObject implements Parcelable {
             shortLinkBuilder.setDuration(linkProperties.getMatchDuration());
         }
 
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentTitle.getKey(), title_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentKeyWords.getKey(), getKeywordsJsonArray());
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentDesc.getKey(), description_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentType.getKey(), type_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expirationInMilliSec_);
+        if (!TextUtils.isEmpty(title_)) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentTitle.getKey(), title_);
+        }
+        if (!TextUtils.isEmpty(canonicalIdentifier_)) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
+        }
+        if (!TextUtils.isEmpty(canonicalUrl_)) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl_);
+        }
+        JSONArray keywords = getKeywordsJsonArray();
+        if (keywords.length() > 0) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentKeyWords.getKey(), keywords);
+        }
+        if (!TextUtils.isEmpty(description_)) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentDesc.getKey(), description_);
+        }
+        if (!TextUtils.isEmpty(imageUrl_)) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
+        }
+        if (!TextUtils.isEmpty(type_)) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentType.getKey(), type_);
+        }
+        if (expirationInMilliSec_ > 0) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expirationInMilliSec_);
+        }
         shortLinkBuilder.addParameters(Defines.Jsonkey.PublicallyIndexable.getKey(), "" + isPublicallyIndexable());
-        shortLinkBuilder.addParameters(Defines.Jsonkey.PurchaseAmount.getKey(), "" + price_);
-        shortLinkBuilder.addParameters(Defines.Jsonkey.PurchaseCurrency.getKey(), currency_.toString());
-
-
+        if (price_ != null) {
+            shortLinkBuilder.addParameters(Defines.Jsonkey.PurchaseAmount.getKey(), "" + price_);
+            shortLinkBuilder.addParameters(Defines.Jsonkey.PurchaseCurrency.getKey(), currency_.toString());
+        }
         for (String key : metadata_.keySet()) {
             shortLinkBuilder.addParameters(key, metadata_.get(key));
         }
@@ -613,7 +626,6 @@ public class BranchUniversalObject implements Parcelable {
         for (String key : controlParam.keySet()) {
             shortLinkBuilder.addParameters(key, controlParam.get(key));
         }
-
 
         return shortLinkBuilder;
     }
@@ -721,21 +733,39 @@ public class BranchUniversalObject implements Parcelable {
     public JSONObject convertToJson() {
         JSONObject buoJsonModel = new JSONObject();
         try {
-            buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
-            buoJsonModel.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
-            buoJsonModel.put(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl_);
-            JSONArray keyWordJsonArray = new JSONArray();
-            for (String keyword : keywords_) {
-                keyWordJsonArray.put(keyword);
+            if (!TextUtils.isEmpty(title_)) {
+                buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
             }
-            buoJsonModel.put(Defines.Jsonkey.ContentKeyWords.getKey(), keyWordJsonArray);
-            buoJsonModel.put(Defines.Jsonkey.ContentDesc.getKey(), description_);
-            buoJsonModel.put(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
-            buoJsonModel.put(Defines.Jsonkey.ContentType.getKey(), type_);
-            buoJsonModel.put(Defines.Jsonkey.ContentExpiryTime.getKey(), expirationInMilliSec_);
+            if (!TextUtils.isEmpty(canonicalIdentifier_)) {
+                buoJsonModel.put(Defines.Jsonkey.CanonicalIdentifier.getKey(), canonicalIdentifier_);
+            }
+            if (!TextUtils.isEmpty(canonicalUrl_)) {
+                buoJsonModel.put(Defines.Jsonkey.CanonicalUrl.getKey(), canonicalUrl_);
+            }
+            if (keywords_.size() > 0) {
+                JSONArray keyWordJsonArray = new JSONArray();
+                for (String keyword : keywords_) {
+                    keyWordJsonArray.put(keyword);
+                }
+                buoJsonModel.put(Defines.Jsonkey.ContentKeyWords.getKey(), keyWordJsonArray);
+            }
+            if (!TextUtils.isEmpty(description_)) {
+                buoJsonModel.put(Defines.Jsonkey.ContentDesc.getKey(), description_);
+            }
+            if (!TextUtils.isEmpty(imageUrl_)) {
+                buoJsonModel.put(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
+            }
+            if (!TextUtils.isEmpty(type_)) {
+                buoJsonModel.put(Defines.Jsonkey.ContentType.getKey(), type_);
+            }
+            if (expirationInMilliSec_ > 0) {
+                buoJsonModel.put(Defines.Jsonkey.ContentExpiryTime.getKey(), expirationInMilliSec_);
+            }
             buoJsonModel.put(Defines.Jsonkey.PublicallyIndexable.getKey(), isPublicallyIndexable());
-            buoJsonModel.put(Defines.Jsonkey.PurchaseAmount.getKey(), price_);
-            buoJsonModel.put(Defines.Jsonkey.PurchaseCurrency.getKey(), currency_.toString());
+            if (price_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.PurchaseAmount.getKey(), price_);
+                buoJsonModel.put(Defines.Jsonkey.PurchaseCurrency.getKey(), currency_.toString());
+            }
 
             Set<String> metadataKeys = metadata_.keySet();
             for (String metadataKey : metadataKeys) {
@@ -773,7 +803,8 @@ public class BranchUniversalObject implements Parcelable {
         dest.writeString(type_);
         dest.writeLong(expirationInMilliSec_);
         dest.writeInt(indexMode_.ordinal());
-        dest.writeDouble(price_);
+        double priceVal = price_ != null ? price_ : -1;
+        dest.writeDouble(priceVal);
         dest.writeInt(currency_.ordinal());
         dest.writeSerializable(keywords_);
 
@@ -796,6 +827,9 @@ public class BranchUniversalObject implements Parcelable {
         expirationInMilliSec_ = in.readLong();
         indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
         price_ = in.readDouble();
+        if (price_ < 0) {
+            price_ = null;
+        }
         currency_ = CURRENCY_TYPE.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
