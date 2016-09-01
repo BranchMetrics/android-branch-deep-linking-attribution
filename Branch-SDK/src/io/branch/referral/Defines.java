@@ -71,6 +71,7 @@ public class Defines {
         AndroidPushIdentifier("push_identifier"),
 
         CanonicalIdentifier("$canonical_identifier"),
+        CanonicalIdentifierList("$canonical_identifier_list"),
         ContentTitle(Branch.OG_TITLE),
         ContentDesc(Branch.OG_DESC),
         ContentImgUrl(Branch.OG_IMAGE_URL),

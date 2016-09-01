@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.util.CurrencyType;
+import io.branch.referral.util.CURRENCY_TYPE;
 
 /**
  * * <p>
@@ -107,7 +107,7 @@ class ServerRequestRegisterView extends ServerRequest {
 
         paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeywordsJsonArray());
         paramsObj.put(Defines.Jsonkey.PublicallyIndexable.getKey(), universalObject.isPublicallyIndexable());
-        if (!universalObject.getCurrencyType().equals(CurrencyType.NONE.toString())) {
+        if (!universalObject.getCurrencyType().equals(CURRENCY_TYPE.NONE.toString())) {
             paramsObj.put(Defines.Jsonkey.PurchaseAmount.getKey(), universalObject.getPrice());
             paramsObj.put(Defines.Jsonkey.PurchaseCurrency.getKey(), universalObject.getCurrencyType());
         }

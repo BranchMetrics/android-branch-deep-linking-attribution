@@ -4,7 +4,7 @@ package io.branch.referral.util;
  * Created by sojanpr on 8/31/16.
  * ISO 4217 code enumeration for currency
  */
-public enum CurrencyType {
+public enum CURRENCY_TYPE {
     AED("AED"), AFN("AFN"), ALL("ALL"), AMD("AMD"), ANG("ANG"), AOA("AOA"), ARS("ARS"), AUD("AUD"), AWG("AWG"), AZN("AZN"), BAM("BAM"), BBD("BBD"),
     BDT("BDT"), BGN("BGN"), BHD("BHD"), BIF("BIF"), BMD("BMD"), BND("BND"), BOB("BOB"), BOV("BOV"), BRL("BRL"), BSD("BSD"), BTN("BTN"), BWP("BWP"),
     BYN("BYN"), BYR("BYR"), BZD("BZD"), CAD("CAD"), CDF("CDF"), CHE("CHE"), CHF("CHF"), CHW("CHW"), CLF("CLF"), CLP("CLP"), CNY("CNY"), COP("COP"),
@@ -23,7 +23,7 @@ public enum CurrencyType {
 
     private String iso4217Code = "";
 
-    CurrencyType(String code) {
+    CURRENCY_TYPE(String code) {
         this.iso4217Code = code;
     }
 

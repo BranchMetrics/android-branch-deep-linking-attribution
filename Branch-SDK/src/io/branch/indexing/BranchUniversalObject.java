@@ -22,7 +22,7 @@ import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.Defines;
-import io.branch.referral.util.CurrencyType;
+import io.branch.referral.util.CURRENCY_TYPE;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 
@@ -56,7 +56,28 @@ public class BranchUniversalObject implements Parcelable {
     /* Price associated with the content of this BUO */
     private double price_;
     /* Type of the currency associated with the price */
-    private CurrencyType currency_;
+    private CURRENCY_TYPE currency_;
+
+    /**
+     * <p>
+     * User action associated with BUO. Please see #userCompletedAction()
+     * </p>
+     * User actions on the BUO
+     */
+    public enum BUO_USER_ACTIONS {
+        View("View"),
+        ADD_TO_WISH_LIST("Add to Wishlist"),
+        ADD_TO_CART("Add to Cart"),
+        PURCHASE_STARTED("Purchase Started"),
+        PURCHASED("Purchased"),
+        SHARE_STARTED("Share Started"),
+        SHARE_COMPLETED("Share Completed");
+        String buoAction;
+
+        BUO_USER_ACTIONS(String action) {
+            buoAction = action;
+        }
+    }
 
     /**
      * Defines the Content indexing modes
@@ -85,7 +106,7 @@ public class BranchUniversalObject implements Parcelable {
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         expirationInMilliSec_ = 0L;
         price_ = 0.0;
-        currency_ = CurrencyType.NONE;
+        currency_ = CURRENCY_TYPE.NONE;
     }
 
     /**
@@ -253,10 +274,10 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @param price    A {@link Double} value specifying the price info associated with BUO
-     * @param currency ISO 4217 currency code defined in {@link CurrencyType} for the price
+     * @param currency ISO 4217 currency code defined in {@link CURRENCY_TYPE} for the price
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject setPrice(double price, CurrencyType currency) {
+    public BranchUniversalObject setPrice(double price, CURRENCY_TYPE currency) {
         price_ = price;
         currency_ = currency;
         return this;
@@ -272,6 +293,27 @@ public class BranchUniversalObject implements Parcelable {
      */
     public void listOnGoogleSearch(Context context) {
         AppIndexingHelper.addToAppIndex(context, this);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
+     */
+    public void userCompletedAction(BUO_USER_ACTIONS action) {
+        JSONObject actionCompletedPayload = new JSONObject();
+        try {
+            JSONArray canonicalIDList = new JSONArray();
+            canonicalIDList.put(canonicalIdentifier_);
+            actionCompletedPayload.put(Defines.Jsonkey.CanonicalIdentifierList.getKey(), canonicalIDList);
+            actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().userCompletedAction(action.buoAction, actionCompletedPayload);
+            }
+        } catch (JSONException ignore) {
+        }
     }
 
     /**
@@ -393,7 +435,7 @@ public class BranchUniversalObject implements Parcelable {
      */
     public String getCurrencyType() {
         String currencyName = "";
-        if (currency_ != CurrencyType.NONE) {
+        if (currency_ != CURRENCY_TYPE.NONE) {
             currencyName = currency_.toString();
         }
         return currencyName;
@@ -641,7 +683,7 @@ public class BranchUniversalObject implements Parcelable {
                 branchUniversalObject.price_ = jsonObject.getDouble(Defines.Jsonkey.PurchaseAmount.getKey());
             }
             if (jsonObject.has(Defines.Jsonkey.PurchaseCurrency.getKey())) {
-                branchUniversalObject.currency_ = CurrencyType.valueOf(jsonObject.getString(Defines.Jsonkey.PurchaseCurrency.getKey()));
+                branchUniversalObject.currency_ = CURRENCY_TYPE.valueOf(jsonObject.getString(Defines.Jsonkey.PurchaseCurrency.getKey()));
             }
 
             Iterator<String> keys = jsonObject.keys();
@@ -754,7 +796,7 @@ public class BranchUniversalObject implements Parcelable {
         expirationInMilliSec_ = in.readLong();
         indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
         price_ = in.readDouble();
-        currency_ = CurrencyType.values()[in.readInt()];
+        currency_ = CURRENCY_TYPE.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
         keywords_.addAll(keywordsTemp);
