@@ -75,7 +75,8 @@ public class Defines {
         ContentDesc(Branch.OG_DESC),
         ContentImgUrl(Branch.OG_IMAGE_URL),
         CanonicalUrl("$canonical_url"),
-
+        PurchaseAmount("$amount"),
+        PurchaseCurrency("$currency"),
 
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
