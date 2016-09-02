@@ -71,17 +71,21 @@ public class Defines {
         AndroidPushIdentifier("push_identifier"),
 
         CanonicalIdentifier("$canonical_identifier"),
+        CanonicalIdentifierList("$canonical_identifier_list"),
         ContentTitle(Branch.OG_TITLE),
         ContentDesc(Branch.OG_DESC),
         ContentImgUrl(Branch.OG_IMAGE_URL),
         CanonicalUrl("$canonical_url"),
-
+        PurchaseAmount("$amount"),
+        PurchaseCurrency("$currency"),
 
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
         ContentKeyWords("$keywords"),
         ContentExpiryTime("$exp_date"),
         Params("params"),
+        SharedLink("$shared_link"),
+        ShareError("$share_error"),
 
 
         External_Intent_URI("external_intent_uri"),
