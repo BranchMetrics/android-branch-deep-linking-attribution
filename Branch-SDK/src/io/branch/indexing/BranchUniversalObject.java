@@ -58,6 +58,8 @@ public class BranchUniversalObject implements Parcelable {
     private Double price_;
     /* Type of the currency associated with the price */
     private CURRENCY_TYPE currency_;
+    /* Wrapper for intercepting link share response */
+    private LinkShareListenerWrapper linkShareListenerWrapper_;
 
     /**
      * <p>
@@ -303,12 +305,29 @@ public class BranchUniversalObject implements Parcelable {
      * @param action A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
      */
     public void userCompletedAction(BUO_USER_ACTIONS action) {
+        userCompletedAction(action, null);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action   A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
+     * @param metadata A HashMap containing any additional metadata need to add to this user event
+     */
+    public void userCompletedAction(BUO_USER_ACTIONS action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
             canonicalIDList.put(canonicalIdentifier_);
             actionCompletedPayload.put(Defines.Jsonkey.CanonicalIdentifierList.getKey(), canonicalIDList);
             actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
+            if (metadata != null) {
+                for (String key : metadata.keySet()) {
+                    actionCompletedPayload.put(key, metadata.get(key));
+                }
+            }
             if (Branch.getInstance() != null) {
                 Branch.getInstance().userCompletedAction(action.buoAction, actionCompletedPayload);
             }
@@ -527,20 +546,20 @@ public class BranchUniversalObject implements Parcelable {
                 Log.e("BranchSDK", "Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
         } else {
-            JSONObject params = new JSONObject();
-            try {
-                for (String key : metadata_.keySet()) {
-                    params.put(key, metadata_.get(key));
-                }
-                HashMap<String, String> controlParams = linkProperties.getControlParams();
-                for (String key : controlParams.keySet()) {
-                    params.put(key, controlParams.get(key));
-                }
-            } catch (JSONException ignore) {
-            }
-
+//            JSONObject params = new JSONObject();
+//            try {
+//                for (String key : metadata_.keySet()) {
+//                    params.put(key, metadata_.get(key));
+//                }
+//                HashMap<String, String> controlParams = linkProperties.getControlParams();
+//                for (String key : controlParams.keySet()) {
+//                    params.put(key, controlParams.get(key));
+//                }
+//            } catch (JSONException ignore) {
+//            }
+            linkShareListenerWrapper_ = new LinkShareListenerWrapper(callback);
             Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
-                    .setCallback(callback)
+                    .setCallback(linkShareListenerWrapper_)
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
                     .setMessage(style.getMessageBody());
@@ -840,5 +859,52 @@ public class BranchUniversalObject implements Parcelable {
         }
     }
 
+    /**
+     * Class for intercepting share sheet events to report auto events on BUO
+     */
+    private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
+        private final Branch.BranchLinkShareListener originalCallback_;
+
+        public LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback) {
+            originalCallback_ = originalCallback;
+        }
+
+        @Override
+        public void onShareLinkDialogLaunched() {
+            userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED);
+            if (originalCallback_ != null) {
+                originalCallback_.onShareLinkDialogLaunched();
+            }
+        }
+
+        @Override
+        public void onShareLinkDialogDismissed() {
+            if (originalCallback_ != null) {
+                originalCallback_.onShareLinkDialogDismissed();
+            }
+        }
+
+        @Override
+        public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+            HashMap<String, String> metaData = new HashMap<>();
+            if (error == null) {
+                metaData.put(Defines.Jsonkey.SharedLink.getKey(), sharedLink);
+            } else {
+                metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
+            }
+            userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_COMPLETED, metaData);
+
+            if (originalCallback_ != null) {
+                originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
+            }
+        }
+
+        @Override
+        public void onChannelSelected(String channelName) {
+            if (originalCallback_ != null) {
+                originalCallback_.onChannelSelected(channelName);
+            }
+        }
+    }
 
 }

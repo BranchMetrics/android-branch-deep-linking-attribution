@@ -84,6 +84,8 @@ public class Defines {
         ContentKeyWords("$keywords"),
         ContentExpiryTime("$exp_date"),
         Params("params"),
+        SharedLink("$shared_link"),
+        ShareError("$share_error"),
 
 
         External_Intent_URI("external_intent_uri"),

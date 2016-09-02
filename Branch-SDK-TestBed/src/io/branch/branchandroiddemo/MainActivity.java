@@ -260,7 +260,6 @@ public class MainActivity extends Activity {
 
                             @Override
                             public void onShareLinkDialogLaunched() {
-                                branchUniversalObject.userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED);
                             }
 
                             @Override
@@ -269,7 +268,6 @@ public class MainActivity extends Activity {
 
                             @Override
                             public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-                                branchUniversalObject.userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_COMPLETED);
                             }
 
                             @Override
