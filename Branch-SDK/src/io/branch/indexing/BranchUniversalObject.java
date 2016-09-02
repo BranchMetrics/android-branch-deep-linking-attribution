@@ -501,6 +501,9 @@ public class BranchUniversalObject implements Parcelable {
         if (linkProperties.getStage() != null) {
             shortLinkBuilder.setStage(linkProperties.getStage());
         }
+        if (linkProperties.getCampaign() != null) {
+            shortLinkBuilder.setCampaign(linkProperties.getCampaign());
+        }
         if (linkProperties.getMatchDuration() > 0) {
             shortLinkBuilder.setDuration(linkProperties.getMatchDuration());
         }
