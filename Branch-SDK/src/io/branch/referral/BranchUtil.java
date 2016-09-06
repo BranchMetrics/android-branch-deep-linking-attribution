@@ -20,6 +20,7 @@ import java.util.Iterator;
  */
 class BranchUtil {
 
+    static boolean isCustomDebugEnabled_ = false; /* For setting debug mode using Branch#setDebug api */
 
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
@@ -28,6 +29,9 @@ class BranchUtil {
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
     public static boolean isTestModeEnabled(Context context) {
+        if (isCustomDebugEnabled_) {
+            return isCustomDebugEnabled_;
+        }
         boolean isTestMode_ = false;
         String testModeKey = "io.branch.sdk.TestMode";
         try {

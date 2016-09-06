@@ -411,6 +411,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         externalUriWhiteList_ = new ArrayList<>();
     }
 
+    /**
+     * <p>
+     * Enables the test mode for the SDK. This will use the Branch Test Keys.
+     * This will also enable debug logs.
+     * Note: This is same as setting "io.branch.sdk.TestMode" to "True" in Manifest file
+     * </p>
+     */
+    public void setDebug() {
+        BranchUtil.isCustomDebugEnabled_ = true;
+    }
 
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
