@@ -46,6 +46,8 @@ class ServerRequestCreateUrl extends ServerRequest {
      *                 Should not exceed 128 characters.
      * @param stage    A {@link String} value identifying the stage in an application or user flow
      *                 process. Should not exceed 128 characters.
+     * @param campaign A {@link String} denoting the campaign that the link belongs to. Should not
+     *                 exceed 128 characters.
      * @param params   A {@link JSONObject} value containing the deep linked params associated with
      *                 the link that will be passed into a new app session when clicked
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
@@ -54,7 +56,7 @@ class ServerRequestCreateUrl extends ServerRequest {
      */
     public ServerRequestCreateUrl(Context context, final String alias, final int type, final int duration,
                                   final Collection<String> tags, final String channel, final String feature,
-                                  final String stage, final String params,
+                                  final String stage, final String campaign, final String params,
                                   Branch.BranchLinkCreateListener callback, boolean async) {
 
         super(context, Defines.RequestPath.GetURL.getPath());
@@ -78,6 +80,7 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.putChannel(channel);
             linkPost_.putFeature(feature);
             linkPost_.putStage(stage);
+            linkPost_.putCampaign(campaign);
             linkPost_.putParams(params);
 
             setPost(linkPost_);
@@ -209,6 +212,11 @@ class ServerRequestCreateUrl extends ServerRequest {
         String stage = linkPost_.getStage();
         if (stage != null && stage.length() > 0) {
             longUrl = longUrl + Defines.LinkParam.Stage + "=" + stage + "&";
+        }
+
+        String campaign = linkPost_.getCampaign();
+        if (campaign != null && campaign.length() > 0) {
+            longUrl = longUrl + Defines.LinkParam.Campaign + "=" + campaign + "&";
         }
 
         long type = linkPost_.getType();

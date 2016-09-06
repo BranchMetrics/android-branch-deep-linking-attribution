@@ -27,6 +27,8 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     protected String feature_;
     /* Name that identify the stage in an application or user flow process. */
     protected String stage_;
+    /* Name of the campaign that the link belongs to. */
+    protected String campaign_;
     /* Link 'alias' can be used to label the endpoint on the link. */
     protected String alias_;
     /* Number of times the link should perform deep link */
@@ -121,7 +123,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         String shortUrl = null;
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
-                    channel_, feature_, stage_,
+                    channel_, feature_, stage_, campaign_,
                     BranchUtil.formatAndStringifyLinkParam(params_), null, false);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
@@ -135,7 +137,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     protected void generateUrl(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
-                    channel_, feature_, stage_,
+                    channel_, feature_, stage_, campaign_,
                     BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
             req.setIsReqStartedFromBranchShareSheet(isFromShareSheet);
             branchReferral_.generateShortLinkInternal(req);

@@ -33,6 +33,7 @@ public class LinkProperties implements Parcelable {
     private int matchDuration_;
     private final HashMap<String, String> controlParams_;
     private String channel_;
+    private String campaign_;
 
     /**
      * Create an instance of {@link LinkProperties}
@@ -45,6 +46,7 @@ public class LinkProperties implements Parcelable {
         stage_ = "";
         matchDuration_ = 0;
         channel_ = "";
+        campaign_ = "";
     }
 
     /**
@@ -138,6 +140,18 @@ public class LinkProperties implements Parcelable {
     }
 
     /**
+     * <p> Sets the campaign for this link. </p>
+     *
+     * @param campaign A {@link String} denoting the campaign that the link belongs to. Should not
+     *                 exceed 128 characters.
+     * @return This Builder object to allow for chaining of calls to set methods.
+     */
+    public LinkProperties setCampaign(String campaign) {
+        this.campaign_ = campaign;
+        return this;
+    }
+
+    /**
      * Get the list of tags associated with this {@link LinkProperties}
      *
      * @return {@link ArrayList} with the tags associated with this {@link LinkProperties}
@@ -204,6 +218,15 @@ public class LinkProperties implements Parcelable {
         return channel_;
     }
 
+    /**
+     * <p> Gets the campaign for this link. </p>
+     *
+     * @return A {@link String} denoting the campaign that the link belongs to
+     */
+    public String getCampaign() {
+        return campaign_;
+    }
+
 
     @Override
     public int describeContents() {
@@ -243,6 +266,9 @@ public class LinkProperties implements Parcelable {
                     if (latestParam.has("~stage")) {
                         linkProperties.setStage(latestParam.getString("~stage"));
                     }
+                    if (latestParam.has("~campaign")) {
+                        linkProperties.setCampaign(latestParam.getString("~campaign"));
+                    }
                     if (latestParam.has("~duration")) {
                         linkProperties.setDuration(latestParam.getInt("~duration"));
                     }
@@ -277,6 +303,7 @@ public class LinkProperties implements Parcelable {
         dest.writeString(alias_);
         dest.writeString(stage_);
         dest.writeString(channel_);
+        dest.writeString(campaign_);
         dest.writeInt(matchDuration_);
         dest.writeSerializable(tags_);
 
@@ -295,6 +322,7 @@ public class LinkProperties implements Parcelable {
         alias_ = in.readString();
         stage_ = in.readString();
         channel_ = in.readString();
+        campaign_ = in.readString();
         matchDuration_ = in.readInt();
         @SuppressWarnings("unchecked")
         ArrayList<String> tagsTemp = (ArrayList<String>) in.readSerializable();
