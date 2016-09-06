@@ -546,17 +546,6 @@ public class BranchUniversalObject implements Parcelable {
                 Log.e("BranchSDK", "Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
         } else {
-//            JSONObject params = new JSONObject();
-//            try {
-//                for (String key : metadata_.keySet()) {
-//                    params.put(key, metadata_.get(key));
-//                }
-//                HashMap<String, String> controlParams = linkProperties.getControlParams();
-//                for (String key : controlParams.keySet()) {
-//                    params.put(key, controlParams.get(key));
-//                }
-//            } catch (JSONException ignore) {
-//            }
             linkShareListenerWrapper_ = new LinkShareListenerWrapper(callback);
             Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
                     .setCallback(linkShareListenerWrapper_)
