@@ -441,8 +441,7 @@ branchUniversalObject.generateShortUrl(this, linkProperties, new BranchLinkCreat
 });
 ```
 ### List links in Google Search with App Indexing
-Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google search via their App Indexing API.
-Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
+Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google Search via their App Indexing API. Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
 
 ```java
 branchUniversalObject.listOnGoogleSearch(context);
