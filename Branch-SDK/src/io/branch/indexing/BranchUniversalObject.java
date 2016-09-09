@@ -68,7 +68,7 @@ public class BranchUniversalObject implements Parcelable {
      * User actions on the BUO
      */
     public enum BUO_USER_ACTIONS {
-        View("View"),
+        VIEW("View"),
         ADD_TO_WISH_LIST("Add to Wishlist"),
         ADD_TO_CART("Add to Cart"),
         PURCHASE_STARTED("Purchase Started"),
