@@ -18,7 +18,7 @@ public class Defines {
         AppLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
-
+        BranchKey("branch_key"),
 
         Bucket("bucket"),
         DefaultBucket("default"),

@@ -91,6 +91,7 @@ public class PrefHelper {
 
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
     private static final String KEY_BRANCH_ANALYTICAL_DATA = "bnc_branch_analytical_data";
+    private static final String KEY_LAST_STRONG_MATCH_TIME = "bnc_branch_strong_match_time";
 
 
     private static String Branch_Key = null;
@@ -1015,6 +1016,24 @@ public class PrefHelper {
             } catch (JSONException ignore) {
             }
         }
+    }
+
+    /**
+     * Saves the last strong match epoch time stamp
+     *
+     * @param strongMatchCheckTime epoch time stamp for last strong match
+     */
+    public void saveLastStrongMatchTime(long strongMatchCheckTime) {
+        setLong(KEY_LAST_STRONG_MATCH_TIME, strongMatchCheckTime);
+    }
+
+    /**
+     * Get the last strong match check epoch time
+     *
+     * @return {@link Long} with last strong match epoch timestamp
+     */
+    public long getLastStrongMatchTime() {
+        return getLong(KEY_LAST_STRONG_MATCH_TIME);
     }
 
     /**
