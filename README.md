@@ -384,13 +384,13 @@ We've added a series of custom events that you'll want to start tracking for ric
 
 | Key | Value
 | --- | ---
-| BUO_USER_ACTIONS.VIEW | User viewed the object
-| BUO_USER_ACTIONS.ADD_TO_WISH_LIST | User added the object to their wishlist
-| BUO_USER_ACTIONS.ADD_TO_CART | User added object to cart
-| BUO_USER_ACTIONS.PURCHASE_STARTED | User started to check out
-| BUO_USER_ACTIONS.PURCHASED | User purchased the item
-| BUO_USER_ACTIONS.SHARE_STARTED | User started to share the object
-| BUO_USER_ACTIONS.SHARE_COMPLETED | User completed a share
+| BranchUniversalObject.BUO_USER_ACTIONS.VIEW | User viewed the object
+| BranchUniversalObject.BUO_USER_ACTIONS.ADD_TO_WISH_LIST | User added the object to their wishlist
+| BranchUniversalObject.BUO_USER_ACTIONS.ADD_TO_CART | User added object to cart
+| BranchUniversalObject.BUO_USER_ACTIONS.PURCHASE_STARTED | User started to check out
+| BranchUniversalObject.BUO_USER_ACTIONS.PURCHASED | User purchased the item
+| BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED | User started to share the object
+| BranchUniversalObject.BUO_USER_ACTIONS.SHARE_COMPLETED | User completed a share
 
 ```java
 branchUniversalObject.userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.VIEW);
