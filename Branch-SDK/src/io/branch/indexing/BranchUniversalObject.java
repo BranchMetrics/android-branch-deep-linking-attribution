@@ -23,6 +23,7 @@ import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.Defines;
+import io.branch.referral.util.BRANCH_EVENT;
 import io.branch.referral.util.CURRENCY_TYPE;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
@@ -58,29 +59,6 @@ public class BranchUniversalObject implements Parcelable {
     private Double price_;
     /* Type of the currency associated with the price */
     private CURRENCY_TYPE currency_;
-    /* Wrapper for intercepting link share response */
-    private LinkShareListenerWrapper linkShareListenerWrapper_;
-
-    /**
-     * <p>
-     * User action associated with BUO. Please see #userCompletedAction()
-     * </p>
-     * User actions on the BUO
-     */
-    public enum BUO_USER_ACTIONS {
-        VIEW("View"),
-        ADD_TO_WISH_LIST("Add to Wishlist"),
-        ADD_TO_CART("Add to Cart"),
-        PURCHASE_STARTED("Purchase Started"),
-        PURCHASED("Purchased"),
-        SHARE_STARTED("Share Started"),
-        SHARE_COMPLETED("Share Completed");
-        String buoAction;
-
-        BUO_USER_ACTIONS(String action) {
-            buoAction = action;
-        }
-    }
 
     /**
      * Defines the Content indexing modes
@@ -302,9 +280,9 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
-     * @param action A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
+     * @param action A {@link String }with value of user action name.  See {@link io.branch.referral.util.BRANCH_EVENT} for Branch defined user events.
      */
-    public void userCompletedAction(BUO_USER_ACTIONS action) {
+    public void userCompletedAction(String action) {
         userCompletedAction(action, null);
     }
 
@@ -313,10 +291,10 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
-     * @param action   A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
+     * @param action   A {@link String }with value of user action name.  See {@link io.branch.referral.util.BRANCH_EVENT} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
      */
-    public void userCompletedAction(BUO_USER_ACTIONS action, HashMap<String, String> metadata) {
+    public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
@@ -329,7 +307,7 @@ public class BranchUniversalObject implements Parcelable {
                 }
             }
             if (Branch.getInstance() != null) {
-                Branch.getInstance().userCompletedAction(action.buoAction, actionCompletedPayload);
+                Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
         } catch (JSONException ignore) {
         }
@@ -546,20 +524,8 @@ public class BranchUniversalObject implements Parcelable {
                 Log.e("BranchSDK", "Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
         } else {
-//            JSONObject params = new JSONObject();
-//            try {
-//                for (String key : metadata_.keySet()) {
-//                    params.put(key, metadata_.get(key));
-//                }
-//                HashMap<String, String> controlParams = linkProperties.getControlParams();
-//                for (String key : controlParams.keySet()) {
-//                    params.put(key, controlParams.get(key));
-//                }
-//            } catch (JSONException ignore) {
-//            }
-            linkShareListenerWrapper_ = new LinkShareListenerWrapper(callback);
             Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
-                    .setCallback(linkShareListenerWrapper_)
+                    .setCallback(new LinkShareListenerWrapper(callback))
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
                     .setMessage(style.getMessageBody());
@@ -874,7 +840,7 @@ public class BranchUniversalObject implements Parcelable {
 
         @Override
         public void onShareLinkDialogLaunched() {
-            userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED);
+            userCompletedAction(BRANCH_EVENT.SHARE_STARTED);
             if (originalCallback_ != null) {
                 originalCallback_.onShareLinkDialogLaunched();
             }
@@ -895,7 +861,7 @@ public class BranchUniversalObject implements Parcelable {
             } else {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
-            userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_COMPLETED, metaData);
+            userCompletedAction(BRANCH_EVENT.SHARE_COMPLETED, metaData);
 
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
