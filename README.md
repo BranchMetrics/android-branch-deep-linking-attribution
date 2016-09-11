@@ -32,8 +32,8 @@ ___
 
 4. Branch Universal Objects
   + [Instantiate a Branch Universal Object](#defining-the-branch-universal-object)
-  + [Register views for content analytics](#registering-a-view)
-  + [List content on Spotlight](#list-links-in-google-search-with-app-indexing)
+  + [Register user actions on an object](#register-user-actions-on-an-object)
+  + [List content on Google Search](#list-links-in-google-search-with-app-indexing)
   + [Creating a short link referencing the object](#creating-a-deep-link)
   + [Triggering a share sheet to share a link](#showing-a-custom-share-sheet)
 
@@ -336,6 +336,22 @@ Some example events you might want to track:
 
 As more methods have evolved in Android, we've found that it was increasingly hard to manage them all. We abstracted as many as we could into the concept of a Branch Universal Object. This is the object that is associated with the thing you want to share (content or user). You can set all the metadata associated with the object and then call action methods on it to get a link or register a view.
 
+### Branch Universal Object best practices
+
+Here are a set of best practices to ensure that your analytics are correct, and your content is ranking on Spotlight effectively.
+
+1. Set the `canonicalIdentifier` to a unique, de-duped value across instances of the app
+2. Ensure that the `title`, `contentDescription` and `imageUrl` properly represent the object
+3. Initialize the Branch Universal Object and call `userCompletedAction` with the `BranchUniversalObject.BUO_USER_ACTIONS.VIEW` **on page load**
+4. Call `showShareSheet` and `createShortLink` later in the life cycle, when the user takes an action that needs a link
+5. Call the additional object events (purchase, share completed, etc) when the corresponding user action is taken
+
+Practices to _avoid_:
+1. Don't set the same `title`, `contentDescription` and `imageUrl` across all objects
+2. Don't wait to initialize the object and register views until the user goes to share
+3. Don't wait to initialize the object until you conveniently need a link
+4. Don't create many objects at once and register views in a `for` loop.
+
 ### Defining the Branch Universal Object
 
 The universal object is where you define all of the custom metadata associated with the content that you want to link to or index. Please use the builder format below to create one.
@@ -362,12 +378,22 @@ The universal object is where you define all of the custom metadata associated w
             .addContentMetadata("property2", "red");
 ```
 
-### Registering a View
+### Register User Actions On An Object
 
-Branch recently launched [Content Analytics](https://branch.io/content-analytics) which gives you insight into how engaging your content and how well it drives growth. You'd likely want to observe how many views each piece of content has as well. Once you've created the Universal Object, it's a simple call when the page loads.
+We've added a series of custom events that you'll want to start tracking for rich analytics and targeting. Here's a list below with a sample snippet that calls the register view event.
+
+| Key | Value
+| --- | ---
+| BranchUniversalObject.BUO_USER_ACTIONS.VIEW | User viewed the object
+| BranchUniversalObject.BUO_USER_ACTIONS.ADD_TO_WISH_LIST | User added the object to their wishlist
+| BranchUniversalObject.BUO_USER_ACTIONS.ADD_TO_CART | User added object to cart
+| BranchUniversalObject.BUO_USER_ACTIONS.PURCHASE_STARTED | User started to check out
+| BranchUniversalObject.BUO_USER_ACTIONS.PURCHASED | User purchased the item
+| BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED | User started to share the object
+| BranchUniversalObject.BUO_USER_ACTIONS.SHARE_COMPLETED | User completed a share
 
 ```java
-branchUniversalObject.registerView();
+branchUniversalObject.userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.VIEW);
 ```
 
 ### Creating a Deep Link
@@ -415,8 +441,7 @@ branchUniversalObject.generateShortUrl(this, linkProperties, new BranchLinkCreat
 });
 ```
 ### List links in Google Search with App Indexing
-Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google search via their App Indexing API.
-Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
+Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google Search via their App Indexing API. Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
 
 ```java
 branchUniversalObject.listOnGoogleSearch(context);
