@@ -378,6 +378,26 @@ The universal object is where you define all of the custom metadata associated w
             .addContentMetadata("property2", "red");
 ```
 
+#### Parameters
+
+**canonicalIdentifier**: This is the unique identifier for content that will help Branch dedupe across many instances of the same thing. If you have a website with pathing, feel free to use that. Or if you have database identifiers for entities, use those.
+
+**title**: This is the name for the content and will automatically be used for the OG tags. It will insert $og_title into the data dictionary of any link created.
+
+**contentDescription**: This is the description for the content and will automatically be used for the OG tags. It will insert $og_description into the data dictionary of any link created.
+
+**imageUrl**: This is the image URL for the content and will automatically be used for the OG tags. It will insert $og_image_url into the data dictionary of any link created.
+
+**metadata**: These are any extra parameters you'd like to associate with the Branch Universal Object. These will be made available to you after the user clicks the link and opens up the app. To add more keys/values, just use the method `addMetadataKey`.
+
+**price**: The price of the item to be used in conjunction with the commerce related events below.
+
+**currency**: The currency representing the price in [ISO 4217 currency code](http://en.wikipedia.org/wiki/ISO_4217). Default is USD.
+
+**contentIndexMode**: Can be set to the ENUM of either `ContentIndexModePublic` or `ContentIndexModePrivate`. Public indicates that you'd like this content to be discovered by other apps. Currently, this is only used for Spotlight indexing but will be used by Branch in the future.
+
+**expirationDate**: The date when the content will not longer be available or valid. Currently, this is only used for Spotlight indexing but will be used by Branch in the future.
+
 ### Register User Actions On An Object
 
 We've added a series of custom events that you'll want to start tracking for rich analytics and targeting. Here's a list below with a sample snippet that calls the register view event.
