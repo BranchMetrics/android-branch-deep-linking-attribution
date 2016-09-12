@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.Set;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.util.CURRENCY_TYPE;
+import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.CurrencyType;
 
 /**
  * * <p>
@@ -108,8 +109,8 @@ class ServerRequestRegisterView extends ServerRequest {
         paramsObj.put(Defines.Jsonkey.ContentKeyWords.getKey(), universalObject.getKeywordsJsonArray());
         paramsObj.put(Defines.Jsonkey.PublicallyIndexable.getKey(), universalObject.isPublicallyIndexable());
         if (universalObject.getPrice() > 0) {
-            paramsObj.put(Defines.Jsonkey.PurchaseAmount.getKey(), universalObject.getPrice());
-            paramsObj.put(Defines.Jsonkey.PurchaseCurrency.getKey(), universalObject.getCurrencyType());
+            paramsObj.put(BranchEvent.PURCHASE_AMOUNT, universalObject.getPrice());
+            paramsObj.put(BranchEvent.PURCHASE_CURRENCY, universalObject.getCurrencyType());
         }
 
         String canonicalId = universalObject.getCanonicalIdentifier();
