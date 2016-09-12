@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  * cookie jar for doing  a strong match.
  * </p>
  */
-public class BranchStrongMatchHelper {
+class BranchStrongMatchHelper {
 
     private static BranchStrongMatchHelper branchStrongMatchHelper_;
     CustomTabsClient mClient_ = null;
@@ -45,14 +45,14 @@ public class BranchStrongMatchHelper {
     }
 
 
-    public void checkForStrongMatch(Context context, String sessionSharedLink, DeviceInfo deviceInfo, final PrefHelper prefHelper, final StrongMatchCheckEvents callback) {
+    public void checkForStrongMatch(Context context, String sessionSharedLink, DeviceInfo deviceInfo, final PrefHelper prefHelper, SystemObserver systemObserver, final StrongMatchCheckEvents callback) {
         //Check if strong match checked in last 30 days
         if (System.currentTimeMillis() - prefHelper.getLastStrongMatchTime() < THIRTY_DAYS_EPOCH_MILLI_SEC) {
             updateStrongMatchCheckFinished(callback);
         } else {
             try {
                 if (deviceInfo.isHardwareIDReal() && deviceInfo.getHardwareID() != null) {
-                    final Uri strongMatchUri = buildStrongMatchUrl(sessionSharedLink, deviceInfo, prefHelper);
+                    final Uri strongMatchUri = buildStrongMatchUrl(sessionSharedLink, deviceInfo, prefHelper, systemObserver);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
                             @Override
@@ -96,7 +96,7 @@ public class BranchStrongMatchHelper {
         }
     }
 
-    private Uri buildStrongMatchUrl(String sessionReferredLink, DeviceInfo deviceInfo, PrefHelper prefHelper) {
+    private Uri buildStrongMatchUrl(String sessionReferredLink, DeviceInfo deviceInfo, PrefHelper prefHelper, SystemObserver systemObserver) {
         Uri strongMatchUri = null;
         String hostString = "";
         if (!TextUtils.isEmpty(sessionReferredLink) && !TextUtils.isEmpty(Uri.parse(sessionReferredLink).getHost())) {
@@ -118,6 +118,10 @@ public class BranchStrongMatchHelper {
                 uriString += hostString + "_strong_match?os=" + deviceInfo.getOsName();
                 // Add HW ID
                 uriString += "&" + Defines.Jsonkey.HardwareID.getKey() + "=" + deviceInfo.getHardwareID();
+                // Add GAID if available
+                if (systemObserver.GAIDString_ != null) {
+                    uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + systemObserver.GAIDString_;
+                }
                 // Add device finger print if available
                 if (!prefHelper.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
                     uriString += "&" + Defines.Jsonkey.DeviceFingerprintID.getKey() + "=" + prefHelper.getDeviceFingerPrintID();

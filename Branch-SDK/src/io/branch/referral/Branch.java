@@ -2056,7 +2056,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
                 requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, sessionReferredLink_, deviceInfo, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, sessionReferredLink_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
                     @Override
                     public void onStrongMatchCheckFinished() {
                         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
