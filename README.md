@@ -342,7 +342,7 @@ Here are a set of best practices to ensure that your analytics are correct, and 
 
 1. Set the `canonicalIdentifier` to a unique, de-duped value across instances of the app
 2. Ensure that the `title`, `contentDescription` and `imageUrl` properly represent the object
-3. Initialize the Branch Universal Object and call `userCompletedAction` with the `BRANCH_EVENT.VIEW` **on page load**
+3. Initialize the Branch Universal Object and call `userCompletedAction` with the `BranchEvent.VIEW` **on page load**
 4. Call `showShareSheet` and `createShortLink` later in the life cycle, when the user takes an action that needs a link
 5. Call the additional object events (purchase, share completed, etc) when the corresponding user action is taken
 
@@ -384,16 +384,16 @@ We've added a series of custom events that you'll want to start tracking for ric
 
 | Key | Value
 | --- | ---
-| BRANCH_EVENT.VIEW | User viewed the object
-| BRANCH_EVENT.ADD_TO_WISH_LIST | User added the object to their wishlist
-| BRANCH_EVENT.ADD_TO_CART | User added object to cart
-| BRANCH_EVENT.PURCHASE_STARTED | User started to check out
-| BRANCH_EVENT.PURCHASED | User purchased the item
-| BRANCH_EVENT.SHARE_STARTED | User started to share the object
-| BRANCH_EVENT.SHARE_COMPLETED | User completed a share
+| BranchEvent.VIEW | User viewed the object
+| BranchEvent.ADD_TO_WISH_LIST | User added the object to their wishlist
+| BranchEvent.ADD_TO_CART | User added object to cart
+| BranchEvent.PURCHASE_STARTED | User started to check out
+| BranchEvent.PURCHASED | User purchased the item
+| BranchEvent.SHARE_STARTED | User started to share the object
+| BranchEvent.SHARE_COMPLETED | User completed a share
 
 ```java
-branchUniversalObject.userCompletedAction(BRANCH_EVENT.VIEW);
+branchUniversalObject.userCompletedAction(BranchEvent.VIEW);
 ```
 
 ### Creating a Deep Link
