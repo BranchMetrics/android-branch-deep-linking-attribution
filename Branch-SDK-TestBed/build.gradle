@@ -3,7 +3,6 @@ apply plugin: 'com.android.application'
 dependencies {
     compile project(':Branch-SDK')
     //debugCompile 'com.squareup.leakcanary:leakcanary-android:1.+'
-    //releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.3.1'
     compile ('com.google.android.gms:play-services:9.0.0'){
         exclude module: 'support-v4'
     }

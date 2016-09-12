@@ -380,7 +380,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
-    private static String cookieBasedMatchDomain_ = null; // Domain name used for cookie based matching
+    private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
