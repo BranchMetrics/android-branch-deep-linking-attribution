@@ -41,6 +41,14 @@
                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/xhsd" /> <!-- Live App link-->
                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/Ojqd" /> <!-- Test App link-->
             </intent-filter>
+
+            <!-- Custom App link example-->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="bnctestbed.app.link" /> <!-- Custom App link-->
+            </intent-filter>
         </activity>
 
         <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity"/>

@@ -380,6 +380,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
+    private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1175,6 +1177,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 scheduleListOfApps();
             }
         }
+    }
+
+    /**
+     * <p/>
+     * Enabled Strong matching check using chrome cookies. This method should be called before
+     * Branch#getAutoInstance(Context).
+     *
+     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
+     *                          </p>
+     */
+    public static void enableCookieBasedMatching(String cookieMatchDomain) {
+        cookieBasedMatchDomain_ = cookieMatchDomain;
     }
 
     /**
@@ -2037,12 +2051,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void onIntentReady(Activity activity) {
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         if (activity.getIntent() != null) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
+            if (cookieBasedMatchDomain_ != null) {
+                DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
+                Context context = currentActivityReference_.get().getApplicationContext();
+                requestQueue_.setStrongMatchWaitLock();
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
+                    @Override
+                    public void onStrongMatchCheckFinished() {
+                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
+                        processNextQueueItem();
+                    }
+                });
+            } else {
+                processNextQueueItem();
+            }
+        } else {
+            processNextQueueItem();
         }
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        processNextQueueItem();
     }
 
     /**
@@ -2116,7 +2145,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
-
         }
 
         @Override
@@ -2134,6 +2162,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
+
+
                 Uri intentData = null;
                 if (activity.getIntent() != null) {
                     intentData = activity.getIntent().getData();

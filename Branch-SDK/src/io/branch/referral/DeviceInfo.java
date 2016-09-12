@@ -81,14 +81,6 @@ class DeviceInfo {
         return thisInstance_;
     }
 
-    /**
-     * Get the singleton object for Device info
-     *
-     * @return {@link DeviceInfo} instance if initialised else null
-     */
-    public static DeviceInfo getThisInstance() {
-        return thisInstance_;
-    }
 
     private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
         if (disableAndroidIDFetch) {
@@ -162,5 +154,17 @@ class DeviceInfo {
      */
     public String getAppVersion() {
         return appVersion_;
+    }
+
+    public boolean isHardwareIDReal() {
+        return isHardwareIDReal_;
+    }
+
+    public String getHardwareID() {
+        return hardwareID_.equals(SystemObserver.BLANK) ? null : hardwareID_;
+    }
+
+    public String getOsName() {
+        return osName_;
     }
 }

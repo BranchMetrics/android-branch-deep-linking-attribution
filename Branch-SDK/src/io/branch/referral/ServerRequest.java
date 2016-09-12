@@ -34,7 +34,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK
+        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, STRONG_MATCH_PENDING_WAIT_LOCK
     }
 
     // Set for holding any active wait locks
@@ -171,7 +171,7 @@ public abstract class ServerRequest {
             }
             post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
-            Log.e("BranchSDK", "Could not merge metadatas, ignoring user metadata.");
+            Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
         }
         params_ = post;
         DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
