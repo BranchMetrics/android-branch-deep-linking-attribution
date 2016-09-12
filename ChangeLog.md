@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.3.1 Correcting BUO Action name View to VIEW
+
 - v2.3.0 Enhancements to Branch universal object. Support for campaign in link properties
 
 - v2.2.0 Adding Branch Content Discovery feature.

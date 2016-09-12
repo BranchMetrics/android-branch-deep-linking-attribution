@@ -263,15 +263,14 @@ class ShareLinkManager {
     }
 
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {
+        if (callback_ != null) {
+            callback_.onLinkShareResponse(url, channelName, null);
+        } else {
+            Log.i("BranchSDK", "Shared link with " + channelName);
+        }
         if (selectedResolveInfo instanceof CopyLinkItem) {
             addLinkToClipBoard(url, builder_.getShareMsg());
         } else {
-            if (callback_ != null) {
-                callback_.onLinkShareResponse(url, channelName, null);
-            } else {
-                Log.i("BranchSDK", "Shared link with " + channelName);
-            }
-
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
             String shareSub = builder_.getShareSub();
             String shareMsg = builder_.getShareMsg();

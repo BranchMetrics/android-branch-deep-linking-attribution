@@ -23,7 +23,8 @@ import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.Defines;
-import io.branch.referral.util.CURRENCY_TYPE;
+import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 
@@ -57,30 +58,7 @@ public class BranchUniversalObject implements Parcelable {
     /* Price associated with the content of this BUO */
     private Double price_;
     /* Type of the currency associated with the price */
-    private CURRENCY_TYPE currency_;
-    /* Wrapper for intercepting link share response */
-    private LinkShareListenerWrapper linkShareListenerWrapper_;
-
-    /**
-     * <p>
-     * User action associated with BUO. Please see #userCompletedAction()
-     * </p>
-     * User actions on the BUO
-     */
-    public enum BUO_USER_ACTIONS {
-        View("View"),
-        ADD_TO_WISH_LIST("Add to Wishlist"),
-        ADD_TO_CART("Add to Cart"),
-        PURCHASE_STARTED("Purchase Started"),
-        PURCHASED("Purchased"),
-        SHARE_STARTED("Share Started"),
-        SHARE_COMPLETED("Share Completed");
-        String buoAction;
-
-        BUO_USER_ACTIONS(String action) {
-            buoAction = action;
-        }
-    }
+    private CurrencyType currency_;
 
     /**
      * Defines the Content indexing modes
@@ -108,7 +86,7 @@ public class BranchUniversalObject implements Parcelable {
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         expirationInMilliSec_ = 0L;
-        currency_ = CURRENCY_TYPE.USD;
+        currency_ = CurrencyType.USD;
     }
 
     /**
@@ -276,10 +254,10 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @param price    A {@link Double} value specifying the price info associated with BUO
-     * @param currency ISO 4217 currency code defined in {@link CURRENCY_TYPE} for the price
+     * @param currency ISO 4217 currency code defined in {@link CurrencyType} for the price
      * @return This instance to allow for chaining of calls to set methods
      */
-    public BranchUniversalObject setPrice(double price, CURRENCY_TYPE currency) {
+    public BranchUniversalObject setPrice(double price, CurrencyType currency) {
         price_ = price;
         currency_ = currency;
         return this;
@@ -302,9 +280,9 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
-     * @param action A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
+     * @param action A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
      */
-    public void userCompletedAction(BUO_USER_ACTIONS action) {
+    public void userCompletedAction(String action) {
         userCompletedAction(action, null);
     }
 
@@ -313,15 +291,15 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
-     * @param action   A {@link io.branch.indexing.BranchUniversalObject.BUO_USER_ACTIONS} type defining the user action.
+     * @param action   A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
      */
-    public void userCompletedAction(BUO_USER_ACTIONS action, HashMap<String, String> metadata) {
+    public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
             canonicalIDList.put(canonicalIdentifier_);
-            actionCompletedPayload.put(Defines.Jsonkey.CanonicalIdentifierList.getKey(), canonicalIDList);
+            actionCompletedPayload.put(BranchEvent.CANONICAL_ID_LIST, canonicalIDList);
             actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
             if (metadata != null) {
                 for (String key : metadata.keySet()) {
@@ -329,7 +307,7 @@ public class BranchUniversalObject implements Parcelable {
                 }
             }
             if (Branch.getInstance() != null) {
-                Branch.getInstance().userCompletedAction(action.buoAction, actionCompletedPayload);
+                Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
         } catch (JSONException ignore) {
         }
@@ -546,20 +524,8 @@ public class BranchUniversalObject implements Parcelable {
                 Log.e("BranchSDK", "Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
         } else {
-//            JSONObject params = new JSONObject();
-//            try {
-//                for (String key : metadata_.keySet()) {
-//                    params.put(key, metadata_.get(key));
-//                }
-//                HashMap<String, String> controlParams = linkProperties.getControlParams();
-//                for (String key : controlParams.keySet()) {
-//                    params.put(key, controlParams.get(key));
-//                }
-//            } catch (JSONException ignore) {
-//            }
-            linkShareListenerWrapper_ = new LinkShareListenerWrapper(callback);
             Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties))
-                    .setCallback(linkShareListenerWrapper_)
+                    .setCallback(new LinkShareListenerWrapper(callback))
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
                     .setMessage(style.getMessageBody());
@@ -638,8 +604,8 @@ public class BranchUniversalObject implements Parcelable {
         }
         shortLinkBuilder.addParameters(Defines.Jsonkey.PublicallyIndexable.getKey(), "" + isPublicallyIndexable());
         if (price_ != null) {
-            shortLinkBuilder.addParameters(Defines.Jsonkey.PurchaseAmount.getKey(), "" + price_);
-            shortLinkBuilder.addParameters(Defines.Jsonkey.PurchaseCurrency.getKey(), currency_.toString());
+            shortLinkBuilder.addParameters(BranchEvent.PURCHASE_AMOUNT, "" + price_);
+            shortLinkBuilder.addParameters(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
         }
         for (String key : metadata_.keySet()) {
             shortLinkBuilder.addParameters(key, metadata_.get(key));
@@ -664,7 +630,7 @@ public class BranchUniversalObject implements Parcelable {
         Branch branchInstance = Branch.getInstance();
         try {
             if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
-                // Check if link clicked. Unless deepvlink debug enabled return null if there is no link click
+                // Check if link clicked. Unless deep link debug enabled return null if there is no link click
                 if (branchInstance.getLatestReferringParams().has("+clicked_branch_link") && branchInstance.getLatestReferringParams().getBoolean("+clicked_branch_link")) {
                     branchUniversalObject = createInstance(branchInstance.getLatestReferringParams());
                 }
@@ -713,11 +679,11 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
                 branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
             }
-            if (jsonObject.has(Defines.Jsonkey.PurchaseAmount.getKey())) {
-                branchUniversalObject.price_ = jsonObject.getDouble(Defines.Jsonkey.PurchaseAmount.getKey());
+            if (jsonObject.has(BranchEvent.PURCHASE_AMOUNT)) {
+                branchUniversalObject.price_ = jsonObject.getDouble(BranchEvent.PURCHASE_AMOUNT);
             }
-            if (jsonObject.has(Defines.Jsonkey.PurchaseCurrency.getKey())) {
-                branchUniversalObject.currency_ = CURRENCY_TYPE.valueOf(jsonObject.getString(Defines.Jsonkey.PurchaseCurrency.getKey()));
+            if (jsonObject.has(BranchEvent.PURCHASE_CURRENCY)) {
+                branchUniversalObject.currency_ = CurrencyType.valueOf(jsonObject.getString(BranchEvent.PURCHASE_CURRENCY));
             }
 
             Iterator<String> keys = jsonObject.keys();
@@ -785,8 +751,8 @@ public class BranchUniversalObject implements Parcelable {
             }
             buoJsonModel.put(Defines.Jsonkey.PublicallyIndexable.getKey(), isPublicallyIndexable());
             if (price_ != null) {
-                buoJsonModel.put(Defines.Jsonkey.PurchaseAmount.getKey(), price_);
-                buoJsonModel.put(Defines.Jsonkey.PurchaseCurrency.getKey(), currency_.toString());
+                buoJsonModel.put(BranchEvent.PURCHASE_AMOUNT, price_);
+                buoJsonModel.put(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
             }
 
             Set<String> metadataKeys = metadata_.keySet();
@@ -852,7 +818,7 @@ public class BranchUniversalObject implements Parcelable {
         if (price_ < 0) {
             price_ = null;
         }
-        currency_ = CURRENCY_TYPE.values()[in.readInt()];
+        currency_ = CurrencyType.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
         keywords_.addAll(keywordsTemp);
@@ -874,7 +840,7 @@ public class BranchUniversalObject implements Parcelable {
 
         @Override
         public void onShareLinkDialogLaunched() {
-            userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_STARTED);
+            userCompletedAction(BranchEvent.SHARE_STARTED);
             if (originalCallback_ != null) {
                 originalCallback_.onShareLinkDialogLaunched();
             }
@@ -895,7 +861,7 @@ public class BranchUniversalObject implements Parcelable {
             } else {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
-            userCompletedAction(BranchUniversalObject.BUO_USER_ACTIONS.SHARE_COMPLETED, metaData);
+            userCompletedAction(BranchEvent.SHARE_COMPLETED, metaData);
 
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
