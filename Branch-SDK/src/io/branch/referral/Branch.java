@@ -1931,16 +1931,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         try {
             for (int i = 0; i < requestQueue_.getSize(); i++) {
                 ServerRequest req = requestQueue_.peekAt(i);
-                JSONObject reqJson = req.getPost();
-                if (reqJson != null) {
-                    if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                        req.getPost().put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
-                    }
-                    if (reqJson.has(Defines.Jsonkey.IdentityID.getKey())) {
-                        req.getPost().put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
-                    }
-                    if (reqJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                        req.getPost().put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                if (req != null) {
+                    JSONObject reqJson = req.getPost();
+                    if (reqJson != null) {
+                        if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                            req.getPost().put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                        }
+                        if (reqJson.has(Defines.Jsonkey.IdentityID.getKey())) {
+                            req.getPost().put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                        }
+                        if (reqJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                            req.getPost().put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                        }
                     }
                 }
             }

@@ -42,12 +42,13 @@
                 <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/Ojqd" /> <!-- Test App link-->
             </intent-filter>
 
-            <!-- Custom App link example-->
+            <!-- Custom App link example. You can create your custom app link domain on Branch dash board-->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="bnctestbed.app.link" /> <!-- Custom App link-->
+                <data android:scheme="https" android:host="bnctestbed.app.link" /> <!-- Custom App link - Live -->
+                <data android:scheme="https" android:host="bnctestbed.test-app.link" /> <!-- Custom App link - Test -->
             </intent-filter>
         </activity>
 
