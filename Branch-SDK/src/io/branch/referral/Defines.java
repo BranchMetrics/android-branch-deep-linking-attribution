@@ -18,7 +18,7 @@ public class Defines {
         AppLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
-
+        BranchKey("branch_key"),
 
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -71,13 +71,10 @@ public class Defines {
         AndroidPushIdentifier("push_identifier"),
 
         CanonicalIdentifier("$canonical_identifier"),
-        CanonicalIdentifierList("$canonical_identifier_list"),
         ContentTitle(Branch.OG_TITLE),
         ContentDesc(Branch.OG_DESC),
         ContentImgUrl(Branch.OG_IMAGE_URL),
         CanonicalUrl("$canonical_url"),
-        PurchaseAmount("$amount"),
-        PurchaseCurrency("$currency"),
 
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
