@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.4.1 Updating minimum SDK version to 15.
+
 - v2.4.0 Adding Cookie based matching support. Fixing few format issues and updating documentation.
 
 - v2.3.1 Correcting BUO Action name View to VIEW
