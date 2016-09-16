@@ -1221,8 +1221,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (data != null) {
                     if (externalUriWhiteList_.size() > 0) {
-                        String externalIntentScheme = Uri.parse(data.toString()).getScheme();
-                        if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
+                        String uriString = data.toString();
+                        boolean foundWhiteListMatch = false;
+                        for (String whiteListScheme : externalUriWhiteList_) {
+                            if (uriString.contains(whiteListScheme)) {
+                                foundWhiteListMatch = true;
+                                break;
+                            }
+                        }
+                        if (foundWhiteListMatch) {
                             sessionReferredLink_ = data.toString();
                             prefHelper_.setExternalIntentUri(data.toString());
                         }
@@ -1318,12 +1325,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Add the given URI Scheme to the external Uri white list. Branch will collect
-     * external intent uri only for Uris added to the white list.
+     * Add the given URI Scheme or paths to the external Uri white list. Branch will collect
+     * external intent uri only if white list matches with the app opened URL properties
      * If no URI is added to the white list branch will collect all external intent uris.
      * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.
+     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.(eg. "my_scheme://" or "my_scheme://custom_path")
      * @return {@link Branch} instance for successive method calls
      */
     public Branch addWhiteListedScheme(String uriScheme) {
