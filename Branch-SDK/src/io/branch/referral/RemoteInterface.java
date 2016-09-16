@@ -32,7 +32,7 @@ class RemoteInterface {
     public static final int NO_CONNECTIVITY_STATUS = -1009;
     public static final int NO_BRANCH_KEY_STATUS = -1234;
 
-    static final String SDK_VERSION = "2.4.1";
+    static final String SDK_VERSION = "2.4.2";
     private static final int DEFAULT_TIMEOUT = 3000;
 
     /**
