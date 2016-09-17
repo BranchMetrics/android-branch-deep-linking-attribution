@@ -65,7 +65,7 @@ compile ('io.branch.sdk.android:library:2.+') {
   exclude module: 'answers-shim'
 }
 ```
-- This supports minimum sdk level 14. If you want to support minimum sdk level 9 please consider using version 1.14.5
+- This supports minimum sdk level 15. If you want to support minimum sdk level 9 please consider using version 1.14.5
 - If you want to import the JAR directly, you can find the build in the root of this repository. 
 - Or you can clone this repo and import the source as a library into your project
 
@@ -196,12 +196,13 @@ To collect the Google Advertising ID, you must ensure that proguard doesn't remo
 
 ## Initialization
 
-If your minimum sdk level is 14+, To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
-If you need to support pre 14, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/getting-started/sdk-integration-guide/advanced/android/#supporting-pre-14-android). Basically, if you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
+If your minimum sdk level is 15+, To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
+
+If you need to support pre 15, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/getting-started/sdk-integration-guide/advanced/android/#supporting-pre-15-android). Basically, if you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
 
 #### Initialize Branch lifecycle
 
-Initialising and closing session is done automatically with our new _automatic session management_. Automatic session management can work only with API level 14 and above. Once you do any of the below, there is no need to close or init sessions in your Activities. Branch SDK will do all that for you. You can get your Branch instance at any time as follows.
+Initialising and closing session is done automatically with our new _automatic session management_.
 
 ##### Alt 1: You Have A Custom Application Class
 
