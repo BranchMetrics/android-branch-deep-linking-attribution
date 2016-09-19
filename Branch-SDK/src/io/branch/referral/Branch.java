@@ -377,6 +377,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isGAParamsFetchInProgress_ = false;
 
     private List<String> externalUriWhiteList_;
+    private List<String> externalPathWhiteList_;
 
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
@@ -411,6 +412,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             intentState_ = INTENT_STATE.READY;
         }
         externalUriWhiteList_ = new ArrayList<>();
+        externalPathWhiteList_ = new ArrayList<>();
     }
 
     /**
@@ -1220,25 +1222,41 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
             try {
                 if (data != null) {
+                    boolean foundSchemeMatch = false;
+                    boolean foundPathMatch = false;
+
                     if (externalUriWhiteList_.size() > 0) {
-                        String uriString = data.toString();
-                        boolean foundWhiteListMatch = false;
+                        String uriScheme = data.getScheme();
+
                         for (String whiteListScheme : externalUriWhiteList_) {
-                            if (uriString.contains(whiteListScheme)) {
-                                foundWhiteListMatch = true;
+                            if (uriScheme.equals(whiteListScheme)) {
+                                foundSchemeMatch = true;
                                 break;
                             }
                         }
-                        if (foundWhiteListMatch) {
-                            sessionReferredLink_ = data.toString();
-                            prefHelper_.setExternalIntentUri(data.toString());
+                    } else {
+                        foundSchemeMatch = true;
+                    }
+
+                    if (externalPathWhiteList_.size() > 0) {
+                        String uriPath = data.getPath();
+
+                        for (String whiteListPath : externalPathWhiteList_) {
+                            if (uriPath.startsWith(whiteListPath)) {
+                                foundPathMatch = true;
+                                break;
+                            }
                         }
                     } else {
+                        foundPathMatch = true;
+                    }
+
+                    if ((foundSchemeMatch) && (foundPathMatch)) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
-
                 }
+
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     Bundle bundle = activity.getIntent().getExtras();
                     Set<String> extraKeys = bundle.keySet();
@@ -1325,15 +1343,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Add the given URI Scheme or paths to the external Uri white list. Branch will collect
+     * Add the given URI Scheme to the external Uri white list. Branch will collect
      * external intent uri only if white list matches with the app opened URL properties
      * If no URI is added to the white list branch will collect all external intent uris.
      * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.(eg. "my_scheme://" or "my_scheme://custom_path")
+     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.(eg. "my_scheme://")
      * @return {@link Branch} instance for successive method calls
      */
     public Branch addWhiteListedScheme(String uriScheme) {
+        if (uriScheme == null) {
+            return this;
+        }
+
+        uriScheme = uriScheme.replace("://", "");
+
         externalUriWhiteList_.add(uriScheme);
         return this;
     }
@@ -1349,6 +1373,28 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public Branch setWhiteListedSchemes(List<String> uriSchemes) {
         externalUriWhiteList_ = uriSchemes;
+        return this;
+    }
+
+    /**
+     * Add the given URI path to the external Uri white list. Branch will collect
+     * external intent uri only if white list matches with the app opened URL properties.
+     * If no path is added to the white list Branch will collect all external Intent uris.
+     * White list paths should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
+     *
+     * NOTE: Branch uses the path "open" by default. As such, the path "open" will always be whitelisted.
+     *
+     * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri white list. (e.g. "product" or "category/shipping"
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addWhiteListedPath(String pathName) {
+        // Need the Branch-default "open" path to be whitelisted.
+        if (externalPathWhiteList_.size() == 0) {
+            externalPathWhiteList_.add("open");
+        }
+
+        externalPathWhiteList_.add(pathName);
+
         return this;
     }
 
