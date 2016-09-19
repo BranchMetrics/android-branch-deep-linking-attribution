@@ -36,6 +36,5 @@ public class BranchApp extends Application {
         } else {
             Branch.getTestInstance(this);
         }
-        Branch.getInstance().addUriPathsToSkip("/Q0mNlPieJw");
     }
 }
