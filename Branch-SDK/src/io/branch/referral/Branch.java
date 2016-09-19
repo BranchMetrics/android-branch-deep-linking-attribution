@@ -377,6 +377,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isGAParamsFetchInProgress_ = false;
 
     private List<String> externalUriWhiteList_;
+    private List<String> skipExternalUriPaths_;
 
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
@@ -411,6 +412,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             intentState_ = INTENT_STATE.READY;
         }
         externalUriWhiteList_ = new ArrayList<>();
+        skipExternalUriPaths_ = new ArrayList<>();
     }
 
     /**
@@ -1220,18 +1222,28 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
             try {
                 if (data != null) {
+                    boolean foundSchemeMatch;
+                    boolean skipThisPath = false;
                     if (externalUriWhiteList_.size() > 0) {
-                        String externalIntentScheme = Uri.parse(data.toString()).getScheme();
-                        if (externalIntentScheme != null && externalUriWhiteList_.contains(externalIntentScheme)) {
-                            sessionReferredLink_ = data.toString();
-                            prefHelper_.setExternalIntentUri(data.toString());
-                        }
+                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
                     } else {
+                        foundSchemeMatch = true;
+                    }
+                    if (skipExternalUriPaths_.size() > 0) {
+                        for (String path : skipExternalUriPaths_) {
+                            String externalPath = data.getPath();
+                            if (externalPath != null && externalPath.startsWith(path)) {
+                                skipThisPath = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (foundSchemeMatch && !skipThisPath) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
-
                 }
+
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     Bundle bundle = activity.getIntent().getExtras();
                     Set<String> extraKeys = bundle.keySet();
@@ -1319,14 +1331,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * Add the given URI Scheme to the external Uri white list. Branch will collect
-     * external intent uri only for Uris added to the white list.
+     * external intent uri only if white list matches with the app opened URL properties
      * If no URI is added to the white list branch will collect all external intent uris.
      * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.
+     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.(eg. "my_scheme://")
      * @return {@link Branch} instance for successive method calls
      */
     public Branch addWhiteListedScheme(String uriScheme) {
+        if (uriScheme == null) {
+            return this;
+        }
+
+        uriScheme = uriScheme.replace("://", "");
+
         externalUriWhiteList_.add(uriScheme);
         return this;
     }
@@ -1342,6 +1360,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public Branch setWhiteListedSchemes(List<String> uriSchemes) {
         externalUriWhiteList_ = uriSchemes;
+        return this;
+    }
+
+    /**
+     * Add the given URI path to the external Uri skip list. Branch will not collect
+     * external intent uri if skip list contains with the app opened URL path.
+     * If no path is added to the skip list Branch will collect all external Intent uris.
+     * Path skip list paths should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
+     * <p/>
+     *
+     * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "/product" or "/category/shipping"
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addUriPathsToSkip(String pathName) {
+        if (pathName != null && !pathName.startsWith("/")) {
+            pathName = "/" + pathName;
+        }
+        skipExternalUriPaths_.add(pathName);
         return this;
     }
 
