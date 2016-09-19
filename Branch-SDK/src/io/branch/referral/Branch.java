@@ -1222,13 +1222,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
             try {
                 if (data != null) {
-                    boolean foundSchemeMatch = false;
+                    boolean foundSchemeMatch;
                     boolean skipThisPath = false;
                     if (externalUriWhiteList_.size() > 0) {
                         foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
+                    } else {
+                        foundSchemeMatch = true;
                     }
                     if (skipExternalUriPaths_.size() > 0) {
-                        skipThisPath = skipExternalUriPaths_.contains(data.getPath());
+                        for (String path : skipExternalUriPaths_) {
+                            String externalPath = data.getPath();
+                            if (externalPath != null && externalPath.startsWith(path)) {
+                                skipThisPath = true;
+                                break;
+                            }
+                        }
                     }
                     if (foundSchemeMatch && !skipThisPath) {
                         sessionReferredLink_ = data.toString();
