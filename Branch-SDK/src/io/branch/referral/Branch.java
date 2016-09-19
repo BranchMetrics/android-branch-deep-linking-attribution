@@ -377,7 +377,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isGAParamsFetchInProgress_ = false;
 
     private List<String> externalUriWhiteList_;
-    private List<String> externalPathWhiteList_;
+    private List<String> skipExternalUriPaths_;
 
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
@@ -412,7 +412,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             intentState_ = INTENT_STATE.READY;
         }
         externalUriWhiteList_ = new ArrayList<>();
-        externalPathWhiteList_ = new ArrayList<>();
+        skipExternalUriPaths_ = new ArrayList<>();
     }
 
     /**
@@ -1223,35 +1223,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (data != null) {
                     boolean foundSchemeMatch = false;
-                    boolean foundPathMatch = false;
-
+                    boolean skipThisPath = false;
                     if (externalUriWhiteList_.size() > 0) {
-                        String uriScheme = data.getScheme();
-
-                        for (String whiteListScheme : externalUriWhiteList_) {
-                            if (uriScheme.equals(whiteListScheme)) {
-                                foundSchemeMatch = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        foundSchemeMatch = true;
+                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
                     }
-
-                    if (externalPathWhiteList_.size() > 0) {
-                        String uriPath = data.getPath();
-
-                        for (String whiteListPath : externalPathWhiteList_) {
-                            if (uriPath.startsWith(whiteListPath)) {
-                                foundPathMatch = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        foundPathMatch = true;
+                    if (skipExternalUriPaths_.size() > 0) {
+                        skipThisPath = skipExternalUriPaths_.contains(data.getPath());
                     }
-
-                    if ((foundSchemeMatch) && (foundPathMatch)) {
+                    if (foundSchemeMatch && !skipThisPath) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
@@ -1377,24 +1356,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Add the given URI path to the external Uri white list. Branch will collect
-     * external intent uri only if white list matches with the app opened URL properties.
-     * If no path is added to the white list Branch will collect all external Intent uris.
-     * White list paths should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
+     * Add the given URI path to the external Uri skip list. Branch will not collect
+     * external intent uri if skip list contains with the app opened URL path.
+     * If no path is added to the skip list Branch will collect all external Intent uris.
+     * Path skip list paths should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
+     * <p/>
      *
-     * NOTE: Branch uses the path "open" by default. As such, the path "open" will always be whitelisted.
-     *
-     * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri white list. (e.g. "product" or "category/shipping"
+     * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "product" or "category/shipping"
      * @return {@link Branch} instance for successive method calls
      */
-    public Branch addWhiteListedPath(String pathName) {
-        // Need the Branch-default "open" path to be whitelisted.
-        if (externalPathWhiteList_.size() == 0) {
-            externalPathWhiteList_.add("open");
-        }
-
-        externalPathWhiteList_.add(pathName);
-
+    public Branch addUriPathsToSkip(String pathName) {
+        skipExternalUriPaths_.add(pathName);
         return this;
     }
 
