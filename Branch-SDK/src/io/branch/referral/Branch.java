@@ -1370,10 +1370,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Path skip list paths should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
      * <p/>
      *
+<<<<<<< HEAD
      * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "product" or "category/shipping"
      * @return {@link Branch} instance for successive method calls
      */
     public Branch addUriPathsToSkip(String pathName) {
+=======
+     * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "/product" or "/category/shipping"
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addUriPathsToSkip(String pathName) {
+        if (pathName != null && !pathName.startsWith("/")) {
+            pathName = "/" + pathName;
+        }
+>>>>>>> master
         skipExternalUriPaths_.add(pathName);
         return this;
     }
