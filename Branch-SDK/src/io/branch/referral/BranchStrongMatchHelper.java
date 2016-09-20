@@ -59,10 +59,14 @@ class BranchStrongMatchHelper {
                             @Override
                             public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
                                 mClient_ = client;
-                                mClient_.warmup(0);
-                                CustomTabsSession session = mClient_.newSession(null);
-                                session.mayLaunchUrl(strongMatchUri, null, null);
-                                prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
+                                if (mClient_ != null) {
+                                    mClient_.warmup(0);
+                                    CustomTabsSession session = mClient_.newSession(null);
+                                    if (session != null) {
+                                        session.mayLaunchUrl(strongMatchUri, null, null);
+                                        prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
+                                    }
+                                }
                             }
 
                             @Override

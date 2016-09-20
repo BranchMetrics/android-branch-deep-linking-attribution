@@ -377,7 +377,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isGAParamsFetchInProgress_ = false;
 
     private List<String> externalUriWhiteList_;
-    private List<String> skipExternalUriPaths_;
+    private List<String> skipExternalUriHosts_;
 
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
 
@@ -412,7 +412,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             intentState_ = INTENT_STATE.READY;
         }
         externalUriWhiteList_ = new ArrayList<>();
-        skipExternalUriPaths_ = new ArrayList<>();
+        skipExternalUriHosts_ = new ArrayList<>();
     }
 
     /**
@@ -1223,22 +1223,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (data != null) {
                     boolean foundSchemeMatch;
-                    boolean skipThisPath = false;
+                    boolean skipThisHost = false;
                     if (externalUriWhiteList_.size() > 0) {
                         foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
                     } else {
                         foundSchemeMatch = true;
                     }
-                    if (skipExternalUriPaths_.size() > 0) {
-                        for (String path : skipExternalUriPaths_) {
-                            String externalPath = data.getPath();
-                            if (externalPath != null && externalPath.startsWith(path)) {
-                                skipThisPath = true;
+                    if (skipExternalUriHosts_.size() > 0) {
+                        for (String host : skipExternalUriHosts_) {
+                            String externalHost = data.getHost();
+                            if (externalHost != null && externalHost.equals(host)) {
+                                skipThisHost = true;
                                 break;
                             }
                         }
                     }
-                    if (foundSchemeMatch && !skipThisPath) {
+                    if (foundSchemeMatch && !skipThisHost) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
                     }
@@ -1364,20 +1364,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Add the given URI path to the external Uri skip list. Branch will not collect
-     * external intent uri if skip list contains with the app opened URL path.
-     * If no path is added to the skip list Branch will collect all external Intent uris.
-     * Path skip list paths should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
+     * Add the given URI host to the external Uri skip list. Branch will not collect
+     * external intent uri if skip list contains with the app opened URL.
+     * If no host is added to the skip list, Branch will collect all external Intent uris.
+     * Skip list hosts should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
      * <p/>
      *
-     * @param pathName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "/product" or "/category/shipping"
+     * @param hostName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "product" to skip my-scheme://product/*)
      * @return {@link Branch} instance for successive method calls
      */
-    public Branch addUriPathsToSkip(String pathName) {
-        if (pathName != null && !pathName.startsWith("/")) {
-            pathName = "/" + pathName;
-        }
-        skipExternalUriPaths_.add(pathName);
+    public Branch addUriHostsToSkip(String hostName) {
+        if ((hostName != null) && (!hostName.equals("")))
+            skipExternalUriHosts_.add(hostName);
+
         return this;
     }
 
