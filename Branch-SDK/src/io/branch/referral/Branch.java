@@ -1374,7 +1374,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return {@link Branch} instance for successive method calls
      */
     public Branch addUriHostsToSkip(String hostName) {
-        if (hostName != null)
+        if ((hostName != null) && (!hostName.equals("")))
             skipExternalUriHosts_.add(hostName);
 
         return this;
