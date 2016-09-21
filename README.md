@@ -42,6 +42,8 @@ ___
   + [Redeem rewards](#redeem-all-or-some-of-the-reward-balance-store-state)
   + [Get credit history](#get-credit-history)
 
+6. General support
+  + [Troubleshooting](#troubleshooting)
 ___
 
 
@@ -656,30 +658,32 @@ The response will return an array that has been parsed from the following JSON:
 3. _3_ - This is a very unique case where we will subtract credits automatically when we detect fraud
 
 
-## Trouble Shooting
-####ClassNotFoundException : Branch.Java
+## Troubleshooting
+
+### ClassNotFoundException : Branch.Java
 
 In case of having other SDKs along with Branch and exceeding the Dex limit, please make sure you have enabled multi-dex support for your application. Check the following to ensure multi-dex is configured properly
 
 1. Make sure you have enabled multi-dex support in your build.gradle file
 
-    ```java
-     defaultConfig {
-        multiDexEnabled true
-    }
-    ```
+```java
+ defaultConfig {
+    multiDexEnabled true
+}
+```
+
 2. Make sure your `Application` class is extending `MultiDexApplication`
 
 3. Make sure dex files are properly loaded from .apk file. In your application class make sure you have the following
 
-    ```java
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
-    }
-    ```
+```java
+@Override
+protected void attachBaseContext(Context base) {
+    super.attachBaseContext(base);
+    MultiDex.install(this);
+}
+```
 
-####InvalidClassException, ClassLoadingError or VerificationError
+### InvalidClassException, ClassLoadingError or VerificationError
 
 This is often caused by a Proguard bug with optimization. Please try to use the latest Proguard version or disable Proguard optimisation by setting `-dontoptimize` option
