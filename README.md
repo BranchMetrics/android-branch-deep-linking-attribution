@@ -664,7 +664,7 @@ The response will return an array that has been parsed from the following JSON:
 
 In case of having other SDKs along with Branch and exceeding the Dex limit, please make sure you have enabled multi-dex support for your application. Check the following to ensure multi-dex is configured properly
 
-1. Make sure you have enabled multi-dex support in your build.gradle file
+1) Make sure you have enabled multi-dex support in your build.gradle file
 
 ```java
  defaultConfig {
@@ -672,9 +672,9 @@ In case of having other SDKs along with Branch and exceeding the Dex limit, plea
 }
 ```
 
-2. Make sure your `Application` class is extending `MultiDexApplication`
+2) Make sure your `Application` class is extending `MultiDexApplication`
 
-3. Make sure dex files are properly loaded from .apk file. In your application class make sure you have the following
+3) Make sure dex files are properly loaded from .apk file. In your application class make sure you have the following
 
 ```java
 @Override
