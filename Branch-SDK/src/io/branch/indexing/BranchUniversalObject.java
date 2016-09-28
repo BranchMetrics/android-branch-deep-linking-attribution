@@ -771,7 +771,7 @@ public class BranchUniversalObject implements Parcelable {
         return 0;
     }
 
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+    public static final Parcelable.Creator<BranchUniversalObject> CREATOR = new Parcelable.Creator<BranchUniversalObject>() {
         public BranchUniversalObject createFromParcel(Parcel in) {
             return new BranchUniversalObject(in);
         }
@@ -874,6 +874,13 @@ public class BranchUniversalObject implements Parcelable {
                 originalCallback_.onChannelSelected(channelName);
             }
         }
+    }
+
+
+    //----------App Bridge---------------//
+
+    public void addToSharableContent(){
+        Branch.getInstance().addToSharedContent(this);
     }
 
 }

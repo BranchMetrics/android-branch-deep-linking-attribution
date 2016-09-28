@@ -92,6 +92,12 @@
             <!--</intent-filter>-->
         <!--</receiver>-->
 
+        <service
+            android:enabled="true"
+            android:exported="true"
+            android:name="io.branch.bridge.AppBridgeService"
+            android:process=":appbridge"/>
+
     </application>
 
     <instrumentation

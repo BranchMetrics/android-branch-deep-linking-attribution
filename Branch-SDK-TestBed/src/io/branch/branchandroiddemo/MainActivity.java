@@ -12,6 +12,9 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -94,6 +97,11 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 JSONObject obj = branch.getFirstReferringParams();
                 Log.i("BranchTestBed", "install params = " + obj.toString());
+
+                List<BranchUniversalObject> searchResult = branch.getLocalContent(null);
+                for (BranchUniversalObject object : searchResult) {
+                    Log.i("BranchTestBed", "Local Content  = " + object.getTitle());
+                }
             }
         });
 
@@ -225,6 +233,7 @@ public class MainActivity extends Activity {
                 branchUniversalObject.registerView();
                 // List on google search
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
+                branchUniversalObject.addToSharableContent();
             }
         });
 
