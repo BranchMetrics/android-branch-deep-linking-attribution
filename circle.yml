@@ -11,7 +11,7 @@ dependencies:
     - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
         
   override:
-    - ./install-dependencies.sh
+    #- ./install-dependencies.sh
     - VERSION=`perl -ne '/VERSION_NAME=(.*)/ && print "$1\n"' <  gradle.properties`.jar && cd Branch-SDK && jar -cf $VERSION src/
     - cd && wget https://services.gradle.org/distributions/gradle-2.4-bin.zip && unzip gradle-2.4-bin.zip
 
