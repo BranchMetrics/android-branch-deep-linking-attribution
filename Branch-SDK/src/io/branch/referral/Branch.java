@@ -2652,7 +2652,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
         } catch (ClassNotFoundException e) {
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
-        } catch (JSONException ignore) {
+        } catch (Exception ignore) {
+            // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
         }
     }
 
