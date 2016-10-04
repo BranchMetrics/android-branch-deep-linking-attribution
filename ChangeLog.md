@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.4.5 Adding fix for transaction too large exception while auto deep linking. Fixing invalid argument exception while reading params from intent.
+
 - v2.4.4 Adding ability to skip collecting external intent data specific to URI host. Adding NPE protection for custom tab session access
 
 - v2.4.3 Adding ability to skip collecting external intent data specific to URI paths
