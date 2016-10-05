@@ -2199,19 +2199,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
-
-
-                Uri intentData = null;
-                if (activity.getIntent() != null) {
-                    intentData = activity.getIntent().getData();
-                }
-                initSessionWithData(intentData, activity); // indicate  starting of session.
+                startSession(activity);
+            } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
+                initState_ = SESSION_STATE.UNINITIALISED;
+                // no need call close here since it is session forced restart. Don't want to wait till close finish
+                startSession(activity);
             }
             activityCnt_++;
         }
 
         @Override
         public void onActivityResumed(Activity activity) {
+            // Need to check here again for session restart request in case the intent is created while the activity is already running
+            if (checkIntentForSessionRestart(activity.getIntent())) {
+                initState_ = SESSION_STATE.UNINITIALISED;
+                startSession(activity);
+            }
             currentActivityReference_ = new WeakReference<>(activity);
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
@@ -2248,6 +2251,30 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
 
+    }
+
+    private void startSession(Activity activity) {
+        Uri intentData = null;
+        if (activity.getIntent() != null) {
+            intentData = activity.getIntent().getData();
+        }
+        initSessionWithData(intentData, activity); // indicate  starting of session.
+    }
+
+    /*
+     * Check for forced session restart. The Branch session is restarted if the incoming intent has $branch_force_new_session set to true.
+     * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
+     *
+     */
+    private boolean checkIntentForSessionRestart(Intent intent) {
+        boolean isRestartSessionRequested = false;
+        if (intent != null) {
+            isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            if (isRestartSessionRequested) {
+                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            }
+        }
+        return isRestartSessionRequested;
     }
 
     /**
