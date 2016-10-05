@@ -159,6 +159,12 @@ You can deep link to content from push notifications just by adding a Branch lin
        PendingIntent resultPendingIntent =  PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 ```
 
+If you would like to support push notification based routing while your app already in foreground, please add the following to your notification intent.
+
+```java
+       intent.putExtra("$branch_force_new_session",true);
+```
+
 ### Configure your AndroidManifest.xml
 
 Note: Provide internet permission. Branch SDK need internet access to talk to Branch APIs.
