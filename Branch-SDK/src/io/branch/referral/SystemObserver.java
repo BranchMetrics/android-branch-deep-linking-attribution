@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -319,6 +320,19 @@ class SystemObserver {
      */
     public String getPhoneModel() {
         return android.os.Build.MODEL;
+    }
+
+    /**
+     * Gets os locale string as it is represented in the http request header.
+     *
+     * @return A string representing the locale in format "ISO2Language-ISO2Country" (Eg. "ml-IN"). An empty string is returned on error
+     */
+    public String getLocaleString() {
+        if (Locale.getDefault() != null) {
+            return Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
+        } else {
+            return "";
+        }
     }
 
     /**

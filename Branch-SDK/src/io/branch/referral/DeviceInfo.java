@@ -55,6 +55,7 @@ class DeviceInfo {
 
     private final String packageName_;
     private final String appVersion_;
+    private final String localeString_;
 
     private static DeviceInfo thisInstance_ = null;
 
@@ -104,6 +105,7 @@ class DeviceInfo {
 
         packageName_ = sysObserver.getPackageName();
         appVersion_ = sysObserver.getAppVersion();
+        localeString_ = sysObserver.getLocaleString();
     }
 
     /**
@@ -132,6 +134,7 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
             }
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
+            requestObj.put(Defines.Jsonkey.locale.getKey(), localeString_);
 
         } catch (JSONException ignore) {
 
@@ -166,5 +169,9 @@ class DeviceInfo {
 
     public String getOsName() {
         return osName_;
+    }
+
+    public String getLocaleString() {
+        return localeString_;
     }
 }
