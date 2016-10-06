@@ -323,17 +323,31 @@ class SystemObserver {
     }
 
     /**
-     * Gets os locale string as it is represented in the http request header.
+     * Gets default ISO2 Country code
      *
-     * @return A string representing the locale in format "ISO2Language-ISO2Country" (Eg. "ml-IN"). An empty string is returned on error
+     * @return A string representing the ISO2 Country code (eg US, IN)
      */
-    public String getLocaleString() {
+    public String getISO2CountryCode() {
         if (Locale.getDefault() != null) {
-            return Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
+            return Locale.getDefault().getCountry();
         } else {
             return "";
         }
     }
+
+    /**
+     * Gets default ISO2 language code
+     *
+     * @return A string representing the ISO2 language code (eg en, ml)
+     */
+    public String getISO2LanguageCode() {
+        if (Locale.getDefault() != null) {
+            return Locale.getDefault().getLanguage();
+        } else {
+            return "";
+        }
+    }
+
 
     /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android

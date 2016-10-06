@@ -55,7 +55,8 @@ class DeviceInfo {
 
     private final String packageName_;
     private final String appVersion_;
-    private final String localeString_;
+    private final String countryCode_;
+    private final String languageCode_;
 
     private static DeviceInfo thisInstance_ = null;
 
@@ -105,7 +106,8 @@ class DeviceInfo {
 
         packageName_ = sysObserver.getPackageName();
         appVersion_ = sysObserver.getAppVersion();
-        localeString_ = sysObserver.getLocaleString();
+        countryCode_ = sysObserver.getISO2CountryCode();
+        languageCode_ = sysObserver.getISO2LanguageCode();
     }
 
     /**
@@ -134,7 +136,8 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
             }
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
-            requestObj.put(Defines.Jsonkey.locale.getKey(), localeString_);
+            requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+            requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
 
         } catch (JSONException ignore) {
 
@@ -171,7 +174,4 @@ class DeviceInfo {
         return osName_;
     }
 
-    public String getLocaleString() {
-        return localeString_;
-    }
 }
