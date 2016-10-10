@@ -162,7 +162,7 @@ You can deep link to content from push notifications just by adding a Branch lin
 If you would like to support push notification based routing while your app already in foreground, please add the following to your notification intent.
 
 ```java
-       intent.putExtra("$branch_force_new_session",true);
+       intent.putExtra("branch_force_new_session",true);
 ```
 
 ### Configure your AndroidManifest.xml

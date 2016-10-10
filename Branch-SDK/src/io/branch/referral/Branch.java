@@ -2262,7 +2262,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /*
-     * Check for forced session restart. The Branch session is restarted if the incoming intent has $branch_force_new_session set to true.
+     * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
      * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
      *
      */

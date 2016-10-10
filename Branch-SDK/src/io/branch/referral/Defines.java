@@ -69,7 +69,7 @@ public class Defines {
         AndroidAppLinkURL("android_app_link_url"),
         AndroidPushNotificationKey("branch"),
         AndroidPushIdentifier("push_identifier"),
-        ForceNewBranchSession("$branch_force_new_session"),
+        ForceNewBranchSession("branch_force_new_session"),
 
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle(Branch.OG_TITLE),
