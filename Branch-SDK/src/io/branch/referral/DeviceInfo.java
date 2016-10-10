@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONException;
@@ -136,8 +137,12 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
             }
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
-            requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
-            requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+            if (!TextUtils.isEmpty(countryCode_)) {
+                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+            }
+            if (!TextUtils.isEmpty(languageCode_)) {
+                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+            }
 
         } catch (JSONException ignore) {
 
