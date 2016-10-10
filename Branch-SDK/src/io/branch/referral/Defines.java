@@ -46,6 +46,8 @@ public class Defines {
         IsHardwareIDReal("is_hardware_id_real"),
         AppVersion("app_version"),
         OSVersion("os_version"),
+        Country("country"),
+        Language("language"),
         IsReferrable("is_referrable"),
         Update("update"),
         URIScheme("uri_scheme"),
