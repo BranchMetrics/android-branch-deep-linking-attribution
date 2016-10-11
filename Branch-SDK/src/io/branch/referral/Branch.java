@@ -1263,10 +1263,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Check for any push identifier in case app is launched by a push notification
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
-                    if (pushIdentifier != null && pushIdentifier.length() > 0) {
-                        prefHelper_.setPushIdentifier(pushIdentifier);
-                        return false;
+                    if (activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey()) == false) {
+                        String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
+                        if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                            prefHelper_.setPushIdentifier(pushIdentifier);
+                            Intent thisIntent = activity.getIntent();
+                            thisIntent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                            activity.setIntent(thisIntent);
+                            return false;
+                        }
                     }
                 }
             } catch (Exception ignore) {
@@ -1304,11 +1309,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
                             if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
                                 if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
+                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.BranchLinkUsed.getKey()) == null) {
                                     prefHelper_.setAppLink(data.toString());
                                     String uriString = data.toString();
                                     uriString += uriString.contains("?") ? "&" : "?";
-                                    uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
+                                    uriString += Defines.Jsonkey.BranchLinkUsed.getKey() + "=true";
                                     activity.getIntent().setData(Uri.parse(uriString));
                                     return false;
                                 }
@@ -2199,19 +2204,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
-
-
-                Uri intentData = null;
-                if (activity.getIntent() != null) {
-                    intentData = activity.getIntent().getData();
-                }
-                initSessionWithData(intentData, activity); // indicate  starting of session.
+                startSession(activity);
+            } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
+                initState_ = SESSION_STATE.UNINITIALISED;
+                // no need call close here since it is session forced restart. Don't want to wait till close finish
+                startSession(activity);
             }
             activityCnt_++;
         }
 
         @Override
         public void onActivityResumed(Activity activity) {
+            // Need to check here again for session restart request in case the intent is created while the activity is already running
+            if (checkIntentForSessionRestart(activity.getIntent())) {
+                initState_ = SESSION_STATE.UNINITIALISED;
+                startSession(activity);
+            }
             currentActivityReference_ = new WeakReference<>(activity);
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
@@ -2248,6 +2256,30 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
 
+    }
+
+    private void startSession(Activity activity) {
+        Uri intentData = null;
+        if (activity.getIntent() != null) {
+            intentData = activity.getIntent().getData();
+        }
+        initSessionWithData(intentData, activity); // indicate  starting of session.
+    }
+
+    /*
+     * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
+     * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
+     *
+     */
+    private boolean checkIntentForSessionRestart(Intent intent) {
+        boolean isRestartSessionRequested = false;
+        if (intent != null) {
+            isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            if (isRestartSessionRequested) {
+                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            }
+        }
+        return isRestartSessionRequested;
     }
 
     /**

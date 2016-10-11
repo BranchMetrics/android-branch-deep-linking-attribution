@@ -15,7 +15,7 @@ public class Defines {
         SessionID("session_id"),
         LinkClickID("link_click_id"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
-        AppLinkUsed("branch_used"),
+        BranchLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
@@ -71,6 +71,7 @@ public class Defines {
         AndroidAppLinkURL("android_app_link_url"),
         AndroidPushNotificationKey("branch"),
         AndroidPushIdentifier("push_identifier"),
+        ForceNewBranchSession("branch_force_new_session"),
 
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle(Branch.OG_TITLE),
