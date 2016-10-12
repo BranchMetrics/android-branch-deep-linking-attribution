@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -320,6 +321,33 @@ class SystemObserver {
     public String getPhoneModel() {
         return android.os.Build.MODEL;
     }
+
+    /**
+     * Gets default ISO2 Country code
+     *
+     * @return A string representing the ISO2 Country code (eg US, IN)
+     */
+    public String getISO2CountryCode() {
+        if (Locale.getDefault() != null) {
+            return Locale.getDefault().getCountry();
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Gets default ISO2 language code
+     *
+     * @return A string representing the ISO2 language code (eg en, ml)
+     */
+    public String getISO2LanguageCode() {
+        if (Locale.getDefault() != null) {
+            return Locale.getDefault().getLanguage();
+        } else {
+            return "";
+        }
+    }
+
 
     /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android

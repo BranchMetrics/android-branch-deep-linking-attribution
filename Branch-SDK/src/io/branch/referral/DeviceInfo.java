@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONException;
@@ -55,6 +56,8 @@ class DeviceInfo {
 
     private final String packageName_;
     private final String appVersion_;
+    private final String countryCode_;
+    private final String languageCode_;
 
     private static DeviceInfo thisInstance_ = null;
 
@@ -104,6 +107,8 @@ class DeviceInfo {
 
         packageName_ = sysObserver.getPackageName();
         appVersion_ = sysObserver.getAppVersion();
+        countryCode_ = sysObserver.getISO2CountryCode();
+        languageCode_ = sysObserver.getISO2LanguageCode();
     }
 
     /**
@@ -132,6 +137,12 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
             }
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
+            if (!TextUtils.isEmpty(countryCode_)) {
+                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+            }
+            if (!TextUtils.isEmpty(languageCode_)) {
+                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+            }
 
         } catch (JSONException ignore) {
 
@@ -167,4 +178,5 @@ class DeviceInfo {
     public String getOsName() {
         return osName_;
     }
+
 }
