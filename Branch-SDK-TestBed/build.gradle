@@ -4,6 +4,10 @@ dependencies {
     compile project(':Branch-SDK')
     //debugCompile 'com.squareup.leakcanary:leakcanary-android:1.+'
     compile ('com.google.android.gms:play-services:9.0.0')
+
+    androidTestCompile 'com.android.support:support-annotations:23.3.0'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
 }
 
 android {
@@ -16,6 +20,8 @@ android {
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     signingConfigs { release }
 
