@@ -62,6 +62,7 @@ public class Defines {
         ScreenHeight("screen_height"),
         ScreenWidth("screen_width"),
         WiFi("wifi"),
+        LocalIP("local_ip"),
 
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),

@@ -46,6 +46,10 @@ class DeviceInfo {
      */
     private final boolean isWifiConnected_;
     /**
+     * Local IP address for the device
+     */
+    private final String localIpAddr_;
+    /**
      * Device os name
      */
     private final String osName_;
@@ -101,6 +105,7 @@ class DeviceInfo {
         screenWidth_ = dMetrics.widthPixels;
 
         isWifiConnected_ = sysObserver.getWifiConnected();
+        localIpAddr_ = sysObserver.getLocalIPAddress();
 
         osName_ = sysObserver.getOS();
         osVersion_ = sysObserver.getOSVersion();
@@ -133,6 +138,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
 
+
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
             }
@@ -142,6 +148,9 @@ class DeviceInfo {
             }
             if (!TextUtils.isEmpty(languageCode_)) {
                 requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+            }
+            if ((!TextUtils.isEmpty(localIpAddr_))) {
+                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
             }
 
         } catch (JSONException ignore) {
