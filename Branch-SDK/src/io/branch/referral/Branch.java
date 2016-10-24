@@ -506,14 +506,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.linkCache_.clear();
                 branchReferral_.requestQueue_.clear();
             }
-        }
-        branchReferral_.context_ = context.getApplicationContext();
 
-        /* If {@link Application} is instantiated register for activity life cycle events. */
-        if (context instanceof BranchApp) {
-            isAutoSessionMode_ = true;
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
+            branchReferral_.context_ = context.getApplicationContext();
+            /* If {@link Application} is instantiated register for activity life cycle events. */
+            if (context instanceof BranchApp) {
+                isAutoSessionMode_ = true;
+                branchReferral_.setActivityLifeCycleObserver((Application) context);
+            }
         }
+
 
         return branchReferral_;
     }
@@ -562,7 +563,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, isLive);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -586,7 +586,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, !isDebug);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -603,7 +602,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -623,7 +621,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -1229,6 +1226,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     } else {
                         foundSchemeMatch = true;
                     }
+
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
                             String externalHost = data.getHost();
