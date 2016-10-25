@@ -2200,6 +2200,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
+                initState_ = SESSION_STATE.UNINITIALISED;
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
