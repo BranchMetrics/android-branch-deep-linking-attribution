@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.4.7 Fix for cold start issue with deeplink parameters on slower internet connection. Added local ip address as part of device params
+
 - v2.4.6 Fixed issue with receiving deep link prams through push notification while app is running in foreground. Added device locale info for stronger matching.
 
 - v2.4.5 Adding fix for transaction too large exception while auto deep linking. Fixing invalid argument exception while reading params from intent.
