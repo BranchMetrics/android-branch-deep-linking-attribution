@@ -1239,20 +1239,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (foundSchemeMatch && !skipThisHost) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
-                    }
-                }
 
-                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    Bundle bundle = activity.getIntent().getExtras();
-                    Set<String> extraKeys = bundle.keySet();
+                        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                            Bundle bundle = activity.getIntent().getExtras();
+                            Set<String> extraKeys = bundle.keySet();
 
-                    if (extraKeys.size() > 0) {
-                        JSONObject extrasJson = new JSONObject();
-                        for (String key : extraKeys) {
-                            extrasJson.put(key, bundle.get(key));
+                            if (extraKeys.size() > 0) {
+                                JSONObject extrasJson = new JSONObject();
+                                for (String key : extraKeys) {
+                                    extrasJson.put(key, bundle.get(key));
 
+                                }
+                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                            }
                         }
-                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
                     }
                 }
             } catch (Exception ignore) {
