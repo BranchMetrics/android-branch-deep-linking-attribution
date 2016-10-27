@@ -283,6 +283,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean disableDeviceIDFetch_;
 
+    private static boolean isLogging_ = false;
+
     private boolean enableFacebookAppLinkCheck_ = true;
 
     /**
@@ -2205,6 +2207,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
+
+                //prefHelper_.setLogging(BranchUtil.isLoggingEnabled(context_));
+                prefHelper_.setLogging(isLogging_);
+
                 startSession(activity);
             } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
                 initState_ = SESSION_STATE.UNINITIALISED;
@@ -2740,6 +2746,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return matched;
     }
+
+
+    public static void setIsLogging(final boolean logging) {
+        isLogging_ = logging;
+    }
+
+    public static boolean getIsLogging() { return isLogging_; }
+
     //-------------------------- Branch Builders--------------------------------------//
 
     /**

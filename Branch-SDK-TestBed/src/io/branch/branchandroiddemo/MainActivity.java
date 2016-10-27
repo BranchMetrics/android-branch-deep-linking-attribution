@@ -32,6 +32,8 @@ public class MainActivity extends Activity {
 
     BranchUniversalObject branchUniversalObject;
 
+    private static final String SET_ID_NAME = "this_is_a_test";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,14 +56,13 @@ public class MainActivity extends Activity {
                 .setPrice(5.00, CurrencyType.USD)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
-                .addContentMetadata("Metadata_Key1", "Metadata_value1")
-                .addContentMetadata("Metadata_Key2", "Metadata_value2");
+                .addContentMetadata("LINK", "1");
 
 
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.setIdentity("test_user_10", new BranchReferralInitListener() {
+                branch.setIdentity(SET_ID_NAME, new BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(JSONObject referringParams, BranchError error) {
                         if (error != null) {
@@ -146,7 +147,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdRedeemFive).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.redeemRewards(5, new BranchReferralStateChangedListener() {
+                branch.redeemRewards(1, new BranchReferralStateChangedListener() {
                     @Override
                     public void onStateChanged(boolean changed, BranchError error) {
                         if (error != null) {
@@ -233,10 +234,10 @@ public class MainActivity extends Activity {
             public void onClick(View view) {
                 JSONObject obj = new JSONObject();
                 LinkProperties linkProperties = new LinkProperties()
-                        .addTag("myShareTag1")
+                        .addTag("myShareTag12")
                         .addTag("myShareTag2")
                                 //.setAlias("mylinkName") // In case you need to white label your link
-                        .setChannel("myShareChannel2")
+                        .setChannel("myShareChannel21")
                         .setFeature("mySharefeature2")
                         .setStage("10")
                         .setCampaign("Android campaign")
@@ -251,7 +252,6 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
-                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setAsFullWidthStyle(true)
                         .setSharingTitle("Share With");
                 // Define custom styel for the share sheet list view
@@ -310,7 +310,6 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
