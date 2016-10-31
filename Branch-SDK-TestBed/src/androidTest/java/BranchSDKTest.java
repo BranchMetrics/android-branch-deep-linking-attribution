@@ -3,6 +3,7 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.SmallTest;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.InstrumentationTestCase;
@@ -20,11 +21,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.branch.branchandroiddemo.MainActivity;
+import io.branch.branchandroiddemo.R;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 /**
  * Created by sojanpr on 10/13/16.
@@ -43,22 +52,26 @@ public class BranchSDKTest extends InstrumentationTestCase {
     LinkProperties linkProperties_;
     private static String shortUrlCreated_;
     private static String errorMessage_;
-    private static final int LINK_GEN_WAIT_TIME = 1000; // Link should be created in 1/2 second
-
+    private static final int LINK_GEN_WAIT_TIME = 1000; // Link should be created in 1 second
+    private static final int MAX_BRANCH_REQ_WAIT_TIME = 2000; // Wait time for a Branch Request to respond
+    Instrumentation instrumentation_;
+    Activity currActivity_;
+    PrefHelper prefHelper_;
+    boolean testFlag_; // General flag to be used with tests
 
     @Before
     public void createBranchInstance() {
         context_ = InstrumentationRegistry.getTargetContext().getApplicationContext();
-        Instrumentation mInstrumentation = InstrumentationRegistry.getInstrumentation();
-        Instrumentation.ActivityMonitor monitor = mInstrumentation.addMonitor(MainActivity.class.getName(), null, false);
+        instrumentation_ = InstrumentationRegistry.getInstrumentation();
+        Instrumentation.ActivityMonitor monitor = instrumentation_.addMonitor(MainActivity.class.getName(), null, false);
 
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setClassName(mInstrumentation.getTargetContext(), MainActivity.class.getName());
-        mInstrumentation.startActivitySync(intent);
+        intent.setClassName(instrumentation_.getTargetContext(), MainActivity.class.getName());
+        instrumentation_.startActivitySync(intent);
 
-        Activity currentActivity = mInstrumentation.waitForMonitor(monitor);
-        assertNotNull(currentActivity);
+        currActivity_ = instrumentation_.waitForMonitor(monitor);
+        assertNotNull(currActivity_);
 
         buo_ = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/1000")
@@ -77,6 +90,8 @@ public class BranchSDKTest extends InstrumentationTestCase {
 
         linkProperties_ = new LinkProperties()
                 .setChannel("Test_channel");
+
+        prefHelper_ = PrefHelper.getInstance(context_);
     }
 
     @Test
@@ -96,7 +111,7 @@ public class BranchSDKTest extends InstrumentationTestCase {
             }
         });
         try {
-            latch.await();
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
             isInitialised_ = false;
@@ -106,7 +121,7 @@ public class BranchSDKTest extends InstrumentationTestCase {
 
     @Test
     public void test01ShortLinkCreation() {
-        Log.d(TAG, "\n---- @Test::getShortUrl() ----");
+        Log.d(TAG, "\n---- @Test::getShortUrl ----");
         shortUrlCreated_ = buo_.getShortUrl(context_, linkProperties_);
         Log.d(TAG, "Short url created " + shortUrlCreated_);
 
@@ -116,14 +131,14 @@ public class BranchSDKTest extends InstrumentationTestCase {
 
     @Test
     public void test02LinkCache() {
-        Log.d(TAG, "\n---- @Test::LinkCache() ----");
+        Log.d(TAG, "\n---- @Test::LinkCache ----");
         String url = buo_.getShortUrl(context_, linkProperties_);
         assertEquals("Link is not retrieved from cache ", shortUrlCreated_, url);
     }
 
     @Test
     public void test03ShortLinkGeneration() {
-        Log.d(TAG, "\n---- @Test::ShortLinkGeneration() ----");
+        Log.d(TAG, "\n---- @Test::ShortLinkGeneration ----");
         linkProperties_.setFeature("TestAsyncLink creation");
         boolean timedOut = false;
         final CountDownLatch latch = new CountDownLatch(1);
@@ -147,6 +162,17 @@ public class BranchSDKTest extends InstrumentationTestCase {
             timedOut = true;
         }
         assertFalse("Async link creation timed out. Waited for " + LINK_GEN_WAIT_TIME + "milli seconds", timedOut);
+    }
+
+    /**
+     * Check if share sheet is shown
+     */
+    @Test
+    public void test04ShareSheet() {
+        Log.d(TAG, "\n---- @Test::ShareSheet ----");
+        onView(withId(R.id.share_btn)).perform(click());
+        //Check if share dialog is up
+        onView(withText("Share With")).check(ViewAssertions.matches(isDisplayed()));
     }
 
 

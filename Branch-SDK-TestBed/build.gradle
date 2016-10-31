@@ -8,6 +8,10 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:23.3.0'
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
+
+    //--- Instrumentation test dependencies ----- //
+    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
+    androidTestCompile 'com.android.support.test.espresso:espresso-web:2.2.2'
 }
 
 android {
@@ -30,6 +34,11 @@ android {
             signingConfig signingConfigs.release
         }
     }
+    packagingOptions {
+        exclude 'META-INF/maven/com.google.guava/guava/pom.properties'
+        exclude 'META-INF/maven/com.google.guava/guava/pom.xml'
+    }
+
 }
 
 File propFile = file('signing.properties');
@@ -49,5 +58,7 @@ if (propFile.exists()) {
 } else {
         android.buildTypes.release.signingConfig = null
 }
+
+
 
 
