@@ -285,6 +285,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean enableFacebookAppLinkCheck_ = true;
 
+    private static boolean isSimulatingInstalls_;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -2098,7 +2100,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null) {
-                DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
+                boolean simulateInstall = ( prefHelper_.getExternDebug() || isSimulatingInstalls() );
+                DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
                 requestQueue_.setStrongMatchWaitLock();
                 BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
@@ -2739,6 +2742,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return matched;
     }
+
+    public static void enableSimulateInstalls() {
+        isSimulatingInstalls_ = true;
+    }
+    public static void disableSimulateInstalls() {
+        isSimulatingInstalls_ = false;
+    }
+    public static boolean isSimulatingInstalls() {
+        return isSimulatingInstalls_;
+    }
+
     //-------------------------- Branch Builders--------------------------------------//
 
     /**
