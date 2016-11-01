@@ -40,7 +40,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             }
 
             // Read and update the URI scheme only if running in debug mode
-            if (prefHelper_.isDebug()) {
+            if (prefHelper_.getExternDebug()) {
                 String uriScheme = sysObserver.getURIScheme();
                 if (!uriScheme.equals(SystemObserver.BLANK))
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
@@ -50,7 +50,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
 
-            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
+            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
             setPost(installPost);
 
         } catch (JSONException ex) {

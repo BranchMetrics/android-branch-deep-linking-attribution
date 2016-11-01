@@ -9,7 +9,7 @@ public final class CustomBranchApp extends BranchApp {
     @Override
     public void onCreate() {
         super.onCreate();
-        //Branch.enableSimulateInstalls();
+        Branch.enableSimulateInstalls();
         // Uncomment to test memory leak
         // LeakCanary.install(this);
     }
