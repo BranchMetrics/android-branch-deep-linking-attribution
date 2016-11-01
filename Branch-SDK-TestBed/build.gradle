@@ -33,6 +33,9 @@ android {
         release {
             signingConfig signingConfigs.release
         }
+        debug {
+            testCoverageEnabled = true
+        }
     }
     packagingOptions {
         exclude 'META-INF/maven/com.google.guava/guava/pom.properties'
