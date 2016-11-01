@@ -506,14 +506,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.linkCache_.clear();
                 branchReferral_.requestQueue_.clear();
             }
-        }
-        branchReferral_.context_ = context.getApplicationContext();
 
-        /* If {@link Application} is instantiated register for activity life cycle events. */
-        if (context instanceof BranchApp) {
-            isAutoSessionMode_ = true;
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
+            branchReferral_.context_ = context.getApplicationContext();
+            /* If {@link Application} is instantiated register for activity life cycle events. */
+            if (context instanceof Application) {
+                isAutoSessionMode_ = true;
+                branchReferral_.setActivityLifeCycleObserver((Application) context);
+            }
         }
+
 
         return branchReferral_;
     }
@@ -562,7 +563,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, isLive);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -586,7 +586,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, !isDebug);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -603,7 +602,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -623,7 +621,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -1229,6 +1226,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     } else {
                         foundSchemeMatch = true;
                     }
+
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
                             String externalHost = data.getHost();
@@ -1241,20 +1239,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (foundSchemeMatch && !skipThisHost) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
-                    }
-                }
 
-                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    Bundle bundle = activity.getIntent().getExtras();
-                    Set<String> extraKeys = bundle.keySet();
+                        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                            Bundle bundle = activity.getIntent().getExtras();
+                            Set<String> extraKeys = bundle.keySet();
 
-                    if (extraKeys.size() > 0) {
-                        JSONObject extrasJson = new JSONObject();
-                        for (String key : extraKeys) {
-                            extrasJson.put(key, bundle.get(key));
+                            if (extraKeys.size() > 0) {
+                                JSONObject extrasJson = new JSONObject();
+                                for (String key : extraKeys) {
+                                    extrasJson.put(key, bundle.get(key));
 
+                                }
+                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                            }
                         }
-                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
                     }
                 }
             } catch (Exception ignore) {
@@ -2200,6 +2198,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
+                initState_ = SESSION_STATE.UNINITIALISED;
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();

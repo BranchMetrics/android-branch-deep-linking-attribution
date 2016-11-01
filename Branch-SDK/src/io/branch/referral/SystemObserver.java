@@ -24,6 +24,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -641,4 +644,31 @@ class SystemObserver {
     interface GAdsParamsFetchEvents {
         void onGAdsFetchFinished();
     }
+
+    /**
+     * Get IP address from first non local net Interface
+     */
+    public static String getLocalIPAddress() {
+        String ipAddress = "";
+        try {
+            List<NetworkInterface> netInterfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface netInterface : netInterfaces) {
+                List<InetAddress> addresses = Collections.list(netInterface.getInetAddresses());
+                for (InetAddress address : addresses) {
+                    if (!address.isLoopbackAddress()) {
+                        String ip = address.getHostAddress();
+                        boolean isIPv4 = ip.indexOf(':') < 0;
+                        if (isIPv4) {
+                            ipAddress = ip;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+
+        return ipAddress;
+    }
+
 }
