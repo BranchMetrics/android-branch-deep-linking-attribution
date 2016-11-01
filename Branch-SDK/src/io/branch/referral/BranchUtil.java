@@ -49,6 +49,31 @@ class BranchUtil {
         return isTestMode_;
     }
 
+
+    /**
+     * Get the value of "io.branch.sdk.Logging" entry in application manifest or from String res.
+     *
+     * @return value of "io.branch.sdk.Logging" entry in application manifest or String res.
+     * false if "io.branch.sdk.Logging" is not added in the manifest or String res.
+     */
+    public static boolean isLoggingEnabled(Context context) {
+        boolean isLogging_ = false;
+        String key = "io.branch.sdk.Logging";
+        try {
+            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null && ai.metaData.containsKey(key)) {
+                isLogging_ = ai.metaData.getBoolean(key, false);
+            } else {
+                Resources resources = context.getResources();
+                isLogging_ = Boolean.parseBoolean(resources.getString(resources.getIdentifier(key, "string", context.getPackageName())));
+            }
+
+        } catch (Exception ignore) {
+        }
+
+        return isLogging_;
+    }
+
     /**
      * Converts a given link param as {@link JSONObject} to string after adding the source param and removes replaces any illegal characters.
      *
