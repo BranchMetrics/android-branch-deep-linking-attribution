@@ -199,8 +199,8 @@ public class BranchSDKTest extends InstrumentationTestCase {
     }
 
     @Test
-    public void test06LoadRewards() {
-        Log.d(TAG, "\n---- @Test::LoadRewards ----");
+    public void test06BuyCredit() {
+        Log.d(TAG, "\n---- @Test::BuyCredit ----");
         final CountDownLatch latch = new CountDownLatch(1);
         final int[] availableCredits = new int[1];
         Branch.getInstance().loadRewards(new Branch.BranchReferralStateChangedListener() {
@@ -232,7 +232,40 @@ public class BranchSDKTest extends InstrumentationTestCase {
     }
 
     @Test
-    public void test07RedeemRewards() {
+    public void test07BuyCreditsWithMetaData() {
+        Log.d(TAG, "\n---- @Test::LoadRewards ----");
+        final CountDownLatch latch = new CountDownLatch(1);
+        final int[] availableCredits = new int[1];
+        Branch.getInstance().loadRewards(new Branch.BranchReferralStateChangedListener() {
+            @Override
+            public void onStateChanged(boolean changed, BranchError error) {
+                assertNull("Error while loading rewards ", error);
+                availableCredits[0] = prefHelper_.getCreditCount();
+            }
+        });
+
+        onView(withId(R.id.cmdCommitBuyMetadataAction)).perform(click());
+        Branch.getInstance().loadRewards(new Branch.BranchReferralStateChangedListener() {
+            @Override
+            public void onStateChanged(boolean changed, BranchError error) {
+                assertNull("Error while loading rewards ", error);
+                int updatedCredits = prefHelper_.getCreditCount();
+                assertTrue(updatedCredits == (availableCredits[0] + 5)); // 5 credits are add in one buy
+                latch.countDown();
+            }
+        });
+
+        try {
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            assertTrue("Loading rewards timed out ", false);
+        }
+
+    }
+
+    @Test
+    public void test08RedeemRewards() {
         Log.d(TAG, "\n---- @Test::RedeemRewards ----");
         final CountDownLatch latch = new CountDownLatch(1);
         final int availableCredits = prefHelper_.getCreditCount();
@@ -261,5 +294,49 @@ public class BranchSDKTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
+    public void test09LogoutUser() {
+        Log.d(TAG, "\n---- @Test::LogoutUser ----");
+        final CountDownLatch latch = new CountDownLatch(1);
+        Branch.getInstance().logout(new Branch.LogoutStatusListener() {
+            @Override
+            public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                assertNull("Error while logging out user", error);
+                assertTrue("Unable to logout user", loggedOut);
+                assertTrue(prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE));
+                assertTrue(prefHelper_.getSessionParams().equals(PrefHelper.NO_STRING_VALUE));
+                assertTrue(prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE));
+                assertTrue(prefHelper_.getCreditCount() == 0);
+                latch.countDown();
+            }
+        });
+
+        try {
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            assertTrue("Logging out user timed out ", false);
+        }
+    }
+
+    @Test
+    public void test10RegisterViewTest() {
+        Log.d(TAG, "\n---- @Test::RegisterView ----");
+        final CountDownLatch latch = new CountDownLatch(1);
+        buo_.registerView(new BranchUniversalObject.RegisterViewStatusListener() {
+            @Override
+            public void onRegisterViewFinished(boolean registered, BranchError error) {
+                assertNull("Error while registering view ", error);
+                assertTrue("Registering  view failed", registered);
+            }
+        });
+
+        try {
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            assertTrue("Registering view timed out ", false);
+        }
+    }
 
 }
