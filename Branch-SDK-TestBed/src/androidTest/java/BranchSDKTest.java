@@ -171,8 +171,94 @@ public class BranchSDKTest extends InstrumentationTestCase {
     public void test04ShareSheet() {
         Log.d(TAG, "\n---- @Test::ShareSheet ----");
         onView(withId(R.id.share_btn)).perform(click());
-        //Check if share dialog is up
+        // Check if share dialog is up
         onView(withText("Share With")).check(ViewAssertions.matches(isDisplayed()));
+    }
+
+    @Test
+    public void test05SetIdentity() {
+        Log.d(TAG, "\n---- @Test::SetIdentity ----");
+        final CountDownLatch latch = new CountDownLatch(1);
+        final String identityID = prefHelper_.getIdentityID();
+        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
+        Branch.getInstance().setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                assertNull(error);
+                assertNotNull(referringParams);
+                assertTrue(prefHelper_.getIdentityID().equals("159812520658343392")); //"test_user_1" user id
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            assertTrue("setIdentity timed out ", false);
+        }
+    }
+
+    @Test
+    public void test06LoadRewards() {
+        Log.d(TAG, "\n---- @Test::LoadRewards ----");
+        final CountDownLatch latch = new CountDownLatch(1);
+        final int[] availableCredits = new int[1];
+        Branch.getInstance().loadRewards(new Branch.BranchReferralStateChangedListener() {
+            @Override
+            public void onStateChanged(boolean changed, BranchError error) {
+                assertNull("Error while loading rewards ", error);
+                availableCredits[0] = prefHelper_.getCreditCount();
+            }
+        });
+
+        onView(withId(R.id.cmdCommitBuyAction)).perform(click());
+        Branch.getInstance().loadRewards(new Branch.BranchReferralStateChangedListener() {
+            @Override
+            public void onStateChanged(boolean changed, BranchError error) {
+                assertNull("Error while loading rewards ", error);
+                int updatedCredits = prefHelper_.getCreditCount();
+                assertTrue(updatedCredits == (availableCredits[0] + 5)); // 5 credits are add in one buy
+                latch.countDown();
+            }
+        });
+
+        try {
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            assertTrue("Loading rewards timed out ", false);
+        }
+
+    }
+
+    @Test
+    public void test07RedeemRewards() {
+        Log.d(TAG, "\n---- @Test::RedeemRewards ----");
+        final CountDownLatch latch = new CountDownLatch(1);
+        final int availableCredits = prefHelper_.getCreditCount();
+        Branch.getInstance().redeemRewards(5, new Branch.BranchReferralStateChangedListener() {
+            @Override
+            public void onStateChanged(boolean changed, BranchError error) {
+                assertNull("Error while redeeming rewards", error);
+                assertTrue("Local credit does not changed on redeeming rewards", changed);
+            }
+        });
+
+        Branch.getInstance().loadRewards(new Branch.BranchReferralStateChangedListener() {
+            @Override
+            public void onStateChanged(boolean changed, BranchError error) {
+                assertNull("Error while loading rewards ", error);
+                int updatedCredits = prefHelper_.getCreditCount();
+                assertTrue(updatedCredits == (availableCredits - 5));
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await(MAX_BRANCH_REQ_WAIT_TIME * 2, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            assertTrue("Redeeming rewards timed out ", false);
+        }
     }
 
 
