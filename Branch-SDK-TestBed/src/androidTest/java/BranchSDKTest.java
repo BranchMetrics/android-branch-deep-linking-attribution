@@ -2,6 +2,9 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.SmallTest;
@@ -10,6 +13,7 @@ import android.test.InstrumentationTestCase;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -17,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -58,6 +63,9 @@ public class BranchSDKTest extends InstrumentationTestCase {
     Activity currActivity_;
     PrefHelper prefHelper_;
     boolean testFlag_; // General flag to be used with tests
+
+    private static final String TEST_LINK_1 = "https://bnctestbed.test-app.link/rVmb127dZx";
+    private static final String TEST_LINK_2 = "https://bnctestbed.test-app.link/aPxlUcgeZx";
 
     @Before
     public void createBranchInstance() {
@@ -339,4 +347,88 @@ public class BranchSDKTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
+    public void test11AppLinkAssociation() {
+        Log.d(TAG, "\n---- @Test::AppLinkAssociation ----");
+        if (android.os.Build.VERSION.SDK_INT >= 23) { // App links are supported only from Android M+
+            Intent deepLinkIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_LINK_1));
+            PackageManager packageManager = context_.getPackageManager();
+            List<ResolveInfo> resolveInfos = packageManager.queryIntentActivities(deepLinkIntent, PackageManager.MATCH_DEFAULT_ONLY);
+            boolean foundApplication = false;
+            for (ResolveInfo resolveInfo : resolveInfos) {
+                foundApplication = (resolveInfo.activityInfo).packageName.equals("io.branch.branchandroiddemo");
+                if (foundApplication) {
+                    break;
+                }
+            }
+            assertTrue("Applink failed to open the app", foundApplication);
+        }
+    }
+
+    @Test
+    public void test12DeferredDeepLinkWithChrome() {
+        Log.d(TAG, "\n---- @Test::DeferredDeepLinkWithChrome ----");
+        simulateDeferredDeepLinking("com.android.chrome", TEST_LINK_1);
+
+        JSONObject latestParams = Branch.getInstance().getLatestReferringParams();
+        try {
+            assertTrue("Link click not received by application", latestParams.getBoolean("+clicked_branch_link"));
+            assertTrue("Received incorrect referring link", latestParams.getString("~referring_link").equals(TEST_LINK_1));
+            assertTrue("Title is not set correctly", latestParams.getString("$og_title").equals("Test_Title_1"));
+            assertTrue("Description is not set correctly", latestParams.getString("$og_description").equals("Test_Description_1"));
+            assertTrue("Incorrect metadata received", latestParams.getString("Metadata_Key_Test11").equals("Test_Metadata_11"));
+            assertTrue("Incorrect metadata received", latestParams.getString("Metadata_Key_Test12").equals("Test_Metadata_12"));
+            assertTrue("Incorrect Channel value", latestParams.getString("~channel").equals("Gmail"));
+            assertTrue("Incorrect feature value", latestParams.getString("~feature").equals("mySharefeature2"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            assertTrue("Unable to retrieve the deep link data", false);
+        }
+
+        simulateDeferredDeepLinking("com.android.chrome", TEST_LINK_2);
+
+        latestParams = Branch.getInstance().getLatestReferringParams();
+        try {
+            assertTrue("Link click not received by application", latestParams.getBoolean("+clicked_branch_link"));
+            assertTrue("Received incorrect referring link", latestParams.getString("~referring_link").equals(TEST_LINK_2));
+            assertTrue("Title is not set correctly", latestParams.getString("$og_title").equals("Test_Title_2"));
+            assertTrue("Description is not set correctly", latestParams.getString("$og_description").equals("Test_Description_2"));
+            assertTrue("Incorrect metadata received", latestParams.getString("Metadata_Key_Test21").equals("Test_Metadata_21"));
+            assertTrue("Incorrect metadata received", latestParams.getString("Metadata_Key_Test22").equals("Test_Metadata_22"));
+            assertTrue("Incorrect Channel value", latestParams.getString("~channel").equals("Gmail"));
+            assertTrue("Incorrect feature value", latestParams.getString("~feature").equals("mySharefeature2"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            assertTrue("Unable to retrieve the deep link data", false);
+        }
+    }
+
+    /**
+     * Open the given link in the specified browser and opens the app after that to test deferred deep linking
+     *
+     * @param browserPackageName Package name for the browser for teh browser to be opened
+     * @param branchLink         Branch link to be opened in the browser
+     */
+    private void simulateDeferredDeepLinking(String browserPackageName, String branchLink) {
+        Intent deepLinkIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(branchLink));
+        deepLinkIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        deepLinkIntent.setPackage(browserPackageName);
+        context_.startActivity(deepLinkIntent);
+        try {
+            Thread.sleep(1500); // Allow the browser to load the url
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setClassName(instrumentation_.getTargetContext(), MainActivity.class.getName());
+        instrumentation_.startActivitySync(intent);
+
+        try {
+            Thread.sleep(2500);  // Allow the app to finish init Session
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }
