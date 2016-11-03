@@ -4,6 +4,14 @@ dependencies {
     compile project(':Branch-SDK')
     //debugCompile 'com.squareup.leakcanary:leakcanary-android:1.+'
     compile ('com.google.android.gms:play-services:9.0.0')
+
+    androidTestCompile 'com.android.support:support-annotations:23.3.0'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+
+    //--- Instrumentation test dependencies ----- //
+    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
+    androidTestCompile 'com.android.support.test.espresso:espresso-web:2.2.2'
 }
 
 android {
@@ -16,39 +24,24 @@ android {
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
-    }
 
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
     signingConfigs { release }
 
     buildTypes {
         release {
             signingConfig signingConfigs.release
         }
-    }
-    
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            resources.srcDirs = ['src']
-            aidl.srcDirs = ['src']
-            renderscript.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
+        debug {
+            testCoverageEnabled = true
         }
-
-        // Move the tests to tests/java, tests/res, etc...
-        instrumentTest.setRoot('tests')
-
-        // Move the build types to build-types/<type>
-        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        // This moves them out of them default location under src/<type>/... which would
-        // conflict with src/ being used by the main source set.
-        // Adding new build types or product flavors should be accompanied
-        // by a similar customization.
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
     }
+    packagingOptions {
+        exclude 'META-INF/maven/com.google.guava/guava/pom.properties'
+        exclude 'META-INF/maven/com.google.guava/guava/pom.xml'
+    }
+
 }
 
 File propFile = file('signing.properties');
@@ -68,5 +61,7 @@ if (propFile.exists()) {
 } else {
         android.buildTypes.release.signingConfig = null
 }
+
+
 
 
