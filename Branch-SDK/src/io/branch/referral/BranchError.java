@@ -128,7 +128,7 @@ public class BranchError {
         } else if (statusCode == 409) {
             errorCode_ = ERR_BRANCH_RESOURCE_CONFLICT;
             errMsg = " A resource with this identifier already exists.";
-        } else if (statusCode > 400) {
+        } else if (statusCode >= 400) {
             errorCode_ = ERR_BRANCH_INVALID_REQUEST;
             errMsg = " The request was invalid.";
         } else {
