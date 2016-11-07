@@ -201,6 +201,13 @@ To collect the Google Advertising ID, you must ensure that proguard doesn't remo
 ```bash
 -keep class com.google.android.gms.ads.identifier.** { *; }
 ```
+In case you are using Facebook SDK to support deep linking through Facebook ads, please make sure to keep the Facebook SDK classes in proguard
+
+```bash
+-keep class com.facebook.applinks.** { *; }
+-keepclassmembers class com.facebook.applinks.** { *; }
+-keep class com.facebook.FacebookSdk { *; }
+```
 
 ## Initialization
 
