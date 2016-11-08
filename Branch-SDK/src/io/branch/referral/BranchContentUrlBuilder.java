@@ -21,7 +21,7 @@ public class BranchContentUrlBuilder extends BranchUrlBuilder<BranchContentUrlBu
      * @return A {@link String} containing the resulting content URL. Null is returned in case of an error or if Branch is not initialised.
      */
     public String getContentUrl() {
-        return getUrl();
+        return getUrl(true);
     }
 
     /**
@@ -31,6 +31,6 @@ public class BranchContentUrlBuilder extends BranchUrlBuilder<BranchContentUrlBu
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
      */
     public void generateContentUrl(Branch.BranchLinkCreateListener callback) {
-        super.generateUrl(callback);
+        super.generateUrl(callback, true);
     }
 }

@@ -501,14 +501,55 @@ public class BranchUniversalObject implements Parcelable {
 
     //--------------------- Create Link --------------------------//
 
-
+    /**
+     * Creates a short url for the BUO synchronously.
+     *
+     * @param context        {@link Context} instance
+     * @param linkProperties An object of {@link LinkProperties} specifying the properties of this link
+     * @return A {@link String} with value of the short url created for this BUO. A long url for the BUO is returned in case link creation fails
+     */
     public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         return getLinkBuilder(context, linkProperties).getShortUrl();
     }
 
+    /**
+     * Creates a short url for the BUO synchronously.
+     * xa
+     *
+     * @param context          {@link Context} instance
+     * @param linkProperties   An object of {@link LinkProperties} specifying the properties of this link
+     * @param defaultToLongUrl A {@link Boolean} specifies if a long url should be returned in case of link creation error
+     *                         If set to false NULL is returned in case of link creation error
+     * @return A {@link String} with value of the short url created for this BUO. NULL is returned in case link creation fails
+     */
+    public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, boolean defaultToLongUrl) {
+        return getLinkBuilder(context, linkProperties).getShortUrl(defaultToLongUrl);
+    }
+
+    /**
+     * Creates a short url for the BUO asynchronously
+     *
+     * @param context        {@link Context} instance
+     * @param linkProperties An object of {@link LinkProperties} specifying the properties of this link
+     * @param callback       An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
+     */
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
         getLinkBuilder(context, linkProperties).generateShortUrl(callback);
     }
+
+    /**
+     * Creates a short url for the BUO asynchronously.
+     *
+     * @param context          {@link Context} instance
+     * @param linkProperties   An object of {@link LinkProperties} specifying the properties of this link
+     * @param callback         An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
+     * @param defaultToLongUrl A {@link Boolean} specifies if a long url should be returned in case of link creation error
+     *                         If set to false NULL is returned in case of link creation error
+     */
+    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
+        getLinkBuilder(context, linkProperties).generateShortUrl(callback, defaultToLongUrl);
+    }
+
 
     //------------------ Share sheet -------------------------------------//
 

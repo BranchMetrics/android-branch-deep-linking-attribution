@@ -104,6 +104,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         }
         return (T) this;
     }
+
     @SuppressWarnings("unchecked")
     public T addParameters(String key, JSONArray value) {
         try {
@@ -119,26 +120,26 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
 
     ///------------------------- Link Build methods---------------------------///
 
-    protected String getUrl() {
+    protected String getUrl(boolean defaultToLongUrl) {
         String shortUrl = null;
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,
-                    BranchUtil.formatAndStringifyLinkParam(params_), null, false);
+                    BranchUtil.formatAndStringifyLinkParam(params_), null, false, defaultToLongUrl);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
     }
 
-    protected void generateUrl(Branch.BranchLinkCreateListener callback) {
-        generateUrl(callback, false);
+    protected void generateUrl(Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
+        generateUrlInternal(callback, false, defaultToLongUrl);
     }
 
-    protected void generateUrl(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
+    protected void generateUrlInternal(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet, boolean defaultToLongUrl) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,
-                    BranchUtil.formatAndStringifyLinkParam(params_), callback, true);
+                    BranchUtil.formatAndStringifyLinkParam(params_), callback, true, defaultToLongUrl);
             req.setIsReqStartedFromBranchShareSheet(isFromShareSheet);
             branchReferral_.generateShortLinkInternal(req);
         } else {
