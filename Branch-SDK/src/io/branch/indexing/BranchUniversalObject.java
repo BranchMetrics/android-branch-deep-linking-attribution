@@ -522,7 +522,7 @@ public class BranchUniversalObject implements Parcelable {
      * @return A {@link String} with value of the short url created for this BUO. NULL is returned in case link creation fails
      */
     public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, boolean defaultToLongUrl) {
-        return getLinkBuilder(context, linkProperties).getShortUrl(defaultToLongUrl);
+        return getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).getShortUrl();
     }
 
     /**
@@ -546,7 +546,7 @@ public class BranchUniversalObject implements Parcelable {
      *                         If set to false, NULL is returned in case of link creation error
      */
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
-        getLinkBuilder(context, linkProperties).generateShortUrl(callback, defaultToLongUrl);
+        getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).generateShortUrl(callback);
     }
 
 

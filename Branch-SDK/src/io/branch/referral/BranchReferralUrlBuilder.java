@@ -24,7 +24,7 @@ public class BranchReferralUrlBuilder extends BranchUrlBuilder<BranchReferralUrl
      * @return A {@link String} containing the resulting referral URL. Null is returned in case of an error or if Branch is not initialised.
      */
     public String getReferralUrl() {
-        return super.getUrl(true);
+        return super.getUrl();
     }
 
     /**
@@ -34,6 +34,6 @@ public class BranchReferralUrlBuilder extends BranchUrlBuilder<BranchReferralUrl
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger when link is generated.
      */
     public void generateReferralUrl(Branch.BranchLinkCreateListener callback) {
-        super.generateUrl(callback, true);
+        super.generateUrl(callback);
     }
 }
