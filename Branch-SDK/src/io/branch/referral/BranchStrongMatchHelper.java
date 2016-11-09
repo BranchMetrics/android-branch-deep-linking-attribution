@@ -1,14 +1,16 @@
 package io.branch.referral;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
-import android.support.customtabs.CustomTabsClient;
-import android.support.customtabs.CustomTabsServiceConnection;
-import android.support.customtabs.CustomTabsSession;
 import android.text.TextUtils;
 import android.util.Log;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
 
 /**
  * Created by sojanpr on 9/2/16.
@@ -21,7 +23,7 @@ import android.util.Log;
 class BranchStrongMatchHelper {
 
     private static BranchStrongMatchHelper branchStrongMatchHelper_;
-    CustomTabsClient mClient_ = null;
+    Object mClient_ = null;
     private static final int STRONG_MATCH_CHECK_TIME_OUT = 500; // Time to wait for strong match check
     private static final long THIRTY_DAYS_EPOCH_MILLI_SEC = 30 * 24 * 60 * 60 * 1000L;
 
@@ -46,7 +48,7 @@ class BranchStrongMatchHelper {
             updateStrongMatchCheckFinished(callback);
         } else {
             try {
-                if (deviceInfo.isHardwareIDReal() && deviceInfo.getHardwareID() != null) {
+                if (/*deviceInfo.isHardwareIDReal() &&*/ deviceInfo.getHardwareID() != null) {
                     final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
@@ -55,26 +57,43 @@ class BranchStrongMatchHelper {
                                 updateStrongMatchCheckFinished(callback);
                             }
                         }, STRONG_MATCH_CHECK_TIME_OUT);
-                        CustomTabsClient.bindCustomTabsService(context, "com.android.chrome", new CustomTabsServiceConnection() {
-                            @Override
-                            public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
-                                mClient_ = client;
-                                if (mClient_ != null) {
-                                    mClient_.warmup(0);
-                                    CustomTabsSession session = mClient_.newSession(null);
-                                    if (session != null) {
-                                        session.mayLaunchUrl(strongMatchUri, null, null);
-                                        prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
-                                    }
-                                }
-                            }
 
+
+                        final Class<?> CustomTabsClientClass = Class.forName("android.support.customtabs.CustomTabsClient");
+                        final Class<?> CustomServiceTabConnectionClass = Class.forName("android.support.customtabs.CustomTabsServiceConnection");
+                        final Class<?> CustomTabsCallbackClass = Class.forName("android.support.customtabs.CustomTabsCallback");
+                        final Class<?> CustomTabsSessionClass = Class.forName("android.support.customtabs.CustomTabsSession");
+
+                        Method bindCustomTabsServiceMethod = CustomTabsClientClass.getMethod("bindCustomTabsService", Context.class, String.class, CustomServiceTabConnectionClass);
+                        final Method warmupMethod = CustomTabsClientClass.getMethod("warmup", long.class);
+                        final Method newSessionMethod = CustomTabsClientClass.getMethod("newSession", CustomTabsCallbackClass);
+                        final Method mayLaunchUrlMethod = CustomTabsSessionClass.getMethod("mayLaunchUrl", Uri.class, Bundle.class, List.class);
+
+                        InvocationHandler CustomServiceTabConnectionHandler = new InvocationHandler() {
                             @Override
-                            public void onServiceDisconnected(ComponentName name) {
-                                mClient_ = null;
-                                updateStrongMatchCheckFinished(callback);
+                            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                if (method.getName().equals("onCustomTabsServiceConnected") && args[1] != null) {
+                                    mClient_ = CustomTabsClientClass.cast(args[1]);
+                                    if (mClient_ != null) {
+                                        warmupMethod.invoke(mClient_, 0);
+                                        Object customTabsSessionObj = newSessionMethod.invoke(mClient_, null);
+                                        if (customTabsSessionObj != null) {
+                                            mayLaunchUrlMethod.invoke(customTabsSessionObj, strongMatchUri, null, null);
+                                            prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
+                                        }
+                                    }
+                                } else if (method.getName().equals("onServiceDisconnected")) {
+                                    mClient_ = null;
+                                    updateStrongMatchCheckFinished(callback);
+                                }
+                                return null;
                             }
-                        });
+                        };
+                        Object customServiceTabConnListener = Proxy.newProxyInstance(CustomServiceTabConnectionClass.getClassLoader()
+                                , new Class<?>[]{CustomServiceTabConnectionClass}
+                                , CustomServiceTabConnectionHandler);
+                        bindCustomTabsServiceMethod.invoke(CustomTabsClientClass, context, "com.android.chrome", customServiceTabConnListener);
+
                     } else {
                         updateStrongMatchCheckFinished(callback);
                     }
@@ -82,7 +101,7 @@ class BranchStrongMatchHelper {
                     updateStrongMatchCheckFinished(callback);
                     Log.d("BranchSDK", "Cannot use cookie-based matching while setDebug is enabled");
                 }
-            } catch (Exception ignore) {
+            } catch (Throwable ignore) {
                 updateStrongMatchCheckFinished(callback);
             }
         }
