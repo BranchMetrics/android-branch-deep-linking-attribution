@@ -72,7 +72,7 @@ class BranchStrongMatchHelper {
             updateStrongMatchCheckFinished(callback);
         } else {
             try {
-                if (/*deviceInfo.isHardwareIDReal() && */deviceInfo.getHardwareID() != null) {
+                if (deviceInfo.isHardwareIDReal() && deviceInfo.getHardwareID() != null) {
                     final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
