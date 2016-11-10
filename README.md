@@ -165,6 +165,16 @@ If you would like to support push notification based routing while your app alre
        intent.putExtra("branch_force_new_session",true);
 ```
 
+### Guaranteed Matching
+Branch support hundred percent guaranteed matching with cookie based matching using Custom Chrome Tabs. This is highly recommended if you like to do user authentication through deep link metadata.
+Just add the following to your build.gradle file to enable guaranteed matching
+
+```
+    compile 'com.android.support:customtabs:23.3.0'
+```
+
+Note : Adding additional dependencies may overrun the dex limit and lead to `NoClassDefFoundError` or `ClassNotFoundException`. Please make sure you have enabled multi-dex support to solve this issue. For more information on enabling multi-dex support please refer to [Troubleshooting](#troubleshooting)
+
 ### Configure your AndroidManifest.xml
 
 Note: Provide internet permission. Branch SDK need internet access to talk to Branch APIs.
