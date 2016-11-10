@@ -40,7 +40,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
             openPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
-            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.isDebug() || prefHelper_.getExternDebug());
+            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
 
             setPost(openPost);
         } catch (JSONException ex) {
