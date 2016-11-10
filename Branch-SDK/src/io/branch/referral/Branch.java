@@ -1828,7 +1828,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
-            String url = req.getLongUrl();
+            String url = null;
+            if (req.isDefaultToLongUrl()) {
+                url = req.getLongUrl();
+            }
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
                     url = response.getObject().getString("url");
