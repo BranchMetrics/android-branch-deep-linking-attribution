@@ -287,6 +287,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean isSimulatingInstalls_;
 
+    private static boolean isLogging_;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -2209,6 +2211,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
+                prefHelper_.setIsLogging(isLogging());
                 startSession(activity);
             } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
                 initState_ = SESSION_STATE.UNINITIALISED;
@@ -2745,6 +2748,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return matched;
     }
 
+    public static void enableLogging() { isLogging_ = true; }
+    public static void disableLogging() { isLogging_ = false; }
+    public static boolean isLogging() { return isLogging_; }
     public static void enableSimulateInstalls() {
         isSimulatingInstalls_ = true;
     }
