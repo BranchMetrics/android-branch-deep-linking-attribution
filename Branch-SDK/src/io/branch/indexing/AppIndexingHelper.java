@@ -25,7 +25,7 @@ class AppIndexingHelper {
                 if (!TextUtils.isEmpty(urlForAppIndexing)) {
                     try {
                         listOnGoogleSearch(urlForAppIndexing, context, buo);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in google search. Please make sure you have the latest google play libs added to your project");
                     }
                 }

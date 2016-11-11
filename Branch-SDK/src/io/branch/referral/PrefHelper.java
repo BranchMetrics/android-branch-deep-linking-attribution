@@ -1111,22 +1111,6 @@ public class PrefHelper {
         return this.requestMetadata;
     }
 
-
-    /**
-     * <p>Gets the {@link Boolean} value of {@link #BNC_Dev_Debug}, which indicates whether or not
-     * debugging is enabled.</p>
-     *
-     * @return A {@link Boolean} value indicating current debug state:
-     * <p/>
-     * <ul>
-     * <li><i>true</i> Debugging is enabled.</li>
-     * <li><i>false</i> Debugging is disabled.</li>
-     * </ul>
-     */
-    public boolean isDebug() {
-        return BNC_Dev_Debug;
-    }
-
     /**
      * <p>Creates a <b>Log</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
