@@ -41,7 +41,8 @@ public class AppBridgeServiceConnection implements ServiceConnection {
 
     public void doBindService(Context context) {
         Log.d("Bridge_test","doBindService");
-        Intent intent = new Intent(context, AppBridgeService.class);
+        Intent intent = new Intent("bridgeServiceConn");
+        intent.setPackage("io.branch.appbridge");
         Boolean serviceBound = context.bindService(intent, connection_, Context.BIND_AUTO_CREATE);
         Log.d("Bridge_test","Service Bound :- "+serviceBound);
     }
