@@ -237,7 +237,7 @@ class ShareLinkManager {
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
         shortLinkBuilder.setChannel(channelName);
 
-        shortLinkBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
+        shortLinkBuilder.generateShortUrlInternal(new Branch.BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {
