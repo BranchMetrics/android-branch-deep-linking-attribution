@@ -95,7 +95,7 @@
         <service
             android:enabled="true"
             android:exported="true"
-            android:name="io.branch.bridge.AppBridgeService"
+            android:name="io.branch.search.AppBridgeService"
             android:process=":appbridge"/>
 
     </application>

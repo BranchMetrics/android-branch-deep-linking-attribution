@@ -1,7 +1,7 @@
 // IBridgeInterface.aidl
-package io.branch.bridge;
+package io.branch.search;
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.bridge.BranchSearchContent;
+import io.branch.search.BranchSearchContent;
 
 interface IBridgeInterface {
   void addToSharableContent (in BranchUniversalObject contentBUO, in String packageName);

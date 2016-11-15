@@ -1,4 +1,4 @@
-package io.branch.bridge;
+package io.branch.search;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -6,12 +6,7 @@ import android.os.Parcelable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.Branch;
-import io.branch.referral.util.CurrencyType;
 
 
 /**

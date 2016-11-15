@@ -1,4 +1,4 @@
 // BranchUniversalObject.aidl
-package io.branch.bridge;
+package io.branch.search;
 
 parcelable BranchSearchContent;

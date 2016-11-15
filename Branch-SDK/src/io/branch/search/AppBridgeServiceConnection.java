@@ -1,4 +1,4 @@
-package io.branch.bridge;
+package io.branch.search;
 
 import android.content.ComponentName;
 import android.content.Context;
