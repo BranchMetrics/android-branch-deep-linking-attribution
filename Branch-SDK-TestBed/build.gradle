@@ -5,7 +5,6 @@ dependencies {
     //debugCompile 'com.squareup.leakcanary:leakcanary-android:1.+'
     compile ('com.google.android.gms:play-services:9.0.0')
 
-
     /* Add chrome custom tabs for guaranteed matching */
     compile ('com.android.support:customtabs:23.3.0'){
         exclude module: 'support-v4'
