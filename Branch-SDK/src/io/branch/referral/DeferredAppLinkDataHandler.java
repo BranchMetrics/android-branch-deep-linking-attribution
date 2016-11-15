@@ -64,7 +64,7 @@ class DeferredAppLinkDataHandler {
                 fetchDeferredAppLinkDataMethod.invoke(null, context, fbAppID, completionListenerInterface);
             }
 
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             isRequestSucceeded = false;
         }
         return isRequestSucceeded;

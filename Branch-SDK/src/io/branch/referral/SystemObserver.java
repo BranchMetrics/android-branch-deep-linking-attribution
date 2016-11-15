@@ -24,7 +24,11 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -322,6 +326,33 @@ class SystemObserver {
     }
 
     /**
+     * Gets default ISO2 Country code
+     *
+     * @return A string representing the ISO2 Country code (eg US, IN)
+     */
+    public String getISO2CountryCode() {
+        if (Locale.getDefault() != null) {
+            return Locale.getDefault().getCountry();
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Gets default ISO2 language code
+     *
+     * @return A string representing the ISO2 language code (eg en, ml)
+     */
+    public String getISO2LanguageCode() {
+        if (Locale.getDefault() != null) {
+            return Locale.getDefault().getLanguage();
+        } else {
+            return "";
+        }
+    }
+
+
+    /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android
      * SDK versions.</p>
      * <p/>
@@ -613,4 +644,31 @@ class SystemObserver {
     interface GAdsParamsFetchEvents {
         void onGAdsFetchFinished();
     }
+
+    /**
+     * Get IP address from first non local net Interface
+     */
+    public static String getLocalIPAddress() {
+        String ipAddress = "";
+        try {
+            List<NetworkInterface> netInterfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface netInterface : netInterfaces) {
+                List<InetAddress> addresses = Collections.list(netInterface.getInetAddresses());
+                for (InetAddress address : addresses) {
+                    if (!address.isLoopbackAddress()) {
+                        String ip = address.getHostAddress();
+                        boolean isIPv4 = ip.indexOf(':') < 0;
+                        if (isIPv4) {
+                            ipAddress = ip;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+
+        return ipAddress;
+    }
+
 }

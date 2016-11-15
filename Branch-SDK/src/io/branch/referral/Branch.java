@@ -287,6 +287,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean enableFacebookAppLinkCheck_ = true;
 
+    private static boolean isSimulatingInstalls_;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -512,14 +514,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.linkCache_.clear();
                 branchReferral_.requestQueue_.clear();
             }
-        }
-        branchReferral_.context_ = context.getApplicationContext();
 
-        /* If {@link Application} is instantiated register for activity life cycle events. */
-        if (context instanceof BranchApp) {
-            isAutoSessionMode_ = true;
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
+            branchReferral_.context_ = context.getApplicationContext();
+            /* If {@link Application} is instantiated register for activity life cycle events. */
+            if (context instanceof Application) {
+                isAutoSessionMode_ = true;
+                branchReferral_.setActivityLifeCycleObserver((Application) context);
+            }
         }
+
 
         return branchReferral_;
     }
@@ -568,7 +571,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, isLive);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -592,7 +594,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
         getBranchInstance(context, !isDebug);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -609,7 +610,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -629,7 +629,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
-        branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
 
@@ -1235,6 +1234,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     } else {
                         foundSchemeMatch = true;
                     }
+
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
                             String externalHost = data.getHost();
@@ -1247,35 +1247,40 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (foundSchemeMatch && !skipThisHost) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
-                    }
-                }
 
-                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    Bundle bundle = activity.getIntent().getExtras();
-                    Set<String> extraKeys = bundle.keySet();
+                        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                            Bundle bundle = activity.getIntent().getExtras();
+                            Set<String> extraKeys = bundle.keySet();
 
-                    if (extraKeys.size() > 0) {
-                        JSONObject extrasJson = new JSONObject();
-                        for (String key : extraKeys) {
-                            extrasJson.put(key, bundle.get(key));
+                            if (extraKeys.size() > 0) {
+                                JSONObject extrasJson = new JSONObject();
+                                for (String key : extraKeys) {
+                                    extrasJson.put(key, bundle.get(key));
 
+                                }
+                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                            }
                         }
-                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
                     }
                 }
             } catch (Exception ignore) {
             }
 
             //Check for any push identifier in case app is launched by a push notification
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                try {
-                    String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
-                    if (pushIdentifier != null && pushIdentifier.length() > 0) {
-                        prefHelper_.setPushIdentifier(pushIdentifier);
-                        return false;
+            try {
+                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                    if (activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey()) == false) {
+                        String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
+                        if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                            prefHelper_.setPushIdentifier(pushIdentifier);
+                            Intent thisIntent = activity.getIntent();
+                            thisIntent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                            activity.setIntent(thisIntent);
+                            return false;
+                        }
                     }
-                } catch (Exception ignore) {
                 }
+            } catch (Exception ignore) {
             }
 
             //Check for link click id or app link
@@ -1310,11 +1315,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
                             if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
                                 if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.AppLinkUsed.getKey()) == null) {
+                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.BranchLinkUsed.getKey()) == null) {
                                     prefHelper_.setAppLink(data.toString());
                                     String uriString = data.toString();
                                     uriString += uriString.contains("?") ? "&" : "?";
-                                    uriString += Defines.Jsonkey.AppLinkUsed.getKey() + "=true";
+                                    uriString += Defines.Jsonkey.BranchLinkUsed.getKey() + "=true";
                                     activity.getIntent().setData(Uri.parse(uriString));
                                     return false;
                                 }
@@ -1831,7 +1836,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
-            String url = req.getLongUrl();
+            String url = null;
+            if (req.isDefaultToLongUrl()) {
+                url = req.getLongUrl();
+            }
             if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                 try {
                     url = response.getObject().getString("url");
@@ -2099,7 +2107,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null) {
-                DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
+                boolean simulateInstall = ( prefHelper_.getExternDebug() || isSimulatingInstalls() );
+                DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
                 requestQueue_.setStrongMatchWaitLock();
                 BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
@@ -2201,23 +2210,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
+                initState_ = SESSION_STATE.UNINITIALISED;
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
-
-
-                Uri intentData = null;
-                if (activity.getIntent() != null) {
-                    intentData = activity.getIntent().getData();
-                }
-                initSessionWithData(intentData, activity); // indicate  starting of session.
+                startSession(activity);
+            } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
+                initState_ = SESSION_STATE.UNINITIALISED;
+                // no need call close here since it is session forced restart. Don't want to wait till close finish
+                startSession(activity);
             }
             activityCnt_++;
         }
 
         @Override
         public void onActivityResumed(Activity activity) {
+            // Need to check here again for session restart request in case the intent is created while the activity is already running
+            if (checkIntentForSessionRestart(activity.getIntent())) {
+                initState_ = SESSION_STATE.UNINITIALISED;
+                startSession(activity);
+            }
             currentActivityReference_ = new WeakReference<>(activity);
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
@@ -2254,6 +2267,30 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
 
+    }
+
+    private void startSession(Activity activity) {
+        Uri intentData = null;
+        if (activity.getIntent() != null) {
+            intentData = activity.getIntent().getData();
+        }
+        initSessionWithData(intentData, activity); // indicate  starting of session.
+    }
+
+    /*
+     * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
+     * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
+     *
+     */
+    private boolean checkIntentForSessionRestart(Intent intent) {
+        boolean isRestartSessionRequested = false;
+        if (intent != null) {
+            isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            if (isRestartSessionRequested) {
+                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            }
+        }
+        return isRestartSessionRequested;
     }
 
     /**
@@ -2658,7 +2695,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
         } catch (ClassNotFoundException e) {
             Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
-        } catch (JSONException ignore) {
+        } catch (Exception ignore) {
+            // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
         }
     }
 
@@ -2712,6 +2750,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return matched;
     }
+
+    public static void enableSimulateInstalls() {
+        isSimulatingInstalls_ = true;
+    }
+    public static void disableSimulateInstalls() {
+        isSimulatingInstalls_ = false;
+    }
+    public static boolean isSimulatingInstalls() {
+        return isSimulatingInstalls_;
+    }
+
     //-------------------------- Branch Builders--------------------------------------//
 
     /**

@@ -53,10 +53,11 @@ public class BranchError {
 
     /**
      * <p>Returns an error code for this Branch Error. </p>
+     *
      * @return An {@link Integer} specifying  the error code for this error. Value will be one of the error code defined in branch errors.
      */
-    public int getErrorCode(){
-        return  errorCode_;
+    public int getErrorCode() {
+        return errorCode_;
     }
 
     /**
@@ -122,13 +123,13 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_REQ_TIMED_OUT) {
             errorCode_ = ERR_BRANCH_REQ_TIMED_OUT;
             errMsg = " Request to Branch server timed out. Please check your internet connectivity";
-        } else if (statusCode >= 500) {
+        } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
             errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
-        } else if (statusCode == 409) {
+        } else if (statusCode == 409 || statusCode == ERR_BRANCH_RESOURCE_CONFLICT) {
             errorCode_ = ERR_BRANCH_RESOURCE_CONFLICT;
             errMsg = " A resource with this identifier already exists.";
-        } else if (statusCode > 400) {
+        } else if (statusCode >= 400 || statusCode == ERR_BRANCH_INVALID_REQUEST) {
             errorCode_ = ERR_BRANCH_INVALID_REQUEST;
             errMsg = " The request was invalid.";
         } else {

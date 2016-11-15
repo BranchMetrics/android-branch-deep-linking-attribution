@@ -140,7 +140,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
         super.generateUrl(callback);
     }
 
-    void generateShortUrl(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
-        super.generateUrl(callback, isFromShareSheet);
+    void generateShortUrlInternal(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
+        super.generateUrlInternal(callback, isFromShareSheet);
     }
 }

@@ -318,7 +318,7 @@ public class BranchUniversalObject implements Parcelable {
      * Specifies whether the contents referred by this object is publically indexable
      * </p>
      *
-     * @return A {@link Boolean} whose value is set to true if index mode is public
+     * @return A {@link boolean} whose value is set to true if index mode is public
      */
     public boolean isPublicallyIndexable() {
         return indexMode_ == CONTENT_INDEX_MODE.PUBLIC;
@@ -491,7 +491,7 @@ public class BranchUniversalObject implements Parcelable {
         /**
          * Called on finishing the the register view process
          *
-         * @param registered A {@link Boolean} which is set to true if register content view succeeded
+         * @param registered A {@link boolean} which is set to true if register content view succeeded
          * @param error      An instance of {@link BranchError} to notify any error occurred during registering a content view event.
          *                   A null value is set if the registering content view succeeds
          */
@@ -501,14 +501,54 @@ public class BranchUniversalObject implements Parcelable {
 
     //--------------------- Create Link --------------------------//
 
-
+    /**
+     * Creates a short url for the BUO synchronously.
+     *
+     * @param context        {@link Context} instance
+     * @param linkProperties An object of {@link LinkProperties} specifying the properties of this link
+     * @return A {@link String} with value of the short url created for this BUO. A long url for the BUO is returned in case link creation fails
+     */
     public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         return getLinkBuilder(context, linkProperties).getShortUrl();
     }
 
+    /**
+     * Creates a short url for the BUO synchronously.
+     *
+     * @param context          {@link Context} instance
+     * @param linkProperties   An object of {@link LinkProperties} specifying the properties of this link
+     * @param defaultToLongUrl A {@link boolean} specifies if a long url should be returned in case of link creation error
+     *                         If set to false, NULL is returned in case of link creation error
+     * @return A {@link String} with value of the short url created for this BUO. NULL is returned in case link creation fails
+     */
+    public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, boolean defaultToLongUrl) {
+        return getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).getShortUrl();
+    }
+
+    /**
+     * Creates a short url for the BUO asynchronously
+     *
+     * @param context        {@link Context} instance
+     * @param linkProperties An object of {@link LinkProperties} specifying the properties of this link
+     * @param callback       An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
+     */
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
         getLinkBuilder(context, linkProperties).generateShortUrl(callback);
     }
+
+    /**
+     * Creates a short url for the BUO asynchronously.
+     *
+     * @param context          {@link Context} instance
+     * @param linkProperties   An object of {@link LinkProperties} specifying the properties of this link
+     * @param callback         An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
+     * @param defaultToLongUrl A {@link boolean} specifies if a long url should be returned in case of link creation error
+     *                         If set to false, NULL is returned in case of link creation error
+     */
+    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
+        getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).generateShortUrl(callback);
+    }
+
 
     //------------------ Share sheet -------------------------------------//
 

@@ -23,11 +23,11 @@ test:
         background: true
         parallel: true
     - circle-android wait-for-boot
-    #- $ANDROID_HOME/tools/emulator -avd testing -no-window -no-audio:
-        #background: true
-        #parallel: true
-    #- ./wait.sh:
-        #parallel: true
+#    - $ANDROID_HOME/tools/emulator -avd circleci-android23 -no-skin -no-window -no-audio:
+#        background: true
+#        #parallel: true
+#    - ./wait.sh:
+#        #parallel: true
     - adb install Branch-SDK-TestBed/Branch-SDK-TestBed-release-unsigned.apk
     - adb logcat:
         background: true

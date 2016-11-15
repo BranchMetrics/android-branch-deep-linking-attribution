@@ -159,6 +159,22 @@ You can deep link to content from push notifications just by adding a Branch lin
        PendingIntent resultPendingIntent =  PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 ```
 
+If you would like to support push notification based routing while your app already in foreground, please add the following to your notification intent.
+
+```java
+       intent.putExtra("branch_force_new_session",true);
+```
+
+### Guaranteed Matching
+Branch support hundred percent guaranteed matching with cookie based matching using Custom Chrome Tabs. This is highly recommended if you like to do user authentication through deep link metadata.
+Just add the following to your build.gradle file to enable guaranteed matching
+
+```
+    compile 'com.android.support:customtabs:23.3.0'
+```
+
+Note : Adding additional dependencies may overrun the dex limit and lead to `NoClassDefFoundError` or `ClassNotFoundException`. Please make sure you have enabled multi-dex support to solve this issue. For more information on enabling multi-dex support please refer to [Troubleshooting](#troubleshooting)
+
 ### Configure your AndroidManifest.xml
 
 Note: Provide internet permission. Branch SDK need internet access to talk to Branch APIs.
@@ -194,6 +210,13 @@ To collect the Google Advertising ID, you must ensure that proguard doesn't remo
 
 ```bash
 -keep class com.google.android.gms.ads.identifier.** { *; }
+```
+In case you are using Facebook SDK to support deep linking through Facebook ads, please make sure to keep the Facebook SDK classes in proguard
+
+```bash
+-keep class com.facebook.applinks.** { *; }
+-keepclassmembers class com.facebook.applinks.** { *; }
+-keep class com.facebook.FacebookSdk { *; }
 ```
 
 ## Initialization

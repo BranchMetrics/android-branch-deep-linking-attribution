@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONException;
@@ -45,6 +46,10 @@ class DeviceInfo {
      */
     private final boolean isWifiConnected_;
     /**
+     * Local IP address for the device
+     */
+    private final String localIpAddr_;
+    /**
      * Device os name
      */
     private final String osName_;
@@ -55,6 +60,8 @@ class DeviceInfo {
 
     private final String packageName_;
     private final String appVersion_;
+    private final String countryCode_;
+    private final String languageCode_;
 
     private static DeviceInfo thisInstance_ = null;
 
@@ -98,12 +105,15 @@ class DeviceInfo {
         screenWidth_ = dMetrics.widthPixels;
 
         isWifiConnected_ = sysObserver.getWifiConnected();
+        localIpAddr_ = sysObserver.getLocalIPAddress();
 
         osName_ = sysObserver.getOS();
         osVersion_ = sysObserver.getOSVersion();
 
         packageName_ = sysObserver.getPackageName();
         appVersion_ = sysObserver.getAppVersion();
+        countryCode_ = sysObserver.getISO2CountryCode();
+        languageCode_ = sysObserver.getISO2LanguageCode();
     }
 
     /**
@@ -128,10 +138,20 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
 
+
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
             }
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
+            if (!TextUtils.isEmpty(countryCode_)) {
+                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+            }
+            if (!TextUtils.isEmpty(languageCode_)) {
+                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+            }
+            if ((!TextUtils.isEmpty(localIpAddr_))) {
+                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
+            }
 
         } catch (JSONException ignore) {
 
@@ -167,4 +187,5 @@ class DeviceInfo {
     public String getOsName() {
         return osName_;
     }
+
 }
