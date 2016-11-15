@@ -17,7 +17,12 @@ public class SharingHelper {
         EMAIL("com.google.android.email"),
         FLICKR("com.yahoo.mobile.client.android.flickr"),
         GOOGLE_DOC("com.google.android.apps.docs"),
-        WHATS_APP("com.whatsapp");
+        WHATS_APP("com.whatsapp"),
+        PINTEREST("com.pinterest"),
+        HANGOUT("com.google.android.talk"),
+        INSTAGRAM("com.instagram.android"),
+        WECHAT("jom.tencent.mm"),
+        GMAIL("com.google.android.gm");
 
         private String name = "";
 
