@@ -47,19 +47,19 @@ public class AppBridgeServiceConnection implements ServiceConnection {
         Log.d("Bridge_test","Service Bound :- "+serviceBound);
     }
 
-    public void addToSharableContent(BranchUniversalObject contentBUO) {
+    public void addToSharableContent(BranchUniversalObject contentBUO, String packageName) {
         Log.d("Bridge_test","addToSharableContent");
         if (bridgeInterface_ != null) {
             try {
-                bridgeInterface_.addToSharableContent(contentBUO);
+                bridgeInterface_.addToSharableContent(contentBUO, packageName);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public List<BranchUniversalObject> getContentForKey(String key) {
-        List<BranchUniversalObject> searchResult = new ArrayList<>();
+    public List<BranchSearchContent> getContentForKey(String key) {
+        List<BranchSearchContent> searchResult = new ArrayList<>();
         if (bridgeInterface_ != null) {
             try {
                 searchResult = bridgeInterface_.searchContent(key);

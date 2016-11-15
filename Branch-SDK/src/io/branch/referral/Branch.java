@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.bridge.AppBridgeServiceConnection;
+import io.branch.bridge.BranchSearchContent;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
@@ -3252,10 +3253,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     ///-----App Bridging-----------------------------//
     public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
-        appBridgeServiceConnection_.addToSharableContent(branchUniversalObject);
+        appBridgeServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName());
     }
 
-    public List<BranchUniversalObject> getLocalContent(String keyword){
+    public List<BranchSearchContent> getLocalContent(String keyword){
         return appBridgeServiceConnection_.getContentForKey(keyword);
     }
 }

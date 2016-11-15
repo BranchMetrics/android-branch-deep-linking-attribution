@@ -97,11 +97,6 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 JSONObject obj = branch.getFirstReferringParams();
                 Log.i("BranchTestBed", "install params = " + obj.toString());
-
-                List<BranchUniversalObject> searchResult = branch.getLocalContent(null);
-                for (BranchUniversalObject object : searchResult) {
-                    Log.i("BranchTestBed", "Local Content  = " + object.getTitle());
-                }
             }
         });
 
