@@ -2101,7 +2101,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null) {
-                boolean simulateInstall = ( prefHelper_.getExternDebug() || isSimulatingInstalls() );
+                boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
                 DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
                 requestQueue_.setStrongMatchWaitLock();
@@ -2204,7 +2204,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
-                initState_ = SESSION_STATE.UNINITIALISED;
+                if (initState_ == SESSION_STATE.INITIALISED) {
+                    // Handling case :  init session completed previously when app was in background.
+                    initState_ = SESSION_STATE.UNINITIALISED;
+                }
                 // Check if debug mode is set in manifest. If so enable debug.
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
@@ -2748,9 +2751,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void enableSimulateInstalls() {
         isSimulatingInstalls_ = true;
     }
+
     public static void disableSimulateInstalls() {
         isSimulatingInstalls_ = false;
     }
+
     public static boolean isSimulatingInstalls() {
         return isSimulatingInstalls_;
     }
