@@ -2859,7 +2859,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return this;
         }
 
-        public String getImageUrl_() {
+        public String getImageUrl() {
             return imageUrl_;
         }
 
