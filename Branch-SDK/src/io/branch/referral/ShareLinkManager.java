@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
@@ -21,6 +22,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,11 +54,12 @@ class ShareLinkManager {
     /* Styleable resource for share sheet.*/
     private int shareDialogThemeID_ = -1;
 
+    private String imageUrl;
     private Branch.ShareLinkBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
 
-
+    private static final String PINTEREST_SHARE_URL = "https://www.pinterest.com/pin/create/button/?url=%s&media=%s&description=%s";
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
@@ -63,7 +67,9 @@ class ShareLinkManager {
      * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
     public Dialog shareLink(Branch.ShareLinkBuilder builder) {
+
         builder_ = builder;
+        imageUrl = builder.getImageUrl_();
         context_ = builder.getActivity();
         callback_ = builder.getCallback();
         channelPropertiesCallback_ = builder.getChannelPropertiesCallback();
@@ -288,11 +294,33 @@ class ShareLinkManager {
             if (shareSub != null && shareSub.trim().length() > 0) {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }
-            shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg + "\n" + url);
-            context_.startActivity(shareLinkIntent_);
+
+            // Open native/web pinterest app for sharing
+            // Code taken from http://stackoverflow.com/questions/27388056/android-share-intent-for-pinterest-not-working
+            if(selectedResolveInfo.activityInfo.processName.equals(SharingHelper.SHARE_WITH.PINTEREST.toString()) && imageUrl != null){
+                url = String.format(
+                        PINTEREST_SHARE_URL,
+                        urlEncode(url), urlEncode(imageUrl), shareMsg);
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                context_.startActivity(intent);
+            }
+            else {
+                shareLinkIntent_.putExtra(Intent.EXTRA_TEXT, shareMsg + "\n" + url);
+                context_.startActivity(shareLinkIntent_);
+            }
         }
     }
 
+    // Code taken from http://stackoverflow.com/questions/27388056/android-share-intent-for-pinterest-not-working
+    public static String urlEncode(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
+        }
+        catch (UnsupportedEncodingException e) {
+            Log.wtf("", "UTF-8 should always be supported", e);
+            return "";
+        }
+    }
     /**
      * Adds a given link to the clip board.
      *
