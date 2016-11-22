@@ -716,9 +716,6 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
                 branchUniversalObject.expirationInMilliSec_ = jsonObject.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
             }
-            if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
-                branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-            }
             if (jsonObject.has(BranchEvent.PURCHASE_AMOUNT)) {
                 branchUniversalObject.price_ = jsonObject.getDouble(BranchEvent.PURCHASE_AMOUNT);
             }
@@ -744,6 +741,15 @@ public class BranchUniversalObject implements Parcelable {
                     for (int i = 0; i < keywordJsonArray.length(); i++) {
                         branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
                     }
+                }
+            }
+
+            if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
+                try {
+                    branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+                } catch (JSONException ignore) {
+                    // iOS compatibility issue. iOS send 0/1 instead of true or false
+                    branchUniversalObject.indexMode_ = jsonObject.getInt(Defines.Jsonkey.PublicallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
                 }
             }
         } catch (Exception ignore) {
