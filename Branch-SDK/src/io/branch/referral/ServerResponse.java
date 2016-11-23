@@ -4,8 +4,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * Class providing the structure of a HTTP response as recieved from the Branch API.
- * <p/>
+ * <p>Class providing the structure of a HTTP response as recieved from the Branch API.
+ * </p>
  * Supports the following methods:
  * <ul>
  * <li>{@link ServerResponse#getTag()}</li>
@@ -14,6 +14,7 @@ import org.json.JSONObject;
  * <li>{@link ServerResponse#getObject()}</li>
  * <li>{@link ServerResponse#getArray()}</li>
  * </ul>
+ *
  */
 public class ServerResponse {
 

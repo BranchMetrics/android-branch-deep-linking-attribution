@@ -25,7 +25,6 @@ import io.branch.referral.PrefHelper;
  * *Once content discovery is enabled* through Branch, this class is responsible for discovering content entities within an app.
  * It will crawl the view hierarchy and read through text on pages similar to the functionality of a web crawler. The primary
  * uses of the data are for app indexing, content analytics, content recommendation and future content-based products.
- * <p/>
  * Note that this feature can be controlled from the dashboard.
  * </p>
  */
