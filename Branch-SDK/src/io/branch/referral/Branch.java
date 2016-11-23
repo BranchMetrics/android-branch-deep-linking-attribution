@@ -47,7 +47,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.search.AppBridgeServiceConnection;
+import io.branch.search.BranchSearchServiceConnection;
 import io.branch.search.BranchSearchContent;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
@@ -387,7 +387,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
-    private final AppBridgeServiceConnection appBridgeServiceConnection_;
+    private final BranchSearchServiceConnection appBridgeServiceConnection_;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -419,7 +419,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
-        appBridgeServiceConnection_ =AppBridgeServiceConnection.getInstance();
+        appBridgeServiceConnection_ = BranchSearchServiceConnection.getInstance();
         appBridgeServiceConnection_.doBindService(context.getApplicationContext());
     }
 
@@ -2107,7 +2107,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null) {
-                boolean simulateInstall = ( prefHelper_.getExternDebug() || isSimulatingInstalls() );
+                boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
                 DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
                 requestQueue_.setStrongMatchWaitLock();
@@ -2754,9 +2754,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void enableSimulateInstalls() {
         isSimulatingInstalls_ = true;
     }
+
     public static void disableSimulateInstalls() {
         isSimulatingInstalls_ = false;
     }
+
     public static boolean isSimulatingInstalls() {
         return isSimulatingInstalls_;
     }
@@ -3298,13 +3300,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
 
-
     ///-----App Bridging-----------------------------//
     public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
-        appBridgeServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName());
+        String url = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
+        appBridgeServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
     }
 
-    public List<BranchSearchContent> getLocalContent(String keyword){
+    public List<BranchSearchContent> getLocalContent(String keyword) {
         return appBridgeServiceConnection_.getContentForKey(keyword);
     }
 }

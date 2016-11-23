@@ -1,5 +1,8 @@
 package io.branch.search;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -7,6 +10,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.Defines;
+import io.branch.roots.Roots;
 
 
 /**
@@ -23,19 +28,38 @@ public class BranchSearchContent implements Parcelable {
     public static final int RESULT_PRIORITY_NON_LOCAL_CONTENTS = 3;    /* Contents residing in a non installed  app */
     public static final int RESULT_PRIORITY_NON_LOCAL_APPS = 4;        /* App that are not installed but matches the search */
 
+
     private static final String PACKAGE_NAME_KEY = "package_name_key";
     private static final String RESULT_PRIORITY_KEY = "result_prority";
     private static final String CONTENT_BUO_KEY = "content_buo_key";
 
+
     private BranchUniversalObject buo_;
 
     private String packageName_ = "";
+    private String contentUrl_ = "";
+    private String contentImageUrl_ = "";
+    private String contentTitle_ = "";
+    private String contentDescription_ = "";
     private int resultPriority_ = RESULT_PRIORITY_CONTENT_LOCAL;
 
-    public BranchSearchContent(BranchUniversalObject buo, String packageName, int resultPriority) {
+    public BranchSearchContent(BranchUniversalObject buo, String packageName, int resultPriority, String contentUrl) {
         buo_ = buo;
+        contentTitle_ = buo.getTitle();
+        contentDescription_ = buo.getDescription();
+        contentImageUrl_ = buo.getImageUrl();
         packageName_ = packageName;
         resultPriority_ = resultPriority;
+        contentUrl_ = contentUrl;
+    }
+
+    public BranchSearchContent(String title, String desc, String imgUrl, String packageName, int resultPriority, String contentUrl) {
+        contentTitle_ = title;
+        contentDescription_ = desc;
+        contentImageUrl_ = imgUrl;
+        packageName_ = packageName;
+        resultPriority_ = resultPriority;
+        contentUrl_ = contentUrl;
     }
 
     private BranchSearchContent() {
@@ -85,28 +109,51 @@ public class BranchSearchContent implements Parcelable {
     }
 
     public String getContentTitle() {
-        String title = "";
-        if (buo_ != null) {
-            title = buo_.getTitle();
-        }
-        return title;
+        return contentTitle_;
     }
 
     public String getContentDescription() {
-        String desc = "";
-        if (buo_ != null) {
-            desc = buo_.getDescription();
-        }
-        return desc;
+        return contentDescription_;
     }
 
     public String getImageUrl() {
-        String imgUrl = "";
-        if (buo_ != null) {
-            imgUrl = buo_.getImageUrl();
-        }
-        return imgUrl;
+        return contentImageUrl_;
     }
+
+    public String getContentUrl() {
+        return contentUrl_;
+    }
+
+    public boolean redirectToContent(Activity context) {
+        boolean isRedirected = false;
+        if (buo_ != null) {
+            new Roots(context, contentUrl_).connect();
+            isRedirected = true;
+        }
+
+        return isRedirected;
+    }
+
+    public boolean redirectToContentThroughPush(Activity context) {
+        boolean isRedirected = false;
+        if (buo_ != null) {
+            PackageManager manager = context.getPackageManager();
+            try {
+                Intent i = manager.getLaunchIntentForPackage(packageName_);
+                if (i != null) {
+                    i.putExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey(), contentUrl_);
+                    i.addCategory(Intent.CATEGORY_LAUNCHER);
+                    context.startActivity(i);
+                    isRedirected = true;
+                }
+            } catch (Exception ignore) {
+
+            }
+        }
+
+        return isRedirected;
+    }
+
 
     //---------------------Marshaling and Unmarshaling----------//
     @Override
@@ -128,6 +175,9 @@ public class BranchSearchContent implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(packageName_);
+        dest.writeString(contentTitle_);
+        dest.writeString(contentDescription_);
+        dest.writeString(contentImageUrl_);
         dest.writeInt(resultPriority_);
         dest.writeParcelable(buo_, 0);
     }
@@ -135,8 +185,13 @@ public class BranchSearchContent implements Parcelable {
     private BranchSearchContent(Parcel in) {
         this();
         packageName_ = in.readString();
+        contentTitle_ = in.readString();
+        contentDescription_ = in.readString();
+        contentImageUrl_ = in.readString();
         resultPriority_ = in.readInt();
         buo_ = in.readParcelable(BranchSearchContent.class.getClassLoader());
     }
+
+
 }
 

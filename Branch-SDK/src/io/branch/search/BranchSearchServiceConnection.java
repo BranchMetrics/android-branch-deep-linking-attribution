@@ -16,13 +16,13 @@ import io.branch.indexing.BranchUniversalObject;
 /**
  * Created by sojanpr on 9/26/16.
  */
-public class AppBridgeServiceConnection implements ServiceConnection {
-    private static AppBridgeServiceConnection connection_;
+public class BranchSearchServiceConnection implements ServiceConnection {
+    private static BranchSearchServiceConnection connection_;
     IBridgeInterface bridgeInterface_;
 
-    public static AppBridgeServiceConnection getInstance() {
+    public static BranchSearchServiceConnection getInstance() {
         if (connection_ == null) {
-            connection_ = new AppBridgeServiceConnection();
+            connection_ = new BranchSearchServiceConnection();
         }
         return connection_;
     }
@@ -30,28 +30,28 @@ public class AppBridgeServiceConnection implements ServiceConnection {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
         bridgeInterface_ = IBridgeInterface.Stub.asInterface(service);
-        Log.d("Bridge_test","onServiceConnected()");
+        Log.d("Bridge_test", "onServiceConnected()");
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        Log.d("Bridge_test","onServiceDisconnected()");
+        Log.d("Bridge_test", "onServiceDisconnected()");
         bridgeInterface_ = null;
     }
 
     public void doBindService(Context context) {
-        Log.d("Bridge_test","doBindService");
-        Intent intent = new Intent("bridgeServiceConn");
-        intent.setPackage("io.branch.appbridge");
+        Log.d("Bridge_test", "doBindService");
+        Intent intent = new Intent("BranchSearchServiceConn");
+        intent.setPackage("io.branch.searchservice");
         Boolean serviceBound = context.bindService(intent, connection_, Context.BIND_AUTO_CREATE);
-        Log.d("Bridge_test","Service Bound :- "+serviceBound);
+        Log.d("Bridge_test", "Service Bound :- " + serviceBound);
     }
 
-    public void addToSharableContent(BranchUniversalObject contentBUO, String packageName) {
-        Log.d("Bridge_test","addToSharableContent");
+    public void addToSharableContent(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
+        Log.d("Bridge_test", "addToSharableContent");
         if (bridgeInterface_ != null) {
             try {
-                bridgeInterface_.addToSharableContent(contentBUO, packageName);
+                bridgeInterface_.addToSharableContent(contentBUO, packageName, contentUrl);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
