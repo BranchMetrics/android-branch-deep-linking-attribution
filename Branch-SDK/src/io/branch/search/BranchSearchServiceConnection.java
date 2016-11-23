@@ -18,7 +18,7 @@ import io.branch.indexing.BranchUniversalObject;
  */
 public class BranchSearchServiceConnection implements ServiceConnection {
     private static BranchSearchServiceConnection connection_;
-    IBridgeInterface bridgeInterface_;
+    IBranchSearchServiceInterface bridgeInterface_;
 
     public static BranchSearchServiceConnection getInstance() {
         if (connection_ == null) {
@@ -29,7 +29,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        bridgeInterface_ = IBridgeInterface.Stub.asInterface(service);
+        bridgeInterface_ = IBranchSearchServiceInterface.Stub.asInterface(service);
         Log.d("Bridge_test", "onServiceConnected()");
     }
 
