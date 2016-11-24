@@ -52,6 +52,7 @@ import io.branch.search.BranchSearchContent;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
+import io.branch.search.IBranchSearchCallback;
 
 /**
  * <p>
@@ -387,7 +388,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
-    private final BranchSearchServiceConnection appBridgeServiceConnection_;
+    private final BranchSearchServiceConnection branchSearchServiceConnection_;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -419,8 +420,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
-        appBridgeServiceConnection_ = BranchSearchServiceConnection.getInstance();
-        appBridgeServiceConnection_.doBindService(context.getApplicationContext());
+        branchSearchServiceConnection_ = BranchSearchServiceConnection.getInstance();
+        branchSearchServiceConnection_.doBindService(context.getApplicationContext());
     }
 
     /**
@@ -3303,10 +3304,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     ///-----App Bridging-----------------------------//
     public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
         String url = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
-        appBridgeServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
+        branchSearchServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
     }
 
-    public List<BranchSearchContent> getLocalContent(String keyword) {
-        return appBridgeServiceConnection_.getContentForKey(keyword);
+    public boolean getLocalContent(String keyword, int offset, int limit, IBranchSearchEvents callback) {
+        return branchSearchServiceConnection_.getContentForKey(keyword, offset, limit, callback);
+    }
+
+    public interface IBranchSearchEvents {
+        void onSearchResult(int offset, int limit, String searchKeyWord, List<BranchSearchContent> searchResults);
     }
 }

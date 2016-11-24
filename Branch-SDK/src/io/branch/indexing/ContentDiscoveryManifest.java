@@ -162,6 +162,7 @@ public class ContentDiscoveryManifest {
             return "-1";
         }
         return manifestVersion_;
+
     }
 
     class CDPathProperties {
