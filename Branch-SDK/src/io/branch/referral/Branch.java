@@ -56,16 +56,17 @@ import io.branch.referral.util.LinkProperties;
  * The core object required when using Branch SDK. You should declare an object of this type at
  * the class-level of each Activity or Fragment that you wish to use Branch functionality within.
  * </p>
- * <p/>
+ *
  * <p>
  * Normal instantiation of this object would look like this:
  * </p>
- * <p/>
+ *
+ * <!--
  * <pre style="background:#fff;padding:10px;border:2px solid silver;">
  * Branch.getInstance(this.getApplicationContext()) // from an Activity
- * <p/>
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
+ * -->
  */
 public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents {
 
@@ -527,7 +528,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     * <p/>
+     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -553,7 +554,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     * <p/>
+     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -573,7 +574,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     * <p/>
+     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context      A {@link Context} from which this call was made.
@@ -675,7 +676,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Sets the duration in milliseconds that the system should wait for a response before considering
      * any Branch API call to have timed out. Default 3000 ms.</p>
-     * <p/>
+     *
      * <p>Increase this to perform better in low network speed situations, but at the expense of
      * responsiveness to error situation.</p>
      *
@@ -1183,12 +1184,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * <p/>
+     * <p>
      * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).
+     * Branch#getAutoInstance(Context).</p>
      *
      * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     *                          </p>
+     *
      */
     public static void enableCookieBasedMatching(String cookieMatchDomain) {
         cookieBasedMatchDomain_ = cookieMatchDomain;
@@ -1362,7 +1363,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * If no URI is added to the white list branch will collect all external intent uris
      * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list
+     * <!-- @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list -->
      * @return {@link Branch} instance for successive method calls
      */
     public Branch setWhiteListedSchemes(List<String> uriSchemes) {
@@ -1371,11 +1372,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>
      * Add the given URI host to the external Uri skip list. Branch will not collect
      * external intent uri if skip list contains with the app opened URL.
      * If no host is added to the skip list, Branch will collect all external Intent uris.
      * Skip list hosts should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
-     * <p/>
+     * </p>
      *
      * @param hostName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "product" to skip my-scheme://product/*)
      * @return {@link Branch} instance for successive method calls
@@ -1593,9 +1595,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 return.
      * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *                 <p/>
+     *
      *                 <p>Valid choices:</p>
-     *                 <p/>
+     *
      *                 <ul>
      *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
@@ -1621,9 +1623,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 return.
      * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *                 <p/>
+     *
      *                 <p>Valid choices:</p>
-     *                 <p/>
+     *
      *                 <ul>
      *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
@@ -2624,12 +2626,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activitie configured for auto deep link on seeing matching keys.
      * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
-     * <p>
+     *
      * Configure your activity in your manifest to enable auto deep linking as follows
+     * <!--
      * <activity android:name=".YourActivity">
      * <meta-data android:name="io.branch.sdk.auto_link" android:value="DeepLinkKey1","DeepLinkKey2" />
      * </activity>
-     * </p>
+     * -->
      *
      * @param activity Instance of activity to check if launched on auto deep link.
      * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
@@ -2807,7 +2810,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * user selected clients</p>
          *
          * @param activity   The {@link Activity} to show the dialog for choosing sharing application.
-         * @param parameters @param params  A {@link JSONObject} value containing the deep link params.
+         * @param parameters A {@link JSONObject} value containing the deep link params.
          */
         public ShareLinkBuilder(Activity activity, JSONObject parameters) {
             this.activity_ = activity;

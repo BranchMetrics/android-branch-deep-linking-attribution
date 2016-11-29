@@ -13,11 +13,12 @@ import java.util.HashMap;
  * <p> Class for listening installation referrer params. Add this class to your manifest in order to get a referrer info </p>
  *
  * <p> Add to InstallListener to manifest as follows
-     <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
+  <!--   <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
          <intent-filter>
          <action android:name="com.android.vending.INSTALL_REFERRER" />
          </intent-filter>
-     </receiver></p>
+     </receiver> -->
+ </p>
  */
 public class InstallListener extends BroadcastReceiver {
 

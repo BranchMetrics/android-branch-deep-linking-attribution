@@ -15,8 +15,7 @@ import org.json.JSONObject;
  * The content discovery manifest is the instruction set for how the Branch SDK will *optionally* and automatically discover content
  * within your app. It parses the configuration from the server, which will tell the client whether it's eligible for content discovery.
  * This manifest is then used to inform the ContentDiscover class's behavior.
- * <p/>
- * Note that this behavior can be controlled from the dashboard.
+ * * Note that this behavior can be controlled from the dashboard.
  * </p>
  */
 public class ContentDiscoveryManifest {
