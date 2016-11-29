@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.5.2 Fix for Android/iOS link-click compatibility when used with BUO. Fixed doc formatting for latest Android Studio version.
+
 - v2.5.1 Fix for init session not being called when used from onCreate().
 
 - v2.5.0 Changing chrome tabs dependency optional. Adding option to simulate and test install. Few corner error  handling
