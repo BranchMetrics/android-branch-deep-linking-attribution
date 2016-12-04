@@ -284,7 +284,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean disableDeviceIDFetch_;
 
-    private boolean enableFacebookAppLinkCheck_ = true;
+    private boolean enableFacebookAppLinkCheck_ = false;
 
     private static boolean isSimulatingInstalls_;
 
