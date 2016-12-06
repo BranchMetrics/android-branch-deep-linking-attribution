@@ -126,17 +126,17 @@ public class BranchSearchContent implements Parcelable {
 
     public boolean redirectToContent(Activity context) {
         boolean isRedirected = false;
-        if (buo_ != null) {
+       // if (buo_ != null) {
             new Roots(context, contentUrl_).connect();
             isRedirected = true;
-        }
+       // }
 
         return isRedirected;
     }
 
     public boolean redirectToContentThroughPush(Activity context) {
         boolean isRedirected = false;
-        if (buo_ != null) {
+        //if (buo_ != null) {
             PackageManager manager = context.getPackageManager();
             try {
                 Intent i = manager.getLaunchIntentForPackage(packageName_);
@@ -149,7 +149,7 @@ public class BranchSearchContent implements Parcelable {
             } catch (Exception ignore) {
 
             }
-        }
+        //}
 
         return isRedirected;
     }
