@@ -422,13 +422,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>
-     * Enables the test mode for the SDK. This will use the Branch Test Keys.
+     * Enables/Disables the test mode for the SDK. This will use the Branch Test Keys.
      * This will also enable debug logs.
      * Note: This is same as setting "io.branch.sdk.TestMode" to "True" in Manifest file
      * </p>
      */
-    public void setDebug() {
+    public static void enableTestMode() {
         BranchUtil.isCustomDebugEnabled_ = true;
+    }
+    public static void disableTestMode() {
+        BranchUtil.isCustomDebugEnabled_ = false;
+    }
+    public void setDebug() {
+        enableTestMode();
     }
 
     /**
