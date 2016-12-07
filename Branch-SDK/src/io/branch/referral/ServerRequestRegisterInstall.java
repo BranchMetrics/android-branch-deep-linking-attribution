@@ -14,7 +14,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-
+    SystemObserver systemObserver_;
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
@@ -28,7 +28,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                                         SystemObserver sysObserver, String installID) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
-
+        systemObserver_ = sysObserver;
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
@@ -48,7 +48,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
+            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
 
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
             setPost(installPost);
@@ -109,6 +109,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
+
+            prefHelper_.setAppVersion(systemObserver_.getAppVersion());
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
