@@ -434,8 +434,6 @@ class SystemObserver {
      * and {@link PackageInfo#lastUpdateTime} values did not exist in older versions of the
      * {@link PackageInfo} class.</p>
      *
-     * @param updatePrefs A {@link Boolean} value indicating whether or not current App version
-     *                    number should be updated in preferences.
      * @return <p>A {@link Integer} value indicating the update state of the application package.</p>
      * <ul>
      * <li><i>1</i> - App not updated since install.</li>
@@ -443,7 +441,7 @@ class SystemObserver {
      * </ul>
      */
     @SuppressLint("NewApi")
-    public int getUpdateState(boolean updatePrefs) {
+    public int getUpdateState() {
         PrefHelper pHelper = PrefHelper.getInstance(context_);
         String currAppVersion = getAppVersion();
         if (PrefHelper.NO_STRING_VALUE.equals(pHelper.getAppVersion())) {
