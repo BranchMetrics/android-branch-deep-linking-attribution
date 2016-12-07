@@ -594,6 +594,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchReferral_;
     }
 
+    public static Branch getAutoInstance(@NonNull Context context, String branchKey) {
+        isAutoSessionMode_ = true;
+        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
+        boolean isLive = !BranchUtil.isTestModeEnabled(context);
+        getBranchInstance(context, isLive);
+
+        if (branchKey.startsWith("key_")) {
+            boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
+            //on setting a new key clear link cache and pending requests
+            if (isNewBranchKeySet) {
+                branchReferral_.linkCache_.clear();
+                branchReferral_.requestQueue_.clear();
+            }
+        } else {
+            Log.e("BranchSDK", "Branch Key is invalid.Please check your BranchKey");
+        }
+        return branchReferral_;
+    }
+
     /**
      * <p>If you configured the your Strings file according to the guide, you'll be able to use
      * the test version of your app by just calling this static method before calling initSession.</p>
