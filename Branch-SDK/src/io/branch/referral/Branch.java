@@ -433,7 +433,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void disableTestMode() {
         BranchUtil.isCustomDebugEnabled_ = false;
     }
-    public static void setDebug() {
+    public void setDebug() {
         enableTestMode();
     }
 
