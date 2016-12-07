@@ -14,6 +14,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
+    SystemObserver systemObserver_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
@@ -27,6 +28,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                                      SystemObserver sysObserver) {
         super(context, Defines.RequestPath.RegisterOpen.getPath());
 
+        systemObserver_ = sysObserver;
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
@@ -91,6 +93,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
+
+            prefHelper_.setAppVersion(systemObserver_.getAppVersion());
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
