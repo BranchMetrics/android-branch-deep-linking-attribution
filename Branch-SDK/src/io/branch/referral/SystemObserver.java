@@ -448,9 +448,6 @@ class SystemObserver {
         String currAppVersion = getAppVersion();
         if (PrefHelper.NO_STRING_VALUE.equals(pHelper.getAppVersion())) {
             // if no app version is in storage, this must be the first time Branch is here
-            if (updatePrefs) {
-                pHelper.setAppVersion(currAppVersion);
-            }
             if (android.os.Build.VERSION.SDK_INT >= 9) {
                 // if we can access update/install time, use that to check if it's a fresh install or update
                 try {
@@ -466,9 +463,6 @@ class SystemObserver {
             return STATE_FRESH_INSTALL;
         } else if (!pHelper.getAppVersion().equals(currAppVersion)) {
             // if the current app version doesn't match the stored, it's an update
-            if (updatePrefs) {
-                pHelper.setAppVersion(currAppVersion);
-            }
             return STATE_UPDATE;
         }
         // otherwise it's an open

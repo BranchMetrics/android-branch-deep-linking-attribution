@@ -14,7 +14,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-
+    SystemObserver systemObserver_;
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
@@ -28,7 +28,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                                         SystemObserver sysObserver, String installID) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
-
+        systemObserver_ = sysObserver;
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
@@ -109,6 +109,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
+
+            prefHelper_.setAppVersion(systemObserver_.getAppVersion());
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
