@@ -36,6 +36,7 @@ public class BranchSearchContent implements Parcelable {
 
     private BranchUniversalObject buo_;
 
+    private String canonicalUrl_ = "";
     private String packageName_ = "";
     private String contentUrl_ = "";
     private String contentImageUrl_ = "";
@@ -45,6 +46,7 @@ public class BranchSearchContent implements Parcelable {
 
     public BranchSearchContent(BranchUniversalObject buo, String packageName, int resultPriority, String contentUrl) {
         buo_ = buo;
+        canonicalUrl_ = buo.getCanonicalUrl();
         contentTitle_ = buo.getTitle();
         contentDescription_ = buo.getDescription();
         contentImageUrl_ = buo.getImageUrl();
@@ -53,7 +55,8 @@ public class BranchSearchContent implements Parcelable {
         contentUrl_ = contentUrl;
     }
 
-    public BranchSearchContent(String title, String desc, String imgUrl, String packageName, int resultPriority, String contentUrl) {
+    public BranchSearchContent(String canonicalUrl, String title, String desc, String imgUrl, String packageName, int resultPriority, String contentUrl) {
+        canonicalUrl_ = canonicalUrl;
         contentTitle_ = title;
         contentDescription_ = desc;
         contentImageUrl_ = imgUrl;
@@ -98,6 +101,10 @@ public class BranchSearchContent implements Parcelable {
 
         }
         return branchSearchContent;
+    }
+
+    public String getCanonicalUrl() {
+        return canonicalUrl_;
     }
 
     public int getResultPriority() {
@@ -174,6 +181,7 @@ public class BranchSearchContent implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(canonicalUrl_);
         dest.writeString(packageName_);
         dest.writeString(contentTitle_);
         dest.writeString(contentDescription_);
@@ -184,6 +192,7 @@ public class BranchSearchContent implements Parcelable {
 
     private BranchSearchContent(Parcel in) {
         this();
+        canonicalUrl_ = in.readString();
         packageName_ = in.readString();
         contentTitle_ = in.readString();
         contentDescription_ = in.readString();
