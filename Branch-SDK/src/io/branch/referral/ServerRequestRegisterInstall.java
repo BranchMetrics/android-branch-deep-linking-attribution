@@ -25,7 +25,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param installID   installation ID.                                   .
      */
     public ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
-                                        SystemObserver sysObserver, String installID) {
+                                        SystemObserver sysObserver, String installID, String googleSearchInstallReferrerUrl) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
 
@@ -34,6 +34,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         try {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
+            }
+            if (!googleSearchInstallReferrerUrl.equals(PrefHelper.NO_STRING_VALUE)) {
+                installPost.put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallReferrerUrl);
             }
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());

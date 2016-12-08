@@ -14,6 +14,7 @@ public class Defines {
         DeviceFingerprintID("device_fingerprint_id"),
         SessionID("session_id"),
         LinkClickID("link_click_id"),
+        GoogleSearchInstallReferrer("google_search_install_referrer"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         BranchLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
@@ -114,7 +115,7 @@ public class Defines {
         ContentAnalyticsMode("content_analytics_mode"),
         ContentDiscovery("cd");
 
-        
+
         private String key = "";
 
         Jsonkey(String key) {
