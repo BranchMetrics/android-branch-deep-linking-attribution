@@ -2087,7 +2087,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID(), InstallListener.getGoogleSearchInstallReferrerID_());
         }
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
