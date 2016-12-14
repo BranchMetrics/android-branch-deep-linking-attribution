@@ -613,7 +613,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * one was not already requested during the current app lifecycle.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static Branch getAutoInstance(@NonNull Context context, String branchKey) {
+    public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
