@@ -36,7 +36,7 @@ public class BranchSearchContent implements Parcelable {
 
     private BranchUniversalObject buo_;
 
-    private String canonicalUrl_ = "";
+    private String canonicalId_ = "";
     private String packageName_ = "";
     private String contentUrl_ = "";
     private String contentImageUrl_ = "";
@@ -46,7 +46,7 @@ public class BranchSearchContent implements Parcelable {
 
     public BranchSearchContent(BranchUniversalObject buo, String packageName, int resultPriority, String contentUrl) {
         buo_ = buo;
-        canonicalUrl_ = buo.getCanonicalUrl();
+        canonicalId_ = buo.getCanonicalIdentifier();
         contentTitle_ = buo.getTitle();
         contentDescription_ = buo.getDescription();
         contentImageUrl_ = buo.getImageUrl();
@@ -55,8 +55,8 @@ public class BranchSearchContent implements Parcelable {
         contentUrl_ = contentUrl;
     }
 
-    public BranchSearchContent(String canonicalUrl, String title, String desc, String imgUrl, String packageName, int resultPriority, String contentUrl) {
-        canonicalUrl_ = canonicalUrl;
+    public BranchSearchContent(String canonicalId, String title, String desc, String imgUrl, String packageName, int resultPriority, String contentUrl) {
+        canonicalId_ = canonicalId;
         contentTitle_ = title;
         contentDescription_ = desc;
         contentImageUrl_ = imgUrl;
@@ -112,8 +112,8 @@ public class BranchSearchContent implements Parcelable {
         return branchSearchContent;
     }
 
-    public String getCanonicalUrl() {
-        return canonicalUrl_;
+    public String getCanonicalId() {
+        return canonicalId_;
     }
 
     public int getResultPriority() {
@@ -142,10 +142,10 @@ public class BranchSearchContent implements Parcelable {
 
     public boolean redirectToContent(Activity context) {
         boolean isRedirected = false;
-       // if (buo_ != null) {
-            new Roots(context, contentUrl_).connect();
-            isRedirected = true;
-       // }
+        // if (buo_ != null) {
+        new Roots(context, contentUrl_).connect();
+        isRedirected = true;
+        // }
 
         return isRedirected;
     }
@@ -153,18 +153,18 @@ public class BranchSearchContent implements Parcelable {
     public boolean redirectToContentThroughPush(Activity context) {
         boolean isRedirected = false;
         //if (buo_ != null) {
-            PackageManager manager = context.getPackageManager();
-            try {
-                Intent i = manager.getLaunchIntentForPackage(packageName_);
-                if (i != null) {
-                    i.putExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey(), contentUrl_);
-                    i.addCategory(Intent.CATEGORY_LAUNCHER);
-                    context.startActivity(i);
-                    isRedirected = true;
-                }
-            } catch (Exception ignore) {
-
+        PackageManager manager = context.getPackageManager();
+        try {
+            Intent i = manager.getLaunchIntentForPackage(packageName_);
+            if (i != null) {
+                i.putExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey(), contentUrl_);
+                i.addCategory(Intent.CATEGORY_LAUNCHER);
+                context.startActivity(i);
+                isRedirected = true;
             }
+        } catch (Exception ignore) {
+
+        }
         //}
 
         return isRedirected;
@@ -190,7 +190,7 @@ public class BranchSearchContent implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(canonicalUrl_);
+        dest.writeString(canonicalId_);
         dest.writeString(packageName_);
         dest.writeString(contentTitle_);
         dest.writeString(contentDescription_);
@@ -202,7 +202,7 @@ public class BranchSearchContent implements Parcelable {
 
     private BranchSearchContent(Parcel in) {
         this();
-        canonicalUrl_ = in.readString();
+        canonicalId_ = in.readString();
         packageName_ = in.readString();
         contentTitle_ = in.readString();
         contentDescription_ = in.readString();

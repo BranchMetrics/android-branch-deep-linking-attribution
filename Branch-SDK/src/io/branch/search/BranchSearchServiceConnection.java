@@ -68,6 +68,25 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         }
     }
 
+    /**
+     * Add the user interaction event to the on-device index that will then later be used to influence
+     * search ranking
+     * @param contentBUO The content BUO to be added to the index
+     * @param packageName The application that this content belongs to
+     * @param userAction The user interaction event
+     * @param contentUrl The deeplink url to open the piece of content.
+     */
+    public void addUserInteraction(BranchUniversalObject contentBUO, String packageName, String userAction, String contentUrl) {
+        Log.d("Bridge_test", "addUserInteraction");
+        if (branchSearchServiceInterface_ != null) {
+            try {
+                branchSearchServiceInterface_.addUserInteraction(contentBUO, packageName, userAction, contentUrl);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public boolean getContentForKey(String key, int offset, int limit, Branch.IBranchSearchEvents callback) {
         boolean isServiceConnected = false;
         searchEvents_ = callback;

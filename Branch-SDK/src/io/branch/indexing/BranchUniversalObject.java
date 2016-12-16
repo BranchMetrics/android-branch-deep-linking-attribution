@@ -284,6 +284,8 @@ public class BranchUniversalObject implements Parcelable {
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
+        /* Add the user interaction to the on-device index */
+        addUserInteraction(action);
     }
 
     /**
@@ -309,6 +311,10 @@ public class BranchUniversalObject implements Parcelable {
             if (Branch.getInstance() != null) {
                 Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
+
+            /* Add the user interaction to the on-device index */
+            addUserInteraction(action);
+
         } catch (JSONException ignore) {
         }
     }
@@ -923,4 +929,7 @@ public class BranchUniversalObject implements Parcelable {
         Branch.getInstance().addToSharedContent(this);
     }
 
+    public void addUserInteraction(String userAction) {
+        Branch.getInstance().addUserInteraction(this, userAction);
+    }
 }
