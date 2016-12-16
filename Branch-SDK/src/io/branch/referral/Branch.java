@@ -3311,6 +3311,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchSearchServiceConnection_.getContentForKey(keyword, offset, limit, callback);
     }
 
+    public void addUserInteraction(BranchUniversalObject branchUniversalObject, String userAction) {
+        // The url that will be used to open this piece of content
+        String deeplinkUrl = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
+        String packageName = context_.getPackageName();
+        branchSearchServiceConnection_.addUserInteraction(branchUniversalObject, packageName, userAction, deeplinkUrl);
+    }
+
     public interface IBranchSearchEvents {
         void onSearchResult(int offset, int limit, String searchKeyWord, List<BranchSearchContent> searchResults);
     }
