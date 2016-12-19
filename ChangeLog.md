@@ -1,5 +1,9 @@
 Branch Android SDK change log
 
+- v2.5.4 Fix to better register opens/installs. Added enableTestMode/disableTestMode static functions.
+
+- v2.5.3 Fix to disable FB app link check by default.
+
 - v2.5.2 Fix for Android/iOS link-click compatibility when used with BUO. Fixed doc formatting for latest Android Studio version.
 
 - v2.5.1 Fix for init session not being called when used from onCreate().
