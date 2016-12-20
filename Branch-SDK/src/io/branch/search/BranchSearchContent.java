@@ -65,6 +65,15 @@ public class BranchSearchContent implements Parcelable {
         contentUrl_ = contentUrl;
     }
 
+    public BranchSearchContent(String title, String desc, String imgUrl, String packageName, int resultPriority, String contentUrl) {
+        contentTitle_ = title;
+        contentDescription_ = desc;
+        contentImageUrl_ = imgUrl;
+        packageName_ = packageName;
+        resultPriority_ = resultPriority;
+        contentUrl_ = contentUrl;
+    }
+
     private BranchSearchContent() {
 
     }
@@ -186,6 +195,7 @@ public class BranchSearchContent implements Parcelable {
         dest.writeString(contentTitle_);
         dest.writeString(contentDescription_);
         dest.writeString(contentImageUrl_);
+        dest.writeString(contentUrl_);
         dest.writeInt(resultPriority_);
         dest.writeParcelable(buo_, 0);
     }
@@ -197,6 +207,7 @@ public class BranchSearchContent implements Parcelable {
         contentTitle_ = in.readString();
         contentDescription_ = in.readString();
         contentImageUrl_ = in.readString();
+        contentUrl_ = in.readString();
         resultPriority_ = in.readInt();
         buo_ = in.readParcelable(BranchSearchContent.class.getClassLoader());
     }
