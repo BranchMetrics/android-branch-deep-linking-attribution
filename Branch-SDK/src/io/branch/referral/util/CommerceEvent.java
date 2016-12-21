@@ -11,6 +11,7 @@ import java.util.List;
  * Created by Evan Groth on 12/21/16.
  */
 public class CommerceEvent {
+    private static final int DECIMAL_PLACES = 2;
     public BigDecimal revenue;
     public String currency;
     public String transactionID;
@@ -32,11 +33,11 @@ public class CommerceEvent {
     }
 
     public CommerceEvent(BigDecimal revenue, String currency, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, List<Product> products) {
-        this.revenue = revenue;
+        this.revenue = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
         this.currency = currency;
         this.transactionID = transactionID;
-        this.shipping = shipping;
-        this.tax = tax;
+        this.shipping = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
+        this.tax = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
         this.coupon = coupon;
         this.affiliation = affiliation;
         this.products = products;

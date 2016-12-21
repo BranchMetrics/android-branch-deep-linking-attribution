@@ -10,6 +10,7 @@ import java.math.BigDecimal;
  */
 
 public class Product {
+    private static final int DECIMAL_PLACES = 2;
     public String sku;
     public String name;
     public BigDecimal price;
@@ -21,7 +22,7 @@ public class Product {
     public Product() {
         this.sku = "";
         this.name = "";
-        this.price = new BigDecimal(0.0);
+        this.price = new BigDecimal(0).setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
         this.quantity = 0;
         this.brand = "";
         this.category = "";
@@ -31,7 +32,7 @@ public class Product {
     public Product(String sku, String name, BigDecimal price, int quantity, String brand, String category, String variant) {
         this.sku = sku;
         this.name = name;
-        this.price = price;
+        this.price = price.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
         this.quantity = quantity;
         this.brand = brand;
         this.category = category;
