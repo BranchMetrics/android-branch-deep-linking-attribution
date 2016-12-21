@@ -337,20 +337,7 @@ public class MainActivity extends Activity {
             }
         }, this.getIntent().getData(), this);
 
-        sendCommerceEvent();
-
     }
-
-    private void sendCommerceEvent() {
-        Branch branch = Branch.getInstance();
-        Product product = new Product("acme007", "Acme brand 1 ton weight", new BigDecimal(1000.99), 1, "Acme", "Widgets", "Lite Weight" );
-        CommerceEvent commerceEvent = new CommerceEvent(new BigDecimal(1101.99), "Smackeroos", "tr00x8", new BigDecimal(100.00), new BigDecimal(1.0),
-                "Acme weights coupon", "ACME by Amazon", product);
-        JSONObject jsonObject = new JSONObject();
-        try { jsonObject.put("metakey", "metavalue"); } catch ( JSONException e ) {}
-        branch.sendCommerceEvent(commerceEvent, jsonObject, null);
-    }
-
 
     @Override
     public void onNewIntent(Intent intent) {
