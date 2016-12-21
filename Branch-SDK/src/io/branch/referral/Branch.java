@@ -49,6 +49,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
+import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -1732,6 +1733,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             metadata = BranchUtil.filterOutBadCharacters(metadata);
         }
         ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata, callback);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
+    }
+
+    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject
+            metadata, BranchViewHandler.IBranchViewEvents callback) {
+        if (metadata != null) {
+            metadata = BranchUtil.filterOutBadCharacters(metadata);
+        }
+        ServerRequest req = new ServerRequestRActionCompleted(context_, commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }

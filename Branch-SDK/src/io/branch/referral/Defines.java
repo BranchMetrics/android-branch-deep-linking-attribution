@@ -31,6 +31,7 @@ public class Defines {
         Expiration("expiration"),
         Event("event"),
         Metadata("metadata"),
+        CommerceData("commerce_data"),
         ReferralCode("referral_code"),
         Total("total"),
         Unique("unique"),

@@ -12,6 +12,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -19,8 +21,10 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.Product;
 import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
@@ -333,6 +337,18 @@ public class MainActivity extends Activity {
             }
         }, this.getIntent().getData(), this);
 
+        sendCommerceEvent();
+
+    }
+
+    private void sendCommerceEvent() {
+        branch = Branch.getInstance();
+        Product product = new Product("acme007", "Acme brand 1 ton weight", new BigDecimal(1000.99), 1, "Acme", "Widgets", "Lite Weight" );
+        CommerceEvent commerceEvent = new CommerceEvent(new BigDecimal(1101.99), "Smackeroos", "tr00x8", new BigDecimal(100.00), new BigDecimal(1.0),
+                "Acme weights coupon", "ACME by Amazon", product);
+        JSONObject jsonObject = new JSONObject();
+        try { jsonObject.put("metakey", "metavalue"); } catch ( JSONException e ) {}
+        branch.sendCommerceEvent(commerceEvent, jsonObject, null);
     }
 
 
