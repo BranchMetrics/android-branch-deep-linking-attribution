@@ -18,4 +18,5 @@ public class BranchEvent {
     public static final String CANONICAL_ID_LIST = "$canonical_identifier_list";
     public static final String PURCHASE_AMOUNT = "$amount";
     public static final String PURCHASE_CURRENCY = "$currency";
+    public static final String ADD_TO_FAVORITE = "Add to Favorite";
 }
