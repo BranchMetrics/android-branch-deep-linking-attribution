@@ -2421,7 +2421,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
-        void onChannelSelected(String channelName);
+        void onChannelSelected(String channelName, Branch.ShareLinkBuilder builder);
     }
 
     /**

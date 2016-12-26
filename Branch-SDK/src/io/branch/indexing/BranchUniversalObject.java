@@ -915,9 +915,9 @@ public class BranchUniversalObject implements Parcelable {
         }
 
         @Override
-        public void onChannelSelected(String channelName) {
+        public void onChannelSelected(String channelName, Branch.ShareLinkBuilder builder) {
             if (originalCallback_ != null) {
-                originalCallback_.onChannelSelected(channelName);
+                originalCallback_.onChannelSelected(channelName, builder);
             }
         }
     }

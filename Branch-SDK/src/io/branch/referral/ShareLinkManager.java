@@ -190,7 +190,7 @@ class ShareLinkManager {
                         if (view.getTag() != null && context_ != null && ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()) != null) {
                             selectedChannelName = ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString();
                         }
-                        callback_.onChannelSelected(selectedChannelName);
+                        callback_.onChannelSelected(selectedChannelName, builder_);
                     }
                     adapter.selectedPos = pos;
                     adapter.notifyDataSetChanged();
