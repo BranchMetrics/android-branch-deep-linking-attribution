@@ -13,7 +13,7 @@ import java.util.List;
 public class CommerceEvent {
     private static final int DECIMAL_PLACES = 2;
     public BigDecimal revenue;
-    public String currency;
+    public CurrencyType currencyType;
     public String transactionID;
     public BigDecimal shipping;
     public BigDecimal tax;
@@ -23,7 +23,7 @@ public class CommerceEvent {
 
     public CommerceEvent() {
         this.revenue = new BigDecimal(0);
-        this.currency = "";
+        this.currencyType = CurrencyType.USD;
         this.transactionID = "";
         this.shipping = new BigDecimal(0);
         this.tax = new BigDecimal(0);
@@ -32,9 +32,9 @@ public class CommerceEvent {
         this.products = new ArrayList<>();
     }
 
-    public CommerceEvent(BigDecimal revenue, String currency, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, List<Product> products) {
+    public CommerceEvent(BigDecimal revenue, CurrencyType currencyType, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, List<Product> products) {
         this.revenue = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
-        this.currency = currency;
+        this.currencyType = currencyType;
         this.transactionID = transactionID;
         this.shipping = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
         this.tax = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
@@ -43,9 +43,9 @@ public class CommerceEvent {
         this.products = products;
     }
 
-    public CommerceEvent(BigDecimal revenue, String currency, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, Product product) {
+    public CommerceEvent(BigDecimal revenue, CurrencyType currencyType, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, Product product) {
         this.revenue = revenue;
-        this.currency = currency;
+        this.currencyType = currencyType;
         this.transactionID = transactionID;
         this.shipping = shipping;
         this.tax = tax;
@@ -59,7 +59,7 @@ public class CommerceEvent {
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("revenue", this.revenue);
-            jsonObject.put("currency", this.currency);
+            jsonObject.put("currency", this.currencyType);
             jsonObject.put("transactionID", this.transactionID);
             jsonObject.put("shipping", this.shipping);
             jsonObject.put("tax", this.tax);
