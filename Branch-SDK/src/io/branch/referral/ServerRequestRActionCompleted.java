@@ -42,11 +42,12 @@ class ServerRequestRActionCompleted extends ServerRequest {
                 post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
             post.put(Defines.Jsonkey.Event.getKey(), "purchase");
-            if (metadata != null)
+            if (metadata != null) {
                 post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
-            if (commerceEvent != null)
+            }
+            if (commerceEvent != null) {
                 post.put(Defines.Jsonkey.CommerceData.getKey(), commerceEvent.getCommerceJSONObject());
-
+            }
             setPost(post);
         } catch (JSONException ex) {
             ex.printStackTrace();
