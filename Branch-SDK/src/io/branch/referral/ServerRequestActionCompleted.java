@@ -48,6 +48,10 @@ class ServerRequestActionCompleted extends ServerRequest {
             ex.printStackTrace();
             constructError_ = true;
         }
+
+        if (action != null && action.equals("purchase")) {
+            Log.e("BranchSDK", "Warning: You are sending a purchase event with our non-dedicated purchase function. Please see function sendCommerceEvent");
+        }
     }
 
     public ServerRequestActionCompleted(String requestPath, JSONObject post, Context context) {
