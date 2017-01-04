@@ -25,13 +25,13 @@ public enum ProductCategory {
     SOFTWARE("Software"),
     SPORTING_GOODS("Sporting Goods"),
     TOYS_AND_GAMES("Toys & Games"),
-    VEHICLES_AND_PARTS("Vehicles & Parts"),
-    NO_CATEGORY("no_category");
-
+    VEHICLES_AND_PARTS("Vehicles & Parts");
     private String type;
+
     ProductCategory(String type) {
         this.type = type;
     }
+
     @Override
     public String toString() {
         return type;

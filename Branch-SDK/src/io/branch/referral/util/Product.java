@@ -28,7 +28,7 @@ public class Product {
         this.brand = "";
         this.category = "";
         this.variant = "";
-        this.productCategory = ProductCategory.NO_CATEGORY;
+        this.productCategory = null;
     }
 
     public Product(String sku, String name, BigDecimal price, int quantity, String brand, String category, String variant, ProductCategory productCategory) {
