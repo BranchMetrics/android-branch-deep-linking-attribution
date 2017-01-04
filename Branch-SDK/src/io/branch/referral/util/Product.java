@@ -3,17 +3,14 @@ package io.branch.referral.util;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.math.BigDecimal;
-
 /**
  * Created by Evan Groth on 12/21/16.
  */
 
 public class Product {
-    private static final int DECIMAL_PLACES = 2;
     public String sku;
     public String name;
-    public BigDecimal price;
+    public Double price;
     public int quantity;
     public String brand;
     public String category;
@@ -23,7 +20,7 @@ public class Product {
     public Product() {
         this.sku = "";
         this.name = "";
-        this.price = new BigDecimal(0).setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
+        this.price = 0.0;
         this.quantity = 0;
         this.brand = "";
         this.category = "";
@@ -31,10 +28,10 @@ public class Product {
         this.productCategory = null;
     }
 
-    public Product(String sku, String name, BigDecimal price, int quantity, String brand, String category, String variant, ProductCategory productCategory) {
+    public Product(String sku, String name, Double price, int quantity, String brand, String category, String variant, ProductCategory productCategory) {
         this.sku = sku;
         this.name = name;
-        this.price = price.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
+        this.price = price;
         this.quantity = quantity;
         this.brand = brand;
         this.category = category;
