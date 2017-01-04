@@ -18,6 +18,7 @@ public class Product {
     public String brand;
     public String category;
     public String variant;
+    public ProductCategory productCategory;
 
     public Product() {
         this.sku = "";
@@ -27,9 +28,10 @@ public class Product {
         this.brand = "";
         this.category = "";
         this.variant = "";
+        this.productCategory = ProductCategory.NO_CATEGORY;
     }
 
-    public Product(String sku, String name, BigDecimal price, int quantity, String brand, String category, String variant) {
+    public Product(String sku, String name, BigDecimal price, int quantity, String brand, String category, String variant, ProductCategory productCategory) {
         this.sku = sku;
         this.name = name;
         this.price = price.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
@@ -37,6 +39,7 @@ public class Product {
         this.brand = brand;
         this.category = category;
         this.variant = variant;
+        this.productCategory = productCategory;
     }
 
     public JSONObject getProductJSONObject() {
@@ -49,6 +52,7 @@ public class Product {
             jsonObject.put("brand", this.brand);
             jsonObject.put("category", this.category);
             jsonObject.put("variant", this.variant);
+            jsonObject.put("productCategory", this.productCategory);
         } catch (JSONException e) {
 
         }
