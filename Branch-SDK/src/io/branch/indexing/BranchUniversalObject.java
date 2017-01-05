@@ -925,7 +925,7 @@ public class BranchUniversalObject implements Parcelable {
 
     //----------App Bridge---------------//
 
-    public void addToSharableContent(){
+    public void listOnLocalIndex() {
         Branch.getInstance().addToSharedContent(this);
     }
 
