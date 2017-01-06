@@ -166,7 +166,7 @@ class ShareLinkManager {
             textView.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
             textView.setTextColor(context_.getResources().getColor(android.R.color.darker_gray));
             textView.setPadding(leftMargin, padding, padding, padding);
-            shareOptionListView.addHeaderView(textView);
+            shareOptionListView.addHeaderView(textView, null, false);
         }
 
         shareOptionListView.setAdapter(adapter);
