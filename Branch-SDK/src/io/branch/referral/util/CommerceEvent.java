@@ -20,6 +20,66 @@ public class CommerceEvent {
     public String affiliation;
     public List<Product> products;
 
+    public Double getRevenue() {
+        return revenue;
+    }
+
+    public void setRevenue(Double revenue) {
+        this.revenue = revenue;
+    }
+
+    public CurrencyType getCurrencyType() {
+        return currencyType;
+    }
+
+    public void setCurrencyType(CurrencyType currencyType) {
+        this.currencyType = currencyType;
+    }
+
+    public String getTransactionID() {
+        return transactionID;
+    }
+
+    public void setTransactionID(String transactionID) {
+        this.transactionID = transactionID;
+    }
+
+    public Double getShipping() {
+        return shipping;
+    }
+
+    public void setShipping(Double shipping) {
+        this.shipping = shipping;
+    }
+
+    public Double getTax() {
+        return tax;
+    }
+
+    public void setTax(Double tax) {
+        this.tax = tax;
+    }
+
+    public String getCoupon() {
+        return coupon;
+    }
+
+    public void setCoupon(String coupon) {
+        this.coupon = coupon;
+    }
+
+    public String getAffiliation() {
+        return affiliation;
+    }
+
+    public void setAffiliation(String affiliation) {
+        this.affiliation = affiliation;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
     public CommerceEvent() {
         this.revenue = 0.0;
         this.currencyType = CurrencyType.USD;
@@ -65,7 +125,7 @@ public class CommerceEvent {
             jsonObject.put("coupon", this.coupon);
             jsonObject.put("affiliation", this.affiliation);
             jsonObject.put("products", getProducts());
-        } catch ( JSONException e ) {
+        } catch (JSONException e) {
 
         }
 
@@ -74,7 +134,7 @@ public class CommerceEvent {
 
     public List<JSONObject> getProducts() {
         List<JSONObject> products = new ArrayList<>();
-        for ( Product p : this.products ) {
+        for (Product p : this.products) {
             products.add(p.getProductJSONObject());
         }
         return products;
