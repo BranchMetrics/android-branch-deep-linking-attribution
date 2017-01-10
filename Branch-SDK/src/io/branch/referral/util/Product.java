@@ -28,13 +28,12 @@ public class Product {
         this.productCategory = null;
     }
 
-    public Product(String sku, String name, Double price, int quantity, String brand, String category, String variant, ProductCategory productCategory) {
+    public Product(String sku, String name, Double price, int quantity, String brand, String variant, ProductCategory productCategory) {
         this.sku = sku;
         this.name = name;
         this.price = price;
         this.quantity = quantity;
         this.brand = brand;
-        this.category = category;
         this.variant = variant;
         this.productCategory = productCategory;
     }
@@ -47,9 +46,8 @@ public class Product {
             jsonObject.put("price", this.price);
             jsonObject.put("quantity", this.quantity);
             jsonObject.put("brand", this.brand);
-            jsonObject.put("category", this.category);
             jsonObject.put("variant", this.variant);
-            jsonObject.put("productCategory", this.productCategory);
+            jsonObject.put("category", this.productCategory);
         } catch (JSONException e) {
 
         }

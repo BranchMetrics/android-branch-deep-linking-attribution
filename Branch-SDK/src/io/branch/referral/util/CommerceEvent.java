@@ -11,39 +11,38 @@ import java.util.List;
  * Created by Evan Groth on 12/21/16.
  */
 public class CommerceEvent {
-    private static final int DECIMAL_PLACES = 2;
-    public BigDecimal revenue;
+    public Double revenue;
     public CurrencyType currencyType;
     public String transactionID;
-    public BigDecimal shipping;
-    public BigDecimal tax;
+    public Double shipping;
+    public Double tax;
     public String coupon;
     public String affiliation;
     public List<Product> products;
 
     public CommerceEvent() {
-        this.revenue = new BigDecimal(0);
+        this.revenue = 0.0;
         this.currencyType = CurrencyType.USD;
         this.transactionID = "";
-        this.shipping = new BigDecimal(0);
-        this.tax = new BigDecimal(0);
+        this.shipping = 0.0;
+        this.tax = 0.0;
         this.coupon = "";
         this.affiliation = "";
         this.products = new ArrayList<>();
     }
 
-    public CommerceEvent(BigDecimal revenue, CurrencyType currencyType, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, List<Product> products) {
-        this.revenue = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
+    public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, List<Product> products) {
+        this.revenue = revenue;
         this.currencyType = currencyType;
         this.transactionID = transactionID;
-        this.shipping = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
-        this.tax = revenue.setScale(DECIMAL_PLACES, BigDecimal.ROUND_HALF_UP);
+        this.shipping = shipping;
+        this.tax = tax;
         this.coupon = coupon;
         this.affiliation = affiliation;
         this.products = products;
     }
 
-    public CommerceEvent(BigDecimal revenue, CurrencyType currencyType, String transactionID, BigDecimal shipping, BigDecimal tax, String coupon, String affiliation, Product product) {
+    public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, Product product) {
         this.revenue = revenue;
         this.currencyType = currencyType;
         this.transactionID = transactionID;
