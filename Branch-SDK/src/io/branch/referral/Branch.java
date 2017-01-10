@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -388,6 +389,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
+    private final int LATCH_WAIT_UNTIL = 10000;
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1756,7 +1758,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>Returns the parameters associated with the link that referred the session. If a user
-     * clicks a link, and then opens the app, initSession will return the paramters of the link
+     * clicks a link, and then opens the app, initSession will return the parameters of the link
      * and then set them in as the latest parameters to be retrieved by this method. By default,
      * sessions persist for the duration of time that the app is in focus. For example, if you
      * minimize the app, these parameters will be cleared when closeSession is called.</p>
@@ -1768,6 +1770,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
         latestParams = appendDebugParams(latestParams);
+        return latestParams;
+    }
+
+    private CountDownLatch latch = null;
+    public JSONObject getLatestReferringParamsSync() {
+        latch = new CountDownLatch(1);
+        try {
+            if (initState_ != SESSION_STATE.INITIALISED) latch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+        }
+        String storedParam = prefHelper_.getSessionParams();
+        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
+        latestParams = appendDebugParams(latestParams);
+        latch = null;
         return latestParams;
     }
 
@@ -2632,12 +2648,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 if (thisReq_ instanceof ServerRequestInitSession) {
                                     initState_ = SESSION_STATE.INITIALISED;
                                     // Publish success to listeners
-                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
                                     if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
 
+                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                    // Count down the latch holding getLatestReferringParamsSync
+                                    if ( latch != null ) latch.countDown();
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);

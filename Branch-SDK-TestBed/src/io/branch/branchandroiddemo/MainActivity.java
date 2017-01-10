@@ -2,6 +2,7 @@ package io.branch.branchandroiddemo;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -240,7 +241,7 @@ public class MainActivity extends Activity {
                         .setFeature("mySharefeature2")
                         .setStage("10")
                         .setCampaign("Android campaign")
-                        .addControlParameter("$android_deeplink_path", "custom/path/*")
+                        //.addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
 
@@ -306,11 +307,13 @@ public class MainActivity extends Activity {
 
     }
 
+
+
     @Override
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-
+        testSyncFunc();
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
@@ -332,7 +335,6 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
-
     }
 
 
@@ -351,6 +353,23 @@ public class MainActivity extends Activity {
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
             startActivity(i);
+        }
+    }
+
+    private void testSyncFunc() {
+        new GetLatestReferringParamsTask().execute();
+    }
+
+    private class GetLatestReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
+        @Override
+        protected JSONObject doInBackground(Void... params) {
+            return Branch.getInstance().getLatestReferringParamsSync();
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+            super.onPostExecute(jsonObject);
+            Log.d("BranchSDK", "onPostExecuteSync: " + jsonObject.toString());
         }
     }
 }
