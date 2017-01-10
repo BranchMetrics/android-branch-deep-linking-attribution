@@ -8,14 +8,14 @@ import org.json.JSONObject;
  */
 
 public class Product {
-    public String sku;
-    public String name;
-    public Double price;
-    public int quantity;
-    public String brand;
-    public String category;
-    public String variant;
-    public ProductCategory productCategory;
+    private String sku;
+    private String name;
+    private Double price;
+    private int quantity;
+    private String brand;
+    private String category;
+    private String variant;
+    private ProductCategory productCategory;
 
     public String getSku() {
         return sku;

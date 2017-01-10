@@ -11,14 +11,14 @@ import java.util.List;
  * Created by Evan Groth on 12/21/16.
  */
 public class CommerceEvent {
-    public Double revenue;
-    public CurrencyType currencyType;
-    public String transactionID;
-    public Double shipping;
-    public Double tax;
-    public String coupon;
-    public String affiliation;
-    public List<Product> products;
+    private Double revenue;
+    private CurrencyType currencyType;
+    private String transactionID;
+    private Double shipping;
+    private Double tax;
+    private String coupon;
+    private String affiliation;
+    private List<Product> products;
 
     public Double getRevenue() {
         return revenue;
