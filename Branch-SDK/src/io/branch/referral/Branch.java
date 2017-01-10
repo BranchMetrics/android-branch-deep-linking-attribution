@@ -2655,7 +2655,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     // Count down the latch holding getLatestReferringParamsSync
-                                    if ( latch != null ) latch.countDown();
+                                    if ( latch != null ) {
+                                        latch.countDown();
+                                    }
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
