@@ -157,7 +157,7 @@ class ShareLinkManager {
         shareOptionListView.setBackgroundColor(Color.WHITE);
 
         if (builder_.getSharingTitleView() != null) {
-            shareOptionListView.addHeaderView(builder_.getSharingTitleView());
+            shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
         } else if (!TextUtils.isEmpty(builder_.getSharingTitle())) {
             TextView textView = new TextView(context_);
             textView.setText(builder_.getSharingTitle());
@@ -166,7 +166,7 @@ class ShareLinkManager {
             textView.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
             textView.setTextColor(context_.getResources().getColor(android.R.color.darker_gray));
             textView.setPadding(leftMargin, padding, padding, padding);
-            shareOptionListView.addHeaderView(textView);
+            shareOptionListView.addHeaderView(textView, null, false);
         }
 
         shareOptionListView.setAdapter(adapter);
