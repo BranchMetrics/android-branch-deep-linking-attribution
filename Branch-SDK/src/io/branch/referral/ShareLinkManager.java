@@ -157,7 +157,7 @@ class ShareLinkManager {
         shareOptionListView.setBackgroundColor(Color.WHITE);
 
         if (builder_.getSharingTitleView() != null) {
-            shareOptionListView.addHeaderView(builder_.getSharingTitleView());
+            shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
         } else if (!TextUtils.isEmpty(builder_.getSharingTitle())) {
             TextView textView = new TextView(context_);
             textView.setText(builder_.getSharingTitle());
