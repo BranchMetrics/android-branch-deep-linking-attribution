@@ -123,7 +123,7 @@ class BranchStrongMatchHelper {
                     }
                 } else {
                     updateStrongMatchCheckFinished(callback);
-                    Log.d("BranchSDK", "Cannot use cookie-based matching while setDebug is enabled");
+                    Log.d("BranchSDK", "Cannot use cookie-based matching while TestMode is enabled");
                 }
             } catch (Throwable ignore) {
                 updateStrongMatchCheckFinished(callback);
