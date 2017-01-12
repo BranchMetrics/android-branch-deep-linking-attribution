@@ -389,6 +389,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
+    /* List of keys whose values are collected from the Intent Extra.*/
+    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[] {
+            "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
+    };
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1290,11 +1295,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                             if (extraKeys.size() > 0) {
                                 JSONObject extrasJson = new JSONObject();
-                                for (String key : extraKeys) {
-                                    extrasJson.put(key, bundle.get(key));
-
+                                for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
+                                    if (extraKeys.contains(key)) {
+                                        extrasJson.put(key, bundle.get(key));
+                                    }
                                 }
-                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                                if (extrasJson.length() > 0) {
+                                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                                }
                             }
                         }
                     }
