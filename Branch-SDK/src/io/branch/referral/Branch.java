@@ -389,7 +389,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
     /* List of keys whose values are collected from the Intent Extra.*/
-    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[]{
+    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[] {
             "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
     };
 
