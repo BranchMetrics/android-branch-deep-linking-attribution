@@ -65,7 +65,7 @@ public class InstallListener extends BroadcastReceiver {
         return installID_;
     }
 
-    public static String getGoogleSearchInstallReferrerID_() {
+    public static String getGoogleSearchInstallReferrerID() {
         return googleSearchInstallReferrerID_;
     }
 }
