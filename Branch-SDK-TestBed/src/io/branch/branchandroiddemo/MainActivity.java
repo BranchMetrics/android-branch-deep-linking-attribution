@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
+import java.util.Random;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -25,6 +26,7 @@ import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.Product;
+import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
@@ -54,7 +56,7 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setContentType("application/vnd.businessobjects")
-                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .setPrice(5.00, CurrencyType.USD)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
@@ -239,7 +241,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                                //.setAlias("mylinkName") // In case you need to white label your link
+                        //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -313,6 +315,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+
         branch = Branch.getInstance();
 
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
@@ -336,12 +339,84 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
-
+        sendCommerceEvent();
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         this.setIntent(intent);
+    }
+
+    private void sendCommerceEvent() {
+//    ANIMALS_AND_PET_SUPPLIES("Animals & Pet Supplies"),
+//    APPAREL_AND_ACCESSORIES("Apparel & Accessories"),
+//    ARTS_AND_ENTERTAINMENT("Arts & Entertainment"),
+//    BABY_AND_TODDLER("Baby & Toddler"),
+//    BUSINESS_AND_INDUSTRIAL("Business & Industrial"),
+//    CAMERA_AND_OPTICS("Camera & Optics"),
+//    ELECTRONICS("Electronics"),
+//    FOOD_BEVERAGE_AND_TOBACCO("Food, Beverage & Tobacco"),
+//    FURNITURE("Furniture"),
+//    HARDWARE("Hardware"),
+//    HEALTH_AND_BEAUTY("Health & Beauty"),
+//    HOME_AND_GARDEN("Home & Garden"),
+//    LUGGAGE_AND_BAGS("Luggage & Bags"),
+//    MATURE("mature"),
+//    MEDIA("media"),
+//    OFFICE_SUPPLIES("Office Supplies"),
+//    RELIGIOUS_AND_CEREMONIAL("Religious & Ceremonial"),
+//    SOFTWARE("Software"),
+//    SPORTING_GOODS("Sporting Goods"),
+//    TOYS_AND_GAMES("Toys & Games"),
+//    VEHICLES_AND_PARTS("Vehicles & Parts");
+        Random rnd = new Random(System.currentTimeMillis());
+        Branch branch = Branch.getInstance();
+        Product product = new Product("acme007", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.ANIMALS_AND_PET_SUPPLIES);
+        Product product2 = new Product("acme008", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.APPAREL_AND_ACCESSORIES);
+        Product product3 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.ARTS_AND_ENTERTAINMENT);
+        Product product4 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.BABY_AND_TODDLER);
+        Product product5 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.BUSINESS_AND_INDUSTRIAL);
+        Product product6 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.CAMERA_AND_OPTICS);
+        Product product7 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.ELECTRONICS);
+        Product product8 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.FOOD_BEVERAGE_AND_TOBACCO);
+        Product product9 = new Product("acme009", "Acme brand 1 ton weight", 1.01, rnd.nextInt(500), "Acme", "uh", ProductCategory.FURNITURE);
+        Product product10 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.HARDWARE);
+        Product product11 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.HEALTH_AND_BEAUTY);
+        Product product12 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.HOME_AND_GARDEN);
+        Product product13 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.LUGGAGE_AND_BAGS);
+        Product product14 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.MATURE);
+        Product product15 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.MEDIA);
+        Product product16 = new Product("acme009", "Acme brand 1 ton weight", 1.10, rnd.nextInt(500), "Acme", "uh", ProductCategory.OFFICE_SUPPLIES);
+        //Product product17 = new Product("acme009", "Acme brand 1 ton weight", 1.0, rnd.nextInt(500), "Acme", "uh", ProductCategory.RELIGIOUS_AND_CEREMONIAL);
+        //Product product18 = new Product("acme009", "Acme brand 1 ton weight", 1.0, rnd.nextInt(500), "Acme", "uh", ProductCategory.SOFTWARE);
+        //Product product19 = new Product("acme009", "Acme brand 1 ton weight", 1.0, rnd.nextInt(500), "Acme", "uh", ProductCategory.SPORTING_GOODS);
+        //Product product20 = new Product("acme009", "Acme brand 1 ton weight", 1.0, rnd.nextInt(500), "Acme", "uh", ProductCategory.TOYS_AND_GAMES);
+        //Product product21 = new Product("acme009", "Acme brand 1 ton weight", 1.0, rnd.nextInt(500), "Acme", "uh", ProductCategory.VEHICLES_AND_PARTS);
+        CommerceEvent commerceEvent = new CommerceEvent(1101.99, CurrencyType.USD, "tr00x8", 100.25, 1.632,
+                "Acme weights coupon", "ACME by Amazon", product);
+        commerceEvent.addProduct(product2);
+        commerceEvent.addProduct(product3);
+        commerceEvent.addProduct(product4);
+        commerceEvent.addProduct(product5);
+        commerceEvent.addProduct(product6);
+        commerceEvent.addProduct(product7);
+        commerceEvent.addProduct(product8);
+        commerceEvent.addProduct(product9);
+        commerceEvent.addProduct(product10);
+        commerceEvent.addProduct(product11);
+        commerceEvent.addProduct(product12);
+        commerceEvent.addProduct(product13);
+        commerceEvent.addProduct(product14);
+        commerceEvent.addProduct(product15);
+        commerceEvent.addProduct(product16);
+        //commerceEvent.addProduct(product17);
+        //commerceEvent.addProduct(product18);
+        //commerceEvent.addProduct(product19);
+        //commerceEvent.addProduct(product20);
+        //commerceEvent.addProduct(product21);
+        JSONObject jsonObject = new JSONObject();
+        try { jsonObject.put("metakey", "metavalue"); } catch ( JSONException e ) {}
+        branch.sendCommerceEvent(commerceEvent, jsonObject, null);
     }
 
     @Override
