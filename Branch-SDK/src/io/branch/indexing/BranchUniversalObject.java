@@ -568,7 +568,8 @@ public class BranchUniversalObject implements Parcelable {
                     .setCallback(new LinkShareListenerWrapper(callback))
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
-                    .setMessage(style.getMessageBody());
+                    .setMessage(style.getMessageBody())
+                    .setImageUrl(getImageUrl());
 
             if (style.getCopyUrlIcon() != null) {
                 shareLinkBuilder.setCopyUrlStyle(style.getCopyUrlIcon(), style.getCopyURlText(), style.getUrlCopiedMessage());

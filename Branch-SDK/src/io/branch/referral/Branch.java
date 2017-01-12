@@ -2459,6 +2459,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * @return {@link String} with value for the message body for sharing the link with the selected channel
          */
         String getSharingMessageForChannel(String channel);
+
     }
 
     /**
@@ -2841,6 +2842,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private final Activity activity_;
         private final Branch branch_;
 
+        private String imageUrl_;
         private String shareMsg_;
         private String shareSub_;
         private Branch.BranchLinkShareListener callback_ = null;
@@ -2882,6 +2884,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } catch (Exception ignore) {
             }
+
+            imageUrl_ = "";
             shareMsg_ = "";
             callback_ = null;
             channelPropertiesCallback_ = null;
@@ -2917,6 +2921,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public ShareLinkBuilder setMessage(String message) {
             this.shareMsg_ = message;
             return this;
+        }
+
+        /**
+         * <p>Sets the image url to be shared with the link for platforms that require images for sharing.</p>
+         *
+         * @param imageUrl A {@link String} to be shared with the link
+         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
+         */
+        public ShareLinkBuilder setImageUrl(String imageUrl) {
+            this.imageUrl_ = imageUrl;
+            return this;
+        }
+
+        public String getImageUrl() {
+            return imageUrl_;
         }
 
         /**
