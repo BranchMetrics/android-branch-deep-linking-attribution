@@ -8,12 +8,14 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.referral.util.CommerceEvent;
+
 /**
  * <p>
  * The server request for Action completed event. Handles request creation and execution.
  * </p>
  */
-class ServerRequestActionCompleted extends ServerRequest {
+class ServerRequestRActionCompleted extends ServerRequest {
 
     private final BranchViewHandler.IBranchViewEvents callback_;
 
@@ -27,7 +29,7 @@ class ServerRequestActionCompleted extends ServerRequest {
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public ServerRequestActionCompleted(Context context, String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
+    public ServerRequestRActionCompleted(Context context, CommerceEvent commerceEvent, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
         callback_ = callback;
         JSONObject post = new JSONObject();
@@ -39,22 +41,21 @@ class ServerRequestActionCompleted extends ServerRequest {
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            post.put(Defines.Jsonkey.Event.getKey(), action);
-            if (metadata != null)
+            post.put(Defines.Jsonkey.Event.getKey(), "purchase");
+            if (metadata != null) {
                 post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
-
+            }
+            if (commerceEvent != null) {
+                post.put(Defines.Jsonkey.CommerceData.getKey(), commerceEvent.getCommerceJSONObject());
+            }
             setPost(post);
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
         }
-
-        if (action != null && action.equalsIgnoreCase("purchase")) {
-            Log.e("BranchSDK", "Warning: You are sending a purchase event with our non-dedicated purchase function. Please see function sendCommerceEvent");
-        }
     }
 
-    public ServerRequestActionCompleted(String requestPath, JSONObject post, Context context) {
+    public ServerRequestRActionCompleted(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         callback_ = null;
     }
