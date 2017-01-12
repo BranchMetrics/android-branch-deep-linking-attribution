@@ -80,6 +80,10 @@ public class CommerceEvent {
         this.products = products;
     }
 
+    public void addProduct(Product product) {
+        this.products.add(product);
+    }
+
     public CommerceEvent() {
         this.revenue = 0.0;
         this.currencyType = CurrencyType.USD;
