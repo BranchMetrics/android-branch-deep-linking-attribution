@@ -13,6 +13,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -20,8 +22,10 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.Product;
 import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
@@ -340,7 +344,6 @@ public class MainActivity extends Activity {
 
 
     }
-
 
     @Override
     public void onNewIntent(Intent intent) {
