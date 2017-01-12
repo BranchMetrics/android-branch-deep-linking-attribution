@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -389,7 +390,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
-    private final int LATCH_WAIT_UNTIL = 10000;
+    private final int LATCH_WAIT_UNTIL = 4500;
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1756,6 +1757,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return firstReferringParams;
     }
 
+    private CountDownLatch getFirstReferringParamsLatch = null;
+    public JSONObject getFirstReferringParamsSync() {
+        getFirstReferringParamsLatch = new CountDownLatch(1);
+        try {
+            if (initState_ != SESSION_STATE.INITIALISED) getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+        }
+        String storedParam = prefHelper_.getInstallParams();
+        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
+        firstReferringParams = appendDebugParams(firstReferringParams);
+        getFirstReferringParamsLatch = null;
+        return firstReferringParams;
+    }
+
     /**
      * <p>Returns the parameters associated with the link that referred the session. If a user
      * clicks a link, and then opens the app, initSession will return the parameters of the link
@@ -1773,17 +1788,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return latestParams;
     }
 
-    private CountDownLatch latch = null;
+    private CountDownLatch getLatestReferringParamsLatch = null;
     public JSONObject getLatestReferringParamsSync() {
-        latch = new CountDownLatch(1);
+        getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
-            if (initState_ != SESSION_STATE.INITIALISED) latch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            if (initState_ != SESSION_STATE.INITIALISED) getLatestReferringParamsLatch.await();
         } catch (InterruptedException e) {
         }
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
         latestParams = appendDebugParams(latestParams);
-        latch = null;
+        getLatestReferringParamsLatch = null;
         return latestParams;
     }
 
@@ -2655,8 +2670,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     // Count down the latch holding getLatestReferringParamsSync
-                                    if ( latch != null ) {
-                                        latch.countDown();
+                                    if ( getLatestReferringParamsLatch != null ) {
+                                        getLatestReferringParamsLatch.countDown();
+                                    }
+                                    // Count down the latch holding getFirstReferringParamsSync
+                                    if ( getFirstReferringParamsLatch != null ) {
+                                        getFirstReferringParamsLatch.countDown();
                                     }
                                 } else {
                                     // For setting identity just call only request succeeded

@@ -312,8 +312,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        branch = Branch.getInstance();
         testSyncFunc();
+
+
+        branch = Branch.getInstance();
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
@@ -335,6 +337,8 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
+
+
     }
 
 
@@ -358,6 +362,7 @@ public class MainActivity extends Activity {
 
     private void testSyncFunc() {
         new GetLatestReferringParamsTask().execute();
+        new GetFirstReferringParamsTask().execute();
     }
 
     private class GetLatestReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
@@ -369,7 +374,19 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(JSONObject jsonObject) {
             super.onPostExecute(jsonObject);
-            Log.d("BranchSDK", "onPostExecuteSync: " + jsonObject.toString());
+            Log.d("BranchSDK", "GetLatestReferringParamsTask onPostExecuteSync: " + jsonObject.toString());
+        }
+    }
+    private class GetFirstReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
+        @Override
+        protected JSONObject doInBackground(Void... params) {
+            return Branch.getInstance().getFirstReferringParamsSync();
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+            super.onPostExecute(jsonObject);
+            Log.d("BranchSDK", "GetFirstReferringParamsTask onPostExecuteSync: " + jsonObject.toString());
         }
     }
 }
