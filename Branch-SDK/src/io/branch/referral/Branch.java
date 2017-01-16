@@ -1757,6 +1757,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
+        sendCommerceEvent(commerceEvent, null, null);
+    }
+
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
