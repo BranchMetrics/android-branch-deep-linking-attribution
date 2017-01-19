@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +45,10 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
             openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
 
+            if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                openPost.put(Defines.Jsonkey.InstallReferrer.getKey(), prefHelper_.getInstallReferrerParams());
+            }
+
             setPost(openPost);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -65,6 +70,10 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
+
+            //clear out install referrer string
+            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
+
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
                 // If Clicked on a branch link

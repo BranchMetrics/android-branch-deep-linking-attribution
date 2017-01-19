@@ -36,7 +36,7 @@ import java.util.jar.JarFile;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
- * attributes and parameters used by the Branch class, and made publically available for use by
+ * attributes and parameters used by the Branch class, and made publicly available for use by
  * other classes.</p>
  */
 class SystemObserver {

@@ -24,10 +24,12 @@ public class InstallListener extends BroadcastReceiver {
 
     /* Link identifier on installing app from play store. */
     private static String installID_ =  PrefHelper.NO_STRING_VALUE;
+    private static InstallReferrerFetch callback_ = null;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         String rawReferrerString = intent.getStringExtra("referrer");
+        if ( rawReferrerString != null ) Log.d("InstallListener", "InstallListener onReceive: " + rawReferrerString);
         if(rawReferrerString != null) {
             try {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
@@ -43,6 +45,7 @@ public class InstallListener extends BroadcastReceiver {
 
                 if(referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())){
                     installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
+                    callback_.onInstallReferrerFetchFinished(installID_);
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -53,8 +56,15 @@ public class InstallListener extends BroadcastReceiver {
 
         }
     }
-
     public static String getInstallationID(){
         return installID_;
+    }
+
+    public static void setListener(InstallReferrerFetch installReferrerFetch) {
+        callback_ = installReferrerFetch;
+    }
+
+    interface InstallReferrerFetch {
+        void onInstallReferrerFetchFinished(String linkClickId);
     }
 }

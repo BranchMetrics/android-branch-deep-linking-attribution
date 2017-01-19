@@ -38,6 +38,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             }
+            if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                installPost.put(Defines.Jsonkey.InstallReferrer.getKey(), prefHelper_.getInstallReferrerParams());
+            }
 
             // Read and update the URI scheme only if running in debug mode
             if (prefHelper_.getExternDebug()) {
@@ -49,7 +52,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
-
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
             setPost(installPost);
 
@@ -76,6 +78,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         try {
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
 
+            //clear out install referrer string
+            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
+
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
                 // If Clicked on a branch link
@@ -94,11 +99,11 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 }
             }
 
-            if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
-                prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
-            } else {
-                prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
-            }
+//            if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
+//                prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
+//            } else {
+//                prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
+//            }
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());

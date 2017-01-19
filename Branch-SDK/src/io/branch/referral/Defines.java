@@ -112,8 +112,8 @@ public class Defines {
         ContentData("content_data"),
         ContentEvents("events"),
         ContentAnalyticsMode("content_analytics_mode"),
-        ContentDiscovery("cd");
-
+        ContentDiscovery("cd"),
+        InstallReferrer("install_referrer");
         
         private String key = "";
 
