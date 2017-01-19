@@ -372,11 +372,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void testSyncFunc() {
-        //new GetLatestReferringParamsTask().execute();
-        //new GetFirstReferringParamsTask().execute();
-    }
-
     private class GetLatestReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
         @Override
         protected JSONObject doInBackground(Void... params) {
