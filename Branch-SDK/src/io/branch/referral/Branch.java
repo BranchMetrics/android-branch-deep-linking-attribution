@@ -391,7 +391,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
-    private final int LATCH_WAIT_UNTIL = 4500;
+    private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1804,7 +1805,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public JSONObject getLatestReferringParamsSync() {
         getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
-            if (initState_ != SESSION_STATE.INITIALISED) getLatestReferringParamsLatch.await();
+            if (initState_ == SESSION_STATE.INITIALISING) getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
         }
         String storedParam = prefHelper_.getSessionParams();
@@ -2565,10 +2566,32 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 thisReq_.updateGAdsParams(systemObserver_);
             }
 
+            //check if server response is from initcall
+            //get latest params
+            //unlock lack
+
             if (thisReq_.isGetRequest()) {
-                return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
+                ServerResponse response = kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
+                if (response.getStatusCode() == 200 && thisReq_ instanceof ServerRequestInitSession) {
+//                    if (getLatestReferringParamsLatch != null) {
+//                        getLatestReferringParamsLatch.countDown();
+//                    }
+//                    if (getFirstReferringParamsLatch != null) {
+//                        getFirstReferringParamsLatch.countDown();
+//                    }
+                }
+                return response;
             } else {
-                return kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                ServerResponse response = kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                if (response.getStatusCode() == 200 && thisReq_ instanceof ServerRequestInitSession) {
+//                    if (getLatestReferringParamsLatch != null) {
+//                        getLatestReferringParamsLatch.countDown();
+//                    }
+//                    if (getFirstReferringParamsLatch != null) {
+//                        getFirstReferringParamsLatch.countDown();
+//                    }
+                }
+                return response;
             }
         }
 
@@ -2682,11 +2705,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     // Count down the latch holding getLatestReferringParamsSync
-                                    if ( getLatestReferringParamsLatch != null ) {
+                                    if (getLatestReferringParamsLatch != null) {
                                         getLatestReferringParamsLatch.countDown();
                                     }
                                     // Count down the latch holding getFirstReferringParamsSync
-                                    if ( getFirstReferringParamsLatch != null ) {
+                                    if (getFirstReferringParamsLatch != null) {
                                         getFirstReferringParamsLatch.countDown();
                                     }
                                 } else {

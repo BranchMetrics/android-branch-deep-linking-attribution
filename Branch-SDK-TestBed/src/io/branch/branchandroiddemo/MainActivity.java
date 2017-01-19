@@ -316,9 +316,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        testSyncFunc();
-
-
         branch = Branch.getInstance();
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
@@ -342,12 +339,24 @@ public class MainActivity extends Activity {
             }
         }, this.getIntent().getData(), this);
 
-
+        getLatestReferringParamsSyncExample();
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         this.setIntent(intent);
+    }
+
+    private void getLatestReferringParamsSyncExample() {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("BranchSDK", "fetching latest referring link data....");
+                Log.d("BranchSDK", "latest: " + Branch.getInstance().getLatestReferringParamsSync().toString());
+                Log.d("BranchSDK", "fetched");
+            }
+        });
+        t.start();
     }
 
     @Override
@@ -364,8 +373,8 @@ public class MainActivity extends Activity {
     }
 
     private void testSyncFunc() {
-        new GetLatestReferringParamsTask().execute();
-        new GetFirstReferringParamsTask().execute();
+        //new GetLatestReferringParamsTask().execute();
+        //new GetFirstReferringParamsTask().execute();
     }
 
     private class GetLatestReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
