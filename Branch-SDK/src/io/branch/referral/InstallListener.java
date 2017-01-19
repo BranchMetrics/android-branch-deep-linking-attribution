@@ -25,6 +25,9 @@ public class InstallListener extends BroadcastReceiver {
     /* Link identifier on installing app from play store. */
     private static String installID_ =  PrefHelper.NO_STRING_VALUE;
 
+    /* URL identifier from an ad click on Google Search. */
+    private static String googleSearchInstallReferrerID_ = PrefHelper.NO_STRING_VALUE;
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String rawReferrerString = intent.getStringExtra("referrer");
@@ -44,6 +47,10 @@ public class InstallListener extends BroadcastReceiver {
                 if(referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())){
                     installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
                 }
+
+                if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
+                    googleSearchInstallReferrerID_ = referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey());
+                }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IllegalArgumentException e){
@@ -56,5 +63,9 @@ public class InstallListener extends BroadcastReceiver {
 
     public static String getInstallationID(){
         return installID_;
+    }
+
+    public static String getGoogleSearchInstallReferrerID() {
+        return googleSearchInstallReferrerID_;
     }
 }

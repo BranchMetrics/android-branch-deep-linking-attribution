@@ -393,6 +393,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
 
+    /* List of keys whose values are collected from the Intent Extra.*/
+    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[] {
+            "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
+    };
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1294,11 +1299,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                             if (extraKeys.size() > 0) {
                                 JSONObject extrasJson = new JSONObject();
-                                for (String key : extraKeys) {
-                                    extrasJson.put(key, bundle.get(key));
-
+                                for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
+                                    if (extraKeys.contains(key)) {
+                                        extrasJson.put(key, bundle.get(key));
+                                    }
                                 }
-                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                                if (extrasJson.length() > 0) {
+                                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                                }
                             }
                         }
                     }
@@ -2169,7 +2177,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID(), InstallListener.getGoogleSearchInstallReferrerID());
         }
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
@@ -2186,7 +2194,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (activity.getIntent() != null) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
-            if (cookieBasedMatchDomain_ != null) {
+            if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
                 DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
