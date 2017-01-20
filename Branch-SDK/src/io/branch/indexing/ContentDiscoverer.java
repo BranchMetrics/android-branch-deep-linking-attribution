@@ -190,11 +190,16 @@ public class ContentDiscoverer {
 
     private void discoverViewContents(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            
             View childView = viewGroup.getChildAt(i);
-            if (childView.getVisibility() == View.VISIBLE) if (childView instanceof ViewGroup) {
+            if ((childView.getVisibility() == View.VISIBLE) && (childView instanceof ViewGroup)) {
                 discoverViewContents((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
             } else {
-                String viewName = res.getResourceEntryName(childView.getId());
+                String viewName = String.valueOf(childView.getId());
+                try {
+                    viewName = res.getResourceEntryName(childView.getId());
+                } catch (Exception ignore) {
+                }
                 updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
             }
         }
