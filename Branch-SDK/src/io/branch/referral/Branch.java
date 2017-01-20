@@ -394,6 +394,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
     };
 
+    private static List<String> includeInShareSheet = new ArrayList<>();
+    private static List<String> excludeFromShareSheet = new ArrayList<>();
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -424,6 +427,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
+
     }
 
     /**
@@ -441,6 +445,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     public void setDebug() {
         enableTestMode();
+    }
+
+    public static void excludeFromShareSheet(@NonNull String packageName) {
+        excludeFromShareSheet.add(packageName);
+    }
+    public static void includeInShareSheet(@NonNull String packageName) {
+        includeInShareSheet.add(packageName);
+    }
+    public static List<String> getExcludedFromShareSheet() {
+        return excludeFromShareSheet;
+    }
+    public static List<String> getIncludedInShareSheet() {
+        return includeInShareSheet;
     }
 
     /**

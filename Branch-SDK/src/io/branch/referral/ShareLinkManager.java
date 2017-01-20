@@ -111,6 +111,8 @@ class ShareLinkManager {
         final PackageManager packageManager = context_.getPackageManager();
         final List<ResolveInfo> preferredApps = new ArrayList<>();
         final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
+        final List<String> excludedApps = Branch.getExcludedFromShareSheet();
+        final List<String> includedApps = Branch.getIncludedInShareSheet();
         ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
 
         /* Get all apps available for sharing and the available preferred apps. */
@@ -135,14 +137,46 @@ class ShareLinkManager {
         matchingApps.add(new CopyLinkItem());
         preferredApps.add(new CopyLinkItem());
 
-        if (preferredApps.size() > 1) {
-            /* Add more and copy link option to preferred app.*/
-            if (matchingApps.size() > preferredApps.size()) {
-                preferredApps.add(new MoreShareItem());
+        final List<ResolveInfo> cleanedListPreferred = new ArrayList<>();
+        final List<ResolveInfo> cleanedListMatching = new ArrayList<>();
+        final List<ResolveInfo> cleanedListPreferred2 = new ArrayList<>();
+        final List<ResolveInfo> cleanedListMatching2 = new ArrayList<>();
+
+        //first only add apps that exist in the included app call, if any exist
+        if (includedApps.size() > 0) {
+            for (ResolveInfo r : preferredApps) {
+                if (r != null && r.activityInfo != null && includedApps.contains(r.activityInfo.packageName)) {
+                    cleanedListPreferred.add(r);
+                }
             }
-            appList_ = preferredApps;
+            for (ResolveInfo r : matchingApps) {
+                if (r != null && r.activityInfo != null && includedApps.contains(r.activityInfo.packageName)) {
+                    cleanedListMatching.add(r);
+                }
+            }
+        }
+
+        //remove blacklisted entries from sharesheet
+        for (ResolveInfo r : cleanedListPreferred) {
+            if (r != null && r.activityInfo != null && !cleanedListPreferred.contains(r.activityInfo.packageName)) {
+                cleanedListPreferred2.add(r);
+            }
+        }
+        //remove blacklisted entries from sharesheet
+        for (ResolveInfo r : cleanedListMatching) {
+            if (r != null && r.activityInfo != null && !cleanedListMatching.contains(r.activityInfo.packageName)) {
+                cleanedListMatching2.add(r);
+            }
+        }
+
+        if (cleanedListPreferred2.size() > 1) {
+            /* Add more and copy link option to preferred app.*/
+            if (cleanedListMatching2.size() > cleanedListPreferred2.size()) {
+                cleanedListPreferred2.add(new MoreShareItem());
+            }
+            appList_ = cleanedListPreferred2;
         } else {
-            appList_ = matchingApps;
+            appList_ = cleanedListMatching2;
         }
 
         /* Copy link option will be always there for sharing. */
@@ -182,7 +216,7 @@ class ShareLinkManager {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 if (view.getTag() instanceof MoreShareItem) {
-                    appList_ = matchingApps;
+                    appList_ = cleanedListMatching2;
                     adapter.notifyDataSetChanged();
                 } else {
                     if (callback_ != null) {
