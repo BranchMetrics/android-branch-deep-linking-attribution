@@ -64,7 +64,7 @@ Just add `compile 'io.branch.sdk.android:library:2.+'` to the dependencies secti
 - If you don't plan to use the `Fabric Answers` integration, and don't want to import the `answers-shim`, just import your project as follows:
 ```
 compile ('io.branch.sdk.android:library:2.+') {
-  exclude module: 'answers-shim'
+  exclude module: 'answers.shim'
 }
 ```
 - This supports minimum sdk level 15. If you want to support minimum sdk level 9 please consider using version 1.14.5
