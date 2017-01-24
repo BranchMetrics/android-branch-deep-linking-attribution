@@ -1813,7 +1813,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public JSONObject getLatestReferringParamsSync() {
         getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
-            if (initState_ == SESSION_STATE.INITIALISING) getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            if (initState_ != SESSION_STATE.INITIALISED) getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
         }
         String storedParam = prefHelper_.getSessionParams();
