@@ -122,7 +122,7 @@ public class CommerceEvent {
             jsonObject.put("tax", this.tax);
             jsonObject.put("coupon", this.coupon);
             jsonObject.put("affiliation", this.affiliation);
-            jsonObject.put("products", getProducts());
+            try { jsonObject.put("products", getProducts()); } catch ( NullPointerException e ) {}
         } catch (JSONException e) {
 
         }
@@ -131,7 +131,9 @@ public class CommerceEvent {
     }
 
     public List<JSONObject> getProducts() {
-        if (this.products == null) return null;
+        if (this.products == null) {
+            return null;
+        }
         List<JSONObject> products = new ArrayList<>();
         for (Product p : this.products) {
             products.add(p.getProductJSONObject());
