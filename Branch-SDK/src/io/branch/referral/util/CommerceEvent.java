@@ -122,7 +122,7 @@ public class CommerceEvent {
             jsonObject.put("tax", this.tax);
             jsonObject.put("coupon", this.coupon);
             jsonObject.put("affiliation", this.affiliation);
-            try { jsonObject.put("products", getProducts()); } catch ( NullPointerException e ) {}
+            if ( getProducts() != null ) jsonObject.put("products", getProducts());
         } catch (JSONException e) {
 
         }
