@@ -81,18 +81,13 @@ public class CommerceEvent {
     }
 
     public void addProduct(Product product) {
+        if ( this.products == null ) {
+            this.products = new ArrayList<>();
+        }
         this.products.add(product);
     }
 
     public CommerceEvent() {
-        this.revenue = 0.0;
-        this.currencyType = CurrencyType.USD;
-        this.transactionID = "";
-        this.shipping = 0.0;
-        this.tax = 0.0;
-        this.coupon = "";
-        this.affiliation = "";
-        this.products = new ArrayList<>();
     }
 
     public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, List<Product> products) {
@@ -137,6 +132,7 @@ public class CommerceEvent {
     }
 
     public List<JSONObject> getProducts() {
+        if (this.products == null) return null;
         List<JSONObject> products = new ArrayList<>();
         for (Product p : this.products) {
             products.add(p.getProductJSONObject());

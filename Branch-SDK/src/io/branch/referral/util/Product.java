@@ -11,11 +11,10 @@ public class Product {
     private String sku;
     private String name;
     private Double price;
-    private int quantity;
+    private Integer quantity;
     private String brand;
-    private String category;
     private String variant;
-    private ProductCategory productCategory;
+    private ProductCategory category;
 
     public String getSku() {
         return sku;
@@ -41,11 +40,11 @@ public class Product {
         this.price = price;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -57,14 +56,6 @@ public class Product {
         this.brand = brand;
     }
 
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
     public String getVariant() {
         return variant;
     }
@@ -73,33 +64,25 @@ public class Product {
         this.variant = variant;
     }
 
-    public ProductCategory getProductCategory() {
-        return productCategory;
+    public ProductCategory getCategory() {
+        return category;
     }
 
-    public void setProductCategory(ProductCategory productCategory) {
-        this.productCategory = productCategory;
+    public void setCategory(ProductCategory category) {
+        this.category = category;
     }
 
     public Product() {
-        this.sku = "";
-        this.name = "";
-        this.price = 0.0;
-        this.quantity = 0;
-        this.brand = "";
-        this.category = "";
-        this.variant = "";
-        this.productCategory = null;
     }
 
-    public Product(String sku, String name, Double price, int quantity, String brand, String variant, ProductCategory productCategory) {
+    public Product(String sku, String name, Double price, int quantity, String brand, String variant, ProductCategory category) {
         this.sku = sku;
         this.name = name;
         this.price = price;
         this.quantity = quantity;
         this.brand = brand;
         this.variant = variant;
-        this.productCategory = productCategory;
+        this.category = category;
     }
 
     public JSONObject getProductJSONObject() {
@@ -111,7 +94,7 @@ public class Product {
             jsonObject.put("quantity", this.quantity);
             jsonObject.put("brand", this.brand);
             jsonObject.put("variant", this.variant);
-            jsonObject.put("category", this.productCategory);
+            jsonObject.put("category", this.category);
         } catch (JSONException e) {
 
         }
