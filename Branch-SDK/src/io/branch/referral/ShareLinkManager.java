@@ -158,10 +158,10 @@ class ShareLinkManager {
 
         //make sure our "show more" option includes preferred apps
         for (ResolveInfo r : matchingApps) {
-            for ( SharingHelper.SHARE_WITH shareWith : packagesFilterList)
-            if ( shareWith.toString().equalsIgnoreCase(r.activityInfo.packageName) ) {
-                cleanedMatchingAppsFinal.add(r);
-            }
+            for (SharingHelper.SHARE_WITH shareWith : packagesFilterList)
+                if (shareWith.toString().equalsIgnoreCase(r.activityInfo.packageName)) {
+                    cleanedMatchingAppsFinal.add(r);
+                }
         }
 
         cleanedMatchingAppsFinal.add(new CopyLinkItem());

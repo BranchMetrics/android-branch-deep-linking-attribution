@@ -211,8 +211,32 @@ public class ShareSheetStyle {
         return this;
     }
 
+    public ShareSheetStyle excludeFromShareSheet(@NonNull String[] packageName) {
+        for (String s : packageName) {
+            this.excludeFromShareSheet.add(s);
+        }
+        return this;
+    }
+
+    public ShareSheetStyle excludeFromShareSheet(@NonNull List<String> packageNames) {
+        this.excludeFromShareSheet.addAll(packageNames);
+        return this;
+    }
+
     public ShareSheetStyle includeInShareSheet(@NonNull String packageName) {
         this.includeInShareSheet.add(packageName);
+        return this;
+    }
+
+    public ShareSheetStyle includeInShareSheet(@NonNull String[] packageName) {
+        for (String s : packageName) {
+            this.includeInShareSheet.add(s);
+        }
+        return this;
+    }
+
+    public ShareSheetStyle includeInShareSheet(@NonNull List<String> packageNames) {
+        this.includeInShareSheet.addAll(packageNames);
         return this;
     }
 
