@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -2862,8 +2863,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private View sharingTitleView = null;
 
         BranchShortLinkBuilder shortLinkBuilder_;
-        private static List<String> includeInShareSheet = new ArrayList<>();
-        private static List<String> excludeFromShareSheet = new ArrayList<>();
+        private List<String> includeInShareSheet = new ArrayList<>();
+        private List<String> excludeFromShareSheet = new ArrayList<>();
 
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
@@ -3192,12 +3193,32 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) {
-            excludeFromShareSheet.add(packageName);
+            this.excludeFromShareSheet.add(packageName);
+            return this;
+        }
+
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) {
+            this.excludeFromShareSheet.addAll(Arrays.asList(packageName));
+            return this;
+        }
+
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) {
+            this.excludeFromShareSheet.addAll(packageNames);
             return this;
         }
 
         public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) {
-            includeInShareSheet.add(packageName);
+            this.includeInShareSheet.add(packageName);
+            return this;
+        }
+
+        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) {
+            this.includeInShareSheet.addAll(Arrays.asList(packageName));
+            return this;
+        }
+
+        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) {
+            this.includeInShareSheet.addAll(packageNames);
             return this;
         }
         /**

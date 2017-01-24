@@ -591,14 +591,10 @@ public class BranchUniversalObject implements Parcelable {
             shareLinkBuilder.setSharingTitle(style.getSharingTitleView());
 
             if (style.getIncludedInShareSheet() != null && style.getIncludedInShareSheet().size() > 0) {
-                for (String s : style.getIncludedInShareSheet()) {
-                    shareLinkBuilder.includeInShareSheet(s);
-                }
+                shareLinkBuilder.includeInShareSheet(style.getIncludedInShareSheet());
             }
-            if (style.getExcludedFromShareSheet() != null && style.getIncludedInShareSheet().size() > 0) {
-                for (String s : style.getExcludedFromShareSheet()) {
-                    shareLinkBuilder.excludeFromShareSheet(s);
-                }
+            if (style.getExcludedFromShareSheet() != null && style.getExcludedFromShareSheet().size() > 0) {
+                shareLinkBuilder.excludeFromShareSheet(style.getExcludedFromShareSheet());
             }
 
             shareLinkBuilder.shareLink();

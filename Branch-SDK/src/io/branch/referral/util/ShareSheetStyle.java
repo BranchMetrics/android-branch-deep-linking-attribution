@@ -11,6 +11,7 @@ import android.support.annotation.StyleRes;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
@@ -212,9 +213,7 @@ public class ShareSheetStyle {
     }
 
     public ShareSheetStyle excludeFromShareSheet(@NonNull String[] packageName) {
-        for (String s : packageName) {
-            this.excludeFromShareSheet.add(s);
-        }
+        excludeFromShareSheet.addAll(Arrays.asList(packageName));
         return this;
     }
 
@@ -229,9 +228,7 @@ public class ShareSheetStyle {
     }
 
     public ShareSheetStyle includeInShareSheet(@NonNull String[] packageName) {
-        for (String s : packageName) {
-            this.includeInShareSheet.add(s);
-        }
+        includeInShareSheet.addAll(Arrays.asList(packageName));
         return this;
     }
 
