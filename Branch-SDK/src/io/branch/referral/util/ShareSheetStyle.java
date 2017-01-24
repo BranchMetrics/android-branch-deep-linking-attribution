@@ -11,6 +11,7 @@ import android.support.annotation.StyleRes;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -44,6 +45,9 @@ public class ShareSheetStyle {
 
     private String sharingTitle_ = null;
     private View sharingTitleView_ = null;
+
+    private List<String> includeInShareSheet = new ArrayList<>();
+    private List<String> excludeFromShareSheet = new ArrayList<>();
 
     public ShareSheetStyle(@NonNull Context context, @NonNull String messageTitle, @NonNull String messageBody) {
         context_ = context;
@@ -200,6 +204,24 @@ public class ShareSheetStyle {
     public ShareSheetStyle setSharingTitle(View titleView) {
         this.sharingTitleView_ = titleView;
         return this;
+    }
+
+    public ShareSheetStyle excludeFromShareSheet(@NonNull String packageName) {
+        this.excludeFromShareSheet.add(packageName);
+        return this;
+    }
+
+    public ShareSheetStyle includeInShareSheet(@NonNull String packageName) {
+        this.includeInShareSheet.add(packageName);
+        return this;
+    }
+
+    public List<String> getExcludedFromShareSheet() {
+        return excludeFromShareSheet;
+    }
+
+    public List<String> getIncludedInShareSheet() {
+        return includeInShareSheet;
     }
 
     public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {

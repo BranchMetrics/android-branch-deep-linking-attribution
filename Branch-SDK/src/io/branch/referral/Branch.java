@@ -394,9 +394,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
     };
 
-    private static List<String> includeInShareSheet = new ArrayList<>();
-    private static List<String> excludeFromShareSheet = new ArrayList<>();
-
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -446,20 +443,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-
-    public static void excludeFromShareSheet(@NonNull String packageName) {
-        excludeFromShareSheet.add(packageName);
-    }
-    public static void includeInShareSheet(@NonNull String packageName) {
-        includeInShareSheet.add(packageName);
-    }
-    public static List<String> getExcludedFromShareSheet() {
-        return excludeFromShareSheet;
-    }
-    public static List<String> getIncludedInShareSheet() {
-        return includeInShareSheet;
-    }
-
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
      * Make sure your app is instantiating {@link BranchApp} before calling this method
@@ -2879,6 +2862,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private View sharingTitleView = null;
 
         BranchShortLinkBuilder shortLinkBuilder_;
+        private static List<String> includeInShareSheet = new ArrayList<>();
+        private static List<String> excludeFromShareSheet = new ArrayList<>();
 
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
@@ -3206,7 +3191,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return this;
         }
 
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) {
+            excludeFromShareSheet.add(packageName);
+            return this;
+        }
 
+        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) {
+            includeInShareSheet.add(packageName);
+            return this;
+        }
         /**
          * <p> Set the given style to the List View showing the share sheet</p>
          *
@@ -3234,6 +3227,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
             return preferredOptions_;
+        }
+
+        public List<String> getExcludedFromShareSheet() {
+            return excludeFromShareSheet;
+        }
+
+        public List<String> getIncludedInShareSheet() {
+            return includeInShareSheet;
         }
 
         public Branch getBranch() {

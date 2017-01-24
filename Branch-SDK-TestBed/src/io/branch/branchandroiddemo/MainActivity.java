@@ -257,8 +257,10 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setAsFullWidthStyle(true)
+                        .includeInShareSheet("com.Slack")
+                        .ex
                         .setSharingTitle("Share With");
-                // Define custom styel for the share sheet list view
+                // Define custom style for the share sheet list view
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
