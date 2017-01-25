@@ -8,7 +8,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
@@ -16,11 +15,16 @@ import io.branch.referral.Branch;
 
 /**
  * Created by sojanpr on 9/26/16.
+ * <p>
+ * Service connection class for BranchSearchService.
+ * Implements  {@link IBranchSearchServiceInterface} methods implemented by BranchSearchService.
+ * </p>
  */
 public class BranchSearchServiceConnection implements ServiceConnection {
     private static BranchSearchServiceConnection connection_;
     IBranchSearchServiceInterface branchSearchServiceInterface_;
     private Branch.IBranchSearchEvents searchEvents_;
+    private Branch.IBranchAppRecommendationEvents appRecommendationEvent_;
     String packageName_;
 
     public static BranchSearchServiceConnection getInstance() {
@@ -71,10 +75,11 @@ public class BranchSearchServiceConnection implements ServiceConnection {
     /**
      * Add the user interaction event to the on-device index that will then later be used to influence
      * search ranking
-     * @param contentBUO The content BUO to be added to the index
+     *
+     * @param contentBUO  The content BUO to be added to the index
      * @param packageName The application that this content belongs to
-     * @param userAction The user interaction event
-     * @param contentUrl The deeplink url to open the piece of content.
+     * @param userAction  The user interaction event
+     * @param contentUrl  The deeplink url to open the piece of content.
      */
     public void addUserInteraction(BranchUniversalObject contentBUO, String packageName, String userAction, String contentUrl) {
         Log.d("Bridge_test", "addUserInteraction");
@@ -101,11 +106,32 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         return isServiceConnected;
     }
 
+    public boolean getAppRecommendations(int maxAppCount, boolean skipSystemApps, Branch.IBranchAppRecommendationEvents callback) {
+        boolean isServiceConnected = false;
+        appRecommendationEvent_ = callback;
+        if (branchSearchServiceInterface_ != null) {
+            isServiceConnected = true;
+            try {
+                branchSearchServiceInterface_.getTopRecommendedApps(maxAppCount, skipSystemApps, packageName_);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return isServiceConnected;
+    }
+
     private final IBranchSearchCallback.Stub searchCallback = new IBranchSearchCallback.Stub() {
         @Override
         public void onSearchResult(int offset, int limit, String searchKey, List<BranchSearchContent> searchResult) throws RemoteException {
             if (searchEvents_ != null) {
                 searchEvents_.onSearchResult(offset, limit, searchKey, searchResult);
+            }
+        }
+
+        @Override
+        public void onRecommendedAppList(List<String> packageNames) throws RemoteException {
+            if (appRecommendationEvent_ != null) {
+                appRecommendationEvent_.onAppRecommendation(packageNames);
             }
         }
     };

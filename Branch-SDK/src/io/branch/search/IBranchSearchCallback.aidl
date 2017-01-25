@@ -5,4 +5,5 @@ import io.branch.search.BranchSearchContent;
 
 interface IBranchSearchCallback {
   void onSearchResult(in int offset, in int limit, in String searchKey, in List<BranchSearchContent> searchResult);
+  void onRecommendedAppList(in List<String> packageNames);
 }
