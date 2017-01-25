@@ -3,7 +3,6 @@ package io.branch.branchandroiddemo;
 
 //import com.squareup.leakcanary.LeakCanary;
 
-import io.branch.referral.Branch;
 import io.branch.referral.BranchApp;
 
 public final class CustomBranchApp extends BranchApp {
