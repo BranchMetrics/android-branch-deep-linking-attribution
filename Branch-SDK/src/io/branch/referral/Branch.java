@@ -400,7 +400,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private CountDownLatch getFirstReferringParamsLatch = null;
     private CountDownLatch getLatestReferringParamsLatch = null;
 
-
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
