@@ -2,6 +2,7 @@ package io.branch.branchandroiddemo;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -54,7 +55,7 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setContentType("application/vnd.businessobjects")
-                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .setPrice(5.00, CurrencyType.USD)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
@@ -239,7 +240,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                                //.setAlias("mylinkName") // In case you need to white label your link
+                        //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -310,11 +311,11 @@ public class MainActivity extends Activity {
 
     }
 
+
     @Override
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
@@ -336,7 +337,6 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
-
     }
 
     @Override

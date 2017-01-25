@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -390,10 +391,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
+    private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+
     /* List of keys whose values are collected from the Intent Extra.*/
     private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[] {
             "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
     };
+
+    private CountDownLatch getFirstReferringParamsLatch = null;
+    private CountDownLatch getLatestReferringParamsLatch = null;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1780,8 +1786,35 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>This function must be called from a non-UI thread! If Branch has no install link data,
+     * and this func is called, it will return data upon initializing, or until LATCH_WAIT_UNTIL.
+     * Returns the parameters associated with the link that referred the user. This is only set once,
+     * the first time the user is referred by a link. Think of this as the user referral parameters.
+     * It is also only set if isReferrable is equal to true, which by default is only true
+     * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
+     * user already exists from a previous device) and logout.</p>
+     *
+     * @return A {@link JSONObject} containing the install-time parameters as configured
+     * locally.
+     */
+    public JSONObject getFirstReferringParamsSync() {
+        getFirstReferringParamsLatch = new CountDownLatch(1);
+        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+            }
+        }
+        String storedParam = prefHelper_.getInstallParams();
+        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
+        firstReferringParams = appendDebugParams(firstReferringParams);
+        getFirstReferringParamsLatch = null;
+        return firstReferringParams;
+    }
+
+    /**
      * <p>Returns the parameters associated with the link that referred the session. If a user
-     * clicks a link, and then opens the app, initSession will return the paramters of the link
+     * clicks a link, and then opens the app, initSession will return the parameters of the link
      * and then set them in as the latest parameters to be retrieved by this method. By default,
      * sessions persist for the duration of time that the app is in focus. For example, if you
      * minimize the app, these parameters will be cleared when closeSession is called.</p>
@@ -1793,6 +1826,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
         latestParams = appendDebugParams(latestParams);
+        return latestParams;
+    }
+
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
+     * and this func is called, it will return data upon initialization, or until LATCH_WAIT_UNTIL.
+     * Returns the parameters associated with the link that referred the session. If a user
+     * clicks a link, and then opens the app, initSession will return the parameters of the link
+     * and then set them in as the latest parameters to be retrieved by this method. By default,
+     * sessions persist for the duration of time that the app is in focus. For example, if you
+     * minimize the app, these parameters will be cleared when closeSession is called.</p>
+     *
+     * @return A {@link JSONObject} containing the latest referring parameters as
+     * configured locally.
+     */
+    public JSONObject getLatestReferringParamsSync() {
+        getLatestReferringParamsLatch = new CountDownLatch(1);
+        try {
+            if (initState_ != SESSION_STATE.INITIALISED) {
+                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException e) {
+        }
+        String storedParam = prefHelper_.getSessionParams();
+        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
+        latestParams = appendDebugParams(latestParams);
+        getLatestReferringParamsLatch = null;
         return latestParams;
     }
 
@@ -2656,13 +2716,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                                 if (thisReq_ instanceof ServerRequestInitSession) {
                                     initState_ = SESSION_STATE.INITIALISED;
-                                    // Publish success to listeners
+
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                    // Publish success to listeners
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
                                     if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
-
+                                    // Count down the latch holding getLatestReferringParamsSync
+                                    if (getLatestReferringParamsLatch != null) {
+                                        getLatestReferringParamsLatch.countDown();
+                                    }
+                                    // Count down the latch holding getFirstReferringParamsSync
+                                    if (getFirstReferringParamsLatch != null) {
+                                        getFirstReferringParamsLatch.countDown();
+                                    }
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
