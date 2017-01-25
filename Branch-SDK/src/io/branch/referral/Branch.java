@@ -397,6 +397,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
     };
 
+    private CountDownLatch getFirstReferringParamsLatch = null;
+    private CountDownLatch getLatestReferringParamsLatch = null;
+
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -1777,12 +1781,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return firstReferringParams;
     }
 
-    private CountDownLatch getFirstReferringParamsLatch = null;
     public JSONObject getFirstReferringParamsSync() {
         getFirstReferringParamsLatch = new CountDownLatch(1);
-        try {
-            if (initState_ != SESSION_STATE.INITIALISED) getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
+        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+            }
         }
         String storedParam = prefHelper_.getInstallParams();
         JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
@@ -1808,11 +1813,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return latestParams;
     }
 
-    private CountDownLatch getLatestReferringParamsLatch = null;
     public JSONObject getLatestReferringParamsSync() {
         getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
-            if (initState_ != SESSION_STATE.INITIALISED) getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            if (initState_ != SESSION_STATE.INITIALISED) {
+                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            }
         } catch (InterruptedException e) {
         }
         String storedParam = prefHelper_.getSessionParams();
