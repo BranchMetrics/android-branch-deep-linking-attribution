@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -424,6 +425,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
+
     }
 
     /**
@@ -442,7 +444,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
      * Make sure your app is instantiating {@link BranchApp} before calling this method
@@ -1829,7 +1830,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     //-----------------Generate Short URL      -------------------------------------------//
 
     /**
-     * <p> Generates a shorl url fot the given {@link ServerRequestCreateUrl} object </p>
+     * <p> Generates a shorl url for the given {@link ServerRequestCreateUrl} object </p>
      *
      * @param req An instance  of {@link ServerRequestCreateUrl} with parameters create the short link.
      * @return A url created with the given request if the request is synchronous else null.
@@ -2866,6 +2867,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private View sharingTitleView = null;
 
         BranchShortLinkBuilder shortLinkBuilder_;
+        private List<String> includeInShareSheet = new ArrayList<>();
+        private List<String> excludeFromShareSheet = new ArrayList<>();
 
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
@@ -3193,6 +3196,77 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return this;
         }
 
+        /**
+         * Exclude items from the ShareSheet by package name String.
+         *
+         * @param packageName {@link String} package name to be excluded.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) {
+            this.excludeFromShareSheet.add(packageName);
+            return this;
+        }
+
+        /**
+         * Exclude items from the ShareSheet by package name array.
+         *
+         * @param packageName {@link String[]} package name to be excluded.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) {
+            this.excludeFromShareSheet.addAll(Arrays.asList(packageName));
+            return this;
+        }
+
+        /**
+         * Exclude items from the ShareSheet by package name List.
+         *
+         * @param packageNames {@link List<String>} package name to be excluded.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) {
+            this.excludeFromShareSheet.addAll(packageNames);
+            return this;
+        }
+
+        /**
+         * Include items from the ShareSheet by package name String. If only "com.Slack"
+         * is included, then only preferred sharing options + Slack
+         * will be displayed, for example.
+         *
+         * @param packageName {@link String} package name to be included.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) {
+            this.includeInShareSheet.add(packageName);
+            return this;
+        }
+
+        /**
+         * Include items from the ShareSheet by package name Array. If only "com.Slack"
+         * is included, then only preferred sharing options + Slack
+         * will be displayed, for example.
+         *
+         * @param packageName {@link String[]} package name to be included.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) {
+            this.includeInShareSheet.addAll(Arrays.asList(packageName));
+            return this;
+        }
+
+        /**
+         * Include items from the ShareSheet by package name List. If only "com.Slack"
+         * is included, then only preferred sharing options + Slack
+         * will be displayed, for example.
+         *
+         * @param packageNames {@link List<String>} package name to be included.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) {
+            this.includeInShareSheet.addAll(packageNames);
+            return this;
+        }
 
         /**
          * <p> Set the given style to the List View showing the share sheet</p>
@@ -3221,6 +3295,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
             return preferredOptions_;
+        }
+
+        List<String> getExcludedFromShareSheet() {
+            return excludeFromShareSheet;
+        }
+
+        List<String> getIncludedInShareSheet() {
+            return includeInShareSheet;
         }
 
         public Branch getBranch() {
