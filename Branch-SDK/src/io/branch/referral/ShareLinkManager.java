@@ -287,9 +287,14 @@ class ShareLinkManager {
                         }
                     }
                 }
-                isShareInProgress_ = false;
-                // Cancel the dialog and context is released on dialog cancel
-                cancelShareLinkDialog(false);
+                // Cancel the dialog and context is released on dialog cancel, but if
+                // failure is due to connection, continue with share.
+                if (error.getErrorCode() != BranchError.ERR_BRANCH_NO_CONNECTIVITY_STATUS) {
+                    cancelShareLinkDialog(false);
+                    isShareInProgress_ = false;
+                } else {
+                    shareWithClient(selectedResolveInfo, url, channelName);
+                }
             }
         }, true);
     }

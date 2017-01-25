@@ -1826,7 +1826,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     //-----------------Generate Short URL      -------------------------------------------//
 
     /**
-     * <p> Generates a shorl url fot the given {@link ServerRequestCreateUrl} object </p>
+     * <p> Generates a shorl url for the given {@link ServerRequestCreateUrl} object </p>
      *
      * @param req An instance  of {@link ServerRequestCreateUrl} with parameters create the short link.
      * @return A url created with the given request if the request is synchronous else null.
