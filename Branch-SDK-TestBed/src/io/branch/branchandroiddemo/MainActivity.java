@@ -55,7 +55,7 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setContentType("application/vnd.businessobjects")
-                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .setPrice(5.00, CurrencyType.USD)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                                //.setAlias("mylinkName") // In case you need to white label your link
+                        //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -312,7 +312,6 @@ public class MainActivity extends Activity {
     }
 
 
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -338,25 +337,11 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
-
-        getLatestReferringParamsSyncExample();
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         this.setIntent(intent);
-    }
-
-    private void getLatestReferringParamsSyncExample() {
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("BranchSDK", "fetching latest referring link data....");
-                Log.d("BranchSDK", "latest: " + Branch.getInstance().getLatestReferringParamsSync().toString());
-                Log.d("BranchSDK", "fetched");
-            }
-        });
-        t.start();
     }
 
     @Override
@@ -369,31 +354,6 @@ public class MainActivity extends Activity {
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
             startActivity(i);
-        }
-    }
-
-    private class GetLatestReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
-        @Override
-        protected JSONObject doInBackground(Void... params) {
-            return Branch.getInstance().getLatestReferringParamsSync();
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            super.onPostExecute(jsonObject);
-            Log.d("BranchSDK", "GetLatestReferringParamsTask onPostExecuteSync: " + jsonObject.toString());
-        }
-    }
-    private class GetFirstReferringParamsTask extends AsyncTask<Void, Void, JSONObject> {
-        @Override
-        protected JSONObject doInBackground(Void... params) {
-            return Branch.getInstance().getFirstReferringParamsSync();
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            super.onPostExecute(jsonObject);
-            Log.d("BranchSDK", "GetFirstReferringParamsTask onPostExecuteSync: " + jsonObject.toString());
         }
     }
 }

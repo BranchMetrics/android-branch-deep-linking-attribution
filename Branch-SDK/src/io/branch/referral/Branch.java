@@ -1780,6 +1780,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return firstReferringParams;
     }
 
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has no install link data,
+     * and this func is called, it will return data upon initializing, or until LATCH_WAIT_UNTIL.
+     * Returns the parameters associated with the link that referred the user. This is only set once,
+     * the first time the user is referred by a link. Think of this as the user referral parameters.
+     * It is also only set if isReferrable is equal to true, which by default is only true
+     * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
+     * user already exists from a previous device) and logout.</p>
+     *
+     * @return A {@link JSONObject} containing the install-time parameters as configured
+     * locally.
+     */
     public JSONObject getFirstReferringParamsSync() {
         getFirstReferringParamsLatch = new CountDownLatch(1);
         if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
@@ -1812,6 +1824,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return latestParams;
     }
 
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
+     * and this func is called, it will return data upon initialization, or until LATCH_WAIT_UNTIL.
+     * Returns the parameters associated with the link that referred the session. If a user
+     * clicks a link, and then opens the app, initSession will return the parameters of the link
+     * and then set them in as the latest parameters to be retrieved by this method. By default,
+     * sessions persist for the duration of time that the app is in focus. For example, if you
+     * minimize the app, these parameters will be cleared when closeSession is called.</p>
+     *
+     * @return A {@link JSONObject} containing the latest referring parameters as
+     * configured locally.
+     */
     public JSONObject getLatestReferringParamsSync() {
         getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
@@ -2577,10 +2601,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (thisReq_.isGAdsParamsRequired()) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
-
-            //check if server response is from initcall
-            //get latest params
-            //unlock lack
 
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
