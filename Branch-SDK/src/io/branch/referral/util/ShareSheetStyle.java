@@ -279,11 +279,11 @@ public class ShareSheetStyle {
         return this;
     }
 
-    List<String> getExcludedFromShareSheet() {
+    public List<String> getExcludedFromShareSheet() {
         return excludeFromShareSheet;
     }
 
-    List<String> getIncludedInShareSheet() {
+    public List<String> getIncludedInShareSheet() {
         return includeInShareSheet;
     }
 
