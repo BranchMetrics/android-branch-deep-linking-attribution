@@ -2583,27 +2583,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //unlock lack
 
             if (thisReq_.isGetRequest()) {
-                ServerResponse response = kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
-                if (response.getStatusCode() == 200 && thisReq_ instanceof ServerRequestInitSession) {
-//                    if (getLatestReferringParamsLatch != null) {
-//                        getLatestReferringParamsLatch.countDown();
-//                    }
-//                    if (getFirstReferringParamsLatch != null) {
-//                        getFirstReferringParamsLatch.countDown();
-//                    }
-                }
-                return response;
+                return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
             } else {
-                ServerResponse response = kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
-                if (response.getStatusCode() == 200 && thisReq_ instanceof ServerRequestInitSession) {
-//                    if (getLatestReferringParamsLatch != null) {
-//                        getLatestReferringParamsLatch.countDown();
-//                    }
-//                    if (getFirstReferringParamsLatch != null) {
-//                        getFirstReferringParamsLatch.countDown();
-//                    }
-                }
-                return response;
+                return kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             }
         }
 
@@ -2709,13 +2691,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                                 if (thisReq_ instanceof ServerRequestInitSession) {
                                     initState_ = SESSION_STATE.INITIALISED;
+
+                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     // Publish success to listeners
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
                                     if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
-
-                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     // Count down the latch holding getLatestReferringParamsSync
                                     if (getLatestReferringParamsLatch != null) {
                                         getLatestReferringParamsLatch.countDown();
