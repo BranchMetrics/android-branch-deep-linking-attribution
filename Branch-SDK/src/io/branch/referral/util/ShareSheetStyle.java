@@ -207,41 +207,83 @@ public class ShareSheetStyle {
         return this;
     }
 
+    /**
+     * Exclude items from the ShareSheet by package name String.
+     *
+     * @param packageName {@link String} package name to be excluded.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
     public ShareSheetStyle excludeFromShareSheet(@NonNull String packageName) {
         this.excludeFromShareSheet.add(packageName);
         return this;
     }
 
+    /**
+     * Exclude items from the ShareSheet by package name array.
+     *
+     * @param packageName {@link String[]} package name to be excluded.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
     public ShareSheetStyle excludeFromShareSheet(@NonNull String[] packageName) {
         excludeFromShareSheet.addAll(Arrays.asList(packageName));
         return this;
     }
 
+    /**
+     * Exclude items from the ShareSheet by package name List.
+     *
+     * @param packageNames {@link List<String>} package name to be excluded.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
     public ShareSheetStyle excludeFromShareSheet(@NonNull List<String> packageNames) {
         this.excludeFromShareSheet.addAll(packageNames);
         return this;
     }
 
+    /**
+     * Include items from the ShareSheet by package name String. If only "com.Slack"
+     * is included, then only preferred sharing options + Slack
+     * will be displayed, for example.
+     *
+     * @param packageName {@link String} package name to be included.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
     public ShareSheetStyle includeInShareSheet(@NonNull String packageName) {
         this.includeInShareSheet.add(packageName);
         return this;
     }
 
+    /**
+     * Include items from the ShareSheet by package name Array. If only "com.Slack"
+     * is included, then only preferred sharing options + Slack
+     * will be displayed, for example.
+     *
+     * @param packageName {@link String[]} package name to be included.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
     public ShareSheetStyle includeInShareSheet(@NonNull String[] packageName) {
         includeInShareSheet.addAll(Arrays.asList(packageName));
         return this;
     }
 
+    /**
+     * Include items from the ShareSheet by package name List. If only "com.Slack"
+     * is included, then only preferred sharing options + Slack
+     * will be displayed, for example.
+     *
+     * @param packageNames {@link List<String>} package name to be included.
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
     public ShareSheetStyle includeInShareSheet(@NonNull List<String> packageNames) {
         this.includeInShareSheet.addAll(packageNames);
         return this;
     }
 
-    public List<String> getExcludedFromShareSheet() {
+    List<String> getExcludedFromShareSheet() {
         return excludeFromShareSheet;
     }
 
-    public List<String> getIncludedInShareSheet() {
+    List<String> getIncludedInShareSheet() {
         return includeInShareSheet;
     }
 
