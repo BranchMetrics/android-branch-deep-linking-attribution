@@ -1,5 +1,8 @@
 Branch Android SDK change log
 
+- v2.5.7 Fix for ShareSheet Airplane mode, updated commerceevent defaults, Added feature for sharesheet to whitelist/blacklist apps by package name. Added synchronous
+  getLatestReferringParams and getFirstReferringParams.
+
 - v2.5.6 Fix for sharesheet title, extra intent data fix, added commerceevent function.
 
 - v2.5.5 Added function to init Branch w/ key programmatically (vs having to use Manifest file).

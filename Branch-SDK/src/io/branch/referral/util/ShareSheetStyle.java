@@ -232,7 +232,7 @@ public class ShareSheetStyle {
     /**
      * Exclude items from the ShareSheet by package name List.
      *
-     * @param packageNames {@link List<String>} package name to be excluded.
+     * @param packageNames {@link List} package name to be excluded.
      * @return this Builder object to allow for chaining of calls to set methods.
      */
     public ShareSheetStyle excludeFromShareSheet(@NonNull List<String> packageNames) {
@@ -271,7 +271,7 @@ public class ShareSheetStyle {
      * is included, then only preferred sharing options + Slack
      * will be displayed, for example.
      *
-     * @param packageNames {@link List<String>} package name to be included.
+     * @param packageNames {@link List} package name to be included.
      * @return this Builder object to allow for chaining of calls to set methods.
      */
     public ShareSheetStyle includeInShareSheet(@NonNull List<String> packageNames) {
