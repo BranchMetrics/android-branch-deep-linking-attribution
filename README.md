@@ -304,10 +304,12 @@ Previously, Branch did not return any information to the app if `initSession` wa
 #### Retrieve session (install or open) parameters
 
 These session parameters will be available at any point later on with this command. If no params, the dictionary will be empty. This refreshes with every new session (app installs AND app opens)
+
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject sessionParams = branch.getLatestReferringParams();
 ```
+
 To retrieve this information synchronously, call the following from a non-UI thread:
 
 ```java
