@@ -308,13 +308,25 @@ These session parameters will be available at any point later on with this comma
 Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject sessionParams = branch.getLatestReferringParams();
 ```
+To retrieve this information synchronously, call the following from a non-UI thread:
+
+```java
+JSONObject sessionParams = branch.getLatestReferringParamsSync();
+```
 
 #### Retrieve install (install only) parameters
 
 If you ever want to access the original session params (the parameters passed in for the first install event only), you can use this line. This is useful if you only want to reward users who newly installed the app from a referral link or something.
+
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
 JSONObject installParams = branch.getFirstReferringParams();
+```
+
+To retrieve this information synchronously, call the following from a non-UI thread:
+
+```java
+JSONObject sessionParams = branch.getFirstReferringParamsSync();
 ```
 
 ### Persistent identities
