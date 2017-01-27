@@ -19,10 +19,9 @@ test:
 
   override:
     - gradle
-    - emulator -avd circleci-android23 -no-audio -no-window:
-        background: true
-        parallel: true
-    - circle-android wait-for-boot
+    - emulator -avd circleci-android24 -no-window -gpu off:
+            background: true
+            parallel: true
 #    - $ANDROID_HOME/tools/emulator -avd circleci-android23 -no-skin -no-window -no-audio:
 #        background: true
 #        #parallel: true
