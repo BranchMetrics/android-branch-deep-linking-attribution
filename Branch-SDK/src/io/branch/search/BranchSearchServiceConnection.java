@@ -25,6 +25,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
     IBranchSearchServiceInterface branchSearchServiceInterface_;
     private Branch.IBranchSearchEvents searchEvents_;
     private Branch.IBranchAppRecommendationEvents appRecommendationEvent_;
+    private Branch.IBranchContentRecommendationEvents contentRecommendationEvents_;
     String packageName_;
 
     public static BranchSearchServiceConnection getInstance() {
@@ -120,6 +121,20 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         return isServiceConnected;
     }
 
+    public boolean getContentRecommendations(int maxContentCount, Branch.IBranchContentRecommendationEvents callback) {
+        boolean isServiceConnected = false;
+        contentRecommendationEvents_ = callback;
+        if (branchSearchServiceInterface_ != null) {
+            isServiceConnected = true;
+            try {
+                branchSearchServiceInterface_.getTopRecommendedContents(maxContentCount, packageName_);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return isServiceConnected;
+    }
+
     private final IBranchSearchCallback.Stub searchCallback = new IBranchSearchCallback.Stub() {
         @Override
         public void onSearchResult(int offset, int limit, String searchKey, List<BranchSearchContent> searchResult) throws RemoteException {
@@ -132,6 +147,13 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         public void onRecommendedAppList(List<String> packageNames) throws RemoteException {
             if (appRecommendationEvent_ != null) {
                 appRecommendationEvent_.onAppRecommendation(packageNames);
+            }
+        }
+
+        @Override
+        public void onRecommendedContent(List<BranchSearchContent> recommendedContents) throws RemoteException {
+            if (contentRecommendationEvents_ != null) {
+                contentRecommendationEvents_.onContentRecommendation(recommendedContents);
             }
         }
     };

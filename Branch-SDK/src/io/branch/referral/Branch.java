@@ -3315,6 +3315,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchSearchServiceConnection_.getAppRecommendations(maxAppCount, skipSystemApps, callback);
     }
 
+    public boolean getTopRecommendedContents(int maxContentCount, IBranchContentRecommendationEvents callback) {
+        return branchSearchServiceConnection_.getContentRecommendations(maxContentCount, callback);
+    }
+
     public void addUserInteraction(BranchUniversalObject branchUniversalObject, String userAction) {
         // The url that will be used to open this piece of content
         String deeplinkUrl = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
@@ -3329,5 +3333,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public interface IBranchAppRecommendationEvents {
         void onAppRecommendation(List<String> recommendedApps);
+    }
+
+    public interface IBranchContentRecommendationEvents {
+        void onContentRecommendation(List<BranchSearchContent> recommendedContents);
     }
 }
