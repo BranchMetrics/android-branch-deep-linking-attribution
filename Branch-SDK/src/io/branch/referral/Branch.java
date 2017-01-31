@@ -30,6 +30,7 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -50,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
+import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -392,6 +395,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
+    private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+
+    /* List of keys whose values are collected from the Intent Extra.*/
+    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[] {
+            "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
+    };
+
+    private CountDownLatch getFirstReferringParamsLatch = null;
+    private CountDownLatch getLatestReferringParamsLatch = null;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -423,6 +436,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
+
     }
 
     /**
@@ -441,6 +455,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
+<<<<<<< HEAD
 
     public static void enableMatchGuaranteed() {
         isMatchGuaranteed = true;
@@ -1310,11 +1325,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                             if (extraKeys.size() > 0) {
                                 JSONObject extrasJson = new JSONObject();
-                                for (String key : extraKeys) {
-                                    extrasJson.put(key, bundle.get(key));
-
+                                for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
+                                    if (extraKeys.contains(key)) {
+                                        extrasJson.put(key, bundle.get(key));
+                                    }
                                 }
-                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                                if (extrasJson.length() > 0) {
+                                    prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                                }
                             }
                         }
                     }
@@ -1766,6 +1784,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject
+            metadata, BranchViewHandler.IBranchViewEvents callback) {
+        if (metadata != null) {
+            metadata = BranchUtil.filterOutBadCharacters(metadata);
+        }
+        ServerRequest req = new ServerRequestRActionCompleted(context_, commerceEvent, metadata, callback);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
+    }
+
+    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
+        sendCommerceEvent(commerceEvent, null, null);
+    }
+
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
@@ -1784,8 +1817,35 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>This function must be called from a non-UI thread! If Branch has no install link data,
+     * and this func is called, it will return data upon initializing, or until LATCH_WAIT_UNTIL.
+     * Returns the parameters associated with the link that referred the user. This is only set once,
+     * the first time the user is referred by a link. Think of this as the user referral parameters.
+     * It is also only set if isReferrable is equal to true, which by default is only true
+     * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
+     * user already exists from a previous device) and logout.</p>
+     *
+     * @return A {@link JSONObject} containing the install-time parameters as configured
+     * locally.
+     */
+    public JSONObject getFirstReferringParamsSync() {
+        getFirstReferringParamsLatch = new CountDownLatch(1);
+        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+            }
+        }
+        String storedParam = prefHelper_.getInstallParams();
+        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
+        firstReferringParams = appendDebugParams(firstReferringParams);
+        getFirstReferringParamsLatch = null;
+        return firstReferringParams;
+    }
+
+    /**
      * <p>Returns the parameters associated with the link that referred the session. If a user
-     * clicks a link, and then opens the app, initSession will return the paramters of the link
+     * clicks a link, and then opens the app, initSession will return the parameters of the link
      * and then set them in as the latest parameters to be retrieved by this method. By default,
      * sessions persist for the duration of time that the app is in focus. For example, if you
      * minimize the app, these parameters will be cleared when closeSession is called.</p>
@@ -1797,6 +1857,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
         latestParams = appendDebugParams(latestParams);
+        return latestParams;
+    }
+
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
+     * and this func is called, it will return data upon initialization, or until LATCH_WAIT_UNTIL.
+     * Returns the parameters associated with the link that referred the session. If a user
+     * clicks a link, and then opens the app, initSession will return the parameters of the link
+     * and then set them in as the latest parameters to be retrieved by this method. By default,
+     * sessions persist for the duration of time that the app is in focus. For example, if you
+     * minimize the app, these parameters will be cleared when closeSession is called.</p>
+     *
+     * @return A {@link JSONObject} containing the latest referring parameters as
+     * configured locally.
+     */
+    public JSONObject getLatestReferringParamsSync() {
+        getLatestReferringParamsLatch = new CountDownLatch(1);
+        try {
+            if (initState_ != SESSION_STATE.INITIALISED) {
+                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException e) {
+        }
+        String storedParam = prefHelper_.getSessionParams();
+        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
+        latestParams = appendDebugParams(latestParams);
+        getLatestReferringParamsLatch = null;
         return latestParams;
     }
 
@@ -1834,7 +1921,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     //-----------------Generate Short URL      -------------------------------------------//
 
     /**
-     * <p> Generates a shorl url fot the given {@link ServerRequestCreateUrl} object </p>
+     * <p> Generates a shorl url for the given {@link ServerRequestCreateUrl} object </p>
      *
      * @param req An instance  of {@link ServerRequestCreateUrl} with parameters create the short link.
      * @return A url created with the given request if the request is synchronous else null.
@@ -2154,7 +2241,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID(), InstallListener.getGoogleSearchInstallReferrerID());
         }
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
@@ -2188,7 +2275,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (activity.getIntent() != null) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
-            if (cookieBasedMatchDomain_ != null) {
+            if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
                 DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
                 Context context = currentActivityReference_.get().getApplicationContext();
@@ -2677,13 +2764,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                                 if (thisReq_ instanceof ServerRequestInitSession) {
                                     initState_ = SESSION_STATE.INITIALISED;
-                                    // Publish success to listeners
+
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+                                    // Publish success to listeners
                                     isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
                                     if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
-
+                                    // Count down the latch holding getLatestReferringParamsSync
+                                    if (getLatestReferringParamsLatch != null) {
+                                        getLatestReferringParamsLatch.countDown();
+                                    }
+                                    // Count down the latch holding getFirstReferringParamsSync
+                                    if (getFirstReferringParamsLatch != null) {
+                                        getFirstReferringParamsLatch.countDown();
+                                    }
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
@@ -2888,6 +2983,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private View sharingTitleView = null;
 
         BranchShortLinkBuilder shortLinkBuilder_;
+        private List<String> includeInShareSheet = new ArrayList<>();
+        private List<String> excludeFromShareSheet = new ArrayList<>();
 
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
@@ -3215,6 +3312,77 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return this;
         }
 
+        /**
+         * Exclude items from the ShareSheet by package name String.
+         *
+         * @param packageName {@link String} package name to be excluded.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) {
+            this.excludeFromShareSheet.add(packageName);
+            return this;
+        }
+
+        /**
+         * Exclude items from the ShareSheet by package name array.
+         *
+         * @param packageName {@link String[]} package name to be excluded.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) {
+            this.excludeFromShareSheet.addAll(Arrays.asList(packageName));
+            return this;
+        }
+
+        /**
+         * Exclude items from the ShareSheet by package name List.
+         *
+         * @param packageNames {@link List} package name to be excluded.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) {
+            this.excludeFromShareSheet.addAll(packageNames);
+            return this;
+        }
+
+        /**
+         * Include items from the ShareSheet by package name String. If only "com.Slack"
+         * is included, then only preferred sharing options + Slack
+         * will be displayed, for example.
+         *
+         * @param packageName {@link String} package name to be included.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) {
+            this.includeInShareSheet.add(packageName);
+            return this;
+        }
+
+        /**
+         * Include items from the ShareSheet by package name Array. If only "com.Slack"
+         * is included, then only preferred sharing options + Slack
+         * will be displayed, for example.
+         *
+         * @param packageName {@link String[]} package name to be included.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) {
+            this.includeInShareSheet.addAll(Arrays.asList(packageName));
+            return this;
+        }
+
+        /**
+         * Include items from the ShareSheet by package name List. If only "com.Slack"
+         * is included, then only preferred sharing options + Slack
+         * will be displayed, for example.
+         *
+         * @param packageNames {@link List} package name to be included.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) {
+            this.includeInShareSheet.addAll(packageNames);
+            return this;
+        }
 
         /**
          * <p> Set the given style to the List View showing the share sheet</p>
@@ -3243,6 +3411,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
             return preferredOptions_;
+        }
+
+        List<String> getExcludedFromShareSheet() {
+            return excludeFromShareSheet;
+        }
+
+        List<String> getIncludedInShareSheet() {
+            return includeInShareSheet;
         }
 
         public Branch getBranch() {

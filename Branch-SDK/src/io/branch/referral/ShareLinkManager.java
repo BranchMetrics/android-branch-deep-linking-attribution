@@ -54,7 +54,8 @@ class ShareLinkManager {
     private Branch.ShareLinkBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
-
+    private List<String> includeInShareSheet = new ArrayList<>();
+    private List<String> excludeFromShareSheet = new ArrayList<>();
 
     /**
      * Creates an application selector and shares a link on user selecting the application.
@@ -70,6 +71,9 @@ class ShareLinkManager {
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
         shareDialogThemeID_ = builder.getStyleResourceID();
+        includeInShareSheet = builder.getIncludedInShareSheet();
+        excludeFromShareSheet = builder.getExcludedFromShareSheet();
+
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
@@ -111,6 +115,8 @@ class ShareLinkManager {
         final PackageManager packageManager = context_.getPackageManager();
         final List<ResolveInfo> preferredApps = new ArrayList<>();
         final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
+        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
+        final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
         ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
 
         /* Get all apps available for sharing and the available preferred apps. */
@@ -132,6 +138,33 @@ class ShareLinkManager {
         matchingApps.removeAll(preferredApps);
         matchingApps.addAll(0, preferredApps);
 
+        //if apps are explicitly being included, add only those, otherwise at the else statement add them all
+        if (includeInShareSheet.size() > 0) {
+            for (ResolveInfo r : matchingApps) {
+                if (includeInShareSheet.contains(r.activityInfo.packageName)) {
+                    cleanedMatchingApps.add(r);
+                }
+            }
+        } else {
+            cleanedMatchingApps = matchingApps;
+        }
+
+        //does our list contain explicitly excluded items? do not carry them into the next list
+        for (ResolveInfo r : cleanedMatchingApps) {
+            if (!excludeFromShareSheet.contains(r.activityInfo.packageName)) {
+                cleanedMatchingAppsFinal.add(r);
+            }
+        }
+
+        //make sure our "show more" option includes preferred apps
+        for (ResolveInfo r : matchingApps) {
+            for (SharingHelper.SHARE_WITH shareWith : packagesFilterList)
+                if (shareWith.toString().equalsIgnoreCase(r.activityInfo.packageName)) {
+                    cleanedMatchingAppsFinal.add(r);
+                }
+        }
+
+        cleanedMatchingAppsFinal.add(new CopyLinkItem());
         matchingApps.add(new CopyLinkItem());
         preferredApps.add(new CopyLinkItem());
 
@@ -142,7 +175,7 @@ class ShareLinkManager {
             }
             appList_ = preferredApps;
         } else {
-            appList_ = matchingApps;
+            appList_ = cleanedMatchingAppsFinal;
         }
 
         /* Copy link option will be always there for sharing. */
@@ -157,7 +190,7 @@ class ShareLinkManager {
         shareOptionListView.setBackgroundColor(Color.WHITE);
 
         if (builder_.getSharingTitleView() != null) {
-            shareOptionListView.addHeaderView(builder_.getSharingTitleView());
+            shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
         } else if (!TextUtils.isEmpty(builder_.getSharingTitle())) {
             TextView textView = new TextView(context_);
             textView.setText(builder_.getSharingTitle());
@@ -166,11 +199,10 @@ class ShareLinkManager {
             textView.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
             textView.setTextColor(context_.getResources().getColor(android.R.color.darker_gray));
             textView.setPadding(leftMargin, padding, padding, padding);
-            shareOptionListView.addHeaderView(textView);
+            shareOptionListView.addHeaderView(textView, null, false);
         }
 
         shareOptionListView.setAdapter(adapter);
-
 
         if (builder_.getDividerHeight() >= 0) { //User set height
             shareOptionListView.setDividerHeight(builder_.getDividerHeight());
@@ -182,7 +214,7 @@ class ShareLinkManager {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 if (view.getTag() instanceof MoreShareItem) {
-                    appList_ = matchingApps;
+                    appList_ = cleanedMatchingAppsFinal;
                     adapter.notifyDataSetChanged();
                 } else {
                     if (callback_ != null) {
@@ -253,11 +285,15 @@ class ShareLinkManager {
                         } else {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
+
+                        if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY_STATUS) {
+                            shareWithClient(selectedResolveInfo, url, channelName);
+                        } else {
+                            cancelShareLinkDialog(false);
+                            isShareInProgress_ = false;
+                        }
                     }
                 }
-                isShareInProgress_ = false;
-                // Cancel the dialog and context is released on dialog cancel
-                cancelShareLinkDialog(false);
             }
         }, true);
     }
