@@ -20,7 +20,7 @@ test:
     # Ideally tests would execute on at least min and target SDK.  The challenge
     # is collecting the test results and coverage when there are multiple
     # executions.  Tests currently run against 22, because 23 hangs on CircleCI.
-    - emulator -avd circleci-android22 -no-audio -no-window:
+    - emulator -avd circleci-android22 -no-window:
         background: true
         parallel: true
     - circle-android wait-for-boot
