@@ -28,7 +28,7 @@ test:
     # The emulator lags even after wait-for-boot, causing tests against the
     # emulator to fail with a timeout.  An explicit sleep isn't ideal because
     # it adds extra time to every build, however this is good enough for now.
-    - sleep 30
+    - sleep 31
 
     - adb logcat:
         background: true
