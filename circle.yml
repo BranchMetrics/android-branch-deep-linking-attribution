@@ -4,34 +4,11 @@ machine:
     #ANDROID_HOME: /home/ubuntu/android
 
 dependencies:
-
   #cache_directories:
     #- ~/.android
     #- ~/android
   pre:
-    - echo y | android update sdk --no-ui --all --filter "android-24"
-    # Android SDK Platform 25 Build Tools
-    - echo y | android update sdk --no-ui --all --filter "tools"
-    # Android SDK Platform Tools 24.0.2
-    - echo y | android update sdk --no-ui --all --filter "platform-tools"
-    # Android SDK Build-tools, revision 24.0.2
-    - echo y | android update sdk --no-ui --all --filter "build-tools-24.0.1"
-    # Android Support Repository, revision 35 / Local Maven repository for Support Libraries
-    - echo y | android update sdk --no-ui --all --filter "extra-android-m2repository"
-    # Android 24 ARM Google APIs system Image
-    - echo y | android update sdk --no-ui --all --filter "sys-img-armeabi-v7a-google_apis-24"
-    # Create the android 24 AVD
-    - echo no | android create avd -n circleci-android24-googleapis -t 'android-24' --abi google_apis/armeabi-v7a
-    - |
-      # software rendering is broken in revision 10, we'll use revision 08
-      wget "https://dl-ssl.google.com/android/repository/sys-img/google_apis/armeabi-v7a-24_r08.zip"
-      unzip armeabi-v7a-24_r08.zip
-      # overwrite some of the new files with older files
-      mv armeabi-v7a/* /usr/local/android-sdk-linux/system-images/android-24/google_apis/armeabi-v7a
-      rm armeabi-v7a-24_r08.zip
-
-  #pre:
-  #  - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
+    - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
         
   override:
     #- ./install-dependencies.sh
@@ -39,18 +16,20 @@ dependencies:
     - cd && wget https://services.gradle.org/distributions/gradle-2.4-bin.zip && unzip gradle-2.4-bin.zip
 
 test:
-
   override:
-    - gradle
-    - emulator -avd circleci-android24 -no-window -gpu off:
-            background: true
-            parallel: true
-#    - $ANDROID_HOME/tools/emulator -avd circleci-android23 -no-skin -no-window -no-audio:
-#        background: true
-#        #parallel: true
-#    - ./wait.sh:
-#        #parallel: true
-    - adb install Branch-SDK-TestBed/Branch-SDK-TestBed-release-unsigned.apk
+    # Ideally tests would execute on at least min and target SDK.  The challenge
+    # is collecting the test results and coverage when there are multiple
+    # executions.  Tests currently run against 22, because 23 hangs on CircleCI.
+    - emulator -avd circleci-android22 -no-audio -no-window:
+        background: true
+        parallel: true
+    - circle-android wait-for-boot
+
+    # The emulator lags even after wait-for-boot, causing tests against the
+    # emulator to fail with a timeout.  An explicit sleep isn't ideal because
+    # it adds extra time to every build, however this is good enough for now.
+    - sleep 30
+
     - adb logcat:
         background: true
     - adb wait-for-device
