@@ -71,9 +71,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
 
-            //clear out install referrer string
-            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
-
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
                 // If Clicked on a branch link

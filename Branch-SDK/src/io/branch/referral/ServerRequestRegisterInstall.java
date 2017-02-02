@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,6 +35,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         try {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
+                //Log.d("ServerRequestRegisterOp", "adding install id: " + installID);
             }
             if (!googleSearchInstallReferrerID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallReferrerID);
@@ -43,6 +45,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             }
             if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.InstallReferrer.getKey(), prefHelper_.getInstallReferrerParams());
+                //Log.d("ServerRequestRegisterOp", "adding install referrer: " + prefHelper_.getInstallReferrerParams());
             }
 
             // Read and update the URI scheme only if running in debug mode
@@ -51,6 +54,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 if (!uriScheme.equals(SystemObserver.BLANK))
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             }
+
+//            Log.d("ServerRequestRegisterOp", "adding install id: " + installID);
+//            Log.d("ServerRequestRegisterOp", "sending install params: " + prefHelper_.getInstallReferrerParams());
 
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
@@ -80,9 +86,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         super.onRequestSucceeded(resp, branch);
         try {
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
-
-            //clear out install referrer string
-            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));

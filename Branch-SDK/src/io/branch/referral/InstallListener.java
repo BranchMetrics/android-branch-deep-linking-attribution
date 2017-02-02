@@ -23,7 +23,7 @@ import java.util.HashMap;
 public class InstallListener extends BroadcastReceiver {
 
     /* Link identifier on installing app from play store. */
-    private static String installID_ =  PrefHelper.NO_STRING_VALUE;
+    private static String installID_ = PrefHelper.NO_STRING_VALUE;
     private static InstallReferrerFetch callback_ = null;
 
     /* URL identifier from an ad click on Google Search. */
@@ -32,21 +32,20 @@ public class InstallListener extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String rawReferrerString = intent.getStringExtra("referrer");
-        if ( rawReferrerString != null ) Log.d("InstallListener", "InstallListener onReceive: " + rawReferrerString);
-        if(rawReferrerString != null) {
+        if (rawReferrerString != null) {
             try {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
                 HashMap<String, String> referrerMap = new HashMap<>();
                 String[] referralParams = rawReferrerString.split("&");
 
                 for (String referrerParam : referralParams) {
-                    String[] keyValue  =  referrerParam.split("=");
+                    String[] keyValue = referrerParam.split("=");
                     if (keyValue.length > 1) { // To make sure that there is one key value pair in referrer
                         referrerMap.put(URLDecoder.decode(keyValue[0], "UTF-8"), URLDecoder.decode(keyValue[1], "UTF-8"));
                     }
                 }
 
-                if(referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())){
+                if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
                     installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
                     callback_.onInstallReferrerFetchFinished(installID_);
                 }
@@ -56,14 +55,15 @@ public class InstallListener extends BroadcastReceiver {
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
-            } catch (IllegalArgumentException e){
+            } catch (IllegalArgumentException e) {
                 e.printStackTrace();
                 Log.w("BranchSDK", "Illegal characters in url encoded string");
             }
 
         }
     }
-    public static String getInstallationID(){
+
+    public static String getInstallationID() {
         return installID_;
     }
 

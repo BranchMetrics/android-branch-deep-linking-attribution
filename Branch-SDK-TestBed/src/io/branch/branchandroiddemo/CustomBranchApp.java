@@ -13,6 +13,7 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
         Branch.enableLogging();
+        Branch.enableSimulateInstalls();
         Branch.enableMatchGuaranteed();
         Branch.getAutoInstance(this);
         // Uncomment to test memory leak

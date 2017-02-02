@@ -91,6 +91,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setIsAppLinkTriggeredInit(false);
+            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
@@ -117,6 +118,15 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+            } catch (JSONException ignore) {
+            }
+        }
+    }
+
+    public void updateInstallReferrer() {
+        if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getPost().put(Defines.Jsonkey.InstallReferrer.getKey(), prefHelper_.getInstallReferrerParams());
             } catch (JSONException ignore) {
             }
         }

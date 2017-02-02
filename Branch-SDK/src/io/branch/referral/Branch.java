@@ -295,7 +295,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static boolean isLogging_ = false;
 
     private static boolean isMatchGuaranteed = false;
-    private static long REFERRAL_FETCH_WAIT_FOR = 2500;
+    private static long REFERRAL_FETCH_WAIT_FOR = 10000;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -455,8 +455,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-<<<<<<< HEAD
-
     public static void enableMatchGuaranteed() {
         isMatchGuaranteed = true;
     }
@@ -1416,7 +1414,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     @Override
     public void onInstallReferrerFetchFinished(String linkClickId) {
-        Log.d("BranchSDK", "onFetchFinished:" + linkClickId);
+        Log.d("BranchSDK", "onFetchFinished (" + System.currentTimeMillis() + ") " + linkClickId);
         prefHelper_.setInstallReferrerParams(linkClickId);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
         processNextQueueItem();
@@ -2253,8 +2251,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (getIsMatchGuaranteed()) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             unlockReferrerWaitLockAfter(REFERRAL_FETCH_WAIT_FOR);
-            Log.d("BranchSDK", "locking for match guaranteed");
         }
+
         registerInstallOrOpen(request, callback);
     }
 
@@ -2272,6 +2270,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void onIntentReady(Activity activity) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        Log.d("BranchSDK", "onIntentReady install_referrer: " + prefHelper_.getInstallReferrerParams());
         if (activity.getIntent() != null) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
@@ -2645,6 +2644,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected ServerResponse doInBackground(Void... voids) {
             if (thisReq_ instanceof ServerRequestInitSession) {
                 ((ServerRequestInitSession) thisReq_).updateLinkClickIdentifier();
+                ((ServerRequestInitSession) thisReq_).updateInstallReferrer();
+                //set install referrer HERE
             }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
