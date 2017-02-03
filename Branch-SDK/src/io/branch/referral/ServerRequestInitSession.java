@@ -126,7 +126,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     public void updateInstallReferrer() {
         if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
             try {
-                getPost().put(Defines.Jsonkey.InstallReferrer.getKey(), prefHelper_.getInstallReferrerParams());
+                getPost().put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getInstallReferrerParams());
             } catch (JSONException ignore) {
             }
         }

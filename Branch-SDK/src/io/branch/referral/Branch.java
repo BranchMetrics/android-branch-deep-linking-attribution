@@ -295,7 +295,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static boolean isLogging_ = false;
 
     private static boolean isMatchGuaranteed = false;
-    private static long REFERRAL_FETCH_WAIT_FOR = 1000;
+    private static long REFERRAL_FETCH_WAIT_FOR = 5000;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -2643,8 +2643,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected ServerResponse doInBackground(Void... voids) {
             if (thisReq_ instanceof ServerRequestInitSession) {
                 ((ServerRequestInitSession) thisReq_).updateLinkClickIdentifier();
-                ((ServerRequestInitSession) thisReq_).updateInstallReferrer();
-                //set install referrer HERE
+                if ( getIsMatchGuaranteed() ) ((ServerRequestInitSession) thisReq_).updateInstallReferrer();
             }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
