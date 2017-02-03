@@ -8,13 +8,13 @@ import android.app.Application;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchApp;
 
-public final class CustomBranchApp extends Application {
+public final class CustomBranchApp extends BranchApp {
     @Override
     public void onCreate() {
         super.onCreate();
         Branch.enableLogging();
         Branch.enableMatchGuaranteed();
-        Branch.getAutoInstance(this);
+        //Branch.getAutoInstance(this);
         // Uncomment to test memory leak
         // LeakCanary.install(this);
     }
