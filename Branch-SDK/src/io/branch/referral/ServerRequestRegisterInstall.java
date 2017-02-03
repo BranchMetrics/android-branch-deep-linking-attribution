@@ -16,6 +16,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
     SystemObserver systemObserver_;
+
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
@@ -35,17 +36,12 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         try {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
-                //Log.d("ServerRequestRegisterOp", "adding install id: " + installID);
             }
             if (!googleSearchInstallReferrerID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallReferrerID);
             }
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
-            }
-            if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.InstallReferrer.getKey(), prefHelper_.getInstallReferrerParams());
-                //Log.d("ServerRequestRegisterOp", "adding install referrer: " + prefHelper_.getInstallReferrerParams());
             }
 
             // Read and update the URI scheme only if running in debug mode
@@ -54,9 +50,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 if (!uriScheme.equals(SystemObserver.BLANK))
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             }
-
-//            Log.d("ServerRequestRegisterOp", "adding install id: " + installID);
-//            Log.d("ServerRequestRegisterOp", "sending install params: " + prefHelper_.getInstallReferrerParams());
 
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
@@ -105,11 +98,11 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 }
             }
 
-//            if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
-//                prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
-//            } else {
-//                prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
-//            }
+            if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
+                prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
+            } else {
+                prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
+            }
 
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());

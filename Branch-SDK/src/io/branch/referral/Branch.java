@@ -295,7 +295,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static boolean isLogging_ = false;
 
     private static boolean isMatchGuaranteed = false;
-    private static long REFERRAL_FETCH_WAIT_FOR = 10000;
+    private static long REFERRAL_FETCH_WAIT_FOR = 1000;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -2270,7 +2270,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void onIntentReady(Activity activity) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        Log.d("BranchSDK", "onIntentReady install_referrer: " + prefHelper_.getInstallReferrerParams());
         if (activity.getIntent() != null) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
