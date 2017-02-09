@@ -27,7 +27,8 @@ public class BranchSearchContent implements Parcelable {
     public static final int RESULT_PRIORITY_LOCAL_APP = 2;             /* Apps available locally that matches the contents */
     public static final int RESULT_PRIORITY_NON_LOCAL_CONTENTS = 3;    /* Contents residing in a non installed  app */
     public static final int RESULT_PRIORITY_NON_LOCAL_APPS = 4;        /* App that are not installed but matches the search */
-    public static final int RESULT_PRIORITY_IN_APP_SEARCH = 5;        /* In app search option */
+    public static final int RESULT_PRIORITY_APP_INFO = 5;              /* In app search option */
+    public static final int RESULT_PRIORITY_IN_APP_SEARCH = 6;         /* In app search option */
 
 
     private static final String PACKAGE_NAME_KEY = "package_name_key";
