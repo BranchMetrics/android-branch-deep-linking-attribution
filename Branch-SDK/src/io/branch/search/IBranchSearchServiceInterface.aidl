@@ -11,4 +11,5 @@ interface IBranchSearchServiceInterface {
   void addUserInteraction(in BranchUniversalObject contentBUO, in String packageName, String userAction, String contentUrl);
   void getTopRecommendedApps(int count, boolean skipSystemApps, String packageaName);
   void getTopRecommendedContents(int count, String packageaName);
+  void searchInApp(String packageName, String searchKeyword);
 }

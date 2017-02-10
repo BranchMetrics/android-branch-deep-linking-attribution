@@ -135,6 +135,19 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         return isServiceConnected;
     }
 
+    public boolean searchAppForContents(String packageName, String appKeyword) {
+        boolean isServiceConnected = false;
+        if (branchSearchServiceInterface_ != null) {
+            isServiceConnected = true;
+            try {
+                branchSearchServiceInterface_.searchInApp(packageName, appKeyword);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return isServiceConnected;
+    }
+
     private final IBranchSearchCallback.Stub searchCallback = new IBranchSearchCallback.Stub() {
         @Override
         public void onSearchResult(int offset, int limit, String searchKey, List<BranchSearchContent> searchResult) throws RemoteException {
