@@ -24,7 +24,7 @@ public class InstallListener extends BroadcastReceiver {
 
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
-    private static InstallReferrerFetch callback_ = null;
+    private static IInstallReferrerEvents callback_ = null;
 
     /* URL identifier from an ad click on Google Search. */
     private static String googleSearchInstallReferrerID_ = PrefHelper.NO_STRING_VALUE;
@@ -47,7 +47,13 @@ public class InstallListener extends BroadcastReceiver {
 
                 if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
                     installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
-                    callback_.onInstallReferrerFetchFinished(installID_);
+                    if ( callback_ != null ) {
+                        callback_.onInstallReferrerEventsFinished(installID_);
+                    }
+                } else {
+                    if ( callback_ != null ) {
+                        callback_.onInstallReferrerEventsFinished(rawReferrerString);
+                    }
                 }
 
                 if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
@@ -67,12 +73,12 @@ public class InstallListener extends BroadcastReceiver {
         return installID_;
     }
 
-    public static void setListener(InstallReferrerFetch installReferrerFetch) {
+    public static void setListener(IInstallReferrerEvents installReferrerFetch) {
         callback_ = installReferrerFetch;
     }
 
-    interface InstallReferrerFetch {
-        void onInstallReferrerFetchFinished(String linkClickId);
+    interface IInstallReferrerEvents {
+        void onInstallReferrerEventsFinished(String linkClickId);
     }
 
     public static String getGoogleSearchInstallReferrerID() {

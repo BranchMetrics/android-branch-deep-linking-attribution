@@ -72,7 +72,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.InstallReferrerFetch {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -294,7 +294,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean isLogging_ = false;
 
-    private static boolean isMatchGuaranteed = false;
+    private static boolean checkInstallReferrer_ = false;
     private static long REFERRAL_FETCH_WAIT_FOR = 5000;
 
     /**
@@ -455,14 +455,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-    public static void enableMatchGuaranteed() {
-        isMatchGuaranteed = true;
+    public static void enableCheckInstallReferrer() {
+        checkInstallReferrer_ = true;
     }
-    public static void disableMatchGuaranted() {
-        isMatchGuaranteed = false;
+    public static void disableCheckInstallReferrer() {
+        checkInstallReferrer_ = false;
     }
-    public static boolean getIsMatchGuaranteed() {
-        return isMatchGuaranteed;
+    public static boolean checkInstallReferrer() {
+        return checkInstallReferrer_;
     }
     public static void setReferralFetchWaitTime(int delay) {
         REFERRAL_FETCH_WAIT_FOR = delay;
@@ -1413,7 +1413,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     @Override
-    public void onInstallReferrerFetchFinished(String linkClickId) {
+    public void onInstallReferrerEventsFinished(String linkClickId) {
         Log.d("BranchSDK", "onFetchFinished (" + System.currentTimeMillis() + ") " + linkClickId);
         prefHelper_.setInstallReferrerParams(linkClickId);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
@@ -2248,7 +2248,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
-        if (getIsMatchGuaranteed()) {
+        if (checkInstallReferrer()) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             unlockReferrerWaitLockAfter(REFERRAL_FETCH_WAIT_FOR);
         }
@@ -2643,7 +2643,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected ServerResponse doInBackground(Void... voids) {
             if (thisReq_ instanceof ServerRequestInitSession) {
                 ((ServerRequestInitSession) thisReq_).updateLinkClickIdentifier();
-                if ( getIsMatchGuaranteed() ) ((ServerRequestInitSession) thisReq_).updateInstallReferrer();
+                if ( checkInstallReferrer() ) ((ServerRequestInitSession) thisReq_).updateInstallReferrer();
             }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
