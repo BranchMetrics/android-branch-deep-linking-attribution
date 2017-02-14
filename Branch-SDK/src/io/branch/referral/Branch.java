@@ -1414,7 +1414,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     @Override
     public void onInstallReferrerEventsFinished(String linkClickId) {
-        Log.d("BranchSDK", "onFetchFinished (" + System.currentTimeMillis() + ") " + linkClickId);
         prefHelper_.setInstallReferrerParams(linkClickId);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
         processNextQueueItem();
