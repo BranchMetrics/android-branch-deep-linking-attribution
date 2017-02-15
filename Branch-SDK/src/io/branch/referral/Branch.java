@@ -295,7 +295,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static boolean isLogging_ = false;
 
     private static boolean checkInstallReferrer_ = false;
-    private static long REFERRAL_FETCH_WAIT_FOR = 5000;
+    private static long PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = 5000;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -455,20 +455,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-    public static void enableCheckInstallReferrer() {
+    public static void enablePlayStoreReferrer(long delay) {
         checkInstallReferrer_ = true;
+        PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
     }
-    public static void disableCheckInstallReferrer() {
-        checkInstallReferrer_ = false;
-    }
-    public static boolean checkInstallReferrer() {
+    static boolean checkPlayStoreReferrer() {
         return checkInstallReferrer_;
     }
-    public static void setReferralFetchWaitTime(int delay) {
-        REFERRAL_FETCH_WAIT_FOR = delay;
-    }
     public static long getReferralFetchWaitTime() {
-        return REFERRAL_FETCH_WAIT_FOR;
+        return PLAYSTORE_REFERRAL_FETCH_WAIT_FOR;
     }
 
     /**
@@ -1413,8 +1408,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     @Override
-    public void onInstallReferrerEventsFinished(String linkClickId) {
-        prefHelper_.setInstallReferrerParams(linkClickId);
+    public void onInstallReferrerEventsFinished (){
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
         processNextQueueItem();
     }
@@ -2169,7 +2163,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-
     private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
@@ -2247,24 +2240,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
-        if (checkInstallReferrer()) {
+        if (checkPlayStoreReferrer() && request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            unlockReferrerWaitLockAfter(REFERRAL_FETCH_WAIT_FOR);
+            InstallListener.startInstallReferrerTime(PLAYSTORE_REFERRAL_FETCH_WAIT_FOR);
         }
 
         registerInstallOrOpen(request, callback);
-    }
-
-    private void unlockReferrerWaitLockAfter(final long after) {
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                processNextQueueItem();
-            }
-        };
-        Handler h = new Handler();
-        h.postDelayed(r, after);
     }
 
     private void onIntentReady(Activity activity) {
@@ -2642,7 +2623,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected ServerResponse doInBackground(Void... voids) {
             if (thisReq_ instanceof ServerRequestInitSession) {
                 ((ServerRequestInitSession) thisReq_).updateLinkClickIdentifier();
-                if ( checkInstallReferrer() ) ((ServerRequestInitSession) thisReq_).updateInstallReferrer();
             }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));

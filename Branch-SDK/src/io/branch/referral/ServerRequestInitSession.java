@@ -123,15 +123,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
     }
 
-    public void updateInstallReferrer() {
-        if (!prefHelper_.getInstallReferrerParams().equals(PrefHelper.NO_STRING_VALUE)) {
-            try {
-                getPost().put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getInstallReferrerParams());
-            } catch (JSONException ignore) {
-            }
-        }
-    }
-
     @Override
     public void onPreExecute() {
         JSONObject post = getPost();
