@@ -72,7 +72,7 @@ class BranchStrongMatchHelper {
             updateStrongMatchCheckFinished(callback);
         } else {
             try {
-                if (deviceInfo.isHardwareIDReal() && deviceInfo.getHardwareID() != null) {
+                if (deviceInfo.getHardwareID() != null) {
                     final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
@@ -123,7 +123,7 @@ class BranchStrongMatchHelper {
                     }
                 } else {
                     updateStrongMatchCheckFinished(callback);
-                    Log.d("BranchSDK", "Cannot use cookie-based matching while setDebug is enabled");
+                    Log.d("BranchSDK", "Cannot use cookie-based matching since device id is not available");
                 }
             } catch (Throwable ignore) {
                 updateStrongMatchCheckFinished(callback);
@@ -144,6 +144,8 @@ class BranchStrongMatchHelper {
             String uriString = "https://" + matchDomain + "/_strong_match?os=" + deviceInfo.getOsName();
             // Add HW ID
             uriString += "&" + Defines.Jsonkey.HardwareID.getKey() + "=" + deviceInfo.getHardwareID();
+            String hardwareIDTypeVal = deviceInfo.isHardwareIDReal() ? Defines.Jsonkey.HardwareIDTypeVendor.getKey() : Defines.Jsonkey.HardwareIDTypeRandom.getKey();
+            uriString += "&" + Defines.Jsonkey.HardwareIDType.getKey() + "=" + hardwareIDTypeVal;
             // Add GAID if available
             if (systemObserver.GAIDString_ != null) {
                 uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + systemObserver.GAIDString_;

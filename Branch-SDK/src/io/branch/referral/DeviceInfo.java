@@ -91,7 +91,7 @@ class DeviceInfo {
 
     private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
         if (disableAndroidIDFetch) {
-            hardwareID_ = SystemObserver.BLANK;
+            hardwareID_ = sysObserver.getUniqueID(true);
         } else {
             hardwareID_ = sysObserver.getUniqueID(isExternalDebug);
         }
