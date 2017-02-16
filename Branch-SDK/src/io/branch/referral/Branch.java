@@ -400,7 +400,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private CountDownLatch getLatestReferringParamsLatch = null;
 
     /* Flag for checking of Strong matching is waiting on GAID fetch */
-    private boolean performCookieBaseDStrongMatchingOnGAIDAvailable = false;
+    private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1386,8 +1386,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void onGAdsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        if (performCookieBaseDStrongMatchingOnGAIDAvailable) {
+        if (performCookieBasedStrongMatchingOnGAIDAvailable) {
             performCookieBasedStrongMatch();
+            performCookieBasedStrongMatchingOnGAIDAvailable = false;
         } else {
             processNextQueueItem();
         }
@@ -2229,7 +2230,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 if (isGAParamsFetchInProgress_) {
                     // Wait for GAID to Available
-                    performCookieBaseDStrongMatchingOnGAIDAvailable = true;
+                    performCookieBasedStrongMatchingOnGAIDAvailable = true;
                 } else {
                     performCookieBasedStrongMatch();
                 }
