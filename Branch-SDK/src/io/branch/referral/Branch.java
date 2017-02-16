@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
@@ -69,7 +70,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -291,6 +292,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean isLogging_ = false;
 
+    private static boolean checkInstallReferrer_ = false;
+    private static long PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = 5000;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -422,6 +426,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+        InstallListener.setListener(this);
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             handleDelayedNewIntents_ = true;
@@ -454,6 +459,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         enableTestMode();
     }
 
+    public static void enablePlayStoreReferrer(long delay) {
+        checkInstallReferrer_ = true;
+        PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
+    }
+  
+    static boolean checkPlayStoreReferrer() {
+        return checkInstallReferrer_;
+    }
+  
+    public static long getReferralFetchWaitTime() {
+        return PLAYSTORE_REFERRAL_FETCH_WAIT_FOR;
+    }
+  
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
      * Make sure your app is instantiating {@link BranchApp} before calling this method
@@ -1394,6 +1412,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    @Override
+    public void onInstallReferrerEventsFinished (){
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+        processNextQueueItem();
+    }
+
     /**
      * Add the given URI Scheme to the external Uri white list. Branch will collect
      * external intent uri only if white list matches with the app opened URL properties
@@ -2141,7 +2165,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-
     private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
@@ -2219,6 +2242,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
+        if (checkPlayStoreReferrer() && request instanceof ServerRequestRegisterInstall) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+            InstallListener.startInstallReferrerTime(PLAYSTORE_REFERRAL_FETCH_WAIT_FOR);
+        }
+
         registerInstallOrOpen(request, callback);
     }
 

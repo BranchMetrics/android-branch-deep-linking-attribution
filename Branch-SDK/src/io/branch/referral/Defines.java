@@ -119,7 +119,6 @@ public class Defines {
         ContentAnalyticsMode("content_analytics_mode"),
         ContentDiscovery("cd");
 
-
         private String key = "";
 
         Jsonkey(String key) {

@@ -91,6 +91,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setIsAppLinkTriggeredInit(false);
+            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
