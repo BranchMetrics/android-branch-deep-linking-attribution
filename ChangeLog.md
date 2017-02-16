@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.5.8 Fix for getAppVersion, added matching via PlayStore install broadcast intent, modifications to strong match url.
+
 - v2.5.7 Fix for ShareSheet Airplane mode, updated commerceevent defaults, Added feature for sharesheet to whitelist/blacklist apps by package name. Added synchronous
   getLatestReferringParams and getFirstReferringParams.
 
