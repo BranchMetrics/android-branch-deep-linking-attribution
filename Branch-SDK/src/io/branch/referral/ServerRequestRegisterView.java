@@ -11,7 +11,6 @@ import java.util.Set;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.BranchEvent;
-import io.branch.referral.util.CurrencyType;
 
 /**
  * * <p>
@@ -94,7 +93,12 @@ class ServerRequestRegisterView extends ServerRequest {
         contentObject.put(Defines.Jsonkey.SessionID.getKey(), sessionID);
         contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 
-        String uniqueId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
+        String uniqueId;
+        if (DeviceInfo.getInstance() != null) {
+            uniqueId = DeviceInfo.getInstance().getHardwareID();
+        } else {
+            uniqueId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
+        }
         if (!uniqueId.equals(SystemObserver.BLANK) && sysObserver.hasRealHardwareId()) {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqueId);
         }
