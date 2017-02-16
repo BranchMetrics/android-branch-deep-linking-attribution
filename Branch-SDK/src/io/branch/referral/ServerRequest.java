@@ -27,7 +27,7 @@ public abstract class ServerRequest {
     private JSONObject params_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
-    private SystemObserver systemObserver_;
+    private final SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
     private int waitLockCnt = 0;

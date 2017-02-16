@@ -15,7 +15,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-    SystemObserver systemObserver_;
+    final SystemObserver systemObserver_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
@@ -55,6 +55,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     public ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        systemObserver_ = new SystemObserver(context);
     }
 
     @Override

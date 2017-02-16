@@ -15,7 +15,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-    SystemObserver systemObserver_;
+    final SystemObserver systemObserver_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
@@ -67,6 +67,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        systemObserver_ = new SystemObserver(context);
     }
 
     @Override

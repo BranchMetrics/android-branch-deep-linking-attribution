@@ -724,3 +724,7 @@ protected void attachBaseContext(Context base) {
 ### InvalidClassException, ClassLoadingError or VerificationError
 
 This is often caused by a Proguard bug with optimization. Please try to use the latest Proguard version or disable Proguard optimisation by setting `-dontoptimize` option
+
+### Proguard warning or errors with `answers-shim` module
+This is often caused when you exclude the `answers-shim` module from Branch SDK depending on your proguard settings. Please add the following to your proguard file to solve this issue
+`-dontwarn com.crashlytics.android.answers.shim.**`
