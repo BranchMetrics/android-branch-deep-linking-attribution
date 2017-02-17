@@ -98,6 +98,8 @@ public class PrefHelper {
     private static final String KEY_BRANCH_ANALYTICAL_DATA = "bnc_branch_analytical_data";
     private static final String KEY_LAST_STRONG_MATCH_TIME = "bnc_branch_strong_match_time";
 
+    private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
+
 
     private static String Branch_Key = null;
     /**
@@ -591,6 +593,12 @@ public class PrefHelper {
      */
     public void setInstallParams(String params) {
         setString(KEY_INSTALL_PARAMS, params);
+    }
+    public void setInstallReferrerParams(String params) {
+        setString(KEY_INSTALL_REFERRER, params);
+    }
+    public String getInstallReferrerParams() {
+        return getString(KEY_INSTALL_REFERRER);
     }
 
     /**
@@ -1213,5 +1221,4 @@ public class PrefHelper {
             }
         }
     }
-
 }

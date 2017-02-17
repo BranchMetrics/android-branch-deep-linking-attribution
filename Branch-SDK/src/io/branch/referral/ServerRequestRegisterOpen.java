@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,7 +15,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-    SystemObserver systemObserver_;
+    final SystemObserver systemObserver_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
@@ -54,6 +55,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     public ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        systemObserver_ = new SystemObserver(context);
     }
 
     @Override
@@ -65,6 +67,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
+
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
                 // If Clicked on a branch link

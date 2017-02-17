@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,7 +15,8 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-    SystemObserver systemObserver_;
+    final SystemObserver systemObserver_;
+
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
@@ -52,7 +54,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
-
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
             setPost(installPost);
 
@@ -66,6 +67,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        systemObserver_ = new SystemObserver(context);
     }
 
     @Override

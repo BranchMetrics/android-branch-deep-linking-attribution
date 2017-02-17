@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
@@ -59,11 +60,9 @@ import io.branch.referral.util.LinkProperties;
  * The core object required when using Branch SDK. You should declare an object of this type at
  * the class-level of each Activity or Fragment that you wish to use Branch functionality within.
  * </p>
- *
  * <p>
  * Normal instantiation of this object would look like this:
  * </p>
- *
  * <!--
  * <pre style="background:#fff;padding:10px;border:2px solid silver;">
  * Branch.getInstance(this.getApplicationContext()) // from an Activity
@@ -71,7 +70,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
 
     private static final String TAG = "BranchSDK";
 
@@ -293,6 +292,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean isLogging_ = false;
 
+    private static boolean checkInstallReferrer_ = false;
+    private static long PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = 5000;
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -301,7 +303,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private BranchRemoteInterface kRemoteInterface_;
     private PrefHelper prefHelper_;
-    private SystemObserver systemObserver_;
+    private final SystemObserver systemObserver_;
     private Context context_;
 
     final Object lock;
@@ -394,12 +396,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
 
     /* List of keys whose values are collected from the Intent Extra.*/
-    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[] {
+    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[]{
             "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
     };
 
     private CountDownLatch getFirstReferringParamsLatch = null;
     private CountDownLatch getLatestReferringParamsLatch = null;
+
+    /* Flag for checking of Strong matching is waiting on GAID fetch */
+    private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -421,8 +426,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+        InstallListener.setListener(this);
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
-        if (android.os.Build.VERSION.SDK_INT >= 23) {
+        // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
+        if (android.os.Build.VERSION.SDK_INT >= 15) {
             handleDelayedNewIntents_ = true;
             intentState_ = INTENT_STATE.PENDING;
         } else {
@@ -444,12 +451,28 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void enableTestMode() {
         BranchUtil.isCustomDebugEnabled_ = true;
     }
+
     public static void disableTestMode() {
         BranchUtil.isCustomDebugEnabled_ = false;
     }
+
     public void setDebug() {
         enableTestMode();
     }
+
+    public static void enablePlayStoreReferrer(long delay) {
+        checkInstallReferrer_ = true;
+        PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
+    }
+  
+    static boolean checkPlayStoreReferrer() {
+        return checkInstallReferrer_;
+    }
+  
+    public static long getReferralFetchWaitTime() {
+        return PLAYSTORE_REFERRAL_FETCH_WAIT_FOR;
+    }
+  
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
      * Make sure your app is instantiating {@link BranchApp} before calling this method
@@ -547,7 +570,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -573,7 +595,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -593,7 +614,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context      A {@link Context} from which this call was made.
@@ -616,10 +636,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     *
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
-     * @param context A {@link Context} from which this call was made.
+     * @param context   A {@link Context} from which this call was made.
      * @param branchKey A {@link String} value used to initialize Branch.
      * @return An initialised {@link Branch} object, either fetched from a pre-initialised
      * instance within the singleton class, or a newly instantiated object where
@@ -727,7 +746,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Sets the duration in milliseconds that the system should wait for a response before considering
      * any Branch API call to have timed out. Default 3000 ms.</p>
-     *
      * <p>Increase this to perform better in low network speed situations, but at the expense of
      * responsiveness to error situation.</p>
      *
@@ -1240,7 +1258,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Branch#getAutoInstance(Context).</p>
      *
      * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     *
      */
     public static void enableCookieBasedMatching(String cookieMatchDomain) {
         cookieBasedMatchDomain_ = cookieMatchDomain;
@@ -1388,6 +1405,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void onGAdsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        if (performCookieBasedStrongMatchingOnGAIDAvailable) {
+            performCookieBasedStrongMatch();
+            performCookieBasedStrongMatchingOnGAIDAvailable = false;
+        } else {
+            processNextQueueItem();
+        }
+    }
+
+    @Override
+    public void onInstallReferrerEventsFinished (){
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
         processNextQueueItem();
     }
 
@@ -1414,10 +1442,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Set the given list of URI Scheme as the external Uri white list. Branch will collect
      * external intent uri only for Uris in white list.
+     *
      * If no URI is added to the white list branch will collect all external intent uris
      * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
-     *
      * <!-- @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list -->
+     *
      * @return {@link Branch} instance for successive method calls
      */
     public Branch setWhiteListedSchemes(List<String> uriSchemes) {
@@ -1649,9 +1678,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 return.
      * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *
      *                 <p>Valid choices:</p>
-     *
      *                 <ul>
      *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
@@ -1677,9 +1704,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 return.
      * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *
      *                 <p>Valid choices:</p>
-     *
      *                 <ul>
      *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
@@ -2141,7 +2166,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-
     private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
@@ -2219,6 +2243,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
+        if (checkPlayStoreReferrer() && request instanceof ServerRequestRegisterInstall) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+            InstallListener.startInstallReferrerTime(PLAYSTORE_REFERRAL_FETCH_WAIT_FOR);
+        }
+
         registerInstallOrOpen(request, callback);
     }
 
@@ -2228,23 +2257,32 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-                boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
-                DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
-                Context context = currentActivityReference_.get().getApplicationContext();
-                requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
-                    @Override
-                    public void onStrongMatchCheckFinished() {
-                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
-                        processNextQueueItem();
-                    }
-                });
+                if (isGAParamsFetchInProgress_) {
+                    // Wait for GAID to Available
+                    performCookieBasedStrongMatchingOnGAIDAvailable = true;
+                } else {
+                    performCookieBasedStrongMatch();
+                }
             } else {
                 processNextQueueItem();
             }
         } else {
             processNextQueueItem();
         }
+    }
+
+    private void performCookieBasedStrongMatch() {
+        boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
+        DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
+        Context context = currentActivityReference_.get().getApplicationContext();
+        requestQueue_.setStrongMatchWaitLock();
+        BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
+            @Override
+            public void onStrongMatchCheckFinished() {
+                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
+                processNextQueueItem();
+            }
+        });
     }
 
     /**
@@ -2757,7 +2795,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activitie configured for auto deep link on seeing matching keys.
      * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
-     *
      * Configure your activity in your manifest to enable auto deep linking as follows
      * <!--
      * <activity android:name=".YourActivity">
@@ -2897,11 +2934,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return isSimulatingInstalls_;
     }
 
-    public static void enableLogging() { isLogging_ = true; }
+    public static void enableLogging() {
+        isLogging_ = true;
+    }
 
-    public static void disableLogging() { isLogging_ = false; }
+    public static void disableLogging() {
+        isLogging_ = false;
+    }
 
-    public static boolean getIsLogging() { return isLogging_; }
+    public static boolean getIsLogging() {
+        return isLogging_;
+    }
 
     //-------------------------- Branch Builders--------------------------------------//
 
