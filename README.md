@@ -29,6 +29,7 @@ ___
   + [Setting the user id for tracking influencers](#persistent-identities)
   + [Logging a user out](#logout)
   + [Tracking custom events](#register-custom-events)
+  + [Matching through Install Listener](#matching-through-install-listener)
 
 4. Branch Universal Objects
   + [Instantiate a Branch Universal Object](#defining-the-branch-universal-object)
@@ -371,6 +372,15 @@ Some example events you might want to track:
 "wrote_message"
 "finished_level_ten"
 ```
+
+### Matching Through Install Listener
+```java
+Branch.enablePlayStoreReferrer(long delay); //from your Application class before getAutoInstance.
+//test sending broadcasts via:
+adb shell am broadcast -a com.android.vending.INSTALL_REFERRER -n io.branch.branchandroiddemo/io.branch.referral.InstallListener --es "referrer" "link_click_id=123"
+```
+
+Enable to pass link_click_id from Install Listener, as broadcasts can arrive at different times, developer can set amount of time v1/open should wait for the install listener broadcast before posting. Requires including io.branch.referral.InstallListener.
 
 ## Branch Universal Object (for deep links, content analytics and indexing)
 
