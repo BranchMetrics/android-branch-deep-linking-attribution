@@ -380,7 +380,7 @@ Branch.enablePlayStoreReferrer(long delay); //from your Application class before
 adb shell am broadcast -a com.android.vending.INSTALL_REFERRER -n io.branch.branchandroiddemo/io.branch.referral.InstallListener --es "referrer" "link_click_id=123"
 ```
 
-Enable to pass link_click_id from Install Listener, as broadcasts can arrive at different times, developer can set amount of time v1/open should wait for the install listener broadcast before posting. Requires including io.branch.referral.InstallListener.
+Enable to pass link_click_id from Google Play to Branch through your Install Listener. As broadcasts can arrive at different times, you can set the amount of time Branch should wait for the install listener broadcast before posting. Requires including io.branch.referral.InstallListener in your Manifest file. You can test sending broadcasts to your app using the above adb shell command.
 
 ## Branch Universal Object (for deep links, content analytics and indexing)
 
