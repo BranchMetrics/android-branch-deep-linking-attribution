@@ -16,19 +16,20 @@ dependencies:
     - cd && wget https://services.gradle.org/distributions/gradle-2.4-bin.zip && unzip gradle-2.4-bin.zip
 
 test:
-
   override:
-    - gradle
-    - emulator -avd circleci-android23 -no-audio -no-window:
+    # Ideally tests would execute on at least min and target SDK.  The challenge
+    # is collecting the test results and coverage when there are multiple
+    # executions.  Tests currently run against 22, because 23 hangs on CircleCI.
+    - emulator -avd circleci-android22 -no-window:
         background: true
         parallel: true
     - circle-android wait-for-boot
-#    - $ANDROID_HOME/tools/emulator -avd circleci-android23 -no-skin -no-window -no-audio:
-#        background: true
-#        #parallel: true
-#    - ./wait.sh:
-#        #parallel: true
-    - adb install Branch-SDK-TestBed/Branch-SDK-TestBed-release-unsigned.apk
+
+    # The emulator lags even after wait-for-boot, causing tests against the
+    # emulator to fail with a timeout.  An explicit sleep isn't ideal because
+    # it adds extra time to every build, however this is good enough for now.
+    - sleep 31
+
     - adb logcat:
         background: true
     - adb wait-for-device
