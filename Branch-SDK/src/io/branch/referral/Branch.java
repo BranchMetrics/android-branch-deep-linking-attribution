@@ -428,7 +428,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
         InstallListener.setListener(this);
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
-        if (android.os.Build.VERSION.SDK_INT >= 23) {
+        // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
+        if (android.os.Build.VERSION.SDK_INT >= 15) {
             handleDelayedNewIntents_ = true;
             intentState_ = INTENT_STATE.PENDING;
         } else {
