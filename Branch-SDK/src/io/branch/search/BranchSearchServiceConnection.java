@@ -62,15 +62,46 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         Log.d("Bridge_test", "Service Bound :- " + serviceBound);
     }
 
-    public void addToSharableContent(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
+    public boolean addToSharableContent(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
         Log.d("Bridge_test", "addToSharableContent");
+        boolean isContentAdded = false;
         if (branchSearchServiceInterface_ != null) {
             try {
                 branchSearchServiceInterface_.addToSharableContent(contentBUO, packageName, contentUrl);
+                isContentAdded = true;
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
+        return isContentAdded;
+    }
+
+    public boolean deleteContent(BranchUniversalObject buo, String packageName) {
+        Log.d("Bridge_test", "deleteContent");
+        boolean isContentDeleted = false;
+        if (branchSearchServiceInterface_ != null) {
+            try {
+                branchSearchServiceInterface_.deleteContent(buo, packageName);
+                isContentDeleted = true;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return isContentDeleted;
+    }
+
+    public boolean clearAllContents(String packageName){
+        Log.d("Bridge_test", "deleteContent");
+        boolean clearedAllContents = false;
+        if (branchSearchServiceInterface_ != null) {
+            try {
+                branchSearchServiceInterface_.clearContent(packageName);
+                clearedAllContents = true;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return clearedAllContents;
     }
 
     /**

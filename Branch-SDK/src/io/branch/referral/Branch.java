@@ -633,6 +633,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchReferral_;
     }
 
+    public Context getAppContext() {
+        return context_;
+    }
+
     /**
      * <p>Initialises an instance of the Branch object.</p>
      *
@@ -3302,10 +3306,31 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
 
     ///-----App Bridging-----------------------------//
-    public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
-        String url = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
-        branchSearchServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
+
+    /**
+     * Delete the content with specified canonical id from Samsung local search
+     *
+     * @param canonicalID {@link String} canonical id of the content added
+     * @return {@code true} if content is successfully deleted from Samsung Local search
+     * @see {@link BranchUniversalObject#listOnSamsungSearch()}
+     */
+    public boolean deleteFromSamsungSearch(String canonicalID) {
+        BranchUniversalObject branchUniversalObject = new BranchUniversalObject();
+        branchUniversalObject.setCanonicalIdentifier(canonicalID);
+        return branchSearchServiceConnection_.deleteContent(branchUniversalObject, context_.getPackageName());
     }
+
+    /**
+     * Clears all contents from this application added to the Samsung local search
+     * @return {@code true} if contents are successfully cleared from Samsung Local search
+     */
+    public boolean clearAllSamsungSearchableContent() {
+        return branchSearchServiceConnection_.clearAllContents(context_.getPackageName());
+    }
+//    public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
+//        String url = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
+//        branchSearchServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
+//    }
 
     public boolean getLocalContent(String keyword, int offset, int limit, IBranchSearchEvents callback) {
         return branchSearchServiceConnection_.getContentForKey(keyword, offset, limit, callback);

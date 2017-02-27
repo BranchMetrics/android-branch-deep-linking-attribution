@@ -27,6 +27,7 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.search.BranchSearchServiceConnection;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -925,11 +926,70 @@ public class BranchUniversalObject implements Parcelable {
 
     //----------App Bridge---------------//
 
-    public void listOnLocalIndex() {
-        Branch.getInstance().addToSharedContent(this);
+    /**
+     * <p>
+     * Makes the content associated with this BUO discoverable in the native search on Samsung devices.
+     * </p>
+     * <p/>
+     * <p>
+     * Calling this method would put the BUO to the Samsung local search. Your content will appear in
+     * Samsung search as user search with matching keywords. Make sure the BUO is properly configured with
+     * {@link #setCanonicalIdentifier(String)},{@link #setTitle(String)}, {@link #setContentDescription(String)}, {@link #setContentImageUrl(String)} etc.
+     * The Title, Description and Image url is used to show your content properly in the search results.
+     * The contents displayed in Samsung search will get directly deep linked to the app.
+     * </p>
+     *
+     * @param userAction A {@link String }with value of user action name. See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @return {@code true} if content successfully added to samsung search
+     */
+    public boolean listOnSamsungSearch(String userAction) {
+        boolean isContentAdded;
+        Context context = Branch.getInstance().getAppContext();
+        String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
+        isContentAdded = BranchSearchServiceConnection.getInstance().addToSharableContent(this, context.getPackageName(), url);
+        if (!TextUtils.isEmpty(userAction)) {
+            addUserInteraction(userAction);
+        }
+        return isContentAdded;
     }
 
-    public void addUserInteraction(String userAction) {
+    /**
+     * <p>
+     * Makes the content associated with this BUO discoverable in the native search on Samsung devices.
+     * </p>
+     * <p/>
+     * <p>
+     * Calling this method would put the BUO to the Samsung local search. Your content will appear in
+     * Samsung search as user search with matching keywords. Make sure the BUO is properly configured with
+     * {@link #setCanonicalIdentifier(String)},{@link #setTitle(String)}, {@link #setContentDescription(String)}, {@link #setContentImageUrl(String)} etc.
+     * The Title, Description and Image url is used to show your content properly in the search results.
+     * The contents displayed in Samsung search will get directly deep linked to the app.
+     * </p>
+     *
+     * @return {@code true} if content successfully added to samsung search
+     */
+    public boolean listOnSamsungSearch() {
+        return listOnSamsungSearch(null);
+    }
+
+    /**
+     * <p/>
+     * Delete this BUO from the Samsung local search.
+     * On successful deletion content of this BUO will not appear on Samsung Local search
+     *
+     * @return
+     * @see {@link Branch#deleteFromSamsungSearch(String)} also.
+     * </p>
+     */
+    public boolean deleteFromSamsungSearch() {
+        return BranchSearchServiceConnection.getInstance().deleteContent(this,Branch.getInstance().getAppContext().getPackageName());
+    }
+
+    private void addUserInteraction(String userAction) {
+        Context context = Branch.getInstance().getAppContext();
         Branch.getInstance().addUserInteraction(this, userAction);
+        String deepLinkUrl = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
+        String packageName = context.getPackageName();
+        BranchSearchServiceConnection.getInstance().addUserInteraction(this, packageName, userAction, deepLinkUrl);
     }
 }
