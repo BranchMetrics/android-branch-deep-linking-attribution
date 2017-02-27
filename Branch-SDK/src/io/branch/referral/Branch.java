@@ -3327,10 +3327,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean clearAllSamsungSearchableContent() {
         return branchSearchServiceConnection_.clearAllContents(context_.getPackageName());
     }
-//    public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
-//        String url = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
-//        branchSearchServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
-//    }
+
 
     public boolean getLocalContent(String keyword, int offset, int limit, IBranchSearchEvents callback) {
         return branchSearchServiceConnection_.getContentForKey(keyword, offset, limit, callback);

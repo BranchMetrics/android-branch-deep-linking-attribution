@@ -5,9 +5,9 @@ import io.branch.search.BranchSearchContent;
 import io.branch.search.IBranchSearchCallback;
 
 interface IBranchSearchServiceInterface {
-  void addToSharableContent (in BranchUniversalObject contentBUO, in String packageName, String contentUrl);
-  void deleteContent (in BranchUniversalObject contentBUO, in String packageName);
-  void clearContent (in String packageName);
+  void addToIndex (in BranchUniversalObject contentBUO, in String packageName, String contentUrl);
+  void deleteFromIndex(in BranchUniversalObject contentBUO, in String packageName);
+  void deleteAllSearchableContent (in String packageName);
   void searchContent(String keyword, int offset, int limit, String packageName);
   void registerCallback (in IBranchSearchCallback callback, String packageName);
   void addUserInteraction(in BranchUniversalObject contentBUO, in String packageName, String userAction, String contentUrl);

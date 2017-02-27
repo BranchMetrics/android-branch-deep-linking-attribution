@@ -67,7 +67,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         boolean isContentAdded = false;
         if (branchSearchServiceInterface_ != null) {
             try {
-                branchSearchServiceInterface_.addToSharableContent(contentBUO, packageName, contentUrl);
+                branchSearchServiceInterface_.addToIndex(contentBUO, packageName, contentUrl);
                 isContentAdded = true;
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -81,7 +81,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         boolean isContentDeleted = false;
         if (branchSearchServiceInterface_ != null) {
             try {
-                branchSearchServiceInterface_.deleteContent(buo, packageName);
+                branchSearchServiceInterface_.deleteFromIndex(buo, packageName);
                 isContentDeleted = true;
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -95,7 +95,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         boolean clearedAllContents = false;
         if (branchSearchServiceInterface_ != null) {
             try {
-                branchSearchServiceInterface_.clearContent(packageName);
+                branchSearchServiceInterface_.deleteAllSearchableContent(packageName);
                 clearedAllContents = true;
             } catch (RemoteException e) {
                 e.printStackTrace();
