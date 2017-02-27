@@ -2274,12 +2274,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private void performCookieBasedStrongMatch() {
         boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
         DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
-        Context context;
-        try {
-            context = currentActivityReference_.get().getApplicationContext();
-        } catch (NullPointerException e) {
-            context = null;
-        }
+        Context context = currentActivityReference_ != null && currentActivityReference_.get() != null ? currentActivityReference_.get().getApplicationContext() : null;
         if (context != null) {
             requestQueue_.setStrongMatchWaitLock();
             BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
