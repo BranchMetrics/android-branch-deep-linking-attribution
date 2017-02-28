@@ -1,7 +1,7 @@
 // IBridgeInterface.aidl
 package io.branch.search;
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.search.BranchSearchContent;
+import io.branch.search.BranchSearchResult;
 import io.branch.search.IBranchSearchCallback;
 
 interface IBranchSearchServiceInterface {

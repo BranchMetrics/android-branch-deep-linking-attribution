@@ -47,12 +47,12 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.search.BranchSearchResult;
 import io.branch.search.BranchSearchServiceConnection;
-import io.branch.search.BranchSearchContent;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
-import io.branch.search.IBranchSearchCallback;
+import io.branch.search.ContentResult;
 
 /**
  * <p>
@@ -3349,7 +3349,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public interface IBranchSearchEvents {
-        void onSearchResult(int offset, int limit, String searchKeyWord, List<BranchSearchContent> searchResults);
+        void onSearchResult(int offset, int limit, String searchKeyWord, BranchSearchResult searchResult);
 
     }
 
@@ -3358,6 +3358,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public interface IBranchContentRecommendationEvents {
-        void onContentRecommendation(List<BranchSearchContent> recommendedContents);
+        void onContentRecommendation(List<ContentResult> recommendedContents);
     }
 }

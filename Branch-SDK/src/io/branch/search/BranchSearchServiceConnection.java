@@ -181,7 +181,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
 
     private final IBranchSearchCallback.Stub searchCallback = new IBranchSearchCallback.Stub() {
         @Override
-        public void onSearchResult(int offset, int limit, String searchKey, List<BranchSearchContent> searchResult) throws RemoteException {
+        public void onSearchResult(int offset, int limit, String searchKey, BranchSearchResult searchResult) throws RemoteException {
             if (searchEvents_ != null) {
                 searchEvents_.onSearchResult(offset, limit, searchKey, searchResult);
             }
@@ -195,7 +195,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         }
 
         @Override
-        public void onRecommendedContent(List<BranchSearchContent> recommendedContents) throws RemoteException {
+        public void onRecommendedContent(List<ContentResult> recommendedContents) throws RemoteException {
             if (contentRecommendationEvents_ != null) {
                 contentRecommendationEvents_.onContentRecommendation(recommendedContents);
             }
