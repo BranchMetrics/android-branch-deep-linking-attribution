@@ -188,9 +188,9 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         }
 
         @Override
-        public void onRecommendedAppList(List<String> packageNames) throws RemoteException {
+        public void onRecommendedAppList(List<AppResult> apps) throws RemoteException {
             if (appRecommendationEvent_ != null) {
-                appRecommendationEvent_.onAppRecommendation(packageNames);
+                appRecommendationEvent_.onAppRecommendation(apps);
             }
         }
 

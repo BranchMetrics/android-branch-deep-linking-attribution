@@ -47,6 +47,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.search.AppResult;
 import io.branch.search.BranchSearchResult;
 import io.branch.search.BranchSearchServiceConnection;
 import io.branch.indexing.BranchUniversalObject;
@@ -3354,7 +3355,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public interface IBranchAppRecommendationEvents {
-        void onAppRecommendation(List<String> recommendedApps);
+        void onAppRecommendation(List<AppResult> recommendedApps);
     }
 
     public interface IBranchContentRecommendationEvents {

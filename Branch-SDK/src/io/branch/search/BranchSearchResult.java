@@ -3,8 +3,6 @@ package io.branch.search;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -18,13 +16,10 @@ import java.util.List;
 public class BranchSearchResult implements Parcelable {
     private final List<AppResult> appResults;
     private final List<ContentResult> contentResults;
-    private final HashMap<AppResult, List<ContentResult>> groupedResults;
 
-
-    public BranchSearchResult(List<AppResult> appResults, List<ContentResult> contentResults, HashMap<AppResult, List<ContentResult>> groupedResults) {
+    public BranchSearchResult(List<AppResult> appResults, List<ContentResult> contentResults) {
         this.appResults = appResults;
         this.contentResults = contentResults;
-        this.groupedResults = groupedResults;
     }
 
     /**
@@ -83,14 +78,6 @@ public class BranchSearchResult implements Parcelable {
         return contentResults;
     }
 
-    /**
-     * Get the content results grouped by application.
-     *
-     * @return {@link HashMap<AppResult, ArrayList<ContentResult>>}
-     */
-    public HashMap<AppResult, List<ContentResult>> getGroupedResults() {
-        return groupedResults;
-    }
 
     //----------Parcelable implementation-----------------//
 
@@ -103,13 +90,11 @@ public class BranchSearchResult implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeTypedList(this.appResults);
         dest.writeTypedList(this.contentResults);
-        dest.writeSerializable(this.groupedResults);
     }
 
     protected BranchSearchResult(Parcel in) {
         this.appResults = in.createTypedArrayList(AppResult.CREATOR);
         this.contentResults = in.createTypedArrayList(ContentResult.CREATOR);
-        this.groupedResults = (HashMap<AppResult, List<ContentResult>>) in.readSerializable();
     }
 
     public static final Parcelable.Creator<BranchSearchResult> CREATOR = new Parcelable.Creator<BranchSearchResult>() {
