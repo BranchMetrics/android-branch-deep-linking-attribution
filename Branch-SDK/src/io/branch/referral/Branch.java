@@ -3330,10 +3330,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
 
-    public boolean getLocalContent(String keyword, int offset, int limit, IBranchSearchEvents callback) {
-        return branchSearchServiceConnection_.getContentForKey(keyword, offset, limit, callback);
-    }
-
     public boolean getTopRecommendedApps(int maxAppCount, boolean skipSystemApps, IBranchAppRecommendationEvents callback) {
         return branchSearchServiceConnection_.getAppRecommendations(maxAppCount, skipSystemApps, callback);
     }
@@ -3349,10 +3345,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchSearchServiceConnection_.addUserInteraction(branchUniversalObject, packageName, userAction, deeplinkUrl);
     }
 
-    public interface IBranchSearchEvents {
-        void onSearchResult(int offset, int limit, String searchKeyWord, BranchSearchResult searchResult);
-
-    }
 
     public interface IBranchAppRecommendationEvents {
         void onAppRecommendation(List<AppResult> recommendedApps);

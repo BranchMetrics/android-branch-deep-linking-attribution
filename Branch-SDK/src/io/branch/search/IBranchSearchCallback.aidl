@@ -6,7 +6,7 @@ import io.branch.search.ContentResult;
 import io.branch.search.AppResult;
 
 interface IBranchSearchCallback {
-  void onSearchResult(in int offset, in int limit, in String searchKey, in BranchSearchResult searchResult);
+  void onSearchResult(in String searchQuery, in BranchSearchResult searchResult);
   void onRecommendedAppList(in List<AppResult> packageNames);
   void onRecommendedContent(in List<ContentResult> recommendedContents);
 }
