@@ -47,13 +47,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.search.AppResult;
-import io.branch.search.BranchSearchResult;
-import io.branch.search.BranchSearchServiceConnection;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
-import io.branch.search.ContentResult;
+import io.branch.search.BranchSearchServiceConnection;
 
 /**
  * <p>
@@ -389,8 +386,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
-    private final BranchSearchServiceConnection branchSearchServiceConnection_;
-
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -421,8 +416,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
-        branchSearchServiceConnection_ = BranchSearchServiceConnection.getInstance();
-        branchSearchServiceConnection_.doBindService(context.getApplicationContext());
+        BranchSearchServiceConnection.getInstance().doBindService(context.getApplicationContext());
     }
 
     /**
@@ -1235,11 +1229,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (data != null) {
                     boolean foundSchemeMatch;
                     boolean skipThisHost = false;
-                    if (externalUriWhiteList_.size() > 0) {
-                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
-                    } else {
-                        foundSchemeMatch = true;
-                    }
+                    foundSchemeMatch = externalUriWhiteList_.size() <= 0 || externalUriWhiteList_.contains(data.getScheme());
 
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
@@ -1275,7 +1265,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Check for any push identifier in case app is launched by a push notification
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    if (activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey()) == false) {
+                    if (!activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey())) {
                         String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
                         if (pushIdentifier != null && pushIdentifier.length() > 0) {
                             prefHelper_.setPushIdentifier(pushIdentifier);
@@ -3304,30 +3294,5 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          */
         boolean skipBranchViewsOnThisActivity();
     }
-
-
-    ///-----App Bridging-----------------------------//
-
-    /**
-     * Delete the content with specified canonical id from Samsung local search
-     *
-     * @param canonicalID {@link String} canonical id of the content added
-     * @return {@code true} if content is successfully deleted from Samsung Local search
-     * @see {@link BranchUniversalObject#listOnSamsungSearch()}
-     */
-    public boolean deleteFromSamsungSearch(String canonicalID) {
-        BranchUniversalObject branchUniversalObject = new BranchUniversalObject();
-        branchUniversalObject.setCanonicalIdentifier(canonicalID);
-        return branchSearchServiceConnection_.deleteContent(branchUniversalObject, context_.getPackageName());
-    }
-
-    /**
-     * Clears all contents from this application added to the Samsung local search
-     * @return {@code true} if contents are successfully cleared from Samsung Local search
-     */
-    public boolean clearAllSamsungSearchableContent() {
-        return branchSearchServiceConnection_.clearAllContents(context_.getPackageName());
-    }
-
 
 }
