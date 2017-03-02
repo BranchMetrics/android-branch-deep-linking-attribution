@@ -3330,27 +3330,4 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
 
-    public boolean getTopRecommendedApps(int maxAppCount, boolean skipSystemApps, IBranchAppRecommendationEvents callback) {
-        return branchSearchServiceConnection_.getAppRecommendations(maxAppCount, skipSystemApps, callback);
-    }
-
-    public boolean getTopRecommendedContents(int maxContentCount, IBranchContentRecommendationEvents callback) {
-        return branchSearchServiceConnection_.getContentRecommendations(maxContentCount, callback);
-    }
-
-    public void addUserInteraction(BranchUniversalObject branchUniversalObject, String userAction) {
-        // The url that will be used to open this piece of content
-        String deeplinkUrl = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
-        String packageName = context_.getPackageName();
-        branchSearchServiceConnection_.addUserInteraction(branchUniversalObject, packageName, userAction, deeplinkUrl);
-    }
-
-
-    public interface IBranchAppRecommendationEvents {
-        void onAppRecommendation(List<AppResult> recommendedApps);
-    }
-
-    public interface IBranchContentRecommendationEvents {
-        void onContentRecommendation(List<ContentResult> recommendedContents);
-    }
 }

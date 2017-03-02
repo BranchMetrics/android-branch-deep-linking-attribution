@@ -12,6 +12,7 @@ import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.roots.Roots;
 
 /**
  * Created by sojanpr on 9/26/16.
@@ -24,8 +25,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
     private static BranchSearchServiceConnection connection_;
     IBranchSearchServiceInterface branchSearchServiceInterface_;
     private SearchBuilder.IBranchSearchEvent searchEvents_;
-    private Branch.IBranchAppRecommendationEvents appRecommendationEvent_;
-    private Branch.IBranchContentRecommendationEvents contentRecommendationEvents_;
+    private RecommendationBuilder.IRecommendationEvents recommendationEvents_;
     String packageName_;
 
     public static BranchSearchServiceConnection getInstance() {
@@ -138,34 +138,19 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         }
     }
 
-    public boolean getAppRecommendations(int maxAppCount, boolean skipSystemApps, Branch.IBranchAppRecommendationEvents callback) {
+    public boolean getRecommendations(RecommendationBuilder recommendationBuilder) {
         boolean isServiceConnected = false;
-        appRecommendationEvent_ = callback;
+        recommendationEvents_ = recommendationBuilder.getCallback();
         if (branchSearchServiceInterface_ != null) {
             isServiceConnected = true;
             try {
-                branchSearchServiceInterface_.getTopRecommendedApps(maxAppCount, skipSystemApps, packageName_);
+                branchSearchServiceInterface_.getRecommendations(packageName_, recommendationBuilder);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
         return isServiceConnected;
     }
-
-    public boolean getContentRecommendations(int maxContentCount, Branch.IBranchContentRecommendationEvents callback) {
-        boolean isServiceConnected = false;
-        contentRecommendationEvents_ = callback;
-        if (branchSearchServiceInterface_ != null) {
-            isServiceConnected = true;
-            try {
-                branchSearchServiceInterface_.getTopRecommendedContents(maxContentCount, packageName_);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return isServiceConnected;
-    }
-
 
     private final IBranchSearchCallback.Stub searchCallback = new IBranchSearchCallback.Stub() {
         @Override
@@ -174,18 +159,10 @@ public class BranchSearchServiceConnection implements ServiceConnection {
                 searchEvents_.onBranchSearchEvents(searchQuery, searchResult);
             }
         }
-
         @Override
-        public void onRecommendedAppList(List<AppResult> apps) throws RemoteException {
-            if (appRecommendationEvent_ != null) {
-                appRecommendationEvent_.onAppRecommendation(apps);
-            }
-        }
-
-        @Override
-        public void onRecommendedContent(List<ContentResult> recommendedContents) throws RemoteException {
-            if (contentRecommendationEvents_ != null) {
-                contentRecommendationEvents_.onContentRecommendation(recommendedContents);
+        public void onRecommendations(BranchSearchResult recommendationResult) throws RemoteException {
+            if(recommendationEvents_ != null) {
+                recommendationEvents_.onRecommendationsAvailable(recommendationResult);
             }
         }
     };

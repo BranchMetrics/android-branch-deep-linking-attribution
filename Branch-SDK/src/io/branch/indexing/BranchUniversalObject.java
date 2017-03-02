@@ -982,12 +982,11 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      */
     public boolean deleteFromSamsungSearch() {
-        return BranchSearchServiceConnection.getInstance().deleteContent(this,Branch.getInstance().getAppContext().getPackageName());
+        return BranchSearchServiceConnection.getInstance().deleteContent(this, Branch.getInstance().getAppContext().getPackageName());
     }
 
     private void addUserInteraction(String userAction) {
         Context context = Branch.getInstance().getAppContext();
-        Branch.getInstance().addUserInteraction(this, userAction);
         String deepLinkUrl = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
         String packageName = context.getPackageName();
         BranchSearchServiceConnection.getInstance().addUserInteraction(this, packageName, userAction, deepLinkUrl);
