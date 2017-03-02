@@ -1,4 +1,5 @@
 Branch Android SDK change log
+- v2.5.9 Fix for strong match NPE.
 
 - v2.5.8 Fix for getAppVersion, added matching via PlayStore install broadcast intent, modifications to strong match url.
 
