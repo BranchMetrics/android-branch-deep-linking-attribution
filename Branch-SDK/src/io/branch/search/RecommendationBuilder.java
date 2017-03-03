@@ -18,7 +18,6 @@ public class RecommendationBuilder implements Parcelable {
     private static final int DEF_MAX_CONTENT_REC_COUNT = 3;
     private int maxAppRecommendationCount;
     private int maxContentRecommendationCount;
-    private boolean skipSystemApps;
     private final List<String> preferredAppsForContents;
     private final IRecommendationEvents callback;
 
@@ -35,7 +34,6 @@ public class RecommendationBuilder implements Parcelable {
         this.callback = callback;
         this.maxAppRecommendationCount = DEF_MAX_APP_REC_COUNT;
         this.maxContentRecommendationCount = DEF_MAX_CONTENT_REC_COUNT;
-        this.skipSystemApps = true;
         this.preferredAppsForContents = new ArrayList<>();
     }
 
@@ -63,16 +61,6 @@ public class RecommendationBuilder implements Parcelable {
         return this;
     }
 
-    /**
-     * Setting this will skip all system apps from apps and content recommendation list
-     *
-     * @return RecommendationBuilder instance for chaining
-     * @param  isSkipSystemApps {@code true} to skip the systems apps from app and their contents from recommendation
-     */
-    public RecommendationBuilder skipSystemApps(boolean isSkipSystemApps) {
-        this.skipSystemApps = isSkipSystemApps;
-        return this;
-    }
 
     /**
      * Add the given app to the app preference list. Caller can add any number of preferred apps
@@ -109,9 +97,6 @@ public class RecommendationBuilder implements Parcelable {
         return callback;
     }
 
-    public boolean isSkipSystemApps() {
-        return skipSystemApps;
-    }
 
     public List<String> getPreferredAppsForContents() {
         return preferredAppsForContents;
@@ -127,14 +112,12 @@ public class RecommendationBuilder implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(this.maxAppRecommendationCount);
         dest.writeInt(this.maxContentRecommendationCount);
-        dest.writeByte(this.skipSystemApps ? (byte) 1 : (byte) 0);
         dest.writeStringList(this.preferredAppsForContents);
     }
 
     protected RecommendationBuilder(Parcel in) {
         this.maxAppRecommendationCount = in.readInt();
         this.maxContentRecommendationCount = in.readInt();
-        this.skipSystemApps = in.readByte() != 0;
         this.preferredAppsForContents = in.createStringArrayList();
         callback = null;
     }
