@@ -95,7 +95,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         boolean clearedAllContents = false;
         if (branchSearchServiceInterface_ != null) {
             try {
-                branchSearchServiceInterface_.deleteAllSearchableContent(packageName);
+                branchSearchServiceInterface_.deleteAllFromIndex(packageName);
                 clearedAllContents = true;
             } catch (RemoteException e) {
                 e.printStackTrace();

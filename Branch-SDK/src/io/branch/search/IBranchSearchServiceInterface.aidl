@@ -9,7 +9,7 @@ import io.branch.search.RecommendationBuilder;
 interface IBranchSearchServiceInterface {
   void addToIndex (in BranchUniversalObject contentBUO, in String packageName, String contentUrl);
   void deleteFromIndex(in BranchUniversalObject contentBUO, in String packageName);
-  void deleteAllSearchableContent (in String packageName);
+  void deleteAllFromIndex (in String packageName);
   void searchContent(String packageName, in SearchBuilder searchBuilder);
   void registerCallback (in IBranchSearchCallback callback, String packageName);
   void addUserInteraction(in BranchUniversalObject contentBUO, in String packageName, String userAction, String contentUrl);
