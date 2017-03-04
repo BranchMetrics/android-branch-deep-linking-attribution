@@ -62,7 +62,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         Log.d("Bridge_test", "Service Bound :- " + serviceBound);
     }
 
-    public boolean addToSharableContent(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
+    public boolean addToIndex(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
         Log.d("Bridge_test", "addToSharableContent");
         boolean isContentAdded = false;
         if (branchSearchServiceInterface_ != null) {
@@ -76,7 +76,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         return isContentAdded;
     }
 
-    public boolean deleteContent(BranchUniversalObject buo, String packageName) {
+    public boolean deleteFromIndex(BranchUniversalObject buo, String packageName) {
         Log.d("Bridge_test", "deleteContent");
         boolean isContentDeleted = false;
         if (branchSearchServiceInterface_ != null) {
@@ -90,7 +90,7 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         return isContentDeleted;
     }
 
-    public boolean clearAllContents(String packageName) {
+    public boolean deleteAllFromIndex(String packageName) {
         Log.d("Bridge_test", "deleteContent");
         boolean clearedAllContents = false;
         if (branchSearchServiceInterface_ != null) {

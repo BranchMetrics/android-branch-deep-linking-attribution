@@ -5,9 +5,10 @@ import io.branch.referral.Branch;
 
 /**
  * Created by sojanpr on 3/2/17.
- * <p>
- *     Provides methods to Delete the contents added to Local search
- *     @see {@link BranchUniversalObject#listOnSamsungSearch()} and {@link SearchBuilder}
+ * <p/>
+ * Provides methods to Delete the contents added to Local search
+ *
+ * @see {@link BranchUniversalObject#listOnSamsungSearch()} and {@link SearchBuilder}
  * </p>
  */
 public class DeleteFromSearch {
@@ -21,7 +22,7 @@ public class DeleteFromSearch {
     public static boolean deleteFromSamsungSearch(String canonicalID) {
         BranchUniversalObject branchUniversalObject = new BranchUniversalObject();
         branchUniversalObject.setCanonicalIdentifier(canonicalID);
-        return BranchSearchServiceConnection.getInstance().deleteContent(branchUniversalObject, Branch.getInstance().getAppContext().getPackageName());
+        return BranchSearchServiceConnection.getInstance().deleteFromIndex(branchUniversalObject, Branch.getInstance().getAppContext().getPackageName());
     }
 
     /**
@@ -29,7 +30,7 @@ public class DeleteFromSearch {
      *
      * @return {@code true} if contents are successfully cleared from Samsung Local search
      */
-    public static boolean clearAllSamsungSearchableContent() {
-        return BranchSearchServiceConnection.getInstance().clearAllContents(Branch.getInstance().getAppContext().getPackageName());
+    public static boolean deleteAllFromSamsungSearch() {
+        return BranchSearchServiceConnection.getInstance().deleteAllFromIndex(Branch.getInstance().getAppContext().getPackageName());
     }
 }

@@ -28,6 +28,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 import io.branch.search.BranchSearchServiceConnection;
+import io.branch.search.DeleteFromSearch;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -946,7 +947,7 @@ public class BranchUniversalObject implements Parcelable {
         boolean isContentAdded;
         Context context = Branch.getInstance().getAppContext();
         String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
-        isContentAdded = BranchSearchServiceConnection.getInstance().addToSharableContent(this, context.getPackageName(), url);
+        isContentAdded = BranchSearchServiceConnection.getInstance().addToIndex(this, context.getPackageName(), url);
         if (!TextUtils.isEmpty(userAction)) {
             addUserInteraction(userAction);
         }
@@ -978,11 +979,11 @@ public class BranchUniversalObject implements Parcelable {
      * On successful deletion content of this BUO will not appear on Samsung Local search
      *
      * @return
-     * @see {@link Branch#deleteFromSamsungSearch(String)} also.
+     * @see {@link DeleteFromSearch#clearAllSamsungSearchableContent()} also.
      * </p>
      */
     public boolean deleteFromSamsungSearch() {
-        return BranchSearchServiceConnection.getInstance().deleteContent(this, Branch.getInstance().getAppContext().getPackageName());
+        return BranchSearchServiceConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
     }
 
     private void addUserInteraction(String userAction) {
