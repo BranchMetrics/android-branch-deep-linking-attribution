@@ -12,6 +12,7 @@ import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.roots.Roots;
 
 /**
  * Created by sojanpr on 9/26/16.
@@ -23,9 +24,8 @@ import io.branch.referral.Branch;
 public class BranchSearchServiceConnection implements ServiceConnection {
     private static BranchSearchServiceConnection connection_;
     IBranchSearchServiceInterface branchSearchServiceInterface_;
-    private Branch.IBranchSearchEvents searchEvents_;
-    private Branch.IBranchAppRecommendationEvents appRecommendationEvent_;
-    private Branch.IBranchContentRecommendationEvents contentRecommendationEvents_;
+    private SearchBuilder.IBranchSearchEvent searchEvents_;
+    private RecommendationBuilder.IRecommendationEvents recommendationEvents_;
     String packageName_;
 
     public static BranchSearchServiceConnection getInstance() {
@@ -62,15 +62,60 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         Log.d("Bridge_test", "Service Bound :- " + serviceBound);
     }
 
-    public void addToSharableContent(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
+    public boolean addToIndex(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
         Log.d("Bridge_test", "addToSharableContent");
+        boolean isContentAdded = false;
         if (branchSearchServiceInterface_ != null) {
             try {
-                branchSearchServiceInterface_.addToSharableContent(contentBUO, packageName, contentUrl);
+                branchSearchServiceInterface_.addToIndex(contentBUO, packageName, contentUrl);
+                isContentAdded = true;
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
+        return isContentAdded;
+    }
+
+    public boolean deleteFromIndex(BranchUniversalObject buo, String packageName) {
+        Log.d("Bridge_test", "deleteContent");
+        boolean isContentDeleted = false;
+        if (branchSearchServiceInterface_ != null) {
+            try {
+                branchSearchServiceInterface_.deleteFromIndex(buo, packageName);
+                isContentDeleted = true;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return isContentDeleted;
+    }
+
+    public boolean deleteAllFromIndex(String packageName) {
+        Log.d("Bridge_test", "deleteContent");
+        boolean clearedAllContents = false;
+        if (branchSearchServiceInterface_ != null) {
+            try {
+                branchSearchServiceInterface_.deleteAllFromIndex(packageName);
+                clearedAllContents = true;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return clearedAllContents;
+    }
+
+    public boolean search(SearchBuilder searchBuilder) {
+        boolean isSearchSuccess = false;
+        searchEvents_ = searchBuilder.getCallback();
+        if (branchSearchServiceInterface_ != null) {
+            try {
+                branchSearchServiceInterface_.searchContent(packageName_, searchBuilder);
+                isSearchSuccess = true;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return isSearchSuccess;
     }
 
     /**
@@ -93,54 +138,13 @@ public class BranchSearchServiceConnection implements ServiceConnection {
         }
     }
 
-    public boolean getContentForKey(String key, int offset, int limit, Branch.IBranchSearchEvents callback) {
+    public boolean getRecommendations(RecommendationBuilder recommendationBuilder) {
         boolean isServiceConnected = false;
-        searchEvents_ = callback;
+        recommendationEvents_ = recommendationBuilder.getCallback();
         if (branchSearchServiceInterface_ != null) {
             isServiceConnected = true;
             try {
-                branchSearchServiceInterface_.searchContent(key, offset, limit, packageName_);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return isServiceConnected;
-    }
-
-    public boolean getAppRecommendations(int maxAppCount, boolean skipSystemApps, Branch.IBranchAppRecommendationEvents callback) {
-        boolean isServiceConnected = false;
-        appRecommendationEvent_ = callback;
-        if (branchSearchServiceInterface_ != null) {
-            isServiceConnected = true;
-            try {
-                branchSearchServiceInterface_.getTopRecommendedApps(maxAppCount, skipSystemApps, packageName_);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return isServiceConnected;
-    }
-
-    public boolean getContentRecommendations(int maxContentCount, Branch.IBranchContentRecommendationEvents callback) {
-        boolean isServiceConnected = false;
-        contentRecommendationEvents_ = callback;
-        if (branchSearchServiceInterface_ != null) {
-            isServiceConnected = true;
-            try {
-                branchSearchServiceInterface_.getTopRecommendedContents(maxContentCount, packageName_);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return isServiceConnected;
-    }
-
-    public boolean searchAppForContents(String packageName, String appKeyword) {
-        boolean isServiceConnected = false;
-        if (branchSearchServiceInterface_ != null) {
-            isServiceConnected = true;
-            try {
-                branchSearchServiceInterface_.searchInApp(packageName, appKeyword);
+                branchSearchServiceInterface_.getRecommendations(packageName_, recommendationBuilder);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -150,23 +154,15 @@ public class BranchSearchServiceConnection implements ServiceConnection {
 
     private final IBranchSearchCallback.Stub searchCallback = new IBranchSearchCallback.Stub() {
         @Override
-        public void onSearchResult(int offset, int limit, String searchKey, List<BranchSearchContent> searchResult) throws RemoteException {
+        public void onSearchResult(String searchQuery, BranchSearchResult searchResult) throws RemoteException {
             if (searchEvents_ != null) {
-                searchEvents_.onSearchResult(offset, limit, searchKey, searchResult);
+                searchEvents_.onBranchSearchEvents(searchQuery, searchResult);
             }
         }
-
         @Override
-        public void onRecommendedAppList(List<String> packageNames) throws RemoteException {
-            if (appRecommendationEvent_ != null) {
-                appRecommendationEvent_.onAppRecommendation(packageNames);
-            }
-        }
-
-        @Override
-        public void onRecommendedContent(List<BranchSearchContent> recommendedContents) throws RemoteException {
-            if (contentRecommendationEvents_ != null) {
-                contentRecommendationEvents_.onContentRecommendation(recommendedContents);
+        public void onRecommendations(BranchSearchResult recommendationResult) throws RemoteException {
+            if(recommendationEvents_ != null) {
+                recommendationEvents_.onRecommendationsAvailable(recommendationResult);
             }
         }
     };

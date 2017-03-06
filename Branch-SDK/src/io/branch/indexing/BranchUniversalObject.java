@@ -27,6 +27,8 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.search.BranchSearchServiceConnection;
+import io.branch.search.DeleteFromSearch;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -284,8 +286,6 @@ public class BranchUniversalObject implements Parcelable {
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
-        /* Add the user interaction to the on-device index */
-        addUserInteraction(action);
     }
 
     /**
@@ -297,6 +297,20 @@ public class BranchUniversalObject implements Parcelable {
      * @param metadata A HashMap containing any additional metadata need to add to this user event
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
+        userCompletedAction(action, metadata, true);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action                 A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @param metadata               A HashMap containing any additional metadata need to add to this user event
+     * @param addToBranchSearchIndex control flag for adding this BUO to Branch local search index. Set this to {@code false} to skip the content being listed in Branh local search
+     */
+    public void userCompletedAction(String action, HashMap<String, String> metadata, boolean addToBranchSearchIndex) {
+
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
@@ -312,10 +326,12 @@ public class BranchUniversalObject implements Parcelable {
                 Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
 
-            /* Add the user interaction to the on-device index */
-            addUserInteraction(action);
-
         } catch (JSONException ignore) {
+        }
+
+        if (addToBranchSearchIndex) {
+         /* Add the user interaction to the on-device index */
+            addUserInteraction(action);
         }
     }
 
@@ -925,11 +941,69 @@ public class BranchUniversalObject implements Parcelable {
 
     //----------App Bridge---------------//
 
-    public void listOnLocalIndex() {
-        Branch.getInstance().addToSharedContent(this);
+    /**
+     * <p>
+     * Makes the content associated with this BUO discoverable in the native search on Samsung devices.
+     * </p>
+     * <p/>
+     * <p>
+     * Calling this method would put the BUO to the Samsung local search. Your content will appear in
+     * Samsung search as user search with matching keywords. Make sure the BUO is properly configured with
+     * {@link #setCanonicalIdentifier(String)},{@link #setTitle(String)}, {@link #setContentDescription(String)}, {@link #setContentImageUrl(String)} etc.
+     * The Title, Description and Image url is used to show your content properly in the search results.
+     * The contents displayed in Samsung search will get directly deep linked to the app.
+     * </p>
+     *
+     * @param userAction A {@link String }with value of user action name. See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @return {@code true} if content successfully added to samsung search
+     */
+    public boolean listOnSamsungSearch(String userAction) {
+        boolean isContentAdded;
+        Context context = Branch.getInstance().getAppContext();
+        String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
+        isContentAdded = BranchSearchServiceConnection.getInstance().addToIndex(this, context.getPackageName(), url);
+        if (!TextUtils.isEmpty(userAction)) {
+            addUserInteraction(userAction);
+        }
+        return isContentAdded;
     }
 
-    public void addUserInteraction(String userAction) {
-        Branch.getInstance().addUserInteraction(this, userAction);
+    /**
+     * <p>
+     * Makes the content associated with this BUO discoverable in the native search on Samsung devices.
+     * </p>
+     * <p/>
+     * <p>
+     * Calling this method would put the BUO to the Samsung local search. Your content will appear in
+     * Samsung search as user search with matching keywords. Make sure the BUO is properly configured with
+     * {@link #setCanonicalIdentifier(String)},{@link #setTitle(String)}, {@link #setContentDescription(String)}, {@link #setContentImageUrl(String)} etc.
+     * The Title, Description and Image url is used to show your content properly in the search results.
+     * The contents displayed in Samsung search will get directly deep linked to the app.
+     * </p>
+     *
+     * @return {@code true} if content successfully added to samsung search
+     */
+    public boolean listOnSamsungSearch() {
+        return listOnSamsungSearch(null);
+    }
+
+    /**
+     * <p/>
+     * Delete this BUO from the Samsung local search.
+     * On successful deletion content of this BUO will not appear on Samsung Local search
+     *
+     * @return
+     * @see {@link DeleteFromSearch#deleteAllFromSamsungSearch()} also.
+     * </p>
+     */
+    public boolean deleteFromSamsungSearch() {
+        return BranchSearchServiceConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
+    }
+
+    private void addUserInteraction(String userAction) {
+        Context context = Branch.getInstance().getAppContext();
+        String deepLinkUrl = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
+        String packageName = context.getPackageName();
+        BranchSearchServiceConnection.getInstance().addUserInteraction(this, packageName, userAction, deepLinkUrl);
     }
 }

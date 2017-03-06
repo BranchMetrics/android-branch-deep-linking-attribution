@@ -228,7 +228,7 @@ public class MainActivity extends Activity {
                 branchUniversalObject.registerView();
                 // List on google search
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
-                branchUniversalObject.listOnLocalIndex();
+                branchUniversalObject.listOnSamsungSearch();
             }
         });
 

@@ -1,10 +1,11 @@
 // IBridgeInterface.aidl
 package io.branch.search;
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.search.BranchSearchContent;
+import io.branch.search.BranchSearchResult;
+import io.branch.search.ContentResult;
+import io.branch.search.AppResult;
 
 interface IBranchSearchCallback {
-  void onSearchResult(in int offset, in int limit, in String searchKey, in List<BranchSearchContent> searchResult);
-  void onRecommendedAppList(in List<String> packageNames);
-  void onRecommendedContent(in List<BranchSearchContent> recommendedContents);
+  void onSearchResult(in String searchQuery, in BranchSearchResult searchResult);
+  void onRecommendations(in BranchSearchResult searchResult);
 }

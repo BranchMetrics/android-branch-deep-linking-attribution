@@ -47,12 +47,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.search.BranchSearchServiceConnection;
-import io.branch.search.BranchSearchContent;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.LinkProperties;
-import io.branch.search.IBranchSearchCallback;
+import io.branch.search.BranchSearchServiceConnection;
 
 /**
  * <p>
@@ -388,8 +386,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
-    private final BranchSearchServiceConnection branchSearchServiceConnection_;
-
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -420,8 +416,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
-        branchSearchServiceConnection_ = BranchSearchServiceConnection.getInstance();
-        branchSearchServiceConnection_.doBindService(context.getApplicationContext());
+        BranchSearchServiceConnection.getInstance().doBindService(context.getApplicationContext());
     }
 
     /**
@@ -631,6 +626,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
         return branchReferral_;
+    }
+
+    public Context getAppContext() {
+        return context_;
     }
 
     /**
@@ -1230,11 +1229,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (data != null) {
                     boolean foundSchemeMatch;
                     boolean skipThisHost = false;
-                    if (externalUriWhiteList_.size() > 0) {
-                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
-                    } else {
-                        foundSchemeMatch = true;
-                    }
+                    foundSchemeMatch = externalUriWhiteList_.size() <= 0 || externalUriWhiteList_.contains(data.getScheme());
 
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
@@ -1270,7 +1265,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Check for any push identifier in case app is launched by a push notification
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    if (activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey()) == false) {
+                    if (!activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey())) {
                         String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
                         if (pushIdentifier != null && pushIdentifier.length() > 0) {
                             prefHelper_.setPushIdentifier(pushIdentifier);
@@ -3300,42 +3295,4 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean skipBranchViewsOnThisActivity();
     }
 
-
-    ///-----App Bridging-----------------------------//
-    public void addToSharedContent(BranchUniversalObject branchUniversalObject) {
-        String url = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
-        branchSearchServiceConnection_.addToSharableContent(branchUniversalObject, context_.getPackageName(), url);
-    }
-
-    public boolean getLocalContent(String keyword, int offset, int limit, IBranchSearchEvents callback) {
-        return branchSearchServiceConnection_.getContentForKey(keyword, offset, limit, callback);
-    }
-
-    public boolean getTopRecommendedApps(int maxAppCount, boolean skipSystemApps, IBranchAppRecommendationEvents callback) {
-        return branchSearchServiceConnection_.getAppRecommendations(maxAppCount, skipSystemApps, callback);
-    }
-
-    public boolean getTopRecommendedContents(int maxContentCount, IBranchContentRecommendationEvents callback) {
-        return branchSearchServiceConnection_.getContentRecommendations(maxContentCount, callback);
-    }
-
-    public void addUserInteraction(BranchUniversalObject branchUniversalObject, String userAction) {
-        // The url that will be used to open this piece of content
-        String deeplinkUrl = branchUniversalObject.getShortUrl(context_, new LinkProperties().setChannel("Branch Search"));
-        String packageName = context_.getPackageName();
-        branchSearchServiceConnection_.addUserInteraction(branchUniversalObject, packageName, userAction, deeplinkUrl);
-    }
-
-    public interface IBranchSearchEvents {
-        void onSearchResult(int offset, int limit, String searchKeyWord, List<BranchSearchContent> searchResults);
-
-    }
-
-    public interface IBranchAppRecommendationEvents {
-        void onAppRecommendation(List<String> recommendedApps);
-    }
-
-    public interface IBranchContentRecommendationEvents {
-        void onContentRecommendation(List<BranchSearchContent> recommendedContents);
-    }
 }
