@@ -3,9 +3,6 @@ package io.branch.search;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by sojanpr on 3/1/17.
  * <p>
@@ -18,7 +15,6 @@ public class SearchBuilder implements Parcelable {
     private static final int DEF_MAX_CONTENT_RESULT = 5;
     private final String query;
     private final IBranchSearchEvent callback;
-    private final List<String> packageNames;
     private int maxAppResults;
     private int maxContentResults;
 
@@ -31,7 +27,6 @@ public class SearchBuilder implements Parcelable {
     public SearchBuilder(String query, IBranchSearchEvent callback) {
         this.query = query;
         this.callback = callback;
-        packageNames = new ArrayList<>();
         maxAppResults = DEF_MAX_APP_RESULT;
         maxContentResults = DEF_MAX_CONTENT_RESULT;
     }
@@ -56,15 +51,6 @@ public class SearchBuilder implements Parcelable {
         return this;
     }
 
-    /**
-     * Add the preferred  apps to search with. Setting this option will return only result associated with the specified app
-     * @param packageName package name for the preferred app
-     * @return SearchBuilder instance for  chaining
-     */
-    public SearchBuilder addPreferredApp(String packageName) {
-        packageNames.add(packageName);
-        return this;
-    }
 
     /**
      * Execute a search with Branch with given query and configurations.
@@ -92,9 +78,7 @@ public class SearchBuilder implements Parcelable {
         return query;
     }
 
-    public List<String> getPreferredApps() {
-        return packageNames;
-    }
+
 
     //----------------Parcellable implementation---------------//
     @Override
@@ -105,14 +89,12 @@ public class SearchBuilder implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.query);
-        dest.writeStringList(this.packageNames);
         dest.writeInt(this.maxAppResults);
         dest.writeInt(this.maxContentResults);
     }
 
     protected SearchBuilder(Parcel in) {
         this.query = in.readString();
-        this.packageNames = in.createStringArrayList();
         this.maxAppResults = in.readInt();
         this.maxContentResults = in.readInt();
         callback = null;

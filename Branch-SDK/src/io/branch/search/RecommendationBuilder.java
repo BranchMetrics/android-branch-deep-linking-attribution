@@ -15,10 +15,9 @@ import java.util.List;
  */
 public class RecommendationBuilder implements Parcelable {
     private static final int DEF_MAX_APP_REC_COUNT = 5;
-    private static final int DEF_MAX_CONTENT_REC_COUNT = 3;
+    private static final int DEF_MAX_CONTENT_REC_COUNT = 4;
     private int maxAppRecommendationCount;
     private int maxContentRecommendationCount;
-    private final List<String> preferredAppsForContents;
     private final IRecommendationEvents callback;
 
     /**
@@ -34,7 +33,6 @@ public class RecommendationBuilder implements Parcelable {
         this.callback = callback;
         this.maxAppRecommendationCount = DEF_MAX_APP_REC_COUNT;
         this.maxContentRecommendationCount = DEF_MAX_CONTENT_REC_COUNT;
-        this.preferredAppsForContents = new ArrayList<>();
     }
 
     /**
@@ -61,20 +59,6 @@ public class RecommendationBuilder implements Parcelable {
         return this;
     }
 
-
-    /**
-     * Add the given app to the app preference list. Caller can add any number of preferred apps
-     * The recommended content list will include only contents from the preferred apps.
-     * If no apps added, the content recommendations are left unfiltered with apps
-     *
-     * @param packageName {@link String} package name for the apps to be added to the preferred list
-     * @return RecommendationBuilder instance for chaining
-     */
-    public RecommendationBuilder addPreferredApp(String packageName) {
-        preferredAppsForContents.add(packageName);
-        return this;
-    }
-
     /**
      * Gets the app and content recommendations based on the configurations specified
      * Recommendation results are returned back with {@link io.branch.search.RecommendationBuilder.IRecommendationEvents#onRecommendationsAvailable(BranchSearchResult)}
@@ -98,9 +82,6 @@ public class RecommendationBuilder implements Parcelable {
     }
 
 
-    public List<String> getPreferredAppsForContents() {
-        return preferredAppsForContents;
-    }
 
     //----------- Parcelable implementation-------------//
     @Override
@@ -112,13 +93,11 @@ public class RecommendationBuilder implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(this.maxAppRecommendationCount);
         dest.writeInt(this.maxContentRecommendationCount);
-        dest.writeStringList(this.preferredAppsForContents);
     }
 
     protected RecommendationBuilder(Parcel in) {
         this.maxAppRecommendationCount = in.readInt();
         this.maxContentRecommendationCount = in.readInt();
-        this.preferredAppsForContents = in.createStringArrayList();
         callback = null;
     }
 

@@ -286,8 +286,6 @@ public class BranchUniversalObject implements Parcelable {
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
-        /* Add the user interaction to the on-device index */
-        addUserInteraction(action);
     }
 
     /**
@@ -299,6 +297,20 @@ public class BranchUniversalObject implements Parcelable {
      * @param metadata A HashMap containing any additional metadata need to add to this user event
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
+        userCompletedAction(action, metadata, true);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action                 A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @param metadata               A HashMap containing any additional metadata need to add to this user event
+     * @param addToBranchSearchIndex control flag for adding this BUO to Branch local search index. Set this to {@code false} to skip the content being listed in Branh local search
+     */
+    public void userCompletedAction(String action, HashMap<String, String> metadata, boolean addToBranchSearchIndex) {
+
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
@@ -314,10 +326,12 @@ public class BranchUniversalObject implements Parcelable {
                 Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
 
-            /* Add the user interaction to the on-device index */
-            addUserInteraction(action);
-
         } catch (JSONException ignore) {
+        }
+
+        if (addToBranchSearchIndex) {
+         /* Add the user interaction to the on-device index */
+            addUserInteraction(action);
         }
     }
 
@@ -979,7 +993,7 @@ public class BranchUniversalObject implements Parcelable {
      * On successful deletion content of this BUO will not appear on Samsung Local search
      *
      * @return
-     * @see {@link DeleteFromSearch#clearAllSamsungSearchableContent()} also.
+     * @see {@link DeleteFromSearch#deleteAllFromSamsungSearch()} also.
      * </p>
      */
     public boolean deleteFromSamsungSearch() {
