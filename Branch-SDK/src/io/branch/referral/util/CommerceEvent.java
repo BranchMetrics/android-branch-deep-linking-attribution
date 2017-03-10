@@ -12,7 +12,7 @@ import java.util.List;
 public class CommerceEvent {
     private Double revenue;
     private CurrencyType currencyType;
-    private String transactionID;
+    private String transaction_id;
     private Double shipping;
     private Double tax;
     private String coupon;
@@ -36,11 +36,11 @@ public class CommerceEvent {
     }
 
     public String getTransactionID() {
-        return transactionID;
+        return transaction_id;
     }
 
-    public void setTransactionID(String transactionID) {
-        this.transactionID = transactionID;
+    public void setTransactionID(String transaction_id) {
+        this.transaction_id = transaction_id;
     }
 
     public Double getShipping() {
@@ -92,7 +92,7 @@ public class CommerceEvent {
     public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, List<Product> products) {
         this.revenue = revenue;
         this.currencyType = currencyType;
-        this.transactionID = transactionID;
+        this.transaction_id = transactionID;
         this.shipping = shipping;
         this.tax = tax;
         this.coupon = coupon;
@@ -103,7 +103,7 @@ public class CommerceEvent {
     public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, Product product) {
         this.revenue = revenue;
         this.currencyType = currencyType;
-        this.transactionID = transactionID;
+        this.transaction_id = transactionID;
         this.shipping = shipping;
         this.tax = tax;
         this.coupon = coupon;
@@ -117,12 +117,12 @@ public class CommerceEvent {
         try {
             jsonObject.put("revenue", this.revenue);
             jsonObject.put("currency", this.currencyType);
-            jsonObject.put("transactionID", this.transactionID);
+            jsonObject.put("transaction_id", this.transaction_id);
             jsonObject.put("shipping", this.shipping);
             jsonObject.put("tax", this.tax);
             jsonObject.put("coupon", this.coupon);
             jsonObject.put("affiliation", this.affiliation);
-            if ( getProducts() != null ) jsonObject.put("products", getProducts());
+            if (getProducts() != null) jsonObject.put("products", getProducts());
         } catch (JSONException e) {
 
         }
