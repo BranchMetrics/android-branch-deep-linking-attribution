@@ -103,4 +103,8 @@ public class InstallListener extends BroadcastReceiver {
     public static String getGoogleSearchInstallReferrerID() {
         return googleSearchInstallReferrerID_;
     }
+
+    public static void clearGoogleSearchInstallReferrerID() {
+        googleSearchInstallReferrerID_ = PrefHelper.NO_STRING_VALUE;
+    }
 }

@@ -114,10 +114,24 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
     }
 
-    public void updateLinkClickIdentifier() {
+    /**
+     * Update link referrer params like play store referrer params
+     * For link clicked installs link click id is updated when install referrer broadcast is received
+     * Also update any googleSearchReferrer available with play store referrer broadcast
+     *
+     * @see {@link InstallListener}
+     * @see Branch#enablePlayStoreReferrer(long)
+     */
+    public void updateLinkReferrerParams() {
         if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+            } catch (JSONException ignore) {
+            }
+        }
+        if (!InstallListener.getGoogleSearchInstallReferrerID().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), InstallListener.getGoogleSearchInstallReferrerID());
             } catch (JSONException ignore) {
             }
         }
@@ -142,6 +156,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+            }
+            if (!InstallListener.getGoogleSearchInstallReferrerID().equals(PrefHelper.NO_STRING_VALUE)) {
+                InstallListener.clearGoogleSearchInstallReferrerID();
             }
             if (contentDiscoveryManifest_ != null) {
                 JSONObject cdObj = new JSONObject();
