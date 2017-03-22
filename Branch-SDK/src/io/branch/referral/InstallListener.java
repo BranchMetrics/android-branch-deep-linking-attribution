@@ -27,8 +27,6 @@ public class InstallListener extends BroadcastReceiver {
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
     private static IInstallReferrerEvents callback_ = null;
 
-    /* URL identifier from an ad click on Google Search. */
-    private static String googleSearchInstallReferrerID_ = PrefHelper.NO_STRING_VALUE;
 
     private static boolean isWaitingForReferrer;
 
@@ -70,7 +68,7 @@ public class InstallListener extends BroadcastReceiver {
                 }
 
                 if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
-                    googleSearchInstallReferrerID_ = referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey());
+                    PrefHelper.getInstance(context).setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
                 }
 
                 if (callback_ != null) {
@@ -100,7 +98,4 @@ public class InstallListener extends BroadcastReceiver {
         void onInstallReferrerEventsFinished();
     }
 
-    public static String getGoogleSearchInstallReferrerID() {
-        return googleSearchInstallReferrerID_;
-    }
 }

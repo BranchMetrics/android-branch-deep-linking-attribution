@@ -86,6 +86,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         // Check for any Third party SDK for data handling
         try {
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
@@ -114,10 +115,24 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
     }
 
-    public void updateLinkClickIdentifier() {
+    /**
+     * Update link referrer params like play store referrer params
+     * For link clicked installs link click id is updated when install referrer broadcast is received
+     * Also update any googleSearchReferrer available with play store referrer broadcast
+     *
+     * @see {@link InstallListener}
+     * @see Branch#enablePlayStoreReferrer(long)
+     */
+    public void updateLinkReferrerParams() {
         if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+            } catch (JSONException ignore) {
+            }
+        }
+        if (!prefHelper_.getGoogleSearchInstallIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), prefHelper_.getGoogleSearchInstallIdentifier());
             } catch (JSONException ignore) {
             }
         }
@@ -129,6 +144,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
         try {
             if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+            }
+            if (!prefHelper_.getGoogleSearchInstallIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), prefHelper_.getGoogleSearchInstallIdentifier());
             }
             if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
@@ -143,6 +161,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
+
             if (contentDiscoveryManifest_ != null) {
                 JSONObject cdObj = new JSONObject();
                 cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, contentDiscoveryManifest_.getManifestVersion());

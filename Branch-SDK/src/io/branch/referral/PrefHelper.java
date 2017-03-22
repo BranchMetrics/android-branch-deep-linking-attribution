@@ -70,6 +70,7 @@ public class PrefHelper {
     private static final String KEY_IDENTITY = "bnc_identity";
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
+    private static final String KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER = "bnc_google_search_install_identifier";
     private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
@@ -507,6 +508,7 @@ public class PrefHelper {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
     }
 
+
     /**
      * <p>Gets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
@@ -514,6 +516,22 @@ public class PrefHelper {
      */
     public String getLinkClickIdentifier() {
         return getString(KEY_LINK_CLICK_IDENTIFIER);
+    }
+
+    /**
+     * Sets teh Gogole install referrer identifier to the pref
+     * @param identifier  Gogole install referrer identifier
+     */
+    public void setGoogleSearchInstallIdentifier(String identifier) {
+        setString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER, identifier);
+    }
+
+    /**
+     * Gets the google install referrer identifier
+     * @return {@link String} google install referrer identifier
+     */
+    public String getGoogleSearchInstallIdentifier() {
+        return getString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER);
     }
 
 
