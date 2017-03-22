@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +26,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param installID   installation ID.                                   .
      */
     public ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
-                                        SystemObserver sysObserver, String installID, String googleSearchInstallReferrerID) {
+                                        SystemObserver sysObserver, String installID) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
         systemObserver_ = sysObserver;
@@ -37,9 +36,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
             }
-            if (!googleSearchInstallReferrerID.equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallReferrerID);
-            }
+
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             }

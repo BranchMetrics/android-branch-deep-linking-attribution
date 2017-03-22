@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
@@ -2234,7 +2233,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID(), InstallListener.getGoogleSearchInstallReferrerID());
+            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
         }
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
@@ -2640,7 +2639,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             if (thisReq_ instanceof ServerRequestInitSession) {
-                ((ServerRequestInitSession) thisReq_).updateLinkClickIdentifier();
+                ((ServerRequestInitSession) thisReq_).updateLinkReferrerParams();
             }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
