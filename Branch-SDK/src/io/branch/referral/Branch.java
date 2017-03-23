@@ -463,15 +463,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         checkInstallReferrer_ = true;
         PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
     }
-  
+
     static boolean checkPlayStoreReferrer() {
         return checkInstallReferrer_;
     }
-  
+
     public static long getReferralFetchWaitTime() {
         return PLAYSTORE_REFERRAL_FETCH_WAIT_FOR;
     }
-  
+
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
      * Make sure your app is instantiating {@link BranchApp} before calling this method
@@ -1263,6 +1263,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>
+     * Enabled Strong matching check using chrome cookies. This method should be called before
+     * Branch#getAutoInstance(Context).</p>
+     *
+     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
+     * @param delay             Time in millisecond to wait for the strong match to check to finish before Branch init session is called.
+     *                          Default time is 750 msec.
+     */
+    public static void enableCookieBasedMatching(String cookieMatchDomain, int delay) {
+        cookieBasedMatchDomain_ = cookieMatchDomain;
+        BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay);
+    }
+
+    /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
      */
@@ -1413,7 +1427,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     @Override
-    public void onInstallReferrerEventsFinished (){
+    public void onInstallReferrerEventsFinished() {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
         processNextQueueItem();
     }
@@ -1441,7 +1455,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Set the given list of URI Scheme as the external Uri white list. Branch will collect
      * external intent uri only for Uris in white list.
-     *
+     * <p/>
      * If no URI is added to the white list branch will collect all external intent uris
      * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
      * <!-- @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list -->

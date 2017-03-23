@@ -28,10 +28,13 @@ class BranchStrongMatchHelper {
     private static BranchStrongMatchHelper branchStrongMatchHelper_;
     Object mClient_ = null;
     private static final int STRONG_MATCH_CHECK_TIME_OUT = 500; // Time to wait for strong match check
+    public static final int STRONG_MATCH_URL_HIT_DELAY = 750; // Time default delay time in ms between a Strong match uri call and v1/install
     private static final long THIRTY_DAYS_EPOCH_MILLI_SEC = 30 * 24 * 60 * 60 * 1000L;
     private final Handler timeOutHandler_;
+    private static int StrongMatchUrlHitDelay = BranchStrongMatchHelper.STRONG_MATCH_URL_HIT_DELAY;
 
     private boolean isCustomTabsAvailable_ = true;
+    boolean isStrongMatchUrlLaunched = false;
 
     Class<?> CustomTabsClientClass;
     Class<?> CustomServiceTabConnectionClass;
@@ -63,13 +66,17 @@ class BranchStrongMatchHelper {
         return branchStrongMatchHelper_;
     }
 
+    public void setStrongMatchUrlHitDelay(int delay) {
+        StrongMatchUrlHitDelay = delay;
+    }
 
     public void checkForStrongMatch(Context context, String cookieMatchDomain, DeviceInfo deviceInfo, final PrefHelper prefHelper, SystemObserver systemObserver, final StrongMatchCheckEvents callback) {
+        isStrongMatchUrlLaunched = false;
         //Check if strong match checked in last 30 days
         if (System.currentTimeMillis() - prefHelper.getLastStrongMatchTime() < THIRTY_DAYS_EPOCH_MILLI_SEC) {
-            updateStrongMatchCheckFinished(callback);
+            updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
         } else if (!isCustomTabsAvailable_) {
-            updateStrongMatchCheckFinished(callback);
+            updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
         } else {
             try {
                 if (deviceInfo.getHardwareID() != null) {
@@ -78,7 +85,7 @@ class BranchStrongMatchHelper {
                         timeOutHandler_.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                updateStrongMatchCheckFinished(callback);
+                                updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                             }
                         }, STRONG_MATCH_CHECK_TIME_OUT);
 
@@ -101,12 +108,14 @@ class BranchStrongMatchHelper {
                                         warmupMethod.invoke(mClient_, 0);
                                         Object customTabsSessionObj = newSessionMethod.invoke(mClient_, new Object[]{null});
                                         if (customTabsSessionObj != null) {
+                                            PrefHelper.Debug("BranchSDK","Strong match request "+strongMatchUri);
                                             mayLaunchUrlMethod.invoke(customTabsSessionObj, strongMatchUri, null, null);
                                             prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
+                                            isStrongMatchUrlLaunched = true;
                                         }
                                     } catch (Throwable t) {
                                         mClient_ = null;
-                                        updateStrongMatchCheckFinished(callback);
+                                        updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                                     }
                                 }
                             }
@@ -114,27 +123,35 @@ class BranchStrongMatchHelper {
                             @Override
                             public void onServiceDisconnected(ComponentName name) {
                                 mClient_ = null;
-                                updateStrongMatchCheckFinished(callback);
+                                updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                             }
                         }, Context.BIND_AUTO_CREATE | Context.BIND_WAIVE_PRIORITY);
 
                     } else {
-                        updateStrongMatchCheckFinished(callback);
+                        updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                     }
                 } else {
-                    updateStrongMatchCheckFinished(callback);
+                    updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                     Log.d("BranchSDK", "Cannot use cookie-based matching since device id is not available");
                 }
             } catch (Throwable ignore) {
-                updateStrongMatchCheckFinished(callback);
+                updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
             }
         }
     }
 
-    private void updateStrongMatchCheckFinished(StrongMatchCheckEvents callback) {
+    private void updateStrongMatchCheckFinished(final StrongMatchCheckEvents callback, boolean isStrongMatchUriLaunched) {
         if (callback != null) {
-            callback.onStrongMatchCheckFinished();
-            callback = null;
+            if (isStrongMatchUriLaunched) {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.onStrongMatchCheckFinished();
+                    }
+                }, StrongMatchUrlHitDelay);
+            } else {
+                callback.onStrongMatchCheckFinished();
+            }
         }
     }
 
