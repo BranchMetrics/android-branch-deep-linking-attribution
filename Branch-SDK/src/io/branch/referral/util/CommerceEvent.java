@@ -117,7 +117,7 @@ public class CommerceEvent {
         try {
             jsonObject.put("revenue", this.revenue);
             jsonObject.put("currency", this.currencyType);
-            jsonObject.put("transactionID", this.transactionID);
+            jsonObject.put("transaction_id", this.transactionID);
             jsonObject.put("shipping", this.shipping);
             jsonObject.put("tax", this.tax);
             jsonObject.put("coupon", this.coupon);
