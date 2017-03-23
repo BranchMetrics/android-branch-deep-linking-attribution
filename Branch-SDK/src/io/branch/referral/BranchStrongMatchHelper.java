@@ -108,7 +108,7 @@ class BranchStrongMatchHelper {
                                         warmupMethod.invoke(mClient_, 0);
                                         Object customTabsSessionObj = newSessionMethod.invoke(mClient_, new Object[]{null});
                                         if (customTabsSessionObj != null) {
-                                            PrefHelper.Debug("BranchSDK","Strong match request "+strongMatchUri);
+                                            PrefHelper.Debug("BranchSDK", "Strong match request " + strongMatchUri);
                                             mayLaunchUrlMethod.invoke(customTabsSessionObj, strongMatchUri, null, null);
                                             prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
                                             isStrongMatchUrlLaunched = true;
