@@ -1453,9 +1453,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Set the given list of URI Scheme as the external Uri white list. Branch will collect
+     * <p>Set the given list of URI Scheme as the external Uri white list. Branch will collect
      * external intent uri only for Uris in white list.
-     * <p/>
+     * </p>
      * If no URI is added to the white list branch will collect all external intent uris
      * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
      * <!-- @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list -->

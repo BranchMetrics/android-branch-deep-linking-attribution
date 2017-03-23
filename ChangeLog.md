@@ -1,4 +1,7 @@
 Branch Android SDK change log
+
+- v2.6.0 Fix for NPE edge case. Added configurable delay between strong match url- init. Added support for Google Install Referrer ID.
+
 - v2.5.9 Fix for strong match NPE.
 
 - v2.5.8 Fix for getAppVersion, added matching via PlayStore install broadcast intent, modifications to strong match url.
