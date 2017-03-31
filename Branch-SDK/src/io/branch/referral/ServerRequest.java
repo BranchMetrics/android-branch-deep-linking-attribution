@@ -2,7 +2,9 @@ package io.branch.referral;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -12,6 +14,7 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -204,7 +207,7 @@ public abstract class ServerRequest {
     /**
      * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
      * key-value pairs appended with the instrumentation data.</p>
-     *
+     * <p/>
      * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
      *
      * @return A {@link JSONObject} containing the post data supplied with the current request
@@ -446,5 +449,23 @@ public abstract class ServerRequest {
      */
     public void onPreExecute() {
 
+    }
+
+    protected void updateEnvironment(Context context, JSONObject post) {
+        try {
+            String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
+            post.put(Defines.Jsonkey.Environment.getKey(), environment);
+        } catch (Exception ignore) {
+        }
+    }
+
+    private static boolean isPackageInstalled(Context context) {
+        final PackageManager packageManager = context.getPackageManager();
+        Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
+        if (intent == null) {
+            return false;
+        }
+        List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        return (list != null && list.size() > 0);
     }
 }

@@ -2,14 +2,9 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.List;
 
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.indexing.ContentDiscoveryManifest;
@@ -40,11 +35,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     protected void setPost(JSONObject post) {
         super.setPost(post);
-        try {
-            String environment = isPackageInstalled(context_) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
-            post.put(Defines.Jsonkey.Environment.getKey(), environment);
-        } catch (Exception ignore) {
-        }
+        updateEnvironment(context_,post);
     }
     
     /**
@@ -187,15 +178,5 @@ abstract class ServerRequestInitSession extends ServerRequest {
             
         }
         
-    }
-    
-    private static boolean isPackageInstalled(Context context) {
-        final PackageManager packageManager = context.getPackageManager();
-        Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
-        if (intent == null) {
-            return false;
-        }
-        List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        return (list != null && list.size() > 0);
     }
 }
