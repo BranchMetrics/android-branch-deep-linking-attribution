@@ -25,6 +25,7 @@ import io.branch.referral.PrefHelper;
  * *Once content discovery is enabled* through Branch, this class is responsible for discovering content entities within an app.
  * It will crawl the view hierarchy and read through text on pages similar to the functionality of a web crawler. The primary
  * uses of the data are for app indexing, content analytics, content recommendation and future content-based products.
+ * <p/>
  * Note that this feature can be controlled from the dashboard.
  * </p>
  */
@@ -69,7 +70,9 @@ public class ContentDiscoverer {
 
     //------------------------- Public methods---------------------------------//
 
-    public void discoverContent(final Activity activity, String referredUrl) {
+    //make discoverContent a runnable, kill runnable onActivtyStopped
+
+    public void discoverContent(final Activity activity, final String referredUrl) {
         cdManifest_ = ContentDiscoveryManifest.getInstance(activity);
         referredUrl_ = referredUrl;
 
@@ -85,7 +88,6 @@ public class ContentDiscoverer {
             discoverContent(activity);
         }
     }
-
 
     public void onActivityStopped(Activity activity) {
         if (lastActivityReference_ != null && lastActivityReference_.get() != null
@@ -123,7 +125,6 @@ public class ContentDiscoverer {
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
-
             try {
                 if (cdManifest_.isCDEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
@@ -135,8 +136,10 @@ public class ContentDiscoverer {
                     String viewName = "/" + activity.getClass().getSimpleName();
                     contentEvent_.put(VIEW_KEY, viewName);
 
-
-                    ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
+                    //ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
+                    //ViewGroup rootView = (ViewGroup) activity.getWindow().getDecorView().getRootView();
+                    ViewGroup rootView = (ViewGroup) activity.getCurrentFocus();
+                    //ViewGroup rootView = (ViewGroup) activity.getWindow().getDecorView().findViewById(android.R.id.content);
 
                     if (rootView != null) {
                         ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
@@ -165,7 +168,12 @@ public class ContentDiscoverer {
 
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-                        lastActivityReference_ = null;
+
+                        if (cdManifest_.getDiscoveryRepeatTime() != -1) {
+                            handler_.postDelayed(readContentRunnable, cdManifest_.getDiscoveryRepeatTime());
+                        } else {
+                            lastActivityReference_ = null;
+                        }
                     }
                 }
 
@@ -190,16 +198,11 @@ public class ContentDiscoverer {
 
     private void discoverViewContents(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            
             View childView = viewGroup.getChildAt(i);
-            if ((childView.getVisibility() == View.VISIBLE) && (childView instanceof ViewGroup)) {
+            if (childView.getVisibility() == View.VISIBLE) if (childView instanceof ViewGroup) {
                 discoverViewContents((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
             } else {
-                String viewName = String.valueOf(childView.getId());
-                try {
-                    viewName = res.getResourceEntryName(childView.getId());
-                } catch (Exception ignore) {
-                }
+                String viewName = res.getResourceEntryName(childView.getId());
                 updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
             }
         }
