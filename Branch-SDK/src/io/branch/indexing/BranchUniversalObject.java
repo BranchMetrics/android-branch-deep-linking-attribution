@@ -987,11 +987,15 @@ public class BranchUniversalObject implements Parcelable {
     }
 
 
-    private void addUserInteraction(String userAction) {
-        Context context = Branch.getInstance().getAppContext();
-        String deepLinkUrl = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
-        String packageName = context.getPackageName();
-        BranchSearchServiceConnection.getInstance().addUserInteraction(this, packageName, userAction, deepLinkUrl);
+    private void addUserInteraction(final String userAction) {
+        final Context context = Branch.getInstance().getAppContext();
+        generateShortUrl(context, new LinkProperties().setChannel("Branch Search"), new Branch.BranchLinkCreateListener() {
+            @Override
+            public void onLinkCreate(String deepLinkUrl, BranchError error) {
+                String packageName = context.getPackageName();
+                BranchSearchServiceConnection.getInstance().addUserInteraction(BranchUniversalObject.this, packageName, userAction, deepLinkUrl);
+            }
+        });
     }
 
     /**
