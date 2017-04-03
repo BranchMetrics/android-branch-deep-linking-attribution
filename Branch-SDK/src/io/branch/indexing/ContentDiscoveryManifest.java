@@ -36,6 +36,11 @@ public class ContentDiscoveryManifest {
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
+    /* default scrape repeat delay */
+    private int discoveryRepeatTime_ = 0;
+
+    /* boolean for repeat delay */
+    private boolean isRepeatTimeSet = false;
 
     public static final String MANIFEST_VERSION_KEY = "mv";
     public static final String PACKAGE_NAME_KEY = "pn";
@@ -46,6 +51,7 @@ public class ContentDiscoveryManifest {
     private static final String MAX_TEXT_LEN_KEY = "mtl";
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
+    private static final String DISCOVERY_REPEAT_TIME = "drt";
     public static final String CONTENT_DISCOVER_KEY = "cd";
 
     private SharedPreferences sharedPref;
@@ -143,7 +149,6 @@ public class ContentDiscoveryManifest {
         return isCDEnabled_;
     }
 
-
     public int getMaxTextLen() {
         return maxTextLen_;
     }
@@ -154,6 +159,15 @@ public class ContentDiscoveryManifest {
 
     public int getMaxViewHistorySize() {
         return maxViewHistoryLength_;
+    }
+
+    public int getDiscoveryRepeatTime() {
+        return (isRepeatTimeSet ? discoveryRepeatTime_ : -1);
+    }
+
+    private void setDiscoveryRepeatTime(int discoveryRepeatTime) {
+        discoveryRepeatTime_ = discoveryRepeatTime;
+        isRepeatTimeSet = discoveryRepeatTime_ != -1;
     }
 
     public String getManifestVersion() {
@@ -176,9 +190,17 @@ public class ContentDiscoveryManifest {
                     e.printStackTrace();
                 }
             }
+
+            try {
+                if (pathInfo.has(DISCOVERY_REPEAT_TIME)) {
+                    setDiscoveryRepeatTime(Integer.valueOf(pathInfo.getString(DISCOVERY_REPEAT_TIME)));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
 
-        public JSONArray getFilteredElements() {
+        JSONArray getFilteredElements() {
             JSONArray elementArray = null;
             if (pathInfo_.has(FILTERED_KEYS)) {
                 try {
@@ -190,14 +212,13 @@ public class ContentDiscoveryManifest {
             return elementArray;
         }
 
-        public boolean isClearTextRequested() {
+        boolean isClearTextRequested() {
             return isClearText_;
         }
 
-        public boolean isSkipContentDiscovery() {
+        boolean isSkipContentDiscovery() {
             JSONArray filteredElements = getFilteredElements();
             return filteredElements != null && filteredElements.length() == 0;
         }
-
     }
 }
