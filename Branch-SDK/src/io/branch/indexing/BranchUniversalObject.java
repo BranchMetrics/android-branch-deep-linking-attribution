@@ -28,7 +28,6 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
 import io.branch.search.BranchSearchServiceConnection;
-import io.branch.search.DeleteFromSearch;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -939,7 +938,7 @@ public class BranchUniversalObject implements Parcelable {
     }
 
 
-    //----------App Bridge---------------//
+    //----------Branch Local Search---------------//
 
     /**
      * <p>
@@ -987,23 +986,46 @@ public class BranchUniversalObject implements Parcelable {
         return listOnSamsungSearch(null);
     }
 
-    /**
-     * <p/>
-     * Delete this BUO from the Samsung local search.
-     * On successful deletion content of this BUO will not appear on Samsung Local search
-     *
-     * @return
-     * @see {@link DeleteFromSearch#deleteAllFromSamsungSearch()} also.
-     * </p>
-     */
-    public boolean deleteFromSamsungSearch() {
-        return BranchSearchServiceConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
-    }
 
     private void addUserInteraction(String userAction) {
         Context context = Branch.getInstance().getAppContext();
         String deepLinkUrl = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
         String packageName = context.getPackageName();
         BranchSearchServiceConnection.getInstance().addUserInteraction(this, packageName, userAction, deepLinkUrl);
+    }
+
+    /**
+     * <p/>
+     * Delete this BUO from the Samsung local search.
+     * On successful deletion content of this BUO will not appear on Samsung Local search
+     *
+     * @return {@code true} on success
+     * @see {@link #deleteAllFromSamsungSearch()} also.
+     * </p>
+     */
+    public boolean deleteFromSamsungSearch() {
+        return BranchSearchServiceConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
+    }
+
+    /**
+     * Delete the content with specified canonical id from Samsung local search
+     *
+     * @param canonicalID {@link String} canonical id of the content added
+     * @return {@code true} if content is successfully deleted from Samsung Local search
+     * @see {@link BranchUniversalObject#listOnSamsungSearch()}
+     */
+    public static boolean deleteFromSamsungSearch(String canonicalID) {
+        BranchUniversalObject branchUniversalObject = new BranchUniversalObject();
+        branchUniversalObject.setCanonicalIdentifier(canonicalID);
+        return BranchSearchServiceConnection.getInstance().deleteFromIndex(branchUniversalObject, Branch.getInstance().getAppContext().getPackageName());
+    }
+
+    /**
+     * Clears all contents from this application added to the Samsung local search
+     *
+     * @return {@code true} if contents are successfully cleared from Samsung Local search
+     */
+    public static boolean deleteAllFromSamsungSearch() {
+        return BranchSearchServiceConnection.getInstance().deleteAllFromIndex(Branch.getInstance().getAppContext().getPackageName());
     }
 }
