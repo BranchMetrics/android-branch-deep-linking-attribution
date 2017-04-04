@@ -165,7 +165,12 @@ public class ContentDiscoverer {
 
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-                        lastActivityReference_ = null;
+
+                        if (cdManifest_.getDiscoveryRepeatTime() != -1) {
+                            handler_.postDelayed(readContentRunnable, cdManifest_.getDiscoveryRepeatTime());
+                        } else {
+                            lastActivityReference_ = null;
+                        }
                     }
                 }
 
@@ -190,7 +195,7 @@ public class ContentDiscoverer {
 
     private void discoverViewContents(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            
+
             View childView = viewGroup.getChildAt(i);
             if ((childView.getVisibility() == View.VISIBLE) && (childView instanceof ViewGroup)) {
                 discoverViewContents((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);

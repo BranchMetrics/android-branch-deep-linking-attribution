@@ -36,6 +36,7 @@ public class ContentDiscoveryManifest {
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
+    private int discoveryRepeatTime_ = -1;
 
     public static final String MANIFEST_VERSION_KEY = "mv";
     public static final String PACKAGE_NAME_KEY = "pn";
@@ -47,6 +48,7 @@ public class ContentDiscoveryManifest {
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     public static final String CONTENT_DISCOVER_KEY = "cd";
+    private static final String DISCOVERY_REPEAT_TIME = "drt";
 
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
@@ -163,6 +165,14 @@ public class ContentDiscoveryManifest {
         return manifestVersion_;
     }
 
+    public int getDiscoveryRepeatTime() {
+        return discoveryRepeatTime_;
+    }
+
+    private void setDiscoveryRepeatTime(int discoveryRepeatTime) {
+        discoveryRepeatTime_ = discoveryRepeatTime;
+    }
+
     class CDPathProperties {
         final JSONObject pathInfo_;
         private boolean isClearText_;
@@ -176,6 +186,13 @@ public class ContentDiscoveryManifest {
                     e.printStackTrace();
                 }
             }
+            try {
+                if (pathInfo.has(DISCOVERY_REPEAT_TIME)) {
+                    setDiscoveryRepeatTime(Integer.valueOf(pathInfo.getString(DISCOVERY_REPEAT_TIME)));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
 
         public JSONArray getFilteredElements() {
@@ -187,6 +204,7 @@ public class ContentDiscoveryManifest {
                     e.printStackTrace();
                 }
             }
+
             return elementArray;
         }
 
