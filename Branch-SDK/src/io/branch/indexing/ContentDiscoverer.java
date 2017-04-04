@@ -48,6 +48,8 @@ public class ContentDiscoverer {
     private static final String CONTENT_KEYS_KEY = "ck";
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
+    private static final int DRT_NOT_SET = -1;
+
 
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
@@ -166,8 +168,8 @@ public class ContentDiscoverer {
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
 
-                        if (cdManifest_.getDiscoveryRepeatTime() != -1) {
-                            handler_.postDelayed(readContentRunnable, cdManifest_.getDiscoveryRepeatTime());
+                        if (cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime() != DRT_NOT_SET) {
+                            handler_.postDelayed(readContentRunnable, cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime());
                         } else {
                             lastActivityReference_ = null;
                         }

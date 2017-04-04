@@ -36,8 +36,6 @@ public class ContentDiscoveryManifest {
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
 
-    private int discoveryRepeatTime_ = -1;
-
     public static final String MANIFEST_VERSION_KEY = "mv";
     public static final String PACKAGE_NAME_KEY = "pn";
     public static final String HASH_MODE_KEY = "h";
@@ -49,6 +47,7 @@ public class ContentDiscoveryManifest {
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     public static final String CONTENT_DISCOVER_KEY = "cd";
     private static final String DISCOVERY_REPEAT_TIME = "drt";
+
 
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
@@ -165,17 +164,18 @@ public class ContentDiscoveryManifest {
         return manifestVersion_;
     }
 
-    public int getDiscoveryRepeatTime() {
-        return discoveryRepeatTime_;
-    }
-
-    private void setDiscoveryRepeatTime(int discoveryRepeatTime) {
-        discoveryRepeatTime_ = discoveryRepeatTime;
-    }
-
     class CDPathProperties {
         final JSONObject pathInfo_;
         private boolean isClearText_;
+        private int discoveryRepeatTime_ = -1;
+
+        public int getDiscoveryRepeatTime() {
+            return discoveryRepeatTime_;
+        }
+
+        private void setDiscoveryRepeatTime(int discoveryRepeatTime) {
+            discoveryRepeatTime_ = discoveryRepeatTime;
+        }
 
         CDPathProperties(JSONObject pathInfo) {
             pathInfo_ = pathInfo;
