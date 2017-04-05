@@ -48,6 +48,7 @@ class ServerRequestRActionCompleted extends ServerRequest {
             if (commerceEvent != null) {
                 post.put(Defines.Jsonkey.CommerceData.getKey(), commerceEvent.getCommerceJSONObject());
             }
+            updateEnvironment(context, post);
             setPost(post);
         } catch (JSONException ex) {
             ex.printStackTrace();

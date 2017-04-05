@@ -43,6 +43,7 @@ class ServerRequestActionCompleted extends ServerRequest {
             if (metadata != null)
                 post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
 
+            updateEnvironment(context, post);
             setPost(post);
         } catch (JSONException ex) {
             ex.printStackTrace();
