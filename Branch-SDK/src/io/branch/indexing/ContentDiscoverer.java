@@ -226,7 +226,6 @@ public class ContentDiscoverer {
             }
             contentKeysArray.put(viewName);
         }
-
     }
 
     public JSONObject getContentDiscoverDataForCloseRequest(Context context) {
