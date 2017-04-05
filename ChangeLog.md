@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.6.1 Adding environment variables. Enhancement to CD.
+
 - v2.6.0 Fix for NPE edge case. Added configurable delay between strong match url- init. Added support for Google Install Referrer ID.
 
 - v2.5.9 Fix for strong match NPE.
