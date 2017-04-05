@@ -48,6 +48,8 @@ public class ContentDiscoverer {
     private static final String CONTENT_KEYS_KEY = "ck";
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
+    private static final int DRT_MINIMUM_THRESHHOLD = 500;
+
 
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
@@ -135,7 +137,6 @@ public class ContentDiscoverer {
                     String viewName = "/" + activity.getClass().getSimpleName();
                     contentEvent_.put(VIEW_KEY, viewName);
 
-
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
 
                     if (rootView != null) {
@@ -165,7 +166,13 @@ public class ContentDiscoverer {
 
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-                        lastActivityReference_ = null;
+
+                        int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
+                        if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD) {
+                            handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
+                        } else {
+                            lastActivityReference_ = null;
+                        }
                     }
                 }
 
@@ -190,7 +197,7 @@ public class ContentDiscoverer {
 
     private void discoverViewContents(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            
+
             View childView = viewGroup.getChildAt(i);
             if ((childView.getVisibility() == View.VISIBLE) && (childView instanceof ViewGroup)) {
                 discoverViewContents((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
@@ -219,7 +226,6 @@ public class ContentDiscoverer {
             }
             contentKeysArray.put(viewName);
         }
-
     }
 
     public JSONObject getContentDiscoverDataForCloseRequest(Context context) {
