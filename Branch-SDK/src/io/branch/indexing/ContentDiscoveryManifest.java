@@ -144,7 +144,6 @@ public class ContentDiscoveryManifest {
         return isCDEnabled_;
     }
 
-
     public int getMaxTextLen() {
         return maxTextLen_;
     }

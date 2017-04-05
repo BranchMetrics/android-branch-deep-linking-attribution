@@ -167,9 +167,10 @@ public class ContentDiscoverer {
 
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-
-                        if (cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime() != DRT_NOT_SET) {
-                            handler_.postDelayed(readContentRunnable, cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime());
+                        
+                        int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
+                        if (discoveryRepeatTime != DRT_NOT_SET) {
+                            handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
                         } else {
                             lastActivityReference_ = null;
                         }
