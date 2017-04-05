@@ -166,14 +166,10 @@ public class ContentDiscoveryManifest {
     class CDPathProperties {
         final JSONObject pathInfo_;
         private boolean isClearText_;
-        private int discoveryRepeatTime_ = -1;
+        private int discoveryRepeatTime_;
 
         public int getDiscoveryRepeatTime() {
             return discoveryRepeatTime_;
-        }
-
-        private void setDiscoveryRepeatTime(int discoveryRepeatTime) {
-            discoveryRepeatTime_ = (discoveryRepeatTime >= 500) ? discoveryRepeatTime : -1;
         }
 
         CDPathProperties(JSONObject pathInfo) {
@@ -187,7 +183,7 @@ public class ContentDiscoveryManifest {
             }
             try {
                 if (pathInfo.has(DISCOVERY_REPEAT_TIME)) {
-                    setDiscoveryRepeatTime(Integer.valueOf(pathInfo.getString(DISCOVERY_REPEAT_TIME)));
+                    discoveryRepeatTime_ = (Integer.valueOf(pathInfo.getString(DISCOVERY_REPEAT_TIME)));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

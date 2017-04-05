@@ -48,7 +48,7 @@ public class ContentDiscoverer {
     private static final String CONTENT_KEYS_KEY = "ck";
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
-    private static final int DRT_NOT_SET = -1;
+    private static final int DRT_MINIMUM_THRESHHOLD = 500;
 
 
     private final HashHelper hashHelper_;
@@ -137,7 +137,6 @@ public class ContentDiscoverer {
                     String viewName = "/" + activity.getClass().getSimpleName();
                     contentEvent_.put(VIEW_KEY, viewName);
 
-
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
 
                     if (rootView != null) {
@@ -167,9 +166,9 @@ public class ContentDiscoverer {
 
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-                        
+
                         int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
-                        if (discoveryRepeatTime != DRT_NOT_SET) {
+                        if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD) {
                             handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
                         } else {
                             lastActivityReference_ = null;
