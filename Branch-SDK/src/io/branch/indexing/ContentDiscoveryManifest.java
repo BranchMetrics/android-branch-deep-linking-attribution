@@ -174,7 +174,7 @@ public class ContentDiscoveryManifest {
         }
 
         private void setDiscoveryRepeatTime(int discoveryRepeatTime) {
-            discoveryRepeatTime_ = discoveryRepeatTime;
+            discoveryRepeatTime_ = (discoveryRepeatTime >= 500) ? discoveryRepeatTime : -1;
         }
 
         CDPathProperties(JSONObject pathInfo) {
