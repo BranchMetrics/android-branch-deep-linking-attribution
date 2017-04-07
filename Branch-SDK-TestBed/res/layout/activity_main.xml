@@ -160,7 +160,14 @@
         android:textAppearance="@android:style/TextAppearance.Small"
         android:textColor="@android:color/white"/>
 
-
+    <io.branch.referral.util.AppInstallerView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/share_btn"
+        android:padding="5dp"
+        android:layout_margin="5dp"
+        android:text="Install Full App"
+        android:background="@android:color/holo_red_dark"/>
 
 </RelativeLayout>
 
