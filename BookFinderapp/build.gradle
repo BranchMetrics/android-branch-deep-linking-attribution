@@ -1,0 +1,46 @@
+apply plugin: 'com.android.application'
+
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    defaultConfig {
+        applicationId "io.branch.bookfinder"
+        minSdkVersion 17
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:+'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    //compile 'io.branch.sdk.android:library:2.+'
+    //compile(name:'Branch-SDK-release', ext:'aar')
+    compile project(':Branch-SDK')
+
+    compile 'com.android.support:recyclerview-v7:+'
+    compile 'com.android.support:cardview-v7:+'
+//    compile ('io.branch.sdk.android:library:2.+') {
+//        exclude module: 'answers-shim'
+//    }
+    compile 'com.android.volley:volley:1.+'
+
+}
+
+
+repositories{
+    flatDir{
+        dirs 'libs'
+    }
+}

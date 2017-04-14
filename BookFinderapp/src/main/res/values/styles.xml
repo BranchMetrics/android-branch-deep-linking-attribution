@@ -1,0 +1,23 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Rating" parent="Theme.AppCompat.Light">
+        <item name="colorAccent">@color/bf_rating_bar</item>
+    </style>
+
+    <style name="style0">
+        <item name="android:textSize">19sp</item>
+        <item name="android:textColor">@color/bf_solid_blue</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="style1">
+        <item name="android:textSize">40sp</item>
+        <item name="android:textColor">@color/bf_text_white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_start">#AF1122EB</color>
+    <color name="bg_end">#992233FE</color>
+    <color name="bf_text_white">#CDFAFAEF</color>
+    <color name="bf_translucent">#773A3A3A</color>
+    <color name="bf_white_bg">#FFEAEAEA</color>
+    <color name="bf_black_bg">#FF232323</color>
+    <color name="bf_solid_blue">#EF2233FE</color>
+    <color name="bf_rating_bar">#EFFBFB00</color>
+</resources>

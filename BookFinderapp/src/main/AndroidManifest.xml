@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.branch.bookfinder" >
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/book_icon"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:name="BookFinderApp">
+        <activity
+            android:name=".SplashActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <data android:scheme="bookfinder"/>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+
+            <!-- AppLink example -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_app_id_obtained form Branch dash board " /> -->
+                <data android:scheme="https" android:host="bookfinder.app.link"  /> <!-- Live App link-->
+                <data android:scheme="https" android:host="bookfinder.app.link" /> <!-- Test App link-->
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_app_id_obtained form Branch dash board " /> -->
+                <data android:scheme="https" android:host="bookfinder.app.link"   android:pathPrefix="/8ums"/> <!-- Live App link-->
+                <data android:scheme="https" android:host="bookfinder.app.link"  android:pathPrefix="/xums" /> <!-- Test App link-->
+
+                <data android:scheme="http" android:host="bookfinder.app.link"   android:pathPrefix="/8ums"/> <!-- Live App link-->
+                <data android:scheme="http" android:host="bookfinder.app.link"  android:pathPrefix="/xums" /> <!-- Test App link-->
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".BookFinderHomeActivity"
+                  android:screenOrientation="portrait" />
+
+        <activity android:name=".BookDetailsActivity"
+                  android:screenOrientation="portrait" >
+        </activity>
+
+        <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_elAbidZCxOY7DEeWowH9UkdcErpodtq9" />
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_dhyhna7xrO27qwd7ls8oHhebzCichAGl" />
+
+    </application>
+    <uses-permission android:name="android.permission.INTERNET" />
+
+</manifest>

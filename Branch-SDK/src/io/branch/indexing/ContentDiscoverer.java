@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -30,13 +31,13 @@ import io.branch.referral.PrefHelper;
  */
 public class ContentDiscoverer {
     private static ContentDiscoverer thisInstance_;
-
+    
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
     private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
     private String referredUrl_; // The url which opened this app session
     private JSONObject contentEvent_;
-
+    
     private static final String TIME_STAMP_KEY = "ts";
     private static final String TIME_STAMP_CLOSE_KEY = "tc";
     private static final String NAV_PATH_KEY = "n";
@@ -49,35 +50,36 @@ public class ContentDiscoverer {
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
     private static final int DRT_MINIMUM_THRESHHOLD = 500;
-
-
+    private static final String COLLECTION_VIEW_KEY_PREFIX = "$";
+    
+    
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
-
+    
     public static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
             thisInstance_ = new ContentDiscoverer();
         }
         return thisInstance_;
     }
-
+    
     private ContentDiscoverer() {
         handler_ = new Handler();
         hashHelper_ = new HashHelper();
     }
-
+    
     private int discoveredViewInThisSession_ = 0; // Denote the number  of views discovered in this session
     private ArrayList<String> discoveredViewList_ = new ArrayList<>(); // List for saving already discovered views path
-
+    
     //------------------------- Public methods---------------------------------//
-
+    
     public void discoverContent(final Activity activity, String referredUrl) {
         cdManifest_ = ContentDiscoveryManifest.getInstance(activity);
         referredUrl_ = referredUrl;
-
+        
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
         ContentDiscoveryManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
-
+        
         if (pathProperties != null) { // Check if view is available in CD manifest
             // Discover content only if element array is not empty json array
             if (!pathProperties.isSkipContentDiscovery()) {
@@ -87,8 +89,8 @@ public class ContentDiscoverer {
             discoverContent(activity);
         }
     }
-
-
+    
+    
     public void onActivityStopped(Activity activity) {
         if (lastActivityReference_ != null && lastActivityReference_.get() != null
                 && lastActivityReference_.get().getClass().getName().equals(activity.getClass().getName())) {
@@ -97,14 +99,14 @@ public class ContentDiscoverer {
         }
         updateLastViewTimeStampIfNeeded();
     }
-
+    
     public void onSessionStarted(final Activity activity, String referredUrl) {
         discoveredViewList_ = new ArrayList<>();
         discoverContent(activity, referredUrl);
     }
-
+    
     // ---------------Private methods----------------------//
-
+    
     private void discoverContent(Activity activity) {
         if (discoveredViewList_.size() < cdManifest_.getMaxViewHistorySize()) { // check if max discovery views reached
             handler_.removeCallbacks(readContentRunnable);
@@ -112,7 +114,7 @@ public class ContentDiscoverer {
             handler_.postDelayed(readContentRunnable, VIEW_SETTLE_TIME);
         }
     }
-
+    
     private void updateLastViewTimeStampIfNeeded() {
         try {
             if (contentEvent_ != null) {
@@ -121,11 +123,11 @@ public class ContentDiscoverer {
         } catch (JSONException ignore) {
         }
     }
-
+    
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
-
+            
             try {
                 if (cdManifest_.isCDEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
@@ -136,9 +138,9 @@ public class ContentDiscoverer {
                     }
                     String viewName = "/" + activity.getClass().getSimpleName();
                     contentEvent_.put(VIEW_KEY, viewName);
-
+                    
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-
+                    
                     if (rootView != null) {
                         ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
                         boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
@@ -151,7 +153,7 @@ public class ContentDiscoverer {
                         if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                             JSONArray contentKeysArray = new JSONArray();
                             contentEvent_.put(CONTENT_KEYS_KEY, contentKeysArray);
-
+                            
                             JSONArray contentDataArray = new JSONArray();
                             contentEvent_.put(CONTENT_DATA_KEY, contentDataArray);
                             discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
@@ -159,14 +161,14 @@ public class ContentDiscoverer {
                             if (!discoveredViewList_.contains(viewName)) {  // Check if the view is already discovered. If already discovered no need to get view content keys again
                                 JSONArray contentKeysArray = new JSONArray();
                                 contentEvent_.put(CONTENT_KEYS_KEY, contentKeysArray);
-                                discoverViewContents(rootView, null, contentKeysArray, activity.getResources(), isClearText);
+                                discoverContentKeys(rootView, contentKeysArray, activity.getResources());
                             }
                         }
                         discoveredViewList_.add(viewName);
-
+                        
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-
+                        
                         int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
                         if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD) {
                             handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
@@ -175,13 +177,13 @@ public class ContentDiscoverer {
                         }
                     }
                 }
-
+                
             } catch (JSONException ignore) {
             }
         }
     };
-
-
+    
+    
     private void discoverFilteredViewContents(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
         try {
             for (int i = 0; i < viewIDArray.length(); i++) {
@@ -191,27 +193,58 @@ public class ContentDiscoverer {
                 updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
             }
         } catch (JSONException ignore) {
-
+            
         }
     }
-
-    private void discoverViewContents(ViewGroup viewGroup, JSONArray contentDataArray, JSONArray contentKeysArray, Resources res, boolean isClearText) {
+    
+    private void discoverContentKeys(ViewGroup viewGroup, JSONArray contentKeysArray, Resources res) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
-
+            
             View childView = viewGroup.getChildAt(i);
             if ((childView.getVisibility() == View.VISIBLE) && (childView instanceof ViewGroup)) {
-                discoverViewContents((ViewGroup) childView, contentDataArray, contentKeysArray, res, isClearText);
+                discoverContentKeys((ViewGroup) childView, contentKeysArray, res);
             } else {
-                String viewName = String.valueOf(childView.getId());
-                try {
-                    viewName = res.getResourceEntryName(childView.getId());
-                } catch (Exception ignore) {
-                }
-                updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
+                String viewName = getViewName(childView, res);
+                updateElementData(viewName, childView, true, null, contentKeysArray);
             }
         }
     }
-
+    
+    private String discoverAbsListViewContentKeys(AbsListView absListView, Resources res) {
+        String absListKeys = null;
+        JSONObject absListKeyObj = new JSONObject();
+        if (absListView != null && absListView.getFirstVisiblePosition() > -1) {
+            JSONArray itemViewArray = new JSONArray();
+            // PRS : Some of the list view implementation tend to use a header and footer. These are static fields and not actual contents. Following logic is to handle it
+            int candidateItemViewIdx = absListView.getLastVisiblePosition() > 1 ? absListView.getLastVisiblePosition() - 1 : 0;
+            try {
+                absListKeyObj.put(getViewName(absListView, res), itemViewArray);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            View candidateItemView = absListView.getChildAt(candidateItemViewIdx);
+            if (candidateItemView instanceof ViewGroup) {
+                discoverContentKeys((ViewGroup) candidateItemView, itemViewArray, res);
+            } else if (candidateItemView instanceof TextView) {
+                itemViewArray.put(getViewName(candidateItemView, res));
+            }
+        }
+        if (absListKeyObj.length() > 0) {
+            absListKeys = COLLECTION_VIEW_KEY_PREFIX + absListKeyObj;
+        }
+        return absListKeys;
+    }
+    
+    
+    private String getViewName(View view, Resources res) {
+        String viewName = String.valueOf(view.getId());
+        try {
+            viewName = res.getResourceEntryName(view.getId());
+        } catch (Exception ignore) {
+        }
+        return viewName;
+    }
+    
     private void updateElementData(String viewName, View view, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
         String viewVal;
         if (view instanceof TextView) {
@@ -227,7 +260,7 @@ public class ContentDiscoverer {
             contentKeysArray.put(viewName);
         }
     }
-
+    
     public JSONObject getContentDiscoverDataForCloseRequest(Context context) {
         JSONObject cdObj = null;
         JSONObject branchAnalyticalData = PrefHelper.getInstance(context).getBranchAnalyticsData();
@@ -241,7 +274,7 @@ public class ContentDiscoverer {
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                 }
-
+                
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -249,21 +282,21 @@ public class ContentDiscoverer {
         PrefHelper.getInstance(context).clearBranchAnalyticsData();
         return cdObj;
     }
-
-
+    
+    
     /**
      * Helper class for
      */
     private class HashHelper {
         MessageDigest messageDigest_;
-
+        
         public HashHelper() {
             try {
                 messageDigest_ = MessageDigest.getInstance("MD5");
             } catch (NoSuchAlgorithmException ignore) {
             }
         }
-
+        
         public String hashContent(String content) {
             String hashedVal = "";
             if (messageDigest_ != null) {
@@ -275,5 +308,5 @@ public class ContentDiscoverer {
             return hashedVal;
         }
     }
-
+    
 }

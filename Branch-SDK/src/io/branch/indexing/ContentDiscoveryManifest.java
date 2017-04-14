@@ -49,6 +49,21 @@ public class ContentDiscoveryManifest {
     private static final String DISCOVERY_REPEAT_TIME = "drt";
 
 
+    private final String testManifest = "{"+
+            "\"mhl\" : 300000," +
+            "\"mps\" : 10000000," +
+            "\"mtl\" : 50000," +
+            "\"mv\" : 7," +
+            "\"m\" : [" +
+                    "{" +
+                         "\"p\" :\"/BookFinderHomeActivity\"," +
+                         "\"drt\" : 1000," +
+                        "\"h\" : false" +
+                    "}" +
+                "]" +
+            "}";
+
+
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
 
@@ -89,10 +104,13 @@ public class ContentDiscoveryManifest {
     }
 
     public void onBranchInitialised(JSONObject branchInitResp) {
-        if (branchInitResp.has(CONTENT_DISCOVER_KEY)) {
+
+        //if (branchInitResp.has(CONTENT_DISCOVER_KEY)) {
             isCDEnabled_ = true;
             try {
-                JSONObject cdObj = branchInitResp.getJSONObject(CONTENT_DISCOVER_KEY);
+                // PRS : TEST Code
+                JSONObject cdObj = new JSONObject(testManifest);
+               // JSONObject cdObj = branchInitResp.getJSONObject(CONTENT_DISCOVER_KEY);
 
                 if (cdObj.has(MANIFEST_VERSION_KEY)) {
                     manifestVersion_ = cdObj.getString(MANIFEST_VERSION_KEY);
@@ -116,9 +134,9 @@ public class ContentDiscoveryManifest {
             } catch (JSONException ignore) {
 
             }
-        } else {
-            isCDEnabled_ = false;
-        }
+//        } else {
+//            isCDEnabled_ = false;
+//        }
     }
 
     public CDPathProperties getCDPathProperties(Activity activity) {
