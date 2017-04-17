@@ -145,7 +145,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         if (prefHelper_.isFullAppConversion()) {
             try {
-                getPost().put(Defines.Jsonkey.ReferringLink.getKey(), prefHelper_.getAppLink());
+                getPost().put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
                 getPost().put(Defines.Jsonkey.IsFullAppConv.getKey(), true);
             } catch (JSONException ignore) {
             }
