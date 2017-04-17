@@ -60,15 +60,23 @@ public class InstallListener extends BroadcastReceiver {
                     }
                 }
 
-                if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
-                    installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
-                    if (isWaitingForReferrer) {
-                        PrefHelper.getInstance(context).setLinkClickIdentifier(installID_);
+                PrefHelper prefHelper = PrefHelper.getInstance(context);
+                if (isWaitingForReferrer) {
+                    if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
+                        installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
+                        prefHelper.setLinkClickIdentifier(installID_);
+
+                    }
+                    // Check for full app conversion
+                    if (referrerMap.containsKey(Defines.Jsonkey.IsFullAppConv.getKey())
+                            && referrerMap.containsKey(Defines.Jsonkey.ReferringLink.getKey())) {
+                        prefHelper.setIsFullAppConversion(Boolean.parseBoolean(referrerMap.get(Defines.Jsonkey.IsFullAppConv.getKey())));
+                        prefHelper.setAppLink(referrerMap.get(Defines.Jsonkey.ReferringLink.getKey()));
                     }
                 }
 
                 if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
-                    PrefHelper.getInstance(context).setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
+                    prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
                 }
 
                 if (callback_ != null) {

@@ -35,7 +35,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     protected void setPost(JSONObject post) {
         super.setPost(post);
-        updateEnvironment(context_,post);
+        updateEnvironment(context_, post);
     }
     
     /**
@@ -99,6 +99,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setIsAppLinkTriggeredInit(false);
             prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setIsFullAppConversion(false);
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
@@ -139,6 +140,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!prefHelper_.getGoogleSearchInstallIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), prefHelper_.getGoogleSearchInstallIdentifier());
+            } catch (JSONException ignore) {
+            }
+        }
+        if (prefHelper_.isFullAppConversion()) {
+            try {
+                getPost().put(Defines.Jsonkey.ReferringLink.getKey(), prefHelper_.getAppLink());
+                getPost().put(Defines.Jsonkey.IsFullAppConv.getKey(), true);
             } catch (JSONException ignore) {
             }
         }
