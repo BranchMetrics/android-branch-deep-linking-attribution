@@ -291,11 +291,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean isLogging_ = false;
 
-    // Branch will wait for 1.5 sec to capture the install referrer inorder to provide
-    // accurate attribution . This will be only on the first time user open the app.
-    // @see to skip this please call {@link #disablePlayStoreReferrer() }
-    private static boolean checkInstallReferrer_ = true;
-    private static long PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = 1500;
+    private static boolean checkInstallReferrer_ = false;
+    private static long PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = 5000;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -462,13 +459,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         enableTestMode();
     }
 
+    // Since play store referrer broadcast from google is few millisecond delayed, delay Branch init by calling this method for more accurate
+    // tracking and attribution. This will be only on the first time user open the app.
+    // Note : This method should be called in order to handle IA - Full app conversion deeplinking and attribution
     public static void enablePlayStoreReferrer(long delay) {
         checkInstallReferrer_ = true;
         PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
-    }
-
-    public static void disablePlayStoreReferrer() {
-        checkInstallReferrer_ = false;
     }
 
     static boolean checkPlayStoreReferrer() {
