@@ -1,3 +1,2 @@
 include ':Branch-SDK-TestBed'
 include ':Branch-SDK'
-include ':BookFinderapp'
