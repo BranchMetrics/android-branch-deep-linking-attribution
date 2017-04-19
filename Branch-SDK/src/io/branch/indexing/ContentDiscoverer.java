@@ -156,7 +156,7 @@ public class ContentDiscoverer {
                             
                             JSONArray contentDataArray = new JSONArray();
                             contentEvent_.put(CONTENT_DATA_KEY, contentDataArray);
-                            discoverFilteredViewContents(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
+                            discoverContentData(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
                         } else { // If filter is absent discover all text field keys
                             if (!discoveredViewList_.contains(viewName)) {  // Check if the view is already discovered. If already discovered no need to get view content keys again
                                 JSONArray contentKeysArray = new JSONArray();
@@ -170,7 +170,7 @@ public class ContentDiscoverer {
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
                         
                         int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
-                        if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD) {
+                        if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD && filteredElements != null && filteredElements.length() > 0) {
                             handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
                         } else {
                             lastActivityReference_ = null;
@@ -184,13 +184,17 @@ public class ContentDiscoverer {
     };
     
     
-    private void discoverFilteredViewContents(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
+    private void discoverContentData(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
         try {
             for (int i = 0; i < viewIDArray.length(); i++) {
                 String viewName = viewIDArray.getString(i);
-                int id = activity.getResources().getIdentifier(viewIDArray.getString(i), "id", activity.getPackageName());
-                View childView = activity.findViewById(id);
-                updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
+                if (viewName.startsWith(COLLECTION_VIEW_KEY_PREFIX)) {
+                    discoverCollectionContentData(viewName, activity, isClearText, contentDataArray, contentKeysArray);
+                } else {
+                    int id = activity.getResources().getIdentifier(viewIDArray.getString(i), "id", activity.getPackageName());
+                    View childView = activity.findViewById(id);
+                    updateElementData(viewName, childView, isClearText, contentDataArray, contentKeysArray);
+                }
             }
         } catch (JSONException ignore) {
             
@@ -199,19 +203,60 @@ public class ContentDiscoverer {
     
     private void discoverContentKeys(ViewGroup viewGroup, JSONArray contentKeysArray, Resources res) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            
             View childView = viewGroup.getChildAt(i);
-            if ((childView.getVisibility() == View.VISIBLE) && (childView instanceof ViewGroup)) {
-                discoverContentKeys((ViewGroup) childView, contentKeysArray, res);
-            } else {
-                String viewName = getViewName(childView, res);
-                updateElementData(viewName, childView, true, null, contentKeysArray);
+            if (childView.getVisibility() == View.VISIBLE) {
+                if (childView instanceof AbsListView) {
+                    discoverAbsListContentKeys((AbsListView) childView, res, contentKeysArray);
+                } // Recycler view check
+                else if (childView instanceof ViewGroup) {
+                    discoverContentKeys((ViewGroup) childView, contentKeysArray, res);
+                } else if (childView instanceof TextView) {
+                    String viewName = getViewName(childView, res);
+                    contentKeysArray.put(viewName);
+                }
             }
         }
     }
+
+    private void discoverCollectionContentData(String viewKeyString, Activity activity, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
+        JSONObject listViewContentObj = new JSONObject();
+        contentKeysArray.put(viewKeyString);
+        contentDataArray.put(listViewContentObj);
+        viewKeyString = viewKeyString.replace(COLLECTION_VIEW_KEY_PREFIX, "");
+        try {
+            JSONObject viewKeyJson = new JSONObject(viewKeyString);
+            if (viewKeyJson.length() > 0) {
+                String listViewID = viewKeyJson.keys().next();
+
+                int id = activity.getResources().getIdentifier(listViewID, "id", activity.getPackageName());
+                View view = activity.findViewById(id);
+                if (view instanceof AbsListView) {
+                    AbsListView listView = (AbsListView) view;
+                    JSONArray itemViewChildIdArray = viewKeyJson.getJSONArray(listViewID);
+                    int itemViewIds[] = new int[itemViewChildIdArray.length()];
+                    for (int i = 0; i < itemViewChildIdArray.length(); i++) {
+                        itemViewIds[i] = activity.getResources().getIdentifier(itemViewChildIdArray.getString(i), "id", activity.getPackageName());
+                    }
+
+                    for (int j = listView.getFirstVisiblePosition(); j <= listView.getLastVisiblePosition(); j++) {
+                        JSONObject itemObj = new JSONObject();
+                        listViewContentObj.put("" + j, itemObj);
+                        for (int i = 0; i < itemViewIds.length; i++) {
+                            View itemViewChild = listView.getChildAt(j).findViewById(itemViewIds[i]);
+                            if (itemViewChild instanceof TextView) {
+                                itemObj.put(itemViewChildIdArray.getString(i), getTextViewValue(itemViewChild, isClearText));
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
     
-    private String discoverAbsListViewContentKeys(AbsListView absListView, Resources res) {
-        String absListKeys = null;
+    private void discoverAbsListContentKeys(AbsListView absListView, Resources res, JSONArray contentKeysArray) {
         JSONObject absListKeyObj = new JSONObject();
         if (absListView != null && absListView.getFirstVisiblePosition() > -1) {
             JSONArray itemViewArray = new JSONArray();
@@ -230,9 +275,8 @@ public class ContentDiscoverer {
             }
         }
         if (absListKeyObj.length() > 0) {
-            absListKeys = COLLECTION_VIEW_KEY_PREFIX + absListKeyObj;
+            contentKeysArray.put(COLLECTION_VIEW_KEY_PREFIX + absListKeyObj);
         }
-        return absListKeys;
     }
     
     
@@ -244,19 +288,22 @@ public class ContentDiscoverer {
         }
         return viewName;
     }
+
+    private String getTextViewValue(View view, boolean isClearText) {
+        String viewVal = null;
+        TextView txtView = (TextView) view;
+        if (txtView.getText() != null) {
+            viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
+            viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
+
+        }
+        return viewVal;
+    }
     
     private void updateElementData(String viewName, View view, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
-        String viewVal;
         if (view instanceof TextView) {
-            TextView txtView = (TextView) view;
-            if (contentDataArray != null) { // Will be non null in case of discovering the values
-                viewVal = null;
-                if (txtView.getText() != null) {
-                    viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
-                    viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
-                }
-                contentDataArray.put(viewVal);
-            }
+            String viewVal = getTextViewValue(view, isClearText);
+            contentDataArray.put(viewVal);
             contentKeysArray.put(viewName);
         }
     }
