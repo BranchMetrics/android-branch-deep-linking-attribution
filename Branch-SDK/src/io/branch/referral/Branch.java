@@ -459,9 +459,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         enableTestMode();
     }
 
-    // Since play store referrer broadcast from google is few millisecond delayed, delay Branch init by calling this method for more accurate
-    // tracking and attribution. This will be only on the first time user open the app.
-    // Note : This method should be called in order to handle IA - Full app conversion deeplinking and attribution
+    /**
+     * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
+     * tracking and attribution. This will delay branch init only the first time user open the app.
+     * Note: Recommend 1500 to capture more than 90% of the install referrer cases per our testing as of 4/2017
+     * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds
+     */
     public static void enablePlayStoreReferrer(long delay) {
         checkInstallReferrer_ = true;
         PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
