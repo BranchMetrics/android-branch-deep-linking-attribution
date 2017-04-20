@@ -100,6 +100,7 @@ public class PrefHelper {
     private static final String KEY_LAST_STRONG_MATCH_TIME = "bnc_branch_strong_match_time";
 
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
+    private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
 
 
     private static String Branch_Key = null;
@@ -212,7 +213,7 @@ public class PrefHelper {
 
     /**
      * <p>Sets the value specifying the number of times that a Branch API call has been re-attempted.</p>
-     *
+     * <p/>
      * <p>This overrides the default retry value.</p>
      *
      * @param retry An {@link Integer} value specifying the value to be specified in preferences
@@ -373,10 +374,10 @@ public class PrefHelper {
 
     /**
      * <p>Sets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p/>
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     *
+     * <p/>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
      *
      * @param identity_id A {@link String} value containing the currently configured identity
@@ -398,10 +399,10 @@ public class PrefHelper {
 
     /**
      * <p>Sets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     *
+     * <p/>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentityID(String)} - the UID reference of the user</p>
      *
      * @param identity A {@link String} value containing the currently configured identity
@@ -413,7 +414,7 @@ public class PrefHelper {
 
     /**
      * <p>Gets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      *
@@ -519,8 +520,9 @@ public class PrefHelper {
     }
 
     /**
-     * Sets teh Gogole install referrer identifier to the pref
-     * @param identifier  Gogole install referrer identifier
+     * Sets the Google install referrer identifier to the pref
+     *
+     * @param identifier Google install referrer identifier
      */
     public void setGoogleSearchInstallIdentifier(String identifier) {
         setString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER, identifier);
@@ -528,6 +530,7 @@ public class PrefHelper {
 
     /**
      * Gets the google install referrer identifier
+     *
      * @return {@link String} google install referrer identifier
      */
     public String getGoogleSearchInstallIdentifier() {
@@ -547,10 +550,29 @@ public class PrefHelper {
     /**
      * <p> Get the App link which statrted the application.</p>
      *
-     * @return A {@link String} value of App linnk url
+     * @return A {@link String} value of App link url
      */
     public String getAppLink() {
         return getString(KEY_APP_LINK);
+    }
+
+    /**
+     * Set the value for the full app conversion state. If set true indicate that this session is
+     * initiated by a full app conversion flow
+     *
+     * @param isFullAppConversion {@link Boolean} with value for full app conversion state
+     */
+    public void setIsFullAppConversion(boolean isFullAppConversion) {
+        setBool(KEY_IS_FULL_APP_CONVERSION, isFullAppConversion);
+    }
+
+    /**
+     * Get the value for the full app conversion state.
+     *
+     * @return {@code true} if the session is initiated by a full app conversion flow
+     */
+    public boolean isFullAppConversion() {
+        return getBool(KEY_IS_FULL_APP_CONVERSION);
     }
 
     /**
@@ -573,7 +595,7 @@ public class PrefHelper {
 
     /**
      * <p>Gets the session parameters as currently set in preferences.</p>
-     *
+     * <p/>
      * <p>Parameters are stored in JSON format, and must be parsed prior to access.</p>
      *
      * @return A {@link String} value containing the JSON-encoded structure of parameters for
@@ -612,9 +634,11 @@ public class PrefHelper {
     public void setInstallParams(String params) {
         setString(KEY_INSTALL_PARAMS, params);
     }
+
     public void setInstallReferrerParams(String params) {
         setString(KEY_INSTALL_REFERRER, params);
     }
+
     public String getInstallReferrerParams() {
         return getString(KEY_INSTALL_REFERRER);
     }
@@ -662,7 +686,7 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
-     *
+     * <p/>
      * <ul>
      * <li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
      * </ul>
@@ -720,7 +744,7 @@ public class PrefHelper {
 
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     *
+     * <p/>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
@@ -735,7 +759,7 @@ public class PrefHelper {
 
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     *
+     * <p/>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
@@ -1185,14 +1209,13 @@ public class PrefHelper {
 
         /**
          * @return {@link Integer} value containing the HTTP Status code of the current connection.
-         *
+         * <p/>
          * <ul>
          * <li>200 - The request has succeeded.</li>
          * <li>400 - Request cannot be fulfilled due to bad syntax</li>
          * <li>465 - Server is not listening.</li>
          * <li>500 - The server encountered an unexpected condition which prevented it from fulfilling the request.</li>
          * </ul>
-         *
          * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1 - Status Code Definitions</a>
          */
         public int getConnectionStatus() {

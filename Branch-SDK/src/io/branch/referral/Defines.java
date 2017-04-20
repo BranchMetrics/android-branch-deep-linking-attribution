@@ -42,6 +42,7 @@ public class Defines {
         Link("link"),
         ReferringData("referring_data"),
         ReferringLink("referring_link"),
+        IsFullAppConv("is_full_app_conversion"),
         Data("data"),
         OS("os"),
         HardwareID("hardware_id"),
