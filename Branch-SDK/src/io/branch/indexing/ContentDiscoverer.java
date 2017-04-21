@@ -229,7 +229,7 @@ public class ContentDiscoverer {
                 String listViewID = viewKeyJson.keys().next();
                 
                 int id = activity.getResources().getIdentifier(listViewID, "id", activity.getPackageName());
-                View view = activity.findViewById(id);
+                View view = activity.getCurrentFocus().findViewById(id);
                 if (view instanceof AbsListView) {
                     AbsListView listView = (AbsListView) view;
                     JSONArray itemViewChildIdArray = viewKeyJson.getJSONArray(listViewID);
