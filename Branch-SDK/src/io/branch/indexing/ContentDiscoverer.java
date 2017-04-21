@@ -217,7 +217,7 @@ public class ContentDiscoverer {
             }
         }
     }
-
+    
     private void discoverCollectionContentData(String viewKeyString, Activity activity, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
         JSONObject listViewContentObj = new JSONObject();
         contentKeysArray.put(viewKeyString);
@@ -227,7 +227,7 @@ public class ContentDiscoverer {
             JSONObject viewKeyJson = new JSONObject(viewKeyString);
             if (viewKeyJson.length() > 0) {
                 String listViewID = viewKeyJson.keys().next();
-
+                
                 int id = activity.getResources().getIdentifier(listViewID, "id", activity.getPackageName());
                 View view = activity.findViewById(id);
                 if (view instanceof AbsListView) {
@@ -237,27 +237,32 @@ public class ContentDiscoverer {
                     for (int i = 0; i < itemViewChildIdArray.length(); i++) {
                         itemViewIds[i] = activity.getResources().getIdentifier(itemViewChildIdArray.getString(i), "id", activity.getPackageName());
                     }
-
+                    
                     for (int j = listView.getFirstVisiblePosition(); j <= listView.getLastVisiblePosition(); j++) {
                         JSONObject itemObj = new JSONObject();
                         listViewContentObj.put("" + j, itemObj);
+                        int actualItemPos = j - listView.getFirstVisiblePosition();
                         for (int i = 0; i < itemViewIds.length; i++) {
-                            View itemViewChild = listView.getChildAt(j).findViewById(itemViewIds[i]);
-                            if (itemViewChild instanceof TextView) {
-                                itemObj.put(itemViewChildIdArray.getString(i), getTextViewValue(itemViewChild, isClearText));
+                            if (listView.getChildAt(actualItemPos) != null) {
+                                View itemViewChild = listView.getChildAt(actualItemPos).findViewById(itemViewIds[i]);
+                                if (itemViewChild instanceof TextView) {
+                                    itemObj.put(itemViewChildIdArray.getString(i), getTextViewValue(itemViewChild, isClearText));
+                                }
                             }
                         }
                     }
                 }
             }
-
+            
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
     
+    
     private void discoverAbsListContentKeys(AbsListView absListView, Resources res, JSONArray contentKeysArray) {
         JSONObject absListKeyObj = new JSONObject();
+        
         if (absListView != null && absListView.getFirstVisiblePosition() > -1) {
             JSONArray itemViewArray = new JSONArray();
             // PRS : Some of the list view implementation tend to use a header and footer. These are static fields and not actual contents. Following logic is to handle it
@@ -288,14 +293,14 @@ public class ContentDiscoverer {
         }
         return viewName;
     }
-
+    
     private String getTextViewValue(View view, boolean isClearText) {
         String viewVal = null;
         TextView txtView = (TextView) view;
         if (txtView.getText() != null) {
             viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
             viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
-
+            
         }
         return viewVal;
     }
@@ -329,7 +334,6 @@ public class ContentDiscoverer {
         PrefHelper.getInstance(context).clearBranchAnalyticsData();
         return cdObj;
     }
-    
     
     /**
      * Helper class for
