@@ -229,8 +229,13 @@ public class ContentDiscoverer {
                 String listViewID = viewKeyJson.keys().next();
                 
                 int id = activity.getResources().getIdentifier(listViewID, "id", activity.getPackageName());
+                // PRS : in case of View pager or Tabbed controls there may be many tabs. The same control can be included in more than one tab
+                // Need to make sure the focused content is checked in case it is available or fallback to the root view
                 View view = activity.getCurrentFocus().findViewById(id);
-                if (view instanceof AbsListView) {
+                if(view == null) {
+                    view = activity.findViewById(id);
+                }
+                if (view != null  && view instanceof AbsListView) {
                     AbsListView listView = (AbsListView) view;
                     JSONArray itemViewChildIdArray = viewKeyJson.getJSONArray(listViewID);
                     int itemViewIds[] = new int[itemViewChildIdArray.length()];
