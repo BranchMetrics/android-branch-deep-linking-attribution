@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -31,13 +32,13 @@ import io.branch.referral.PrefHelper;
  */
 public class ContentDiscoverer {
     private static ContentDiscoverer thisInstance_;
-    
+
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
     private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
     private String referredUrl_; // The url which opened this app session
     private JSONObject contentEvent_;
-    
+
     private static final String TIME_STAMP_KEY = "ts";
     private static final String TIME_STAMP_CLOSE_KEY = "tc";
     private static final String NAV_PATH_KEY = "n";
@@ -51,35 +52,36 @@ public class ContentDiscoverer {
     private static final String ENTITIES_KEY = "e";
     private static final int DRT_MINIMUM_THRESHHOLD = 500;
     private static final String COLLECTION_VIEW_KEY_PREFIX = "$";
-    
-    
+    private static final String RECYCLER_VIEW = "RecyclerView";
+
+
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
-    
+
     public static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
             thisInstance_ = new ContentDiscoverer();
         }
         return thisInstance_;
     }
-    
+
     private ContentDiscoverer() {
         handler_ = new Handler();
         hashHelper_ = new HashHelper();
     }
-    
+
     private int discoveredViewInThisSession_ = 0; // Denote the number  of views discovered in this session
     private ArrayList<String> discoveredViewList_ = new ArrayList<>(); // List for saving already discovered views path
-    
+
     //------------------------- Public methods---------------------------------//
-    
+
     public void discoverContent(final Activity activity, String referredUrl) {
         cdManifest_ = ContentDiscoveryManifest.getInstance(activity);
         referredUrl_ = referredUrl;
-        
+
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
         ContentDiscoveryManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
-        
+
         if (pathProperties != null) { // Check if view is available in CD manifest
             // Discover content only if element array is not empty json array
             if (!pathProperties.isSkipContentDiscovery()) {
@@ -89,8 +91,8 @@ public class ContentDiscoverer {
             discoverContent(activity);
         }
     }
-    
-    
+
+
     public void onActivityStopped(Activity activity) {
         if (lastActivityReference_ != null && lastActivityReference_.get() != null
                 && lastActivityReference_.get().getClass().getName().equals(activity.getClass().getName())) {
@@ -99,14 +101,14 @@ public class ContentDiscoverer {
         }
         updateLastViewTimeStampIfNeeded();
     }
-    
+
     public void onSessionStarted(final Activity activity, String referredUrl) {
         discoveredViewList_ = new ArrayList<>();
         discoverContent(activity, referredUrl);
     }
-    
+
     // ---------------Private methods----------------------//
-    
+
     private void discoverContent(Activity activity) {
         if (discoveredViewList_.size() < cdManifest_.getMaxViewHistorySize()) { // check if max discovery views reached
             handler_.removeCallbacks(readContentRunnable);
@@ -114,7 +116,7 @@ public class ContentDiscoverer {
             handler_.postDelayed(readContentRunnable, VIEW_SETTLE_TIME);
         }
     }
-    
+
     private void updateLastViewTimeStampIfNeeded() {
         try {
             if (contentEvent_ != null) {
@@ -123,11 +125,11 @@ public class ContentDiscoverer {
         } catch (JSONException ignore) {
         }
     }
-    
+
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
-            
+
             try {
                 if (cdManifest_.isCDEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
@@ -138,9 +140,9 @@ public class ContentDiscoverer {
                     }
                     String viewName = "/" + activity.getClass().getSimpleName();
                     contentEvent_.put(VIEW_KEY, viewName);
-                    
+
                     ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
-                    
+
                     if (rootView != null) {
                         ContentDiscoveryManifest.CDPathProperties cdPathProperties = cdManifest_.getCDPathProperties(activity);
                         boolean isClearText = cdPathProperties != null && cdPathProperties.isClearTextRequested();
@@ -153,7 +155,7 @@ public class ContentDiscoverer {
                         if (filteredElements != null && filteredElements.length() > 0) { // If filtered views available get filtered views and values
                             JSONArray contentKeysArray = new JSONArray();
                             contentEvent_.put(CONTENT_KEYS_KEY, contentKeysArray);
-                            
+
                             JSONArray contentDataArray = new JSONArray();
                             contentEvent_.put(CONTENT_DATA_KEY, contentDataArray);
                             discoverContentData(filteredElements, contentDataArray, contentKeysArray, activity, isClearText);
@@ -165,10 +167,10 @@ public class ContentDiscoverer {
                             }
                         }
                         discoveredViewList_.add(viewName);
-                        
+
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
-                        
+
                         int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
                         if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD && filteredElements != null && filteredElements.length() > 0) {
                             handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
@@ -177,13 +179,13 @@ public class ContentDiscoverer {
                         }
                     }
                 }
-                
+
             } catch (JSONException ignore) {
             }
         }
     };
-    
-    
+
+
     private void discoverContentData(JSONArray viewIDArray, JSONArray contentDataArray, JSONArray contentKeysArray, Activity activity, boolean isClearText) {
         try {
             for (int i = 0; i < viewIDArray.length(); i++) {
@@ -197,18 +199,19 @@ public class ContentDiscoverer {
                 }
             }
         } catch (JSONException ignore) {
-            
+
         }
     }
-    
+
     private void discoverContentKeys(ViewGroup viewGroup, JSONArray contentKeysArray, Resources res) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             View childView = viewGroup.getChildAt(i);
             if (childView.getVisibility() == View.VISIBLE) {
                 if (childView instanceof AbsListView) {
                     discoverAbsListContentKeys((AbsListView) childView, res, contentKeysArray);
-                } // Recycler view check
-                else if (childView instanceof ViewGroup) {
+                } else if (childView.getClass().getSimpleName().equals(RECYCLER_VIEW)) {
+                    discoverRecyclerListContentKeys(childView, res, contentKeysArray);
+                } else if (childView instanceof ViewGroup) {
                     discoverContentKeys((ViewGroup) childView, contentKeysArray, res);
                 } else if (childView instanceof TextView) {
                     String viewName = getViewName(childView, res);
@@ -217,7 +220,54 @@ public class ContentDiscoverer {
             }
         }
     }
-    
+
+    private void discoverRecyclerListContentKeys(View view, Resources res, JSONArray contentKeysArray) {
+        JSONObject absListKeyObj = new JSONObject();
+        if (view != null) {
+            JSONArray itemViewArray = new JSONArray();
+            try {
+                absListKeyObj.put(getViewName(view, res), itemViewArray);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            ArrayList<View> views = getAllChildren(view);
+
+            // PRS : Some of the list view implementation tend to use a header and footer. These are static fields and not actual contents. Following logic is to handle it
+            View candidateItemView = views.size() > 1 ? views.get(1) : views.get(0);
+            if (candidateItemView instanceof ViewGroup) {
+                discoverContentKeys((ViewGroup) candidateItemView, itemViewArray, res);
+            } else if (candidateItemView instanceof TextView) {
+                itemViewArray.put(getViewName(candidateItemView, res));
+            }
+        }
+        if (absListKeyObj.length() > 0) {
+            contentKeysArray.put(COLLECTION_VIEW_KEY_PREFIX + absListKeyObj);
+        }
+    }
+
+    private ArrayList<View> getAllChildren(View v) {
+        if (!(v instanceof ViewGroup)) {
+            ArrayList<View> viewArrayList = new ArrayList<>();
+            viewArrayList.add(v);
+            return viewArrayList;
+        }
+
+        ArrayList<View> result = new ArrayList<>();
+
+        ViewGroup vg = (ViewGroup) v;
+        for (int i = 0; i < vg.getChildCount(); i++) {
+
+            View child = vg.getChildAt(i);
+
+            ArrayList<View> viewArrayList = new ArrayList<>();
+            viewArrayList.add(v);
+            viewArrayList.addAll(getAllChildren(child));
+
+            result.addAll(viewArrayList);
+        }
+        return result;
+    }
+
     private void discoverCollectionContentData(String viewKeyString, Activity activity, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
         JSONObject listViewContentObj = new JSONObject();
         contentKeysArray.put(viewKeyString);
@@ -227,22 +277,22 @@ public class ContentDiscoverer {
             JSONObject viewKeyJson = new JSONObject(viewKeyString);
             if (viewKeyJson.length() > 0) {
                 String listViewID = viewKeyJson.keys().next();
-                
+
                 int id = activity.getResources().getIdentifier(listViewID, "id", activity.getPackageName());
                 // PRS : in case of View pager or Tabbed controls there may be many tabs. The same control can be included in more than one tab
                 // Need to make sure the focused content is checked in case it is available or fallback to the root view
                 View view = activity.getCurrentFocus().findViewById(id);
-                if(view == null) {
+                if (view == null) {
                     view = activity.findViewById(id);
                 }
-                if (view != null  && view instanceof AbsListView) {
+                if (view != null && view instanceof AbsListView) {
                     AbsListView listView = (AbsListView) view;
                     JSONArray itemViewChildIdArray = viewKeyJson.getJSONArray(listViewID);
                     int itemViewIds[] = new int[itemViewChildIdArray.length()];
                     for (int i = 0; i < itemViewChildIdArray.length(); i++) {
                         itemViewIds[i] = activity.getResources().getIdentifier(itemViewChildIdArray.getString(i), "id", activity.getPackageName());
                     }
-                    
+
                     for (int j = listView.getFirstVisiblePosition(); j <= listView.getLastVisiblePosition(); j++) {
                         JSONObject itemObj = new JSONObject();
                         listViewContentObj.put("" + j, itemObj);
@@ -257,17 +307,39 @@ public class ContentDiscoverer {
                         }
                     }
                 }
+                if (view != null && view.getClass().getSimpleName().equals(RECYCLER_VIEW)) {
+                    ViewGroup listView = (ViewGroup) view;
+                    JSONArray itemViewChildIdArray = viewKeyJson.getJSONArray(listViewID);
+                    int itemViewIds[] = new int[itemViewChildIdArray.length()];
+                    for (int i = 0; i < itemViewChildIdArray.length(); i++) {
+                        itemViewIds[i] = activity.getResources().getIdentifier(itemViewChildIdArray.getString(i), "id", activity.getPackageName());
+                    }
+
+                    for (int j = 0; j <= listView.getChildCount(); j++) {
+                        JSONObject itemObj = new JSONObject();
+                        View cell = listView.getChildAt(j);
+                        if (cell != null && cell.getVisibility() == View.VISIBLE) {
+                            listViewContentObj.put("" + j, itemObj);
+                            for (int i = 0; i < itemViewIds.length; i++) {
+
+                                View itemViewChild = listView.getChildAt(j).findViewById(itemViewIds[i]);
+                                if (itemViewChild instanceof TextView && !TextUtils.isEmpty(((TextView) itemViewChild).getText())) {
+                                    itemObj.put(itemViewChildIdArray.getString(i), getTextViewValue(itemViewChild, isClearText));
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-    
-    
+
     private void discoverAbsListContentKeys(AbsListView absListView, Resources res, JSONArray contentKeysArray) {
         JSONObject absListKeyObj = new JSONObject();
-        
+
         if (absListView != null && absListView.getFirstVisiblePosition() > -1) {
             JSONArray itemViewArray = new JSONArray();
             // PRS : Some of the list view implementation tend to use a header and footer. These are static fields and not actual contents. Following logic is to handle it
@@ -288,8 +360,8 @@ public class ContentDiscoverer {
             contentKeysArray.put(COLLECTION_VIEW_KEY_PREFIX + absListKeyObj);
         }
     }
-    
-    
+
+
     private String getViewName(View view, Resources res) {
         String viewName = String.valueOf(view.getId());
         try {
@@ -298,18 +370,18 @@ public class ContentDiscoverer {
         }
         return viewName;
     }
-    
+
     private String getTextViewValue(View view, boolean isClearText) {
         String viewVal = null;
         TextView txtView = (TextView) view;
         if (txtView.getText() != null) {
             viewVal = txtView.getText().toString().substring(0, Math.min(txtView.getText().toString().length(), cdManifest_.getMaxTextLen()));
             viewVal = isClearText ? viewVal : hashHelper_.hashContent(viewVal);
-            
+
         }
         return viewVal;
     }
-    
+
     private void updateElementData(String viewName, View view, boolean isClearText, JSONArray contentDataArray, JSONArray contentKeysArray) {
         if (view instanceof TextView) {
             String viewVal = getTextViewValue(view, isClearText);
@@ -317,7 +389,7 @@ public class ContentDiscoverer {
             contentKeysArray.put(viewName);
         }
     }
-    
+
     public JSONObject getContentDiscoverDataForCloseRequest(Context context) {
         JSONObject cdObj = null;
         JSONObject branchAnalyticalData = PrefHelper.getInstance(context).getBranchAnalyticsData();
@@ -331,7 +403,7 @@ public class ContentDiscoverer {
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                     cdObj.put(PACKAGE_NAME_KEY, context.getPackageName());
                 }
-                
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -339,20 +411,20 @@ public class ContentDiscoverer {
         PrefHelper.getInstance(context).clearBranchAnalyticsData();
         return cdObj;
     }
-    
+
     /**
      * Helper class for
      */
     private class HashHelper {
         MessageDigest messageDigest_;
-        
+
         public HashHelper() {
             try {
                 messageDigest_ = MessageDigest.getInstance("MD5");
             } catch (NoSuchAlgorithmException ignore) {
             }
         }
-        
+
         public String hashContent(String content) {
             String hashedVal = "";
             if (messageDigest_ != null) {
@@ -364,5 +436,5 @@ public class ContentDiscoverer {
             return hashedVal;
         }
     }
-    
+
 }
