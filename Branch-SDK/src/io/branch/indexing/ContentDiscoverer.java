@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.AbsListView;
 import android.widget.TextView;
 
@@ -18,6 +19,8 @@ import java.lang.ref.WeakReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.branch.referral.PrefHelper;
 
@@ -35,8 +38,11 @@ public class ContentDiscoverer {
     private Handler handler_;
     private WeakReference<Activity> lastActivityReference_;
     private static final int VIEW_SETTLE_TIME = 1000; /* Time for a view to load its components */
+    private static final int SCROLL_SETTLE_TIME = 1500; /* Time for a scroll view to idle */
     private String referredUrl_; // The url which opened this app session
     private JSONObject contentEvent_;
+    private int discoveryRepeatCnt_; // keeps the count of repeated discoveries on an activity.(Repeated discovery happens when DRI or ENABLE_SCROLL_WATCH is enabled)
+    private int maxDiscoveryRepeatCnt = ContentDiscoveryManifest.DEF_MAX_DISCOVERY_REPEAT; // Max limit for repeated discovery should
     
     private static final String TIME_STAMP_KEY = "ts";
     private static final String TIME_STAMP_CLOSE_KEY = "tc";
@@ -49,13 +55,15 @@ public class ContentDiscoverer {
     private static final String CONTENT_KEYS_KEY = "ck";
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
-    private static final int DRT_MINIMUM_THRESHHOLD = 500;
+    private static final int DRT_MINIMUM_THRESHOLD = 500;
     private static final String COLLECTION_VIEW_KEY_PREFIX = "$";
+    private static final String ENABLE_SCROLL_WATCH = "bnc_esw"; // Enables scroll watch for collection views. Provided as part of Collection view data Json
     private static final String RECYCLER_VIEW = "RecyclerView";
     
     
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
+    private final Map<String, WeakReference<ViewTreeObserver>> viewTreeObserverMap;
     
     public static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
@@ -67,6 +75,7 @@ public class ContentDiscoverer {
     private ContentDiscoverer() {
         handler_ = new Handler();
         hashHelper_ = new HashHelper();
+        viewTreeObserverMap = new HashMap<>();
     }
     
     private int discoveredViewInThisSession_ = 0; // Denote the number  of views discovered in this session
@@ -77,7 +86,6 @@ public class ContentDiscoverer {
     public void discoverContent(final Activity activity, String referredUrl) {
         cdManifest_ = ContentDiscoveryManifest.getInstance(activity);
         referredUrl_ = referredUrl;
-        
         //Scan for content only if the app is started by  a link click or if the content path for this view is already cached
         ContentDiscoveryManifest.CDPathProperties pathProperties = cdManifest_.getCDPathProperties(activity);
         
@@ -99,6 +107,13 @@ public class ContentDiscoverer {
             lastActivityReference_ = null;
         }
         updateLastViewTimeStampIfNeeded();
+        for (WeakReference<ViewTreeObserver> viewTreeObserverRef : viewTreeObserverMap.values()) {
+            ViewTreeObserver observer = viewTreeObserverRef.get();
+            if (observer != null) {
+                observer.removeOnScrollChangedListener(scrollChangedListener);
+            }
+        }
+        viewTreeObserverMap.clear();
     }
     
     public void onSessionStarted(final Activity activity, String referredUrl) {
@@ -109,6 +124,7 @@ public class ContentDiscoverer {
     // ---------------Private methods----------------------//
     
     private void discoverContent(Activity activity) {
+        discoveryRepeatCnt_ = 0;
         if (discoveredViewList_.size() < cdManifest_.getMaxViewHistorySize()) { // check if max discovery views reached
             handler_.removeCallbacks(readContentRunnable);
             lastActivityReference_ = new WeakReference<>(activity);
@@ -128,8 +144,8 @@ public class ContentDiscoverer {
     private Runnable readContentRunnable = new Runnable() {
         @Override
         public void run() {
-            
             try {
+                discoveryRepeatCnt_++;
                 if (cdManifest_.isCDEnabled() && lastActivityReference_ != null && lastActivityReference_.get() != null) {
                     Activity activity = lastActivityReference_.get();
                     contentEvent_ = new JSONObject();
@@ -169,12 +185,14 @@ public class ContentDiscoverer {
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
                         
-                        int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
-                        if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD && filteredElements != null && filteredElements.length() > 0) {
+                        int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatInterval();
+                        maxDiscoveryRepeatCnt = cdManifest_.getCDPathProperties(activity).getMaxDiscoveryRepeatNumber();
+                        if (discoveryRepeatCnt_ < maxDiscoveryRepeatCnt && discoveryRepeatTime >= DRT_MINIMUM_THRESHOLD && filteredElements != null && filteredElements.length() > 0) {
                             handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
-                        } else {
-                            lastActivityReference_ = null;
                         }
+//                        else {
+//                            lastActivityReference_ = null;
+//                        }
                     }
                 }
                 
@@ -277,6 +295,11 @@ public class ContentDiscoverer {
                             }
                         }
                     }
+                    boolean isScrollListeningEnabled = viewKeyJson.has(ENABLE_SCROLL_WATCH) && viewKeyJson.getBoolean(ENABLE_SCROLL_WATCH);
+                    if (isScrollListeningEnabled && !viewTreeObserverMap.containsKey(viewKeyString)) {
+                        listView.getViewTreeObserver().addOnScrollChangedListener(scrollChangedListener);
+                        viewTreeObserverMap.put(viewKeyString, new WeakReference<>(listView.getViewTreeObserver()));
+                    }
                 }
             }
             
@@ -284,6 +307,22 @@ public class ContentDiscoverer {
             e.printStackTrace();
         }
     }
+    
+    private ViewTreeObserver.OnScrollChangedListener scrollChangedListener = new ViewTreeObserver.OnScrollChangedListener() {
+        @Override
+        public void onScrollChanged() {
+            handler_.removeCallbacks(readListRunnable);
+            if (maxDiscoveryRepeatCnt > discoveryRepeatCnt_) {
+                handler_.postDelayed(readListRunnable, SCROLL_SETTLE_TIME);
+            }
+        }
+    };
+    private Runnable readListRunnable = new Runnable() {
+        @Override
+        public void run() {
+            readContentRunnable.run();
+        }
+    };
     
     
     private String getViewName(View view, Resources res) {
