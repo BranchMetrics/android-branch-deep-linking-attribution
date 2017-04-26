@@ -42,6 +42,7 @@ public class Defines {
         Link("link"),
         ReferringData("referring_data"),
         ReferringLink("referring_link"),
+        IsFullAppConv("is_full_app_conversion"),
         Data("data"),
         OS("os"),
         HardwareID("hardware_id"),
@@ -119,8 +120,8 @@ public class Defines {
         ContentAnalyticsMode("content_analytics_mode"),
         ContentDiscovery("cd"),
         Environment("environment"),
-        InstantApp("instant_app"),
-        NativeApp("native");
+        InstantApp("INSTANT_APP"),
+        NativeApp("FULL_APP");
         
         private String key = "";
         
