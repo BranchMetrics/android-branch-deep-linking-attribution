@@ -77,8 +77,7 @@ public class ContentDiscoverer {
         hashHelper_ = new HashHelper();
         viewTreeObserverMap = new HashMap<>();
     }
-    
-    private int discoveredViewInThisSession_ = 0; // Denote the number  of views discovered in this session
+
     private ArrayList<String> discoveredViewList_ = new ArrayList<>(); // List for saving already discovered views path
     
     //------------------------- Public methods---------------------------------//
