@@ -3619,6 +3619,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    /***
+     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
+     * full app up on Branch#initSession()
+     * @param activity Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @return {@code true} if install prompt is shown to user
+     */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode) {
         String installReferrerString = "";
         if (Branch.getInstance() != null) {
@@ -3636,7 +3643,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return showInstallPrompt(activity, requestCode, installReferrerString);
     }
 
-    private static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+    /***
+     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The deep link params associated with the referrer is delivered to
+     * full app up on Branch#initSession()
+     * @param activity Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @param referrer Any referrer link to pass to full app
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
             throw new IllegalArgumentException("Activity must be non-null");
         }
