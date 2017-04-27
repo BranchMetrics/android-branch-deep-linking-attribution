@@ -49,6 +49,7 @@ public class Defines {
         HardwareIDType("hardware_id_type"),
         HardwareIDTypeVendor("vendor_id"),
         HardwareIDTypeRandom("random"),
+        HardwareIDTypeGAID("gaid"),
         IsHardwareIDReal("is_hardware_id_real"),
         AppVersion("app_version"),
         OSVersion("os_version"),

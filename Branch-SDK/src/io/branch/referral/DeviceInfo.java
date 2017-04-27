@@ -126,6 +126,8 @@ class DeviceInfo {
             if (!hardwareID_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID_);
                 requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
+                requestObj.put(Defines.Jsonkey.HardwareIDType.getKey(), isHardwareIDReal_ ? Defines.Jsonkey.HardwareIDTypeVendor :
+                Defines.Jsonkey.HardwareIDTypeRandom);
             }
             if (!brandName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName_);
@@ -137,7 +139,6 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
-
 
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);

@@ -207,7 +207,7 @@ public abstract class ServerRequest {
     /**
      * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
      * key-value pairs appended with the instrumentation data.</p>
-     *
+     * <p>
      * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
      *
      * @return A {@link JSONObject} containing the post data supplied with the current request
@@ -372,6 +372,20 @@ public abstract class ServerRequest {
             try {
                 params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
                 params_.put(Defines.Jsonkey.LATVal.getKey(), sysObserver.LATVal_);
+
+                if (params_.has(Defines.Jsonkey.IsHardwareIDReal.getKey())) {
+                    if (params_.get(Defines.Jsonkey.IsHardwareIDReal.getKey()).equals(true)) {
+                        // replacing hardware_id w/ GAID
+                        params_.put(Defines.Jsonkey.HardwareID.getKey(), sysObserver.GAIDString_);
+                        params_.put(Defines.Jsonkey.HardwareIDType.getKey(), Defines.Jsonkey.HardwareIDTypeGAID.getKey());
+                    } else {
+                        // do nothing as the hardware info is intended to be fake (simulating installs)
+                    }
+                } else {
+                    params_.put(Defines.Jsonkey.HardwareID.getKey(), sysObserver.GAIDString_);
+                    params_.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), true);
+                    params_.put(Defines.Jsonkey.HardwareIDType.getKey(), Defines.Jsonkey.HardwareIDTypeGAID.getKey());
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
