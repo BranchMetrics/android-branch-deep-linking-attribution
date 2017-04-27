@@ -167,12 +167,12 @@ public class ContentDiscoverer {
                         // Cache the analytics data for future use
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
 
-                        int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
-                        if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD) {
-                            handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
-                        } else {
-                            lastActivityReference_ = null;
-                        }
+                        //int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatTime();
+                        //if (discoveryRepeatTime >= DRT_MINIMUM_THRESHHOLD) {
+                        //    handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
+                        //} else {
+                        lastActivityReference_ = null;
+                        //}
                     }
                 }
 
