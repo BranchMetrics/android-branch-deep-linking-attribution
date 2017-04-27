@@ -3582,4 +3582,74 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean skipBranchViewsOnThisActivity();
     }
 
+
+    ///----------------- Instant App  support--------------------------//
+    private static Context lastApplicationContext = null;
+    private static Boolean isInstantApp = null;
+
+    public static boolean isInstantApp(@NonNull Context context) {
+        if (Build.VERSION.SDK_INT > 25) {
+            throw new IllegalStateException("This method is not valid in Android O");
+        } else if (context == null) {
+            throw new IllegalArgumentException("Context must be non-null");
+        } else {
+            Context applicationContext = context.getApplicationContext();
+            if (applicationContext == null) {
+                throw new IllegalStateException("Application context is null!");
+            } else if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
+                return isInstantApp.booleanValue();
+            } else {
+                isInstantApp = null;
+                lastApplicationContext = applicationContext;
+                try {
+                    applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
+                    isInstantApp = Boolean.valueOf(true);
+                } catch (ClassNotFoundException ex) {
+                    isInstantApp = Boolean.valueOf(false);
+                }
+
+                return isInstantApp.booleanValue();
+            }
+        }
+    }
+
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode) {
+        String installReferrerString = "";
+        if (Branch.getInstance() != null) {
+            JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
+            String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
+            if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
+                try {
+                    String referringLink = latestReferringParams.getString(referringLinkKey);
+                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return showInstallPrompt(activity, requestCode, installReferrerString);
+    }
+
+    private static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+        if (activity == null) {
+            throw new IllegalArgumentException("Activity must be non-null");
+        }
+        else if (!isInstantApp(activity)) {
+            return false;
+        }
+        else {
+            Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
+                    .putExtra("callerId", activity.getPackageName())
+                    .putExtra("overlay", true);
+            Uri.Builder uriBuilder = (new Uri.Builder()).scheme("market").authority("details").appendQueryParameter("id", activity.getPackageName());
+            if (!TextUtils.isEmpty(referrer)) {
+                uriBuilder.appendQueryParameter("referrer", referrer);
+            }
+
+            intent.setData(uriBuilder.build());
+            activity.startActivityForResult(intent, requestCode);
+            return true;
+        }
+    }
+
 }
