@@ -42,7 +42,7 @@ public class ContentDiscoverer {
     private String referredUrl_; // The url which opened this app session
     private JSONObject contentEvent_;
     private int discoveryRepeatCnt_; // keeps the count of repeated discoveries on an activity.(Repeated discovery happens when DRI or ENABLE_SCROLL_WATCH is enabled)
-    private int maxDiscoveryRepeatCnt = ContentDiscoveryManifest.DEF_MAX_DISCOVERY_REPEAT; // Max limit for repeated discovery should
+    private int maxDiscoveryRepeatCnt = ContentDiscoveryManifest.DEF_MAX_DISCOVERY_REPEAT; // Max limit for repeated discovery
     
     private static final String TIME_STAMP_KEY = "ts";
     private static final String TIME_STAMP_CLOSE_KEY = "tc";
@@ -55,7 +55,7 @@ public class ContentDiscoverer {
     private static final String CONTENT_KEYS_KEY = "ck";
     private static final String PACKAGE_NAME_KEY = "p";
     private static final String ENTITIES_KEY = "e";
-    private static final int DRT_MINIMUM_THRESHOLD = 500;
+
     private static final String COLLECTION_VIEW_KEY_PREFIX = "$";
     private static final String ENABLE_SCROLL_WATCH = "bnc_esw"; // Enables scroll watch for collection views. Provided as part of Collection view data Json
     private static final String RECYCLER_VIEW = "RecyclerView";
@@ -64,6 +64,7 @@ public class ContentDiscoverer {
     private final HashHelper hashHelper_;
     private ContentDiscoveryManifest cdManifest_;
     private final Map<String, WeakReference<ViewTreeObserver>> viewTreeObserverMap;
+    private ArrayList<String> discoveredViewList_ = new ArrayList<>(); // List for saving already discovered views path
     
     public static ContentDiscoverer getInstance() {
         if (thisInstance_ == null) {
@@ -71,15 +72,13 @@ public class ContentDiscoverer {
         }
         return thisInstance_;
     }
-    
+
     private ContentDiscoverer() {
         handler_ = new Handler();
         hashHelper_ = new HashHelper();
         viewTreeObserverMap = new HashMap<>();
     }
 
-    private ArrayList<String> discoveredViewList_ = new ArrayList<>(); // List for saving already discovered views path
-    
     //------------------------- Public methods---------------------------------//
     
     public void discoverContent(final Activity activity, String referredUrl) {
@@ -97,8 +96,7 @@ public class ContentDiscoverer {
             discoverContent(activity);
         }
     }
-    
-    
+
     public void onActivityStopped(Activity activity) {
         if (lastActivityReference_ != null && lastActivityReference_.get() != null
                 && lastActivityReference_.get().getClass().getName().equals(activity.getClass().getName())) {
@@ -185,13 +183,13 @@ public class ContentDiscoverer {
                         PrefHelper.getInstance(activity).saveBranchAnalyticsData(contentEvent_);
                         int discoveryRepeatTime = cdManifest_.getCDPathProperties(activity).getDiscoveryRepeatInterval();
                         maxDiscoveryRepeatCnt = cdManifest_.getCDPathProperties(activity).getMaxDiscoveryRepeatNumber();
-                        if (discoveryRepeatCnt_ < maxDiscoveryRepeatCnt && discoveryRepeatTime >= DRT_MINIMUM_THRESHOLD && filteredElements != null && filteredElements.length() > 0) {
+                        if (discoveryRepeatCnt_ < maxDiscoveryRepeatCnt && discoveryRepeatTime >= ContentDiscoveryManifest.DRI_MINIMUM_THRESHOLD && filteredElements != null && filteredElements.length() > 0) {
                             handler_.postDelayed(readContentRunnable, discoveryRepeatTime);
                         }
                     }
                 }
                 
-            } catch (JSONException ignore) {
+            } catch (Exception ignore) {
             }
         }
     };
@@ -215,6 +213,8 @@ public class ContentDiscoverer {
     private void discoverListViewContentKeys(ViewGroup listView, Resources res, JSONArray contentKeysArray) {
         JSONObject absListKeyObj = new JSONObject();
         if (listView != null && listView.getChildCount() > -1) {
+            // PRS : Considering the case that some devs add header anf footer for list as the list item. The header will be static and doesn't
+            // represent the real views representing the content. So take the second cell in the list to get the views if there is 2 cells
             View candidateItemView = listView.getChildAt(listView.getChildCount() > 1 ? 1 : 0);
             if (candidateItemView != null) {
                 JSONArray itemViewArray = new JSONArray();
@@ -318,7 +318,6 @@ public class ContentDiscoverer {
             readContentRunnable.run();
         }
     };
-    
     
     private String getViewName(View view, Resources res) {
         String viewName = String.valueOf(view.getId());

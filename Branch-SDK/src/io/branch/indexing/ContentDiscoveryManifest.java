@@ -50,6 +50,7 @@ public class ContentDiscoveryManifest {
     private static final String MAX_DISCOVERY_REPEAT = "mdr";
     
     static final int DEF_MAX_DISCOVERY_REPEAT = 15; // Default Maximum number for discovery repeat
+    static final int DRI_MINIMUM_THRESHOLD = 500; // Minimum value for Discovery repeat interval
     
     
     private SharedPreferences sharedPref;
