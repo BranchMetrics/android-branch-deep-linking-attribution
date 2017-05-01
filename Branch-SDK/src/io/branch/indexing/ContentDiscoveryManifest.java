@@ -20,7 +20,7 @@ import org.json.JSONObject;
  */
 public class ContentDiscoveryManifest {
     private static ContentDiscoveryManifest thisInstance_;
-
+    
     /* JsonObject representation for the CD manifest */
     private JSONObject cdManifestObject_;
     /* Manifest version number */
@@ -35,10 +35,10 @@ public class ContentDiscoveryManifest {
     private boolean isCDEnabled_ = false;
     /* Json Array for the content path object and the filtered views for this application */
     private JSONArray contentPaths_;
-
+    
     public static final String MANIFEST_VERSION_KEY = "mv";
     public static final String PACKAGE_NAME_KEY = "pn";
-    public static final String HASH_MODE_KEY = "h";
+    static final String HASH_MODE_KEY = "h";
     private static final String MANIFEST_KEY = "m";
     private static final String PATH_KEY = "p";
     private static final String FILTERED_KEYS = "ck";
@@ -46,29 +46,33 @@ public class ContentDiscoveryManifest {
     private static final String MAX_VIEW_HISTORY_LENGTH = "mhl";
     private static final String MAX_PACKET_SIZE_KEY = "mps";
     public static final String CONTENT_DISCOVER_KEY = "cd";
-    private static final String DISCOVERY_REPEAT_TIME = "drt";
-
-
+    private static final String DISCOVERY_REPEAT_INTERVAL = "dri";
+    private static final String MAX_DISCOVERY_REPEAT = "mdr";
+    
+    static final int DEF_MAX_DISCOVERY_REPEAT = 15; // Default Maximum number for discovery repeat
+    static final int DRI_MINIMUM_THRESHOLD = 500; // Minimum value for Discovery repeat interval
+    
+    
     private SharedPreferences sharedPref;
     private final String PREF_KEY = "BNC_CD_MANIFEST";
-
+    
     private ContentDiscoveryManifest(Context context) {
         sharedPref = context.getSharedPreferences("bnc_content_discovery_manifest_storage", Context.MODE_PRIVATE);
         retrieve(context);
     }
-
+    
     public static ContentDiscoveryManifest getInstance(Context context) {
         if (thisInstance_ == null) {
             thisInstance_ = new ContentDiscoveryManifest(context);
         }
         return thisInstance_;
     }
-
+    
     private void persist() {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(PREF_KEY, cdManifestObject_.toString()).apply();
     }
-
+    
     private void retrieve(Context context) {
         String jsonStr = sharedPref.getString(PREF_KEY, null);
         if (jsonStr != null) {
@@ -87,20 +91,21 @@ public class ContentDiscoveryManifest {
             cdManifestObject_ = new JSONObject();
         }
     }
-
+    
     public void onBranchInitialised(JSONObject branchInitResp) {
+        
         if (branchInitResp.has(CONTENT_DISCOVER_KEY)) {
             isCDEnabled_ = true;
             try {
                 JSONObject cdObj = branchInitResp.getJSONObject(CONTENT_DISCOVER_KEY);
-
+                
                 if (cdObj.has(MANIFEST_VERSION_KEY)) {
                     manifestVersion_ = cdObj.getString(MANIFEST_VERSION_KEY);
                 }
                 if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
                     maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
                 }
-
+                
                 if (cdObj.has(MANIFEST_KEY)) {
                     contentPaths_ = cdObj.getJSONArray(MANIFEST_KEY);
                 }
@@ -114,14 +119,14 @@ public class ContentDiscoveryManifest {
                 cdManifestObject_.put(MANIFEST_KEY, contentPaths_);
                 persist();
             } catch (JSONException ignore) {
-
+                
             }
         } else {
             isCDEnabled_ = false;
         }
     }
-
-    public CDPathProperties getCDPathProperties(Activity activity) {
+    
+    CDPathProperties getCDPathProperties(Activity activity) {
         CDPathProperties pathProperties = null;
         if (contentPaths_ != null) {
             String viewPath = "/" + activity.getClass().getSimpleName();
@@ -134,46 +139,52 @@ public class ContentDiscoveryManifest {
                     }
                 }
             } catch (JSONException ignore) {
-
+                
             }
         }
         return pathProperties;
     }
-
-    public boolean isCDEnabled() {
+    
+    boolean isCDEnabled() {
         return isCDEnabled_;
     }
-
-    public int getMaxTextLen() {
+    
+    int getMaxTextLen() {
         return maxTextLen_;
     }
-
-    public int getMaxPacketSize() {
+    
+    int getMaxPacketSize() {
         return maxPacketSize_;
     }
-
-    public int getMaxViewHistorySize() {
+    
+    int getMaxViewHistorySize() {
         return maxViewHistoryLength_;
     }
-
+    
     public String getManifestVersion() {
         if (TextUtils.isEmpty(manifestVersion_)) {
             return "-1";
         }
         return manifestVersion_;
     }
-
+    
     class CDPathProperties {
         final JSONObject pathInfo_;
         private boolean isClearText_;
-        private int discoveryRepeatTime_;
-
-        public int getDiscoveryRepeatTime() {
-            return discoveryRepeatTime_;
+        private int discoveryRepeatInterval_;
+        private int maxDiscoveryRepeat_;
+        
+        int getDiscoveryRepeatInterval() {
+            return discoveryRepeatInterval_;
         }
-
+        
+        int getMaxDiscoveryRepeatNumber() {
+            return maxDiscoveryRepeat_;
+        }
+        
         CDPathProperties(JSONObject pathInfo) {
             pathInfo_ = pathInfo;
+            maxDiscoveryRepeat_ = DEF_MAX_DISCOVERY_REPEAT;
             if (pathInfo.has(HASH_MODE_KEY)) {
                 try {
                     isClearText_ = !pathInfo.getBoolean(HASH_MODE_KEY);
@@ -182,15 +193,18 @@ public class ContentDiscoveryManifest {
                 }
             }
             try {
-                if (pathInfo.has(DISCOVERY_REPEAT_TIME)) {
-                    discoveryRepeatTime_ = (Integer.valueOf(pathInfo.getString(DISCOVERY_REPEAT_TIME)));
+                if (pathInfo.has(DISCOVERY_REPEAT_INTERVAL)) {
+                    discoveryRepeatInterval_ = pathInfo.getInt(DISCOVERY_REPEAT_INTERVAL);
+                }
+                if (pathInfo.has(MAX_DISCOVERY_REPEAT)) {
+                    maxDiscoveryRepeat_ = pathInfo.getInt(MAX_DISCOVERY_REPEAT);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-
-        public JSONArray getFilteredElements() {
+        
+        JSONArray getFilteredElements() {
             JSONArray elementArray = null;
             if (pathInfo_.has(FILTERED_KEYS)) {
                 try {
@@ -199,18 +213,18 @@ public class ContentDiscoveryManifest {
                     e.printStackTrace();
                 }
             }
-
+            
             return elementArray;
         }
-
-        public boolean isClearTextRequested() {
+        
+        boolean isClearTextRequested() {
             return isClearText_;
         }
-
-        public boolean isSkipContentDiscovery() {
+        
+        boolean isSkipContentDiscovery() {
             JSONArray filteredElements = getFilteredElements();
             return filteredElements != null && filteredElements.length() == 0;
         }
-
+        
     }
 }
