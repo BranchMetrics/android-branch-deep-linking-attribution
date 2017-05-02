@@ -1405,8 +1405,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                         && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.BranchLinkUsed.getKey()) == null) {
                                     prefHelper_.setAppLink(data.toString());
                                     String uriString = data.toString();
+                                    // PRS: Support for URLs with fragments. Fragments need to be last part of the URL
+                                    String fragment = "";
+                                    String url_fragment_char = "#";
+                                    if (uriString.contains(url_fragment_char)) {
+                                        String[] splits = uriString.split(url_fragment_char);
+                                        uriString = splits[0];
+                                        fragment = splits[1];
+                                    }
                                     uriString += uriString.contains("?") ? "&" : "?";
                                     uriString += Defines.Jsonkey.BranchLinkUsed.getKey() + "=true";
+                                    if (!TextUtils.isEmpty(fragment)) {
+                                        uriString += url_fragment_char + fragment;
+                                    }
                                     activity.getIntent().setData(Uri.parse(uriString));
                                     return false;
                                 }
