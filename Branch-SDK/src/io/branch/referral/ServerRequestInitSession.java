@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.content.Context;
+import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -100,6 +101,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setIsAppLinkTriggeredInit(false);
             prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setIsFullAppConversion(false);
+
+            if (!TextUtils.isEmpty(prefHelper_.getPushToken()) && ServerRequestQueue.getInstance(context_).containsPushActionCompleted()) {
+                Branch.getInstance().handleNewRequest(new ServerRequestPushActionCompleted(context_, prefHelper_.getPushToken(), null));
+            }
+
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
