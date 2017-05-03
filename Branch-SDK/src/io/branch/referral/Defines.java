@@ -121,7 +121,9 @@ public class Defines {
         ContentDiscovery("cd"),
         Environment("environment"),
         InstantApp("INSTANT_APP"),
-        NativeApp("FULL_APP");
+        NativeApp("FULL_APP"),
+
+        PushToken("PUSH_TOKEN");
         
         private String key = "";
         

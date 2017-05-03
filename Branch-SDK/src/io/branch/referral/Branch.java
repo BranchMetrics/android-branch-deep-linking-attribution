@@ -1808,6 +1808,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    public void sendPushToken(@NonNull String token, BranchViewHandler.IBranchViewEvents callback) {
+        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, callback);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
+    }
+    public void sendPushToken(@NonNull String token) {
+        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
+    }
+
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
         sendCommerceEvent(commerceEvent, null, null);
     }
