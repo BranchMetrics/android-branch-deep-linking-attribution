@@ -74,6 +74,7 @@ public class PrefHelper {
     private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
+    private static final String KEY_PUSH_TOKEN_IDENTIFIER = "bnc_push_token_identifier";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
@@ -591,6 +592,14 @@ public class PrefHelper {
      */
     public String getPushIdentifier() {
         return getString(KEY_PUSH_IDENTIFIER);
+    }
+
+    public void setPushToken(String token) {
+        setString(KEY_PUSH_TOKEN_IDENTIFIER, token);
+    }
+
+    public String getPushToken() {
+        return getString(KEY_PUSH_TOKEN_IDENTIFIER);
     }
 
     /**
