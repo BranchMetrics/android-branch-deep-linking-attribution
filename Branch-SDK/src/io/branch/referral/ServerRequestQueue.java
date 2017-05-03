@@ -279,6 +279,17 @@ class ServerRequestQueue {
         return false;
     }
 
+    public boolean containsPushActionCompleted() {
+        synchronized (queue) {
+            for (ServerRequest req : queue) {
+                if (req != null && req instanceof ServerRequestPushActionCompleted) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * <p>Determines whether the queue contains an install/register request.</p>
      *
