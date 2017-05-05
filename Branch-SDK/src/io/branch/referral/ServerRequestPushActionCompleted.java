@@ -28,7 +28,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
      * @param context Current {@link Application} context
      * @param token   {@link String} containing the push token.
      */
-    public ServerRequestPushActionCompleted(Context context, @NonNull String token, BranchViewHandler.IBranchViewEvents callback, Branch.PUSH_TOKEN_TYPE push_token_type) {
+    public ServerRequestPushActionCompleted(Context context, @NonNull String token, BranchViewHandler.IBranchViewEvents callback, String pushTokenType) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
         callback_ = callback;
         context_ = context;
@@ -43,7 +43,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
             }
             post.put(Defines.Jsonkey.Event.getKey(), "updatePushToken");
             post.put(Defines.Jsonkey.PushToken.getKey(), token);
-            post.put(Defines.Jsonkey.PushTokenType.getKey(), push_token_type.toString());
+            post.put(Defines.Jsonkey.PushTokenType.getKey(), pushTokenType);
             updateEnvironment(context, post);
             setPost(post);
         } catch (JSONException ex) {
@@ -54,6 +54,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
         //set the push token
         PrefHelper prefHelper = PrefHelper.getInstance(context_);
         prefHelper.setPushToken(token);
+        prefHelper.setPushTokenType(pushTokenType);
     }
 
     public ServerRequestPushActionCompleted(String requestPath, JSONObject post, Context context) {
@@ -66,6 +67,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
         //clear push token as the request succeeded
         PrefHelper prefHelper = PrefHelper.getInstance(context_);
         prefHelper.setPushToken("");
+        prefHelper.setPushTokenType("");
 
         // Check for any Branch view associated with this request.
         if (resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {

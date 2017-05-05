@@ -75,6 +75,7 @@ public class PrefHelper {
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
     private static final String KEY_PUSH_TOKEN_IDENTIFIER = "bnc_push_token_identifier";
+    private static final String KEY_PUSH_TOKEN_TYPE = "bnc_push_token_type";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
@@ -600,6 +601,14 @@ public class PrefHelper {
 
     public String getPushToken() {
         return getString(KEY_PUSH_TOKEN_IDENTIFIER);
+    }
+
+    public void setPushTokenType(String pushTokenType) {
+        setString(KEY_PUSH_TOKEN_TYPE, pushTokenType);
+    }
+
+    public String getPushTokenType() {
+        return getString(KEY_PUSH_TOKEN_TYPE);
     }
 
     /**
