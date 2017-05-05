@@ -28,7 +28,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
      * @param context Current {@link Application} context
      * @param token   {@link String} containing the push token.
      */
-    public ServerRequestPushActionCompleted(Context context, @NonNull String token, BranchViewHandler.IBranchViewEvents callback) {
+    public ServerRequestPushActionCompleted(Context context, @NonNull String token, BranchViewHandler.IBranchViewEvents callback, Branch.PUSH_TOKEN_TYPE push_token_type) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
         callback_ = callback;
         context_ = context;
@@ -43,6 +43,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
             }
             post.put(Defines.Jsonkey.Event.getKey(), "updatePushToken");
             post.put(Defines.Jsonkey.PushToken.getKey(), token);
+            post.put(Defines.Jsonkey.PushTokenType.getKey(), push_token_type.toString());
             updateEnvironment(context, post);
             setPost(post);
         } catch (JSONException ex) {

@@ -123,7 +123,8 @@ public class Defines {
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
 
-        PushToken("PUSH_TOKEN");
+        PushToken("PUSH_TOKEN"),
+        PushTokenType("PUSH_TOKEN_TYPE");
         
         private String key = "";
         
