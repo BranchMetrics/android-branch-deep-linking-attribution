@@ -1812,7 +1812,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     public void sendPushToken(@NonNull String token, PUSH_TOKEN_TYPE push_token_type) {
-        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null, push_token_type);
+        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null, push_token_type.toString());
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }

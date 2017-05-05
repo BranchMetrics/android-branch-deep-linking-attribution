@@ -104,7 +104,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
             //If we reached this point and prefHelper still has a push token stored, it was never sent to the server, so we try again!
             if (!TextUtils.isEmpty(prefHelper_.getPushToken()) && ServerRequestQueue.getInstance(context_).containsPushActionCompleted()) {
-                Branch.getInstance().handleNewRequest(new ServerRequestPushActionCompleted(context_, prefHelper_.getPushToken(), null));
+                Branch.getInstance().handleNewRequest(new ServerRequestPushActionCompleted(context_, prefHelper_.getPushToken(), null, prefHelper_.getPushTokenType()));
             }
 
             // Provide data to Fabric answers
