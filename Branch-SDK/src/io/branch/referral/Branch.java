@@ -331,6 +331,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         INITIALISED, INITIALISING, UNINITIALISED
     }
 
+    public enum PUSH_TOKEN_TYPE {
+        GCM, FCM
+    }
 
     private enum INTENT_STATE {
         PENDING,
@@ -1808,8 +1811,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    public void sendPushToken(@NonNull String token) {
-        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null);
+    public void sendPushToken(@NonNull String token, PUSH_TOKEN_TYPE push_token_type) {
+        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null, push_token_type);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
