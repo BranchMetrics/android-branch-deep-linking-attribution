@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.content.Context;
-import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,39 +19,39 @@ abstract class ServerRequestInitSession extends ServerRequest {
     static final String ACTION_INSTALL = "install";
     private final Context context_;
     private final ContentDiscoveryManifest contentDiscoveryManifest_;
-    
+
     ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
         context_ = context;
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
-    
+
     ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
-    
+
     @Override
     protected void setPost(JSONObject post) {
         super.setPost(post);
         updateEnvironment(context_, post);
     }
-    
+
     /**
      * Check if there is a valid callback to return init session result
      *
      * @return True if a valid call back is present.
      */
     public abstract boolean hasCallBack();
-    
+
     @Override
     public boolean isGAdsParamsRequired() {
         return true; //Session start requests need GAds params
     }
-    
+
     public abstract String getRequestActionName();
-    
+
     static boolean isInitSessionAction(String actionName) {
         boolean isInitSessionAction = false;
         if (actionName != null) {
@@ -60,7 +59,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isInitSessionAction;
     }
-    
+
     boolean handleBranchViewIfAvailable(ServerResponse resp) {
         boolean isBranchViewShowing = false;
         if (resp != null && resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
@@ -86,9 +85,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isBranchViewShowing;
     }
-    
+
     @Override
-    
+
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         // Check for any Third party SDK for data handling
         try {
@@ -102,11 +101,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setIsFullAppConversion(false);
 
-            //If we reached this point and prefHelper still has a push token stored, it was never sent to the server, so we try again!
-            if (!TextUtils.isEmpty(prefHelper_.getPushToken()) && ServerRequestQueue.getInstance(context_).containsPushActionCompleted()) {
-                Branch.getInstance().handleNewRequest(new ServerRequestPushActionCompleted(context_, prefHelper_.getPushToken(), null, prefHelper_.getPushTokenType()));
-            }
-
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
                 String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
@@ -116,7 +110,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         } catch (JSONException ignore) {
         }
     }
-    
+
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
@@ -128,7 +122,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
     }
-    
+
     /**
      * Update link referrer params like play store referrer params
      * For link clicked installs link click id is updated when install referrer broadcast is received
@@ -158,7 +152,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
     }
-    
+
     @Override
     public void onPreExecute() {
         JSONObject post = getPost();
@@ -182,7 +176,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
-            
+
             if (contentDiscoveryManifest_ != null) {
                 JSONObject cdObj = new JSONObject();
                 cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, contentDiscoveryManifest_.getManifestVersion());
@@ -190,8 +184,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
             }
         } catch (JSONException ignore) {
-            
+
         }
-        
     }
 }
