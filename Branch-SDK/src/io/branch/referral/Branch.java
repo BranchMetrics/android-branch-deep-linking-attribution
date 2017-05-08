@@ -332,7 +332,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public enum PUSH_TOKEN_TYPE {
-        GCM, FCM
+        FCM
     }
 
     private enum INTENT_STATE {
