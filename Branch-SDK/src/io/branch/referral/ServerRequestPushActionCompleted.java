@@ -27,7 +27,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
      * @param token   {@link String} containing the push token.
      */
     public ServerRequestPushActionCompleted(Context context, @NonNull String token, BranchViewHandler.IBranchViewEvents callback) {
-        super(context, Defines.RequestPath.CompletedAction.getPath());
+        super(context, Defines.RequestPath.DeviceUpdate.getPath());
         callback_ = callback;
         context_ = context;
         JSONObject post = new JSONObject();

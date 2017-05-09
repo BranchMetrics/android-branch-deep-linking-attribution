@@ -157,6 +157,7 @@ public class Defines {
         GetCredits("v1/credits/"),
         GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
+        DeviceUpdate("v1/device-update"),
         IdentifyUser("v1/profile"),
         Logout("v1/logout"),
         GetReferralCode("v1/referralcode"),
