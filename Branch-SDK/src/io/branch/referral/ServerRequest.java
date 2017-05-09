@@ -355,6 +355,8 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())) {
             extendedReq = new ServerRequestSendAppList(requestPath, post, context);
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.DeviceUpdate.getPath())) {
+            extendedReq = new ServerRequestPushActionCompleted(requestPath, post, context);
         }
 
         return extendedReq;
