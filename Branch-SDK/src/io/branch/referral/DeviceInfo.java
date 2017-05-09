@@ -126,7 +126,7 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID_);
                 requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
                 requestObj.put(Defines.Jsonkey.HardwareIDType.getKey(), isHardwareIDReal_ ? Defines.Jsonkey.HardwareIDTypeVendor :
-                Defines.Jsonkey.HardwareIDTypeRandom);
+                        Defines.Jsonkey.HardwareIDTypeRandom);
             }
             if (!brandName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName_);
