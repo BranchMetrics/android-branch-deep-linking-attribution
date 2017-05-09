@@ -198,10 +198,10 @@ public abstract class ServerRequest {
      * By default update GAds params update is turned off. Override this on request which need to have GAds params
      * </p>
      *
-     * @return A {@link Boolean} with value true if this reuest need GAds params
+     * @return A {@link Boolean} with value true if this request need GAds params
      */
     public boolean isGAdsParamsRequired() {
-        return false;
+        return true;
     }
 
     /**
@@ -391,7 +391,6 @@ public abstract class ServerRequest {
             }
         }
     }
-
 
     /*
      * Checks if this Application has internet permissions.

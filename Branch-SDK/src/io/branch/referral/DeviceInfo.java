@@ -65,7 +65,6 @@ class DeviceInfo {
 
     private static DeviceInfo thisInstance_ = null;
 
-
     /**
      * Get the singleton instance for deviceInfo class
      *

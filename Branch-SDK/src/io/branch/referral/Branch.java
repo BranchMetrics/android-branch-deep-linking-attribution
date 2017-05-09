@@ -463,6 +463,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
      * tracking and attribution. This will delay branch init only the first time user open the app.
      * Note: Recommend 1500 to capture more than 90% of the install referrer cases per our testing as of 4/2017
+     *
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds
      */
     public static void enablePlayStoreReferrer(long delay) {
@@ -2664,7 +2665,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
 
-            //Google ADs ID  and LAT value are updated using reflection. These method need background thread
+            //Google ADs ID and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
             if (thisReq_.isGAdsParamsRequired()) {
                 thisReq_.updateGAdsParams(systemObserver_);
