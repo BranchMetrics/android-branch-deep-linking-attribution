@@ -463,6 +463,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
      * tracking and attribution. This will delay branch init only the first time user open the app.
      * Note: Recommend 1500 to capture more than 90% of the install referrer cases per our testing as of 4/2017
+     *
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds
      */
     public static void enablePlayStoreReferrer(long delay) {
@@ -1397,28 +1398,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     } else {
                         // Check if the clicked url is an app link pointing to this app
                         String scheme = data.getScheme();
-                        if (scheme != null && activity.getIntent() != null) {
+                        Intent intent = activity.getIntent();
+                        if (scheme != null && intent != null) {
                             // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
                             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                            if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+                            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
                                 if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.BranchLinkUsed.getKey()) == null) {
+                                        && data.getHost() != null && data.getHost().length() > 0 && !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
                                     prefHelper_.setAppLink(data.toString());
-                                    String uriString = data.toString();
-                                    // PRS: Support for URLs with fragments. Fragments need to be last part of the URL
-                                    String fragment = "";
-                                    String url_fragment_char = "#";
-                                    if (uriString.contains(url_fragment_char)) {
-                                        String[] splits = uriString.split(url_fragment_char);
-                                        uriString = splits[0];
-                                        fragment = splits[1];
-                                    }
-                                    uriString += uriString.contains("?") ? "&" : "?";
-                                    uriString += Defines.Jsonkey.BranchLinkUsed.getKey() + "=true";
-                                    if (!TextUtils.isEmpty(fragment)) {
-                                        uriString += url_fragment_char + fragment;
-                                    }
-                                    activity.getIntent().setData(Uri.parse(uriString));
+                                    intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                                    activity.setIntent(intent);
                                     return false;
                                 }
                             }
