@@ -376,7 +376,6 @@ public abstract class ServerRequest {
                 if (params_.has(Defines.Jsonkey.IsHardwareIDReal.getKey())) {
                     if (params_.get(Defines.Jsonkey.IsHardwareIDReal.getKey()).equals(true)) {
                         // replacing hardware_id w/ GAID
-                        params_.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), false);
                         params_.put(Defines.Jsonkey.HardwareID.getKey(), sysObserver.GAIDString_);
                         params_.put(Defines.Jsonkey.HardwareIDType.getKey(), Defines.Jsonkey.HardwareIDTypeGAID.getKey());
                     } else {
@@ -384,7 +383,6 @@ public abstract class ServerRequest {
                     }
                 } else {
                     params_.put(Defines.Jsonkey.HardwareID.getKey(), sysObserver.GAIDString_);
-                    params_.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), false);
                     params_.put(Defines.Jsonkey.HardwareIDType.getKey(), Defines.Jsonkey.HardwareIDTypeGAID.getKey());
                 }
             } catch (JSONException e) {
