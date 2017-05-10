@@ -2666,7 +2666,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
-            if (thisReq_.isGAdsParamsRequired()) {
+            if (thisReq_.isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
 
