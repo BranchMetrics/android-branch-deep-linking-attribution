@@ -31,6 +31,7 @@ public class Defines {
         Prefix("prefix"),
         Expiration("expiration"),
         Event("event"),
+        UpdateType("update_type"),
         Metadata("metadata"),
         CommerceData("commerce_data"),
         ReferralCode("referral_code"),
@@ -122,7 +123,7 @@ public class Defines {
         Environment("environment"),
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
-        PushToken("PUSH_TOKEN");
+        PushToken("notification_token");
 
         private String key = "";
 
