@@ -35,6 +35,7 @@ class BranchStrongMatchHelper {
 
     private boolean isCustomTabsAvailable_ = true;
     boolean isStrongMatchUrlLaunched = false;
+    private Context context_;
 
     Class<?> CustomTabsClientClass;
     Class<?> CustomServiceTabConnectionClass;
@@ -72,6 +73,7 @@ class BranchStrongMatchHelper {
 
     public void checkForStrongMatch(Context context, String cookieMatchDomain, DeviceInfo deviceInfo, final PrefHelper prefHelper, SystemObserver systemObserver, final StrongMatchCheckEvents callback) {
         isStrongMatchUrlLaunched = false;
+        context_ = context;
         //Check if strong match checked in last 30 days
         if (System.currentTimeMillis() - prefHelper.getLastStrongMatchTime() < THIRTY_DAYS_EPOCH_MILLI_SEC) {
             updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
@@ -164,7 +166,7 @@ class BranchStrongMatchHelper {
             String hardwareIDTypeVal = deviceInfo.isHardwareIDReal() ? Defines.Jsonkey.HardwareIDTypeVendor.getKey() : Defines.Jsonkey.HardwareIDTypeRandom.getKey();
             uriString += "&" + Defines.Jsonkey.HardwareIDType.getKey() + "=" + hardwareIDTypeVal;
             // Add GAID if available
-            if (systemObserver.GAIDString_ != null) {
+            if (systemObserver.GAIDString_ != null && !BranchUtil.isTestModeEnabled(context_)) {
                 uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + systemObserver.GAIDString_;
             }
             // Add device finger print if available
