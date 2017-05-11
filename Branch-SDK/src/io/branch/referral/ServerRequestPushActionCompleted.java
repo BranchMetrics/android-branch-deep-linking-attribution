@@ -39,7 +39,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            post.put(Defines.Jsonkey.Event.getKey(), "updatePushToken");
+            post.put(Defines.Jsonkey.UpdateType.getKey(), Defines.Jsonkey.PushToken.getKey());
             post.put(Defines.Jsonkey.PushToken.getKey(), token);
             updateEnvironment(context, post);
             setPost(post);
