@@ -60,10 +60,6 @@ class ServerRequestPushActionCompleted extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
-        //clear push token as the request succeeded
-        PrefHelper prefHelper = PrefHelper.getInstance(context_);
-        prefHelper.setPushToken("");
-
         // Check for any Branch view associated with this request.
         if (resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
             if ((Branch.getInstance().currentActivityReference_ != null && Branch.getInstance().currentActivityReference_.get() != null)) {
