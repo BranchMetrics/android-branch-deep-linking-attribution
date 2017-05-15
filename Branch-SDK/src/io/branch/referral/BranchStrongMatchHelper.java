@@ -80,7 +80,7 @@ class BranchStrongMatchHelper {
         } else {
             try {
                 if (deviceInfo.getHardwareID() != null) {
-                    final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver);
+                    final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver, context);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
                             @Override
@@ -155,7 +155,7 @@ class BranchStrongMatchHelper {
         }
     }
 
-    private Uri buildStrongMatchUrl(String matchDomain, DeviceInfo deviceInfo, PrefHelper prefHelper, SystemObserver systemObserver) {
+    private Uri buildStrongMatchUrl(String matchDomain, DeviceInfo deviceInfo, PrefHelper prefHelper, SystemObserver systemObserver, Context context) {
         Uri strongMatchUri = null;
         if (!TextUtils.isEmpty(matchDomain)) {
             String uriString = "https://" + matchDomain + "/_strong_match?os=" + deviceInfo.getOsName();
@@ -164,7 +164,7 @@ class BranchStrongMatchHelper {
             String hardwareIDTypeVal = deviceInfo.isHardwareIDReal() ? Defines.Jsonkey.HardwareIDTypeVendor.getKey() : Defines.Jsonkey.HardwareIDTypeRandom.getKey();
             uriString += "&" + Defines.Jsonkey.HardwareIDType.getKey() + "=" + hardwareIDTypeVal;
             // Add GAID if available
-            if (systemObserver.GAIDString_ != null) {
+            if (systemObserver.GAIDString_ != null && !BranchUtil.isTestModeEnabled(context)) {
                 uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + systemObserver.GAIDString_;
             }
             // Add device finger print if available
