@@ -463,6 +463,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
      * tracking and attribution. This will delay branch init only the first time user open the app.
      * Note: Recommend 1500 to capture more than 90% of the install referrer cases per our testing as of 4/2017
+     *
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds
      */
     public static void enablePlayStoreReferrer(long delay) {
@@ -3593,36 +3594,34 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Context lastApplicationContext = null;
     private static Boolean isInstantApp = null;
 
+    /**
+     * Checks if this is an Instant app instance
+     *
+     * @param context Current {@link Context}
+     * @return {@code true}  if current application is an instance of instant app
+     */
     public static boolean isInstantApp(@NonNull Context context) {
-        if (Build.VERSION.SDK_INT > 25) {
-            throw new IllegalStateException("This method is not valid in Android O");
-        } else if (context == null) {
-            throw new IllegalArgumentException("Context must be non-null");
-        } else {
+        try {
             Context applicationContext = context.getApplicationContext();
-            if (applicationContext == null) {
-                throw new IllegalStateException("Application context is null!");
-            } else if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
+            if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
                 return isInstantApp.booleanValue();
             } else {
                 isInstantApp = null;
                 lastApplicationContext = applicationContext;
-                try {
-                    applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
-                    isInstantApp = Boolean.valueOf(true);
-                } catch (ClassNotFoundException ex) {
-                    isInstantApp = Boolean.valueOf(false);
-                }
-
-                return isInstantApp.booleanValue();
+                applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
+                isInstantApp = Boolean.valueOf(true);
             }
+        } catch (Exception ex) {
+            isInstantApp = Boolean.valueOf(false);
         }
+        return isInstantApp.booleanValue();
     }
 
-    /***
+    /**
      * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
      * full app up on Branch#initSession()
-     * @param activity Current activity
+     *
+     * @param activity    Current activity
      * @param requestCode Request code for the activity to receive the result
      * @return {@code true} if install prompt is shown to user
      */
@@ -3643,22 +3642,54 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return showInstallPrompt(activity, requestCode, installReferrerString);
     }
 
-    /***
-     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The deep link params associated with the referrer is delivered to
-     * full app up on Branch#initSession()
-     * @param activity Current activity
+    /**
+     * Method shows play store install prompt for the full app. Use this method only if you have custom parameters to pass to the full app using referrer else use
+     * {@link #showInstallPrompt(Activity, int)}
+     *
+     * @param activity    Current activity
      * @param requestCode Request code for the activity to receive the result
-     * @param referrer Any referrer link to pass to full app
+     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1&referrer_key2=referrer_value2")
      * @return {@code true} if install prompt is shown to user
      */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+        String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
+        return showInstallPrompt(activity, requestCode, installReferrerString);
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Use this method only if you want the full app to receive a custom {@link BranchUniversalObject} to do deferred deep link.
+     * Please see {@link #showInstallPrompt(Activity, int)}
+     * NOTE :
+     * This method will do a synchronous generation of Branch short link for the BUO. So please consider calling this method on non UI thread
+     * Please make sure your instant app and full ap are using same Branch key in order for the deferred deep link working
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @param buo         {@link BranchUniversalObject} to pass to the full app up on install
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @NonNull BranchUniversalObject buo) {
+        if (buo != null) {
+            String shortUrl = buo.getShortUrl(activity, new LinkProperties());
+            String installReferrerString = Defines.Jsonkey.ReferringLink.getKey() + "=" + shortUrl;
+            if (!TextUtils.isEmpty(installReferrerString)) {
+                return showInstallPrompt(activity, requestCode, installReferrerString);
+            } else {
+                return showInstallPrompt(activity, requestCode, "");
+            }
+        }
+        return false;
+    }
+
+
+    private static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
-            throw new IllegalArgumentException("Activity must be non-null");
-        }
-        else if (!isInstantApp(activity)) {
+            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
             return false;
-        }
-        else {
+        } else if (!isInstantApp(activity)) {
+            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
+            return false;
+        } else {
             Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
                     .putExtra("callerId", activity.getPackageName())
                     .putExtra("overlay", true);
