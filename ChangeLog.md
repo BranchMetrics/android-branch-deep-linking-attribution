@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.7.0 Moved `BranchLinkUsed` to intent extra. Fixed ability to simulate is_first_session:true when testing.
+
 - v2.6.1 Adding environment variables. Enhancement to CD.
 
 - v2.6.0 Fix for NPE edge case. Added configurable delay between strong match url- init. Added support for Google Install Referrer ID.
