@@ -1,6 +1,6 @@
 Branch Android SDK change log
 
-- v2.7.0 Moved `BranchLinkUsed` to intent extra. Fixed ability to simulate is_first_session:true when testing.
+- v2.7.0 Moved `BranchLinkUsed` to intent extra. Fixed ability to simulate is_first_session:true when testing. CD Revamp.
 
 - v2.6.1 Adding environment variables. Enhancement to CD.
 
