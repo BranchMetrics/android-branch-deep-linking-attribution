@@ -254,12 +254,17 @@ If you are not creating or using an Application class throughout your project, a
 
 ```java
 Branch branch = Branch.getInstance(getApplicationContext());
-branch.initSession(new BranchReferralInitListener(){
+branch.initSession(new Branch.BranchUniversalReferralInitListener() {
     @Override
-    public void onInitFinished(JSONObject referringParams, BranchError error) {
+    public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
         if (error == null) {
-            // params are the deep linked params associated with the link that the user clicked -> was re-directed to this app
-            // params will be empty if no data found
+            // branchUniversalObject is the original BranchUniversalObject used to create the link that the user clicked.
+            // branchUniversalObject contains deep linked params associated with the link that the user clicked -> was re-directed to this app
+            // branchUniversalObject will be empty if deep link data found
+
+            // linkProperties represents the properties of the link clicked by user such as channel, tag, stage etc. or any custom control params
+            // specified at the time of link creation
+
             // ... insert custom logic here ...
         } else {
             Log.i("MyApp", error.getMessage());
