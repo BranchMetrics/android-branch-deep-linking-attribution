@@ -48,10 +48,13 @@ ___
   + [Troubleshooting](#troubleshooting)
 ___
 
+# External Resources
 
 ## Get the Demo App
 
 This is the readme file of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
+
+# Getting Started
 
 ## Installation
 
@@ -227,7 +230,7 @@ The Branch SDK make it easier to deep link and attribute your Instant Apps. Sinc
 
 You can check out a [full demo application](https://github.com/BranchMetrics/Branch-Monster-Factory-Example-Android-Instant-Apps) on our Github. We've replicated our [original Android demo application](https://github.com/BranchMetrics/Branch-Example-Deep-Linking-Branchster-Android) and modified it to support Android Instant Apps.
 
-**1. Initialize the Branch SDK **
+**1. Initialize the Branch SDK**
 
 Head to your _core library project_, where your Application class is defined and drop in the snippet of code to the onCreate() method as follows.
 
@@ -308,6 +311,8 @@ if (Branch.isInstantApp(this)) {
   myFullAppInstallButton.setVisibility(View.GONE);
 }
 ```
+
+# Branch General Methods
 
 ## Initialization
 
@@ -470,6 +475,8 @@ adb shell am broadcast -a com.android.vending.INSTALL_REFERRER -n io.branch.bran
 ```
 
 Enable to pass link_click_id from Google Play to Branch through your Install Listener. As broadcasts can arrive at different times, you can set the amount of time Branch should wait for the install listener broadcast before posting. Requires including io.branch.referral.InstallListener in your Manifest file. You can test sending broadcasts to your app using the above adb shell command.
+
+# Branch Universal Object
 
 ## Branch Universal Object (for deep links, content analytics and indexing)
 
@@ -649,56 +656,7 @@ branchUniversalObject.showShareSheet(this,
 });
 ```
 
-
-### Auto Deep link Activities
-
-Branch provides a very easy and powerful automatic deep linking to Activities. You can configure Activities to be launched on clicking a link. Here is how you configure an Activity for auto deep linking.
-
-**0)** Pick the key from the deep link data
-
-When you create a deep link, you'll reference a Branch Universal Object. You have the option to add a ton of custom key/values to the metadata dictionary. You must first pick one that you want to automatically launch the selected Activity in step 1. For example, you'd use `picture_id` if you Universal Objects were mapping to pictures and you stuffed that key in the metadata.
-
-**1)** Configure auto deep link keys for Activity in manifest file
-
-```xml
-<activity android:name=".AutoDeepLinkTestActivity">
-     <!-- Keys for auto deep linking this activity -->
-     <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
-     <!-- Optional request ID for launching this activity on auto deep link key matches -->
-     <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
-</activity>
-```
-
-**2)** Retrieve deep link data in your auto deep link activity
-
-Your deep linked parameters are added to the intent extra with the same key you have used in the JSONObject for creating the link.
-
-```java
-String name = getIntent().getExtras().getString("name");
-```
-
-You can also get the deep linked parameters as the original JSONObject that you used for link creation
-
-```java
-JSONObject linkedParams = Branch.getInstance().getLatestReferringParams();
-```
-
-**3)** Receive deep link activity finish call in main Activity
-
-Branch will auto open the activity when it detects the specified key in the deep link dict. Do this if you want to handle something on auto-deep-linked-Activity finish on your main activity as the example below.
-
-```java
-@Override
-protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-    //Checking if the previous activity is launched on Branch Auto deep link.
-    if(requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)){
-        //Decide here where  to navigate  when an auto deep linked activity finishes.For e.g. go to HomeActivity or a  SignUp Activity.
-        Intent i = new Intent(getApplicationContext(), SignUpActivity.class);
-        startActivity(i);
-    }
-}
-```
+# Referral Rewards
 
 ## Referral system rewarding functionality
 
