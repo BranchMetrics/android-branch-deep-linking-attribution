@@ -195,7 +195,7 @@ class ServerRequestCreateUrl extends ServerRequest {
      * @return A {@link String} url with given deep link parameters
      */
     private String generateLongUrlWithParams(String baseUrl) {
-        String longUrl = baseUrl + "?";
+        String longUrl = baseUrl + "&";  // Base url already has "?"
         Collection<String> tags = linkPost_.getTags();
         if (tags != null) {
             for (String tag : tags) {
