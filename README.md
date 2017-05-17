@@ -48,8 +48,6 @@ ___
   + [Troubleshooting](#troubleshooting)
 ___
 
-# External Resources
-
 ## Get the Demo App
 
 This is the readme file of our open source Android SDK. There's a full demo app embedded in this repository, but you should also check out our live demo: [Branch Monster Factory](https://play.google.com/store/apps/details?id=io.branch.branchster). We've [open sourced the Branchster's app](https://github.com/BranchMetrics/Branchster-Android) as well if you'd like to dig in.
@@ -232,7 +230,7 @@ You can check out a [full demo application](https://github.com/BranchMetrics/Bra
 
 **1. Initialize the Branch SDK**
 
-Head to your _core library project_, where your Application class is defined and drop in the snippet of code to the onCreate() method as follows.
+Head to your _core library project_, where your Application class is defined and drop in the snippet of code to the onCreate() method as follows. If you plan on deep linking from your Android Instant App to your full Android app after its installed, you'll need to add the line `enablePlayStoreReferrer`. This adds a delay to the initialization to wait for the Google Play Referrer, which can take up to a second.
 
 ```java
 public void onCreate() {
