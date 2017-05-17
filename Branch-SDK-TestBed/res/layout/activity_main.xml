@@ -159,8 +159,6 @@
         android:gravity="center"
         android:textAppearance="@android:style/TextAppearance.Small"
         android:textColor="@android:color/white"/>
-
-
-
+    
 </RelativeLayout>
 

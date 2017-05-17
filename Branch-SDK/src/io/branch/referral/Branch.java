@@ -3588,4 +3588,119 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean skipBranchViewsOnThisActivity();
     }
 
+
+    ///----------------- Instant App  support--------------------------//
+    private static Context lastApplicationContext = null;
+    private static Boolean isInstantApp = null;
+
+    /**
+     * Checks if this is an Instant app instance
+     *
+     * @param context Current {@link Context}
+     * @return {@code true}  if current application is an instance of instant app
+     */
+    public static boolean isInstantApp(@NonNull Context context) {
+        try {
+            Context applicationContext = context.getApplicationContext();
+            if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
+                return isInstantApp.booleanValue();
+            } else {
+                isInstantApp = null;
+                lastApplicationContext = applicationContext;
+                applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
+                isInstantApp = Boolean.valueOf(true);
+            }
+        } catch (Exception ex) {
+            isInstantApp = Boolean.valueOf(false);
+        }
+        return isInstantApp.booleanValue();
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
+     * full app up on Branch#initSession()
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode) {
+        String installReferrerString = "";
+        if (Branch.getInstance() != null) {
+            JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
+            String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
+            if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
+                try {
+                    String referringLink = latestReferringParams.getString(referringLinkKey);
+                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return showInstallPrompt(activity, requestCode, installReferrerString);
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Use this method only if you have custom parameters to pass to the full app using referrer else use
+     * {@link #showInstallPrompt(Activity, int)}
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1&referrer_key2=referrer_value2")
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+        String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
+        return showInstallPrompt(activity, requestCode, installReferrerString);
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Use this method only if you want the full app to receive a custom {@link BranchUniversalObject} to do deferred deep link.
+     * Please see {@link #showInstallPrompt(Activity, int)}
+     * NOTE :
+     * This method will do a synchronous generation of Branch short link for the BUO. So please consider calling this method on non UI thread
+     * Please make sure your instant app and full ap are using same Branch key in order for the deferred deep link working
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @param buo         {@link BranchUniversalObject} to pass to the full app up on install
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @NonNull BranchUniversalObject buo) {
+        if (buo != null) {
+            String shortUrl = buo.getShortUrl(activity, new LinkProperties());
+            String installReferrerString = Defines.Jsonkey.ReferringLink.getKey() + "=" + shortUrl;
+            if (!TextUtils.isEmpty(installReferrerString)) {
+                return showInstallPrompt(activity, requestCode, installReferrerString);
+            } else {
+                return showInstallPrompt(activity, requestCode, "");
+            }
+        }
+        return false;
+    }
+
+
+    private static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+        if (activity == null) {
+            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
+            return false;
+        } else if (!isInstantApp(activity)) {
+            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
+            return false;
+        } else {
+            Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
+                    .putExtra("callerId", activity.getPackageName())
+                    .putExtra("overlay", true);
+            Uri.Builder uriBuilder = (new Uri.Builder()).scheme("market").authority("details").appendQueryParameter("id", activity.getPackageName());
+            if (!TextUtils.isEmpty(referrer)) {
+                uriBuilder.appendQueryParameter("referrer", referrer);
+            }
+
+            intent.setData(uriBuilder.build());
+            activity.startActivityForResult(intent, requestCode);
+            return true;
+        }
+    }
+
 }
