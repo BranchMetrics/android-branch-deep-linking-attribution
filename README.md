@@ -20,6 +20,7 @@ ___
   + [Leverage Android App Links for deep linking](#leverage-android-app-links-for-deep-linking)
   + [Deep link from push notifications](#deeplink-via-push-notification)
   + [Add Branch key to your manifest](#configure-your-androidmanifestxml)
+  + [Support for Android Instant Apps](#instant-app-deep-linking-and-attribution-support)
 
 3. Branch general methods
   + [Initialize Branch and register deep link router](#initialization)
@@ -218,6 +219,94 @@ In case you are using Facebook SDK to support deep linking through Facebook ads,
 -keep class com.facebook.applinks.** { *; }
 -keepclassmembers class com.facebook.applinks.** { *; }
 -keep class com.facebook.FacebookSdk { *; }
+```
+
+### Instant App Deep Linking and Attribution Support
+
+The Branch SDK make it easier to deep link and attribute your Instant Apps. Since Branch automatically configures and hosts the assetlinks.json file for you, you don't need to worry about all the complexity involved in setting up Android App Links. Additionally, the Branch SDK makes it easy to deferred deep link from the Instant App through the full Android app install, providing attribution for every step of the way. Please make sure you have the following added along with regular Branch implementation for instant app enabled project
+
+You can check out a [full demo application](https://github.com/BranchMetrics/Branch-Monster-Factory-Example-Android-Instant-Apps) on our Github. We've replicated our [original Android demo application](https://github.com/BranchMetrics/Branch-Example-Deep-Linking-Branchster-Android) and modified it to support Android Instant Apps.
+
+**1. Initialize the Branch SDK **
+
+Head to your _core library project_, where your Application class is defined and drop in the snippet of code to the onCreate() method as follows.
+
+```java
+public void onCreate() {
+  super.onCreate();
+  // This is needed to deferred deep link from an Android Instant App to a full app
+  // It tells the Branch initialization to wait for the Google Play Referrer before proceeding.
+  Branch.enablePlayStoreReferrer(1000L);
+
+  // Initialize the Branch SDK
+  Branch.getAutoInstance(this);
+}
+```
+
+**2. Add your Branch keys and register for Install Referrer**
+
+Instant Apps can be rather confusing as there are many different manifests, but you want to find the Manifest that contains your `application` tags. Make sure your Application class name is defined here, and then specify the Branch keys _inside_ this manifest file which has the `Application` element.
+
+```xml
+<application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:supportsRtl="true"
+        android:name=".MyApplication">
+
+      <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
+      <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_my_live_key" />
+      <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_my_test_key" />
+
+      <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
+        <intent-filter>
+           <action android:name="com.android.vending.INSTALL_REFERRER" />
+        </intent-filter>
+      </receiver>
+</application>
+```
+
+**3. Retrieve Branch deep link data**
+
+Now that you've outfitted your Instant App project with the above, you can now [register a deep link router function](#initialization) for activities you want to receive the deep link data in any Activity split, similar to how you would retrieve deep link data in the full app.
+
+**4. Configure the deep linking from Instant App to your Full App**
+
+Now, the user has arrived in your Instant App and you're ready to convert them to install your full native app. Don't worry, Branch as got your covered! We have overridden the default `showInstallPrompt` with a method that auto configures the Google Play prompt with all of the deep link data you need to carry context through install. Additionally, we can provide you the full set of attribution on how many users conver through this prompt.
+
+Branch SDK provides convenient methods to check for app types and full app conversion. This eliminates the dependency on Google IA support SDK ('com.google.android.instantapp'). Here are some of the methods that makes life easy
+
+- `Branch#isInstantApp()`
+
+This convenience methods checks whether the current version of app running is Instant App or Full Android App to allow you convenience
+
+- `Branch#showInstallPrompt()`
+      
+This methods shows an install prompt for the full Android app, allowing you an easy way to pass Branch referring deep data to the full app through the install process. Similar to how deferred deep linking works for Branch normally, the full app will receive the deep link params in the handle callback.
+
+The below example shows how to create a custom Branch Universal Object, the associate it with the installation prompt that will be passed through to your full native Android app after the user installs.
+
+```java
+if (Branch.isInstantApp(this)) {
+  myFullAppInstallButton.setVisibility(View.VISIBLE);
+  myFullAppInstallButton.setOnClickListener(new OnClickListener() {
+    @Override
+    public void onClick(View v) {
+       BranchUniversalObject branchUniversalObject = new BranchUniversalObject()
+            .setCanonicalIdentifier("item/12345")
+            .setTitle("My Content Title")
+            .setContentDescription("My Content Description")
+            .setContentImageUrl("https://example.com/mycontent-12345.png")
+            .addContentMetadata("property1", "blue")
+            .addContentMetadata("property2", "red");
+
+      Branch.showInstallPrompt(myActivity, activity_ret_code, branchUniversalObject);
+    }
+  });
+} else {
+  myFullAppInstallButton.setVisibility(View.GONE);
+}
 ```
 
 ## Initialization
@@ -559,92 +648,7 @@ branchUniversalObject.showShareSheet(this,
     }
 });
 ```
-### Instant App Support
-Branch SDK make it easier to work with Instant apps. Since Branch host the Digital Asset Linking file for your branch domains, your branch links are compatible with Instant apps guide lines.
-Please make sure you have the following added along with regular Branch implementation for instant app enabled project
 
-1.Make sure your core library project has an Application class with onCreate() method as follows
-
-```java
-    public void onCreate() {
-            super.onCreate();
-            Branch.getAutoInstance(this);
-    }
-    ```
-
-2.Add your Application class name and Branch keys in the manifest file which has the `Application` element.
-
- ```java
-    <application
-            android:allowBackup="true"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme"
-            android:supportsRtl="true"
-            android:name=".MyApplication">
- ```
- ```
-      <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
-      <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_my_live_key" />
-      <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_my_test_key" />
- ```
-
-That's it. Now you can [Register deep link router](#initialization) for activities you want to receive the deeplink data in any split
-
-#### Full App conversion with deep linking
-Branch SDK provides convenient methods to check for app types and full app conversion. This eliminates the dependency on Google IA support SDK ('com.google.android.instantapp'). Here are some of the methods that makes life easy
-
-      1) Branch#isInstantApp()
-      This methods checks whether the current version of app running is Instant app or Full app
-
-      2)Branch#showInstallPrompt()
-      This methods shows an install prompt for the full app. This method will pass referrer info to the full app when it is installed.
-      The full app will receive the same deep link params as the instant app.
-
-
-Follow below step to add full app conversion with deferred deep linking support for your application
-
-1.Show Install Prompt
-
-```java
- if (Branch.isInstantApp(this)) {
-            myFullAppInstallButton.setVisibility(View.VISIBLE);
-            myFullAppInstallButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Branch.showInstallPrompt(myActivity, activity_ret_code);
-                }
-            });
-        } else {
-            myFullAppInstallButton.setVisibility(View.GONE);
-        }
-```
-
-2.Add INSTALL_REFERRER
-
-   The referrer information is passed through play-store install referrer. So please add the following intent filter to your manifest which has the Application tag
-
-   ```java
-   <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
-       <intent-filter>
-           <action android:name="com.android.vending.INSTALL_REFERRER" />
-       </intent-filter>
-   </receiver>
-   ```
-
-   If you are using custom install referrer please consider extending your receiver class with {@link io.branch.referral.InstallListener}
-
-   NOTE: Since install referrer broadcast from google play is few millisecond delayed, We recommend to call `Branch#enablePlayStoreReferrer(delay)` from `Application#onCreate()` method for
-   more accurate tracking and attribution. This will delay Branch init only the first time user open the app. Recommended delay is 1500ms to capture more than 90% of the install referrer
-   cases per our testing as of 4/2017
-   ```
-   public class MyApplication extends Application {
-       public void onCreate() {
-           super.onCreate();
-           Branch.enablePlayStoreReferrer(1500L);
-           Branch.getAutoInstance(this);
-       }
-   }
-   ```
 
 ### Auto Deep link Activities
 
