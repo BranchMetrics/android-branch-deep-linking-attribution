@@ -246,7 +246,7 @@ public void onCreate() {
 
 **2. Add your Branch keys and register for Install Referrer**
 
-Instant Apps can be rather confusing as there are many different manifests, but you want to find the Manifest that contains your `application` tags. Make sure your Application class name is defined here, and then specify the Branch keys _inside_ this manifest file which has the `Application` element.
+Instant Apps can be rather confusing as there are many different manifests, but you want to find the Manifest that contains your `application` tags. Make sure your Application class name is defined here, and then specify the Branch keys _inside_ the `application` element.
 
 ```xml
 <application
@@ -256,23 +256,44 @@ Instant Apps can be rather confusing as there are many different manifests, but 
         android:supportsRtl="true"
         android:name=".MyApplication">
 
-      <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
-      <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_my_live_key" />
-      <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_my_test_key" />
+  <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
+  <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_my_live_key" />
+  <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_my_test_key" />
 
-      <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
-        <intent-filter>
-           <action android:name="com.android.vending.INSTALL_REFERRER" />
-        </intent-filter>
-      </receiver>
+  <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
+    <intent-filter>
+       <action android:name="com.android.vending.INSTALL_REFERRER" />
+    </intent-filter>
+  </receiver>
 </application>
 ```
 
-**3. Retrieve Branch deep link data**
+**3. Configure your Branch links as Android App Links**
+
+This guide presumes that you've already configured Branch for Android App Links in the past. If you haven't configured your full native app to use Branch as Android App Links, [please complete this guide](https://dev.branch.io/getting-started/universal-app-links/guide/android/) which will correctly configure the dashboard and manifest.
+
+Now, you simply need to edit the above manifest and paste in the following snippet _inside_ the `application` element. Then you'll need to replace the `xxxx` with your own custom subdomain which will be visible on [the Branch link settings dashboard](https://dashboard.branch.io/link-settings) at the bottom of the page. If you're using a custom subdomain, you can find the advanced instructions in the above link regarding configuring Android App Links.
+
+```xml
+<application
+  ......
+  
+  <intent-filter android:autoVerify="true">
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.DEFAULT" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" android:host="xxxx.app.link" />
+      <data android:scheme="https" android:host="xxxx-alternate.app.link" />
+  </intent-filter>
+  
+</application>
+```
+
+**4. Retrieve Branch deep link data**
 
 Now that you've outfitted your Instant App project with the above, you can now [register a deep link router function](#initialization) for activities you want to receive the deep link data in any Activity split, similar to how you would retrieve deep link data in the full app.
 
-**4. Configure the deep linking from Instant App to your Full App**
+**5. Configure the deep linking from Instant App to your Full App**
 
 Now, the user has arrived in your Instant App and you're ready to convert them to install your full native app. Don't worry, Branch as got your covered! We have overridden the default `showInstallPrompt` with a method that auto configures the Google Play prompt with all of the deep link data you need to carry context through install. Additionally, we can provide you the full set of attribution on how many users conver through this prompt.
 
