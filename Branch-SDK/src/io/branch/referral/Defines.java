@@ -6,9 +6,9 @@ package io.branch.referral;
  * </p>
  */
 public class Defines {
-    
+
     public enum Jsonkey {
-        
+
         IdentityID("identity_id"),
         Identity("identity"),
         DeviceFingerprintID("device_fingerprint_id"),
@@ -20,7 +20,7 @@ public class Defines {
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
-        
+
         Bucket("bucket"),
         DefaultBucket("default"),
         Amount("amount"),
@@ -31,6 +31,7 @@ public class Defines {
         Prefix("prefix"),
         Expiration("expiration"),
         Event("event"),
+        UpdateReason("update_reason"),
         Metadata("metadata"),
         CommerceData("commerce_data"),
         ReferralCode("referral_code"),
@@ -69,23 +70,23 @@ public class Defines {
         ScreenWidth("screen_width"),
         WiFi("wifi"),
         LocalIP("local_ip"),
-        
+
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),
         AndroidDeepLinkPath("$android_deeplink_path"),
         DeepLinkPath(Branch.DEEPLINK_PATH),
-        
+
         AndroidAppLinkURL("android_app_link_url"),
         AndroidPushNotificationKey("branch"),
         AndroidPushIdentifier("push_identifier"),
         ForceNewBranchSession("branch_force_new_session"),
-        
+
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle(Branch.OG_TITLE),
         ContentDesc(Branch.OG_DESC),
         ContentImgUrl(Branch.OG_IMAGE_URL),
         CanonicalUrl("$canonical_url"),
-        
+
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
         ContentKeyWords("$keywords"),
@@ -93,22 +94,22 @@ public class Defines {
         Params("params"),
         SharedLink("$shared_link"),
         ShareError("$share_error"),
-        
-        
+
+
         External_Intent_URI("external_intent_uri"),
         External_Intent_Extra("external_intent_extra"),
         Last_Round_Trip_Time("lrtt"),
         Branch_Round_Trip_Time("brtt"),
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
-        
+
         BranchViewData("branch_view_data"),
         BranchViewID("id"),
         BranchViewAction("action"),
         BranchViewNumOfUse("number_of_use"),
         BranchViewUrl("url"),
         BranchViewHtml("html"),
-        
+
         Path("path"),
         ViewList("view_list"),
         ContentActionView("view"),
@@ -121,24 +122,25 @@ public class Defines {
         ContentDiscovery("cd"),
         Environment("environment"),
         InstantApp("INSTANT_APP"),
-        NativeApp("FULL_APP");
-        
+        NativeApp("FULL_APP"),
+        NotificationToken("notification_token");
+
         private String key = "";
-        
+
         Jsonkey(String key) {
             this.key = key;
         }
-        
+
         public String getKey() {
             return key;
         }
-        
+
         @Override
         public String toString() {
             return key;
         }
     }
-    
+
     /**
      * <p>
      * Defines all server path for the requests
@@ -156,6 +158,7 @@ public class Defines {
         GetCredits("v1/credits/"),
         GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
+        DeviceUpdate("v1/device-update"),
         IdentifyUser("v1/profile"),
         Logout("v1/logout"),
         GetReferralCode("v1/referralcode"),
@@ -163,23 +166,23 @@ public class Defines {
         ApplyReferralCode("v1/applycode/"),
         DebugConnect("v1/debug/connect"),
         ContentEvent("v1/content-events");
-        
+
         private String key = "";
-        
+
         RequestPath(String key) {
             this.key = key;
         }
-        
+
         public String getPath() {
             return key;
         }
-        
+
         @Override
         public String toString() {
             return key;
         }
     }
-    
+
     /**
      * <p>
      * Defines link parameter keys
@@ -196,22 +199,22 @@ public class Defines {
         Campaign("campaign"),
         Data("data"),
         URL("url");
-        
+
         private String key = "";
-        
+
         LinkParam(String key) {
             this.key = key;
         }
-        
+
         public String getKey() {
             return key;
         }
-        
+
         @Override
         public String toString() {
             return key;
         }
-        
+
     }
-    
+
 }

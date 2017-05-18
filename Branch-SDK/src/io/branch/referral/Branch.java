@@ -331,6 +331,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         INITIALISED, INITIALISING, UNINITIALISED
     }
 
+    public enum PUSH_TOKEN_TYPE {
+        FCM
+    }
 
     private enum INTENT_STATE {
         PENDING,
@@ -1803,6 +1806,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             metadata = BranchUtil.filterOutBadCharacters(metadata);
         }
         ServerRequest req = new ServerRequestRActionCompleted(context_, commerceEvent, metadata, callback);
+        if (!req.constructError_ && !req.handleErrors(context_)) {
+            handleNewRequest(req);
+        }
+    }
+    
+    public void setFCMToken(@NonNull String token) {
+        ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
