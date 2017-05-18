@@ -38,7 +38,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
             if (prefHelper_.getPushToken() != null && prefHelper_.getPushToken().length() > 0 &&
                     !prefHelper_.getPushToken().equals(PrefHelper.NO_STRING_VALUE)) {
-                openPost.put(Defines.Jsonkey.PushToken.getKey(), prefHelper_.getPushToken());
+                openPost.put(Defines.Jsonkey.NotificationToken.getKey(), prefHelper_.getPushToken());
             }
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
