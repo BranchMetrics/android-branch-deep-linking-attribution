@@ -3647,7 +3647,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * @param activity    Current activity
      * @param requestCode Request code for the activity to receive the result
-     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1&referrer_key2=referrer_value2")
+     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1%26referrer_key2=referrer_value2")
      * @return {@code true} if install prompt is shown to user
      */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
