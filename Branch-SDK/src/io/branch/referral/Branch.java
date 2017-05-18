@@ -1810,7 +1810,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     public void setFCMToken(@NonNull String token) {
         ServerRequest req = new ServerRequestPushActionCompleted(context_, token, null);
         if (!req.constructError_ && !req.handleErrors(context_)) {
