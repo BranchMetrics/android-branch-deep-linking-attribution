@@ -105,12 +105,14 @@ public class ContentDiscoveryManifest {
                 if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
                     maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
                 }
-                
                 if (cdObj.has(MANIFEST_KEY)) {
                     contentPaths_ = cdObj.getJSONArray(MANIFEST_KEY);
                 }
                 if (cdObj.has(MAX_TEXT_LEN_KEY)) {
-                    maxTextLen_ = cdObj.getInt(MAX_TEXT_LEN_KEY);
+                    int maxTextLength = cdObj.getInt(MAX_TEXT_LEN_KEY);
+                    if (maxTextLength > 0) {
+                        maxTextLen_ = maxTextLength;
+                    }
                 }
                 if (cdObj.has(MAX_PACKET_SIZE_KEY)) {
                     maxPacketSize_ = cdObj.getInt(MAX_PACKET_SIZE_KEY);
@@ -181,7 +183,7 @@ public class ContentDiscoveryManifest {
         int getMaxDiscoveryRepeatNumber() {
             return maxDiscoveryRepeat_;
         }
-        
+
         CDPathProperties(JSONObject pathInfo) {
             pathInfo_ = pathInfo;
             maxDiscoveryRepeat_ = DEF_MAX_DISCOVERY_REPEAT;

@@ -31,7 +31,7 @@ public class Defines {
         Prefix("prefix"),
         Expiration("expiration"),
         Event("event"),
-        UpdateType("update_type"),
+        UpdateReason("update_reason"),
         Metadata("metadata"),
         CommerceData("commerce_data"),
         ReferralCode("referral_code"),

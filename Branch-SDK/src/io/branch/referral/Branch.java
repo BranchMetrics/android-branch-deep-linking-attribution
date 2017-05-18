@@ -466,6 +466,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
      * tracking and attribution. This will delay branch init only the first time user open the app.
      * Note: Recommend 1500 to capture more than 90% of the install referrer cases per our testing as of 4/2017
+     *
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds
      */
     public static void enablePlayStoreReferrer(long delay) {
@@ -1400,17 +1401,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     } else {
                         // Check if the clicked url is an app link pointing to this app
                         String scheme = data.getScheme();
-                        if (scheme != null && activity.getIntent() != null) {
+                        Intent intent = activity.getIntent();
+                        if (scheme != null && intent != null) {
                             // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
                             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                            if ((activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+                            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
                                 if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                        && data.getHost() != null && data.getHost().length() > 0 && data.getQueryParameter(Defines.Jsonkey.BranchLinkUsed.getKey()) == null) {
+                                        && data.getHost() != null && data.getHost().length() > 0 && !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
                                     prefHelper_.setAppLink(data.toString());
-                                    String uriString = data.toString();
-                                    uriString += uriString.contains("?") ? "&" : "?";
-                                    uriString += Defines.Jsonkey.BranchLinkUsed.getKey() + "=true";
-                                    activity.getIntent().setData(Uri.parse(uriString));
+                                    intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                                    activity.setIntent(intent);
                                     return false;
                                 }
                             }
@@ -2676,7 +2676,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
-            if (thisReq_.isGAdsParamsRequired()) {
+            if (thisReq_.isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
 
@@ -3596,6 +3596,121 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
          */
         boolean skipBranchViewsOnThisActivity();
+    }
+
+
+    ///----------------- Instant App  support--------------------------//
+    private static Context lastApplicationContext = null;
+    private static Boolean isInstantApp = null;
+
+    /**
+     * Checks if this is an Instant app instance
+     *
+     * @param context Current {@link Context}
+     * @return {@code true}  if current application is an instance of instant app
+     */
+    public static boolean isInstantApp(@NonNull Context context) {
+        try {
+            Context applicationContext = context.getApplicationContext();
+            if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
+                return isInstantApp.booleanValue();
+            } else {
+                isInstantApp = null;
+                lastApplicationContext = applicationContext;
+                applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
+                isInstantApp = Boolean.valueOf(true);
+            }
+        } catch (Exception ex) {
+            isInstantApp = Boolean.valueOf(false);
+        }
+        return isInstantApp.booleanValue();
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
+     * full app up on Branch#initSession()
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode) {
+        String installReferrerString = "";
+        if (Branch.getInstance() != null) {
+            JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
+            String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
+            if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
+                try {
+                    String referringLink = latestReferringParams.getString(referringLinkKey);
+                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return showInstallPrompt(activity, requestCode, installReferrerString);
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Use this method only if you have custom parameters to pass to the full app using referrer else use
+     * {@link #showInstallPrompt(Activity, int)}
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1%26referrer_key2=referrer_value2")
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+        String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
+        return showInstallPrompt(activity, requestCode, installReferrerString);
+    }
+
+    /**
+     * Method shows play store install prompt for the full app. Use this method only if you want the full app to receive a custom {@link BranchUniversalObject} to do deferred deep link.
+     * Please see {@link #showInstallPrompt(Activity, int)}
+     * NOTE :
+     * This method will do a synchronous generation of Branch short link for the BUO. So please consider calling this method on non UI thread
+     * Please make sure your instant app and full ap are using same Branch key in order for the deferred deep link working
+     *
+     * @param activity    Current activity
+     * @param requestCode Request code for the activity to receive the result
+     * @param buo         {@link BranchUniversalObject} to pass to the full app up on install
+     * @return {@code true} if install prompt is shown to user
+     */
+    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @NonNull BranchUniversalObject buo) {
+        if (buo != null) {
+            String shortUrl = buo.getShortUrl(activity, new LinkProperties());
+            String installReferrerString = Defines.Jsonkey.ReferringLink.getKey() + "=" + shortUrl;
+            if (!TextUtils.isEmpty(installReferrerString)) {
+                return showInstallPrompt(activity, requestCode, installReferrerString);
+            } else {
+                return showInstallPrompt(activity, requestCode, "");
+            }
+        }
+        return false;
+    }
+
+
+    private static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
+        if (activity == null) {
+            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
+            return false;
+        } else if (!isInstantApp(activity)) {
+            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
+            return false;
+        } else {
+            Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
+                    .putExtra("callerId", activity.getPackageName())
+                    .putExtra("overlay", true);
+            Uri.Builder uriBuilder = (new Uri.Builder()).scheme("market").authority("details").appendQueryParameter("id", activity.getPackageName());
+            if (!TextUtils.isEmpty(referrer)) {
+                uriBuilder.appendQueryParameter("referrer", referrer);
+            }
+
+            intent.setData(uriBuilder.build());
+            activity.startActivityForResult(intent, requestCode);
+            return true;
+        }
     }
 
 }
