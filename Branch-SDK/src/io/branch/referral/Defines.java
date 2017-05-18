@@ -123,7 +123,7 @@ public class Defines {
         Environment("environment"),
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
-        PushToken("notification_token");
+        NotificationToken("notification_token");
 
         private String key = "";
 

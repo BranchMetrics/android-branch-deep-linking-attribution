@@ -31,16 +31,17 @@ class ServerRequestPushActionCompleted extends ServerRequest {
         callback_ = callback;
         context_ = context;
         JSONObject post = new JSONObject();
-
         try {
             post.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
             post.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             post.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
-            post.put(Defines.Jsonkey.UpdateType.getKey(), Defines.Jsonkey.PushToken.getKey());
-            post.put(Defines.Jsonkey.PushToken.getKey(), token);
+
+            post.put(Defines.Jsonkey.UpdateType.getKey(), Defines.Jsonkey.NotificationToken.getKey());
+            post.put(Defines.Jsonkey.NotificationToken.getKey(), token);
             updateEnvironment(context, post);
             setPost(post);
         } catch (JSONException ex) {
