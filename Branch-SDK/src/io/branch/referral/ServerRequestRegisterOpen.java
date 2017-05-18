@@ -37,7 +37,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
 
             if (prefHelper_.getPushToken() != null && prefHelper_.getPushToken().length() > 0 &&
-                    !prefHelper_.getPushToken().equals(SystemObserver.BLANK)) {
+                    !prefHelper_.getPushToken().equals(PrefHelper.NO_STRING_VALUE)) {
                 openPost.put(Defines.Jsonkey.PushToken.getKey(), prefHelper_.getPushToken());
             }
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
