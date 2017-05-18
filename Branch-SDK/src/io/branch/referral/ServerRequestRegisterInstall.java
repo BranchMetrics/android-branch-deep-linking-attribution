@@ -47,7 +47,10 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 if (!uriScheme.equals(SystemObserver.BLANK))
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             }
-
+            if (prefHelper_.getPushToken() != null && prefHelper_.getPushToken().length() > 0 &&
+                    !prefHelper_.getPushToken().equals(SystemObserver.BLANK)) {
+                installPost.put(Defines.Jsonkey.PushToken.getKey(), prefHelper_.getPushToken());
+            }
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());

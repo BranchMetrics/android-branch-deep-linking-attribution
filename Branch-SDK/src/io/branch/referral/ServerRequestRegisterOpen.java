@@ -35,8 +35,11 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             openPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
             openPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            openPost.put(Defines.Jsonkey.PushToken.getKey(), prefHelper_.getPushToken());
 
+            if (prefHelper_.getPushToken() != null && prefHelper_.getPushToken().length() > 0 &&
+                    !prefHelper_.getPushToken().equals(SystemObserver.BLANK)) {
+                openPost.put(Defines.Jsonkey.PushToken.getKey(), prefHelper_.getPushToken());
+            }
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             }
