@@ -40,7 +40,7 @@ class ServerRequestPushActionCompleted extends ServerRequest {
                 post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
 
-            post.put(Defines.Jsonkey.UpdateType.getKey(), Defines.Jsonkey.NotificationToken.getKey());
+            post.put(Defines.Jsonkey.UpdateReason.getKey(), Defines.Jsonkey.NotificationToken.getKey());
             post.put(Defines.Jsonkey.NotificationToken.getKey(), token);
             updateEnvironment(context, post);
             setPost(post);
