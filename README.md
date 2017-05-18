@@ -498,6 +498,7 @@ Enable to pass link_click_id from Google Play to Branch through your Install Lis
 ### Tracking Uninstalls
 ```java
 Branch.getInstance().setFCMToken(String token)
+```
 Send Branch your FCM push token and uninstall tracking will be enabled automatically! Call this from the codeblock where your app generates/receives a push token (onTokenRefresh()).
 
 # Branch Universal Object
