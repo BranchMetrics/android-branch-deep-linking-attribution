@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setContentType("application/vnd.businessobjects")
-                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
                 .setPrice(5.00, CurrencyType.USD)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
@@ -239,7 +239,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                                //.setAlias("mylinkName") // In case you need to white label your link
+                        //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -258,7 +258,7 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setAsFullWidthStyle(true)
                         .setSharingTitle("Share With");
-                // Define custom styel for the share sheet list view
+                // Define custom style for the share sheet list view
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
@@ -310,11 +310,11 @@ public class MainActivity extends Activity {
 
     }
 
+
     @Override
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
@@ -336,9 +336,7 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
-
     }
-
 
     @Override
     public void onNewIntent(Intent intent) {

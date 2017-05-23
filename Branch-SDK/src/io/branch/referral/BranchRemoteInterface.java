@@ -18,7 +18,7 @@ public class BranchRemoteInterface extends RemoteInterface {
 
     /**
      * <p>Required, but empty constructor method.</p>
-     * <p/>
+     *
      * <p>Use {@link #BranchRemoteInterface(Context)} instead, as it instantiates the class
      * {@link PrefHelper} and {@link SystemObserver} handles for the class.</p>
      */

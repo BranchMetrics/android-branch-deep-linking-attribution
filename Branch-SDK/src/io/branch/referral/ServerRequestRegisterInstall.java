@@ -14,6 +14,7 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
+    final SystemObserver systemObserver_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
@@ -28,13 +29,14 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                                         SystemObserver sysObserver, String installID) {
 
         super(context, Defines.RequestPath.RegisterInstall.getPath());
-
+        systemObserver_ = sysObserver;
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
             }
+
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             }
@@ -48,8 +50,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
             installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState(true));
-
+            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
             setPost(installPost);
 
@@ -63,6 +64,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        systemObserver_ = new SystemObserver(context);
     }
 
     @Override
@@ -109,6 +111,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
+
+            prefHelper_.setAppVersion(systemObserver_.getAppVersion());
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }

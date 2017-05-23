@@ -1,4 +1,30 @@
 Branch Android SDK change log
+- v2.8.0 Adding Instant App support. Supports Instant App content deep linking, Full app conversion with deep linking and associated conversion attributions.
+
+- v2.7.0 Moved `BranchLinkUsed` to intent extra. Fixed ability to simulate is_first_session:true when testing. CD Revamp.
+
+- v2.6.1 Adding environment variables. Enhancement to CD.
+
+- v2.6.0 Fix for NPE edge case. Added configurable delay between strong match url- init. Added support for Google Install Referrer ID.
+
+- v2.5.9 Fix for strong match NPE.
+
+- v2.5.8 Fix for getAppVersion, added matching via PlayStore install broadcast intent, modifications to strong match url.
+
+- v2.5.7 Fix for ShareSheet Airplane mode, updated commerceevent defaults, Added feature for sharesheet to whitelist/blacklist apps by package name. Added synchronous
+  getLatestReferringParams and getFirstReferringParams.
+
+- v2.5.6 Fix for sharesheet title, extra intent data fix, added commerceevent function.
+
+- v2.5.5 Added function to init Branch w/ key programmatically (vs having to use Manifest file).
+
+- v2.5.4 Fix to better register opens/installs. Added enableTestMode/disableTestMode static functions.
+
+- v2.5.3 Fix to disable FB app link check by default.
+
+- v2.5.2 Fix for Android/iOS link-click compatibility when used with BUO. Fixed doc formatting for latest Android Studio version.
+
+- v2.5.1 Fix for init session not being called when used from onCreate().
 
 - v2.5.0 Changing chrome tabs dependency optional. Adding option to simulate and test install. Few corner error  handling
 

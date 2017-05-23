@@ -72,7 +72,7 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      *
      * @param parameters A {@link JSONObject} value containing the deep linked params associated with
      *                   the link that will be passed into a new app session when clicked.
-     *                   {@see addParameters} if you want to set parameters as individual key value.
+     *                   <!-- {@see addParameters} if you want to set parameters as individual key value.-->
      * @return This Builder object to allow for chaining of calls to set methods.
      */
     public BranchShortLinkBuilder setParameters(JSONObject parameters) {

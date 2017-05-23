@@ -130,9 +130,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Set description for the content for the content referred by this object
-     * <p/>
+     * </p>
      *
      * @param description A {@link String} with value for the description of the content referred by this object
      * @return This instance to allow for chaining of calls to set methods
@@ -143,9 +143,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Set the url to any image associated with this content.
-     * <p/>
+     * </p>
      *
      * @param imageUrl A {@link String} specifying a url to an image associated with content referred by this object
      * @return This instance to allow for chaining of calls to set methods
@@ -265,10 +265,10 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Publish this BUO with Google app indexing so that the contents will be available with google search
      * with branch link pointing to the app.
-     * </p?>
+     * </p>
      *
      * @param context Application context
      */
@@ -390,9 +390,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Get description for the content for the content referred by this object
-     * <p/>
+     * </p>
      *
      * @return A {@link String} with value for the description of the content referred by this object
      */
@@ -401,9 +401,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Get the url to any image associated with this content.
-     * <p/>
+     * </p>
      *
      * @return A {@link String} specifying a url to an image associated with content referred by this object
      */
@@ -610,6 +610,14 @@ public class BranchUniversalObject implements Parcelable {
             shareLinkBuilder.setAsFullWidthStyle(style.getIsFullWidthStyle());
             shareLinkBuilder.setSharingTitle(style.getSharingTitle());
             shareLinkBuilder.setSharingTitle(style.getSharingTitleView());
+
+            if (style.getIncludedInShareSheet() != null && style.getIncludedInShareSheet().size() > 0) {
+                shareLinkBuilder.includeInShareSheet(style.getIncludedInShareSheet());
+            }
+            if (style.getExcludedFromShareSheet() != null && style.getExcludedFromShareSheet().size() > 0) {
+                shareLinkBuilder.excludeFromShareSheet(style.getExcludedFromShareSheet());
+            }
+
             shareLinkBuilder.shareLink();
         }
     }
@@ -737,9 +745,6 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
                 branchUniversalObject.expirationInMilliSec_ = jsonObject.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
             }
-            if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
-                branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-            }
             if (jsonObject.has(BranchEvent.PURCHASE_AMOUNT)) {
                 branchUniversalObject.price_ = jsonObject.getDouble(BranchEvent.PURCHASE_AMOUNT);
             }
@@ -765,6 +770,15 @@ public class BranchUniversalObject implements Parcelable {
                     for (int i = 0; i < keywordJsonArray.length(); i++) {
                         branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
                     }
+                }
+            }
+
+            if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
+                try {
+                    branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+                } catch (JSONException ignore) {
+                    // iOS compatibility issue. iOS send 0/1 instead of true or false
+                    branchUniversalObject.indexMode_ = jsonObject.getInt(Defines.Jsonkey.PublicallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
                 }
             }
         } catch (Exception ignore) {
