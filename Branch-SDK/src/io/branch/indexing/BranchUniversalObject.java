@@ -27,7 +27,7 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.search.BranchSearchServiceConnection;
+import io.branch.search.BranchListContentConnection;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -974,7 +974,7 @@ public class BranchUniversalObject implements Parcelable {
         boolean isContentAdded;
         Context context = Branch.getInstance().getAppContext();
         String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
-        isContentAdded = BranchSearchServiceConnection.getInstance().addToIndex(this, context.getPackageName(), url);
+        isContentAdded = BranchListContentConnection.getInstance().addToIndex(this, context.getPackageName(), url);
         if (!TextUtils.isEmpty(userAction)) {
             addUserInteraction(userAction);
         }
@@ -1008,7 +1008,7 @@ public class BranchUniversalObject implements Parcelable {
             public void onLinkCreate(String deepLinkUrl, BranchError error) {
                 if (error == null) {
                     String packageName = context.getPackageName();
-                    BranchSearchServiceConnection.getInstance().addUserInteraction(BranchUniversalObject.this, packageName, userAction, deepLinkUrl);
+                    BranchListContentConnection.getInstance().addUserInteraction(BranchUniversalObject.this, packageName, userAction, deepLinkUrl);
                 }
             }
         });
@@ -1024,7 +1024,7 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      */
     public boolean deleteFromSamsungSearch() {
-        return BranchSearchServiceConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
+        return BranchListContentConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
     }
 
     /**
@@ -1037,7 +1037,7 @@ public class BranchUniversalObject implements Parcelable {
     public static boolean deleteFromSamsungSearch(String canonicalID) {
         BranchUniversalObject branchUniversalObject = new BranchUniversalObject();
         branchUniversalObject.setCanonicalIdentifier(canonicalID);
-        return BranchSearchServiceConnection.getInstance().deleteFromIndex(branchUniversalObject, Branch.getInstance().getAppContext().getPackageName());
+        return BranchListContentConnection.getInstance().deleteFromIndex(branchUniversalObject, Branch.getInstance().getAppContext().getPackageName());
     }
 
     /**
@@ -1046,6 +1046,6 @@ public class BranchUniversalObject implements Parcelable {
      * @return {@code true} if contents are successfully cleared from Samsung Local search
      */
     public static boolean deleteAllFromSamsungSearch() {
-        return BranchSearchServiceConnection.getInstance().deleteAllFromIndex(Branch.getInstance().getAppContext().getPackageName());
+        return BranchListContentConnection.getInstance().deleteAllFromIndex(Branch.getInstance().getAppContext().getPackageName());
     }
 }
