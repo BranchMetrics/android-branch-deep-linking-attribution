@@ -53,6 +53,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
+import io.branch.search.BranchListContentConnection;
 
 /**
  * <p>
@@ -437,7 +438,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
-
+        BranchListContentConnection.getInstance().doBindService(context.getApplicationContext());
     }
 
     /**
@@ -703,6 +704,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false);
         return branchReferral_;
+    }
+
+    public Context getAppContext() {
+        return context_;
     }
 
     /**
@@ -1314,11 +1319,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (data != null) {
                     boolean foundSchemeMatch;
                     boolean skipThisHost = false;
-                    if (externalUriWhiteList_.size() > 0) {
-                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
-                    } else {
-                        foundSchemeMatch = true;
-                    }
+                    foundSchemeMatch = externalUriWhiteList_.size() <= 0 || externalUriWhiteList_.contains(data.getScheme());
 
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
@@ -1357,7 +1358,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Check for any push identifier in case app is launched by a push notification
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    if (activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey()) == false) {
+                    if (!activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey())) {
                         String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
                         if (pushIdentifier != null && pushIdentifier.length() > 0) {
                             prefHelper_.setPushIdentifier(pushIdentifier);

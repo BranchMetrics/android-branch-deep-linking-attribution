@@ -27,6 +27,7 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.search.BranchListContentConnection;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -295,6 +296,20 @@ public class BranchUniversalObject implements Parcelable {
      * @param metadata A HashMap containing any additional metadata need to add to this user event
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
+        userCompletedAction(action, metadata, true);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action                 A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @param metadata               A HashMap containing any additional metadata need to add to this user event
+     * @param addToBranchSearchIndex control flag for adding this BUO to Branch local search index. Set this to {@code false} to skip the content being listed in Branh local search
+     */
+    public void userCompletedAction(String action, HashMap<String, String> metadata, boolean addToBranchSearchIndex) {
+
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
@@ -309,7 +324,13 @@ public class BranchUniversalObject implements Parcelable {
             if (Branch.getInstance() != null) {
                 Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
+
         } catch (JSONException ignore) {
+        }
+
+        if (addToBranchSearchIndex) {
+         /* Add the user interaction to the on-device index */
+            addUserInteraction(action);
         }
     }
 
@@ -825,7 +846,7 @@ public class BranchUniversalObject implements Parcelable {
         return 0;
     }
 
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+    public static final Parcelable.Creator<BranchUniversalObject> CREATOR = new Parcelable.Creator<BranchUniversalObject>() {
         public BranchUniversalObject createFromParcel(Parcel in) {
             return new BranchUniversalObject(in);
         }
@@ -930,4 +951,101 @@ public class BranchUniversalObject implements Parcelable {
         }
     }
 
+
+    //----------Branch Local Search---------------//
+
+    /**
+     * <p>
+     * Makes the content associated with this BUO discoverable in the native search on Samsung devices.
+     * </p>
+     * <p/>
+     * <p>
+     * Calling this method would put the BUO to the Samsung local search. Your content will appear in
+     * Samsung search as user search with matching keywords. Make sure the BUO is properly configured with
+     * {@link #setCanonicalIdentifier(String)},{@link #setTitle(String)}, {@link #setContentDescription(String)}, {@link #setContentImageUrl(String)} etc.
+     * The Title, Description and Image url is used to show your content properly in the search results.
+     * The contents displayed in Samsung search will get directly deep linked to the app.
+     * </p>
+     *
+     * @param userAction A {@link String }with value of user action name. See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @return {@code true} if content successfully added to samsung search
+     */
+    public boolean listOnSamsungSearch(String userAction) {
+        boolean isContentAdded;
+        Context context = Branch.getInstance().getAppContext();
+        String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
+        isContentAdded = BranchListContentConnection.getInstance().addToIndex(this, context.getPackageName(), url);
+        if (!TextUtils.isEmpty(userAction)) {
+            addUserInteraction(userAction);
+        }
+        return isContentAdded;
+    }
+
+    /**
+     * <p>
+     * Makes the content associated with this BUO discoverable in the native search on Samsung devices.
+     * </p>
+     * <p/>
+     * <p>
+     * Calling this method would put the BUO to the Samsung local search. Your content will appear in
+     * Samsung search as user search with matching keywords. Make sure the BUO is properly configured with
+     * {@link #setCanonicalIdentifier(String)},{@link #setTitle(String)}, {@link #setContentDescription(String)}, {@link #setContentImageUrl(String)} etc.
+     * The Title, Description and Image url is used to show your content properly in the search results.
+     * The contents displayed in Samsung search will get directly deep linked to the app.
+     * </p>
+     *
+     * @return {@code true} if content successfully added to samsung search
+     */
+    public boolean listOnSamsungSearch() {
+        return listOnSamsungSearch(null);
+    }
+
+
+    private void addUserInteraction(final String userAction) {
+        final Context context = Branch.getInstance().getAppContext();
+        generateShortUrl(context, new LinkProperties().setChannel("Branch Search"), new Branch.BranchLinkCreateListener() {
+            @Override
+            public void onLinkCreate(String deepLinkUrl, BranchError error) {
+                if (error == null) {
+                    String packageName = context.getPackageName();
+                    BranchListContentConnection.getInstance().addUserInteraction(BranchUniversalObject.this, packageName, userAction, deepLinkUrl);
+                }
+            }
+        });
+    }
+
+    /**
+     * <p/>
+     * Delete this BUO from the Samsung local search.
+     * On successful deletion content of this BUO will not appear on Samsung Local search
+     *
+     * @return {@code true} on success
+     * @see {@link #deleteAllFromSamsungSearch()} also.
+     * </p>
+     */
+    public boolean deleteFromSamsungSearch() {
+        return BranchListContentConnection.getInstance().deleteFromIndex(this, Branch.getInstance().getAppContext().getPackageName());
+    }
+
+    /**
+     * Delete the content with specified canonical id from Samsung local search
+     *
+     * @param canonicalID {@link String} canonical id of the content added
+     * @return {@code true} if content is successfully deleted from Samsung Local search
+     * @see {@link BranchUniversalObject#listOnSamsungSearch()}
+     */
+    public static boolean deleteFromSamsungSearch(String canonicalID) {
+        BranchUniversalObject branchUniversalObject = new BranchUniversalObject();
+        branchUniversalObject.setCanonicalIdentifier(canonicalID);
+        return BranchListContentConnection.getInstance().deleteFromIndex(branchUniversalObject, Branch.getInstance().getAppContext().getPackageName());
+    }
+
+    /**
+     * Clears all contents from this application added to the Samsung local search
+     *
+     * @return {@code true} if contents are successfully cleared from Samsung Local search
+     */
+    public static boolean deleteAllFromSamsungSearch() {
+        return BranchListContentConnection.getInstance().deleteAllFromIndex(Branch.getInstance().getAppContext().getPackageName());
+    }
 }

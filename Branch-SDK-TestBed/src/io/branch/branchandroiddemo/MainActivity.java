@@ -12,6 +12,9 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -225,6 +228,7 @@ public class MainActivity extends Activity {
                 branchUniversalObject.registerView();
                 // List on google search
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
+                branchUniversalObject.listOnSamsungSearch();
             }
         });
 
