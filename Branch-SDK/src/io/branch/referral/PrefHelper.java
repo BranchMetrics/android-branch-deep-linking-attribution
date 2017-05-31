@@ -124,11 +124,6 @@ public class PrefHelper {
     private Editor prefsEditor_;
 
     /**
-     * Instance of {@link BranchRemoteInterface} enabling remote interaction via the server interface.
-     */
-    private BranchRemoteInterface remoteInterface_;
-
-    /**
      * Arbitrary key values added to all requests.
      */
     private JSONObject requestMetadata;
