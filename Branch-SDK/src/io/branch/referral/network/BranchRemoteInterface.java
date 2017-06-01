@@ -1,6 +1,7 @@
 package io.branch.referral.network;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -234,19 +235,38 @@ public abstract class BranchRemoteInterface {
 
     //-------------- Supporting classes -----------------------//
 
+    /**
+     * <p>
+     *     Class for providing result of RESTful operation against Branch Remote server
+     * </p>
+     */
     public static class BranchResponse {
         private final String responseData;
         private final int responseCode;
 
-        public BranchResponse(String responseData, int responseCode) {
+        /**
+         * Creates a BranchResponse object with response data and status code
+         * @param responseData The data returned by branch server. Nullable in case of errors.(Note :please @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} for a better handling of errors)
+         * @param responseCode Standard Http Response code (rfc2616 http error codes)
+         */
+        public BranchResponse(@Nullable String responseData, int responseCode) {
             this.responseData = responseData;
             this.responseCode = responseCode;
         }
     }
 
+    /**
+     * Exception thrown when there is an error while doing a restful operation with Branch Remote server
+     * @see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
+     */
     public static class BranchRemoteException extends Exception {
         private int branchErrorCode = BranchError.ERR_BRANCH_NO_CONNECTIVITY;
 
+        /**
+         * Creates BranchRemoteException
+         * @param errorCode Error code for operation failure. Should be one of
+         * {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT} | {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY}
+         */
         public BranchRemoteException(int errorCode) {
             branchErrorCode = errorCode;
         }
