@@ -39,6 +39,7 @@ public abstract class BranchRemoteInterface {
      * <p/>
      * Abstract method to implement the network layer to do a RESTful GET to Branch servers.
      * This method is called whenever Branch SDK want to make a GET request to Branch servers.
+     * Please note that this methods always called on the background thread and no need for thread switching for the network operations.
      *
      * @param url The url end point
      * @return {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse} with the get result data and http status code
@@ -56,6 +57,7 @@ public abstract class BranchRemoteInterface {
      * <p/>
      * Abstract method to implement the network layer to do a RESTful GET to Branch servers.
      * This method is called whenever Branch SDK want to make a GET request to Branch servers.
+     * Please note that this methods always called on the background thread and no need for thread switching to execute network operations.
      *
      * @param url     The url end point
      * @param payload The JSon object payload for the post request
