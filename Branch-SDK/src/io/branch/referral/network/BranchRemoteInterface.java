@@ -27,7 +27,10 @@ import io.branch.referral.ServerResponse;
  * </p>
  */
 public abstract class BranchRemoteInterface {
-    private static final String BRANCH_KEY = "branch_key";
+    /**
+     * Key for adding retry numbers for the request. This will help better network issue analysis and debugging.
+     * Add the retry number to the GET Request as a query param and as a JSon key value for post
+     */
     public static final String RETRY_NUMBER = "retryNumber";
 
     //----------- Abstract methods-----------------------//
@@ -43,6 +46,8 @@ public abstract class BranchRemoteInterface {
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
      * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
+     *
+     * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a query params if you implement multiple retries for your request
      * </p>
      */
     public abstract BranchResponse doRestfulGet(String url) throws BranchRemoteException;
@@ -59,6 +64,8 @@ public abstract class BranchRemoteInterface {
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
      * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
+     *
+     * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a JSon keyvalue  if you implement multiple retries for your request
      * </p>
      */
     public abstract BranchResponse doRestfulPost(String url, JSONObject payload) throws BranchRemoteException;
@@ -193,7 +200,7 @@ public abstract class BranchRemoteInterface {
         try {
             post.put("sdk", "android" + BuildConfig.VERSION_NAME);
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(BRANCH_KEY, branch_key);
+                post.put(Defines.Jsonkey.BranchKey.getKey(), branch_key);
                 return true;
             }
         } catch (JSONException ignore) {
