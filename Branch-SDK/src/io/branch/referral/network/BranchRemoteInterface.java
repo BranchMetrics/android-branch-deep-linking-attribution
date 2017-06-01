@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BuildConfig;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
@@ -190,7 +191,7 @@ public abstract class BranchRemoteInterface {
 
     private boolean addCommonParams(JSONObject post, String branch_key) {
         try {
-            post.put("sdk", "android" + Branch.SDK_VERSION);
+            post.put("sdk", "android" + BuildConfig.VERSION_NAME);
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(BRANCH_KEY, branch_key);
                 return true;

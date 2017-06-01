@@ -406,8 +406,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Flag for checking of Strong matching is waiting on GAID fetch */
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
 
-    public static final String SDK_VERSION = "2.8.0";
-
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -2647,7 +2645,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected ServerResponse doInBackground(ServerRequest... serverRequests) {
             String urlExtend = "v1/url";
             return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(), prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-//            return branchRemoteInterface_.createCustomUrlSync(serverRequests[0].getPost());
         }
     }
 

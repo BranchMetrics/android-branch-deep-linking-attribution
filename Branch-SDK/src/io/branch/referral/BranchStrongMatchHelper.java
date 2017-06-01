@@ -180,7 +180,7 @@ class BranchStrongMatchHelper {
                 uriString += "&" + Defines.Jsonkey.BranchKey.getKey() + "=" + prefHelper.getBranchKey();
             }
             //Add SDK version
-            uriString += "&sdk=android" + Branch.SDK_VERSION;
+            uriString += "&sdk=android" + BuildConfig.VERSION_NAME;
 
             strongMatchUri = Uri.parse(uriString);
 
