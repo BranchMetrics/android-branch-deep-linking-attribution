@@ -25,6 +25,7 @@ import io.branch.referral.PrefHelper;
 /**
  * Created by sojanpr on 5/31/17.
  * Class for implementing BranchRemoteInterface using the HttpUrlConnection.
+ * This class provides implementation for Branch RESTful operations using HTTP URL Connection.
  */
 public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private static final int DEFAULT_TIMEOUT = 3000;
