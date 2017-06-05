@@ -1,5 +1,5 @@
 // IBridgeInterface.aidl
-package io.branch.search;
+package io.branch.indexing;
 import io.branch.indexing.BranchUniversalObject;
 
 interface IBranchListContentInterface {

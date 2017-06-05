@@ -27,7 +27,6 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.search.BranchListContentConnection;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.

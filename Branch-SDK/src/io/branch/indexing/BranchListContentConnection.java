@@ -1,4 +1,4 @@
-package io.branch.search;
+package io.branch.indexing;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -6,9 +6,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.util.Log;
 
-import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.PrefHelper;
 
 /**
  * Created by sojanpr on 9/26/16.
@@ -31,28 +30,26 @@ public class BranchListContentConnection implements ServiceConnection {
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        Log.d("Bridge_test", "onServiceConnected()");
+        PrefHelper.Debug("BranchListContentConnection", "Service connected");
         branchSearchServiceInterface_ = IBranchListContentInterface.Stub.asInterface(service);
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        Log.d("Bridge_test", "onServiceDisconnected()");
+        PrefHelper.Debug("BranchListContentConnection", "Service disconnected");
         branchSearchServiceInterface_ = null;
 
     }
 
     public void doBindService(Context context) {
-        Log.d("Bridge_test", "doBindService");
         packageName_ = context.getPackageName();
         Intent intent = new Intent("BranchListContent");
         intent.setPackage("io.branch.searchservice");
         Boolean serviceBound = context.bindService(intent, connection_, Context.BIND_AUTO_CREATE);
-        Log.d("Bridge_test", "Service Bound :- " + serviceBound);
+        PrefHelper.Debug("BranchListContentConnection", "Service Bound " +serviceBound);
     }
 
     public boolean addToIndex(BranchUniversalObject contentBUO, String packageName, String contentUrl) {
-        Log.d("Bridge_test", "addToSharableContent");
         boolean isContentAdded = false;
         if (branchSearchServiceInterface_ != null) {
             try {
@@ -66,7 +63,6 @@ public class BranchListContentConnection implements ServiceConnection {
     }
 
     public boolean deleteFromIndex(BranchUniversalObject buo, String packageName) {
-        Log.d("Bridge_test", "deleteContent");
         boolean isContentDeleted = false;
         if (branchSearchServiceInterface_ != null) {
             try {
@@ -80,7 +76,6 @@ public class BranchListContentConnection implements ServiceConnection {
     }
 
     public boolean deleteAllFromIndex(String packageName) {
-        Log.d("Bridge_test", "deleteContent");
         boolean clearedAllContents = false;
         if (branchSearchServiceInterface_ != null) {
             try {
@@ -104,7 +99,6 @@ public class BranchListContentConnection implements ServiceConnection {
      * @param contentUrl  The deeplink url to open the piece of content.
      */
     public void addUserInteraction(BranchUniversalObject contentBUO, String packageName, String userAction, String contentUrl) {
-        Log.d("Bridge_test", "addUserInteraction");
         if (branchSearchServiceInterface_ != null) {
             try {
                 branchSearchServiceInterface_.addUserInteraction(contentBUO, packageName, userAction, contentUrl);

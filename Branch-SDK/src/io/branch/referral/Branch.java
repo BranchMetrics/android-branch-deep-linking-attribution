@@ -53,7 +53,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
-import io.branch.search.BranchListContentConnection;
+import io.branch.indexing.BranchListContentConnection;
 
 /**
  * <p>
