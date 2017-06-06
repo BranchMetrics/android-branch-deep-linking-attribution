@@ -47,7 +47,7 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                 .connectTimeout(timeout, TimeUnit.MILLISECONDS)
                 .writeTimeout(timeout, TimeUnit.MILLISECONDS)
                 .readTimeout(timeout, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(true)
+                .retryOnConnectionFailure(false)
                 .build();
     }
 
@@ -63,6 +63,7 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
 
     ///-------------- private methods to implement RESTful GET / POST using HttpURLConnection ---------------//
     private BranchResponse doRestfulGet(String url, int retryNumber) throws BranchRemoteException {
+        Response response = null;
         try {
             String appendKey = url.contains("?") ? "&" : "?";
             String modifiedUrl = url + appendKey + RETRY_NUMBER + "=" + retryNumber;
@@ -70,7 +71,7 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
             Request request = new Request.Builder()
                     .url(modifiedUrl)
                     .build();
-            Response response = okHttpClient_.newCall(request).execute();
+            response = okHttpClient_.newCall(request).execute();
 
             int responseCode = response.code();
             if (responseCode >= 500 &&
@@ -83,32 +84,31 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
             } else {
-                return new BranchResponse(getResponseString(response.isSuccessful() ? response.body().byteStream() : null), responseCode);
-            }
-        } catch (SocketException ex) {
-            PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
-        } catch (SocketTimeoutException ex) {
-            // On socket  time out retry the request for retryNumber of times
-            if (retryNumber < prefHelper.getRetryCount()) {
-                try {
-                    Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                InputStream inputStream;
+                if (response.isSuccessful()) {
+                    try {
+                        inputStream = response.body().byteStream();
+                    } catch (NullPointerException e) {
+                        inputStream = null;
+                    }
+                    return new BranchResponse(getResponseString(inputStream), responseCode);
+                } else {
+                    return new BranchResponse(null, responseCode);
                 }
-                retryNumber++;
-                return doRestfulGet(url, retryNumber);
-            } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         } catch (IOException ex) {
             PrefHelper.Debug(getClass().getSimpleName(), "Branch connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
     }
 
 
     private BranchResponse doRestfulPost(String url, JSONObject payload, int retryNumber) throws BranchRemoteException {
+        Response response = null;
         try {
             payload.put(RETRY_NUMBER, retryNumber);
         } catch (JSONException ignore) {
@@ -119,7 +119,7 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                     .url(url)
                     .post(rbody)
                     .build();
-            Response response = okHttpClient_.newCall(request).execute();
+            response = okHttpClient_.newCall(request).execute();
             int responseCode = response.code();
             if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
                     && retryNumber < prefHelper.getRetryCount()) {
@@ -131,20 +131,17 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                return new BranchResponse(getResponseString(response.isSuccessful() ? response.body().byteStream() : null), responseCode);
-            }
-        } catch (SocketTimeoutException ex) {
-            // On socket  time out retry the request for retryNumber of times
-            if (retryNumber < prefHelper.getRetryCount()) {
-                try {
-                    Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                InputStream inputStream;
+                if (response.isSuccessful()) {
+                    try {
+                        inputStream = response.body().byteStream();
+                    } catch (NullPointerException e) {
+                        inputStream = null;
+                    }
+                    return new BranchResponse(getResponseString(inputStream), responseCode);
+                } else {
+                    return new BranchResponse(null, responseCode);
                 }
-                retryNumber++;
-                return doRestfulPost(url, payload, retryNumber);
-            } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         } catch (IOException ex) {
             PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
@@ -156,6 +153,10 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                     Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
             }
             return new BranchResponse(null, 500);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
     }
 
