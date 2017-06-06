@@ -29,7 +29,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
- * Created by sojanpr on 5/31/17.
+ * Created by sojanpr on 5/31/17, EvanG added OKHTTP on 6/6/2017
  * Class for implementing BranchRemoteInterface using the HttpUrlConnection.
  * This class provides implementation for Branch RESTful operations using HTTP URL Connection.
  */

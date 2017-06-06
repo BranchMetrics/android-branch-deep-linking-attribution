@@ -15,12 +15,14 @@ import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
 
 /**
- * <p/>
+ * <p>
  * Abstract class for Branch remote interface. This class provides the abstraction layer for network operations between
  * Branch SDK and remote Branch servers. Extend this class for creating custom network interface.
  * Class provide abstract method for implementing RESTful requests to Branch server
+ * </p>
  *
- * @see {@link #doRestfulGet(String)}
+ * <p>
+ * @see <!-- {@link #doRestfulGet(String)} -->
  * {@link #doRestfulPost(String, JSONObject)}
  * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
  * {@link BranchRemoteException}
@@ -46,7 +48,7 @@ public abstract class BranchRemoteInterface {
      * @return {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse} with the get result data and http status code
      * @throws BranchRemoteException Branch remote exception is thrown when there is an error in communicating to the Branch servers
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
-     * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
+     * @see <!-- {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} -->
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
      * <p>
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a query params if you implement multiple retries for your request
@@ -66,7 +68,7 @@ public abstract class BranchRemoteInterface {
      * @return {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse} with the get result data and http status code
      * @throws BranchRemoteException Branch remote exception is thrown when there is an error in communicating to the Branch servers
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
-     * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
+     * @see <!-- {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} -->
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
      * <p>
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a JSon keyvalue  if you implement multiple retries for your request
@@ -268,7 +270,7 @@ public abstract class BranchRemoteInterface {
     /**
      * Exception thrown when there is an error while doing a restful operation with Branch Remote server
      *
-     * @see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
+     * @see <!-- {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)} -->
      */
     public static class BranchRemoteException extends Exception {
         private int branchErrorCode = BranchError.ERR_BRANCH_NO_CONNECTIVITY;
