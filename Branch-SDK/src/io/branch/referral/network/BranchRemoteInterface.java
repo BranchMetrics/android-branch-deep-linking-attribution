@@ -15,7 +15,7 @@ import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
 
 /**
- * <p/>
+ * <p>
  * Abstract class for Branch remote interface. This class provides the abstraction layer for network operations between
  * Branch SDK and remote Branch servers. Extend this class for creating custom network interface.
  * Class provide abstract method for implementing RESTful requests to Branch server
@@ -36,7 +36,7 @@ public abstract class BranchRemoteInterface {
     //----------- Abstract methods-----------------------//
 
     /**
-     * <p/>
+     * <p>
      * Abstract method to implement the network layer to do a RESTful GET to Branch servers.
      * This method is called whenever Branch SDK want to make a GET request to Branch servers.
      * Please note that this methods always called on the background thread and no need for thread switching for the network operations.
@@ -50,11 +50,12 @@ public abstract class BranchRemoteInterface {
      *
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a query params if you implement multiple retries for your request
      * </p>
+     *
      */
     public abstract BranchResponse doRestfulGet(String url) throws BranchRemoteException;
 
     /**
-     * <p/>
+     * <p>
      * Abstract method to implement the network layer to do a RESTful GET to Branch servers.
      * This method is called whenever Branch SDK want to make a GET request to Branch servers.
      * Please note that this methods always called on the background thread and no need for thread switching to execute network operations.

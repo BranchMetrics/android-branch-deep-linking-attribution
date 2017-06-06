@@ -28,10 +28,8 @@ class ServerRequestGetRewardHistory extends ServerRequest {
      * @param length   A {@link Integer} value containing the number of credit history records to
      *                 return.
      * @param order    A {@link Branch.CreditHistoryOrder} object indicating which order the results should
-     *                 be returned in.
-     *                 <p/>
+     *                 be returned in.     *
      *                 <p>Valid choices:</p>
-     *                 <p/>
      *                 <ul>
      *                 <li>{@link Branch.CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link Branch.CreditHistoryOrder#kLeastRecentFirst}</li>

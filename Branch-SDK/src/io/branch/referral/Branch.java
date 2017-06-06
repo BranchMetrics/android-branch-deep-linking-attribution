@@ -408,8 +408,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
-     * pattern.</p>
-     * <p/>
+     * pattern.</p>     *
      * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -2059,12 +2058,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Schedules a repeating threaded task to get the following details and report them to the
      * Branch API <b>once a week</b>:</p>
-     * <p/>
-     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
+     *<pre style="background:#fff;padding:10px;border:2px solid silver;">
      * int interval = 7 * 24 * 60 * 60;
      * appListingSchedule_ = scheduler.scheduleAtFixedRate(
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
-     * <p/>
      * <ul>
      * <li>{@link SystemObserver#getOS()}</li>
      * <li>{@link SystemObserver#getListOfApps()}</li>
