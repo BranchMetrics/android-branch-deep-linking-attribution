@@ -36,10 +36,11 @@ public abstract class BranchRemoteInterface {
     //----------- Abstract methods-----------------------//
 
     /**
-     * <p/>
+     * <p>
      * Abstract method to implement the network layer to do a RESTful GET to Branch servers.
      * This method is called whenever Branch SDK want to make a GET request to Branch servers.
      * Please note that this methods always called on the background thread and no need for thread switching for the network operations.
+     * </p>
      *
      * @param url The url end point
      * @return {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse} with the get result data and http status code
@@ -47,17 +48,18 @@ public abstract class BranchRemoteInterface {
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
      * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
-     *
+     * <p>
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a query params if you implement multiple retries for your request
      * </p>
      */
     public abstract BranchResponse doRestfulGet(String url) throws BranchRemoteException;
 
     /**
-     * <p/>
+     * <p>
      * Abstract method to implement the network layer to do a RESTful GET to Branch servers.
      * This method is called whenever Branch SDK want to make a GET request to Branch servers.
      * Please note that this methods always called on the background thread and no need for thread switching to execute network operations.
+     * </p>
      *
      * @param url     The url end point
      * @param payload The JSon object payload for the post request
@@ -66,7 +68,7 @@ public abstract class BranchRemoteInterface {
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
      * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
-     *
+     * <p>
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a JSon keyvalue  if you implement multiple retries for your request
      * </p>
      */
@@ -150,12 +152,10 @@ public abstract class BranchRemoteInterface {
     }
 
     public static final BranchRemoteInterface getDefaultBranchRemoteInterface(Context context) {
-        BranchRemoteInterface branchRemoteInterface = null;
-
-        boolean isOkHttpAvailable = false; // TODO : Check for OKHTTP Availability
-        if (isOkHttpAvailable) {
-            // TODO return default OKHTTP Remote interface here
-        } else {
+        BranchRemoteInterface branchRemoteInterface;
+        try {
+            branchRemoteInterface = new BranchRemoteInterfaceOkHttp(context);
+        } catch (Exception e) {
             branchRemoteInterface = new BranchRemoteInterfaceUrlConnection(context);
         }
         return branchRemoteInterface;
@@ -210,7 +210,6 @@ public abstract class BranchRemoteInterface {
         return false;
     }
 
-
     private String convertJSONtoString(JSONObject json) {
         StringBuilder result = new StringBuilder();
         if (json != null) {
@@ -247,7 +246,7 @@ public abstract class BranchRemoteInterface {
 
     /**
      * <p>
-     *     Class for providing result of RESTful operation against Branch Remote server
+     * Class for providing result of RESTful operation against Branch Remote server
      * </p>
      */
     public static class BranchResponse {
@@ -256,6 +255,7 @@ public abstract class BranchRemoteInterface {
 
         /**
          * Creates a BranchResponse object with response data and status code
+         *
          * @param responseData The data returned by branch server. Nullable in case of errors.(Note :please @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} for a better handling of errors)
          * @param responseCode Standard Http Response code (rfc2616 http error codes)
          */
@@ -267,6 +267,7 @@ public abstract class BranchRemoteInterface {
 
     /**
      * Exception thrown when there is an error while doing a restful operation with Branch Remote server
+     *
      * @see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
      */
     public static class BranchRemoteException extends Exception {
@@ -274,8 +275,9 @@ public abstract class BranchRemoteInterface {
 
         /**
          * Creates BranchRemoteException
+         *
          * @param errorCode Error code for operation failure. Should be one of
-         * {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT} | {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY}
+         *                  {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT} | {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY}
          */
         public BranchRemoteException(int errorCode) {
             branchErrorCode = errorCode;
