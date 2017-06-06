@@ -44,7 +44,7 @@ public class BranchListContentConnection implements ServiceConnection {
     public void doBindService(Context context) {
         packageName_ = context.getPackageName();
         Intent intent = new Intent("BranchListContent");
-        intent.setPackage("io.branch.searchservice");
+        intent.setPackage("io.branch.search.service");
         Boolean serviceBound = context.bindService(intent, connection_, Context.BIND_AUTO_CREATE);
         PrefHelper.Debug("BranchListContentConnection", "Service Bound " +serviceBound);
     }
