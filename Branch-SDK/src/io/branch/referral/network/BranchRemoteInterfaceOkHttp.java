@@ -96,6 +96,9 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                     return new BranchResponse(null, responseCode);
                 }
             }
+        } catch (IllegalStateException ex) {
+            PrefHelper.Debug(getClass().getSimpleName(), "Http illegal state exception: " + ex.getMessage());
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_ILLEGAL_STATE_EXCEPTION);
         } catch (IOException ex) {
             PrefHelper.Debug(getClass().getSimpleName(), "Branch connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
@@ -143,6 +146,9 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                     return new BranchResponse(null, responseCode);
                 }
             }
+        } catch (IllegalStateException ex) {
+            PrefHelper.Debug(getClass().getSimpleName(), "Http illegal state exception: " + ex.getMessage());
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_ILLEGAL_STATE_EXCEPTION);
         } catch (IOException ex) {
             PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
