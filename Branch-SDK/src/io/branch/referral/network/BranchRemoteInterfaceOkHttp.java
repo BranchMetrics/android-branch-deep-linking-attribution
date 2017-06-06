@@ -8,14 +8,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -86,16 +84,11 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
             } else {
-                if (responseCode != HttpsURLConnection.HTTP_OK && !response.isSuccessful()) {
-                    return new BranchResponse(getResponseString(null), responseCode);
-                } else {
-                    return new BranchResponse(getResponseString(response.body().byteStream()), responseCode);
-                }
+                return new BranchResponse(getResponseString(response.isSuccessful() ? response.body().byteStream() : null), responseCode);
             }
         } catch (SocketException ex) {
             PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
-
         } catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
             if (retryNumber < prefHelper.getRetryCount()) {
@@ -139,11 +132,7 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                if (responseCode != HttpsURLConnection.HTTP_OK && !response.isSuccessful()) {
-                    return new BranchResponse(getResponseString(null), responseCode);
-                } else {
-                    return new BranchResponse(getResponseString(response.body().byteStream()), responseCode);
-                }
+                return new BranchResponse(getResponseString(response.isSuccessful() ? response.body().byteStream() : null), responseCode);
             }
         } catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
