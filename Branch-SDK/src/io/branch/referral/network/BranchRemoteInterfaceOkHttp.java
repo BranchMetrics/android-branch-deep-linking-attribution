@@ -11,8 +11,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -61,7 +59,7 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
         return doRestfulPost(url, payload, 0);
     }
 
-    ///-------------- private methods to implement RESTful GET / POST using HttpURLConnection ---------------//
+    ///-------------- private methods to implement RESTful GET / POST using OkHttp ---------------//
     private BranchResponse doRestfulGet(String url, int retryNumber) throws BranchRemoteException {
         Response response = null;
         try {
@@ -71,8 +69,8 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
             Request request = new Request.Builder()
                     .url(modifiedUrl)
                     .build();
-            response = okHttpClient_.newCall(request).execute();
 
+            response = okHttpClient_.newCall(request).execute();
             int responseCode = response.code();
             if (responseCode >= 500 &&
                     retryNumber < prefHelper.getRetryCount()) {
