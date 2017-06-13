@@ -30,9 +30,7 @@ afterEvaluate { project ->
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
                 pom.withXml {
-                    asNode().dependencies.dependency.findAll {
-                        it.artifactId.text() == 'okhttp' || it.artifactId.text() == 'okhttp3'
-                    }.each {
+                    asNode().dependencies.dependency.findAll {}.each {
                         if (it.optional)
                             it.optional.value = 'true'
                         else
