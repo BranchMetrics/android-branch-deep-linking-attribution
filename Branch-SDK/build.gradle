@@ -67,4 +67,4 @@ task makeJar(type: Copy) {
 
 makeJar.dependsOn(clearJar, build)
 
-apply from: 'https://raw.githubusercontent.com/BranchMetrics/android-branch-deep-linking/Network-Abstraction-OkieHTTP/gradle-maven-push.gradle'
+apply from: 'https://raw.githubusercontent.com/BranchMetrics/GradleToMavenOptionalDependencies/master/gradle-maven-push.gradle'
