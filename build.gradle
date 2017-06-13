@@ -2,10 +2,16 @@
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.0.+'
     }
+}
+
+plugins {
+    id 'nebula.optional-base' version '3.0.3' // if you want optional-base
+    id 'nebula.provided-base' version '3.0.3' // if you want provided-base
 }
 
 allprojects {
@@ -16,3 +22,6 @@ allprojects {
         jcenter()
     }
 }
+
+apply plugin: 'java'
+apply plugin: 'nebula.optional-base'
