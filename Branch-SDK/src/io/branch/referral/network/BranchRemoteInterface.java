@@ -20,7 +20,7 @@ import io.branch.referral.ServerResponse;
  * Branch SDK and remote Branch servers. Extend this class for creating custom network interface.
  * Class provide abstract method for implementing RESTful requests to Branch server
  *
- * @see {@link #doRestfulGet(String)}
+ * see {@link #doRestfulGet(String)}
  * {@link #doRestfulPost(String, JSONObject)}
  * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
  * {@link BranchRemoteException}
@@ -45,7 +45,7 @@ public abstract class BranchRemoteInterface {
      * @return {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse} with the get result data and http status code
      * @throws BranchRemoteException Branch remote exception is thrown when there is an error in communicating to the Branch servers
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
-     * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
+     * see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
      *
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a query params if you implement multiple retries for your request
@@ -65,7 +65,7 @@ public abstract class BranchRemoteInterface {
      * @return {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse} with the get result data and http status code
      * @throws BranchRemoteException Branch remote exception is thrown when there is an error in communicating to the Branch servers
      *                               BranchRemoteException contains the corresponding BranchError code for the error {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY } | {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT}
-     * @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
+     * see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException}
      * {@link io.branch.referral.network.BranchRemoteInterface.BranchResponse}
      *
      * NOTE: For better debugging purpose conside adding {@link #RETRY_NUMBER} as a JSon keyvalue  if you implement multiple retries for your request
@@ -177,7 +177,7 @@ public abstract class BranchRemoteInterface {
      *                       resultant {@link ServerResponse} object.
      * @return A {@link ServerResponse} object representing the resultant output object from Branch Remote server
      * response in Branch SDK terms.
-     * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
+     * see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
     private ServerResponse processEntityForJSON(String responseString, int statusCode, String tag) {
         ServerResponse result = new ServerResponse(tag, statusCode);
@@ -257,7 +257,7 @@ public abstract class BranchRemoteInterface {
 
         /**
          * Creates a BranchResponse object with response data and status code
-         * @param responseData The data returned by branch server. Nullable in case of errors.(Note :please @see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} for a better handling of errors)
+         * @param responseData The data returned by branch server. Nullable in case of errors.(Note :please see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} for a better handling of errors)
          * @param responseCode Standard Http Response code (rfc2616 http error codes)
          */
         public BranchResponse(@Nullable String responseData, int responseCode) {
@@ -268,7 +268,7 @@ public abstract class BranchRemoteInterface {
 
     /**
      * Exception thrown when there is an error while doing a restful operation with Branch Remote server
-     * @see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
+     * see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
      */
     public static class BranchRemoteException extends Exception {
         private int branchErrorCode = BranchError.ERR_BRANCH_NO_CONNECTIVITY;
