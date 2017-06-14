@@ -51,6 +51,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
+import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
@@ -300,7 +301,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private static Branch branchReferral_;
 
-    private BranchRemoteInterface kRemoteInterface_;
+    private BranchRemoteInterface branchRemoteInterface_;
     private PrefHelper prefHelper_;
     private final SystemObserver systemObserver_;
     private Context context_;
@@ -407,15 +408,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
-     * pattern.</p>
-     * <p/>
+     * pattern.</p>     *
      * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
     private Branch(@NonNull Context context) {
         prefHelper_ = PrefHelper.getInstance(context);
-        kRemoteInterface_ = new BranchRemoteInterface(context);
+        branchRemoteInterface_ = BranchRemoteInterface.getDefaultBranchRemoteInterface(context);
         systemObserver_ = new SystemObserver(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         serverSema_ = new Semaphore(1);
@@ -441,6 +441,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
+     * Branch SDK and remote Branch server
+     *
+     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with implementation for abstract RESTful GET or POST methods
+     */
+    public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
+        branchRemoteInterface_ = remoteInterface;
+    }
+
+    /**
      * <p>
      * Enables/Disables the test mode for the SDK. This will use the Branch Test Keys.
      * This will also enable debug logs.
@@ -458,6 +468,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
+
 
     /**
      * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
@@ -2047,12 +2058,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Schedules a repeating threaded task to get the following details and report them to the
      * Branch API <b>once a week</b>:</p>
-     * <p/>
-     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
+     *<pre style="background:#fff;padding:10px;border:2px solid silver;">
      * int interval = 7 * 24 * 60 * 60;
      * appListingSchedule_ = scheduler.scheduleAtFixedRate(
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
-     * <p/>
      * <ul>
      * <li>{@link SystemObserver#getOS()}</li>
      * <li>{@link SystemObserver#getListOfApps()}</li>
@@ -2194,7 +2203,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // Make sure a callback is associated with this request. This callback can
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
-            // Update the callback to the latest one in initsession call
+            // Update the callback to the latest one in init session call
             if (callback != null) {
                 requestQueue_.setInstallOrOpenCallback(callback);
             }
@@ -2209,7 +2218,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             initState_ = SESSION_STATE.UNINITIALISED;
             //Report Key error on callback
             if (callback != null) {
-                callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", RemoteInterface.NO_BRANCH_KEY_STATUS));
+                callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
             Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
             return;
@@ -2250,10 +2259,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
+            request = new ServerRequestRegisterOpen(context_, callback, systemObserver_);
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, systemObserver_, InstallListener.getInstallationID());
         }
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
@@ -2631,7 +2640,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private class getShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
         @Override
         protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return kRemoteInterface_.createCustomUrlSync(serverRequests[0].getPost());
+            String urlExtend = "v1/url";
+            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(), prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
     }
 
@@ -2642,12 +2652,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * published in the main thread.
      */
     private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
-        int timeOut_ = 0;
         ServerRequest thisReq_;
 
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
-            timeOut_ = prefHelper_.getTimeout();
         }
 
         @Override
@@ -2671,9 +2679,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
 
             if (thisReq_.isGetRequest()) {
-                return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
+                return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             } else {
-                return kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                return branchRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             }
         }
 
