@@ -71,6 +71,7 @@ public class PrefHelper {
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
     private static final String KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER = "bnc_google_search_install_identifier";
+    private static final String KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA = "bnc_google_play_install_referrer_extras";
     private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
@@ -531,6 +532,26 @@ public class PrefHelper {
     public String getGoogleSearchInstallIdentifier() {
         return getString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER);
     }
+
+    /**
+     * Sets the Google play install referrer string
+     *
+     * @param referrer Google play install referrer string
+     */
+    public void setGooglePlayReferrer(String referrer) {
+        setString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA, referrer);
+    }
+
+    /**
+     * Gets the google play install referrer string
+     *
+     * @return {@link String}  Google play install referrer string
+     */
+    public String getGooglePlayReferrer() {
+        return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
+    }
+
+
 
 
     /**
