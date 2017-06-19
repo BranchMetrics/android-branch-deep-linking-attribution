@@ -1,6 +1,7 @@
 package io.branch.referral.network;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
@@ -11,17 +12,22 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 
 import io.branch.referral.BranchError;
 import io.branch.referral.PrefHelper;
+import okhttp3.ConnectionSpec;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.TlsVersion;
 
 /**
  * Created by sojanpr on 5/31/17, EvanG added OkHttp on 6/6/2017
@@ -41,12 +47,17 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
         }
-        okHttpClient_ = new OkHttpClient.Builder()
+        okHttpClient_ = getNewHttpClient(timeout);
+    }
+
+    private OkHttpClient getNewHttpClient(int timeout) {
+        OkHttpClient.Builder client = new OkHttpClient.Builder()
                 .connectTimeout(timeout, TimeUnit.MILLISECONDS)
                 .writeTimeout(timeout, TimeUnit.MILLISECONDS)
                 .readTimeout(timeout, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(false)
-                .build();
+                .retryOnConnectionFailure(false);
+
+        return enableTls12OnPreLollipop(client).build();
     }
 
     @Override
@@ -106,7 +117,6 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
             }
         }
     }
-
 
     private BranchResponse doRestfulPost(String url, JSONObject payload, int retryNumber) throws BranchRemoteException {
         Response response = null;
@@ -174,6 +184,31 @@ public class BranchRemoteInterfaceOkHttp extends BranchRemoteInterface {
             }
         }
         return responseString;
+    }
+
+    public static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
+        if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
+            try {
+                SSLContext sc = SSLContext.getInstance("TLSv1.2");
+                sc.init(null, null, null);
+                client.sslSocketFactory(new Tls12SocketFactory(sc.getSocketFactory()));
+
+                ConnectionSpec cs = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                        .tlsVersions(TlsVersion.TLS_1_2)
+                        .build();
+
+                List<ConnectionSpec> specs = new ArrayList<>();
+                specs.add(cs);
+                specs.add(ConnectionSpec.COMPATIBLE_TLS);
+                specs.add(ConnectionSpec.CLEARTEXT);
+
+                client.connectionSpecs(specs);
+            } catch (Exception exc) {
+                Log.e("OkHttpTLSCompat", "Error while setting TLS 1.2", exc);
+            }
+        }
+
+        return client;
     }
 
 }
