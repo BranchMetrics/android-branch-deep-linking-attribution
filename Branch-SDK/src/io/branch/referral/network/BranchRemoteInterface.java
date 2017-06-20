@@ -2,6 +2,7 @@ package io.branch.referral.network;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -157,8 +158,10 @@ public abstract class BranchRemoteInterface {
         BranchRemoteInterface branchRemoteInterface;
         try {
             branchRemoteInterface = new BranchRemoteInterfaceOkHttp(context);
-        } catch (Exception e) {
+            Log.d("BranchSDK", "using OKHTTP");
+        } catch (Throwable e) {
             branchRemoteInterface = new BranchRemoteInterfaceUrlConnection(context);
+            Log.d("BranchSDK", "using UrlConnection");
         }
         return branchRemoteInterface;
     }
