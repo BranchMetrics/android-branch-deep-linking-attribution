@@ -3660,7 +3660,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
-        return showInstallPrompt(activity, requestCode, installReferrerString);
+        return doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
