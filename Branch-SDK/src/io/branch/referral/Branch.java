@@ -2058,7 +2058,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Schedules a repeating threaded task to get the following details and report them to the
      * Branch API <b>once a week</b>:</p>
-     *<pre style="background:#fff;padding:10px;border:2px solid silver;">
+     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * int interval = 7 * 24 * 60 * 60;
      * appListingSchedule_ = scheduler.scheduleAtFixedRate(
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
@@ -3646,7 +3646,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        return showInstallPrompt(activity, requestCode, installReferrerString);
+        return doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
@@ -3660,7 +3660,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
-        return showInstallPrompt(activity, requestCode, installReferrerString);
+        return doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
