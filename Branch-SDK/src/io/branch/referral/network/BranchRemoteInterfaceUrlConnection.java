@@ -31,7 +31,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private static final int DEFAULT_TIMEOUT = 3000;
     PrefHelper prefHelper;
 
-    BranchRemoteInterfaceUrlConnection(Context context) {
+    public BranchRemoteInterfaceUrlConnection(Context context) {
         prefHelper = PrefHelper.getInstance(context);
     }
 
