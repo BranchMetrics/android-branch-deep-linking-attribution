@@ -1,4 +1,6 @@
 Branch Android SDK change log
+- v2.9.1 Hot fix for a possible app crash on instant app to full app conversion
+
 - v2.9.0 Adding network layer abstraction to build custom network layer. Apps can build their own network implementation to handle Branch network requests. By default Branch will be using URL connection for handling network requests.
 
 - v2.8.0 Adding Instant App support. Supports Instant App content deep linking, Full app conversion with deep linking and associated conversion attributions.
