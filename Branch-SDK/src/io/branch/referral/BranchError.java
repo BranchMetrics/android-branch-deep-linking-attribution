@@ -40,6 +40,8 @@ public class BranchError {
     public static final int ERR_BRANCH_RESOURCE_CONFLICT = -115;
     /* Branch request is invalid */
     public static final int ERR_BRANCH_INVALID_REQUEST = -116;
+    /* Branch illegal state exception */
+    public static final int ERR_BRANCH_ILLEGAL_STATE_EXCEPTION = -117;
 
     /**
      * <p>Returns the message explaining the error.</p>
@@ -123,6 +125,9 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_REQ_TIMED_OUT) {
             errorCode_ = ERR_BRANCH_REQ_TIMED_OUT;
             errMsg = " Request to Branch server timed out. Please check your internet connectivity";
+        } else if (statusCode == ERR_BRANCH_ILLEGAL_STATE_EXCEPTION) {
+            errorCode_ = ERR_BRANCH_ILLEGAL_STATE_EXCEPTION;
+            errMsg = " Illegal state exception.";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
             errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";

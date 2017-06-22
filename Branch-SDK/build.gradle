@@ -7,12 +7,13 @@ dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile 'com.android.support:support-annotations:22.2.0'
     compile 'com.crashlytics.sdk.android:answers-shim:0.0.6'
+    compile 'com.squareup.okhttp3:okhttp:3.8.0', optional
 }
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
-    
+
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
@@ -54,17 +55,16 @@ android {
 }
 
 task clearJar(type: Delete) {
-    delete 'build/libs/'+ jarFileName
+    delete 'build/libs/' + jarFileName
 }
 
 task makeJar(type: Copy) {
     from('build/intermediates/bundles/release/')
     into('../')
     include('classes.jar')
-    rename ('classes.jar', 'Branch-'+project.VERSION_NAME+'.jar')
+    rename('classes.jar', 'Branch-' + project.VERSION_NAME + '.jar')
 }
 
 makeJar.dependsOn(clearJar, build)
 
-
-apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
+apply from: 'https://raw.githubusercontent.com/BranchMetrics/GradleToMavenOptionalDependencies/master/gradle-maven-push.gradle'
