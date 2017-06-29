@@ -77,6 +77,7 @@ public class InstallListener extends BroadcastReceiver {
 
                 if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
                     prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
+                    prefHelper.setGooglePlayReferrer(rawReferrerString);
                 }
 
                 if (callback_ != null) {
