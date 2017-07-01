@@ -470,6 +470,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         enableTestMode();
     }
 
+    /**
+     * @deprecated This method is deprecated since play store referrer is enabled by default from v2.9.1.
+     * Please use {@link #setPlayStoreReferrerCheckTimeout(long)} instead.
+     */
+    public static void enablePlayStoreReferrer(long delay) {
+        setPlayStoreReferrerCheckTimeout(delay);
+    }
 
     /**
      * Since play store referrer broadcast from google play is few millisecond delayed Branch will delay the collecting deep link data on app install by {@link #playStoreReferrerFetchTime} millisecond
