@@ -26,8 +26,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -2275,7 +2277,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.startInstallReferrerTime(playStoreReferrerFetchTime);
+            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime);
         }
 
         registerInstallOrOpen(request, callback);
@@ -3640,11 +3642,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
             String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
             if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
+                String referringLink = "";
                 try {
-                    String referringLink = latestReferringParams.getString(referringLinkKey);
-                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
-                } catch (JSONException e) {
+                    referringLink = latestReferringParams.getString(referringLinkKey);
+                    // Considering the case that url may contain query params with `=` and `&` with it and may cause issue when parsing play store referrer
+                    referringLink = URLEncoder.encode(referringLink, "UTF-8");
+                } catch (JSONException | UnsupportedEncodingException e) {
                     e.printStackTrace();
+                }
+                if (!TextUtils.isEmpty(referringLink)) {
+                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
                 }
             }
         }
