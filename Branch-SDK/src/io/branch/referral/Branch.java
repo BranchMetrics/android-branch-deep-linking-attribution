@@ -1388,12 +1388,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             //Check for link click id or app link
             if (data != null && data.isHierarchical() && activity != null) {
+
+                Intent intent = activity.getIntent();
+                String scheme = data.getScheme();
+
                 try {
-                    if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
+                    // Try to read the raw URI intent with link click ID and clean it up if so
+                    if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null && !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
                         prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
                         String paramString = "link_click_id=" + data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
                         String uriString = null;
-                        if (activity.getIntent() != null) {
+                        if (intent != null) {
                             uriString = activity.getIntent().getDataString();
                         }
                         if (data.getQuery().length() == paramString.length()) {
@@ -1405,15 +1410,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         }
                         if (uriString != null) {
                             Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
-                            activity.getIntent().setData(newData);
+                            intent.setData(newData);
+                            intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
                         } else {
                             Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
                         }
                         return true;
                     } else {
                         // Check if the clicked url is an app link pointing to this app
-                        String scheme = data.getScheme();
-                        Intent intent = activity.getIntent();
                         if (scheme != null && intent != null) {
                             // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
                             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
