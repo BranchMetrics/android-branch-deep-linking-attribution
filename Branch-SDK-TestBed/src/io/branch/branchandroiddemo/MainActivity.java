@@ -19,9 +19,15 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.BranchEventData;
+import io.branch.referral.util.BranchStandardEvents;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.util.TrackCustomEventBuilder;
+import io.branch.referral.util.TrackEventBuilder;
+import io.branch.referral.util.TrackStandardEventBuilder;
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -50,8 +56,8 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setContentType("application/vnd.businessobjects")
-                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
-                .setPrice(5.00, CurrencyType.USD)
+                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                .setPrice(5.00)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
                 .addContentMetadata("Metadata_Key1", "Metadata_value1")
@@ -235,7 +241,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                        //.setAlias("mylinkName") // In case you need to white label your link
+                                //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -304,6 +310,117 @@ public class MainActivity extends Activity {
         //        }catch (JSONException ignore){
         //        }
 
+        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new TrackCustomEventBuilder("Trading_Commodity")
+                        .addCustomData("Trading_Item", "CLD")
+                        .addCustomData("Sell_Rate", "+1.2%")
+                        .track(MainActivity.this);
+            }
+        });
+
+        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new TrackStandardEventBuilder(BranchStandardEvents.PURCHASE)
+                        .addContentItems(
+                                new BranchUniversalObject()
+                                        .setCanonicalIdentifier("nike/1234")
+                                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                                        .setPrice(101.20)
+                                        .setProductBrand("Nike")
+                                        .setProductCategory(ProductCategory.SPORTING_GOODS)
+                                        .setProductName("Runner")
+                                        .setProductVariant("XL")
+                                        .setQuantity(1D)
+                                        .setRatingCount(5)
+                                        .setMaximumRating(2.2)
+                                        .setAverageRating(4.2)
+                                        .setSku("1101123445")
+                                        .setTitle("Nike Shoe")
+                                        .setContentDescription("Start loving your steps"),
+                                new BranchUniversalObject()
+                                        .setCanonicalIdentifier("nike/5324")
+                                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                                        .setPrice(80.20)
+                                        .setProductBrand("Nike")
+                                        .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
+                                        .setProductName("Woolen Sox")
+                                        .setProductVariant("Xl")
+                                        .setQuantity(5d)
+                                        .setRatingCount(5)
+                                        .setMaximumRating(2.8)
+                                        .setAverageRating(3.3)
+                                        .setSku("110112467")
+                                        .setTitle("Nike Woolen Sox")
+                                        .setContentDescription("Fine combed woolen sox for those who love your foot")
+                        )
+                        .addCustomData("purchase_loc", "Palo Alto")
+                        .addCustomData("store_pickup", "unavailable")
+                        .addEventData(new BranchEventData("tras_Id_1232343434")
+                                .setAffiliation("high_fi")
+                                .setCoupon("promo-1234")
+                                .setCurrency(CurrencyType.USD)
+                                .setDescription("Preferred purchase")
+                                .setRevenue(180.2)
+                                .setShipping(10.5)
+                                .setTax(13.5))
+                        .setCallback(new TrackEventBuilder.ITrackEventListener() {
+                            @Override
+                            public void onEventTracked() {
+                                Log.d("BranchTestBed", "onEventTracked");
+                            }
+
+                            @Override
+                            public void onEventTrackingFailed(BranchError branchError) {
+                                Log.d("BranchTestBed", "onEventTrackingFailed " + branchError.getMessage());
+                            }
+                        })
+                        .track(MainActivity.this);
+            }
+        });
+    }
+
+
+    private void trackStandardEvent() {
+        BranchUniversalObject buo1 = new BranchUniversalObject()
+                .setCanonicalIdentifier("nike/1234")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                .setPrice(101.20)
+                .setProductBrand("Nike")
+                .setProductCategory(ProductCategory.SPORTING_GOODS)
+                .setProductName("Runner")
+                .setProductVariant("XL")
+                .setQuantity(1D)
+                .setRatingCount(5)
+                .setMaximumRating(2.2)
+                .setAverageRating(4.2)
+                .setSku("1101123445")
+                .setTitle("Nike Shoe")
+                .setContentDescription("Start loving your steps");
+
+        BranchUniversalObject buo2 = new BranchUniversalObject()
+                .setCanonicalIdentifier("nike/5324")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                .setPrice(80.20)
+                .setProductBrand("Nike")
+                .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
+                .setProductName("Woolen Sox")
+                .setProductVariant("Xl")
+                .setQuantity(5d)
+                .setRatingCount(5)
+                .setMaximumRating(2.8)
+                .setAverageRating(3.3)
+                .setSku("110112467")
+                .setTitle("Nike Woolen Sox")
+                .setContentDescription("Fine combed woolen sox for those who love your foot");
+
+
     }
 
 
@@ -332,6 +449,8 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
+
+        trackStandardEvent();
     }
 
     @Override
