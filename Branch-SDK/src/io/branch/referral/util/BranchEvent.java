@@ -16,6 +16,4 @@ public class BranchEvent {
     public static final String SHARE_STARTED = "Share Started";
     public static final String SHARE_COMPLETED = "Share Completed";
     public static final String CANONICAL_ID_LIST = "$canonical_identifier_list";
-    public static final String PURCHASE_AMOUNT = "$amount";
-    public static final String PURCHASE_CURRENCY = "$currency";
 }
