@@ -2437,8 +2437,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
                 // Grab the intent only for first activity unless this activity is intent to  force new session
-                boolean grabIntentParams = (activity.getIntent() != null)
-                        && (activityCnt_ == 1 || activity.getIntent().getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false));
+                boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
                 onIntentReady(activity, grabIntentParams);
             }
         }
