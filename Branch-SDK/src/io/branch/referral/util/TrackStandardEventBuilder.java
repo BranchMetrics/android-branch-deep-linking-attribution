@@ -56,7 +56,7 @@ public class TrackStandardEventBuilder extends TrackEventBuilder<TrackStandardEv
                 reqBody.put(Defines.Jsonkey.CustomData.getKey(), customData);
             }
             if (eventData != null) {
-                reqBody.put(Defines.Jsonkey.EventData.getKey(), eventData);
+                reqBody.put(Defines.Jsonkey.EventData.getKey(), eventData.toJson());
             }
             if (buoList.size() > 0) {
                 JSONArray contentItemsArray = new JSONArray();
