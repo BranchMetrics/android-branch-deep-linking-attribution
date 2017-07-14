@@ -342,6 +342,7 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
+     * @param action A {@link BranchStandardEvents }with value of user action name.  See {@link BranchStandardEvents} for Branch defined user events.
      */
     public void userCompletedAction(BranchStandardEvents action) {
         userCompletedAction(action.getName(), null);
