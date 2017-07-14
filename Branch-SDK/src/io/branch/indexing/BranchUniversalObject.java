@@ -26,6 +26,7 @@ import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.Defines;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.BranchStandardEvents;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
@@ -330,6 +331,7 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @param action A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @deprecated please use {@link #userCompletedAction(BranchStandardEvents)} instead
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
@@ -340,15 +342,25 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
+     */
+    public void userCompletedAction(BranchStandardEvents action) {
+        userCompletedAction(action.getName(), null);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
      * @param action   A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
+     * @deprecated please use {@link #userCompletedAction(BranchStandardEvents, HashMap)} instead
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
             canonicalIDList.put(canonicalIdentifier_);
-            actionCompletedPayload.put(BranchEvent.CANONICAL_ID_LIST, canonicalIDList);
             actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
             if (metadata != null) {
                 for (String key : metadata.keySet()) {
@@ -360,6 +372,18 @@ public class BranchUniversalObject implements Parcelable {
             }
         } catch (JSONException ignore) {
         }
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action   A {@link BranchStandardEvents }with value of user action name.  See {@link BranchStandardEvents} for Branch defined user events.
+     * @param metadata A HashMap containing any additional metadata need to add to this user event
+     */
+    public void userCompletedAction(BranchStandardEvents action, HashMap<String, String> metadata) {
+        userCompletedAction(action.getName(), metadata);
     }
 
     /**
@@ -1207,7 +1231,6 @@ public class BranchUniversalObject implements Parcelable {
 
         @Override
         public void onShareLinkDialogLaunched() {
-            userCompletedAction(BranchEvent.SHARE_STARTED);
             if (originalCallback_ != null) {
                 originalCallback_.onShareLinkDialogLaunched();
             }
@@ -1228,7 +1251,7 @@ public class BranchUniversalObject implements Parcelable {
             } else {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
-            userCompletedAction(BranchEvent.SHARE_COMPLETED, metaData);
+            userCompletedAction(BranchStandardEvents.SHARE_CONTENT_ITEM.getName(), metaData);
 
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);

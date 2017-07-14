@@ -6,6 +6,8 @@ package io.branch.referral.util;
  * Branch Defined user events. Please see {@link io.branch.referral.Branch#userCompletedAction(String)} and
  * {@link io.branch.indexing.BranchUniversalObject#userCompletedAction(String)}
  * </p>
+ *
+ * @deprecated Please see {@link BranchStandardEvents}
  */
 public class BranchEvent {
     public static final String VIEW = "View";
