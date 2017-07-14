@@ -1,4 +1,6 @@
 Branch Android SDK change log
+- v2.10.2 More reliable install referrer capture. URL encoding for supporting referring links added in play store referrer
+
 - v2.10.1 Deprecating enablePlayStoreReferrer()
 
 - v2.10.0 Added changes to capture raw play store referrer string when Google search install referrer is present
