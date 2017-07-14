@@ -55,6 +55,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.util.CommerceEvent;
+import io.branch.referral.util.InstantAppUtil;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -3612,20 +3613,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return {@code true}  if current application is an instance of instant app
      */
     public static boolean isInstantApp(@NonNull Context context) {
-        try {
-            Context applicationContext = context.getApplicationContext();
-            if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
-                return isInstantApp.booleanValue();
-            } else {
-                isInstantApp = null;
-                lastApplicationContext = applicationContext;
-                applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
-                isInstantApp = Boolean.valueOf(true);
-            }
-        } catch (Exception ex) {
-            isInstantApp = Boolean.valueOf(false);
-        }
-        return isInstantApp.booleanValue();
+        return InstantAppUtil.isInstantApp(context);
     }
 
     /**
