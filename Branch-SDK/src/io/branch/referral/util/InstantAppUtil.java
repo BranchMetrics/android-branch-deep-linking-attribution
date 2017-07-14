@@ -61,6 +61,7 @@ public class InstantAppUtil {
         return !"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR"));
     }
 
+    @SuppressWarnings("RedundantArrayCreation")
     private static class PackageManagerWrapper {
         private final PackageManager packageManager;
         private static Method isInstantAppMethod;
