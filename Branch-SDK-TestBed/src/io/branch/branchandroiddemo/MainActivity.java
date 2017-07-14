@@ -310,7 +310,8 @@ public class MainActivity extends Activity {
         //        }catch (JSONException ignore){
         //        }
 
-        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
+        // Tracking events
+        findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 new TrackCustomEventBuilder("Trading_Commodity")
@@ -340,7 +341,8 @@ public class MainActivity extends Activity {
                                         .setAverageRating(4.2)
                                         .setSku("1101123445")
                                         .setTitle("Nike Shoe")
-                                        .setContentDescription("Start loving your steps"),
+                                        .setContentDescription("Start loving your steps")
+                                        .setAddress("2440 Ash Street", "Palo Alto", "CA", "USA", "95067"),
                                 new BranchUniversalObject()
                                         .setCanonicalIdentifier("nike/5324")
                                         .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
@@ -357,6 +359,8 @@ public class MainActivity extends Activity {
                                         .setSku("110112467")
                                         .setTitle("Nike Woolen Sox")
                                         .setContentDescription("Fine combed woolen sox for those who love your foot")
+                                        .setAddress("2440 Heaven Lane", "Sand city", null, "USA", "95067")
+
                         )
                         .addCustomData("purchase_loc", "Palo Alto")
                         .addCustomData("store_pickup", "unavailable")
@@ -382,45 +386,6 @@ public class MainActivity extends Activity {
                         .track(MainActivity.this);
             }
         });
-    }
-
-
-    private void trackStandardEvent() {
-        BranchUniversalObject buo1 = new BranchUniversalObject()
-                .setCanonicalIdentifier("nike/1234")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                .setPrice(101.20)
-                .setProductBrand("Nike")
-                .setProductCategory(ProductCategory.SPORTING_GOODS)
-                .setProductName("Runner")
-                .setProductVariant("XL")
-                .setQuantity(1D)
-                .setRatingCount(5)
-                .setMaximumRating(2.2)
-                .setAverageRating(4.2)
-                .setSku("1101123445")
-                .setTitle("Nike Shoe")
-                .setContentDescription("Start loving your steps");
-
-        BranchUniversalObject buo2 = new BranchUniversalObject()
-                .setCanonicalIdentifier("nike/5324")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                .setPrice(80.20)
-                .setProductBrand("Nike")
-                .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
-                .setProductName("Woolen Sox")
-                .setProductVariant("Xl")
-                .setQuantity(5d)
-                .setRatingCount(5)
-                .setMaximumRating(2.8)
-                .setAverageRating(3.3)
-                .setSku("110112467")
-                .setTitle("Nike Woolen Sox")
-                .setContentDescription("Fine combed woolen sox for those who love your foot");
-
-
     }
 
 
@@ -450,7 +415,6 @@ public class MainActivity extends Activity {
             }
         }, this.getIntent().getData(), this);
 
-        trackStandardEvent();
     }
 
     @Override
