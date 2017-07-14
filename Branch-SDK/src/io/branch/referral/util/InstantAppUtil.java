@@ -1,20 +1,17 @@
 package io.branch.referral.util;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.net.Uri.Builder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
  * Created by Evan on 7/14/17.
+ * <p>
+ * Util class for Instant App functions.
+ * </p>
  */
 
 public class InstantAppUtil {
@@ -22,7 +19,7 @@ public class InstantAppUtil {
     private static Context lastApplicationContext = null;
     private static PackageManagerWrapper packageManagerWrapper = null;
 
-    public static boolean isInstantApp(@NonNull Context context) {
+    public static boolean isInstantApp(Context context) {
         if (context == null) {
             throw new IllegalArgumentException("Context must be non-null");
         } else {
@@ -30,7 +27,7 @@ public class InstantAppUtil {
             if (applicationContext == null) {
                 throw new IllegalStateException("Application context is null!");
             } else if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
-                return isInstantApp.booleanValue();
+                return isInstantApp;
             } else {
                 isInstantApp = null;
                 Boolean isInstantAppResult = null;
@@ -46,12 +43,12 @@ public class InstantAppUtil {
                 } else {
                     try {
                         applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
-                        isInstantApp = Boolean.valueOf(true);
+                        isInstantApp = true;
                     } catch (ClassNotFoundException var4) {
-                        isInstantApp = Boolean.valueOf(false);
+                        isInstantApp = false;
                     }
                 }
-                return isInstantApp.booleanValue();
+                return isInstantApp;
             }
         }
     }
@@ -64,24 +61,7 @@ public class InstantAppUtil {
         return !"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR"));
     }
 
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
-        if (activity == null) {
-            throw new IllegalArgumentException("Activity must be non-null");
-        } else if (!isInstantApp(activity)) {
-            return false;
-        } else {
-            Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT").putExtra("callerId", activity.getPackageName()).putExtra("overlay", true);
-            Builder uriBuilder = (new Builder()).scheme("market").authority("details").appendQueryParameter("id", activity.getPackageName());
-            if (!TextUtils.isEmpty(referrer)) {
-                uriBuilder.appendQueryParameter("referrer", referrer);
-            }
-            intent.setData(uriBuilder.build());
-            activity.startActivityForResult(intent, requestCode);
-            return true;
-        }
-    }
-
-    static class PackageManagerWrapper {
+    private static class PackageManagerWrapper {
         private final PackageManager packageManager;
         private static Method isInstantAppMethod;
 
