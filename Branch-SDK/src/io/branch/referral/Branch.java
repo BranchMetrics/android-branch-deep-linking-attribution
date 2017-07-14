@@ -3602,9 +3602,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
 
     ///----------------- Instant App  support--------------------------//
-    private static Context lastApplicationContext = null;
-    private static Boolean isInstantApp = null;
-
     /**
      * Checks if this is an Instant app instance
      *
