@@ -47,11 +47,12 @@ class InstantAppUtil {
             } else {
                 try {
                     applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
-                    isInstantApp = true;
+                    isInstantApp = Boolean.TRUE;
                 } catch (ClassNotFoundException var4) {
-                    isInstantApp = false;
+                    isInstantApp = Boolean.FALSE;
                 }
             }
+
             return isInstantApp;
         }
     }
@@ -67,10 +68,14 @@ class InstantAppUtil {
     @SuppressWarnings("ConstantConditions")
     static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
-            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
+            if (Branch.getIsLogging()) {
+                Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
+            }
             return false;
         } else if (!isInstantApp(activity)) {
-            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
+            if (Branch.getIsLogging()) {
+                Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
+            }
             return false;
         } else {
             Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
@@ -97,7 +102,7 @@ class InstantAppUtil {
         }
 
         Boolean isInstantApp() {
-            if (isAtLeastO()) {
+            if (!isAtLeastO()) {
                 return null;
             } else {
                 if (isInstantAppMethod == null) {
@@ -107,6 +112,7 @@ class InstantAppUtil {
                         return null;
                     }
                 }
+
                 try {
                     return (Boolean) isInstantAppMethod.invoke(this.packageManager, new Object[0]);
                 } catch (IllegalAccessException var2) {
