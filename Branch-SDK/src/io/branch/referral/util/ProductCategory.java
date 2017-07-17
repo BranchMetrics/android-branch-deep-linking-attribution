@@ -43,7 +43,7 @@ public enum ProductCategory {
     public static ProductCategory getByName(String name) {
         ProductCategory productCategoryResult = null;
         for (ProductCategory productCategory : ProductCategory.values()) {
-            if (productCategory.toString().equalsIgnoreCase(name)) {
+            if (productCategory.name.equalsIgnoreCase(name)) {
                 productCategoryResult = productCategory;
                 break;
             }
