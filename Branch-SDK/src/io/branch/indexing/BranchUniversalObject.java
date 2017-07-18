@@ -1000,6 +1000,12 @@ public class BranchUniversalObject implements Parcelable {
     public JSONObject convertToJson() {
         JSONObject buoJsonModel = new JSONObject();
         try {
+            // Add all keys in plane format  initially. All known keys will be replaced with corresponding data type in the following section
+            Set<String> metadataKeys = metadata_.keySet();
+            for (String metadataKey : metadataKeys) {
+                buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
+            }
+
             if (!TextUtils.isEmpty(title_)) {
                 buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
             }
@@ -1032,12 +1038,6 @@ public class BranchUniversalObject implements Parcelable {
             if (price_ != null) {
                 buoJsonModel.put(Defines.Jsonkey.Price.getKey(), price_);
             }
-
-            Set<String> metadataKeys = metadata_.keySet();
-            for (String metadataKey : metadataKeys) {
-                buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
-            }
-
 
             if (contentSchema_ != null) {
                 buoJsonModel.put(Defines.Jsonkey.ContentSchema.getKey(), contentSchema_.getName());
