@@ -12,6 +12,7 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.branchandroiddemo.test.BUOTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -327,38 +328,39 @@ public class MainActivity extends Activity {
                 new TrackStandardEventBuilder(BranchStandardEvents.PURCHASE)
                         .addContentItems(
                                 new BranchUniversalObject()
-                                        .setCanonicalIdentifier("nike/1234")
+                                        .setCanonicalIdentifier("canonicalID/1234")
                                         .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
                                         .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                                         .setPrice(101.20)
-                                        .setProductBrand("Nike")
+                                        .setProductBrand("my_brand1")
                                         .setProductCategory(ProductCategory.SPORTING_GOODS)
-                                        .setProductName("Runner")
-                                        .setProductVariant("XL")
+                                        .setProductName("my_product1")
+                                        .setProductVariant("my_product_variant_1")
                                         .setQuantity(1D)
                                         .setRatingCount(5)
                                         .setMaximumRating(2.2)
                                         .setAverageRating(4.2)
                                         .setSku("1101123445")
-                                        .setTitle("Nike Shoe")
-                                        .setContentDescription("Start loving your steps")
+                                        .setTitle("my_product_title1")
+                                        .setContentDescription("my_product_description1")
                                         .setAddress("2440 Ash Street", "Palo Alto", "CA", "USA", "95067"),
+
                                 new BranchUniversalObject()
-                                        .setCanonicalIdentifier("nike/5324")
+                                        .setCanonicalIdentifier("canonicalID/5324")
                                         .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
                                         .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                                         .setPrice(80.20)
-                                        .setProductBrand("Nike")
+                                        .setProductBrand("my_brand2")
                                         .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
-                                        .setProductName("Woolen Sox")
-                                        .setProductVariant("Xl")
+                                        .setProductName("my_product2")
+                                        .setProductVariant("my_product_variant_2")
                                         .setQuantity(5d)
                                         .setRatingCount(5)
                                         .setMaximumRating(2.8)
                                         .setAverageRating(3.3)
                                         .setSku("110112467")
-                                        .setTitle("Nike Woolen Sox")
-                                        .setContentDescription("Fine combed woolen sox for those who love your foot")
+                                        .setTitle("my_product_title2")
+                                        .setContentDescription("my_product_description2")
                                         .setAddress("2440 Heaven Lane", "Sand city", null, "USA", "95067")
 
                         )
@@ -382,10 +384,11 @@ public class MainActivity extends Activity {
                             public void onEventTrackingFailed(BranchError branchError) {
                                 Log.d("BranchTestBed", "onEventTrackingFailed " + branchError.getMessage());
                             }
-                        })
-                        .track(MainActivity.this);
+                        }).track(MainActivity.this);
             }
         });
+
+        BUOTestRoutines.TestBUOSerialisation();
     }
 
 
