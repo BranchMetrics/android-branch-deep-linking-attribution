@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,9 +24,12 @@ import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.Defines;
+import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.BranchStandardEvents;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
 
 /**
@@ -60,6 +64,35 @@ public class BranchUniversalObject implements Parcelable {
     /* Type of the currency associated with the price */
     private CurrencyType currency_;
 
+    /* Content scheme for this BUO. Enumerated in {@link BranchContentSchema}*/
+    private BranchContentSchema contentSchema_;
+    /* Index mode for  local content indexing */
+    private CONTENT_INDEX_MODE localIndexMode_;
+    /* Quantity of the thing associated with the BUO*/
+    private Double quantity_;
+    /* Holds any associated store keeping unit */
+    private String sku_;
+
+    private String productName_;
+    private String productBrand_;
+    private ProductCategory productCategory_;
+    private String productVariant_;
+    private Double ratingAverage_;
+    private Integer ratingCount_;
+    private Double ratingMax_;
+
+    private String addressStreet_;
+    private String addressCity_;
+    private String addressRegion_;
+    private String addressCountry_;
+    private String addressPostalCode_;
+    private Double latitude_;
+    private Double longitude_;
+    private final ArrayList<String> imageCaptions_;
+    private long creationTimeStamp_;
+    private Integer runTime_;
+
+
     /**
      * Defines the Content indexing modes
      * PUBLIC | PRIVATE
@@ -85,8 +118,11 @@ public class BranchUniversalObject implements Parcelable {
         description_ = "";
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
+        localIndexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default local indexing mode is public
         expirationInMilliSec_ = 0L;
         currency_ = CurrencyType.USD;
+        imageCaptions_ = new ArrayList<>();
+        creationTimeStamp_ = System.currentTimeMillis();
     }
 
     /**
@@ -256,10 +292,24 @@ public class BranchUniversalObject implements Parcelable {
      * @param price    A {@link Double} value specifying the price info associated with BUO
      * @param currency ISO 4217 currency code defined in {@link CurrencyType} for the price
      * @return This instance to allow for chaining of calls to set methods
+     * @deprecated use {@link #setPrice(double)} instead. Please check {@link io.branch.referral.util.TrackStandardEventBuilder} for more info on commerce event tracking with Branch
      */
     public BranchUniversalObject setPrice(double price, CurrencyType currency) {
         price_ = price;
         currency_ = currency;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the price associated with content of this BUO if any
+     * </p>
+     *
+     * @param price A {@link Double} value specifying the price info associated with BUO
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchUniversalObject setPrice(double price) {
+        price_ = price;
         return this;
     }
 
@@ -281,6 +331,7 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @param action A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @deprecated please use {@link #userCompletedAction(BranchStandardEvents)} instead
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
@@ -291,15 +342,26 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
+     * @param action A {@link BranchStandardEvents }with value of user action name.  See {@link BranchStandardEvents} for Branch defined user events.
+     */
+    public void userCompletedAction(BranchStandardEvents action) {
+        userCompletedAction(action.getName(), null);
+    }
+
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
      * @param action   A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
+     * @deprecated please use {@link #userCompletedAction(BranchStandardEvents, HashMap)} instead
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
             canonicalIDList.put(canonicalIdentifier_);
-            actionCompletedPayload.put(BranchEvent.CANONICAL_ID_LIST, canonicalIDList);
             actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
             if (metadata != null) {
                 for (String key : metadata.keySet()) {
@@ -315,6 +377,18 @@ public class BranchUniversalObject implements Parcelable {
 
     /**
      * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action   A {@link BranchStandardEvents }with value of user action name.  See {@link BranchStandardEvents} for Branch defined user events.
+     * @param metadata A HashMap containing any additional metadata need to add to this user event
+     */
+    public void userCompletedAction(BranchStandardEvents action, HashMap<String, String> metadata) {
+        userCompletedAction(action.getName(), metadata);
+    }
+
+    /**
+     * <p>
      * Specifies whether the contents referred by this object is publically indexable
      * </p>
      *
@@ -322,6 +396,91 @@ public class BranchUniversalObject implements Parcelable {
      */
     public boolean isPublicallyIndexable() {
         return indexMode_ == CONTENT_INDEX_MODE.PUBLIC;
+    }
+
+    private boolean isLocallyIndexable() {
+        return localIndexMode_ == CONTENT_INDEX_MODE.PUBLIC;
+    }
+
+
+    public BranchUniversalObject setContentSchema(BranchContentSchema contentSchema) {
+        this.contentSchema_ = contentSchema;
+        return this;
+    }
+
+    public BranchUniversalObject setLocalIndexMode(CONTENT_INDEX_MODE localIndexMode) {
+        this.localIndexMode_ = localIndexMode;
+        return this;
+    }
+
+    public BranchUniversalObject setQuantity(Double quantity) {
+        this.quantity_ = quantity;
+        return this;
+    }
+
+    public BranchUniversalObject setSku(String sku) {
+        this.sku_ = sku;
+        return this;
+    }
+
+    public BranchUniversalObject setProductName(String productName) {
+        this.productName_ = productName;
+        return this;
+    }
+
+    public BranchUniversalObject setProductBrand(String productBrand) {
+        this.productBrand_ = productBrand;
+        return this;
+    }
+
+    public BranchUniversalObject setProductCategory(ProductCategory productCategory) {
+        this.productCategory_ = productCategory;
+        return this;
+    }
+
+    public BranchUniversalObject setProductVariant(String productVariant) {
+        this.productVariant_ = productVariant;
+        return this;
+    }
+
+    public BranchUniversalObject setAverageRating(Double ratingAverage) {
+        this.ratingAverage_ = ratingAverage;
+        return this;
+    }
+
+    public BranchUniversalObject setRatingCount(Integer ratingCount) {
+        this.ratingCount_ = ratingCount;
+        return this;
+    }
+
+    public BranchUniversalObject setMaximumRating(Double ratingMax) {
+        this.ratingMax_ = ratingMax;
+        return this;
+    }
+
+    public BranchUniversalObject setAddress(String streetName, String cityName, String region, String country, String postalCode) {
+        this.addressStreet_ = streetName;
+        this.addressCity_ = cityName;
+        this.addressRegion_ = region;
+        this.addressCountry_ = country;
+        this.addressPostalCode_ = postalCode;
+        return this;
+    }
+
+    public BranchUniversalObject setLocation(double latitude, double longitude) {
+        this.latitude_ = latitude;
+        this.longitude_ = longitude;
+        return this;
+    }
+
+    public BranchUniversalObject addImageCaptions(String... captions) {
+        Collections.addAll(imageCaptions_, captions);
+        return this;
+    }
+
+    public BranchUniversalObject setRunTime(Integer runTime) {
+        this.runTime_ = runTime;
+        return this;
     }
 
     /**
@@ -429,6 +588,7 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @return {@link String} with ISO 4217 for this currency. Empty string if there is no currency type set
+     * @deprecated Please check {@link io.branch.referral.util.TrackStandardEventBuilder} for more info on commerce event tracking with Branch
      */
     public String getCurrencyType() {
         return currency_.toString();
@@ -652,8 +812,8 @@ public class BranchUniversalObject implements Parcelable {
         }
         shortLinkBuilder.addParameters(Defines.Jsonkey.PublicallyIndexable.getKey(), "" + isPublicallyIndexable());
         if (price_ != null) {
-            shortLinkBuilder.addParameters(BranchEvent.PURCHASE_AMOUNT, "" + price_);
-            shortLinkBuilder.addParameters(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
+            shortLinkBuilder.addParameters(Defines.Jsonkey.Price.getKey(), "" + price_);
+            shortLinkBuilder.addParameters(Defines.Jsonkey.Currency.getKey(), currency_.toString());
         }
         for (String key : metadata_.keySet()) {
             shortLinkBuilder.addParameters(key, metadata_.get(key));
@@ -724,11 +884,8 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
                 branchUniversalObject.expirationInMilliSec_ = jsonObject.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
             }
-            if (jsonObject.has(BranchEvent.PURCHASE_AMOUNT)) {
-                branchUniversalObject.price_ = jsonObject.getDouble(BranchEvent.PURCHASE_AMOUNT);
-            }
-            if (jsonObject.has(BranchEvent.PURCHASE_CURRENCY)) {
-                branchUniversalObject.currency_ = CurrencyType.valueOf(jsonObject.getString(BranchEvent.PURCHASE_CURRENCY));
+            if (jsonObject.has(Defines.Jsonkey.Price.getKey())) {
+                branchUniversalObject.price_ = jsonObject.getDouble(Defines.Jsonkey.Price.getKey());
             }
 
             Iterator<String> keys = jsonObject.keys();
@@ -760,6 +917,74 @@ public class BranchUniversalObject implements Parcelable {
                     branchUniversalObject.indexMode_ = jsonObject.getInt(Defines.Jsonkey.PublicallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
                 }
             }
+
+            if (jsonObject.has(Defines.Jsonkey.ContentSchema.getKey())) {
+                branchUniversalObject.contentSchema_ = BranchContentSchema.getByName(jsonObject.getString(Defines.Jsonkey.ContentSchema.getKey()));
+            }
+            if (jsonObject.has(Defines.Jsonkey.LocallyIndexable.getKey())) {
+                branchUniversalObject.localIndexMode_ = jsonObject.getBoolean(Defines.Jsonkey.LocallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+            }
+            if (jsonObject.has(Defines.Jsonkey.Quantity.getKey())) {
+                branchUniversalObject.quantity_ = jsonObject.getDouble(Defines.Jsonkey.Quantity.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.SKU.getKey())) {
+                branchUniversalObject.sku_ = jsonObject.getString(Defines.Jsonkey.SKU.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ProductName.getKey())) {
+                branchUniversalObject.productName_ = jsonObject.getString(Defines.Jsonkey.ProductName.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ProductBrand.getKey())) {
+                branchUniversalObject.productBrand_ = jsonObject.getString(Defines.Jsonkey.ProductBrand.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ProductCategory.getKey())) {
+                branchUniversalObject.productCategory_ = ProductCategory.getByName(jsonObject.getString(Defines.Jsonkey.ProductCategory.getKey()));
+            }
+            if (jsonObject.has(Defines.Jsonkey.ProductVariant.getKey())) {
+                branchUniversalObject.productVariant_ = jsonObject.getString(Defines.Jsonkey.ProductVariant.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.RatingAverage.getKey())) {
+                branchUniversalObject.ratingAverage_ = jsonObject.getDouble(Defines.Jsonkey.RatingAverage.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.RatingCount.getKey())) {
+                branchUniversalObject.ratingCount_ = jsonObject.getInt(Defines.Jsonkey.RatingCount.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.RatingMax.getKey())) {
+                branchUniversalObject.ratingMax_ = jsonObject.getDouble(Defines.Jsonkey.RatingMax.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.AddressStreet.getKey())) {
+                branchUniversalObject.addressStreet_ = jsonObject.getString(Defines.Jsonkey.AddressStreet.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.AddressCity.getKey())) {
+                branchUniversalObject.addressCity_ = jsonObject.getString(Defines.Jsonkey.AddressCity.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.AddressRegion.getKey())) {
+                branchUniversalObject.addressRegion_ = jsonObject.getString(Defines.Jsonkey.AddressRegion.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.AddressCountry.getKey())) {
+                branchUniversalObject.addressCountry_ = jsonObject.getString(Defines.Jsonkey.AddressCountry.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.AddressPostalCode.getKey())) {
+                branchUniversalObject.addressPostalCode_ = jsonObject.getString(Defines.Jsonkey.AddressPostalCode.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.Latitude.getKey())) {
+                branchUniversalObject.latitude_ = jsonObject.getDouble(Defines.Jsonkey.Latitude.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.Longitude.getKey())) {
+                branchUniversalObject.longitude_ = jsonObject.getDouble(Defines.Jsonkey.Longitude.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.ImageCaptions.getKey())) {
+                JSONArray imageCaptionJsonArray = jsonObject.getJSONArray(Defines.Jsonkey.ImageCaptions.getKey());
+                for (int i = 0; i < imageCaptionJsonArray.length(); i++) {
+                    branchUniversalObject.imageCaptions_.add(imageCaptionJsonArray.getString(i));
+                }
+            }
+            if (jsonObject.has(Defines.Jsonkey.CreationTimestamp.getKey())) {
+                branchUniversalObject.creationTimeStamp_ = jsonObject.getLong(Defines.Jsonkey.CreationTimestamp.getKey());
+            }
+            if (jsonObject.has(Defines.Jsonkey.Runtime.getKey())) {
+                branchUniversalObject.runTime_ = jsonObject.getInt(Defines.Jsonkey.Runtime.getKey());
+            }
+
         } catch (Exception ignore) {
         }
         return branchUniversalObject;
@@ -775,6 +1000,12 @@ public class BranchUniversalObject implements Parcelable {
     public JSONObject convertToJson() {
         JSONObject buoJsonModel = new JSONObject();
         try {
+            // Add all keys in plane format  initially. All known keys will be replaced with corresponding data type in the following section
+            Set<String> metadataKeys = metadata_.keySet();
+            for (String metadataKey : metadataKeys) {
+                buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
+            }
+
             if (!TextUtils.isEmpty(title_)) {
                 buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
             }
@@ -805,13 +1036,71 @@ public class BranchUniversalObject implements Parcelable {
             }
             buoJsonModel.put(Defines.Jsonkey.PublicallyIndexable.getKey(), isPublicallyIndexable());
             if (price_ != null) {
-                buoJsonModel.put(BranchEvent.PURCHASE_AMOUNT, price_);
-                buoJsonModel.put(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
+                buoJsonModel.put(Defines.Jsonkey.Price.getKey(), price_);
             }
 
-            Set<String> metadataKeys = metadata_.keySet();
-            for (String metadataKey : metadataKeys) {
-                buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
+            if (contentSchema_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.ContentSchema.getKey(), contentSchema_.getName());
+            }
+            buoJsonModel.put(Defines.Jsonkey.LocallyIndexable.getKey(), isLocallyIndexable());
+            if (quantity_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.Quantity.getKey(), quantity_);
+            }
+            if (!TextUtils.isEmpty(sku_)) {
+                buoJsonModel.put(Defines.Jsonkey.SKU.getKey(), sku_);
+            }
+            if (!TextUtils.isEmpty(productName_)) {
+                buoJsonModel.put(Defines.Jsonkey.ProductName.getKey(), productName_);
+            }
+            if (!TextUtils.isEmpty(productBrand_)) {
+                buoJsonModel.put(Defines.Jsonkey.ProductBrand.getKey(), productBrand_);
+            }
+            if (productCategory_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.ProductCategory.getKey(), productCategory_.getName());
+            }
+            if (!TextUtils.isEmpty(productVariant_)) {
+                buoJsonModel.put(Defines.Jsonkey.ProductVariant.getKey(), productVariant_);
+            }
+            if (ratingAverage_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.RatingAverage.getKey(), ratingAverage_);
+            }
+            if (ratingCount_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.RatingCount.getKey(), ratingCount_);
+            }
+            if (ratingMax_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.RatingMax.getKey(), ratingMax_);
+            }
+            if (!TextUtils.isEmpty(addressStreet_)) {
+                buoJsonModel.put(Defines.Jsonkey.AddressStreet.getKey(), addressStreet_);
+            }
+            if (!TextUtils.isEmpty(addressCity_)) {
+                buoJsonModel.put(Defines.Jsonkey.AddressCity.getKey(), addressCity_);
+            }
+            if (!TextUtils.isEmpty(addressRegion_)) {
+                buoJsonModel.put(Defines.Jsonkey.AddressRegion.getKey(), addressRegion_);
+            }
+            if (!TextUtils.isEmpty(addressCountry_)) {
+                buoJsonModel.put(Defines.Jsonkey.AddressCountry.getKey(), addressCountry_);
+            }
+            if (!TextUtils.isEmpty(addressPostalCode_)) {
+                buoJsonModel.put(Defines.Jsonkey.AddressPostalCode.getKey(), addressPostalCode_);
+            }
+            if (latitude_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.Latitude.getKey(), latitude_);
+            }
+            if (longitude_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.Longitude.getKey(), longitude_);
+            }
+            if (imageCaptions_.size() > 0) {
+                JSONArray imageCaptionsArray = new JSONArray();
+                buoJsonModel.put(Defines.Jsonkey.ImageCaptions.getKey(), imageCaptionsArray);
+                for (String caption : imageCaptions_) {
+                    imageCaptionsArray.put(caption);
+                }
+            }
+            buoJsonModel.put(Defines.Jsonkey.CreationTimestamp.getKey(), creationTimeStamp_);
+            if (runTime_ != null) {
+                buoJsonModel.put(Defines.Jsonkey.Runtime.getKey(), runTime_);
             }
 
         } catch (JSONException ignore) {
@@ -856,6 +1145,30 @@ public class BranchUniversalObject implements Parcelable {
             dest.writeString(entry.getKey());
             dest.writeString(entry.getValue());
         }
+
+        dest.writeInt(contentSchema_.ordinal());
+        dest.writeInt(localIndexMode_.ordinal());
+        dest.writeDouble(quantity_);
+        dest.writeString(sku_);
+        dest.writeString(productName_);
+        dest.writeString(productBrand_);
+        dest.writeInt(productCategory_.ordinal());
+        dest.writeString(productVariant_);
+        dest.writeDouble(ratingAverage_);
+        dest.writeInt(ratingCount_);
+        dest.writeDouble(ratingMax_);
+
+        dest.writeString(addressStreet_);
+        dest.writeString(addressCity_);
+        dest.writeString(addressRegion_);
+        dest.writeString(addressCountry_);
+        dest.writeString(addressPostalCode_);
+        dest.writeDouble(latitude_);
+        dest.writeDouble(longitude_);
+
+        dest.writeSerializable(imageCaptions_);
+        dest.writeLong(creationTimeStamp_);
+        dest.writeInt(runTime_);
     }
 
     private BranchUniversalObject(Parcel in) {
@@ -880,6 +1193,31 @@ public class BranchUniversalObject implements Parcelable {
         for (int i = 0; i < metadataSize; i++) {
             metadata_.put(in.readString(), in.readString());
         }
+
+        contentSchema_ = BranchContentSchema.values()[in.readInt()];
+        localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
+        quantity_ = in.readDouble();
+        sku_ = in.readString();
+        productName_ = in.readString();
+        productBrand_ = in.readString();
+        productCategory_ = ProductCategory.values()[in.readInt()];
+        productVariant_ = in.readString();
+        ratingAverage_ = in.readDouble();
+        ratingCount_ = in.readInt();
+        ratingMax_ = in.readDouble();
+
+        addressStreet_ = in.readString();
+        addressCity_ = in.readString();
+        addressRegion_ = in.readString();
+        addressCountry_ = in.readString();
+        addressPostalCode_ = in.readString();
+        latitude_ = in.readDouble();
+        longitude_ = in.readDouble();
+        @SuppressWarnings("unchecked")
+        ArrayList<String> imageCaptionsTemp = (ArrayList<String>) in.readSerializable();
+        imageCaptions_.addAll(imageCaptionsTemp);
+        creationTimeStamp_ = in.readLong();
+        runTime_ = in.readInt();
     }
 
     /**
@@ -894,7 +1232,6 @@ public class BranchUniversalObject implements Parcelable {
 
         @Override
         public void onShareLinkDialogLaunched() {
-            userCompletedAction(BranchEvent.SHARE_STARTED);
             if (originalCallback_ != null) {
                 originalCallback_.onShareLinkDialogLaunched();
             }
@@ -915,7 +1252,7 @@ public class BranchUniversalObject implements Parcelable {
             } else {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
-            userCompletedAction(BranchEvent.SHARE_COMPLETED, metaData);
+            userCompletedAction(BranchStandardEvents.SHARE_CONTENT_ITEM.getName(), metaData);
 
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);

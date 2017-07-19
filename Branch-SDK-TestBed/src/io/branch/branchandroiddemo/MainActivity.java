@@ -13,6 +13,7 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.branchandroiddemo.test.BUOTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -21,9 +22,15 @@ import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.BranchEventData;
+import io.branch.referral.util.BranchStandardEvents;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.util.TrackCustomEventBuilder;
+import io.branch.referral.util.TrackEventBuilder;
+import io.branch.referral.util.TrackStandardEventBuilder;
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -52,8 +59,8 @@ public class MainActivity extends Activity {
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
                 .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setContentType("application/vnd.businessobjects")
-                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
-                .setPrice(5.00, CurrencyType.USD)
+                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
+                .setPrice(5.00)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
                 .addContentMetadata("Metadata_Key1", "Metadata_value1")
@@ -240,7 +247,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                        //.setAlias("mylinkName") // In case you need to white label your link
+                                //.setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -309,6 +316,84 @@ public class MainActivity extends Activity {
         //        }catch (JSONException ignore){
         //        }
 
+        // Tracking events
+        findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new TrackCustomEventBuilder("Trading_Commodity")
+                        .addCustomData("Trading_Item", "CLD")
+                        .addCustomData("Sell_Rate", "+1.2%")
+                        .track(MainActivity.this);
+            }
+        });
+
+        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new TrackStandardEventBuilder(BranchStandardEvents.PURCHASE)
+                        .addContentItems(
+                                new BranchUniversalObject()
+                                        .setCanonicalIdentifier("canonicalID/1234")
+                                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                                        .setPrice(101.20)
+                                        .setProductBrand("my_brand1")
+                                        .setProductCategory(ProductCategory.SPORTING_GOODS)
+                                        .setProductName("my_product1")
+                                        .setProductVariant("my_product_variant_1")
+                                        .setQuantity(1D)
+                                        .setRatingCount(5)
+                                        .setMaximumRating(2.2)
+                                        .setAverageRating(4.2)
+                                        .setSku("1101123445")
+                                        .setTitle("my_product_title1")
+                                        .setContentDescription("my_product_description1")
+                                        .setAddress("2440 Ash Street", "Palo Alto", "CA", "USA", "95067"),
+
+                                new BranchUniversalObject()
+                                        .setCanonicalIdentifier("canonicalID/5324")
+                                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                                        .setPrice(80.20)
+                                        .setProductBrand("my_brand2")
+                                        .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
+                                        .setProductName("my_product2")
+                                        .setProductVariant("my_product_variant_2")
+                                        .setQuantity(5d)
+                                        .setRatingCount(5)
+                                        .setMaximumRating(2.8)
+                                        .setAverageRating(3.3)
+                                        .setSku("110112467")
+                                        .setTitle("my_product_title2")
+                                        .setContentDescription("my_product_description2")
+                                        .setAddress("2440 Heaven Lane", "Sand city", null, "USA", "95067")
+
+                        )
+                        .addCustomData("purchase_loc", "Palo Alto")
+                        .addCustomData("store_pickup", "unavailable")
+                        .addEventData(new BranchEventData("tras_Id_1232343434")
+                                .setAffiliation("high_fi")
+                                .setCoupon("promo-1234")
+                                .setCurrency(CurrencyType.USD)
+                                .setDescription("Preferred purchase")
+                                .setRevenue(180.2)
+                                .setShipping(10.5)
+                                .setTax(13.5))
+                        .setCallback(new TrackEventBuilder.ITrackEventListener() {
+                            @Override
+                            public void onEventTracked() {
+                                Log.d("BranchTestBed", "onEventTracked");
+                            }
+
+                            @Override
+                            public void onEventTrackingFailed(BranchError branchError) {
+                                Log.d("BranchTestBed", "onEventTrackingFailed " + branchError.getMessage());
+                            }
+                        }).track(MainActivity.this);
+            }
+        });
+
+        BUOTestRoutines.TestBUOSerialisation();
     }
 
 
@@ -337,6 +422,7 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
+
     }
 
     @Override

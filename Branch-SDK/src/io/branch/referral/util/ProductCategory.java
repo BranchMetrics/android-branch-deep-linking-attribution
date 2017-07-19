@@ -2,6 +2,9 @@ package io.branch.referral.util;
 
 /**
  * Created by Evan on 1/4/17.
+ * <p>
+ * Enumeration for product categories to be used with Branch commercial events
+ * </p>
  */
 
 public enum ProductCategory {
@@ -26,15 +29,27 @@ public enum ProductCategory {
     SPORTING_GOODS("Sporting Goods"),
     TOYS_AND_GAMES("Toys & Games"),
     VEHICLES_AND_PARTS("Vehicles & Parts");
-    private String type;
 
-    ProductCategory(String type) {
-        this.type = type;
+    private String name;
+
+    ProductCategory(String name) {
+        this.name = name;
     }
 
-    @Override
-    public String toString() {
-        return type;
+    public String getName() {
+        return name;
     }
+
+    public static ProductCategory getByName(String name) {
+        ProductCategory productCategoryResult = null;
+        for (ProductCategory productCategory : ProductCategory.values()) {
+            if (productCategory.name.equalsIgnoreCase(name)) {
+                productCategoryResult = productCategory;
+                break;
+            }
+        }
+        return productCategoryResult;
+    }
+
 
 }

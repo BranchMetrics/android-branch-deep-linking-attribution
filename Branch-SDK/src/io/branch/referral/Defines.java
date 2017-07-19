@@ -122,7 +122,44 @@ public class Defines {
         ContentDiscovery("cd"),
         Environment("environment"),
         InstantApp("INSTANT_APP"),
-        NativeApp("FULL_APP");
+        NativeApp("FULL_APP"),
+
+        TransactionID("transaction_id"),
+        Currency("currency"),
+        Revenue("revenue"),
+        Shipping("shipping"),
+        Tax("tax"),
+        Coupon("coupon"),
+        Affiliation("affiliation"),
+        Description("description"),
+
+        Name("name"),
+        CustomData("custom_data"),
+        EventData("event_data"),
+        ContentItems("content_items"),
+        ContentSchema("$content_schema"),
+        LocallyIndexable("$locally_indexable"),
+        Price("$price"),
+        Quantity("$quantity"),
+        SKU("$sku"),
+        ProductName("$product_name"),
+        ProductBrand("$product_brand"),
+        ProductCategory("$product_category"),
+        ProductVariant("$product_variant"),
+        RatingAverage("$rating_average"),
+        RatingCount("$rating_count"),
+        RatingMax("$rating_max"),
+        AddressStreet("$address_street"),
+        AddressCity("$address_city"),
+        AddressRegion("$address_region"),
+        AddressCountry("$address_country"),
+        AddressPostalCode("$address_postal_code"),
+        Latitude("$latitude"),
+        Longitude("$longitude"),
+        ImageCaptions("$image_captions"),
+        CreationTimestamp("$creation_timestamp"),
+        Runtime("$run_time");
+
         
         private String key = "";
         
@@ -163,7 +200,9 @@ public class Defines {
         ValidateReferralCode("v1/referralcode/"),
         ApplyReferralCode("v1/applycode/"),
         DebugConnect("v1/debug/connect"),
-        ContentEvent("v1/content-events");
+        ContentEvent("v1/content-events"),
+        TrackStandardEvent("v2/event/standard"),
+        TrackCustomEvent("v2/event/custom");
         
         private String key = "";
         
