@@ -2283,9 +2283,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         registerInstallOrOpen(request, callback);
     }
 
-    private void onIntentReady(Activity activity) {
+    private void onIntentReady(Activity activity, boolean grabIntentParams) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        if (activity.getIntent() != null) {
+        //if (activity.getIntent() != null) {
+        if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
@@ -2435,7 +2436,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             currentActivityReference_ = new WeakReference<>(activity);
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
-                onIntentReady(activity);
+                // Grab the intent only for first activity unless this activity is intent to  force new session
+                boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
+                onIntentReady(activity, grabIntentParams);
             }
         }
 
