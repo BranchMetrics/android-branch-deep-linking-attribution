@@ -54,8 +54,10 @@ import java.util.concurrent.TimeoutException;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.network.BranchRemoteInterface;
+import io.branch.referral.util.BranchStandardEvents;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.TrackStandardEventBuilder;
 
 /**
  * <p>
@@ -3527,11 +3529,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void registerView(BranchUniversalObject
                                      branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
-            ServerRequest req;
-            req = new ServerRequestRegisterView(context_, branchUniversalObject, systemObserver_, callback);
-            if (!req.constructError_ && !req.handleErrors(context_)) {
-                handleNewRequest(req);
-            }
+            new TrackStandardEventBuilder(BranchStandardEvents.VIEW_CONTENT)
+                    .addContentItems(branchUniversalObject)
+                    .track(context_);
         }
     }
 
