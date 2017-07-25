@@ -1,4 +1,6 @@
 Branch Android SDK change log
+- v2.10.3 Fix for reading intent from launcher activity only unless forced to restart session. Instant app utility methods fix for Android `O`
+
 - v2.10.2 More reliable install referrer capture. URL encoding for supporting referring links added in play store referrer
 
 - v2.10.1 Deprecating enablePlayStoreReferrer()

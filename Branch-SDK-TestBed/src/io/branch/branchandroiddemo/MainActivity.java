@@ -2,6 +2,7 @@ package io.branch.branchandroiddemo;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +20,7 @@ import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
+import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BranchEventData;
 import io.branch.referral.util.BranchStandardEvents;
@@ -221,6 +223,9 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 Log.i("BranchTestBed", "Getting credit history...");
                 Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
+                // Test for preventing second intent reading
+                i.setData(Uri.parse("https://testintentread.app.link?error_if_assigned_to_android_app_link"));
+                i.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
                 startActivity(i);
             }
         });

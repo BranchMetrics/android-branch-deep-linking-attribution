@@ -2285,9 +2285,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         registerInstallOrOpen(request, callback);
     }
 
-    private void onIntentReady(Activity activity) {
+    private void onIntentReady(Activity activity, boolean grabIntentParams) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        if (activity.getIntent() != null) {
+        //if (activity.getIntent() != null) {
+        if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
@@ -2437,7 +2438,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             currentActivityReference_ = new WeakReference<>(activity);
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
-                onIntentReady(activity);
+                // Grab the intent only for first activity unless this activity is intent to  force new session
+                boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
+                onIntentReady(activity, grabIntentParams);
             }
         }
 
@@ -3602,9 +3605,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
 
     ///----------------- Instant App  support--------------------------//
-    private static Context lastApplicationContext = null;
-    private static Boolean isInstantApp = null;
-
     /**
      * Checks if this is an Instant app instance
      *
@@ -3612,20 +3612,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return {@code true}  if current application is an instance of instant app
      */
     public static boolean isInstantApp(@NonNull Context context) {
-        try {
-            Context applicationContext = context.getApplicationContext();
-            if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
-                return isInstantApp.booleanValue();
-            } else {
-                isInstantApp = null;
-                lastApplicationContext = applicationContext;
-                applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
-                isInstantApp = Boolean.valueOf(true);
-            }
-        } catch (Exception ex) {
-            isInstantApp = Boolean.valueOf(false);
-        }
-        return isInstantApp.booleanValue();
+        return InstantAppUtil.isInstantApp(context);
     }
 
     /**
@@ -3655,7 +3642,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        return doShowInstallPrompt(activity, requestCode, installReferrerString);
+        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
@@ -3669,7 +3656,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
-        return doShowInstallPrompt(activity, requestCode, installReferrerString);
+        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
@@ -3695,29 +3682,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
-    }
-
-
-    private static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
-        if (activity == null) {
-            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
-            return false;
-        } else if (!isInstantApp(activity)) {
-            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
-            return false;
-        } else {
-            Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
-                    .putExtra("callerId", activity.getPackageName())
-                    .putExtra("overlay", true);
-            Uri.Builder uriBuilder = (new Uri.Builder()).scheme("market").authority("details").appendQueryParameter("id", activity.getPackageName());
-            if (!TextUtils.isEmpty(referrer)) {
-                uriBuilder.appendQueryParameter("referrer", referrer);
-            }
-
-            intent.setData(uriBuilder.build());
-            activity.startActivityForResult(intent, requestCode);
-            return true;
-        }
     }
 
 }
