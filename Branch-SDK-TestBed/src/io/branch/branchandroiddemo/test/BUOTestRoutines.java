@@ -10,6 +10,8 @@ import java.util.Iterator;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.BranchContentSchema;
+import io.branch.referral.util.ContentMetadata;
+import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.ProductCategory;
 
 /**
@@ -30,34 +32,34 @@ public class BUOTestRoutines {
         if (doTestBUOSerialisation(testBuo)) {
             testBuo = new BranchUniversalObject()
                     .setCanonicalIdentifier("myprod/1234")
-                    .addKeyWord("TestKeyword1")
-                    .addKeyWord("Testkeyword2")
-                    .addContentMetadata("Metadatakey1", "MetadataVal1")
-                    .addContentMetadata("Metadatakey2", "MetadataVal2")
-                    .addImageCaptions("img caption 1", "img caption 2")
-                    .setCanonicalUrl("canonical/url")
-                    .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-                    .setLocation(157.2, -97.2)
-                    .setRunTime(1200)
-                    .setContentType("my content type")
-                    .setContentExpiration(new Date(4345343545555L))
+                    .setCanonicalUrl("https://test_canonical_url")
+                    .setContentDescription("est_content_description")
+                    .setContentExpiration(new Date(122323432444L))
+                    .setContentImageUrl("https://test_content_img_url")
                     .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                    .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                    .setPrice(101.20)
-                    .setProductBrand("MyProdBrand")
-                    .setProductCategory(ProductCategory.SPORTING_GOODS)
-                    .setProductName("MyproductName")
-                    .setProductVariant("prod-12")
-                    .setQuantity(1D)
-                    .setRatingCount(5)
-                    .setMaximumRating(2.2)
-                    .setAverageRating(4.2)
-                    .setSku("1101123445")
-                    .setTitle("my content title")
-                    .setContentDescription("My content description")
-                    .setAddress("2440 Ash Street", "Palo Alto", "CA", "USA", "95067");
-            succeeded = doTestBUOSerialisation(testBuo);
+                    .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                    .setTitle("test_title")
+                    .setContentMetadata(
+                            new ContentMetadata()
+                                    .addCustomMetadata("custom_metadata_key1", "custom_metadata_val1")
+                                    .addCustomMetadata("custom_metadata_key1", "custom_metadata_val1")
+                                    .addImageCaptions("image_caption_1", "image_caption2", "image_caption3")
+                                    .setAddress("Street_Name", "test city", "test_state", "test_country", "test_postal_code")
+                                    .setRating(5.2, 6.0, 5)
+                                    .setLocation(-151.67, -124.0)
+                                    .setPrice(10.0, CurrencyType.USD)
+                                    .setProductBrand("test_prod_brand")
+                                    .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
+                                    .setProductName("test_prod_name")
+                                    .setProductVariant("test_prod_variant")
+                                    .setQuantity(1.5)
+                                    .setSku("test_sku")
+                                    .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
 
+                    )
+                    .addKeyWord("keyword1")
+                    .addKeyWord("keyword2");
+            succeeded = doTestBUOSerialisation(testBuo);
         }
         if (succeeded) {
             Log.d("BranchTestBed", "Passed BUO serialisation - de-serialisation test.");
@@ -68,22 +70,25 @@ public class BUOTestRoutines {
     private static boolean doTestBUOSerialisation(BranchUniversalObject buo) {
         boolean isPassed = false;
         JSONObject testBuoJson1 = buo.convertToJson();
-        buo = BranchUniversalObject.createInstance(testBuoJson1);
-        JSONObject testBuoJson2 = buo.convertToJson();
+        BranchUniversalObject buo2 = BranchUniversalObject.createInstance(testBuoJson1);
+        JSONObject testBuoJson2 = buo2.convertToJson();
+        return (checkIfIdenticalJson(buo.getContentMetadata().convertToJson(), buo2.getContentMetadata().convertToJson()))
+                && (checkIfIdenticalJson(testBuoJson1, testBuoJson2));
+    }
 
-        if (testBuoJson1.length() == testBuoJson2.length()) {
-            Iterator<String> keys = testBuoJson1.keys();
+    private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2) {
+        boolean isIdentical = false;
+        if (obj1.length() == obj2.length()) {
+            Iterator<String> keys = obj1.keys();
             try {
                 while (keys.hasNext()) {
                     String currKey = keys.next();
-                    if (testBuoJson1.get(currKey).equals(testBuoJson2.opt(currKey))) {
-                        testBuoJson2.remove(currKey);
+                    if (obj1.get(currKey).equals(obj2.opt(currKey))) {
+                        obj2.remove(currKey);
                     }
                 }
-                if (testBuoJson2.length() == 0) {
-                    isPassed = true;
-                } else {
-                    Log.e("BranchTestBed", "Error Failed BUO serialisation - de-serialisation test. Unmatched keys in de-serialised version " + testBuoJson2.toString(4));
+                if (obj2.length() == 0) {
+                    isIdentical = true;
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -92,6 +97,8 @@ public class BUOTestRoutines {
         } else {
             Log.e("BranchTestBed", "Error : BUO serialisation error. Reason: Additional entries in de-serialised object");
         }
-        return isPassed;
+
+        return isIdentical;
     }
+
 }
