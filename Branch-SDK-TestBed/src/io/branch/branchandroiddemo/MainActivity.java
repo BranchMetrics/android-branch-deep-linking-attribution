@@ -13,6 +13,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 import io.branch.branchandroiddemo.test.BUOTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -22,15 +24,15 @@ import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
-import io.branch.referral.util.BranchEventData;
-import io.branch.referral.util.BranchStandardEvents;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
+import io.branch.referral.util.BranchContentSchema;
+import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.referral.util.TrackCustomEventBuilder;
-import io.branch.referral.util.TrackEventBuilder;
-import io.branch.referral.util.TrackStandardEventBuilder;
+
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -54,17 +56,30 @@ public class MainActivity extends Activity {
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
                 .setCanonicalUrl("https://branch.io/deepviews")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setTitle("My Content Title")
-                .setContentDescription("My Content Description ")
+                .setContentDescription("my_product_description1")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                .setContentType("application/vnd.businessobjects")
-                        //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
-                .setPrice(5.00)
+                .setContentExpiration(new Date(212123232544L))
+                .setContentImageUrl("https://test_img_url")
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
-                .addContentMetadata("Metadata_Key1", "Metadata_value1")
-                .addContentMetadata("Metadata_Key2", "Metadata_value2");
+                .setContentMetadata(
+                        new ContentMetadata().setProductName("my_product_name1")
+                                .setProductBrand("my_prod_Brand1")
+                                .setProductVariant("3T")
+                                .setProductCategory(ProductCategory.BABY_AND_TODDLER)
+                                .setAddress("Street_name1", "city1", "Region1", "Country1", "postal_code")
+                                .setLocation(12.07, -97.5)
+                                .setSku("1994320302")
+                                .setRating(5.0, 7.0, 5)
+                                .addImageCaptions("my_img_caption1", "my_img_caption_2")
+                                .setQuantity(2.0)
+                                .setPrice(23.2, CurrencyType.USD)
+                                .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
+                                .addCustomMetadata("Custom_Content_metadata_key1", "Custom_Content_metadata_val1")
+                );
 
 
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
@@ -320,76 +335,32 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                new TrackCustomEventBuilder("Trading_Commodity")
-                        .addCustomData("Trading_Item", "CLD")
-                        .addCustomData("Sell_Rate", "+1.2%")
-                        .track(MainActivity.this);
+                new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                        .addCustomProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
+                        .addCustomProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
+                        .logEvent(MainActivity.this);
             }
         });
 
         findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                new TrackStandardEventBuilder(BranchStandardEvents.PURCHASE)
-                        .addContentItems(
-                                new BranchUniversalObject()
-                                        .setCanonicalIdentifier("canonicalID/1234")
-                                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                                        .setPrice(101.20)
-                                        .setProductBrand("my_brand1")
-                                        .setProductCategory(ProductCategory.SPORTING_GOODS)
-                                        .setProductName("my_product1")
-                                        .setProductVariant("my_product_variant_1")
-                                        .setQuantity(1D)
-                                        .setRatingCount(5)
-                                        .setMaximumRating(2.2)
-                                        .setAverageRating(4.2)
-                                        .setSku("1101123445")
-                                        .setTitle("my_product_title1")
-                                        .setContentDescription("my_product_description1")
-                                        .setAddress("2440 Ash Street", "Palo Alto", "CA", "USA", "95067"),
+                new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                        .setAffiliation("test_affiliation")
+                        .setCoupon("test_coupon")
+                        .setCurrency(CurrencyType.USD)
+                        .setDescription("Event _description")
+                        .setShipping(10.2)
+                        .setTax(12.3)
+                        .setRevenue(1.5)
+                        .setCondition(BranchEvent.CONDITION.FAIR)
+                        .setTransactionID("12344555")
+                        .addCustomProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addCustomProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
 
-                                new BranchUniversalObject()
-                                        .setCanonicalIdentifier("canonicalID/5324")
-                                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                                        .setPrice(80.20)
-                                        .setProductBrand("my_brand2")
-                                        .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
-                                        .setProductName("my_product2")
-                                        .setProductVariant("my_product_variant_2")
-                                        .setQuantity(5d)
-                                        .setRatingCount(5)
-                                        .setMaximumRating(2.8)
-                                        .setAverageRating(3.3)
-                                        .setSku("110112467")
-                                        .setTitle("my_product_title2")
-                                        .setContentDescription("my_product_description2")
-                                        .setAddress("2440 Heaven Lane", "Sand city", null, "USA", "95067")
 
-                        )
-                        .addCustomData("purchase_loc", "Palo Alto")
-                        .addCustomData("store_pickup", "unavailable")
-                        .addEventData(new BranchEventData("tras_Id_1232343434")
-                                .setAffiliation("high_fi")
-                                .setCoupon("promo-1234")
-                                .setCurrency(CurrencyType.USD)
-                                .setDescription("Preferred purchase")
-                                .setRevenue(180.2)
-                                .setShipping(10.5)
-                                .setTax(13.5))
-                        .setCallback(new TrackEventBuilder.ITrackEventListener() {
-                            @Override
-                            public void onEventTracked() {
-                                Log.d("BranchTestBed", "onEventTracked");
-                            }
-
-                            @Override
-                            public void onEventTrackingFailed(BranchError branchError) {
-                                Log.d("BranchTestBed", "onEventTrackingFailed " + branchError.getMessage());
-                            }
-                        }).track(MainActivity.this);
             }
         });
 
@@ -411,8 +382,7 @@ public class MainActivity extends Activity {
                     if (branchUniversalObject != null) {
                         Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
                         Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getMetadata());
-
+                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
 
                     if (linkProperties != null) {

@@ -9,6 +9,7 @@ import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,7 +19,7 @@ import java.util.Iterator;
 /**
  * Class for Branch utility methods
  */
-class BranchUtil {
+public class BranchUtil {
 
     static boolean isCustomDebugEnabled_ = false; /* For setting debug mode using Branch#setDebug api */
 
@@ -28,7 +29,7 @@ class BranchUtil {
      * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
-    public static boolean isTestModeEnabled(Context context) {
+    static boolean isTestModeEnabled(Context context) {
         if (isCustomDebugEnabled_) {
             return isCustomDebugEnabled_;
         }
@@ -55,7 +56,7 @@ class BranchUtil {
      * @param params Link param JSONObject.
      * @return A {@link String} representation of link params.
      */
-    public static String formatAndStringifyLinkParam(JSONObject params) {
+    static String formatAndStringifyLinkParam(JSONObject params) {
         return stringifyAndAddSource(filterOutBadCharacters(params));
     }
 
@@ -65,7 +66,7 @@ class BranchUtil {
      * @param params JSONObject to convert to string
      * @return A {@link String} value representing the JSONObject
      */
-    public static String stringifyAndAddSource(JSONObject params) {
+    static String stringifyAndAddSource(JSONObject params) {
         if (params == null) {
             params = new JSONObject();
         }
@@ -83,7 +84,7 @@ class BranchUtil {
      * @param inputObj JSONObject to remove illegal characters.
      * @return A {@link JSONObject} with illegal characters replaced.
      */
-    public static JSONObject filterOutBadCharacters(JSONObject inputObj) {
+    static JSONObject filterOutBadCharacters(JSONObject inputObj) {
         JSONObject filteredObj = new JSONObject();
         if (inputObj != null) {
             Iterator<String> keys = inputObj.keys();
@@ -101,6 +102,94 @@ class BranchUtil {
             }
         }
         return filteredObj;
+    }
+
+    public static class JsonReader {
+        private final JSONObject jsonObject;
+
+        public JsonReader(JSONObject jsonObject) {
+            JSONObject tempJsonObj = new JSONObject();
+            try {
+                tempJsonObj = new JSONObject(jsonObject.toString());
+            } catch (JSONException ignore) {
+            }
+            this.jsonObject = tempJsonObj;
+        }
+
+        public int readOutInt(String key) {
+            int val = jsonObject.optInt(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public Integer readOutInt(String key, Integer fallback) {
+            Integer val = fallback;
+            if (jsonObject.has(key)) {
+                val = jsonObject.optInt(key);
+                jsonObject.remove(key);
+            }
+            return val;
+        }
+
+        public String readOutString(String key) {
+            String val = jsonObject.optString(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public String readOutString(String key, String fallback) {
+            String val = jsonObject.optString(key, fallback);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public long readOutLong(String key) {
+            long val = jsonObject.optLong(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public double readOutDouble(String key) {
+            double val = jsonObject.optDouble(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public Double readOutDouble(String key, Double fallback) {
+            Double val = fallback;
+            if (jsonObject.has(key)) {
+                val = jsonObject.optDouble(key);
+                jsonObject.remove(key);
+            }
+            return val;
+        }
+
+        public boolean readOutBoolean(String key) {
+            boolean val = jsonObject.optBoolean(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public JSONArray readOutJsonArray(String key) {
+            JSONArray val = jsonObject.optJSONArray(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public Object readOut(String key) {
+            Object val = jsonObject.opt(key);
+            jsonObject.remove(key);
+            return val;
+        }
+
+        public boolean has(String key) {
+            return jsonObject.has(key);
+        }
+
+        public Iterator<String> keys() {
+            return jsonObject.keys();
+        }
+
     }
 
 

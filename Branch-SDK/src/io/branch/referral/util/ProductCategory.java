@@ -1,5 +1,7 @@
 package io.branch.referral.util;
 
+import android.text.TextUtils;
+
 /**
  * Created by Evan on 1/4/17.
  * <p>
@@ -40,16 +42,16 @@ public enum ProductCategory {
         return name;
     }
 
-    public static ProductCategory getByName(String name) {
+    public static ProductCategory getValue(String name) {
         ProductCategory productCategoryResult = null;
-        for (ProductCategory productCategory : ProductCategory.values()) {
-            if (productCategory.name.equalsIgnoreCase(name)) {
-                productCategoryResult = productCategory;
-                break;
+        if (!TextUtils.isEmpty(name)) {
+            for (ProductCategory productCategory : ProductCategory.values()) {
+                if (productCategory.name.equalsIgnoreCase(name)) {
+                    productCategoryResult = productCategory;
+                    break;
+                }
             }
         }
         return productCategoryResult;
     }
-
-
 }

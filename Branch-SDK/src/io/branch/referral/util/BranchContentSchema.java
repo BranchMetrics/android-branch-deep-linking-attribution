@@ -1,53 +1,47 @@
 package io.branch.referral.util;
 
+import android.text.TextUtils;
+
 /**
  * Created by sojanpr on 7/7/17.
  * Enumerations for BranchContentSchema. This enumearates all content schemas supported by Branch
  */
 public enum BranchContentSchema {
-    COMMERCE_PRODUCT("COMMERCE_PRODUCT"),
-    TEXT_ARTICLE("TEXT_ARTICLE"),
-    TEXT_BLOG("TEXT_BLOG"),
-    MEDIA_IMAGE("MEDIA_IMAGE"),
-    MEDIA_MUSIC("MEDIA_MUSIC"),
-    MEDIA_VIDEO("MEDIA_VIDEO"),
-    COMMERCE_AUCTION("COMMERCE_AUCTION"),
-    COMMERCE_BUSINESS("COMMERCE_BUSINESS"),
-    COMMERCE_RESTAURANT("COMMERCE_RESTAURANT"),
-    COMMERCE_SERVICE("COMMERCE_SERVICE"),
-    COMMERCE_TRAVEL_HOTEL("COMMERCE_TRAVEL_HOTEL"),
-    COMMERCE_TRAVEL_FLIGHT("COMMERCE_TRAVEL_FLIGHT"),
-    COMMERCE_TRAVEL_OTHER("COMMERCE_TRAVEL_OTHER"),
-    TEXT_RECIPE("TEXT_RECIPE"),
-    OTHER_GAME_STATE("OTHER_GAME_STATE"),
-    OTHER_ACTION("OTHER_ACTION"),
-    MEDIA_MIXED("MEDIA_MIXED"),
-    TEXT_STORY("TEXT_STORY"),
-    TEXT_TECHNICAL_DOC("TEXT_TECHNICAL_DOC"),
-    TEXT_REVIEW("TEXT_REVIEW"),
-    TEXT_SEARCH_RESULTS("TEXT_SEARCH_RESULTS"),
-    COMMERCE_OTHER("COMMERCE_OTHER"),
-    TEXT_OTHER("TEXT_OTHER"),
-    MEDIA_OTHER("MEDIA_OTHER"),
-    OTHER("OTHER");
-    private String schemaName;
+    COMMERCE_AUCTION,
+    COMMERCE_BUSINESS,
+    COMMERCE_OTHER,
+    COMMERCE_PRODUCT,
+    COMMERCE_RESTAURANT,
+    COMMERCE_SERVICE,
+    COMMERCE_TRAVEL_FLIGHT,
+    COMMERCE_TRAVEL_HOTEL,
+    COMMERCE_TRAVEL_OTHER,
+    GAME_STATE,
+    MEDIA_IMAGE,
+    MEDIA_MIXED,
+    MEDIA_MUSIC,
+    MEDIA_OTHER,
+    MEDIA_VIDEO,
+    OTHER,
+    TEXT_ARTICLE,
+    TEXT_BLOG,
+    TEXT_OTHER,
+    TEXT_RECIPE,
+    TEXT_REVIEW,
+    TEXT_SEARCH_RESULTS,
+    TEXT_STORY,
+    TEXT_TECHNICAL_DOC;
 
-    BranchContentSchema(String schemaName) {
-        this.schemaName = schemaName;
-    }
-
-    public String getName() {
-        return schemaName;
-    }
-
-    public static BranchContentSchema getByName(String name) {
-        BranchContentSchema contentSchemaResult = COMMERCE_PRODUCT;
-        for (BranchContentSchema contentSchema : BranchContentSchema.values()) {
-            if (contentSchema.schemaName.equalsIgnoreCase(name)) {
-                contentSchemaResult = contentSchema;
-                break;
+    public static BranchContentSchema getValue(String name) {
+        BranchContentSchema schema = null;
+        if (!TextUtils.isEmpty(name)) {
+            for (BranchContentSchema contentSchema : BranchContentSchema.values()) {
+                if (contentSchema.name().equalsIgnoreCase(name)) {
+                    schema = contentSchema;
+                    break;
+                }
             }
         }
-        return contentSchemaResult;
+        return schema;
     }
 }

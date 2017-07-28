@@ -6,7 +6,7 @@ package io.branch.referral.util;
  * Standard Branch Events enumeration. These events are used with Branch standard events
  * </p>
  */
-public enum BranchStandardEvents {
+public enum BRANCH_STANDARD_EVENT {
     // Commerce Events
     ADD_TO_CART("ADD_TO_CART"),
     ADD_TO_WISHLIST("ADD_TO_WISHLIST"),
@@ -21,7 +21,7 @@ public enum BranchStandardEvents {
     VIEW_CONTENT("VIEW_CONTENT"),
     VIEW_CONTENT_LIST("VIEW_CONTENT_LIST"),
     RATE("RATE"),
-    SHARE_CONTENT_ITEM("SHARE_CONTENT_ITEM"),
+    SHARE_CONTENT("SHARE_CONTENT"),
 
     //Life cycle events
     COMPLETE_REGISTRATION("COMPLETE_REGISTRATION"),
@@ -31,7 +31,7 @@ public enum BranchStandardEvents {
 
     private final String name;
 
-    BranchStandardEvents(String name) {
+    BRANCH_STANDARD_EVENT(String name) {
         this.name = name;
     }
 

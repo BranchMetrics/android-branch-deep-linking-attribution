@@ -94,6 +94,7 @@ public class Defines {
         Params("params"),
         SharedLink("$shared_link"),
         ShareError("$share_error"),
+        BUOCustomFields("$custom_fields"),
         
         
         External_Intent_URI("external_intent_uri"),
@@ -140,6 +141,7 @@ public class Defines {
         ContentSchema("$content_schema"),
         LocallyIndexable("$locally_indexable"),
         Price("$price"),
+        PriceCurrency("$currency"),
         Quantity("$quantity"),
         SKU("$sku"),
         ProductName("$product_name"),
@@ -157,6 +159,7 @@ public class Defines {
         Latitude("$latitude"),
         Longitude("$longitude"),
         ImageCaptions("$image_captions"),
+        Condition("$condition"),
         CreationTimestamp("$creation_timestamp"),
         Runtime("$run_time");
 
