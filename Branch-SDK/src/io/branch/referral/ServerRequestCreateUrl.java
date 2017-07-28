@@ -239,9 +239,9 @@ class ServerRequestCreateUrl extends ServerRequest {
             byte[] data = params.getBytes();
             String base64Data = Base64.encodeToString(data, android.util.Base64.NO_WRAP);
             try {
-                String urlEncodedBase64Data = URLEncoder.encode(base64Data,"UTF-8");
+                String urlEncodedBase64Data = URLEncoder.encode(base64Data,"US-ASCII");
                 longUrl = longUrl + "source=android&data=" + urlEncodedBase64Data;
-            } catch (Exception ignore) {
+            } catch (Exception e) {
                 callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.",BranchError.ERR_BRANCH_INVALID_REQUEST));
             }
         }

@@ -56,8 +56,8 @@ public class MainActivity extends Activity {
                 .setPrice(5.00, CurrencyType.USD)
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
-                .addContentMetadata("Metadata_Key1", "<br><br>Metadata_value1")
-                .addContentMetadata("Metadata_Key2", "Metadata_value2<br>");
+                .addContentMetadata("Metadata_Key1", "Metadata_value1")
+                .addContentMetadata("Metadata_Key2", "Metadata_value2");
 
 
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
