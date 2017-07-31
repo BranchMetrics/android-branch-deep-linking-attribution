@@ -358,25 +358,25 @@ public class ContentMetadata implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(contentSchema != null ? contentSchema.name() : "");
-        dest.writeDouble(quantity);
-        dest.writeDouble(price);
+        dest.writeSerializable(quantity);
+        dest.writeSerializable(price);
         dest.writeString(currencyType != null ? currencyType.name() : "");
         dest.writeString(sku);
         dest.writeString(productName);
         dest.writeString(productBrand);
-        dest.writeString(productCategory != null ? productCategory.name() : "");
+        dest.writeString(productCategory != null ? productCategory.getName() : "");
         dest.writeString(productVariant);
-        dest.writeDouble(averageRating);
-        dest.writeInt(ratingCount);
-        dest.writeDouble(maximumRating);
+        dest.writeSerializable(averageRating);
+        dest.writeSerializable(ratingCount);
+        dest.writeSerializable(maximumRating);
 
         dest.writeString(addressStreet);
         dest.writeString(addressCity);
         dest.writeString(addressRegion);
         dest.writeString(addressCountry);
         dest.writeString(addressPostalCode);
-        dest.writeDouble(latitude);
-        dest.writeDouble(longitude);
+        dest.writeSerializable(latitude);
+        dest.writeSerializable(longitude);
 
         dest.writeSerializable(imageCaptions);
         dest.writeSerializable(customMetadata);
@@ -385,25 +385,25 @@ public class ContentMetadata implements Parcelable {
     private ContentMetadata(Parcel in) {
         this();
         contentSchema = BranchContentSchema.getValue(in.readString());
-        quantity = in.readDouble();
-        price = in.readDouble();
+        quantity = (Double) in.readSerializable();
+        price = (Double) in.readSerializable();
         currencyType = CurrencyType.getValue(in.readString());
         sku = in.readString();
         productName = in.readString();
         productBrand = in.readString();
         productCategory = ProductCategory.getValue(in.readString());
         productVariant = in.readString();
-        averageRating = in.readDouble();
-        ratingCount = in.readInt();
-        maximumRating = in.readDouble();
+        averageRating = (Double) in.readSerializable();
+        ratingCount = (Integer) in.readSerializable();
+        maximumRating = (Double) in.readSerializable();
 
         addressStreet = in.readString();
         addressCity = in.readString();
         addressRegion = in.readString();
         addressCountry = in.readString();
         addressPostalCode = in.readString();
-        latitude = in.readDouble();
-        longitude = in.readDouble();
+        latitude = (Double) in.readSerializable();
+        longitude = (Double) in.readSerializable();
         @SuppressWarnings("unchecked")
         ArrayList<String> imageCaptionsTemp = (ArrayList<String>) in.readSerializable();
         imageCaptions.addAll(imageCaptionsTemp);

@@ -1,5 +1,6 @@
 package io.branch.branchandroiddemo.test;
 
+import android.os.Parcel;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -63,6 +64,8 @@ public class BUOTestRoutines {
         }
         if (succeeded) {
             Log.d("BranchTestBed", "Passed BUO serialisation - de-serialisation test.");
+        } else {
+            Log.d("BranchTestBed", "Failed BUO serialisation - de-serialisation test.");
         }
         return succeeded;
     }
@@ -72,8 +75,17 @@ public class BUOTestRoutines {
         JSONObject testBuoJson1 = buo.convertToJson();
         BranchUniversalObject buo2 = BranchUniversalObject.createInstance(testBuoJson1);
         JSONObject testBuoJson2 = buo2.convertToJson();
+
+        Parcel parcel = Parcel.obtain();
+        buo.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+        BranchUniversalObject buoCreatedFromParcel = (BranchUniversalObject) BranchUniversalObject.CREATOR.createFromParcel(parcel);
+
         return (checkIfIdenticalJson(buo.getContentMetadata().convertToJson(), buo2.getContentMetadata().convertToJson()))
-                && (checkIfIdenticalJson(testBuoJson1, testBuoJson2));
+                && (checkIfIdenticalJson(testBuoJson1, testBuoJson2))
+                && (checkIfIdenticalJson(testBuoJson1, buoCreatedFromParcel.convertToJson()));
+
+
     }
 
     private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2) {
@@ -89,13 +101,15 @@ public class BUOTestRoutines {
                 }
                 if (obj2.length() == 0) {
                     isIdentical = true;
+                } else {
+                    Log.e("BranchTestBed", "Error : BUO serialisation error. Reason: Additional entries in de-serialised object " + obj2);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
                 Log.e("BranchTestBed", "Error : BUO serialisation error.");
             }
         } else {
-            Log.e("BranchTestBed", "Error : BUO serialisation error. Reason: Additional entries in de-serialised object");
+            Log.e("BranchTestBed", "Serialised versions buo versions are not matching \n" + obj1 + "\n\n" + obj2);
         }
 
         return isIdentical;

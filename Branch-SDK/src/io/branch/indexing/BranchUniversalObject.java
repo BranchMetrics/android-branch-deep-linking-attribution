@@ -853,6 +853,7 @@ public class BranchUniversalObject implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(creationTimeStamp_);
         dest.writeString(canonicalIdentifier_);
         dest.writeString(canonicalUrl_);
         dest.writeString(title_);
@@ -864,11 +865,12 @@ public class BranchUniversalObject implements Parcelable {
 
         dest.writeParcelable(metadata_, flags);
         dest.writeInt(localIndexMode_.ordinal());
-        dest.writeLong(creationTimeStamp_);
+
     }
 
     private BranchUniversalObject(Parcel in) {
         this();
+        creationTimeStamp_ = in.readLong();
         canonicalIdentifier_ = in.readString();
         canonicalUrl_ = in.readString();
         title_ = in.readString();
@@ -878,12 +880,13 @@ public class BranchUniversalObject implements Parcelable {
         indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
-        keywords_.addAll(keywordsTemp);
+        if (keywordsTemp != null) {
+            keywords_.addAll(keywordsTemp);
+        }
         metadata_ = in.readParcelable(ContentMetadata.class.getClassLoader());
         localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> imageCaptionsTemp = (ArrayList<String>) in.readSerializable();
-        creationTimeStamp_ = in.readLong();
     }
 
     /**
