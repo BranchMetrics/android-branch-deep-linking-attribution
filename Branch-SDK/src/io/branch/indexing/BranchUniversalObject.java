@@ -970,12 +970,14 @@ public class BranchUniversalObject implements Parcelable {
      * @return {@code true} if content successfully added to samsung search
      */
     public boolean listOnSamsungSearch(String userAction) {
-        boolean isContentAdded;
+        boolean isContentAdded = false;
         Context context = Branch.getInstance().getAppContext();
-        String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
-        isContentAdded = BranchListContentConnection.getInstance().addToIndex(this, context.getPackageName(), url);
-        if (!TextUtils.isEmpty(userAction)) {
-            addUserInteraction(userAction);
+        if (ContentDiscoveryManifest.getInstance(context).isLocalIndexingEnabled()) {
+            String url = getShortUrl(context, new LinkProperties().setChannel("Branch Search"));
+            isContentAdded = BranchListContentConnection.getInstance().addToIndex(this, context.getPackageName(), url);
+            if (!TextUtils.isEmpty(userAction)) {
+                addUserInteraction(userAction);
+            }
         }
         return isContentAdded;
     }
