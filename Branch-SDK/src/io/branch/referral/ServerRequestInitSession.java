@@ -93,6 +93,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         try {
             prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setGooglePlayReferrer(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
             prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
@@ -128,21 +129,34 @@ abstract class ServerRequestInitSession extends ServerRequest {
      * Also update any googleSearchReferrer available with play store referrer broadcast
      *
      * @see InstallListener
-     * @see Branch#enablePlayStoreReferrer(long)
+     * @see Branch#setPlayStoreReferrerCheckTimeout(long)
      */
     void updateLinkReferrerParams() {
-        if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+        // Add link identifier if present
+        String linkIdentifier = prefHelper_.getLinkClickIdentifier();
+        if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
-                getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
+                getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
             } catch (JSONException ignore) {
             }
         }
-        if (!prefHelper_.getGoogleSearchInstallIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
+        // Add Google search install referrer if present
+        String googleSearchInstallIdentifier = prefHelper_.getGoogleSearchInstallIdentifier();
+        if (!googleSearchInstallIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
-                getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), prefHelper_.getGoogleSearchInstallIdentifier());
+                getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallIdentifier);
             } catch (JSONException ignore) {
             }
         }
+        // Add Google play raw referrer if present
+        String googlePlayReferrer = prefHelper_.getGooglePlayReferrer();
+        if (!googlePlayReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
+            } catch (JSONException ignore) {
+            }
+        }
+        // Check for Conversion from instant app to full app
         if (prefHelper_.isFullAppConversion()) {
             try {
                 getPost().put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
@@ -156,12 +170,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     public void onPreExecute() {
         JSONObject post = getPost();
         try {
-            if (!prefHelper_.getLinkClickIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(Defines.Jsonkey.LinkIdentifier.getKey(), prefHelper_.getLinkClickIdentifier());
-            }
-            if (!prefHelper_.getGoogleSearchInstallIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), prefHelper_.getGoogleSearchInstallIdentifier());
-            }
             if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
             }

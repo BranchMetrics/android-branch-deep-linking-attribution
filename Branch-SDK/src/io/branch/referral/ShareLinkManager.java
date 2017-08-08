@@ -286,7 +286,7 @@ class ShareLinkManager {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
 
-                        if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY_STATUS) {
+                        if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY) {
                             shareWithClient(selectedResolveInfo, url, channelName);
                         } else {
                             cancelShareLinkDialog(false);

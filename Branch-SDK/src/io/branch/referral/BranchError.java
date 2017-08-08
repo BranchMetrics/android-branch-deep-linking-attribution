@@ -6,7 +6,7 @@ package io.branch.referral;
 public class BranchError {
 
     String errorMessage_ = "";
-    int errorCode_ = ERR_BRANCH_NO_CONNECTIVITY_STATUS;
+    int errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
 
     /* Error processing request since session not initialised yet. */
     public static final int ERR_NO_SESSION = -101;
@@ -33,7 +33,7 @@ public class BranchError {
     /* Request failed to hit branch servers */
     public static final int ERR_BRANCH_UNABLE_TO_REACH_SERVERS = -112;
     /* Request failed due to poor connectivity */
-    public static final int ERR_BRANCH_NO_CONNECTIVITY_STATUS = -113;
+    public static final int ERR_BRANCH_NO_CONNECTIVITY = -113;
     /* Branch key is not specified or invalid */
     public static final int ERR_BRANCH_KEY_INVALID = -114;
     /* Request failed due to resource conflict */
@@ -84,10 +84,10 @@ public class BranchError {
      */
     private String initErrorCodeAndGetLocalisedMessage(int statusCode) {
         String errMsg;
-        if (statusCode == RemoteInterface.NO_CONNECTIVITY_STATUS) {
-            errorCode_ = ERR_BRANCH_NO_CONNECTIVITY_STATUS;
+        if (statusCode == ERR_BRANCH_NO_CONNECTIVITY) {
+            errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
             errMsg = " Branch API Error: poor network connectivity. Please try again later.";
-        } else if (statusCode == RemoteInterface.NO_BRANCH_KEY_STATUS) {
+        } else if (statusCode == ERR_BRANCH_KEY_INVALID) {
             errorCode_ = ERR_BRANCH_KEY_INVALID;
             errMsg = " Branch API Error: Please enter your branch_key in your project's manifest file first.";
         } else if (statusCode == ERR_BRANCH_INIT_FAILED) {
@@ -133,7 +133,7 @@ public class BranchError {
             errorCode_ = ERR_BRANCH_INVALID_REQUEST;
             errMsg = " The request was invalid.";
         } else {
-            errorCode_ = ERR_BRANCH_NO_CONNECTIVITY_STATUS;
+            errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
             errMsg = " Check network connectivity and that you properly initialized.";
         }
         return errMsg;

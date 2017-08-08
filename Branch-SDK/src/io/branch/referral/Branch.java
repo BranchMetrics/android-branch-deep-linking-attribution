@@ -26,8 +26,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -51,6 +53,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
+import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 import io.branch.indexing.BranchListContentConnection;
@@ -292,8 +295,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private static boolean isLogging_ = false;
 
-    private static boolean checkInstallReferrer_ = false;
-    private static long PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = 5000;
+    static boolean checkInstallReferrer_ = true;
+    private static long playStoreReferrerFetchTime = 1500;
+    public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -301,7 +305,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private static Branch branchReferral_;
 
-    private BranchRemoteInterface kRemoteInterface_;
+    private BranchRemoteInterface branchRemoteInterface_;
     private PrefHelper prefHelper_;
     private final SystemObserver systemObserver_;
     private Context context_;
@@ -408,15 +412,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
-     * pattern.</p>
-     * <p/>
+     * pattern.</p>     *
      * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
     private Branch(@NonNull Context context) {
         prefHelper_ = PrefHelper.getInstance(context);
-        kRemoteInterface_ = new BranchRemoteInterface(context);
+        branchRemoteInterface_ = BranchRemoteInterface.getDefaultBranchRemoteInterface(context);
         systemObserver_ = new SystemObserver(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         serverSema_ = new Semaphore(1);
@@ -442,6 +445,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
+     * Branch SDK and remote Branch server
+     *
+     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with implementation for abstract RESTful GET or POST methods
+     */
+    public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
+        branchRemoteInterface_ = remoteInterface;
+    }
+
+    /**
      * <p>
      * Enables/Disables the test mode for the SDK. This will use the Branch Test Keys.
      * This will also enable debug logs.
@@ -461,23 +474,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Since play store referrer broadcast from google play is few millisecond delayed, call this method to delay Branch init for more accurate
-     * tracking and attribution. This will delay branch init only the first time user open the app.
-     * Note: Recommend 1500 to capture more than 90% of the install referrer cases per our testing as of 4/2017
-     *
-     * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds
+     * @deprecated This method is deprecated since play store referrer is enabled by default from v2.9.1.
+     * Please use {@link #setPlayStoreReferrerCheckTimeout(long)} instead.
      */
     public static void enablePlayStoreReferrer(long delay) {
-        checkInstallReferrer_ = true;
-        PLAYSTORE_REFERRAL_FETCH_WAIT_FOR = delay;
+        setPlayStoreReferrerCheckTimeout(delay);
     }
 
-    static boolean checkPlayStoreReferrer() {
-        return checkInstallReferrer_;
-    }
-
-    public static long getReferralFetchWaitTime() {
-        return PLAYSTORE_REFERRAL_FETCH_WAIT_FOR;
+    /**
+     * Since play store referrer broadcast from google play is few millisecond delayed Branch will delay the collecting deep link data on app install by {@link #playStoreReferrerFetchTime} millisecond
+     * This will allow branch to provide for more accurate tracking and attribution. This will delay branch init only the first time user open the app.
+     * This method allows to override the maximum wait time for play store referrer to arrive. Set it to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
+     *
+     * Note:  as of our testing 4/2017  a 1500 milli sec wait time is enough to capture more than 90% of the install referrer case
+     *
+     * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds. Set to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
+     */
+    public static void setPlayStoreReferrerCheckTimeout(long delay) {
+        checkInstallReferrer_ = delay > 0;
+        playStoreReferrerFetchTime = delay;
     }
 
     /**
@@ -2048,12 +2063,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Schedules a repeating threaded task to get the following details and report them to the
      * Branch API <b>once a week</b>:</p>
-     * <p/>
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * int interval = 7 * 24 * 60 * 60;
      * appListingSchedule_ = scheduler.scheduleAtFixedRate(
      * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
-     * <p/>
      * <ul>
      * <li>{@link SystemObserver#getOS()}</li>
      * <li>{@link SystemObserver#getListOfApps()}</li>
@@ -2195,7 +2208,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // Make sure a callback is associated with this request. This callback can
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
-            // Update the callback to the latest one in initsession call
+            // Update the callback to the latest one in init session call
             if (callback != null) {
                 requestQueue_.setInstallOrOpenCallback(callback);
             }
@@ -2210,7 +2223,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             initState_ = SESSION_STATE.UNINITIALISED;
             //Report Key error on callback
             if (callback != null) {
-                callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", RemoteInterface.NO_BRANCH_KEY_STATUS));
+                callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
             Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
             return;
@@ -2251,10 +2264,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback, kRemoteInterface_.getSystemObserver());
+            request = new ServerRequestRegisterOpen(context_, callback, systemObserver_);
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, kRemoteInterface_.getSystemObserver(), InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, systemObserver_, InstallListener.getInstallationID());
         }
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
@@ -2263,17 +2276,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
-        if (checkPlayStoreReferrer() && request instanceof ServerRequestRegisterInstall) {
+        if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.startInstallReferrerTime(PLAYSTORE_REFERRAL_FETCH_WAIT_FOR);
+            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime);
         }
 
         registerInstallOrOpen(request, callback);
     }
 
-    private void onIntentReady(Activity activity) {
+    private void onIntentReady(Activity activity, boolean grabIntentParams) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        if (activity.getIntent() != null) {
+        //if (activity.getIntent() != null) {
+        if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             if (cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
@@ -2423,7 +2437,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             currentActivityReference_ = new WeakReference<>(activity);
             if (handleDelayedNewIntents_) {
                 intentState_ = INTENT_STATE.READY;
-                onIntentReady(activity);
+                // Grab the intent only for first activity unless this activity is intent to  force new session
+                boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
+                onIntentReady(activity, grabIntentParams);
             }
         }
 
@@ -2632,7 +2648,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private class getShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
         @Override
         protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return kRemoteInterface_.createCustomUrlSync(serverRequests[0].getPost());
+            String urlExtend = "v1/url";
+            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(), prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
     }
 
@@ -2643,12 +2660,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * published in the main thread.
      */
     private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
-        int timeOut_ = 0;
         ServerRequest thisReq_;
 
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
-            timeOut_ = prefHelper_.getTimeout();
         }
 
         @Override
@@ -2672,9 +2687,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
 
             if (thisReq_.isGetRequest()) {
-                return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
+                return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             } else {
-                return kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
+                return branchRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             }
         }
 
@@ -3591,9 +3606,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
 
     ///----------------- Instant App  support--------------------------//
-    private static Context lastApplicationContext = null;
-    private static Boolean isInstantApp = null;
-
     /**
      * Checks if this is an Instant app instance
      *
@@ -3601,20 +3613,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return {@code true}  if current application is an instance of instant app
      */
     public static boolean isInstantApp(@NonNull Context context) {
-        try {
-            Context applicationContext = context.getApplicationContext();
-            if (isInstantApp != null && applicationContext.equals(lastApplicationContext)) {
-                return isInstantApp.booleanValue();
-            } else {
-                isInstantApp = null;
-                lastApplicationContext = applicationContext;
-                applicationContext.getClassLoader().loadClass("com.google.android.instantapps.supervisor.InstantAppsRuntime");
-                isInstantApp = Boolean.valueOf(true);
-            }
-        } catch (Exception ex) {
-            isInstantApp = Boolean.valueOf(false);
-        }
-        return isInstantApp.booleanValue();
+        return InstantAppUtil.isInstantApp(context);
     }
 
     /**
@@ -3631,15 +3630,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
             String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
             if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
+                String referringLink = "";
                 try {
-                    String referringLink = latestReferringParams.getString(referringLinkKey);
-                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
-                } catch (JSONException e) {
+                    referringLink = latestReferringParams.getString(referringLinkKey);
+                    // Considering the case that url may contain query params with `=` and `&` with it and may cause issue when parsing play store referrer
+                    referringLink = URLEncoder.encode(referringLink, "UTF-8");
+                } catch (JSONException | UnsupportedEncodingException e) {
                     e.printStackTrace();
+                }
+                if (!TextUtils.isEmpty(referringLink)) {
+                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
                 }
             }
         }
-        return showInstallPrompt(activity, requestCode, installReferrerString);
+        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
@@ -3653,7 +3657,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
-        return showInstallPrompt(activity, requestCode, installReferrerString);
+        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
     }
 
     /**
@@ -3679,29 +3683,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
-    }
-
-
-    private static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
-        if (activity == null) {
-            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
-            return false;
-        } else if (!isInstantApp(activity)) {
-            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
-            return false;
-        } else {
-            Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")
-                    .putExtra("callerId", activity.getPackageName())
-                    .putExtra("overlay", true);
-            Uri.Builder uriBuilder = (new Uri.Builder()).scheme("market").authority("details").appendQueryParameter("id", activity.getPackageName());
-            if (!TextUtils.isEmpty(referrer)) {
-                uriBuilder.appendQueryParameter("referrer", referrer);
-            }
-
-            intent.setData(uriBuilder.build());
-            activity.startActivityForResult(intent, requestCode);
-            return true;
-        }
     }
 
 }

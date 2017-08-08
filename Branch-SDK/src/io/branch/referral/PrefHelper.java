@@ -71,6 +71,7 @@ public class PrefHelper {
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
     private static final String KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER = "bnc_google_search_install_identifier";
+    private static final String KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA = "bnc_google_play_install_referrer_extras";
     private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
@@ -122,11 +123,6 @@ public class PrefHelper {
      * helper class whenever the preferences for the application are changed.
      */
     private Editor prefsEditor_;
-
-    /**
-     * Instance of {@link BranchRemoteInterface} enabling remote interaction via the server interface.
-     */
-    private BranchRemoteInterface remoteInterface_;
 
     /**
      * Arbitrary key values added to all requests.
@@ -536,6 +532,26 @@ public class PrefHelper {
     public String getGoogleSearchInstallIdentifier() {
         return getString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER);
     }
+
+    /**
+     * Sets the Google play install referrer string
+     *
+     * @param referrer Google play install referrer string
+     */
+    public void setGooglePlayReferrer(String referrer) {
+        setString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA, referrer);
+    }
+
+    /**
+     * Gets the google play install referrer string
+     *
+     * @return {@link String}  Google play install referrer string
+     */
+    public String getGooglePlayReferrer() {
+        return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
+    }
+
+
 
 
     /**
@@ -1196,69 +1212,6 @@ public class PrefHelper {
         } else {
             if (BNC_Dev_Debug || BNC_Logging) {
                 Log.i(tag, message);
-            }
-        }
-    }
-
-    /**
-     * <p>Debug connection callback that implements {@link NetworkCallback} to react to server calls
-     * to debug API end-points.</p>
-     */
-    public static class DebugNetworkCallback implements NetworkCallback {
-        private int connectionStatus;
-
-        /**
-         * @return {@link Integer} value containing the HTTP Status code of the current connection.
-         *
-         * <ul>
-         * <li>200 - The request has succeeded.</li>
-         * <li>400 - Request cannot be fulfilled due to bad syntax</li>
-         * <li>465 - Server is not listening.</li>
-         * <li>500 - The server encountered an unexpected condition which prevented it from fulfilling the request.</li>
-         * </ul>
-         * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1 - Status Code Definitions</a>
-         */
-        public int getConnectionStatus() {
-            return connectionStatus;
-        }
-
-        /**
-         * Called when the server response is returned following a request to the debug API.
-         *
-         * @param serverResponse A {@link ServerResponse} object containing the result of the
-         *                       {@link DebugNetworkCallback} action.
-         */
-        @Override
-        public void finished(ServerResponse serverResponse) {
-            if (serverResponse != null) {
-                try {
-                    connectionStatus = serverResponse.getStatusCode();
-                    String requestTag = serverResponse.getTag();
-
-                    if (connectionStatus >= 400
-                            && connectionStatus < 500) {
-                        if (serverResponse.getObject() != null
-                                && serverResponse.getObject().has("error")
-                                && serverResponse.getObject()
-                                .getJSONObject("error").has("message")) {
-                            Log.i("BranchSDK",
-                                    "Branch API Error: "
-                                            + serverResponse.getObject()
-                                            .getJSONObject("error")
-                                            .getString("message"));
-                        }
-                    } else if (connectionStatus != 200) {
-                        if (connectionStatus == RemoteInterface.NO_CONNECTIVITY_STATUS) {
-                            Log.i("BranchSDK",
-                                    "Branch API Error: poor network connectivity. Please try again later.");
-                        } else {
-                            Log.i("BranchSDK",
-                                    "Trouble reaching server. Please try again in a few minutes.");
-                        }
-                    }
-                } catch (JSONException ex) {
-                    ex.printStackTrace();
-                }
             }
         }
     }

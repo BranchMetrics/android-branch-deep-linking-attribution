@@ -78,7 +78,6 @@ class SystemObserver {
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
      * immutable value is generated upon initial device setup, and re-used throughout the life of
      * the device.</p>
-     * <p/>
      * <p>If <i>true</i> is provided as a parameter, the method will return a different,
      * randomly-generated value each time that it is called. This allows you to simulate many different
      * user devices with different ANDROID_ID values with a single physical device or emulator.</p>
@@ -134,7 +133,6 @@ class SystemObserver {
      * <p>Provides the package name of the current app, and passes it to the
      * {@link SystemObserver#getURIScheme(String)} method to enable the call without a {@link String}
      * parameter.</p>
-     * <p/>
      * <p>This method should be used for retrieving the URI scheme of the current application.</p>
      *
      * @return A {@link String} value containing the response from {@link SystemObserver#getURIScheme(String)}.
@@ -145,7 +143,6 @@ class SystemObserver {
 
     /**
      * <p>Gets the URI scheme of the specified package from its AndroidManifest.xml file.</p>
-     * <p/>
      * <p>This method should be used for retrieving the URI scheme of the another application of
      * which the package name is known.</p>
      *
@@ -194,7 +191,6 @@ class SystemObserver {
      * of the lowMemory flag.</p>
      *
      * @return <p>A {@link Boolean} value representing the low memory flag of the current device.</p>
-     * <p/>
      * <ul>
      * <li><i>true</i> - the free memory on the current device is below the system-defined threshold
      * that triggers the low memory flag.</li>
@@ -211,16 +207,13 @@ class SystemObserver {
     /**
      * <p>Gets a {@link JSONArray} object containing a list of the applications that are installed
      * on the current device.</p>
-     * <p/>
      * <p>The method gets a handle on the {@link PackageManager} and calls the
      * {@link PackageManager#getInstalledApplications(int)} method to retrieve a {@link List} of
      * {@link ApplicationInfo} objects, each representing a single application that is installed on
      * the current device.</p>
-     * <p/>
      * <p>For each of these items, the method gets the attributes shown below, and constructs a
      * {@link JSONArray} representation of the list, which can be consumed by a JSON parser on the
      * server.</p>
-     * <p/>
      * <ul>
      * <li>loadLabel</li>
      * <li>packageName</li>
@@ -355,7 +348,6 @@ class SystemObserver {
     /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android
      * SDK versions.</p>
-     * <p/>
      * <p>Not of practical use in your application.</p>
      *
      * @return A {@link String} value that indicates the broad OS type that is in use on the device.
@@ -366,7 +358,6 @@ class SystemObserver {
 
     /**
      * Returns the Android API version of the current device as an {@link Integer}.
-     * <p/>
      * Common values:
      * <ul>
      * <li>22 - Android 5.1, Lollipop MR1</li>
@@ -391,20 +382,15 @@ class SystemObserver {
      * <p>As the Build fingerprint is determined by the OS fingerprint, this will identify whether a
      * an emulator is being used where the developer of said emulator has followed convention and
      * used <b>generic</b> as the first segment of the virtual device fingerprint.</p>
-     * <p/>
-     * <p/>
      * Example of a <u>real device</u> (Google Nexus 5, Android 5.1):
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * <b>google</b>/hammerhead/hammerhead:5.1/LMY47D/1743759:user/release-keys</pre>
-     * <p/>
-     * <p/>
      * Example of an <u>emulator</u> (Genymotion Nexus 6 AVD, Android 5.0):
      * <pre style="background:#fff;padding:10px;border:2px solid silver;">
      * <b>generic</b>/vbox86p/vbox86p:5.0/LRX21M/buildbot12160004:userdebug/test-keys</pre>
      *
      * @return <p>A {@link Boolean} value indicating whether the device upon which the app is being run is
      * a simulated platform, i.e. an emulator. Or a real, hardware device.</p>
-     * <p/>
      * <ul>
      * <li><i>true</i> - the app is running on an emulator</li>
      * <li><i>false</i> - the app is running on a physical device (or a badly configured AVD)</li>
@@ -418,18 +404,15 @@ class SystemObserver {
      * <p>This method returns an {@link Integer} value dependent on whether the application has been
      * updated since its installation on the device. If the application has just been installed and
      * launched immediately, this will always return 1.</p>
-     * <p/>
      * <p>If however the application has already been installed for more than the duration of a
      * single update cycle, and has received one or more updates, the time in
      * {@link PackageInfo#firstInstallTime} will be different from that in
      * {@link PackageInfo#lastUpdateTime} so the return value will be 0; indicative of an update
      * having occurred whilst the app has been installed.</p>
-     * <p/>
      * <p>This is useful to know when the manner of handling of deep-link data has changed betwen
      * application versions and where migration of SharedPrefs may be required. This method provides
      * a condition upon which a consistency check or migration validation operation can be carried
      * out.</p>
-     * <p/>
      * <p>This will not work on Android SDK versions lower than 9, as the {@link PackageInfo#firstInstallTime}
      * and {@link PackageInfo#lastUpdateTime} values did not exist in older versions of the
      * {@link PackageInfo} class.</p>
@@ -472,7 +455,6 @@ class SystemObserver {
      * default display of the device that the SDK is running on. Use this when you need to know the
      * dimensions of the screen, density of pixels on the display or any other information that
      * relates to the device screen.</p>
-     * <p/>
      * <p>Especially useful when operating without an Activity context, e.g. from a background
      * service.</p>
      *
@@ -489,7 +471,6 @@ class SystemObserver {
     /**
      * <p>Use this method to query the system state to determine whether a WiFi connection is
      * available for use by applications installed on the device.</p>
-     * <p/>
      * This applies only to WiFi connections, and does not indicate whether there is
      * a viable Internet connection available; if connected to an offline WiFi router for instance,
      * the boolean will still return <i>true</i>.
@@ -533,9 +514,7 @@ class SystemObserver {
     /**
      * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
      * actions within Android apps.</p>
-     * <p/>
      * <p>The Google Play services APIs expose the advertising tracking ID as UUID such as this:</p>
-     * <p/>
      * <pre>38400000-8cf0-11bd-b23e-10b96e40000d</pre>
      *
      * @return <p>A {@link String} value containing the client ad UUID as supplied by Google Play.</p>
