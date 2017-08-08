@@ -29,19 +29,22 @@ public class InstallListener extends BroadcastReceiver {
 
 
     private static boolean isWaitingForReferrer;
+    // PRS : In case play store referrer get reported really fast as google fix bugs , this implementation will let the referrer parsed and stored
+    //       This will be reported when SDK ask for it
+    private static boolean unReportedReferrerAvailable;
 
-    public static void startInstallReferrerTime(final long delay) {
-        isWaitingForReferrer = true;
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (callback_ != null) {
-                    callback_.onInstallReferrerEventsFinished();
-                    callback_ = null;
-                    isWaitingForReferrer = false;
+    public static void captureInstallReferrer(final long maxWaitTime) {
+        if (unReportedReferrerAvailable) {
+            reportInstallReferrer();
+        } else {
+            isWaitingForReferrer = true;
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    reportInstallReferrer();
                 }
-            }
-        }, delay);
+            }, maxWaitTime);
+        }
     }
 
     @Override
@@ -61,27 +64,27 @@ public class InstallListener extends BroadcastReceiver {
                 }
 
                 PrefHelper prefHelper = PrefHelper.getInstance(context);
-                if (isWaitingForReferrer) {
-                    if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
-                        installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
-                        prefHelper.setLinkClickIdentifier(installID_);
 
-                    }
-                    // Check for full app conversion
-                    if (referrerMap.containsKey(Defines.Jsonkey.IsFullAppConv.getKey())
-                            && referrerMap.containsKey(Defines.Jsonkey.ReferringLink.getKey())) {
-                        prefHelper.setIsFullAppConversion(Boolean.parseBoolean(referrerMap.get(Defines.Jsonkey.IsFullAppConv.getKey())));
-                        prefHelper.setAppLink(referrerMap.get(Defines.Jsonkey.ReferringLink.getKey()));
-                    }
+                if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
+                    installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
+                    prefHelper.setLinkClickIdentifier(installID_);
+
+                }
+                // Check for full app conversion
+                if (referrerMap.containsKey(Defines.Jsonkey.IsFullAppConv.getKey())
+                        && referrerMap.containsKey(Defines.Jsonkey.ReferringLink.getKey())) {
+                    prefHelper.setIsFullAppConversion(Boolean.parseBoolean(referrerMap.get(Defines.Jsonkey.IsFullAppConv.getKey())));
+                    prefHelper.setAppLink(referrerMap.get(Defines.Jsonkey.ReferringLink.getKey()));
                 }
 
                 if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
                     prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
+                    prefHelper.setGooglePlayReferrer(rawReferrerString);
                 }
+                unReportedReferrerAvailable = true;
 
-                if (callback_ != null) {
-                    callback_.onInstallReferrerEventsFinished();
-                    callback_ = null;
+                if (isWaitingForReferrer) {
+                    reportInstallReferrer();
                 }
 
             } catch (UnsupportedEncodingException e) {
@@ -98,6 +101,14 @@ public class InstallListener extends BroadcastReceiver {
         return installID_;
     }
 
+    private static void reportInstallReferrer() {
+        if (callback_ != null) {
+            callback_.onInstallReferrerEventsFinished();
+            callback_ = null;
+            unReportedReferrerAvailable = false;
+        }
+    }
+
     public static void setListener(IInstallReferrerEvents installReferrerFetch) {
         callback_ = installReferrerFetch;
     }
@@ -105,5 +116,6 @@ public class InstallListener extends BroadcastReceiver {
     interface IInstallReferrerEvents {
         void onInstallReferrerEventsFinished();
     }
+
 
 }

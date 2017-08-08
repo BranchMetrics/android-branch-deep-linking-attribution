@@ -28,8 +28,7 @@ class ServerRequestCreateUrl extends ServerRequest {
      * call; with a duration specified within which an app session should be matched to the link.</p>
      *
      * @param context  Current {@link Application} context
-     * @param alias    Link 'alias' can be used to label the endpoint on the link.
-     *                 <p/>
+     * @param alias    Link 'alias' can be used to label the endpoint on the link.     *
      *                 <p>
      *                 For example:
      *                 http://bnc.lt/AUSTIN28.

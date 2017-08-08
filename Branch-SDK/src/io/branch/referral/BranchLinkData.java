@@ -14,7 +14,6 @@ import java.util.Collection;
  * The {@link BranchLinkData} object is based on {@link JSONObject} and expands
  * the class to enable collections of tags.
  * </p>
- * <p/>
  * <p>
  * Tags are returned from the server, and form the data dictionary that each
  * deep link shared via the Branch platform contains.
@@ -42,9 +41,7 @@ class BranchLinkData extends JSONObject {
      * An {@link int} that can be used for scenarios where you want the link to
      * only deep link the first time.
      * </p>
-     * <p/>
      * <b>Values:</b>
-     * <p/>
      * <ul>
      * <li>{@link null}</li>
      * <li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
@@ -58,9 +55,8 @@ class BranchLinkData extends JSONObject {
     /**
      * <p>A {@link String} denoting the channel that the link belongs to. Should not exceed 128
      * characters.</p>
-     * <p/>
+     *
      * <b>Example values:</b>
-     * <p/>
      * <ul>
      * <li><i>null</i></li>
      * <li>"facebook"</li>
@@ -75,9 +71,9 @@ class BranchLinkData extends JSONObject {
     /**
      * <p>A {@link String} value identifying the feature that the link makes use of.
      * Should not exceed 128 characters.</p>
-     * <p/>
+     *
      * <b>Example values:</b>
-     * <p/>
+     *
      * <ul>
      * <li><i>null</i></li>
      * <li>Branch.FEATURE_TAG_SHARE</li>
@@ -92,9 +88,9 @@ class BranchLinkData extends JSONObject {
     /**
      * <p>A {@link String} value identifying the stage in an application or user flow process.
      * Should not exceed 128 characters</p>
-     * <p/>
+     *
      * <b>Example values:</b>
-     * <p/>
+     *
      * <ul>
      * <li>null</li>
      * <li>"level_6"</li>
@@ -108,7 +104,7 @@ class BranchLinkData extends JSONObject {
     /**
      * <p>A {@link String} denoting the campaign that the link belongs to.</p>
      * <b>Example values:</b>
-     * <p/>
+     *
      * <ul>
      * <li><i>null</i></li>
      * <li>"Your campaign name"</li>
@@ -190,7 +186,7 @@ class BranchLinkData extends JSONObject {
      * <b>Adds a type to the link.</b>
      *
      * @param type An {@link Integer} value of the type specified. Valid values are:
-     *             <p/>
+     *
      *             <ul>
      *             <li>{@link Branch#LINK_TYPE_UNLIMITED_USE}</li>
      *             <li>{@link Branch#LINK_TYPE_ONE_TIME_USE}</li>
@@ -388,11 +384,9 @@ class BranchLinkData extends JSONObject {
      * Calculates the hash for this object as currently configured and returns
      * the resultant {@link Integer}.
      * </p>
-     * <p/>
-     * <p>
+     *  <p>
      * The hash value is a combination of the hashCode of:
      * </p>
-     * <p/>
      * <ul>
      * <li>alias</li>
      * <li>channel</li>
@@ -400,7 +394,6 @@ class BranchLinkData extends JSONObject {
      * <li>stage</li>
      * <li>params</li>
      * </ul>
-     * <p/>
      * <p>
      * Changing any of these attributes will change the hashCode, making
      * comparison straightforward.

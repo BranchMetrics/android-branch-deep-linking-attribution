@@ -75,7 +75,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(String sku, String name, Double price, int quantity, String brand, String variant, ProductCategory category) {
+    public Product(String sku, String name, Double price, Integer quantity, String brand, String variant, ProductCategory category) {
         this.sku = sku;
         this.name = name;
         this.price = price;
