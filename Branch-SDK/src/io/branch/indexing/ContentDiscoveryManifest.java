@@ -20,9 +20,7 @@ import org.json.JSONObject;
  */
 public class ContentDiscoveryManifest {
     private static ContentDiscoveryManifest thisInstance_;
-    
-    /* JsonObject representation for the CD manifest */
-    private JSONObject cdManifestObject_;
+
     /* Manifest version number */
     private String manifestVersion_;
     /* Max length for an individual text item */
@@ -48,7 +46,8 @@ public class ContentDiscoveryManifest {
     public static final String CONTENT_DISCOVER_KEY = "cd";
     private static final String DISCOVERY_REPEAT_INTERVAL = "dri";
     private static final String MAX_DISCOVERY_REPEAT = "mdr";
-    
+    private static final String LOCAL_INDEX_CTRL = "lic";
+    private static LocalIndexControl localIndexControl;
     static final int DEF_MAX_DISCOVERY_REPEAT = 15; // Default Maximum number for discovery repeat
     static final int DRI_MINIMUM_THRESHOLD = 500; // Minimum value for Discovery repeat interval
     
@@ -68,64 +67,52 @@ public class ContentDiscoveryManifest {
         return thisInstance_;
     }
     
-    private void persist() {
+    private void persist(JSONObject cdManifestObject) {
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(PREF_KEY, cdManifestObject_.toString()).apply();
+        editor.putString(PREF_KEY, cdManifestObject.toString()).apply();
     }
     
     private void retrieve(Context context) {
         String jsonStr = sharedPref.getString(PREF_KEY, null);
         if (jsonStr != null) {
             try {
-                cdManifestObject_ = new JSONObject(jsonStr);
-                if (cdManifestObject_.has(MANIFEST_VERSION_KEY)) {
-                    manifestVersion_ = cdManifestObject_.getString(MANIFEST_VERSION_KEY);
-                }
-                if (cdManifestObject_.has(MANIFEST_KEY)) {
-                    contentPaths_ = cdManifestObject_.getJSONArray(MANIFEST_KEY);
-                }
+                JSONObject cdManifestObject = new JSONObject(jsonStr);
+                updateManifestFromJson(cdManifestObject);
             } catch (JSONException ignored) {
-                cdManifestObject_ = new JSONObject();
             }
-        } else {
-            cdManifestObject_ = new JSONObject();
         }
     }
     
     public void onBranchInitialised(JSONObject branchInitResp) {
-        
         if (branchInitResp.has(CONTENT_DISCOVER_KEY)) {
             isCDEnabled_ = true;
             try {
-                JSONObject cdObj = branchInitResp.getJSONObject(CONTENT_DISCOVER_KEY);
-                
-                if (cdObj.has(MANIFEST_VERSION_KEY)) {
-                    manifestVersion_ = cdObj.getString(MANIFEST_VERSION_KEY);
+                JSONObject cdObj = branchInitResp.optJSONObject(CONTENT_DISCOVER_KEY);
+                if (cdObj != null) {
+                    updateManifestFromJson(cdObj);
+                    JSONObject cdManifestObject = new JSONObject();
+                    cdManifestObject.put(MANIFEST_VERSION_KEY, manifestVersion_);
+                    cdManifestObject.put(MANIFEST_KEY, contentPaths_);
+                    cdManifestObject.put(MAX_VIEW_HISTORY_LENGTH, maxViewHistoryLength_);
+                    cdManifestObject.put(MAX_TEXT_LEN_KEY, maxTextLen_);
+                    cdManifestObject.put(MAX_PACKET_SIZE_KEY, maxPacketSize_);
+                    cdManifestObject.put(LOCAL_INDEX_CTRL, cdObj.optJSONObject(LOCAL_INDEX_CTRL));
+                    persist(cdManifestObject);
                 }
-                if (cdObj.has(MAX_VIEW_HISTORY_LENGTH)) {
-                    maxViewHistoryLength_ = cdObj.getInt(MAX_VIEW_HISTORY_LENGTH);
-                }
-                if (cdObj.has(MANIFEST_KEY)) {
-                    contentPaths_ = cdObj.getJSONArray(MANIFEST_KEY);
-                }
-                if (cdObj.has(MAX_TEXT_LEN_KEY)) {
-                    int maxTextLength = cdObj.getInt(MAX_TEXT_LEN_KEY);
-                    if (maxTextLength > 0) {
-                        maxTextLen_ = maxTextLength;
-                    }
-                }
-                if (cdObj.has(MAX_PACKET_SIZE_KEY)) {
-                    maxPacketSize_ = cdObj.getInt(MAX_PACKET_SIZE_KEY);
-                }
-                cdManifestObject_.put(MANIFEST_VERSION_KEY, manifestVersion_);
-                cdManifestObject_.put(MANIFEST_KEY, contentPaths_);
-                persist();
             } catch (JSONException ignore) {
-                
             }
         } else {
             isCDEnabled_ = false;
         }
+    }
+
+    private void updateManifestFromJson(JSONObject cdObj) {
+        manifestVersion_ = cdObj.optString(MANIFEST_VERSION_KEY);
+        maxViewHistoryLength_ = cdObj.optInt(MAX_VIEW_HISTORY_LENGTH, 1);
+        contentPaths_ = cdObj.optJSONArray(MANIFEST_KEY);
+        maxTextLen_ = cdObj.optInt(MAX_TEXT_LEN_KEY, 0);
+        maxPacketSize_ = cdObj.optInt(MAX_PACKET_SIZE_KEY);
+        localIndexControl = new LocalIndexControl(cdObj.optJSONObject(LOCAL_INDEX_CTRL));
     }
     
     CDPathProperties getCDPathProperties(Activity activity) {
@@ -161,6 +148,14 @@ public class ContentDiscoveryManifest {
     
     int getMaxViewHistorySize() {
         return maxViewHistoryLength_;
+    }
+
+    boolean isLocalIndexingEnabled() {
+        return localIndexControl.isLocalIndexingEnabled;
+    }
+
+    boolean isLocalAutoIndexingEnabled() {
+        return localIndexControl.isAutoLocalIndexingEnabled;
     }
     
     public String getManifestVersion() {
@@ -229,5 +224,21 @@ public class ContentDiscoveryManifest {
             return filteredElements != null && filteredElements.length() == 0;
         }
         
+    }
+
+
+    private static class LocalIndexControl {
+        private static final String ENABLE_LOCAL_INDEXING = "enable_li";
+        private static final String ENABLE_AUTO_LOCAL_INDEXING = "enable_auto_li";
+        private boolean isLocalIndexingEnabled;
+        private boolean isAutoLocalIndexingEnabled;
+
+        public LocalIndexControl(JSONObject jsonObject) {
+            isLocalIndexingEnabled = true;
+            isAutoLocalIndexingEnabled = false;
+            isLocalIndexingEnabled = jsonObject != null && jsonObject.optBoolean(ENABLE_LOCAL_INDEXING, true);
+            isAutoLocalIndexingEnabled = jsonObject != null && jsonObject.optBoolean(ENABLE_AUTO_LOCAL_INDEXING, false);
+        }
+
     }
 }

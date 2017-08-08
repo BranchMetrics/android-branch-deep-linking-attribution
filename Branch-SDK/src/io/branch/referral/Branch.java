@@ -56,7 +56,7 @@ import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
-import io.branch.search.BranchSearchServiceConnection;
+import io.branch.indexing.BranchListContentConnection;
 
 /**
  * <p>
@@ -441,7 +441,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         externalUriWhiteList_ = new ArrayList<>();
         skipExternalUriHosts_ = new ArrayList<>();
-        BranchSearchServiceConnection.getInstance().doBindService(context.getApplicationContext());
+        BranchListContentConnection.getInstance().doBindService(context.getApplicationContext());
     }
 
     /**
