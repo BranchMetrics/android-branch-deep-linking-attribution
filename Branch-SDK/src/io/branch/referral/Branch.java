@@ -2489,9 +2489,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private boolean checkIntentForSessionRestart(Intent intent) {
         boolean isRestartSessionRequested = false;
-        intent = BranchUtil.sanitizeIntent(intent);
         if (intent != null) {
-            isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            try {
+                isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            } catch (BadParcelableException e) {
+
+            }
             if (isRestartSessionRequested) {
                 intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
             }

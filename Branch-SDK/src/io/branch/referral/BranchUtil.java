@@ -106,23 +106,12 @@ class BranchUtil {
         return filteredObj;
     }
 
-
     public static Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return context.getResources().getDrawable(drawableID, context.getTheme());
         } else {
             //noinspection deprecation
             return context.getResources().getDrawable(drawableID);
-        }
-    }
-
-    static Intent sanitizeIntent(final Intent incomingIntent) {
-        if (incomingIntent == null) return null;
-        try {
-            incomingIntent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-            return incomingIntent;
-        } catch (BadParcelableException e) {
-            return incomingIntent.replaceExtras((Bundle) null);
         }
     }
 }
