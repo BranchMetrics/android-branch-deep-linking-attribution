@@ -2486,9 +2486,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
      * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
      *
-     * We are catching BadParcelableException because of this bug: https://chromium.googlesource.com/chromium/src/+/4bca3b37801c502a164536b804879c00aba7d304
-     * In some cases the parcel inside the intent we're parsing can be malformed, this protects us!
-     *
+     * We are catching BadParcelableException because of the issue reported here: https://github.com/BranchMetrics/android-branch-deep-linking/issues/464
+     * Which is also reported here, affecting Chrome: https://bugs.chromium.org/p/chromium/issues/detail?id=412527
+     * Explanation: In some cases the parcel inside the intent we're parsing from Chrome can be malformed, so we need some protection!
+     * The commit which resolved the issue in Chrome lives here: https://chromium.googlesource.com/chromium/src/+/4bca3b37801c502a164536b804879c00aba7d304
+     * We decided for now to protect this one line with a try/catch.
      */
     private boolean checkIntentForSessionRestart(Intent intent) {
         boolean isRestartSessionRequested = false;
