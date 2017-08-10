@@ -1,11 +1,14 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.os.BadParcelableException;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 
@@ -110,6 +113,16 @@ class BranchUtil {
         } else {
             //noinspection deprecation
             return context.getResources().getDrawable(drawableID);
+        }
+    }
+
+    static Intent sanitizeIntent(final Intent incomingIntent) {
+        if (incomingIntent == null) return null;
+        try {
+            incomingIntent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            return incomingIntent;
+        } catch (BadParcelableException e) {
+            return incomingIntent.replaceExtras((Bundle) null);
         }
     }
 }

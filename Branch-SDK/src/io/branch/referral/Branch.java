@@ -13,6 +13,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.BadParcelableException;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -2488,6 +2489,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private boolean checkIntentForSessionRestart(Intent intent) {
         boolean isRestartSessionRequested = false;
+        intent = BranchUtil.sanitizeIntent(intent);
         if (intent != null) {
             isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
             if (isRestartSessionRequested) {
