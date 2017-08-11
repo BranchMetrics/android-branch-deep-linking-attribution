@@ -51,6 +51,7 @@ android {
     lintOptions {
         abortOnError false
     }
+    buildToolsVersion '25.0.0'
 }
 
 task clearJar(type: Delete) {

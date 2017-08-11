@@ -4,6 +4,14 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
+//import com.google.android.gms.tasks.Task;
+//import com.google.firebase.FirebaseApp;
+//import com.google.firebase.appindexing.Action;
+//import com.google.firebase.appindexing.FirebaseAppIndex;
+//import com.google.firebase.appindexing.FirebaseUserActions
+//import com.google.firebase.appindexing.Indexable;
+//import com.google.firebase.appindexing.builders.Indexables;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -17,22 +25,67 @@ import io.branch.referral.util.LinkProperties;
  * </p>
  */
 class AppIndexingHelper {
+//    private static FirebaseUserActions fireBaseUserActionsInstance = null;
+
+//    static {
+//        try {
+//            fireBaseUserActionsInstance = FirebaseUserActions.getInstance();
+//        } catch (NoClassDefFoundError ignore) {
+//            // Expected when Firebase app indexing dependency is not available
+//        } catch (Throwable ignore) {
+//            // unexpected exception
+//        }
+//    }
+
     public static void addToAppIndex(final Context context, final BranchUniversalObject buo) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String urlForAppIndexing = buo.getShortUrl(context, new LinkProperties().setChannel("google_search"));
-                if (!TextUtils.isEmpty(urlForAppIndexing)) {
-                    try {
-                        listOnGoogleSearch(urlForAppIndexing, context, buo);
-                    } catch (Throwable e) {
-                        PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in google search. Please make sure you have the latest google play libs added to your project");
-                    }
-                }
-            }
-        }).run();
+//        try {
+////            FirebaseApp.initializeApp(context);
+//            fireBaseUserActionsInstance = FirebaseUserActions.getInstance();
+//        } catch (NoClassDefFoundError ignore) {
+//            // Expected when Firebase app indexing dependency is not available
+//        } catch (Throwable ignore) {
+//            // unexpected exception
+//        }
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                String contentUrl = buo.getShortUrl(context, new LinkProperties().setChannel("google_search"));
+//                if (!TextUtils.isEmpty(contentUrl)) {
+//                    try {
+//                        if (fireBaseUserActionsInstance != null) {
+//                            addToAppIndexUsingFireBase(contentUrl, buo);
+//                        } else {
+//                            //noinspection deprecation
+//                            listOnGoogleSearch(contentUrl, context, buo);
+//                        }
+//                    } catch (Throwable e) {
+//                        PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in google search. Please make sure you have added latest firebase app indexing SDK to your project dependencies.");
+//                    }
+//                }
+//            }
+//        }).run();
     }
 
+    private static void addToAppIndexUsingFireBase(String contentUrl, BranchUniversalObject buo) {
+//            Indexable noteToIndex = Indexables.newSimple(buo.getTitle(),contentUrl);
+//            Task<Void> task = FirebaseAppIndex.getInstance().update(noteToIndex);
+//
+//        Action action = new Action.Builder(Action.Builder.VIEW_ACTION)
+//                .setObject(buo.getTitle(), contentUrl)
+//                .setMetadata(new Action.Metadata.Builder()
+//                        .setUpload(buo.isPublicallyIndexable()))
+//                .build();
+//
+//        fireBaseUserActionsInstance.end(action);
+    }
+
+    /**
+     * Method to push content to Google app indexing.
+     * This methods has deprecated with firebase-appindexing. This is kept to maintain backward compatibility
+     * TODO this method should be removed after keeping for a while
+     *
+     * @deprecated gms.appindexing is deprecated with firebase.appindexing
+     */
     private static void listOnGoogleSearch(String shortLink, Context context, BranchUniversalObject branchUniversalObject) throws Exception {
         // Create a Thing instance for the BUO with the link to the BUO
         Class<?> ThingClass = Class.forName("com.google.android.gms.appindexing.Thing");
