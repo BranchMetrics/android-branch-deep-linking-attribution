@@ -158,7 +158,7 @@ public class BranchEvent {
      * @param propertyValue {@link String} Value of the custom property
      * @return This object for chaining builder methods
      */
-    public BranchEvent addCustomProperty(String propertyName, Object propertyValue) {
+    public BranchEvent addCustomProperty(String propertyName, String propertyValue) {
         try {
             this.customProperties.put(propertyName, propertyValue);
         } catch (JSONException e) {
