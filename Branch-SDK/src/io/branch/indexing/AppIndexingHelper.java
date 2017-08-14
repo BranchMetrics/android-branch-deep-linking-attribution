@@ -24,39 +24,40 @@ import io.branch.referral.util.LinkProperties;
  * </p>
  */
 class AppIndexingHelper {
-    private static FirebaseUserActions fireBaseUserActionsInstance = null;
+    private static FirebaseUserActions firebaseUserActionsInstance = null;
     
-
+    
     static void addToAppIndex(final Context context, final BranchUniversalObject buo) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 //noinspection all
                 try {
-                    fireBaseUserActionsInstance = FirebaseUserActions.getInstance();
+                    firebaseUserActionsInstance = FirebaseUserActions.getInstance();
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
                 } catch (Throwable ignore) {
                     // unexpected exception
                 }
                 String contentUrl = buo.getShortUrl(context, new LinkProperties().setChannel("google_search"));
+                PrefHelper.Debug("BranchSDK", "Indexing BranchUniversalObject with Google using URL " + contentUrl);
                 if (!TextUtils.isEmpty(contentUrl)) {
                     try {
-                        if (fireBaseUserActionsInstance != null) {
-                            addToAppIndexUsingFireBase(contentUrl, buo);
+                        if (firebaseUserActionsInstance != null) {
+                            addToAppIndexUsingFirebase(contentUrl, buo);
                         } else {
                             //noinspection deprecation
                             listOnGoogleSearch(contentUrl, context, buo);
                         }
                     } catch (Throwable e) {
-                        PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in google search. Please make sure you have added latest firebase app indexing SDK to your project dependencies.");
+                        PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in Google search. Please make sure you have added latest Firebase app indexing SDK to your project dependencies.");
                     }
                 }
             }
         }).run();
     }
     
-    private static void addToAppIndexUsingFireBase(String contentUrl, BranchUniversalObject buo) {
+    private static void addToAppIndexUsingFirebase(String contentUrl, BranchUniversalObject buo) {
         Indexable noteToIndex = Indexables.newSimple(buo.getTitle(), contentUrl);
         Task<Void> task = FirebaseAppIndex.getInstance().update(noteToIndex);
         
@@ -66,7 +67,7 @@ class AppIndexingHelper {
                         .setUpload(buo.isPublicallyIndexable()))
                 .build();
         
-        fireBaseUserActionsInstance.end(action);
+        firebaseUserActionsInstance.end(action);
     }
     
     /**
