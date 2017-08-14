@@ -635,7 +635,7 @@ Note : Please make sure Firebase app indexing is enabled for your application an
 ```java
 'compile 'com.google.firebase:firebase-appindexing:10.0.1'
 ```
-Please refer the following link to test public content indexing with Google https://firebase.google.com/docs/app-indexing/android/test#test-public-content-indexing. 
+Please refer the following link to test [public content indexing with Google](https://firebase.google.com/docs/app-indexing/android/test#test-public-content-indexing). 
 Please enable debug mode and check the logs to get the Branch link used for indexing and use it with the above link to verify content indexing
 ### Showing a Custom Share Sheet
 
