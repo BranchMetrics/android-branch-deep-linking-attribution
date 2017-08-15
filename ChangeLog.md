@@ -1,4 +1,6 @@
 Branch Android SDK change log
+- v2.11.1 Removing app listing related implementations.
+
 - v2.11.0 Disabling external app listing is by default.
 
 - v2.10.3 Fix for reading intent from launcher activity only unless forced to restart session. Instant app utility methods fix for Android `O`
