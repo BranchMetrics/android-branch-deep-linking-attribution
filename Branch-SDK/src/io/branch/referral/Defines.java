@@ -153,7 +153,6 @@ public class Defines {
         RegisterOpen("v1/open"),
         RegisterView("v1/register-view"),
         Referrals("v1/referrals/"),
-        SendAPPList("v1/applist"),
         GetCredits("v1/credits/"),
         GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),

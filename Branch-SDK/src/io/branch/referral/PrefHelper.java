@@ -37,14 +37,6 @@ public class PrefHelper {
     private static boolean BNC_Logging = false;
 
     /**
-     * {@link Boolean} value that determines whether external App Listing is enabled or not.
-     *
-     * @see {@link Branch#scheduleListOfApps()}
-     * @see {@link SystemObserver#getListOfApps()}
-     */
-    private static boolean BNC_App_Listing = false;
-
-    /**
      * A {@link String} value used where no string value is available.
      */
     public static final String NO_STRING_VALUE = "bnc_no_value";
@@ -1151,29 +1143,21 @@ public class PrefHelper {
      * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps to
      * <i>false</i>.</p>
      *
-     * @deprecated App listing is disabled by default.
+     * @deprecated Branch SDK is no more doing external app listing.
      */
     public void disableExternAppListing() {
-        BNC_App_Listing = false;
+        // Do nothing
     }
 
     /**
      * <p>This let Branch to collect the external apps data.
      * Please note that this will let Branch collect information about other apps installed on the device for analytics purpose
      * </p>
+     *
+     * @deprecated Branch SDK is no more doing external app listing.
      */
     public void enableExternAppListing() {
-        BNC_App_Listing = true;
-    }
-
-    /**
-     * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps.</p>
-     *
-     * @return A {@link Boolean} value containing the current value of the
-     * {@link #BNC_App_Listing} boolean.
-     */
-    public boolean getExternAppListing() {
-        return BNC_App_Listing;
+        // Do nothing
     }
 
 

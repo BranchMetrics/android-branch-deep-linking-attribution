@@ -32,10 +32,8 @@ import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -44,9 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -321,7 +316,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private Map<BranchLinkData, String> linkCache_;
 
-    private ScheduledFuture<?> appListingSchedule_;
 
     /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
     private static boolean isAutoSessionMode_ = false;
@@ -1266,11 +1260,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private void closeSessionInternal() {
         executeClose();
         sessionReferredLink_ = null;
-        if (prefHelper_.getExternAppListing()) {
-            if (appListingSchedule_ == null) {
-                scheduleListOfApps();
-            }
-        }
     }
 
     /**
@@ -2057,47 +2046,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-    }
-
-    /**
-     * <p>Schedules a repeating threaded task to get the following details and report them to the
-     * Branch API <b>once a week</b>:</p>
-     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
-     * int interval = 7 * 24 * 60 * 60;
-     * appListingSchedule_ = scheduler.scheduleAtFixedRate(
-     * periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);</pre>
-     * <ul>
-     * <li>{@link SystemObserver#getOS()}</li>
-     * <li>{@link SystemObserver#getListOfApps()}</li>
-     * </ul>
-     *
-     * @see {@link SystemObserver}
-     * @see {@link PrefHelper}
-     */
-    private void scheduleListOfApps() {
-        ScheduledThreadPoolExecutor scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
-        Runnable periodicTask = new Runnable() {
-            @Override
-            public void run() {
-                ServerRequest req = new ServerRequestSendAppList(context_);
-                if (!req.constructError_ && !req.handleErrors(context_)) {
-                    handleNewRequest(req);
-                }
-            }
-        };
-
-        Date date = new Date();
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(date);
-
-        int days = Calendar.SATURDAY - calendar.get(Calendar.DAY_OF_WEEK);    // days to Saturday
-        int hours = 2 - calendar.get(Calendar.HOUR_OF_DAY);    // hours to 2am, can be negative
-        if (days == 0 && hours < 0) {
-            days = 7;
-        }
-        int interval = 7 * 24 * 60 * 60;
-
-        appListingSchedule_ = scheduler.scheduleAtFixedRate(periodicTask, (days * 24 + hours) * 60 * 60, interval, TimeUnit.SECONDS);
     }
 
     private void processNextQueueItem() {
@@ -3605,6 +3553,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
 
     ///----------------- Instant App  support--------------------------//
+
     /**
      * Checks if this is an Instant app instance
      *
