@@ -37,14 +37,6 @@ public class PrefHelper {
     private static boolean BNC_Logging = false;
 
     /**
-     * {@link Boolean} value that determines whether external App Listing is enabled or not.
-     *
-     * @see {@link Branch#scheduleListOfApps()}
-     * @see {@link SystemObserver#getListOfApps()}
-     */
-    private static boolean BNC_App_Listing = true;
-
-    /**
      * A {@link String} value used where no string value is available.
      */
     public static final String NO_STRING_VALUE = "bnc_no_value";
@@ -550,8 +542,6 @@ public class PrefHelper {
     public String getGooglePlayReferrer() {
         return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
     }
-
-
 
 
     /**
@@ -1152,19 +1142,22 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps to
      * <i>false</i>.</p>
+     *
+     * @deprecated Branch SDK is no more doing external app listing.
      */
     public void disableExternAppListing() {
-        BNC_App_Listing = false;
+        // Do nothing
     }
 
     /**
-     * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps.</p>
+     * <p>This let Branch to collect the external apps data.
+     * Please note that this will let Branch collect information about other apps installed on the device for analytics purpose
+     * </p>
      *
-     * @return A {@link Boolean} value containing the current value of the
-     * {@link #BNC_App_Listing} boolean.
+     * @deprecated Branch SDK is no more doing external app listing.
      */
-    public boolean getExternAppListing() {
-        return BNC_App_Listing;
+    public void enableExternAppListing() {
+        // Do nothing
     }
 
 
