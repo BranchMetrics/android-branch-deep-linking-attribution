@@ -353,8 +353,6 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestRegisterInstall(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
             extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.SendAPPList.getPath())) {
-            extendedReq = new ServerRequestSendAppList(requestPath, post, context);
         }
 
         return extendedReq;
