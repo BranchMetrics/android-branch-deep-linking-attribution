@@ -160,8 +160,7 @@ public class Defines {
         Longitude("$longitude"),
         ImageCaptions("$image_captions"),
         Condition("$condition"),
-        CreationTimestamp("$creation_timestamp"),
-        Runtime("$run_time");
+        CreationTimestamp("$creation_timestamp");
 
         
         private String key = "";

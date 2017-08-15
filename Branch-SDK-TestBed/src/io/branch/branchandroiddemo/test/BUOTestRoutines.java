@@ -56,7 +56,6 @@ public class BUOTestRoutines {
                                     .setQuantity(1.5)
                                     .setSku("test_sku")
                                     .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-
                     )
                     .addKeyWord("keyword1")
                     .addKeyWord("keyword2");
@@ -84,8 +83,6 @@ public class BUOTestRoutines {
         return (checkIfIdenticalJson(buo.getContentMetadata().convertToJson(), buo2.getContentMetadata().convertToJson()))
                 && (checkIfIdenticalJson(testBuoJson1, testBuoJson2))
                 && (checkIfIdenticalJson(testBuoJson1, buoCreatedFromParcel.convertToJson()));
-
-
     }
 
     private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2) {

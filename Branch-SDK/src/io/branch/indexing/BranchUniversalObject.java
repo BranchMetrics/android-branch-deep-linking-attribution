@@ -447,7 +447,7 @@ public class BranchUniversalObject implements Parcelable {
      * @deprecated please use {@link ContentMetadata#contentSchema}
      */
     public String getType() {
-        return "";
+        return null;
     }
 
     /**

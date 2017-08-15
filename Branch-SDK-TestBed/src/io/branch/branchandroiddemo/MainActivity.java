@@ -262,7 +262,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                                //.setAlias("mylinkName") // In case you need to white label your link
+//                        .setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -359,8 +359,6 @@ public class MainActivity extends Activity {
                         .addCustomProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this);
-
-
             }
         });
 

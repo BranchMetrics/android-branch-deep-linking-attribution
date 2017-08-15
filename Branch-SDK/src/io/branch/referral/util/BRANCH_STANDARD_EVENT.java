@@ -7,7 +7,7 @@ package io.branch.referral.util;
  * </p>
  */
 public enum BRANCH_STANDARD_EVENT {
-    // Commerce Events
+    // Commerce events
     ADD_TO_CART("ADD_TO_CART"),
     ADD_TO_WISHLIST("ADD_TO_WISHLIST"),
     VIEW_CART("VIEW_CART"),
@@ -23,7 +23,7 @@ public enum BRANCH_STANDARD_EVENT {
     RATE("RATE"),
     SHARE_CONTENT("SHARE_CONTENT"),
 
-    //Life cycle events
+    // User lifecycle events
     COMPLETE_REGISTRATION("COMPLETE_REGISTRATION"),
     COMPLETE_TUTORIAL("COMPLETE_TUTORIAL"),
     ACHIEVE_LEVEL("ACHIEVE_LEVEL"),
