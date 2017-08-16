@@ -803,11 +803,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * <p>Calls the {@link PrefHelper#disableExternAppListing()} on the local instance to prevent
-     * a list of installed apps from being returned to the Branch API.</p>
+     * @deprecated Branch is not listing external apps any more from v2.11.0
      */
     public void disableAppList() {
-        prefHelper_.disableExternAppListing();
+      // Do nothing
     }
 
     /**

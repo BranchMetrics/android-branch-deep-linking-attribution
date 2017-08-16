@@ -69,7 +69,7 @@ class SystemObserver {
      *
      * @param context Current application context
      */
-    public SystemObserver(Context context) {
+    SystemObserver(Context context) {
         context_ = context;
         isRealHardwareId = true;
     }
@@ -86,7 +86,7 @@ class SystemObserver {
      * @return <p>A {@link String} value representing the unique ANDROID_ID of the device, or a randomly-generated
      * debug value in place of a real identifier.</p>
      */
-    public String getUniqueID(boolean debug) {
+    String getUniqueID(boolean debug) {
         if (context_ != null) {
             String androidID = null;
             if (!debug) {
@@ -109,7 +109,7 @@ class SystemObserver {
      * @return <p>A {@link Boolean} value indicating whether or not the current device has a hardware
      * identifier; {@link Secure#ANDROID_ID}</p>
      */
-    public boolean hasRealHardwareId() {
+    boolean hasRealHardwareId() {
         return isRealHardwareId;
     }
 
@@ -118,7 +118,7 @@ class SystemObserver {
      *
      * @return {@link String} with value as package name. Empty String in case of error
      */
-    public String getPackageName() {
+    String getPackageName() {
         String packageName = "";
         try {
             PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
@@ -137,7 +137,7 @@ class SystemObserver {
      *
      * @return A {@link String} value containing the response from {@link SystemObserver#getURIScheme(String)}.
      */
-    public String getURIScheme() {
+    String getURIScheme() {
         return getURIScheme(context_.getPackageName());
     }
 
@@ -149,7 +149,7 @@ class SystemObserver {
      * @param packageName A {@link String} containing the full package name of the app to check.
      * @return <p>A {@link String} containing the output of {@link ApkParser#decompressXML(byte[])}.</p>
      */
-    public String getURIScheme(String packageName) {
+    private String getURIScheme(String packageName) {
         String scheme = BLANK;
         if (!isLowOnMemory()) {
             PackageManager pm = context_.getPackageManager();
@@ -197,92 +197,20 @@ class SystemObserver {
      * <li><i>false</i> - the device has plenty of free memory.</li>
      * </ul>
      */
-    private boolean isLowOnMemory() {
+    boolean isLowOnMemory() {
         ActivityManager activityManager = (ActivityManager) context_.getSystemService(Context.ACTIVITY_SERVICE);
         MemoryInfo mi = new MemoryInfo();
         activityManager.getMemoryInfo(mi);
         return mi.lowMemory;
     }
-
-    /**
-     * <p>Gets a {@link JSONArray} object containing a list of the applications that are installed
-     * on the current device.</p>
-     * <p>The method gets a handle on the {@link PackageManager} and calls the
-     * {@link PackageManager#getInstalledApplications(int)} method to retrieve a {@link List} of
-     * {@link ApplicationInfo} objects, each representing a single application that is installed on
-     * the current device.</p>
-     * <p>For each of these items, the method gets the attributes shown below, and constructs a
-     * {@link JSONArray} representation of the list, which can be consumed by a JSON parser on the
-     * server.</p>
-     * <ul>
-     * <li>loadLabel</li>
-     * <li>packageName</li>
-     * <li>publicSourceDir</li>
-     * <li>sourceDir</li>
-     * <li>publicSourceDir</li>
-     * <li>uriScheme</li>
-     * </ul>
-     *
-     * @return <p>A {@link JSONArray} containing information about all of the applications installed on the
-     * current device.</p>
-     */
-    @SuppressLint("NewApi")
-    public JSONArray getListOfApps() {
-        JSONArray arr = new JSONArray();
-        PackageManager pm = context_.getPackageManager();
-
-        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        if (packages != null) {
-            for (ApplicationInfo appInfo : packages) {
-                if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
-                    JSONObject packObj = new JSONObject();
-                    try {
-                        CharSequence labelCs = appInfo.loadLabel(pm);
-                        String label = labelCs == null ? null : labelCs.toString();
-                        if (label != null)
-                            packObj.put("name", label);
-                        String packName = appInfo.packageName;
-                        if (packName != null) {
-                            packObj.put(Defines.Jsonkey.AppIdentifier.getKey(), packName);
-                            String uriScheme = getURIScheme(packName);
-                            if (!uriScheme.equals(SystemObserver.BLANK))
-                                packObj.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
-                        }
-                        String pSourceDir = appInfo.publicSourceDir;
-                        if (pSourceDir != null)
-                            packObj.put("public_source_dir", pSourceDir);
-                        String sourceDir = appInfo.sourceDir;
-                        if (sourceDir != null)
-                            packObj.put("source_dir", sourceDir);
-
-                        PackageInfo packInfo = pm.getPackageInfo(appInfo.packageName, PackageManager.GET_PERMISSIONS);
-                        if (packInfo != null) {
-                            if (packInfo.versionCode >= 9) {
-                                packObj.put("install_date", packInfo.firstInstallTime);
-                                packObj.put("last_update_date", packInfo.lastUpdateTime);
-                            }
-                            packObj.put("version_code", packInfo.versionCode);
-                            if (packInfo.versionName != null)
-                                packObj.put("version_name", packInfo.versionName);
-                        }
-                        packObj.put(Defines.Jsonkey.OS.getKey(), this.getOS());
-
-                        arr.put(packObj);
-                    } catch (JSONException | NameNotFoundException ignore) {
-                    }
-                }
-            }
-        }
-        return arr;
-    }
-
+    
     /**
      * <p>Gets the package name of the current application that the SDK is integrated with.</p>
      *
      * @return <p>A {@link String} value containing the full package name of the application that the SDK is
      * currently integrated into.</p>
      */
-    public String getAppVersion() {
+    String getAppVersion() {
         try {
             PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
             if (packageInfo.versionName != null)
@@ -302,7 +230,7 @@ class SystemObserver {
      * @see <a href="http://developer.android.com/reference/android/os/Build.html#MANUFACTURER">
      * Build.MANUFACTURER</a>
      */
-    public String getPhoneBrand() {
+    String getPhoneBrand() {
         return android.os.Build.MANUFACTURER;
     }
 
@@ -314,7 +242,7 @@ class SystemObserver {
      * Build.MODEL
      * </a>
      */
-    public String getPhoneModel() {
+    String getPhoneModel() {
         return android.os.Build.MODEL;
     }
 
@@ -323,7 +251,7 @@ class SystemObserver {
      *
      * @return A string representing the ISO2 Country code (eg US, IN)
      */
-    public String getISO2CountryCode() {
+    String getISO2CountryCode() {
         if (Locale.getDefault() != null) {
             return Locale.getDefault().getCountry();
         } else {
@@ -336,7 +264,7 @@ class SystemObserver {
      *
      * @return A string representing the ISO2 language code (eg en, ml)
      */
-    public String getISO2LanguageCode() {
+    String getISO2LanguageCode() {
         if (Locale.getDefault() != null) {
             return Locale.getDefault().getLanguage();
         } else {
@@ -352,7 +280,7 @@ class SystemObserver {
      *
      * @return A {@link String} value that indicates the broad OS type that is in use on the device.
      */
-    public String getOS() {
+    String getOS() {
         return "Android";
     }
 
@@ -374,31 +302,10 @@ class SystemObserver {
      * @see <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels">
      * Android Developers - API Level and Platform Version</a>
      */
-    public int getOSVersion() {
+    int getOSVersion() {
         return android.os.Build.VERSION.SDK_INT;
     }
 
-    /**
-     * <p>As the Build fingerprint is determined by the OS fingerprint, this will identify whether a
-     * an emulator is being used where the developer of said emulator has followed convention and
-     * used <b>generic</b> as the first segment of the virtual device fingerprint.</p>
-     * Example of a <u>real device</u> (Google Nexus 5, Android 5.1):
-     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
-     * <b>google</b>/hammerhead/hammerhead:5.1/LMY47D/1743759:user/release-keys</pre>
-     * Example of an <u>emulator</u> (Genymotion Nexus 6 AVD, Android 5.0):
-     * <pre style="background:#fff;padding:10px;border:2px solid silver;">
-     * <b>generic</b>/vbox86p/vbox86p:5.0/LRX21M/buildbot12160004:userdebug/test-keys</pre>
-     *
-     * @return <p>A {@link Boolean} value indicating whether the device upon which the app is being run is
-     * a simulated platform, i.e. an emulator. Or a real, hardware device.</p>
-     * <ul>
-     * <li><i>true</i> - the app is running on an emulator</li>
-     * <li><i>false</i> - the app is running on a physical device (or a badly configured AVD)</li>
-     * </ul>
-     */
-    public boolean isSimulator() {
-        return android.os.Build.FINGERPRINT.contains("generic");
-    }
 
     /**
      * <p>This method returns an {@link Integer} value dependent on whether the application has been
@@ -424,7 +331,7 @@ class SystemObserver {
      * </ul>
      */
     @SuppressLint("NewApi")
-    public int getUpdateState() {
+    int getUpdateState() {
         PrefHelper pHelper = PrefHelper.getInstance(context_);
         String currAppVersion = getAppVersion();
         if (PrefHelper.NO_STRING_VALUE.equals(pHelper.getAppVersion())) {
@@ -461,7 +368,7 @@ class SystemObserver {
      * @return <p>A {@link DisplayMetrics} object representing the default display of the device.</p>
      * @see DisplayMetrics
      */
-    public DisplayMetrics getScreenDisplay() {
+    DisplayMetrics getScreenDisplay() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         Display display = ((WindowManager) context_.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         display.getMetrics(displayMetrics);
@@ -499,7 +406,7 @@ class SystemObserver {
      *
      * @return {@link Object} instance of AdvertisingIdClient class
      */
-    public Object getAdInfoObject() {
+    private Object getAdInfoObject() {
         Object adInfoObj = null;
         try {
             Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
@@ -521,7 +428,7 @@ class SystemObserver {
      * @see <a href="https://developer.android.com/google/play-services/id.html">
      * Android Developers - Advertising ID</a>
      */
-    public String getAdvertisingId(Object adInfoObj) {
+    private String getAdvertisingId(Object adInfoObj) {
         try {
             Method getIdMethod = adInfoObj.getClass().getMethod("getId");
             GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
@@ -538,7 +445,7 @@ class SystemObserver {
      * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
      * Android Developers - Limit Ad Tracking</a>
      */
-    public int getLATValue(Object adInfoObj) {
+    private int getLATValue(Object adInfoObj) {
         try {
             Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
             LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
@@ -555,7 +462,7 @@ class SystemObserver {
      * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion
      * @return {@link Boolean} with true if GAID fetch process started.
      */
-    public boolean prefetchGAdsParams(GAdsParamsFetchEvents callback) {
+    boolean prefetchGAdsParams(GAdsParamsFetchEvents callback) {
         boolean isPrefetchStarted = false;
         if (TextUtils.isEmpty(GAIDString_)) {
             isPrefetchStarted = true;
@@ -619,7 +526,7 @@ class SystemObserver {
     /**
      * Get IP address from first non local net Interface
      */
-    public static String getLocalIPAddress() {
+    static String getLocalIPAddress() {
         String ipAddress = "";
         try {
             List<NetworkInterface> netInterfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -641,5 +548,4 @@ class SystemObserver {
 
         return ipAddress;
     }
-
 }
