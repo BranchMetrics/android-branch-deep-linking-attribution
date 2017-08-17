@@ -20,26 +20,32 @@ import io.branch.referral.util.LinkProperties;
 /**
  * Created by sojanpr on 5/18/16.
  * <p>
- * Helper class for publishing BUO with google app indexing
+ * Helper class for publishing BUO with Google app indexing
  * </p>
  */
 class AppIndexingHelper {
     private static FirebaseUserActions firebaseUserActionsInstance = null;
+    private static final LinkProperties DEF_LINK_PROPERTIES = new LinkProperties().setChannel("google_search");
     
-    
-    static void addToAppIndex(final Context context, final BranchUniversalObject buo) {
+    static void addToAppIndex(final Context context, final BranchUniversalObject buo, final LinkProperties linkProperties) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                //noinspection all
                 try {
                     firebaseUserActionsInstance = FirebaseUserActions.getInstance();
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
+                    PrefHelper.Debug("BranchSDK", "Firebase app indexing is not available. Please consider enabling Firebase app indexing for your app for better indexing experience with Google.");
                 } catch (Throwable ignore) {
                     // unexpected exception
+                    PrefHelper.Debug("BranchSDK", "Failed to index your contents using Firebase. Please make sure Firebase  is enabled and initialised in your app");
                 }
-                String contentUrl = buo.getShortUrl(context, new LinkProperties().setChannel("google_search"));
+                String contentUrl;
+                if (linkProperties == null) {
+                    contentUrl = buo.getShortUrl(context, DEF_LINK_PROPERTIES);
+                } else {
+                    contentUrl = buo.getShortUrl(context, linkProperties);
+                }
                 PrefHelper.Debug("BranchSDK", "Indexing BranchUniversalObject with Google using URL " + contentUrl);
                 if (!TextUtils.isEmpty(contentUrl)) {
                     try {
@@ -57,16 +63,44 @@ class AppIndexingHelper {
         }).run();
     }
     
+    static void removeFromFirebaseLocalIndex(final Context context, final BranchUniversalObject buo, final LinkProperties linkProperties) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String contentUrl;
+                    if (linkProperties == null) {
+                        contentUrl = buo.getShortUrl(context, DEF_LINK_PROPERTIES);
+                    } else {
+                        contentUrl = buo.getShortUrl(context, linkProperties);
+                    }
+                    PrefHelper.Debug("BranchSDK", "Removing indexed BranchUniversalObject with link " + contentUrl);
+                    FirebaseAppIndex.getInstance().remove(contentUrl);
+                } catch (NoClassDefFoundError ignore) {
+                    // Expected when Firebase app indexing dependency is not available
+                    PrefHelper.Debug("BranchSDK", "Failed to remove the BranchUniversalObject from Firebase local indexing. Please make sure Firebase is enabled and initialised in your app");
+                } catch (Throwable ignore) {
+                    // unexpected exception
+                    PrefHelper.Debug("BranchSDK", "Failed to index your contents using Firebase. Please make sure Firebase is enabled and initialised in your app");
+                }
+            }
+        }).run();
+    }
+    
     private static void addToAppIndexUsingFirebase(String contentUrl, BranchUniversalObject buo) {
-        Indexable noteToIndex = Indexables.newSimple(buo.getTitle(), contentUrl);
-        Task<Void> task = FirebaseAppIndex.getInstance().update(noteToIndex);
+        //PRS: Add to the Firebase local app indexing only if BUO is locally indexable
+        String contentText = buo.getTitle() + "\n" + buo.getDescription();
+        if (buo.isLocallyIndexable()) {
+            Indexable buoToIndex = Indexables.newSimple(contentText, contentUrl);
+            Task<Void> task = FirebaseAppIndex.getInstance().update(buoToIndex);
+        }
         
+        // Log a Firebase user action inorder for Google to Index the content
         Action action = new Action.Builder(Action.Builder.VIEW_ACTION)
-                .setObject(buo.getTitle(), contentUrl)
+                .setObject(contentText, contentUrl)
                 .setMetadata(new Action.Metadata.Builder()
-                        .setUpload(buo.isPublicallyIndexable()))
+                        .setUpload(buo.isPublicallyIndexable())) // Safety check. Only publicaly indexable contents are updated to Google
                 .build();
-        
         firebaseUserActionsInstance.end(action);
     }
     
