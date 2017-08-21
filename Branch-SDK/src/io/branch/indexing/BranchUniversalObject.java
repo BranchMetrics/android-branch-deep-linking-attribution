@@ -285,9 +285,8 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @param action A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
-     * @deprecated please use {@link #userCompletedAction(BRANCH_STANDARD_EVENT)} instead
+     * NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT)} instead
      */
-    @SuppressWarnings("deprecation")
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
     }
@@ -299,7 +298,6 @@ public class BranchUniversalObject implements Parcelable {
      *
      * @param action A {@link BRANCH_STANDARD_EVENT }with value of user action name.  See {@link BRANCH_STANDARD_EVENT} for Branch defined user events.
      */
-    @SuppressWarnings("deprecation")
     public void userCompletedAction(BRANCH_STANDARD_EVENT action) {
         userCompletedAction(action.getName(), null);
     }
@@ -311,9 +309,8 @@ public class BranchUniversalObject implements Parcelable {
      *
      * @param action   A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
-     * @deprecated please use {@link #userCompletedAction(BRANCH_STANDARD_EVENT, HashMap)} instead
+     * NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT, HashMap)} instead
      */
-    @SuppressWarnings("deprecation")
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
