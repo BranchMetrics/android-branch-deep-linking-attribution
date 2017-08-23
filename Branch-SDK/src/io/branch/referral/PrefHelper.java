@@ -1139,28 +1139,6 @@ public class PrefHelper {
         BNC_Logging = logging;
     }
 
-    /**
-     * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps to
-     * <i>false</i>.</p>
-     *
-     * @deprecated Branch SDK is no more doing external app listing.
-     */
-    public void disableExternAppListing() {
-        // Do nothing
-    }
-
-    /**
-     * <p>This let Branch to collect the external apps data.
-     * Please note that this will let Branch collect information about other apps installed on the device for analytics purpose
-     * </p>
-     *
-     * @deprecated Branch SDK is no more doing external app listing.
-     */
-    public void enableExternAppListing() {
-        // Do nothing
-    }
-
-
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         if (key == null) {
             return;
