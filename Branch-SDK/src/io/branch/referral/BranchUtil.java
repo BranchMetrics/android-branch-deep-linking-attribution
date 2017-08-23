@@ -103,7 +103,6 @@ class BranchUtil {
         return filteredObj;
     }
 
-
     public static Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return context.getResources().getDrawable(drawableID, context.getTheme());
