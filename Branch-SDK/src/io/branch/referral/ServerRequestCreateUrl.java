@@ -6,6 +6,7 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.util.Collection;
 
 /**
@@ -237,7 +238,12 @@ class ServerRequestCreateUrl extends ServerRequest {
         if (params != null && params.length() > 0) {
             byte[] data = params.getBytes();
             String base64Data = Base64.encodeToString(data, android.util.Base64.NO_WRAP);
-            longUrl = longUrl + "source=android&data=" + base64Data;
+            try {
+                String urlEncodedBase64Data = URLEncoder.encode(base64Data,"UTF8");
+                longUrl = longUrl + "source=android&data=" + urlEncodedBase64Data;
+            } catch (Exception ignore) {
+                callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.",BranchError.ERR_BRANCH_INVALID_REQUEST));
+            }
         }
 
         return longUrl;
