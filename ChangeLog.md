@@ -1,4 +1,7 @@
 Branch Android SDK change log
+
+- v2.12.0 Adding support for Firebase based app indexing and local content indexing. Few proactive protections for parcel errors caused by malformed parcels in the intent. Url encoding for long link params.
+
 - v2.11.1 Removing app listing related implementations.
 
 - v2.11.0 Disabling external app listing is by default.
