@@ -626,15 +626,21 @@ branchUniversalObject.generateShortUrl(this, linkProperties, new BranchLinkCreat
 });
 ```
 ### List links in Google Search with App Indexing
-Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google Search via their App Indexing API. Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
+Getting your Branch link and app content listed in Google search is very easy with BranchUniversalObject. Once you've created the BUO, use the following API to list your app contents in Google Search via Firebase App Indexing API. Your app will be opened with deep link data upon user clicking the search result and the session will be tracked.
+This also allow your contents Indexed locally and shown in Google `In Apps` search. By default the the BranchUniversal objects are locally indexable. Set your BranchUniversalObject's local index mode to `private` if intended to avoid indexing locally
 
 ```java
 branchUniversalObject.listOnGoogleSearch(context);
 ```
-Note : Please make sure you have added the following to your gradle dependency
+**NOTE** Please make sure Firebase app indexing is enabled for your application and has Firebase app indexing dependency added
 ```java
-'com.google.android.gms:play-services-appindexing:9.+'
+'compile 'com.google.firebase:firebase-appindexing:10.0.1'
 ```
+To test content indexing follow instructions[here](https://firebase.google.com/docs/app-indexing/android/test#test-public-content-indexing). 
+Please enable debug mode and check the logs to get the Branch link used for indexing and use it with the above link to verify content indexing.
+
+**NOTE** Use `BranchUniversalObject#removeFromLocalIndexing` method to remove the contents from local index. Please make sure to remove user specific contents from local index up on user logout.
+
 ### Showing a Custom Share Sheet
 
 We’ve realized that Android had some very poor offerings for native share sheet functionality, so we built our own and bundled it into the core SDK. This share sheet it customizable and will automatically generate a link when the user selects a channel to share to.
