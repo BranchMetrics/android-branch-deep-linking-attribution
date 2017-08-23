@@ -89,6 +89,7 @@ public class Defines {
         
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
+        LocallyIndexable("$locally_indexable"),
         ContentKeyWords("$keywords"),
         ContentExpiryTime("$exp_date"),
         Params("params"),
@@ -152,17 +153,11 @@ public class Defines {
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
         RegisterView("v1/register-view"),
-        Referrals("v1/referrals/"),
         GetCredits("v1/credits/"),
         GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
-        Logout("v1/logout"),
-        GetReferralCode("v1/referralcode"),
-        ValidateReferralCode("v1/referralcode/"),
-        ApplyReferralCode("v1/applycode/"),
-        DebugConnect("v1/debug/connect"),
-        ContentEvent("v1/content-events");
+        Logout("v1/logout");
         
         private String key = "";
         

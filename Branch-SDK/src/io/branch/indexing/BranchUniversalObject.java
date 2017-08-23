@@ -55,11 +55,13 @@ public class BranchUniversalObject implements Parcelable {
     private final ArrayList<String> keywords_;
     /* Expiry date for the content and any associated links. Represented as epoch milli second */
     private long expirationInMilliSec_;
+    /* Index mode for  local content indexing */
+    private CONTENT_INDEX_MODE localIndexMode_;
     /* Price associated with the content of this BUO */
     private Double price_;
     /* Type of the currency associated with the price */
     private CurrencyType currency_;
-
+    
     /**
      * Defines the Content indexing modes
      * PUBLIC | PRIVATE
@@ -69,8 +71,8 @@ public class BranchUniversalObject implements Parcelable {
         // PUBLIC_IN_APP, /* Referred contents are publically available to the any app user */
         PRIVATE/* Referred contents are not publically indexable */
     }
-
-
+    
+    
     /**
      * <p>
      * Create a BranchUniversalObject with the given content.
@@ -85,10 +87,11 @@ public class BranchUniversalObject implements Parcelable {
         description_ = "";
         type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
+        localIndexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default local indexing mode is public
         expirationInMilliSec_ = 0L;
         currency_ = CurrencyType.USD;
     }
-
+    
     /**
      * <p>
      * Set the canonical identifier for this BranchUniversalObject. Canonical identifier is normally the canonical path for your content in the application or web
@@ -101,7 +104,7 @@ public class BranchUniversalObject implements Parcelable {
         this.canonicalIdentifier_ = canonicalIdentifier;
         return this;
     }
-
+    
     /**
      * <p>
      * Canonical url for the content referred. This would be the corresponding website URL.
@@ -114,7 +117,7 @@ public class BranchUniversalObject implements Parcelable {
         this.canonicalUrl_ = canonicalUrl;
         return this;
     }
-
+    
     /**
      * <p>
      * Set a title for the content referred by this object
@@ -127,7 +130,7 @@ public class BranchUniversalObject implements Parcelable {
         this.title_ = title;
         return this;
     }
-
+    
     /**
      * <p>
      * Set description for the content for the content referred by this object
@@ -140,7 +143,7 @@ public class BranchUniversalObject implements Parcelable {
         this.description_ = description;
         return this;
     }
-
+    
     /**
      * <p>
      * Set the url to any image associated with this content.
@@ -153,7 +156,7 @@ public class BranchUniversalObject implements Parcelable {
         this.imageUrl_ = imageUrl;
         return this;
     }
-
+    
     /**
      * <p>
      * Adds the the given set of key value pairs to the metadata associated with this content. These key values are passed to another user on deep linking.
@@ -167,7 +170,7 @@ public class BranchUniversalObject implements Parcelable {
         this.metadata_.putAll(metadata);
         return this;
     }
-
+    
     /**
      * <p>
      * Adds the the given set of key value pair to the metadata associated with this content. These key value is passed to another user on deep linking.
@@ -181,7 +184,7 @@ public class BranchUniversalObject implements Parcelable {
         this.metadata_.put(key, value);
         return this;
     }
-
+    
     /**
      * <p>
      * Sets the content type for this Object
@@ -194,7 +197,7 @@ public class BranchUniversalObject implements Parcelable {
         this.type_ = type;
         return this;
     }
-
+    
     /**
      * <p>
      * Set the indexing mode for the content referred in this object
@@ -207,7 +210,22 @@ public class BranchUniversalObject implements Parcelable {
         this.indexMode_ = indexMode;
         return this;
     }
-
+    
+    /**
+     * <p>
+     * Set the Local indexing mode for the content referred in this object.
+     * NOTE: The locally indexable contents are added to the local indexing services , if supported, when listing the contents on Google or other content indexing services.
+     * So please make sure you are marking local index mode to {@link CONTENT_INDEX_MODE#PRIVATE} if you don't want to list the contents locally on device
+     * </p>
+     *
+     * @param localIndexMode {@link BranchUniversalObject.CONTENT_INDEX_MODE} value for the content referred
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchUniversalObject setLocalIndexMode(CONTENT_INDEX_MODE localIndexMode) {
+        this.localIndexMode_ = localIndexMode;
+        return this;
+    }
+    
     /**
      * <p>
      * Adds any keywords associated with the content referred
@@ -221,7 +239,7 @@ public class BranchUniversalObject implements Parcelable {
         this.keywords_.addAll(keywords);
         return this;
     }
-
+    
     /**
      * <p>
      * Add a keyword associated with the content referred
@@ -234,7 +252,7 @@ public class BranchUniversalObject implements Parcelable {
         this.keywords_.add(keyword);
         return this;
     }
-
+    
     /**
      * <p>
      * Set the content expiration time.
@@ -247,7 +265,7 @@ public class BranchUniversalObject implements Parcelable {
         this.expirationInMilliSec_ = expirationDate.getTime();
         return this;
     }
-
+    
     /**
      * <p>
      * Set the price associated with content of this BUO if any
@@ -262,7 +280,7 @@ public class BranchUniversalObject implements Parcelable {
         currency_ = currency;
         return this;
     }
-
+    
     /**
      * <p>
      * Publish this BUO with Google app indexing so that the contents will be available with google search
@@ -272,9 +290,43 @@ public class BranchUniversalObject implements Parcelable {
      * @param context Application context
      */
     public void listOnGoogleSearch(Context context) {
-        AppIndexingHelper.addToAppIndex(context, this);
+        AppIndexingHelper.addToAppIndex(context, this, null);
     }
-
+    
+    /**
+     * <p>
+     * Publish this BUO with Google app indexing so that the contents will be available with google search
+     * with branch link pointing to the app. This method takes additional {@link LinkProperties} parameter to configure the link settings for your link that is indexed
+     * </p>
+     *
+     * @param context Application context
+     */
+    public void listOnGoogleSearch(Context context, LinkProperties linkProperties) {
+        AppIndexingHelper.addToAppIndex(context, this, linkProperties);
+    }
+    
+    /**
+     * Remove the BUO from the local indexing if it is added to the local indexing already
+     * This will remove the content from Google(Firebase) and other supported Indexing services
+     *
+     * @param context Application context
+     */
+    public void removeFromLocalIndexing(Context context) {
+        AppIndexingHelper.removeFromFirebaseLocalIndex(context, this, null);
+    }
+    
+    /**
+     * Remove the BUO from the local indexing if it is added to the local indexing already
+     * This will remove the content from Google(Firebase) and other supported Indexing services
+     * This method takes additional {@link LinkProperties} parameter. Use this method if you indexed the content using {@link #listOnGoogleSearch(Context, LinkProperties)} method
+     * otherwise use {@link #removeFromLocalIndexing(Context)}
+     *
+     * @param context Application context
+     */
+    public void removeFromLocalIndexing(Context context, LinkProperties linkProperties) {
+        AppIndexingHelper.removeFromFirebaseLocalIndex(context, this, linkProperties);
+    }
+    
     /**
      * <p>
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
@@ -285,7 +337,7 @@ public class BranchUniversalObject implements Parcelable {
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
     }
-
+    
     /**
      * <p>
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
@@ -312,7 +364,7 @@ public class BranchUniversalObject implements Parcelable {
         } catch (JSONException ignore) {
         }
     }
-
+    
     /**
      * <p>
      * Specifies whether the contents referred by this object is publically indexable
@@ -323,7 +375,18 @@ public class BranchUniversalObject implements Parcelable {
     public boolean isPublicallyIndexable() {
         return indexMode_ == CONTENT_INDEX_MODE.PUBLIC;
     }
-
+    
+    /**
+     * <p>
+     * Specifies whether the contents referred by this object is locally indexable
+     * </p>
+     *
+     * @return A {@link boolean} whose value is set to true if index mode is public
+     */
+    public boolean isLocallyIndexable() {
+        return localIndexMode_ == CONTENT_INDEX_MODE.PUBLIC;
+    }
+    
     /**
      * <p>
      * Get the meta data provided for the content referred bt this object
@@ -334,7 +397,7 @@ public class BranchUniversalObject implements Parcelable {
     public HashMap<String, String> getMetadata() {
         return metadata_;
     }
-
+    
     /**
      * <p>
      * Get expiry date for the content and any associated links. Represented as epoch milli second
@@ -345,7 +408,7 @@ public class BranchUniversalObject implements Parcelable {
     public long getExpirationTime() {
         return expirationInMilliSec_;
     }
-
+    
     /**
      * <p>
      * Get the canonical identifier for this BranchUniversalObject
@@ -356,7 +419,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getCanonicalIdentifier() {
         return canonicalIdentifier_;
     }
-
+    
     /**
      * <p>
      * Get the canonical url for this BranchUniversalObject
@@ -367,7 +430,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getCanonicalUrl() {
         return canonicalUrl_;
     }
-
+    
     /**
      * <p>
      * Get description for the content for the content referred by this object
@@ -378,7 +441,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getDescription() {
         return description_;
     }
-
+    
     /**
      * <p>
      * Get the url to any image associated with this content.
@@ -389,7 +452,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getImageUrl() {
         return imageUrl_;
     }
-
+    
     /**
      * <p>
      * Get a title for the content referred by this object
@@ -400,7 +463,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getTitle() {
         return title_;
     }
-
+    
     /**
      * <p>
      * Get a title for the content referred by this object
@@ -411,7 +474,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getType() {
         return type_;
     }
-
+    
     /**
      * <p>
      * Gets the price associated with this BUO content
@@ -422,7 +485,7 @@ public class BranchUniversalObject implements Parcelable {
     public double getPrice() {
         return price_ != null ? price_ : 0.0;
     }
-
+    
     /**
      * <p>
      * Get the currency type of the price for this BUO
@@ -433,7 +496,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getCurrencyType() {
         return currency_.toString();
     }
-
+    
     /**
      * Get the keywords associated with this {@link BranchUniversalObject}
      *
@@ -446,7 +509,7 @@ public class BranchUniversalObject implements Parcelable {
         }
         return keywordArray;
     }
-
+    
     /**
      * Get the keywords associated with this {@link BranchUniversalObject}
      *
@@ -456,16 +519,16 @@ public class BranchUniversalObject implements Parcelable {
     public ArrayList<String> getKeywords() {
         return keywords_;
     }
-
+    
     //-------------------- Register views--------------------------//
-
+    
     /**
      * Mark the content referred by this object as viewed. This increment the view count of the contents referred by this object.
      */
     public void registerView() {
         registerView(null);
     }
-
+    
     /**
      * Mark the content referred by this object as viewed. This increment the view count of the contents referred by this object.
      *
@@ -480,8 +543,8 @@ public class BranchUniversalObject implements Parcelable {
             }
         }
     }
-
-
+    
+    
     /**
      * <p>
      * Callback interface for listening register content view status
@@ -497,10 +560,10 @@ public class BranchUniversalObject implements Parcelable {
          */
         void onRegisterViewFinished(boolean registered, BranchError error);
     }
-
-
+    
+    
     //--------------------- Create Link --------------------------//
-
+    
     /**
      * Creates a short url for the BUO synchronously.
      *
@@ -511,7 +574,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         return getLinkBuilder(context, linkProperties).getShortUrl();
     }
-
+    
     /**
      * Creates a short url for the BUO synchronously.
      *
@@ -524,7 +587,7 @@ public class BranchUniversalObject implements Parcelable {
     public String getShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, boolean defaultToLongUrl) {
         return getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).getShortUrl();
     }
-
+    
     /**
      * Creates a short url for the BUO asynchronously
      *
@@ -535,7 +598,7 @@ public class BranchUniversalObject implements Parcelable {
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
         getLinkBuilder(context, linkProperties).generateShortUrl(callback);
     }
-
+    
     /**
      * Creates a short url for the BUO asynchronously.
      *
@@ -548,14 +611,14 @@ public class BranchUniversalObject implements Parcelable {
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
         getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).generateShortUrl(callback);
     }
-
-
+    
+    
     //------------------ Share sheet -------------------------------------//
-
+    
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
         showShareSheet(activity, linkProperties, style, callback, null);
     }
-
+    
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback, Branch.IChannelProperties channelProperties) {
         if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
             if (callback != null) {
@@ -569,7 +632,7 @@ public class BranchUniversalObject implements Parcelable {
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
                     .setMessage(style.getMessageBody());
-
+            
             if (style.getCopyUrlIcon() != null) {
                 shareLinkBuilder.setCopyUrlStyle(style.getCopyUrlIcon(), style.getCopyURlText(), style.getUrlCopiedMessage());
             }
@@ -589,18 +652,18 @@ public class BranchUniversalObject implements Parcelable {
             shareLinkBuilder.setAsFullWidthStyle(style.getIsFullWidthStyle());
             shareLinkBuilder.setSharingTitle(style.getSharingTitle());
             shareLinkBuilder.setSharingTitle(style.getSharingTitleView());
-
+            
             if (style.getIncludedInShareSheet() != null && style.getIncludedInShareSheet().size() > 0) {
                 shareLinkBuilder.includeInShareSheet(style.getIncludedInShareSheet());
             }
             if (style.getExcludedFromShareSheet() != null && style.getExcludedFromShareSheet().size() > 0) {
                 shareLinkBuilder.excludeFromShareSheet(style.getExcludedFromShareSheet());
             }
-
+            
             shareLinkBuilder.shareLink();
         }
     }
-
+    
     private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         if (linkProperties.getTags() != null) {
@@ -624,7 +687,7 @@ public class BranchUniversalObject implements Parcelable {
         if (linkProperties.getMatchDuration() > 0) {
             shortLinkBuilder.setDuration(linkProperties.getMatchDuration());
         }
-
+        
         if (!TextUtils.isEmpty(title_)) {
             shortLinkBuilder.addParameters(Defines.Jsonkey.ContentTitle.getKey(), title_);
         }
@@ -662,10 +725,10 @@ public class BranchUniversalObject implements Parcelable {
         for (String key : controlParam.keySet()) {
             shortLinkBuilder.addParameters(key, controlParam.get(key));
         }
-
+        
         return shortLinkBuilder;
     }
-
+    
     /**
      * Get the {@link BranchUniversalObject} associated with the latest deep linking. This should retrieve the
      * exact object used for creating the deep link. This should be called only after initialising Branch Session.
@@ -691,7 +754,7 @@ public class BranchUniversalObject implements Parcelable {
         }
         return branchUniversalObject;
     }
-
+    
     /**
      * Creates a new BranchUniversalObject with the data provided by {@link JSONObject}.
      *
@@ -702,7 +765,7 @@ public class BranchUniversalObject implements Parcelable {
         BranchUniversalObject branchUniversalObject = null;
         try {
             branchUniversalObject = new BranchUniversalObject();
-
+            
             if (jsonObject.has(Defines.Jsonkey.ContentTitle.getKey())) {
                 branchUniversalObject.title_ = jsonObject.getString(Defines.Jsonkey.ContentTitle.getKey());
             }
@@ -730,13 +793,13 @@ public class BranchUniversalObject implements Parcelable {
             if (jsonObject.has(BranchEvent.PURCHASE_CURRENCY)) {
                 branchUniversalObject.currency_ = CurrencyType.valueOf(jsonObject.getString(BranchEvent.PURCHASE_CURRENCY));
             }
-
+            
             Iterator<String> keys = jsonObject.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
                 branchUniversalObject.addContentMetadata(key, jsonObject.getString(key));
             }
-
+            
             if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
                 JSONArray keywordJsonArray = null;
                 Object keyWordArrayObject = jsonObject.get(Defines.Jsonkey.ContentKeyWords.getKey());
@@ -751,22 +814,25 @@ public class BranchUniversalObject implements Parcelable {
                     }
                 }
             }
-
+            
             if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
                 try {
                     branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+                    branchUniversalObject.localIndexMode_ = jsonObject.getBoolean(Defines.Jsonkey.LocallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
                 } catch (JSONException ignore) {
                     // iOS compatibility issue. iOS send 0/1 instead of true or false
                     branchUniversalObject.indexMode_ = jsonObject.getInt(Defines.Jsonkey.PublicallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+                    branchUniversalObject.localIndexMode_ = jsonObject.getInt(Defines.Jsonkey.LocallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
                 }
             }
+            
         } catch (Exception ignore) {
         }
         return branchUniversalObject;
     }
-
+    
     //-------------Object flattening methods--------------------//
-
+    
     /**
      * Convert the BUO to  corresponding Json representation
      *
@@ -808,33 +874,33 @@ public class BranchUniversalObject implements Parcelable {
                 buoJsonModel.put(BranchEvent.PURCHASE_AMOUNT, price_);
                 buoJsonModel.put(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
             }
-
+            
             Set<String> metadataKeys = metadata_.keySet();
             for (String metadataKey : metadataKeys) {
                 buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
             }
-
+            
         } catch (JSONException ignore) {
         }
         return buoJsonModel;
     }
-
+    
     //---------------------Marshaling and Unmarshaling----------//
     @Override
     public int describeContents() {
         return 0;
     }
-
+    
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
         public BranchUniversalObject createFromParcel(Parcel in) {
             return new BranchUniversalObject(in);
         }
-
+        
         public BranchUniversalObject[] newArray(int size) {
             return new BranchUniversalObject[size];
         }
     };
-
+    
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(canonicalIdentifier_);
@@ -845,11 +911,12 @@ public class BranchUniversalObject implements Parcelable {
         dest.writeString(type_);
         dest.writeLong(expirationInMilliSec_);
         dest.writeInt(indexMode_.ordinal());
+        dest.writeInt(localIndexMode_.ordinal());
         double priceVal = price_ != null ? price_ : -1;
         dest.writeDouble(priceVal);
         dest.writeInt(currency_.ordinal());
         dest.writeSerializable(keywords_);
-
+        
         int metaDataSize = metadata_.size();
         dest.writeInt(metaDataSize);
         for (HashMap.Entry<String, String> entry : metadata_.entrySet()) {
@@ -857,7 +924,7 @@ public class BranchUniversalObject implements Parcelable {
             dest.writeString(entry.getValue());
         }
     }
-
+    
     private BranchUniversalObject(Parcel in) {
         this();
         canonicalIdentifier_ = in.readString();
@@ -868,6 +935,7 @@ public class BranchUniversalObject implements Parcelable {
         type_ = in.readString();
         expirationInMilliSec_ = in.readLong();
         indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
+        localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
         price_ = in.readDouble();
         if (price_ < 0) {
             price_ = null;
@@ -881,17 +949,17 @@ public class BranchUniversalObject implements Parcelable {
             metadata_.put(in.readString(), in.readString());
         }
     }
-
+    
     /**
      * Class for intercepting share sheet events to report auto events on BUO
      */
     private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
         private final Branch.BranchLinkShareListener originalCallback_;
-
+        
         public LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback) {
             originalCallback_ = originalCallback;
         }
-
+        
         @Override
         public void onShareLinkDialogLaunched() {
             userCompletedAction(BranchEvent.SHARE_STARTED);
@@ -899,14 +967,14 @@ public class BranchUniversalObject implements Parcelable {
                 originalCallback_.onShareLinkDialogLaunched();
             }
         }
-
+        
         @Override
         public void onShareLinkDialogDismissed() {
             if (originalCallback_ != null) {
                 originalCallback_.onShareLinkDialogDismissed();
             }
         }
-
+        
         @Override
         public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
             HashMap<String, String> metaData = new HashMap<>();
@@ -916,12 +984,12 @@ public class BranchUniversalObject implements Parcelable {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
             userCompletedAction(BranchEvent.SHARE_COMPLETED, metaData);
-
+            
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
             }
         }
-
+        
         @Override
         public void onChannelSelected(String channelName) {
             if (originalCallback_ != null) {
@@ -929,5 +997,5 @@ public class BranchUniversalObject implements Parcelable {
             }
         }
     }
-
+    
 }
