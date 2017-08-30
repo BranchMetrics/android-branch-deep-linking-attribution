@@ -23,10 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Abstract class defining the structure of a Branch Server request.
  */
 public abstract class ServerRequest {
-
+    
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
-
+    
     private JSONObject params_;
     protected String requestPath_;
     protected PrefHelper prefHelper_;
@@ -34,19 +34,24 @@ public abstract class ServerRequest {
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
     private int waitLockCnt = 0;
-
+    
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
         FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, STRONG_MATCH_PENDING_WAIT_LOCK,
         INSTALL_REFERRER_FETCH_WAIT_LOCK
     }
-
+    
     // Set for holding any active wait locks
     final Set<PROCESS_WAIT_LOCK> locks_;
-
+    
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
 
+    public static enum BRANCH_API_VERSION {
+        V1,
+        V2
+    }
+    
     /**
      * <p>Creates an instance of ServerRequest.</p>
      *
@@ -61,7 +66,7 @@ public abstract class ServerRequest {
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
         locks_ = new HashSet<>();
     }
-
+    
     /**
      * <p>Creates an instance of ServerRequest.</p>
      *
@@ -78,7 +83,7 @@ public abstract class ServerRequest {
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
         locks_ = new HashSet<>();
     }
-
+    
     /**
      * <p>Should be implemented by the child class.Specifies any error associated with request.
      * If there are errors request will not be executed.</p>
@@ -88,7 +93,7 @@ public abstract class ServerRequest {
      * Child class is responsible for implementing its own logic for error check and reporting.
      */
     public abstract boolean handleErrors(Context context);
-
+    
     /**
      * <p>Called when execution of this request to server succeeds. Child class should implement
      * its own logic for handling the post request execution.</p>
@@ -97,7 +102,7 @@ public abstract class ServerRequest {
      * @param branch   Current {@link Branch} instance
      */
     public abstract void onRequestSucceeded(ServerResponse response, Branch branch);
-
+    
     /**
      * <p>Called when there is an error on executing this request. Child class should handle the failure
      * accordingly.</p>
@@ -106,19 +111,19 @@ public abstract class ServerRequest {
      * @param causeMsg   A {@link String} value specifying cause for the error if any.
      */
     public abstract void handleFailure(int statusCode, String causeMsg);
-
+    
     /**
      * Specify whether the request is a GET or POST. Child class has to implement accordingly.
      *
      * @return A {@link Boolean} value specifying if this request is a GET or not.
      */
     public abstract boolean isGetRequest();
-
+    
     /**
      * Clears the callbacks associated to this request.
      */
     public abstract void clearCallbacks();
-
+    
     /**
      * Specifies whether to retry this request on failure. By default request is not retried on fail.
      * Those request which need to retry on failure should override and handle accordingly
@@ -128,7 +133,7 @@ public abstract class ServerRequest {
     public boolean shouldRetryOnFail() {
         return false;
     }
-
+    
     /**
      * <p>Provides the path to server for this request.
      * see {@link Defines.RequestPath} <p>
@@ -138,7 +143,7 @@ public abstract class ServerRequest {
     public final String getRequestPath() {
         return requestPath_;
     }
-
+    
     /**
      * <p>Provides the complete url for executing this request. URl consist of API base url and request
      * path. Child class need to extend this method if they need to add specific items to the url </p>
@@ -148,7 +153,7 @@ public abstract class ServerRequest {
     public String getRequestUrl() {
         return prefHelper_.getAPIBaseUrl() + requestPath_;
     }
-
+    
     /**
      * <p>Sets a {@link JSONObject} containing the post data supplied with the current request.</p>
      *
@@ -178,9 +183,22 @@ public abstract class ServerRequest {
             Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
         }
         params_ = post;
-        DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
+        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
+            try {
+                JSONObject userDataObj = new JSONObject();
+                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
+                DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(userDataObj);
+                String devId = prefHelper_.getIdentity();
+                if (devId != null && !devId.equals(PrefHelper.NO_STRING_VALUE)) {
+                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
+                }
+            } catch (JSONException ignore) {
+            }
+        } else {
+            DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
+        }
     }
-
+    
     /**
      * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
      * key-value pairs.</p>
@@ -191,7 +209,7 @@ public abstract class ServerRequest {
     public JSONObject getPost() {
         return params_;
     }
-
+    
     /**
      * <p>
      * Specifies whether this request need to be updated with Google Ads Id and LAT value
@@ -203,11 +221,11 @@ public abstract class ServerRequest {
     public boolean isGAdsParamsRequired() {
         return false;
     }
-
+    
     /**
      * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
      * key-value pairs appended with the instrumentation data.</p>
-     *
+     * <p>
      * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
      *
      * @return A {@link JSONObject} containing the post data supplied with the current request
@@ -244,7 +262,7 @@ public abstract class ServerRequest {
         }
         return extendedPost;
     }
-
+    
     /**
      * Returns a JsonObject with the parameters that needed to be set with the get request.
      *
@@ -253,7 +271,7 @@ public abstract class ServerRequest {
     public JSONObject getGetParams() {
         return params_;
     }
-
+    
     /**
      * Adds a param and its value to the get request
      *
@@ -266,7 +284,7 @@ public abstract class ServerRequest {
         } catch (JSONException ignore) {
         }
     }
-
+    
     /**
      * <p>Gets a {@link JSONObject} corresponding to the {@link ServerRequest} and
      * {@link ServerRequest#POST_KEY} as currently configured.</p>
@@ -285,7 +303,7 @@ public abstract class ServerRequest {
         }
         return json;
     }
-
+    
     /**
      * <p>Converts a {@link JSONObject} object containing keys stored as key-value pairs into
      * a {@link ServerRequest}.</p>
@@ -306,7 +324,7 @@ public abstract class ServerRequest {
         } catch (JSONException e) {
             // it's OK for post to be null
         }
-
+        
         try {
             if (json.has(POST_PATH_KEY)) {
                 requestPath = json.getString(POST_PATH_KEY);
@@ -314,13 +332,13 @@ public abstract class ServerRequest {
         } catch (JSONException e) {
             // it's OK for post to be null
         }
-
+        
         if (requestPath != null && requestPath.length() > 0) {
             return getExtendedServerRequest(requestPath, post, context);
         }
         return null;
     }
-
+    
     /**
      * <p>Factory method for creating the specific server requests objects. Creates requests according
      * to the request path.</p>
@@ -332,7 +350,7 @@ public abstract class ServerRequest {
      */
     private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context) {
         ServerRequest extendedReq = null;
-
+        
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
             extendedReq = new ServerRequestActionCompleted(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
@@ -354,29 +372,37 @@ public abstract class ServerRequest {
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
             extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
         }
-
+        
         return extendedReq;
     }
-
+    
     boolean skipOnTimeOut = false;
-
+    
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      *
      * @param sysObserver {@link SystemObserver} instance.
      */
-    public void updateGAdsParams(final SystemObserver sysObserver) {
+    public void updateGAdsParams(final SystemObserver sysObserver, BRANCH_API_VERSION version) {
         if (!TextUtils.isEmpty(sysObserver.GAIDString_)) {
             try {
-                params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
-                params_.put(Defines.Jsonkey.LATVal.getKey(), sysObserver.LATVal_);
+                if (version == BRANCH_API_VERSION.V2) {
+                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                    if (userDataObj != null) {
+                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), sysObserver.GAIDString_);
+                        userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), sysObserver.LATVal_);
+                    }
+                } else {
+                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
+                    params_.put(Defines.Jsonkey.LATVal.getKey(), sysObserver.LATVal_);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     }
-
-
+    
+    
     /*
      * Checks if this Application has internet permissions.
      *
@@ -388,14 +414,14 @@ public abstract class ServerRequest {
         int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
         return result == PackageManager.PERMISSION_GRANTED;
     }
-
+    
     /**
      * Called when request is added to teh queue
      */
     public void onRequestQueued() {
         queueWaitTime_ = System.currentTimeMillis();
     }
-
+    
     /**
      * Returns the amount of time this request was in queque
      *
@@ -408,7 +434,7 @@ public abstract class ServerRequest {
         }
         return waitTime;
     }
-
+    
     /**
      * <p>
      * Set the specified process wait lock for this request. This request will not be blocked from
@@ -422,7 +448,7 @@ public abstract class ServerRequest {
             locks_.add(lock);
         }
     }
-
+    
     /**
      * Unlock the specified lock from the request. Call this when the locked process finishes
      *
@@ -431,8 +457,8 @@ public abstract class ServerRequest {
     public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
         locks_.remove(lock);
     }
-
-
+    
+    
     /**
      * Check if this request is waiting on any operation to finish before processing
      *
@@ -441,14 +467,14 @@ public abstract class ServerRequest {
     public boolean isWaitingOnProcessToFinish() {
         return locks_.size() > 0;
     }
-
+    
     /**
      * Called on UI thread just before executing a request. Do any final updates to the request here
      */
     public void onPreExecute() {
-
+        
     }
-
+    
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
             String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
@@ -456,7 +482,7 @@ public abstract class ServerRequest {
         } catch (Exception ignore) {
         }
     }
-
+    
     private static boolean isPackageInstalled(Context context) {
         final PackageManager packageManager = context.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
@@ -465,5 +491,14 @@ public abstract class ServerRequest {
         }
         List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return (list != null && list.size() > 0);
+    }
+
+    /**
+     * Returns the Branch API version
+     *
+     * @return {@link BRANCH_API_VERSION} specifying remote Branch API version
+     */
+    public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
+        return BRANCH_API_VERSION.V1;  // Default is v1
     }
 }

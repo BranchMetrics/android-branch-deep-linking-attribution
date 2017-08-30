@@ -159,6 +159,49 @@ class DeviceInfo {
     }
 
     /**
+     * Update the given server request JSON with user data. Used for V2 events
+     *
+     * @param requestObj JSON object for Branch server request
+     */
+    public void updateRequestWithUserData(JSONObject requestObj) {
+        try {
+            if (!hardwareID_.equals(SystemObserver.BLANK)) {
+                requestObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID_);
+                requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
+            }
+
+            if (!brandName_.equals(SystemObserver.BLANK)) {
+                requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName_);
+            }
+            if (!modelName_.equals(SystemObserver.BLANK)) {
+                requestObj.put(Defines.Jsonkey.Model.getKey(), modelName_);
+            }
+            requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
+            requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
+            requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
+            requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
+
+
+            if (!osName_.equals(SystemObserver.BLANK)) {
+                requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
+            }
+            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
+            if (!TextUtils.isEmpty(countryCode_)) {
+                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+            }
+            if (!TextUtils.isEmpty(languageCode_)) {
+                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+            }
+            if ((!TextUtils.isEmpty(localIpAddr_))) {
+                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
+            }
+
+        } catch (JSONException ignore) {
+
+        }
+    }
+
+    /**
      * get the package name for the this application
      *
      * @return {@link String} with package name value

@@ -254,6 +254,11 @@ public class BranchEvent {
         @Override
         public void clearCallbacks() {
         }
+
+        @Override
+        public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
+            return BRANCH_API_VERSION.V2; //This is a v2 event
+        }
     }
 
 
