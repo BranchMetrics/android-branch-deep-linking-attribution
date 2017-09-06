@@ -231,6 +231,7 @@ public class BranchEvent {
                 e.printStackTrace();
             }
             setPost(reqBody);
+            updateEnvironment(context, reqBody);
         }
 
         @Override

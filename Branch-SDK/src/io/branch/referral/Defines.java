@@ -75,6 +75,8 @@ public class Defines {
         LocalIP("local_ip"),
         UserData("user_data"),
         DeveloperIdentity("developer_identity"),
+        UserAgent("user_agent"),
+        SDK("sdk"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),

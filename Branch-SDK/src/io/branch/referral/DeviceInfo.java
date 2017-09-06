@@ -1,7 +1,10 @@
 package io.branch.referral;
 
+import android.content.Context;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.webkit.WebSettings;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -163,11 +166,10 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    public void updateRequestWithUserData(JSONObject requestObj) {
+    public void updateRequestWithUserData(Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
-            if (!hardwareID_.equals(SystemObserver.BLANK)) {
+            if (!hardwareID_.equals(SystemObserver.BLANK) && isHardwareIDReal_) {
                 requestObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID_);
-                requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
             }
 
             if (!brandName_.equals(SystemObserver.BLANK)) {
@@ -179,7 +181,6 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
-            requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
 
 
             if (!osName_.equals(SystemObserver.BLANK)) {
@@ -195,9 +196,17 @@ class DeviceInfo {
             if ((!TextUtils.isEmpty(localIpAddr_))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
             }
-
+            if (prefHelper != null && !prefHelper.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
+                requestObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
+            }
+            String devId = prefHelper.getIdentity();
+            if (devId != null && !devId.equals(PrefHelper.NO_STRING_VALUE)) {
+                requestObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper.getIdentity());
+            }
+            requestObj.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
+            requestObj.put(Defines.Jsonkey.SDK.getKey(), "android" + BuildConfig.VERSION_NAME);
+            requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
         } catch (JSONException ignore) {
-
         }
     }
 
@@ -229,6 +238,15 @@ class DeviceInfo {
 
     public String getOsName() {
         return osName_;
+    }
+
+    // PRS : User agent is checked only from api-17
+    private String getDefaultBrowserAgent(Context context) {
+        String userAgent = "";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            userAgent = WebSettings.getDefaultUserAgent(context);
+        }
+        return userAgent;
     }
 
 }

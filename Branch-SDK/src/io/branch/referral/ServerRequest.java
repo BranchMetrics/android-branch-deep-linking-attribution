@@ -34,6 +34,7 @@ public abstract class ServerRequest {
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
     private int waitLockCnt = 0;
+    private final Context context_;
     
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
@@ -59,6 +60,7 @@ public abstract class ServerRequest {
      * @param requestPath Path to server for this request.
      */
     public ServerRequest(Context context, String requestPath) {
+        context_ = context;
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
         systemObserver_ = new SystemObserver(context);
@@ -76,6 +78,7 @@ public abstract class ServerRequest {
      * @param context     Application context.
      */
     protected ServerRequest(String requestPath, JSONObject post, Context context) {
+        context_ = context;
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
@@ -187,11 +190,9 @@ public abstract class ServerRequest {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(userDataObj);
-                String devId = prefHelper_.getIdentity();
-                if (devId != null && !devId.equals(PrefHelper.NO_STRING_VALUE)) {
-                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
-                }
+                DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
+
+
             } catch (JSONException ignore) {
             }
         } else {
@@ -478,7 +479,14 @@ public abstract class ServerRequest {
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
             String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
-            post.put(Defines.Jsonkey.Environment.getKey(), environment);
+            if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
+                JSONObject userData = post.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                if (userData != null) {
+                    userData.put(Defines.Jsonkey.Environment.getKey(), environment);
+                }
+            } else {
+                post.put(Defines.Jsonkey.Environment.getKey(), environment);
+            }
         } catch (Exception ignore) {
         }
     }
