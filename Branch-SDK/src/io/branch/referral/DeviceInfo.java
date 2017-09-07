@@ -170,6 +170,8 @@ class DeviceInfo {
         try {
             if (!hardwareID_.equals(SystemObserver.BLANK) && isHardwareIDReal_) {
                 requestObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID_);
+            } else {
+                requestObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
             }
 
             if (!brandName_.equals(SystemObserver.BLANK)) {

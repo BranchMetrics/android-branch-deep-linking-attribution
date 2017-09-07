@@ -48,6 +48,7 @@ public class Defines {
         OS("os"),
         HardwareID("hardware_id"),
         AndroidID("android_id"),
+        UnidentifiedDevice("unidentified_device"),
         HardwareIDType("hardware_id_type"),
         HardwareIDTypeVendor("vendor_id"),
         HardwareIDTypeRandom("random"),
