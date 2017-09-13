@@ -103,9 +103,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setIsFullAppConversion(false);
             // Provide data to Fabric answers
             if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
-                String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
                 JSONObject linkDataJsonObj = new JSONObject(response.getObject().getString(Defines.Jsonkey.Data.getKey()));
-                new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
+                if (linkDataJsonObj.optBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
+                    String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
+                    new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
+                }
             }
         } catch (JSONException ignore) {
         }
