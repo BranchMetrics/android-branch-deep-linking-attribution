@@ -31,7 +31,7 @@ public class BranchEvent {
     private final JSONObject customProperties;
     private final List<BranchUniversalObject> buoList;
 
-    public enum CONDITION {OTHER, NEW, GOOD, FAIR, POOR, USED, REFURBISHED}
+    public enum CONDITION {OTHER, NEW, GOOD, FAIR, POOR, USED, REFURBISHED, EXCELLENT}
 
     public BranchEvent(BRANCH_STANDARD_EVENT branchStandardEvent) {
         this(branchStandardEvent.getName(), true);
