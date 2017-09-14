@@ -58,6 +58,10 @@ public class ContentMetadata implements Parcelable {
      */
     public ProductCategory productCategory;
     /**
+     * Condition of the product item. Value is one of the enum constants from {@link CONDITION}
+     */
+    public CONDITION productCondition;
+    /**
      * Variant of product if this metadata is for a product
      */
     public String productVariant;
@@ -104,6 +108,23 @@ public class ContentMetadata implements Parcelable {
 
     private final ArrayList<String> imageCaptions;
     private final HashMap<String, String> customMetadata;
+
+    public enum CONDITION {
+        OTHER, NEW, GOOD, FAIR, POOR, USED, REFURBISHED, EXCELLENT;
+
+        public static CONDITION getValue(String name) {
+            CONDITION conditionResult = null;
+            if (!TextUtils.isEmpty(name)) {
+                for (CONDITION condition : CONDITION.values()) {
+                    if (condition.name().equalsIgnoreCase(name)) {
+                        conditionResult = condition;
+                        break;
+                    }
+                }
+            }
+            return conditionResult;
+        }
+    }
 
     public ContentMetadata() {
         imageCaptions = new ArrayList<>();
@@ -181,6 +202,11 @@ public class ContentMetadata implements Parcelable {
         return this;
     }
 
+    public ContentMetadata setProductCondition(CONDITION productCondition) {
+        this.productCondition = productCondition;
+        return this;
+    }
+
     public ContentMetadata setProductName(String productName) {
         this.productName = productName;
         return this;
@@ -243,6 +269,9 @@ public class ContentMetadata implements Parcelable {
             }
             if (productCategory != null) {
                 metadataJson.put(Defines.Jsonkey.ProductCategory.getKey(), productCategory.getName());
+            }
+            if (productCondition != null) {
+                metadataJson.put(Defines.Jsonkey.Condition.getKey(), productCondition.name());
             }
             if (!TextUtils.isEmpty(productVariant)) {
                 metadataJson.put(Defines.Jsonkey.ProductVariant.getKey(), productVariant);
@@ -307,6 +336,7 @@ public class ContentMetadata implements Parcelable {
         contentMetadata.productName = jsonReader.readOutString(Defines.Jsonkey.ProductName.getKey());
         contentMetadata.productBrand = jsonReader.readOutString(Defines.Jsonkey.ProductBrand.getKey());
         contentMetadata.productCategory = ProductCategory.getValue(jsonReader.readOutString(Defines.Jsonkey.ProductCategory.getKey()));
+        contentMetadata.productCondition = CONDITION.getValue(jsonReader.readOutString(Defines.Jsonkey.Condition.getKey()));
         contentMetadata.productVariant = jsonReader.readOutString(Defines.Jsonkey.ProductVariant.getKey());
         contentMetadata.ratingAvg = jsonReader.readOutDouble(Defines.Jsonkey.RatingAverage.getKey(), null);
         contentMetadata.ratingCount = jsonReader.readOutInt(Defines.Jsonkey.RatingCount.getKey(), null);
@@ -365,6 +395,7 @@ public class ContentMetadata implements Parcelable {
         dest.writeString(productName);
         dest.writeString(productBrand);
         dest.writeString(productCategory != null ? productCategory.getName() : "");
+        dest.writeString(productCondition != null ? productCondition.name() : "");
         dest.writeString(productVariant);
         dest.writeSerializable(ratingAvg);
         dest.writeSerializable(ratingCount);
@@ -392,6 +423,7 @@ public class ContentMetadata implements Parcelable {
         productName = in.readString();
         productBrand = in.readString();
         productCategory = ProductCategory.getValue(in.readString());
+        productCondition = CONDITION.getValue(in.readString());
         productVariant = in.readString();
         ratingAvg = (Double) in.readSerializable();
         ratingCount = (Integer) in.readSerializable();

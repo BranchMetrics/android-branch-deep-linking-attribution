@@ -141,6 +141,7 @@ public class Defines {
         Coupon("coupon"),
         Affiliation("affiliation"),
         Description("description"),
+        SearchQuery("search_query"),
 
         Name("name"),
         CustomData("custom_data"),

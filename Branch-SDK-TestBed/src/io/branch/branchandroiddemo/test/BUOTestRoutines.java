@@ -52,6 +52,7 @@ public class BUOTestRoutines {
                                     .setProductBrand("test_prod_brand")
                                     .setProductCategory(ProductCategory.APPAREL_AND_ACCESSORIES)
                                     .setProductName("test_prod_name")
+                                    .setProductCondition(ContentMetadata.CONDITION.EXCELLENT)
                                     .setProductVariant("test_prod_variant")
                                     .setQuantity(1.5)
                                     .setSku("test_sku")

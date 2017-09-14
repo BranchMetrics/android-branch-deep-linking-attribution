@@ -31,8 +31,6 @@ public class BranchEvent {
     private final JSONObject customProperties;
     private final List<BranchUniversalObject> buoList;
 
-    public enum CONDITION {OTHER, NEW, GOOD, FAIR, POOR, USED, REFURBISHED, EXCELLENT}
-
     public BranchEvent(BRANCH_STANDARD_EVENT branchStandardEvent) {
         this(branchStandardEvent.getName(), true);
     }
@@ -119,16 +117,6 @@ public class BranchEvent {
     }
 
     /**
-     * Set the condition of the content item. Value is one of the enum constants from {@link BranchEvent.CONDITION}
-     *
-     * @param condition {@link BranchEvent.CONDITION}
-     * @return This object for chaining builder methods
-     */
-    public BranchEvent setCondition(CONDITION condition) {
-        return addStandardProperty(Defines.Jsonkey.Condition.getKey(), condition.name());
-    }
-
-    /**
      * Set description for this transaction event
      *
      * @param description {@link String } transaction description
@@ -136,6 +124,16 @@ public class BranchEvent {
      */
     public BranchEvent setDescription(String description) {
         return addStandardProperty(Defines.Jsonkey.Description.getKey(), description);
+    }
+
+    /**
+     * Set any search query associated with the event
+     *
+     * @param searchQuery {@link String} Search Query value
+     * @return This object for chaining builder methods
+     */
+    public BranchEvent setSearchQuery(String searchQuery) {
+        return addStandardProperty(Defines.Jsonkey.SearchQuery.getKey(), searchQuery);
     }
 
     private BranchEvent addStandardProperty(String propertyName, Object propertyValue) {
@@ -236,7 +234,7 @@ public class BranchEvent {
 
         @Override
         public String getRequestUrl() {
-            return "https://rchen.api.beta.branch.io/"+requestPath_;
+            return "https://rchen.api.beta.branch.io/" + requestPath_;
         }
 
         @Override
