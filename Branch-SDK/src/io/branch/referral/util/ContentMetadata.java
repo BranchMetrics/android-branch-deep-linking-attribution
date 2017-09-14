@@ -64,7 +64,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * Average rating for the qualifying content item
      */
-    public Double averageRating;
+    public Double ratingAvg;
     /**
      * Total number of ratings for the qualifying content item
      */
@@ -72,7 +72,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * Maximum ratings for the qualifying content item
      */
-    public Double maximumRating;
+    public Double ratingMax;
     /**
      * Street address associated with the qualifying content item
      */
@@ -80,7 +80,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * City name associated with the qualifying content item
      */
-    private String addressCity;
+    public String addressCity;
     /**
      * Region or province name associated with the qualifying content item
      */
@@ -159,8 +159,8 @@ public class ContentMetadata implements Parcelable {
     }
 
     public ContentMetadata setRating(@Nullable Double averageRating, @Nullable Double maximumRating, @Nullable Integer ratingCount) {
-        this.averageRating = averageRating;
-        this.maximumRating = maximumRating;
+        this.ratingAvg = averageRating;
+        this.ratingMax = maximumRating;
         this.ratingCount = ratingCount;
         return this;
     }
@@ -247,14 +247,14 @@ public class ContentMetadata implements Parcelable {
             if (!TextUtils.isEmpty(productVariant)) {
                 metadataJson.put(Defines.Jsonkey.ProductVariant.getKey(), productVariant);
             }
-            if (averageRating != null) {
-                metadataJson.put(Defines.Jsonkey.RatingAverage.getKey(), averageRating);
+            if (ratingAvg != null) {
+                metadataJson.put(Defines.Jsonkey.RatingAverage.getKey(), ratingAvg);
             }
             if (ratingCount != null) {
                 metadataJson.put(Defines.Jsonkey.RatingCount.getKey(), ratingCount);
             }
-            if (maximumRating != null) {
-                metadataJson.put(Defines.Jsonkey.RatingMax.getKey(), maximumRating);
+            if (ratingMax != null) {
+                metadataJson.put(Defines.Jsonkey.RatingMax.getKey(), ratingMax);
             }
             if (!TextUtils.isEmpty(addressStreet)) {
                 metadataJson.put(Defines.Jsonkey.AddressStreet.getKey(), addressStreet);
@@ -308,9 +308,9 @@ public class ContentMetadata implements Parcelable {
         contentMetadata.productBrand = jsonReader.readOutString(Defines.Jsonkey.ProductBrand.getKey());
         contentMetadata.productCategory = ProductCategory.getValue(jsonReader.readOutString(Defines.Jsonkey.ProductCategory.getKey()));
         contentMetadata.productVariant = jsonReader.readOutString(Defines.Jsonkey.ProductVariant.getKey());
-        contentMetadata.averageRating = jsonReader.readOutDouble(Defines.Jsonkey.RatingAverage.getKey(), null);
+        contentMetadata.ratingAvg = jsonReader.readOutDouble(Defines.Jsonkey.RatingAverage.getKey(), null);
         contentMetadata.ratingCount = jsonReader.readOutInt(Defines.Jsonkey.RatingCount.getKey(), null);
-        contentMetadata.maximumRating = jsonReader.readOutDouble(Defines.Jsonkey.RatingMax.getKey(), null);
+        contentMetadata.ratingMax = jsonReader.readOutDouble(Defines.Jsonkey.RatingMax.getKey(), null);
         contentMetadata.addressStreet = jsonReader.readOutString(Defines.Jsonkey.AddressStreet.getKey());
         contentMetadata.addressCity = jsonReader.readOutString(Defines.Jsonkey.AddressCity.getKey());
         contentMetadata.addressRegion = jsonReader.readOutString(Defines.Jsonkey.AddressRegion.getKey());
@@ -366,9 +366,9 @@ public class ContentMetadata implements Parcelable {
         dest.writeString(productBrand);
         dest.writeString(productCategory != null ? productCategory.getName() : "");
         dest.writeString(productVariant);
-        dest.writeSerializable(averageRating);
+        dest.writeSerializable(ratingAvg);
         dest.writeSerializable(ratingCount);
-        dest.writeSerializable(maximumRating);
+        dest.writeSerializable(ratingMax);
 
         dest.writeString(addressStreet);
         dest.writeString(addressCity);
@@ -393,9 +393,9 @@ public class ContentMetadata implements Parcelable {
         productBrand = in.readString();
         productCategory = ProductCategory.getValue(in.readString());
         productVariant = in.readString();
-        averageRating = (Double) in.readSerializable();
+        ratingAvg = (Double) in.readSerializable();
         ratingCount = (Integer) in.readSerializable();
-        maximumRating = (Double) in.readSerializable();
+        ratingMax = (Double) in.readSerializable();
 
         addressStreet = in.readString();
         addressCity = in.readString();

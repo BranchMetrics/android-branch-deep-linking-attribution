@@ -3480,7 +3480,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void registerView(BranchUniversalObject
                                      branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
-            new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_CONTENT)
+            new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
                     .addContentItems(branchUniversalObject)
                     .logEvent(context_);
         }

@@ -235,6 +235,11 @@ public class BranchEvent {
         }
 
         @Override
+        public String getRequestUrl() {
+            return "https://rchen.api.beta.branch.io/"+requestPath_;
+        }
+
+        @Override
         public boolean handleErrors(Context context) {
             return false;
         }

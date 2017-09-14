@@ -919,7 +919,7 @@ public class BranchUniversalObject implements Parcelable {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
             //noinspection deprecation
-            userCompletedAction(BRANCH_STANDARD_EVENT.SHARE_CONTENT.getName(), metaData);
+            userCompletedAction(BRANCH_STANDARD_EVENT.SHARE.getName(), metaData);
 
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
