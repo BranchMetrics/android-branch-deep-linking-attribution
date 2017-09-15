@@ -34,6 +34,7 @@ public abstract class ServerRequest {
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
     private int waitLockCnt = 0;
+    private Context context_;
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
@@ -60,6 +61,7 @@ public abstract class ServerRequest {
         params_ = new JSONObject();
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
         locks_ = new HashSet<>();
+        context_ = context;
     }
 
     /**
@@ -77,6 +79,7 @@ public abstract class ServerRequest {
         systemObserver_ = new SystemObserver(context);
         disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
         locks_ = new HashSet<>();
+        context_ = context;
     }
 
     /**
@@ -178,7 +181,7 @@ public abstract class ServerRequest {
             Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
         }
         params_ = post;
-        DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
+        DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_, context_).updateRequestWithDeviceParams(params_);
     }
 
     /**

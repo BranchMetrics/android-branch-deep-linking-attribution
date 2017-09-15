@@ -2254,7 +2254,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void performCookieBasedStrongMatch() {
         boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
-        DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
+        DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_, context_);
         Activity currentActivity = null;
         if (currentActivityReference_ != null) {
             currentActivity = currentActivityReference_.get();

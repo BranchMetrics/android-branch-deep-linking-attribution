@@ -1,10 +1,14 @@
 package io.branch.referral;
 
+import android.app.UiModeManager;
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static android.content.Context.UI_MODE_SERVICE;
 
 /**
  * <p>
@@ -57,6 +61,10 @@ class DeviceInfo {
      * Device OS version
      */
     private final int osVersion_;
+    /**
+     * Device type
+     */
+    private final int deviceType_;
 
     private final String packageName_;
     private final String appVersion_;
@@ -72,9 +80,9 @@ class DeviceInfo {
      * @param sysObserver {@link SystemObserver} instance to get device info
      * @return {@link DeviceInfo} global instance
      */
-    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
+    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch, Context context) {
         if (thisInstance_ == null) {
-            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch);
+            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch, context);
         }
         return thisInstance_;
     }
@@ -89,7 +97,7 @@ class DeviceInfo {
     }
 
 
-    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
+    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch, Context context) {
         if (disableAndroidIDFetch) {
             hardwareID_ = sysObserver.getUniqueID(true);
         } else {
@@ -114,6 +122,9 @@ class DeviceInfo {
         appVersion_ = sysObserver.getAppVersion();
         countryCode_ = sysObserver.getISO2CountryCode();
         languageCode_ = sysObserver.getISO2LanguageCode();
+
+        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(UI_MODE_SERVICE);
+        deviceType_ = uiModeManager.getCurrentModeType();
     }
 
     /**
@@ -133,11 +144,12 @@ class DeviceInfo {
             if (!modelName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.Model.getKey(), modelName_);
             }
+
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
-
+            requestObj.put(Defines.Jsonkey.DeviceType.getKey(), deviceType_);
 
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
@@ -187,5 +199,6 @@ class DeviceInfo {
     public String getOsName() {
         return osName_;
     }
+
 
 }
