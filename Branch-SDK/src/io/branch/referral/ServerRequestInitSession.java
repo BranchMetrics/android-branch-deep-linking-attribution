@@ -1,10 +1,8 @@
 package io.branch.referral;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -131,19 +129,20 @@ abstract class ServerRequestInitSession extends ServerRequest {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
             if (branch.currentActivityReference_ != null) try {
                 ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+                //Session Referring Link
+                final JSONObject response_data = new JSONObject(response.getObject().getString("data"));
+                if (response_data.has("validate") && response_data.getBoolean("validate")) {
+                    //Launch the Deepview template
+                    launchURLInChrome(branch.currentActivityReference_,response_data.getString("~referring_link"));
+                }
                 final Handler validate_handle = new Handler(Looper.getMainLooper()) {
 
                     @Override
                     public void handleMessage(Message inputMessage) {
                         try {
-                            //Session Referring Link
-                            JSONObject response_data = new JSONObject(response.getObject().getString("data"));
                             if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
                                 //Deeplink Validate Code comes here
                                 validateCode(response_data, branch.currentActivityReference_);
-                            } else if (response_data.has("validate") && response_data.getBoolean("validate")) {
-                                //Launch the Deepview template
-                                launchURLInChrome(branch.currentActivityReference_,response_data.getString("~referring_link"));
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
