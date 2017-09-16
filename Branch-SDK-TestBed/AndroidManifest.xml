@@ -65,9 +65,9 @@
             <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
         </activity>
 
-        <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv" />
-        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
+        <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_hcEGdBoDXXWSF1ki42L9ylhnCykYYm5Y" />
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_mhqPcxnC832Ut4ohY40nmligExj12rob" />
 
         <!-- Optional. Set to true to disable auto deep link feature-->
         <meta-data android:name="io.branch.sdk.auto_link_disable" android:value="false"/>

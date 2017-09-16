@@ -1,5 +1,11 @@
 package io.branch.referral;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 /**
  * ApkParser
  *
@@ -47,7 +53,8 @@ class ApkParser {
      *
      * @return A {@link String} containing the result of the decompression action.
      */
-    public String decompressXML(byte[] xml) {
+    public JSONObject decompressXML(byte[] xml) {
+        JSONObject intentFilters = new JSONObject();
         // Compressed XML file/bytes starts with 24x bytes of data,
         // 9 32 bit words in little endian order (LSB first):
         //   0th word is 03 00 08 00
@@ -98,41 +105,56 @@ class ApkParser {
         //   3rd word: Flags?
         //   4th word: str ind of attr value again, or ResourceId of value
 
-        // Step through the XML tree element tags and attributes
-        String attrValue;
-        String attrName;
-        int off = xmlTagOff;
-        while (off < xml.length) {
-            int tag0 = LEW(xml, off);
-            if (tag0 == startTag) { // XML START TAG
-                int numbAttrs = LEW(xml, off+7*4);  // Number of Attributes to follow
-                off += 9*4;  // Skip over 6+3 words of startTag data
-                // Look for the Attributes
-                for (int ii=0; ii<numbAttrs; ii++) {
-                    int attrNameSi = LEW(xml, off+1*4);  // AttrName String Index
-                    int attrValueSi = LEW(xml, off+2*4); // AttrValue Str Ind, or FFFFFFFF
-                    int attrResId = LEW(xml, off+4*4);  // AttrValue ResourceId or dup AttrValue StrInd
-                    off += 5*4;  // Skip over the 5 words of an attribute
+        try {
+            // Step through the XML tree element tags and attributes
+            String attrValue;
+            String attrName;
+            int off = xmlTagOff;
+            while (off < xml.length) {
+                int tag0 = LEW(xml, off);
+                if (tag0 == startTag) { // XML START TAG
+                    int numbAttrs = LEW(xml, off+7*4);  // Number of Attributes to follow
+                    off += 9*4;  // Skip over 6+3 words of startTag data
+                    // Look for the Attributes
+                    for (int ii=0; ii<numbAttrs; ii++) {
+                        int attrNameSi = LEW(xml, off+1*4);  // AttrName String Index
+                        int attrValueSi = LEW(xml, off+2*4); // AttrValue Str Ind, or FFFFFFFF
+                        int attrResId = LEW(xml, off+4*4);  // AttrValue ResourceId or dup AttrValue StrInd
+                        off += 5*4;  // Skip over the 5 words of an attribute
 
-                    attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
-                    if (attrName.equals("scheme")) {
-                        attrValue = attrValueSi!=-1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x"+Integer.toHexString(attrResId);
-                        if (validURI(attrValue))
-                            return attrValue;
+                        attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
+                        if (attrName.equals("scheme")) {
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
+                            if (validURI(attrValue)) {
+                                intentFilters.put("scheme", attrValue);
+                            }
+                        } else if (attrName.equals("host")) {
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
+                            JSONArray domainList;
+                            if (intentFilters.has("hosts")) {
+                                domainList = intentFilters.getJSONArray("hosts");
+                            } else {
+                                domainList = new JSONArray();
+                            }
+                            domainList.put(attrValue);
+                            intentFilters.put("hosts", domainList);
+                        }
                     }
+
+                } else if (tag0 == endTag) { // XML END TAG
+                    off += 6*4;  // Skip over 6 words of endTag data
+                } else if (tag0 == endDocTag) {  // END OF XML DOC TAG
+                    break;
+                } else {
+                    break;
                 }
+            } // end of while loop scanning tags and attributes of XML tree
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-            } else if (tag0 == endTag) { // XML END TAG
-                off += 6*4;  // Skip over 6 words of endTag data
-            } else if (tag0 == endDocTag) {  // END OF XML DOC TAG
-                break;
-            } else {
-                break;
-            }
-        } // end of while loop scanning tags and attributes of XML tree
-
-        return SystemObserver.BLANK;
-    } // end of decompressXML
+        return intentFilters;
+    }
 
     /**
      * <p>Checks whether the supplied {@link String} is of a valid/known URI protocol type.</p>
