@@ -23,6 +23,8 @@ public class IntegrationValidator {
 
     public void validateIntegration (Context context){
         Log.d("BranchSDK", "** Initiating Branch integration verification **");
+        Log.d("BranchSDK", "-------------------------------------------------");
+        Log.d("BranchSDK", "----- checking for package name correctness -----");
         BranchIntegrationModel integrationModel = new BranchIntegrationModel();
         integrationModel.packageName = context.getPackageName();
         ApplicationInfo appInfo = null;
@@ -41,19 +43,24 @@ public class IntegrationValidator {
 
         if (serverSideAppConfig != null) {
             try {
-                Log.d("BranchSDK", "\nChecking local config for package name '" + serverSideAppConfig.getString("android_package_name") + "'...");
+                String logLine = "";
                 if (!serverSideAppConfig.get("android_package_name").equals(integrationModel.packageName)) {
-                    Log.d("BranchSDK", "\nERROR: Local package name '" + integrationModel.packageName + "' does NOT match dashboard.\n");
+                    logLine = "ERROR: ";
                 } else {
-                    Log.d("BranchSDK", "\nPASS\n");
+                    logLine = "PASS: ";
                 }
+                logLine = logLine + "Dashboard setting of '" + serverSideAppConfig.getString("android_package_name") + "' compared to client side '"  + integrationModel.packageName + "'";
+                Log.d("BranchSDK", logLine);
 
-                Log.d("BranchSDK", "\nChecking local config for URI scheme '" + serverSideAppConfig.getString("android_uri_scheme") + "'...");
-                if (!serverSideAppConfig.getString("android_uri_scheme").equals(integrationModel.deeplinkUriScheme)) {
-                    Log.d("BranchSDK", "\nERROR: Local URI scheme '" + integrationModel.deeplinkUriScheme + "' does NOT match dashboard.\n");
+                Log.d("BranchSDK", " ----- checking for URI scheme correctness -----");
+
+                if (!serverSideAppConfig.getString("android_uri_scheme").replace("://", "").equals(integrationModel.deeplinkUriScheme)) {
+                    logLine = "ERROR: ";
                 } else {
-                    Log.d("BranchSDK", "\nPASS\n");
+                    logLine = "PASS: ";
                 }
+                logLine = logLine + "Dashboard setting of '" + serverSideAppConfig.getString("android_uri_scheme").replace("://", "") + "' compared to client side '"  + integrationModel.deeplinkUriScheme + "'";
+                Log.d("BranchSDK", logLine);
 
                 if (integrationModel.applinkSheme.isEmpty()) {
                     Log.d("BranchSDK", "ERROR: Could not find any App Link hosts to support Android App Links");
@@ -61,8 +68,7 @@ public class IntegrationValidator {
                     boolean found = false;
 
                     if (serverSideAppConfig.getString("short_url_domain").length() > 0) {
-                        Log.d("BranchSDK", "\nChecking local config for custom link domain '" + serverSideAppConfig.getString("short_url_domain") + "'...");
-
+                        Log.d("BranchSDK", " ----- looking for custom domain App Links intent filter -----");
                         for (String host : integrationModel.applinkSheme) {
                             if (host.equals(serverSideAppConfig.getString("short_url_domain"))) {
                                 found = true;
@@ -76,8 +82,7 @@ public class IntegrationValidator {
                         }
                     }
 
-                    Log.d("BranchSDK", "\nChecking local config for default link domain '" + serverSideAppConfig.get("default_short_url_domain") + "'...");
-
+                    Log.d("BranchSDK", " ----- looking for default link domain App Links intent filter -----");
                     found = false;
                     for (String host : integrationModel.applinkSheme) {
                         if (host.equals(serverSideAppConfig.getString("default_short_url_domain"))) {
@@ -91,8 +96,7 @@ public class IntegrationValidator {
                         Log.d("BranchSDK", "\nPASS\n");
                     }
 
-                    Log.d("BranchSDK", "\nChecking local config for alternate link domain '" + serverSideAppConfig.get("alternate_short_url_domain") + "'...");
-
+                    Log.d("BranchSDK", " ----- looking for alternate link domain App Links intent filter -----");
                     found = false;
                     for (String host : integrationModel.applinkSheme) {
                         if (host.equals(serverSideAppConfig.getString("alternate_short_url_domain"))) {
@@ -106,6 +110,9 @@ public class IntegrationValidator {
                         Log.d("BranchSDK", "\nPASS\n");
                     }
                 }
+                Log.d("BranchSDK", "-------------------------------------------------");
+                Log.d("BranchSDK", "** Branch integration verification complete **");
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
