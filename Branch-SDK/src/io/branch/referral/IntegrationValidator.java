@@ -76,9 +76,9 @@ public class IntegrationValidator {
                             }
                         }
                         if (!found) {
-                            Log.d("BranchSDK", "\nERROR: Could not find custom domain '" + serverSideAppConfig.getString("short_url_domain") + "' in App Link hosts.\n");
+                            Log.d("BranchSDK", "ERROR: Could not find custom domain '" + serverSideAppConfig.getString("short_url_domain") + "' in App Link hosts.");
                         } else {
-                            Log.d("BranchSDK", "\nPASS\n");
+                            Log.d("BranchSDK", "PASS: Successfully found '" + serverSideAppConfig.getString("short_url_domain") + "' in App Link hosts.");
                         }
                     }
 
@@ -91,9 +91,9 @@ public class IntegrationValidator {
                         }
                     }
                     if (!found) {
-                        Log.d("BranchSDK", "\nERROR: Could not find default link domain '" + serverSideAppConfig.getString("default_short_url_domain") + "' in App Link hosts.\n");
+                        Log.d("BranchSDK", "ERROR: Could not find default link domain '" + serverSideAppConfig.getString("default_short_url_domain") + "' in App Link hosts.");
                     } else {
-                        Log.d("BranchSDK", "\nPASS\n");
+                        Log.d("BranchSDK", "PASS: Successfully found '" + serverSideAppConfig.getString("default_short_url_domain") + "' in App Link hosts.");
                     }
 
                     Log.d("BranchSDK", " ----- looking for alternate link domain App Links intent filter -----");
@@ -105,9 +105,9 @@ public class IntegrationValidator {
                         }
                     }
                     if (!found) {
-                        Log.d("BranchSDK", "\nERROR: Could not find default link domain '" + serverSideAppConfig.getString("alternate_short_url_domain") + "' in App Link hosts.\n");
+                        Log.d("BranchSDK", "ERROR: Could not find default link domain '" + serverSideAppConfig.getString("alternate_short_url_domain") + "' in App Link hosts.");
                     } else {
-                        Log.d("BranchSDK", "\nPASS\n");
+                        Log.d("BranchSDK", "PASS: Successfully found '" + serverSideAppConfig.getString("alternate_short_url_domain") + "' in App Link hosts.");
                     }
                 }
                 Log.d("BranchSDK", "-------------------------------------------------");
