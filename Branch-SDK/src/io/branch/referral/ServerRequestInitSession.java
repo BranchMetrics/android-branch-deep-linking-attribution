@@ -1,13 +1,18 @@
 package io.branch.referral;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.Browser;
 import android.util.Log;
 
@@ -121,25 +126,41 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
     }
 
-    void onInitSessionCompleted(ServerResponse response, Branch branch) {
+    void onInitSessionCompleted(final ServerResponse response,final Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
-            if (branch.currentActivityReference_ != null) {
-                try {
-                    Thread.sleep(3000);
-                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
-                } catch (Exception ignore) {
-                }
-                try {
-                    //Session Referring Link
-                    JSONObject response_data = new JSONObject(response.getObject().getString("data"));
-                    if(response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
-                        //Deeplink Validate Code comes here
-                        validateCode(response_data,branch.currentActivityReference_);
+            if (branch.currentActivityReference_ != null) try {
+                ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+                final Handler validate_handle = new Handler(Looper.getMainLooper()) {
+
+                    @Override
+                    public void handleMessage(Message inputMessage) {
+                        try {
+                            //Session Referring Link
+                            JSONObject response_data = new JSONObject(response.getObject().getString("data"));
+                            if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
+                                //Deeplink Validate Code comes here
+                                validateCode(response_data, branch.currentActivityReference_);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                };
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(2000);
+                            Message validatemessage = validate_handle.obtainMessage(1);
+                            validatemessage.sendToTarget();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.run();
+
+            } catch (Exception ignore) {
             }
         }
     }
@@ -155,7 +176,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         builder.setTitle("Branch Deeplinking Routing")
                 .setMessage("Did the Deeplink route you to the correct content?")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // Test Succeeded
                         String launch_link = append_queryparams(validate_json,"g");
@@ -174,6 +195,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                         // Do nothing
                     }
                 })
+                .setCancelable(false)
                 .setIcon(android.R.drawable.sym_def_app_icon)
                 .show();
     }
