@@ -5,25 +5,24 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
-import android.util.Xml;
 
-import org.xmlpull.v1.XmlPullParser;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.jar.JarFile;
 
-import javax.xml.parsers.DocumentBuilder;
-
-import io.branch.referral.ApkParser;
-
 /**
  * Created by sojanpr on 9/15/17.
  */
 
 public class IntegrationValidator {
-    public static void validateIntegration (Context context){
+
+    public void validateIntegration (Context context){
+        Log.d("BranchSDK", "** Initiating Branch integration verification **");
         BranchIntegrationModel integrationModel = new BranchIntegrationModel();
         integrationModel.packageName = context.getPackageName();
         ApplicationInfo appInfo = null;
@@ -37,13 +36,85 @@ public class IntegrationValidator {
             e.printStackTrace();
         }
         updateIntegrationModel(context, integrationModel);
-        Log.d("BranchSDK", "integrationModel params are:" + integrationModel.packageName + "\n"
-                + integrationModel.branchKeyLive + "\n" + integrationModel.branchKeyTest + "\n"
-                + integrationModel.deeplinkUriScheme
-        );
+
+        JSONObject serverSideAppConfig = Branch.getInstance().generateAppConfigInternal();
+
+        if (serverSideAppConfig != null) {
+            try {
+                Log.d("BranchSDK", "\nChecking local config for package name '" + serverSideAppConfig.getString("android_package_name") + "'...");
+                if (!serverSideAppConfig.get("android_package_name").equals(integrationModel.packageName)) {
+                    Log.d("BranchSDK", "\nERROR: Local package name '" + integrationModel.packageName + "' does NOT match dashboard.\n");
+                } else {
+                    Log.d("BranchSDK", "\nPASS\n");
+                }
+
+                Log.d("BranchSDK", "\nChecking local config for URI scheme '" + serverSideAppConfig.getString("android_uri_scheme") + "'...");
+                if (!serverSideAppConfig.getString("android_uri_scheme").equals(integrationModel.deeplinkUriScheme)) {
+                    Log.d("BranchSDK", "\nERROR: Local URI scheme '" + integrationModel.deeplinkUriScheme + "' does NOT match dashboard.\n");
+                } else {
+                    Log.d("BranchSDK", "\nPASS\n");
+                }
+
+                if (integrationModel.applinkSheme.isEmpty()) {
+                    Log.d("BranchSDK", "ERROR: Could not find any App Link hosts to support Android App Links");
+                } else {
+                    boolean found = false;
+
+                    if (serverSideAppConfig.getString("short_url_domain").length() > 0) {
+                        Log.d("BranchSDK", "\nChecking local config for custom link domain '" + serverSideAppConfig.getString("short_url_domain") + "'...");
+
+                        for (String host : integrationModel.applinkSheme) {
+                            if (host.equals(serverSideAppConfig.getString("short_url_domain"))) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            Log.d("BranchSDK", "\nERROR: Could not find custom domain '" + serverSideAppConfig.getString("short_url_domain") + "' in App Link hosts.\n");
+                        } else {
+                            Log.d("BranchSDK", "\nPASS\n");
+                        }
+                    }
+
+                    Log.d("BranchSDK", "\nChecking local config for default link domain '" + serverSideAppConfig.get("default_short_url_domain") + "'...");
+
+                    found = false;
+                    for (String host : integrationModel.applinkSheme) {
+                        if (host.equals(serverSideAppConfig.getString("default_short_url_domain"))) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        Log.d("BranchSDK", "\nERROR: Could not find default link domain '" + serverSideAppConfig.getString("default_short_url_domain") + "' in App Link hosts.\n");
+                    } else {
+                        Log.d("BranchSDK", "\nPASS\n");
+                    }
+
+                    Log.d("BranchSDK", "\nChecking local config for alternate link domain '" + serverSideAppConfig.get("alternate_short_url_domain") + "'...");
+
+                    found = false;
+                    for (String host : integrationModel.applinkSheme) {
+                        if (host.equals(serverSideAppConfig.getString("alternate_short_url_domain"))) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        Log.d("BranchSDK", "\nERROR: Could not find default link domain '" + serverSideAppConfig.getString("alternate_short_url_domain") + "' in App Link hosts.\n");
+                    } else {
+                        Log.d("BranchSDK", "\nPASS\n");
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Log.d("BranchSDK", "ERROR: Unable to read dashboard config. Please confirm that your Branch key is properly added to the manifest");
+        }
     }
 
-    public static void updateIntegrationModel(Context context, BranchIntegrationModel integrationModel) {
+    void updateIntegrationModel(Context context, BranchIntegrationModel integrationModel) {
         
         if (!isLowOnMemory(context)) {
             PackageManager pm = context.getPackageManager();
@@ -59,7 +130,17 @@ public class IntegrationValidator {
                     xml = new byte[is.available()];
                     //noinspection ResultOfMethodCallIgnored
                     is.read(xml);
-                    integrationModel.deeplinkUriScheme = new ApkParser().decompressXML(xml);
+                    JSONObject obj = new ApkParser().decompressXML(xml);
+                    if (obj.has("scheme")) {
+                        integrationModel.deeplinkUriScheme = obj.getString("scheme");
+                    }
+                    if (obj.has("hosts")) {
+                        integrationModel.applinkSheme = new ArrayList<String>();
+                        JSONArray jsonHosts = obj.getJSONArray("hosts");
+                        for (int i = 0; i<jsonHosts.length(); i++){
+                            integrationModel.applinkSheme.add(jsonHosts.getString(i));
+                        }
+                    }
                 } catch (Exception ignored) {
                 } finally {
                     try {
@@ -79,16 +160,15 @@ public class IntegrationValidator {
         }
     }
     
-    private static boolean isLowOnMemory(Context context) {
+    private boolean isLowOnMemory(Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(mi);
         return mi.lowMemory;
     }
     
-    private static class BranchIntegrationModel {
+    private class BranchIntegrationModel {
         private String deeplinkUriScheme;
-        private String deeplinkUriPath;
         private String branchKeyTest;
         private String branchKeyLive;
         private ArrayList<String> applinkSheme;

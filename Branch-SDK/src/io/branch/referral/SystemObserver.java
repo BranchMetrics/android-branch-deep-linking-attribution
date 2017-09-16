@@ -165,7 +165,10 @@ class SystemObserver {
                     xml = new byte[is.available()];
                     //noinspection ResultOfMethodCallIgnored
                     is.read(xml);
-                    scheme = new ApkParser().decompressXML(xml);
+                    JSONObject obj = new ApkParser().decompressXML(xml);
+                    if (obj.has("scheme")) {
+                        scheme = obj.getString("scheme");
+                    }
                 } catch (Exception ignored) {
                 } finally {
                     try {
