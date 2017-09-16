@@ -466,6 +466,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
+    public void validateIntegration() { IntegrationValidator.validateIntegration(context_); }
 
     /**
      * @deprecated This method is deprecated since play store referrer is enabled by default from v2.9.1.

@@ -4,10 +4,17 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.util.Log;
+import android.util.Xml;
+
+import org.xmlpull.v1.XmlPullParser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.jar.JarFile;
+
+import javax.xml.parsers.DocumentBuilder;
 
 import io.branch.referral.ApkParser;
 
@@ -16,13 +23,32 @@ import io.branch.referral.ApkParser;
  */
 
 public class IntegrationValidator {
-    
-    public static void updateIntegrationModel(Context context, String packageName, BranchIntegrationModel integrationModel) {
+    public static void validateIntegration (Context context){
+        BranchIntegrationModel integrationModel = new BranchIntegrationModel();
+        integrationModel.packageName = context.getPackageName();
+        ApplicationInfo appInfo = null;
+        try {
+            appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (appInfo.metaData != null) {
+                integrationModel.branchKeyLive = appInfo.metaData.getString("io.branch.sdk.BranchKey");
+                integrationModel.branchKeyTest = appInfo.metaData.getString("io.branch.sdk.BranchKey.test");
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        updateIntegrationModel(context, integrationModel);
+        Log.d("BranchSDK", "integrationModel params are:" + integrationModel.packageName + "\n"
+                + integrationModel.branchKeyLive + "\n" + integrationModel.branchKeyTest + "\n"
+                + integrationModel.deeplinkUriScheme
+        );
+    }
+
+    public static void updateIntegrationModel(Context context, BranchIntegrationModel integrationModel) {
         
         if (!isLowOnMemory(context)) {
             PackageManager pm = context.getPackageManager();
             try {
-                ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
+                ApplicationInfo ai = pm.getApplicationInfo(integrationModel.packageName, 0);
                 String sourceApk = ai.publicSourceDir;
                 JarFile jf = null;
                 InputStream is = null;
@@ -60,12 +86,12 @@ public class IntegrationValidator {
         return mi.lowMemory;
     }
     
-    private class BranchIntegrationModel {
+    private static class BranchIntegrationModel {
         private String deeplinkUriScheme;
         private String deeplinkUriPath;
         private String branchKeyTest;
         private String branchKeyLive;
-        private String applinkSheme;
+        private ArrayList<String> applinkSheme;
         private String packageName;
         
     }
