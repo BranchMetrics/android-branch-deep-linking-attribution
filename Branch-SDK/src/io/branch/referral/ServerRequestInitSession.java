@@ -141,6 +141,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
                             if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
                                 //Deeplink Validate Code comes here
                                 validateCode(response_data, branch.currentActivityReference_);
+                            } else if (response_data.has("validate") && response_data.getBoolean("validate")) {
+                                //Launch the Deepview template
+                                launchURLInChrome(branch.currentActivityReference_,response_data.getString("~referring_link"));
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
