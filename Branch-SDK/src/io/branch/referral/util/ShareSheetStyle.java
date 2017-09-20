@@ -50,6 +50,8 @@ public class ShareSheetStyle {
     private List<String> includeInShareSheet = new ArrayList<>();
     private List<String> excludeFromShareSheet = new ArrayList<>();
 
+    private int iconSize_ = 0;
+
     public ShareSheetStyle(@NonNull Context context, @NonNull String messageTitle, @NonNull String messageBody) {
         context_ = context;
         moreOptionIcon_ = null;
@@ -279,6 +281,17 @@ public class ShareSheetStyle {
         return this;
     }
 
+    /**
+     * Set icon size for the sharing dialog
+     *
+     * @param iconSize {@link int} for setting the share sheet icon size(s).
+     * @return this Builder object to allow for chaining of calls to set methods.
+     */
+    public ShareSheetStyle setIconSize(int iconSize) {
+        this.iconSize_ = iconSize;
+        return this;
+    }
+
     public List<String> getExcludedFromShareSheet() {
         return excludeFromShareSheet;
     }
@@ -351,4 +364,6 @@ public class ShareSheetStyle {
     public int getStyleResourceID() {
         return styleResourceID_;
     }
+
+    public int getIconSize() { return iconSize_; }
 }

@@ -51,6 +51,8 @@ class ShareLinkManager {
     /* Styleable resource for share sheet.*/
     private int shareDialogThemeID_ = -1;
 
+    private int iconSize_ = 0;
+
     private Branch.ShareLinkBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
@@ -73,7 +75,7 @@ class ShareLinkManager {
         shareDialogThemeID_ = builder.getStyleResourceID();
         includeInShareSheet = builder.getIncludedInShareSheet();
         excludeFromShareSheet = builder.getExcludedFromShareSheet();
-
+        iconSize_ = builder.getIconSize();
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
@@ -414,8 +416,13 @@ class ShareLinkManager {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Large);
                 this.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             } else {
+                if (iconSize_ != 0) {
+                    appIcon.setBounds(0, 0, iconSize_, iconSize_);
+                    this.setCompoundDrawables(appIcon, null, null, null);
+                } else {
+                    this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
+                }
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
-                this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
                 viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
             this.setMinHeight(viewItemMinHeight_);
