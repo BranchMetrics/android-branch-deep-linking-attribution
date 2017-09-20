@@ -70,7 +70,7 @@ public class Defines {
         ScreenWidth("screen_width"),
         WiFi("wifi"),
         LocalIP("local_ip"),
-        DeviceType("device_type"),
+        ModeType("mode_type"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),

@@ -64,7 +64,7 @@ class DeviceInfo {
     /**
      * Device type
      */
-    private final int deviceType_;
+    private final int modeType_;
 
     private final String packageName_;
     private final String appVersion_;
@@ -124,7 +124,7 @@ class DeviceInfo {
         languageCode_ = sysObserver.getISO2LanguageCode();
 
         UiModeManager uiModeManager = (UiModeManager) context.getSystemService(UI_MODE_SERVICE);
-        deviceType_ = uiModeManager.getCurrentModeType();
+        modeType_ = uiModeManager.getCurrentModeType();
     }
 
     /**
@@ -149,7 +149,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
-            requestObj.put(Defines.Jsonkey.DeviceType.getKey(), deviceType_);
+            requestObj.put(Defines.Jsonkey.ModeType.getKey(), modeType_);
 
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
