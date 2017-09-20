@@ -2973,7 +2973,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private int dividerHeight = -1;
         private String sharingTitle = null;
         private View sharingTitleView = null;
-
         private int iconSize_ = 50;
 
         BranchShortLinkBuilder shortLinkBuilder_;
