@@ -43,15 +43,14 @@ public class ShareSheetStyle {
     final Context context_;
     private boolean setFullWidthStyle_;
     private int dividerHeight_ = -1;
+    private int iconSize_ = 50;
 
     private String sharingTitle_ = null;
     private View sharingTitleView_ = null;
 
     private List<String> includeInShareSheet = new ArrayList<>();
     private List<String> excludeFromShareSheet = new ArrayList<>();
-
-    private int iconSize_ = 50;
-
+    
     public ShareSheetStyle(@NonNull Context context, @NonNull String messageTitle, @NonNull String messageBody) {
         context_ = context;
         moreOptionIcon_ = null;

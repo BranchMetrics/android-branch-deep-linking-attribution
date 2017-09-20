@@ -50,9 +50,8 @@ class ShareLinkManager {
     private boolean isShareInProgress_ = false;
     /* Styleable resource for share sheet.*/
     private int shareDialogThemeID_ = -1;
-
+    /* Size of app icons in share sheet */
     private int iconSize_ = 50;
-
     private Branch.ShareLinkBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
