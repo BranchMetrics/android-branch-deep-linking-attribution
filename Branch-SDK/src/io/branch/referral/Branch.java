@@ -2974,7 +2974,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private String sharingTitle = null;
         private View sharingTitleView = null;
 
-        private int iconSize_ = 0;
+        private int iconSize_ = 50;
 
         BranchShortLinkBuilder shortLinkBuilder_;
         private List<String> includeInShareSheet = new ArrayList<>();

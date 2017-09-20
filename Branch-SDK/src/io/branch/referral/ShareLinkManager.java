@@ -51,7 +51,7 @@ class ShareLinkManager {
     /* Styleable resource for share sheet.*/
     private int shareDialogThemeID_ = -1;
 
-    private int iconSize_ = 0;
+    private int iconSize_ = 50;
 
     private Branch.ShareLinkBuilder builder_;
     final int padding = 5;
@@ -400,6 +400,7 @@ class ShareLinkManager {
      */
     private class ShareItemView extends TextView {
         Context context_;
+        int iconSizeDP_;
 
         public ShareItemView(Context context) {
             super(context);
@@ -407,6 +408,7 @@ class ShareLinkManager {
             this.setPadding(leftMargin, padding, padding, padding);
             this.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
             this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
+            this.iconSizeDP_ = iconSize_ != 0 ? BranchUtil.dpToPx(context, iconSize_) : 0;
         }
 
         public void setLabel(String appName, Drawable appIcon, boolean isEnabled) {
@@ -416,8 +418,8 @@ class ShareLinkManager {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Large);
                 this.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             } else {
-                if (iconSize_ != 0) {
-                    appIcon.setBounds(0, 0, iconSize_, iconSize_);
+                if (iconSizeDP_ != 0) {
+                    appIcon.setBounds(0, 0, iconSizeDP_, iconSizeDP_);
                     this.setCompoundDrawables(appIcon, null, null, null);
                 } else {
                     this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
