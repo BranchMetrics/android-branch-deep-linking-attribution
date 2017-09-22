@@ -27,14 +27,7 @@ public class PrefHelper {
      * {@link Boolean} value that enables/disables Branch developer external debug mode.
      */
     private static boolean BNC_Dev_Debug = false;
-
-    /**
-     * {@link Boolean} value that determines whether external App Listing is enabled or not.
-     *
-     * @see {@link Branch#scheduleListOfApps()}
-     * @see {@link SystemObserver#getListOfApps()}
-     */
-    private static boolean BNC_App_Listing = true;
+    
 
     private static boolean BNC_Smart_Session = true;
 
@@ -1025,23 +1018,19 @@ public class PrefHelper {
     public boolean getExternDebug() {
         return BNC_Dev_Debug;
     }
-
+    
     /**
-     * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps to
-     * <i>false</i>.</p>
+     * @deprecated App listing feature is deprecated
      */
     public void disableExternAppListing() {
-        BNC_App_Listing = false;
     }
-
+    
     /**
-     * <p>Sets the {@link Boolean} value that is checked prior to the listing of external apps.</p>
-     *
-     * @return A {@link Boolean} value containing the current value of the
-     * {@link #BNC_App_Listing} boolean.
+     * @deprecated App listing feature is deprecated
+     * @return {@code false}
      */
     public boolean getExternAppListing() {
-        return BNC_App_Listing;
+        return false;
     }
 
     /**
