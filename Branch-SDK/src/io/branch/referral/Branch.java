@@ -2444,7 +2444,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intent != null) {
             try {
                 isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-            } catch (BadParcelableException e) {
+            } catch (Throwable ignore) {
 
             }
             if (isRestartSessionRequested) {
