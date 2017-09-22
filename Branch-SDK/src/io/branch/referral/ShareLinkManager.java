@@ -50,7 +50,8 @@ class ShareLinkManager {
     private boolean isShareInProgress_ = false;
     /* Styleable resource for share sheet.*/
     private int shareDialogThemeID_ = -1;
-
+    /* Size of app icons in share sheet */
+    private int iconSize_ = 50;
     private Branch.ShareLinkBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
@@ -73,7 +74,7 @@ class ShareLinkManager {
         shareDialogThemeID_ = builder.getStyleResourceID();
         includeInShareSheet = builder.getIncludedInShareSheet();
         excludeFromShareSheet = builder.getExcludedFromShareSheet();
-
+        iconSize_ = builder.getIconSize();
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
@@ -398,6 +399,7 @@ class ShareLinkManager {
      */
     private class ShareItemView extends TextView {
         Context context_;
+        int iconSizeDP_;
 
         public ShareItemView(Context context) {
             super(context);
@@ -405,6 +407,7 @@ class ShareLinkManager {
             this.setPadding(leftMargin, padding, padding, padding);
             this.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
             this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
+            this.iconSizeDP_ = iconSize_ != 0 ? BranchUtil.dpToPx(context, iconSize_) : 0;
         }
 
         public void setLabel(String appName, Drawable appIcon, boolean isEnabled) {
@@ -414,8 +417,13 @@ class ShareLinkManager {
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Large);
                 this.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             } else {
+                if (iconSizeDP_ != 0) {
+                    appIcon.setBounds(0, 0, iconSizeDP_, iconSizeDP_);
+                    this.setCompoundDrawables(appIcon, null, null, null);
+                } else {
+                    this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
+                }
                 this.setTextAppearance(context_, android.R.style.TextAppearance_Medium);
-                this.setCompoundDrawablesWithIntrinsicBounds(appIcon, null, null, null);
                 viewItemMinHeight_ = Math.max(viewItemMinHeight_, (appIcon.getIntrinsicHeight() + padding));
             }
             this.setMinHeight(viewItemMinHeight_);
