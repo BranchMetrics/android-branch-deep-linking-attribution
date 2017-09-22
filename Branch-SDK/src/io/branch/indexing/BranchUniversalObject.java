@@ -122,9 +122,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Set description for the content for the content referred by this object
-     * <p/>
+     * </p>
      *
      * @param description A {@link String} with value for the description of the content referred by this object
      * @return This instance to allow for chaining of calls to set methods
@@ -135,9 +135,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Set the url to any image associated with this content.
-     * <p/>
+     * </p>
      *
      * @param imageUrl A {@link String} specifying a url to an image associated with content referred by this object
      * @return This instance to allow for chaining of calls to set methods
@@ -242,10 +242,10 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Publish this BUO with Google app indexing so that the contents will be available with google search
      * with branch link pointing to the app.
-     * </p?>
+     * </p>
      *
      * @param context Application context
      */
@@ -309,9 +309,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Get description for the content for the content referred by this object
-     * <p/>
+     * </p>
      *
      * @return A {@link String} with value for the description of the content referred by this object
      */
@@ -320,9 +320,9 @@ public class BranchUniversalObject implements Parcelable {
     }
 
     /**
-     * <p/>
+     * <p>
      * Get the url to any image associated with this content.
-     * <p/>
+     * </p>
      *
      * @return A {@link String} specifying a url to an image associated with content referred by this object
      */

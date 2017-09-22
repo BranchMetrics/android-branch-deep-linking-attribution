@@ -16,7 +16,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 
 /**
- * <p/>
+ * <p>
  * Class for representing any additional information that is specific to the link.
  * Use this class to specify the properties of a deep link such as channel, feature etc and any control params associated with the link.
  *

@@ -52,6 +52,7 @@ android {
     lintOptions {
         abortOnError false
     }
+    buildToolsVersion '25.0.0'
 }
 
 task clearJar(type: Delete) {
@@ -59,7 +60,7 @@ task clearJar(type: Delete) {
 }
 
 task makeJar(type: Copy) {
-    from('build/intermediates/bundles/release/')
+    from('build/intermediates/bundles/default/')
     into('../')
     include('classes.jar')
     rename ('classes.jar', 'Branch-'+project.VERSION_NAME+'.jar')

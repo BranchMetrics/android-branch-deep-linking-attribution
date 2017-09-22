@@ -29,9 +29,9 @@ class ServerRequestGetRewardHistory extends ServerRequest {
      *                 return.
      * @param order    A {@link Branch.CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *                 <p/>
+     *                 </p>
      *                 <p>Valid choices:</p>
-     *                 <p/>
+     *                 </p>
      *                 <ul>
      *                 <li>{@link Branch.CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link Branch.CreditHistoryOrder#kLeastRecentFirst}</li>

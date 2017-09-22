@@ -31,9 +31,9 @@ class ServerRequestGetReferralCode extends ServerRequest {
      *                        {@link Branch#LINK_TYPE_UNLIMITED_USE} or
      *                        {@link Branch#LINK_TYPE_ONE_TIME_USE}
      * @param location        The user to reward for applying the referral code.
-     *                        <p/>
+     *                        </p>
      *                        <p>Valid options:</p>
-     *                        <p/>
+     *                        </p>
      *                        <ul>
      *                        <li>{@link Branch#REFERRAL_CODE_LOCATION_REFERREE}</li>
      *                        <li>{@link Branch#REFERRAL_CODE_LOCATION_REFERRING_USER}</li>

@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 /**
  * Class providing the structure of a HTTP response as recieved from the Branch API.
- * <p/>
+ *
  * Supports the following methods:
  * <ul>
  * <li>{@link ServerResponse#getTag()}</li>

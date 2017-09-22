@@ -189,7 +189,7 @@ public class PrefHelper {
 
     /**
      * <p>Sets the value specifying the number of times that a Branch API call has been re-attempted.</p>
-     * <p/>
+     *
      * <p>This overrides the default retry value.</p>
      *
      * @param retry An {@link Integer} value specifying the value to be specified in preferences
@@ -252,7 +252,7 @@ public class PrefHelper {
 
     /**
      * <p>Sets the Branch App Key in preferences programmatically.</p>
-     * <p/>
+     *
      * <p><b>Note: </b> This is a deprecated method, you should configure your <i>App Key</i> as an XML
      * String value instead.</p>
      *
@@ -379,10 +379,8 @@ public class PrefHelper {
 
     /**
      * <p>Sets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
-     * <p/>
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     * <p/>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
      *
      * @param identity_id A {@link String} value containing the currently configured identity
@@ -404,10 +402,8 @@ public class PrefHelper {
 
     /**
      * <p>Sets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     * <p/>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentityID(String)} - the UID reference of the user</p>
      *
      * @param identity A {@link String} value containing the currently configured identity
@@ -419,7 +415,6 @@ public class PrefHelper {
 
     /**
      * <p>Gets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     * <p/>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      *
@@ -560,7 +555,6 @@ public class PrefHelper {
 
     /**
      * <p>Gets the session parameters as currently set in preferences.</p>
-     * <p/>
      * <p>Parameters are stored in JSON format, and must be parsed prior to access.</p>
      *
      * @return A {@link String} value containing the JSON-encoded structure of parameters for
@@ -632,7 +626,6 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 1, or <i>true</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
-     * <p/>
      * <ul>
      * <li>Sets {@link #KEY_IS_REFERRABLE} to 1 - <i>true</i> - This session <b><u>is</u></b> referrable.</li>
      * </ul>
@@ -644,7 +637,6 @@ public class PrefHelper {
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
-     * <p/>
      * <ul>
      * <li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
      * </ul>
@@ -702,7 +694,6 @@ public class PrefHelper {
 
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     * <p/>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
@@ -717,7 +708,6 @@ public class PrefHelper {
 
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     * <p/>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
@@ -1073,7 +1063,6 @@ public class PrefHelper {
      * debugging is enabled.</p>
      *
      * @return A {@link Boolean} value indicating current debug state:
-     * <p/>
      * <ul>
      * <li><i>true</i> Debugging is enabled.</li>
      * <li><i>false</i> Debugging is disabled.</li>
@@ -1120,7 +1109,6 @@ public class PrefHelper {
 
         /**
          * @return {@link Integer} value containing the HTTP Status code of the current connection.
-         * <p/>
          * <ul>
          * <li>200 - The request has succeeded.</li>
          * <li>400 - Request cannot be fulfilled due to bad syntax</li>

@@ -28,7 +28,7 @@ class ServerRequestCreateUrl extends ServerRequest {
      *
      * @param context  Current {@link Application} context
      * @param alias    Link 'alias' can be used to label the endpoint on the link.
-     *                 <p/>
+     *                 </p>
      *                 <p>
      *                 For example:
      *                 http://bnc.lt/AUSTIN28.

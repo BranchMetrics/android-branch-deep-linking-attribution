@@ -201,9 +201,9 @@ public abstract class ServerRequest {
     }
 
     /**
-     * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
+     * <p>
+     *     Gets a {@link JSONObject} containing the post data supplied with the current request as
      * key-value pairs appended with the instrumentation data.</p>
-     * <p/>
      * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
      *
      * @return A {@link JSONObject} containing the post data supplied with the current request

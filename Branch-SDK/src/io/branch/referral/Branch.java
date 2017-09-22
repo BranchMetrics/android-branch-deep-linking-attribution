@@ -56,121 +56,121 @@ import io.branch.referral.util.LinkProperties;
  * The core object required when using Branch SDK. You should declare an object of this type at
  * the class-level of each Activity or Fragment that you wish to use Branch functionality within.
  * </p>
- * <p/>
+ *
  * <p>
  * Normal instantiation of this object would look like this:
  * </p>
- * <p/>
+ *
  * <pre style="background:#fff;padding:10px;border:2px solid silver;">
  * Branch.getInstance(this.getApplicationContext()) // from an Activity
- * <p/>
+ *
  * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
  * </pre>
  */
 public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents {
-
+    
     private static final String TAG = "BranchSDK";
-
+    
     /**
      * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that
      * are shared with others directly as a user action, via social media for instance.
      */
     public static final String FEATURE_TAG_SHARE = "share";
-
+    
     /**
      * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are associated
      * with a referral program, incentivized or not.
      */
     public static final String FEATURE_TAG_REFERRAL = "referral";
-
+    
     /**
      * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as
      * referral actions by users of an app using an 'invite contacts' feature for instance.
      */
     public static final String FEATURE_TAG_INVITE = "invite";
-
+    
     /**
      * Hard-coded {@link String} that denotes a link that is part of a commercial 'deal' or offer.
      */
     public static final String FEATURE_TAG_DEAL = "deal";
-
+    
     /**
      * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or
      * product.
      */
     public static final String FEATURE_TAG_GIFT = "gift";
-
+    
     /**
      * The code to be passed as part of a deal or gift; retrieved from the Branch object as a
      * tag upon initialisation. Of {@link String} format.
      */
     public static final String REDEEM_CODE = "$redeem_code";
-
+    
     /**
      * <p>Default value of referral bucket; referral buckets contain credits that are used when users
      * are referred to your apps. These can be viewed in the Branch dashboard under Referrals.</p>
      */
     public static final String REFERRAL_BUCKET_DEFAULT = "default";
-
+    
     /**
      * <p>Hard-coded value for referral code type. Referral codes will always result on "credit" actions.
      * Even if they are of 0 value.</p>
      */
     public static final String REFERRAL_CODE_TYPE = "credit";
-
+    
     /**
      * Branch SDK version for the current release of the Branch SDK.
      */
     public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
-
+    
     /**
      * Key value for referral code as a parameter.
      */
     public static final String REFERRAL_CODE = "referral_code";
-
+    
     /**
      * The redirect URL provided when the link is handled by a desktop client.
      */
     public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
-
+    
     /**
      * The redirect URL provided when the link is handled by an Android device.
      */
     public static final String REDIRECT_ANDROID_URL = "$android_url";
-
+    
     /**
      * The redirect URL provided when the link is handled by an iOS device.
      */
     public static final String REDIRECT_IOS_URL = "$ios_url";
-
+    
     /**
      * The redirect URL provided when the link is handled by a large form-factor iOS device such as
      * an iPad.
      */
     public static final String REDIRECT_IPAD_URL = "$ipad_url";
-
+    
     /**
      * The redirect URL provided when the link is handled by an Amazon Fire device.
      */
     public static final String REDIRECT_FIRE_URL = "$fire_url";
-
+    
     /**
      * The redirect URL provided when the link is handled by a Blackberry device.
      */
     public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
-
+    
     /**
      * The redirect URL provided when the link is handled by a Windows Phone device.
      */
     public static final String REDIRECT_WINDOWS_PHONE_URL = "$windows_phone_url";
-
+    
     /**
      * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
      *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_TITLE = "$og_title";
-
+    
     /**
      * The description of the object to appear in social media feeds that use
      * Facebook's Open Graph specification.
@@ -178,7 +178,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_DESC = "$og_description";
-
+    
     /**
      * An image URL which should represent your object to appear in social media feeds that use
      * Facebook's Open Graph specification.
@@ -186,33 +186,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_IMAGE_URL = "$og_image_url";
-
+    
     /**
      * A URL to a video file that complements this object.
      *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_VIDEO = "$og_video";
-
+    
     /**
      * The canonical URL of your object that will be used as its permanent ID in the graph.
      *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_URL = "$og_url";
-
+    
     /**
      * Unique identifier for the app in use.
      */
     public static final String OG_APP_ID = "$og_app_id";
-
+    
     /**
      * {@link String} value denoting the deep link path to override Branch's default one. By
      * default, Branch will use yourapp://open?link_click_id=12345. If you specify this key/value,
      * Branch will use yourapp://'$deeplink_path'?link_click_id=12345
      */
     public static final String DEEPLINK_PATH = "$deeplink_path";
-
+    
     /**
      * {@link String} value indicating whether the link should always initiate a deep link action.
      * By default, unless overridden on the dashboard, Branch will only open the app if they are
@@ -220,49 +220,49 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Possible values are "true" or "false"
      */
     public static final String ALWAYS_DEEPLINK = "$always_deeplink";
-
+    
     /**
      * An {@link Integer} value indicating the user to reward for applying a referral code. In this
      * case, the user applying the referral code receives credit.
      */
     public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
-
+    
     /**
      * An {@link Integer} value indicating the user to reward for applying a referral code. In this
      * case, the user who created the referral code receives credit.
      */
     public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
-
+    
     /**
      * An {@link Integer} value indicating the user to reward for applying a referral code. In this
      * case, both the creator and applicant receive credit
      */
     public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
-
+    
     /**
      * An {@link Integer} value indicating the calculation type of the referral code. In this case,
      * the referral code can be applied continually.
      */
     public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
-
+    
     /**
      * An {@link Integer} value indicating the calculation type of the referral code. In this case,
      * a user can only apply a specific referral code once.
      */
     public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
-
+    
     /**
      * An {@link Integer} value indicating the link type. In this case, the link can be used an
      * unlimited number of times.
      */
     public static final int LINK_TYPE_UNLIMITED_USE = 0;
-
+    
     /**
      * An {@link Integer} value indicating the link type. In this case, the link can be used only
      * once. After initial use, subsequent attempts will not validate.
      */
     public static final int LINK_TYPE_ONE_TIME_USE = 1;
-
+    
     /**
      * <p>An {@link Integer} variable specifying the amount of time in milliseconds to keep a
      * connection alive before assuming a timeout condition.</p>
@@ -271,109 +271,109 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Timer.schedule (TimerTask task, long delay)</a>
      */
     private static final int SESSION_KEEPALIVE = 2000;
-
+    
     /**
      * <p>An {@link Integer} value defining the timeout period in milliseconds to wait during a
      * looping task before triggering an actual connection close during a session close action.</p>
      */
     private static final int PREVENT_CLOSE_TIMEOUT = 500;
-
+    
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
-
+    
     private static boolean disableDeviceIDFetch_;
-
+    
     private boolean enableFacebookAppLinkCheck_ = true;
-
+    
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
-
+    
     private BranchRemoteInterface kRemoteInterface_;
     private PrefHelper prefHelper_;
     private SystemObserver systemObserver_;
     private Context context_;
-
+    
     final Object lock;
-
+    
     private Timer closeTimer;
     private Timer rotateCloseTimer;
     private boolean keepAlive_;
-
+    
     private Semaphore serverSema_;
-
+    
     private ServerRequestQueue requestQueue_;
-
+    
     private int networkCount_;
-
+    
     private boolean hasNetwork_;
-
+    
     private Map<BranchLinkData, String> linkCache_;
     
-
+    
     /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
     private static boolean isAutoSessionMode_ = false;
-
+    
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
-
-
+    
+    
     /* Enumeration for defining session initialisation state. */
     private enum SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
     }
-
+    
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
-
+    
     /* Instance  of share link manager to share links automatically with third party applications. */
     private ShareLinkManager shareLinkManager_;
-
+    
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
-
+    
     /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
     private enum CUSTOM_REFERRABLE_SETTINGS {
         USE_DEFAULT, REFERRABLE, NON_REFERRABLE
     }
-
+    
     /* By default assume user want to use the default settings. Update this option when user specify custom referrable settings */
     private static CUSTOM_REFERRABLE_SETTINGS customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-
+    
     /* Key to indicate whether the Activity was launched by Branch or not. */
     private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
-
+    
     /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
-
+    
     /* Path for $deeplink_path or $android_deeplink_path to auto deep link. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_PATH = "io.branch.sdk.auto_link_path";
-
+    
     /* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
     private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
-
+    
     /*Key for defining a request code for an activity. should be added as a metadata for an activity. This is used as a request code for launching a an activity on auto deep link. */
     private static final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
-
+    
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
-
+    
     /* Sets to true when the init session params are reported to the app though call back.*/
     private boolean isInitReportedThroughCallBack = false;
-
+    
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
-
+    
     /* Name of the key for getting Fabric Branch API key from string resource */
     private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
-
+    
     private boolean isGAParamsFetchInProgress_ = false;
-
+    
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
-     * <p/>
+     * </p>
      * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -392,11 +392,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
-
+        
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
     }
-
-
+    
+    
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
      * Make sure your app is instantiating {@link BranchApp} before calling this method
@@ -418,7 +418,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return branchReferral_;
     }
-
+    
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
@@ -448,11 +448,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return branchReferral_;
     }
-
+    
     private static Branch getBranchInstance(@NonNull Context context, boolean isLive) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
-
+            
             String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
             boolean isNewBranchKeySet;
             if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
@@ -485,15 +485,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             isAutoSessionMode_ = true;
             branchReferral_.setActivityLifeCycleObserver((Application) context);
         }
-
+        
         return branchReferral_;
     }
-
-
+    
+    
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     * <p/>
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -504,7 +503,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getInstance(@NonNull Context context) {
         return getBranchInstance(context, true);
     }
-
+    
     /**
      * <p>If you configured the your Strings file according to the guide, you'll be able to use
      * the test version of your app by just calling this static method before calling initSession.</p>
@@ -515,11 +514,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getTestInstance(@NonNull Context context) {
         return getBranchInstance(context, false);
     }
-
+    
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     * <p/>
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context A {@link Context} from which this call was made.
@@ -536,11 +534,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
-
+    
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
-     * <p/>
      * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
      *
      * @param context      A {@link Context} from which this call was made.
@@ -560,7 +557,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
-
+    
     /**
      * <p>If you configured the your Strings file according to the guide, you'll be able to use
      * the test version of your app by just calling this static method before calling initSession.</p>
@@ -568,7 +565,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-
+    
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
@@ -577,7 +574,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
-
+    
     /**
      * <p>If you configured the your Strings file according to the guide, you'll be able to use
      * the test version of your app by just calling this static method before calling initSession.</p>
@@ -588,7 +585,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
      * @return An initialised {@link Branch} object.
      */
-
+    
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
@@ -597,7 +594,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchReferral_.setActivityLifeCycleObserver((Application) context);
         return branchReferral_;
     }
-
+    
     /**
      * <p>Initialises an instance of the Branch object.</p>
      *
@@ -607,7 +604,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Branch initInstance(@NonNull Context context) {
         return new Branch(context.getApplicationContext());
     }
-
+    
     /**
      * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has
      * been initialised, to false - forcing re-initialisation.</p>
@@ -615,7 +612,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void resetUserSession() {
         initState_ = SESSION_STATE.UNINITIALISED;
     }
-
+    
     /**
      * <p>Sets the number of times to re-attempt a timed-out request to the Branch API, before
      * considering the request to have failed entirely. Default 5.</p>
@@ -628,7 +625,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             prefHelper_.setRetryCount(retryCount);
         }
     }
-
+    
     /**
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
      * to the Branch API. Default 3000 ms.</p>
@@ -641,11 +638,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             prefHelper_.setRetryInterval(retryInterval);
         }
     }
-
+    
     /**
      * <p>Sets the duration in milliseconds that the system should wait for a response before considering
      * any Branch API call to have timed out. Default 3000 ms.</p>
-     * <p/>
      * <p>Increase this to perform better in low network speed situations, but at the expense of
      * responsiveness to error situation.</p>
      *
@@ -657,18 +653,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             prefHelper_.setTimeout(timeout);
         }
     }
-
+    
     /**
      * <p>Sets the library to function in debug mode, enabling logging of all requests.</p>
      * <p>If you want to flag debug, call this <b>before</b> initUserSession</p>
      *
-     * @deprecated use <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in the manifest instead.
+     * @deprecated use "meta-data android:name="io.branch.sdk.TestMode" in the manifest instead.
      */
     @Deprecated
     public void setDebug() {
         prefHelper_.setExternDebug();
     }
-
+    
     /**
      * Method to control reading Android ID from device. Set this to true to disable reading the device id.
      * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getAutoInstance(Context)}
@@ -678,7 +674,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void disableDeviceIDFetch(Boolean deviceIdFetch) {
         disableDeviceIDFetch_ = deviceIdFetch;
     }
-
+    
     /**
      * Returns true if reading device id is disabled
      *
@@ -687,7 +683,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static boolean isDeviceIDFetchDisabled() {
         return disableDeviceIDFetch_;
     }
-
+    
     /**
      * Sets the key-value pairs for debugging the deep link. The key-value set in debug mode is given back with other deep link data on branch init session.
      * This method should be called from onCreate() of activity which listens to Branch Init Session callbacks
@@ -697,7 +693,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDeepLinkDebugMode(JSONObject debugParams) {
         deeplinkDebugParams_ = debugParams;
     }
-
+    
     /**
      * <p>Calls the {@link PrefHelper#disableExternAppListing()} on the local instance to prevent
      * a list of installed apps from being returned to the Branch API.</p>
@@ -705,21 +701,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void disableAppList() {
         prefHelper_.disableExternAppListing();
     }
-
+    
     /**
      * <p>If there's further Branch API call happening within the two seconds, we then don't close
      * the session; otherwise, we close the session after two seconds.</p>
-     * <p/>
      * <p>Call this method if you don't want this smart session feature and would rather manage
      * the session yourself.</p>
-     * <p/>
+     *
      * <p><b>Note:</b>  smart session - we keep session alive for two seconds</p>
      */
     public void disableSmartSession() {
         prefHelper_.disableSmartSession();
     }
-
-
+    
+    
     /**
      * <p>
      * Enable Facebook app link check operation during Branch initialisation.
@@ -728,14 +723,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void enableFacebookAppLinkCheck() {
         enableFacebookAppLinkCheck_ = true;
     }
-
+    
     /**
      * <p>Add key value pairs to all requests</p>
      */
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.setRequestMetadata(key, value);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
      * to perform an action upon successful initialisation.</p>
@@ -749,7 +744,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession(callback, (Activity) null);
         return false;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
      * to perform an action upon successful initialisation.</p>
@@ -763,7 +758,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession(callback, (Activity) null);
         return false;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a
      * {@link BranchUniversalReferralInitListener} to perform an action upon successful initialisation.</p>
@@ -784,7 +779,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a
      * {@link BranchReferralInitListener} to perform an action upon successful initialisation.</p>
@@ -805,7 +800,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -821,7 +816,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data) {
         return initSession(callback, data, null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -837,7 +832,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data) {
         return initSession(callback, data, null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -856,7 +851,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession(callback, activity);
         return uriHandled;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -875,7 +870,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession(callback, activity);
         return uriHandled;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
      *
@@ -884,7 +879,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession() {
         return initSession((Activity) null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
      *
@@ -894,7 +889,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(Activity activity) {
         return initSession((BranchReferralInitListener) null, activity);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, with associated data from the supplied
      * {@link Uri}.</p>
@@ -907,7 +902,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSessionWithData(@NonNull Uri data) {
         return initSessionWithData(data, null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, with associated data from the supplied
      * {@link Uri}.</p>
@@ -922,7 +917,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession((BranchReferralInitListener) null, activity);
         return uriHandled;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, specifying whether the initialisation can count
      * as a referrable action.</p>
@@ -936,7 +931,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(boolean isReferrable) {
         return initSession((BranchReferralInitListener) null, isReferrable, (Activity) null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API, specifying whether the initialisation can count
      * as a referrable action, and supplying the calling {@link Activity} for context.</p>
@@ -951,7 +946,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
         return initSession((BranchReferralInitListener) null, isReferrable, activity);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -969,7 +964,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -987,7 +982,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -1008,7 +1003,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession(callback, isReferrable, activity);
         return uriHandled;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -1029,7 +1024,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initSession(callback, isReferrable, activity);
         return uriHandled;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -1045,7 +1040,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -1061,7 +1056,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
         return initSession(callback, isReferrable, (Activity) null);
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -1079,7 +1074,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initUserSessionInternal(callback, activity, isReferrable);
         return false;
     }
-
+    
     /**
      * <p>Initialises a session with the Branch API.</p>
      *
@@ -1097,13 +1092,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initUserSessionInternal(callback, activity, isReferrable);
         return false;
     }
-
-
+    
+    
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
         BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
         initUserSessionInternal(branchUniversalReferralInitWrapper, activity, isReferrable);
     }
-
+    
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
         if (activity != null) {
             currentActivityReference_ = new WeakReference<>(activity);
@@ -1137,7 +1132,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             } else {
                 this.prefHelper_.clearIsReferrable();
             }
-
+            
             //If initialising ,then set new callbacks.
             if (initState_ == SESSION_STATE.INITIALISING) {
                 if (callback != null) {
@@ -1151,8 +1146,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-
-
+    
+    
     /**
      * <p>Closes the current session, dependent on the state of the
      * {@link PrefHelper#getSmartSession()} {@link Boolean} value. If <i>true</i>, take no action.
@@ -1170,14 +1165,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
              */
             return;
         }
-
-
+        
+        
         if (prefHelper_.getSmartSession()) {
             if (keepAlive_) {
                 return;
             }
-
-
+            
+            
             // else, real close
             synchronized (lock) {
                 clearCloseTimer();
@@ -1205,7 +1200,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             shareLinkManager_.cancelShareLinkDialog(true);
         }
     }
-
+    
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
@@ -1213,7 +1208,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private void closeSessionInternal() {
         executeClose();
     }
-
+    
     /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
@@ -1235,9 +1230,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             initState_ = SESSION_STATE.UNINITIALISED;
         }
     }
-
+    
     private boolean readAndStripParam(Uri data, Activity activity) {
-
+        
         // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
         try {
             if (data != null) {
@@ -1246,7 +1241,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                 Bundle bundle = activity.getIntent().getExtras();
                 Set<String> extraKeys = bundle.keySet();
-
+                
                 if (extraKeys.size() > 0) {
                     JSONObject extrasJson = new JSONObject();
                     for (String key : extraKeys) {
@@ -1257,7 +1252,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         } catch (Exception ignore) {
         }
-
+        
         //Check for any push identifier in case app is launched by a push notification
         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
             try {
@@ -1269,7 +1264,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             } catch (Exception ignore) {
             }
         }
-
+        
         //Check for link click id or app link
         if (data != null && data.isHierarchical() && activity != null) {
             try {
@@ -1318,14 +1313,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
-
+    
     @Override
     public void onGAdsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         processNextQueueItem();
     }
-
+    
     /**
      * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
      * {@link String} value. No callback.</p>
@@ -1335,7 +1330,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setIdentity(@NonNull String userId) {
         setIdentity(userId, null);
     }
-
+    
     /**
      * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
      * {@link String} value, with a callback specified to perform a defined action upon successful
@@ -1355,7 +1350,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-
+    
     /**
      * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
      * If you call setIdentity, this device will have that identity associated with this user until logout is called.
@@ -1366,7 +1361,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean isUserIdentified() {
         return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
     }
-
+    
     /**
      * <p>This method should be called if you know that a different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
@@ -1375,7 +1370,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void logout() {
         logout(null);
     }
-
+    
     /**
      * <p>This method should be called if you know that a different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
@@ -1389,7 +1384,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Fire-and-forget retrieval of action count for the current session. Without a callback.</p>
      *
@@ -1402,7 +1397,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         loadActionCounts(null);
     }
-
+    
     /**
      * <p>Gets the total action count, with a callback to perform a predefined
      * action following successful report of state change. You'll then need to
@@ -1422,14 +1417,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Fire-and-forget retrieval of rewards for the current session. Without a callback.</p>
      */
     public void loadRewards() {
         loadRewards(null);
     }
-
+    
     /**
      * <p>Retrieves rewards for the current session, with a callback to perform a predefined
      * action following successful report of state change. You'll then need to call getCredits
@@ -1444,7 +1439,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Retrieve the number of credits available for the "default" bucket.</p>
      *
@@ -1453,7 +1448,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public int getCredits() {
         return prefHelper_.getCreditCount();
     }
-
+    
     /**
      * Returns an {@link Integer} of the number of credits available for use within the supplied
      * bucket name.
@@ -1465,7 +1460,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public int getCreditsForBucket(String bucket) {
         return prefHelper_.getCreditCount(bucket);
     }
-
+    
     /**
      * <p>Gets the total number of times that the specified action has been carried out.</p>
      *
@@ -1480,7 +1475,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public int getTotalCountsForAction(@NonNull String action) {
         return prefHelper_.getActionTotalCount(action);
     }
-
+    
     /**
      * <p>Gets the number of unique times that the specified action has been carried out.</p>
      *
@@ -1495,7 +1490,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public int getUniqueCountsForAction(@NonNull String action) {
         return prefHelper_.getActionUniqueCount(action);
     }
-
+    
     /**
      * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
      * credits within it. If the number to redeem exceeds the number available in the bucket, all of
@@ -1507,7 +1502,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void redeemRewards(int count) {
         redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, null);
     }
-
+    
     /**
      * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
      * credits within it. If the number to redeem exceeds the number available in the bucket, all of
@@ -1521,7 +1516,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void redeemRewards(int count, BranchReferralStateChangedListener callback) {
         redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, callback);
     }
-
+    
     /**
      * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
      * credits within it. If the number to redeem exceeds the number available in the bucket, all of
@@ -1535,8 +1530,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void redeemRewards(@NonNull final String bucket, final int count) {
         redeemRewards(bucket, count, null);
     }
-
-
+    
+    
     /**
      * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
      * credits within it. If the number to redeem exceeds the number available in the bucket, all of
@@ -1555,7 +1550,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
      * response.</p>
@@ -1566,7 +1561,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void getCreditHistory(BranchListResponseListener callback) {
         getCreditHistory(null, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
     }
-
+    
     /**
      * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
      * response.</p>
@@ -1579,7 +1574,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener callback) {
         getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
     }
-
+    
     /**
      * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
      * response.</p>
@@ -1591,9 +1586,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 return.
      * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *                 <p/>
+     *
      *                 <p>Valid choices:</p>
-     *                 <p/>
      *                 <ul>
      *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
@@ -1604,7 +1598,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void getCreditHistory(@NonNull final String afterId, final int length, @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
         getCreditHistory(null, afterId, length, order, callback);
     }
-
+    
     /**
      * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
      * response.</p>
@@ -1618,9 +1612,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 return.
      * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
      *                 be returned in.
-     *                 <p/>
+     *
      *                 <p>Valid choices:</p>
-     *                 <p/>
      *                 <ul>
      *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
      *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
@@ -1634,7 +1627,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
      * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
@@ -1647,7 +1640,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
         userCompletedAction(action, metadata, null);
     }
-
+    
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
      * reported to the Branch API.</p>
@@ -1658,7 +1651,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void userCompletedAction(final String action) {
         userCompletedAction(action, null, null);
     }
-
+    
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
      * reported to the Branch API.</p>
@@ -1670,7 +1663,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void userCompletedAction(final String action, BranchViewHandler.IBranchViewEvents callback) {
         userCompletedAction(action, null, callback);
     }
-
+    
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
      * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
@@ -1690,7 +1683,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
@@ -1707,7 +1700,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         firstReferringParams = appendDebugParams(firstReferringParams);
         return firstReferringParams;
     }
-
+    
     /**
      * <p>Returns the parameters associated with the link that referred the session. If a user
      * clicks a link, and then opens the app, initSession will return the paramters of the link
@@ -1724,7 +1717,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         latestParams = appendDebugParams(latestParams);
         return latestParams;
     }
-
+    
     /**
      * Append the deep link debug params to the original params
      *
@@ -1747,17 +1740,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return originalParams;
     }
-
+    
     public JSONObject getDeeplinkDebugParams() {
         if (deeplinkDebugParams_ != null && deeplinkDebugParams_.length() > 0) {
             Log.w(TAG, "You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
         }
         return deeplinkDebugParams_;
     }
-
-
+    
+    
     //-----------------Generate Short URL      -------------------------------------------//
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1771,7 +1764,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1787,7 +1780,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1809,13 +1802,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
      *
      * @param alias   Link 'alias' can be used to label the endpoint on the link.
-     *                <p/>
+     *
      *                <p>
      *                For example:
      *                http://bnc.lt/AUSTIN28.
@@ -1838,7 +1831,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1862,7 +1855,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, type, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1886,7 +1879,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1910,13 +1903,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
      *
      * @param alias   Link 'alias' can be used to label the endpoint on the link.
-     *                <p/>
+     *
      *                <p>
      *                For example:
      *                http://bnc.lt/AUSTIN28.
@@ -1941,7 +1934,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1967,7 +1960,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, type, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -1993,7 +1986,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2007,7 +2000,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.stringifyAndAddSource(new JSONObject()), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2026,7 +2019,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, null, null, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2046,7 +2039,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @see BranchLinkData#putStage(String)
      * @see BranchLinkData#putParams(String)
      * @see BranchLinkCreateListener
-     * <p/>
+     *
      * @deprecated Use {@link BranchUniversalObject } to create links to your content.
      * For more details on content sharing please visit <a href="https://dev.branch.io/recipes/content_analytics_migration/android/">Content Analytics Preparation Guide</a>
      */
@@ -2055,12 +2048,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
      * @param alias    Link 'alias' can be used to label the endpoint on the link.
-     *                 <p/>
+     *
      *                 <p>
      *                 For example:
      *                 http://bnc.lt/AUSTIN28.
@@ -2091,7 +2084,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2122,7 +2115,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, type, 0, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2153,7 +2146,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, null, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2184,7 +2177,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2221,7 +2214,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(alias, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2255,7 +2248,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, type, 0, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
@@ -2289,13 +2282,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, duration, tags, channel, feature, stage, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a short URL to be generated by the Branch servers.</p>
      *
      * @param alias    Link 'alias' can be used to label the endpoint on the link.
-     *                 <p/>
-     *                 <p/>
+     *                 </p>
+     *                 </p>
      *                 For example:
      *                 http://bnc.lt/AUSTIN28.
      *                 Should not exceed 128 characters
@@ -2332,7 +2325,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias, type, duration, tags,
                 channel, feature, stage,
                 params, callback, async);
-
+        
         if (!req.constructError_ && !req.handleErrors(context_)) {
             if (linkCache_.containsKey(req.getLinkPost())) {
                 String url = linkCache_.get(req.getLinkPost());
@@ -2350,7 +2343,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return null;
     }
-
+    
     /**
      * <p> Generates a shorl url fot the given {@link ServerRequestCreateUrl} object </p>
      *
@@ -2374,10 +2367,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return null;
     }
-
-
+    
+    
     //-----------------Generate Referral URL      -------------------------------------------//
-
+    
     /**
      * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
      *
@@ -2398,7 +2391,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a referral URL (feature = referral) to be generated by the Branch servers.</p>
      *
@@ -2422,7 +2415,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a referral URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -2439,7 +2432,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a referral URL to be generated by the Branch servers, via a synchronous
      * call; with a duration specified within which an app session should be matched to the link.</p>
@@ -2458,10 +2451,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_REFERRAL, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
-
+    
+    
     //------------------Generate  content Url------------------------------------------------//
-
+    
     /**
      * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
      *
@@ -2482,7 +2475,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers.</p>
      *
@@ -2506,7 +2499,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), callback, true);
     }
-
+    
     /**
      * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers, via a synchronous
      * call</p>
@@ -2523,7 +2516,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, null, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
+    
     /**
      * <p>Configures and requests a content URL (defined as feature = sharing) to be generated by the Branch servers, via a synchronous
      * call</p>
@@ -2542,10 +2535,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         return generateShortLink(null, LINK_TYPE_UNLIMITED_USE, 0, tags, channel, FEATURE_TAG_SHARE, null, BranchUtil.formatAndStringifyLinkParam(params), null, false);
     }
-
-
+    
+    
     //----------------Get referral code ---------------------------------------//
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2560,7 +2553,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2574,7 +2567,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         this.getReferralCode(null, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2591,7 +2584,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2607,7 +2600,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         this.getReferralCode(null, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2626,7 +2619,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         this.getReferralCode(prefix, amount, expiration, REFERRAL_BUCKET_DEFAULT, REFERRAL_CODE_AWARD_UNLIMITED, REFERRAL_CODE_LOCATION_REFERRING_USER, callback);
     }
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2638,9 +2631,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                        {@link #LINK_TYPE_UNLIMITED_USE} or
      *                        {@link #LINK_TYPE_ONE_TIME_USE}
      * @param location        The user to reward for applying the referral code.
-     *                        <p/>
+     *
      *                        <p>Valid options:</p>
-     *                        <p/>
+     *
      *                        <ul>
      *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
      *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
@@ -2656,7 +2649,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //noinspection deprecation
         this.getReferralCode(prefix, amount, null, REFERRAL_BUCKET_DEFAULT, calculationType, location, callback);
     }
-
+    
     /**
      * <p>Configures and requests a referral code to be generated by the Branch servers.</p>
      *
@@ -2671,9 +2664,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                        {@link #LINK_TYPE_UNLIMITED_USE} or
      *                        {@link #LINK_TYPE_ONE_TIME_USE}
      * @param location        The user to reward for applying the referral code.
-     *                        <p/>
+     *
      *                        <p>Valid options:</p>
-     *                        <p/>
+     *
      *                        <ul>
      *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERREE}</li>
      *                        <li>{@link #REFERRAL_CODE_LOCATION_REFERRING_USER}</li>
@@ -2695,7 +2688,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Validates the supplied referral code on initialisation without applying it to the current
      * session.</p>
@@ -2712,7 +2705,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Applies a supplied referral code to the current user session upon initialisation.</p>
      *
@@ -2729,7 +2722,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-
+    
     /**
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
      * user selected clients.</p>
@@ -2744,7 +2737,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         shareLinkManager_ = new ShareLinkManager();
         shareLinkManager_.shareLink(builder);
     }
-
+    
     /**
      * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
      * calling this method before your activity finishes inorder to prevent any window leak. </p>
@@ -2758,13 +2751,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             shareLinkManager_.cancelShareLinkDialog(animateClose);
         }
     }
-
+    
     // PRIVATE FUNCTIONS
-
+    
     private String convertDate(Date date) {
         return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
     }
-
+    
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
         if (initState_ == SESSION_STATE.INITIALISED) {
             ServerResponse response = null;
@@ -2790,11 +2783,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return null;
     }
-
+    
     private void generateShortLinkAsync(final ServerRequest req) {
         handleNewRequest(req);
     }
-
+    
     private JSONObject convertParamsStringToDictionary(String paramString) {
         if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
             return new JSONObject();
@@ -2819,7 +2812,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
                 networkCount_ = 1;
                 ServerRequest req = requestQueue_.peek();
-
+                
                 serverSema_.release();
                 if (req != null) {
                     if (!req.isWaitingOnProcessToFinish()) {
@@ -2850,7 +2843,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             e.printStackTrace();
         }
     }
-
+    
     private void handleFailure(int index, int statusCode) {
         ServerRequest req;
         if (index >= requestQueue_.getSize()) {
@@ -2860,13 +2853,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         handleFailure(req, statusCode);
     }
-
+    
     private void handleFailure(final ServerRequest req, int statusCode) {
         if (req == null)
             return;
         req.handleFailure(statusCode, "");
     }
-
+    
     private void updateAllRequestsInQueue() {
         try {
             for (int i = 0; i < requestQueue_.getSize(); i++) {
@@ -2888,7 +2881,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             e.printStackTrace();
         }
     }
-
+    
     private void clearCloseTimer() {
         if (rotateCloseTimer == null)
             return;
@@ -2896,7 +2889,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         rotateCloseTimer.purge();
         rotateCloseTimer = new Timer();
     }
-
+    
     private void clearTimer() {
         if (closeTimer == null)
             return;
@@ -2904,7 +2897,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         closeTimer.purge();
         closeTimer = new Timer();
     }
-
+    
     private void keepAlive() {
         keepAlive_ = true;
         synchronized (lock) {
@@ -2922,19 +2915,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }, SESSION_KEEPALIVE);
         }
     }
-
+    
     private boolean hasSession() {
         return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
     }
-
+    
     private boolean hasDeviceFingerPrint() {
         return !prefHelper_.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE);
     }
-
+    
     private boolean hasUser() {
         return !prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE);
     }
-
+    
     private void insertRequestAtFront(ServerRequest req) {
         if (networkCount_ == 0) {
             requestQueue_.insert(req, 0);
@@ -2942,8 +2935,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             requestQueue_.insert(req, 1);
         }
     }
-
-
+    
+    
     private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
@@ -2959,10 +2952,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
         }
-
+        
         processNextQueueItem();
     }
-
+    
     private void initializeSession(final BranchReferralInitListener callback) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))
                 && (prefHelper_.getAppKey() == null || prefHelper_.getAppKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
@@ -2976,7 +2969,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
             Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
-
+        
         if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || !enableFacebookAppLinkCheck_) {
             registerAppInit(callback, null);
         } else {
@@ -3020,7 +3013,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         registerInstallOrOpen(request, callback);
     }
-
+    
     /**
      * Handles execution of a new request other than open or install.
      * Checks for the session initialisation and adds a install/Open request in front of this request
@@ -3031,7 +3024,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void handleNewRequest(ServerRequest req) {
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-
+            
             if ((req instanceof ServerRequestLogout)) {
                 req.handleFailure(BranchError.ERR_NO_SESSION, "");
                 Log.i(TAG, "Branch is not initialized, cannot logout");
@@ -3053,13 +3046,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-
+        
         requestQueue_.enqueue(req);
         req.onRequestQueued();
         processNextQueueItem();
     }
-
-
+    
+    
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
@@ -3068,7 +3061,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
             application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
             isActivityLifeCycleCallbackRegistered_ = true;
-
+            
         } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
             isAutoSessionMode_ = false;
@@ -3076,7 +3069,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Log.w(TAG, new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
         }
     }
-
+    
     /**
      * <p>Class that observes activity life cycle events and determines when to start and stop
      * session.</p>
@@ -3084,15 +3077,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks {
         private int activityCnt_ = 0; //Keep the count of live  activities.
-
-
+        
+        
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
         }
-
+        
         @Override
         public void onActivityStarted(Activity activity) {
             if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
@@ -3109,12 +3102,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             activityCnt_++;
         }
-
+        
         @Override
         public void onActivityResumed(Activity activity) {
             currentActivityReference_ = new WeakReference<>(activity);
         }
-
+        
         @Override
         public void onActivityPaused(Activity activity) {
             /* Close any opened sharing dialog.*/
@@ -3122,7 +3115,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 shareLinkManager_.cancelShareLinkDialog(true);
             }
         }
-
+        
         @Override
         public void onActivityStopped(Activity activity) {
             activityCnt_--; // Check if this is the last activity.If so stop
@@ -3131,11 +3124,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 closeSessionInternal();
             }
         }
-
+        
         @Override
         public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
         }
-
+        
         @Override
         public void onActivityDestroyed(Activity activity) {
             if (currentActivityReference_ != null && currentActivityReference_.get() == activity) {
@@ -3143,9 +3136,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
-
+        
     }
-
+    
     /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchReferralInitListener}, defining a single method that takes a list of params in
@@ -3158,7 +3151,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public interface BranchReferralInitListener {
         void onInitFinished(JSONObject referringParams, BranchError error);
     }
-
+    
     /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchUniversalReferralInitListener}, defining a single method that provides
@@ -3173,8 +3166,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public interface BranchUniversalReferralInitListener {
         void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error);
     }
-
-
+    
+    
     /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchReferralStateChangedListener}, defining a single method that takes a value of
@@ -3187,7 +3180,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public interface BranchReferralStateChangedListener {
         void onStateChanged(boolean changed, BranchError error);
     }
-
+    
     /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchLinkCreateListener}, defining a single method that takes a URL
@@ -3200,7 +3193,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public interface BranchLinkCreateListener {
         void onLinkCreate(String url, BranchError error);
     }
-
+    
     /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
@@ -3210,12 +3203,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * <p> Callback method to update when share link dialog is launched.</p>
          */
         void onShareLinkDialogLaunched();
-
+        
         /**
          * <p> Callback method to update when sharing dialog is dismissed.</p>
          */
         void onShareLinkDialogDismissed();
-
+        
         /**
          * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
          *
@@ -3224,7 +3217,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * @param error         A {@link BranchError} to update errors, if there is any.
          */
         void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
-
+        
         /**
          * <p>Called when user select a channel for sharing a deep link.
          * Branch will create a deep link for the selected channel and share with it after calling this
@@ -3236,7 +3229,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          */
         void onChannelSelected(String channelName);
     }
-
+    
     /**
      * <p>An interface class for customizing sharing properties with selected channel.</p>
      */
@@ -3246,14 +3239,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * @return {@link String} with value for the message title for sharing the link with the selected channel
          */
         String getSharingTitleForChannel(String channel);
-
+        
         /**
          * @param channel The name of the channel selected for sharing.
          * @return {@link String} with value for the message body for sharing the link with the selected channel
          */
         String getSharingMessageForChannel(String channel);
     }
-
+    
     /**
      * <p>An Interface class that is implemented by all classes that make use of
      * {@link BranchListResponseListener}, defining a single method that takes a list of
@@ -3266,7 +3259,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public interface BranchListResponseListener {
         void onReceivingResponse(JSONArray list, BranchError error);
     }
-
+    
     /**
      * <p>
      * Callback interface for listening logout status
@@ -3282,14 +3275,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
     }
-
+    
     /**
      * <p>enum containing the sort options for return of credit history.</p>
      */
     public enum CreditHistoryOrder {
         kMostRecentFirst, kLeastRecentFirst
     }
-
+    
     /**
      * Async Task to create  a shorlink for synchronous methods
      */
@@ -3299,7 +3292,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return kRemoteInterface_.createCustomUrlSync(serverRequests[0].getPost());
         }
     }
-
+    
     /**
      * Asynchronous task handling execution of server requests. Execute the network task on background
      * thread and request are  executed in sequential manner. Handles the request execution in
@@ -3309,12 +3302,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
         int timeOut_ = 0;
         ServerRequest thisReq_;
-
+        
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
             timeOut_ = prefHelper_.getTimeout();
         }
-
+        
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             if (thisReq_ instanceof ServerRequestInitSession) {
@@ -3322,20 +3315,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             //Update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
-
+            
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
             if (thisReq_.isGAdsParamsRequired()) {
                 thisReq_.updateGAdsParams(systemObserver_);
             }
-
+            
             if (thisReq_.isGetRequest()) {
                 return kRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), timeOut_);
             } else {
                 return kRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), timeOut_);
             }
         }
-
+        
         @Override
         protected void onPostExecute(ServerResponse serverResponse) {
             super.onPostExecute(serverResponse);
@@ -3343,7 +3336,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 try {
                     int status = serverResponse.getStatusCode();
                     hasNetwork_ = true;
-
+                    
                     //If the request is not succeeded
                     if (status != 200) {
                         //If failed request is an initialisation request then mark session not initialised
@@ -3377,7 +3370,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             }
                             // Then, set the network count to zero, indicating that requests can be started again.
                             networkCount_ = 0;
-
+                            
                             //Finally call the request callback with the error.
                             for (ServerRequest req : requestToFail) {
                                 if (req != null) {
@@ -3406,7 +3399,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             requestQueue_.clear();
                         }
                         requestQueue_.dequeue();
-
+                        
                         // If this request changes a session update the session-id to queued requests.
                         if (thisReq_ instanceof ServerRequestInitSession
                                 || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
@@ -3431,11 +3424,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
                                     updateRequestsInQueue = true;
                                 }
-
+                                
                                 if (updateRequestsInQueue) {
                                     updateAllRequestsInQueue();
                                 }
-
+                                
                                 if (thisReq_ instanceof ServerRequestInitSession) {
                                     initState_ = SESSION_STATE.INITIALISED;
                                     // Publish success to listeners
@@ -3444,7 +3437,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
-
+                                    
                                 } else {
                                     // For setting identity just call only request succeeded
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
@@ -3465,18 +3458,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-
+    
     //-------------------Auto deep link feature-------------------------------------------//
-
+    
     /**
      * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activitie configured for auto deep link on seeing matching keys.
      * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
-     * <p>
-     * Configure your activity in your manifest to enable auto deep linking as follows
-     * <activity android:name=".YourActivity">
-     * <meta-data android:name="io.branch.sdk.auto_link" android:value="DeepLinkKey1","DeepLinkKey2" />
-     * </activity>
-     * </p>
      *
      * @param activity Instance of activity to check if launched on auto deep link.
      * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
@@ -3484,11 +3471,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static boolean isAutoDeepLinkLaunch(Activity activity) {
         return (activity.getIntent().getStringExtra(AUTO_DEEP_LINKED) != null);
     }
-
+    
     private void checkForAutoDeepLinkConfiguration() {
         JSONObject latestParams = getLatestReferringParams();
         String deepLinkActivity = null;
-
+        
         try {
             //Check if the application is launched by clicking a Branch link.
             if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
@@ -3504,7 +3491,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), PackageManager.GET_ACTIVITIES | PackageManager.GET_META_DATA);
                 ActivityInfo[] activityInfos = info.activities;
                 int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
-
+                
                 if (activityInfos != null) {
                     for (ActivityInfo activityInfo : activityInfos) {
                         if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
@@ -3521,10 +3508,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (currentActivity != null) {
                         Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
                         intent.putExtra(AUTO_DEEP_LINKED, "true");
-
+                        
                         // Put the raw JSON params as extra in case need to get the deep link params as JSON String
                         intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
-
+                        
                         // Add individual parameters in the data
                         Iterator<?> keys = latestParams.keys();
                         while (keys.hasNext()) {
@@ -3545,7 +3532,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } catch (JSONException ignore) {
         }
     }
-
+    
     private boolean checkForAutoDeepLinkKeys(JSONObject params, ActivityInfo activityInfo) {
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
             String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
@@ -3557,7 +3544,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
-
+    
     private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
         String deepLinkPath = null;
         try {
@@ -3578,7 +3565,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
-
+    
     private boolean pathMatch(String templatePath, String path) {
         boolean matched = true;
         String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
@@ -3597,24 +3584,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return matched;
     }
     //-------------------------- Branch Builders--------------------------------------//
-
+    
     /**
      * <p> Class for building a share link dialog.This creates a chooser for selecting application for
      * sharing a link created with given parameters. </p>
      */
     public static class ShareLinkBuilder {
-
+        
         private final Activity activity_;
         private final Branch branch_;
-
+        
         private String shareMsg_;
         private String shareSub_;
         private Branch.BranchLinkShareListener callback_ = null;
         private Branch.IChannelProperties channelPropertiesCallback_ = null;
-
+        
         private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
         private String defaultURL_;
-
+        
         //Customise more and copy url option
         private Drawable moreOptionIcon_;
         private String moreOptionText_;
@@ -3626,15 +3613,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private int dividerHeight = -1;
         private String sharingTitle = null;
         private View sharingTitleView = null;
-
+        
         BranchShortLinkBuilder shortLinkBuilder_;
-
+        
         /**
          * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
          * user selected clients</p>
          *
          * @param activity   The {@link Activity} to show the dialog for choosing sharing application.
-         * @param parameters @param params  A {@link JSONObject} value containing the deep link params.
+         * @param parameters  A {@link JSONObject} value containing the deep link params.
          */
         public ShareLinkBuilder(Activity activity, JSONObject parameters) {
             this.activity_ = activity;
@@ -3653,15 +3640,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             channelPropertiesCallback_ = null;
             preferredOptions_ = new ArrayList<>();
             defaultURL_ = null;
-
+            
             moreOptionIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_more);
             moreOptionText_ = "More...";
-
+            
             copyUrlIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_save);
             copyURlText_ = "Copy link";
             urlCopiedMessage_ = "Copied link to clipboard!";
         }
-
+        
         /**
          * *<p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
          * user selected clients</p>
@@ -3673,7 +3660,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this(activity, new JSONObject());
             shortLinkBuilder_ = shortLinkBuilder;
         }
-
+        
         /**
          * <p>Sets the message to be shared with the link.</p>
          *
@@ -3684,7 +3671,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shareMsg_ = message;
             return this;
         }
-
+        
         /**
          * <p>Sets the subject of this message. This will be added to Email and SMS Application capable of handling subject in the message.</p>
          *
@@ -3695,7 +3682,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shareSub_ = subject;
             return this;
         }
-
+        
         /**
          * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
          * link.</p>
@@ -3708,7 +3695,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shortLinkBuilder_.addTag(tag);
             return this;
         }
-
+        
         /**
          * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
          * link.</p>
@@ -3721,7 +3708,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shortLinkBuilder_.addTags(tags);
             return this;
         }
-
+        
         /**
          * <p>Adds a feature that make use of the link.</p>
          *
@@ -3733,7 +3720,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shortLinkBuilder_.setFeature(feature);
             return this;
         }
-
+        
         /**
          * <p>Adds a stage application or user flow associated with this link.</p>
          *
@@ -3745,7 +3732,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shortLinkBuilder_.setStage(stage);
             return this;
         }
-
+        
         /**
          * <p>Adds a callback to get the sharing status.</p>
          *
@@ -3756,7 +3743,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.callback_ = callback;
             return this;
         }
-
+        
         /**
          * @param channelPropertiesCallback A {@link io.branch.referral.Branch.IChannelProperties} instance for customizing sharing properties for channels.
          * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
@@ -3765,7 +3752,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.channelPropertiesCallback_ = channelPropertiesCallback;
             return this;
         }
-
+        
         /**
          * <p>Adds application to the preferred list of applications which are shown on share dialog.
          * Only these options will be visible when the application selector dialog launches. Other options can be
@@ -3779,7 +3766,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.preferredOptions_.add(preferredOption);
             return this;
         }
-
+        
         /**
          * <p>Adds application to the preferred list of applications which are shown on share dialog.
          * Only these options will be visible when the application selector dialog launches. Other options can be
@@ -3793,7 +3780,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.preferredOptions_.addAll(preferredOptions);
             return this;
         }
-
+        
         /**
          * Add the given key value to the deep link parameters
          *
@@ -3805,11 +3792,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 this.shortLinkBuilder_.addParameters(key, value);
             } catch (Exception ignore) {
-
+                
             }
             return this;
         }
-
+        
         /**
          * <p> Set a default url to share in case there is any error creating the deep link </p>
          *
@@ -3820,7 +3807,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             defaultURL_ = url;
             return this;
         }
-
+        
         /**
          * <p> Set the icon and label for the option to expand the application list to see more options.
          * Default label is set to "More" </p>
@@ -3834,7 +3821,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             moreOptionText_ = label;
             return this;
         }
-
+        
         /**
          * <p> Set the icon and label for the option to expand the application list to see more options.
          * Default label is set to "More" </p>
@@ -3848,7 +3835,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             moreOptionText_ = activity_.getResources().getString(stringLabelID);
             return this;
         }
-
+        
         /**
          * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
          *
@@ -3864,7 +3851,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             urlCopiedMessage_ = message;
             return this;
         }
-
+        
         /**
          * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
          *
@@ -3878,9 +3865,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             copyURlText_ = activity_.getResources().getString(stringLabelID);
             urlCopiedMessage_ = activity_.getResources().getString(stringMessageID);
             return this;
-
+            
         }
-
+        
         /**
          * <p> Sets the alias for this link. </p>
          *
@@ -3896,7 +3883,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shortLinkBuilder_.setAlias(alias);
             return this;
         }
-
+        
         /**
          * <p> Sets the amount of time that Branch allows a click to remain outstanding.</p>
          *
@@ -3908,7 +3895,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.shortLinkBuilder_.setDuration(matchDuration);
             return this;
         }
-
+        
         /**
          * <p>
          * Sets the share dialog to full width mode. Full width mode will show a non modal sheet with entire screen width.
@@ -3921,7 +3908,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.setFullWidthStyle_ = setFullWidthStyle;
             return this;
         }
-
+        
         /**
          * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
          *
@@ -3932,7 +3919,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.dividerHeight = height;
             return this;
         }
-
+        
         /**
          * Set the title for the sharing dialog
          *
@@ -3943,7 +3930,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.sharingTitle = title;
             return this;
         }
-
+        
         /**
          * Set the title for the sharing dialog
          *
@@ -3954,8 +3941,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.sharingTitleView = titleView;
             return this;
         }
-
-
+        
+        
         /**
          * <p> Set the given style to the List View showing the share sheet</p>
          *
@@ -3964,11 +3951,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public void setStyleResourceID(@StyleRes int resourceID) {
             styleResourceID_ = resourceID;
         }
-
+        
         public void setShortLinkBuilderInternal(BranchShortLinkBuilder shortLinkBuilder) {
             this.shortLinkBuilder_ = shortLinkBuilder;
         }
-
+        
         /**
          * <p>Creates an application selector dialog and share a link with user selected sharing option.
          * The link is created with the parameters provided to the builder. </p>
@@ -3976,86 +3963,86 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public void shareLink() {
             branchReferral_.shareLink(this);
         }
-
+        
         public Activity getActivity() {
             return activity_;
         }
-
+        
         public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
             return preferredOptions_;
         }
-
+        
         public Branch getBranch() {
             return branch_;
         }
-
+        
         public String getShareMsg() {
             return shareMsg_;
         }
-
+        
         public String getShareSub() {
             return shareSub_;
         }
-
+        
         public BranchLinkShareListener getCallback() {
             return callback_;
         }
-
+        
         public IChannelProperties getChannelPropertiesCallback() {
             return channelPropertiesCallback_;
         }
-
+        
         public String getDefaultURL() {
             return defaultURL_;
         }
-
+        
         public Drawable getMoreOptionIcon() {
             return moreOptionIcon_;
         }
-
+        
         public String getMoreOptionText() {
             return moreOptionText_;
         }
-
+        
         public Drawable getCopyUrlIcon() {
             return copyUrlIcon_;
         }
-
+        
         public String getCopyURlText() {
             return copyURlText_;
         }
-
+        
         public String getUrlCopiedMessage() {
             return urlCopiedMessage_;
         }
-
+        
         public BranchShortLinkBuilder getShortLinkBuilder() {
             return shortLinkBuilder_;
         }
-
+        
         public boolean getIsFullWidthStyle() {
             return setFullWidthStyle_;
         }
-
+        
         public int getDividerHeight() {
             return dividerHeight;
         }
-
+        
         public String getSharingTitle() {
             return sharingTitle;
         }
-
+        
         public View getSharingTitleView() {
             return sharingTitleView;
         }
-
+        
         public int getStyleResourceID() {
             return styleResourceID_;
         }
     }
-
+    
     //------------------------ Content Indexing methods----------------------//
-
+    
     public void registerView(BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
             ServerRequest req;
@@ -4065,9 +4052,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-
+    
     ///-------Instrumentation additional data---------------///
-
+    
     /**
      * Update the extra instrumentation data provided to Branch
      *
@@ -4076,7 +4063,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void addExtraInstrumentationData(HashMap<String, String> instrumentationData) {
         instrumentationExtraData_.putAll(instrumentationData);
     }
-
+    
     /**
      * Update the extra instrumentation data provided to Branch
      *
@@ -4086,37 +4073,37 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void addExtraInstrumentationData(String key, String value) {
         instrumentationExtraData_.put(key, value);
     }
-
-
+    
+    
     //-------------------- Branch view handling--------------------//
-
-
+    
+    
     @Override
     public void onBranchViewVisible(String action, String branchViewID) {
         //No Implementation on purpose
     }
-
+    
     @Override
     public void onBranchViewAccepted(String action, String branchViewID) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
-
+    
     @Override
     public void onBranchViewCancelled(String action, String branchViewID) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
-
+    
     @Override
     public void onBranchViewError(int errorCode, String errorMsg, String action) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
             checkForAutoDeepLinkConfiguration();
         }
     }
-
+    
     /**
      * Interface for defining optional Branch view behaviour for Activities
      */
@@ -4130,5 +4117,5 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          */
         boolean skipBranchViewsOnThisActivity();
     }
-
+    
 }
