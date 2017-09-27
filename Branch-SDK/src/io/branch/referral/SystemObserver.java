@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -17,10 +18,6 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -33,6 +30,8 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
+
+import static android.content.Context.UI_MODE_SERVICE;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
@@ -547,5 +546,18 @@ class SystemObserver {
         }
 
         return ipAddress;
+    }
+
+    /**
+     * Return the current running mode type.  May be one of
+     * {UI_MODE_TYPE_NORMAL Configuration.UI_MODE_TYPE_NORMAL},
+     * {UI_MODE_TYPE_DESK Configuration.UI_MODE_TYPE_DESK},
+     * {UI_MODE_TYPE_CAR Configuration.UI_MODE_TYPE_CAR},
+     * {UI_MODE_TYPE_TELEVISION Configuration.UI_MODE_TYPE_TELEVISION},
+     * {#UI_MODE_TYPE_APPLIANCE Configuration.UI_MODE_TYPE_APPLIANCE}, or
+     * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
+     */
+    public int getUIMode() {
+        return ((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType();
     }
 }

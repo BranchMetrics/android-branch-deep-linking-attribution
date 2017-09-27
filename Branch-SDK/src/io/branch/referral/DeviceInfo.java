@@ -1,14 +1,10 @@
 package io.branch.referral;
 
-import android.app.UiModeManager;
-import android.content.Context;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import static android.content.Context.UI_MODE_SERVICE;
 
 /**
  * <p>
@@ -64,7 +60,7 @@ class DeviceInfo {
     /**
      * Device type
      */
-    private final int modeType_;
+    private final int UIMode_;
 
     private final String packageName_;
     private final String appVersion_;
@@ -80,9 +76,9 @@ class DeviceInfo {
      * @param sysObserver {@link SystemObserver} instance to get device info
      * @return {@link DeviceInfo} global instance
      */
-    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch, Context context) {
+    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
         if (thisInstance_ == null) {
-            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch, context);
+            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch);
         }
         return thisInstance_;
     }
@@ -97,7 +93,7 @@ class DeviceInfo {
     }
 
 
-    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch, Context context) {
+    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
         if (disableAndroidIDFetch) {
             hardwareID_ = sysObserver.getUniqueID(true);
         } else {
@@ -123,8 +119,7 @@ class DeviceInfo {
         countryCode_ = sysObserver.getISO2CountryCode();
         languageCode_ = sysObserver.getISO2LanguageCode();
 
-        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(UI_MODE_SERVICE);
-        modeType_ = uiModeManager.getCurrentModeType();
+        UIMode_ = sysObserver.getUIMode();
     }
 
     /**
@@ -149,7 +144,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
-            requestObj.put(Defines.Jsonkey.ModeType.getKey(), modeType_);
+            requestObj.put(Defines.Jsonkey.UIMode.getKey(), UIMode_);
 
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
@@ -199,6 +194,5 @@ class DeviceInfo {
     public String getOsName() {
         return osName_;
     }
-
 
 }
