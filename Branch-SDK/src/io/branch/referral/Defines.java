@@ -21,6 +21,7 @@ public class Defines {
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
+        BranchData("branch_data"),
         
         Bucket("bucket"),
         DefaultBucket("default"),
