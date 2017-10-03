@@ -2476,8 +2476,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intent != null) {
             try {
                 isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-            } catch (BadParcelableException e) {
-                
+            } catch (Throwable ignore) {
             }
             if (isRestartSessionRequested) {
                 intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
@@ -3005,7 +3004,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private int dividerHeight = -1;
         private String sharingTitle = null;
         private View sharingTitleView = null;
-        
+        private int iconSize_ = 50;
+
         BranchShortLinkBuilder shortLinkBuilder_;
         private List<String> includeInShareSheet = new ArrayList<>();
         private List<String> excludeFromShareSheet = new ArrayList<>();
@@ -3337,6 +3337,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         
         /**
+         * Set icon size for the sharing dialog
+         *
+         * @param iconSize {@link int} for setting the share sheet icon size.
+         * @return this Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setIconSize(int iconSize) {
+            this.iconSize_ = iconSize;
+            return this;
+        }
+
+        /**
          * Exclude items from the ShareSheet by package name String.
          *
          * @param packageName {@link String} package name to be excluded.
@@ -3512,6 +3523,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public int getStyleResourceID() {
             return styleResourceID_;
         }
+
+        public int getIconSize() { return iconSize_; }
     }
     
     //------------------------ Content Indexing methods----------------------//
