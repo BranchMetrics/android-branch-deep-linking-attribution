@@ -375,7 +375,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
     /* Sets to true when the init session params are reported to the app though call back.*/
-    private boolean isInitReportedThroughCallBack = false;
+    boolean isInitReportedThroughCallBack = false;
     
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
     
@@ -2785,7 +2785,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                     // Publish success to listeners
-                                    //isInitReportedThroughCallBack = ((ServerRequestInitSession) thisReq_).hasCallBack();
+                                    if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
+                                        isInitReportedThroughCallBack = true;
+                                    }
                                     if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                         checkForAutoDeepLinkConfiguration();
                                     }
@@ -3005,7 +3007,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private String sharingTitle = null;
         private View sharingTitleView = null;
         private int iconSize_ = 50;
-
+        
         BranchShortLinkBuilder shortLinkBuilder_;
         private List<String> includeInShareSheet = new ArrayList<>();
         private List<String> excludeFromShareSheet = new ArrayList<>();
@@ -3346,7 +3348,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             this.iconSize_ = iconSize;
             return this;
         }
-
+        
         /**
          * Exclude items from the ShareSheet by package name String.
          *
@@ -3523,8 +3525,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public int getStyleResourceID() {
             return styleResourceID_;
         }
-
-        public int getIconSize() { return iconSize_; }
+        
+        public int getIconSize() {
+            return iconSize_;
+        }
     }
     
     //------------------------ Content Indexing methods----------------------//
