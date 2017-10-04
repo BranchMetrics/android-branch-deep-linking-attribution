@@ -1203,6 +1203,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // If an instant deeplink is possible then call init session immediately. This should proceed to a normal open call
             if (isInstantDeepLinkPossible) {
                 if (reportInitSession(callback)) {
+                    addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
                     isInstantDeepLinkPossible = false;
                     checkForAutoDeepLinkConfiguration();
                 }

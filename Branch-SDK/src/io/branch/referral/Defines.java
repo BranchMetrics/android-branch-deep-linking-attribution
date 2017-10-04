@@ -104,6 +104,7 @@ public class Defines {
         Branch_Round_Trip_Time("brtt"),
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
+        InstantDeepLinkSession("instant_dl_session"),
         
         BranchViewData("branch_view_data"),
         BranchViewID("id"),
