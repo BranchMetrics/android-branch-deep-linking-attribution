@@ -557,7 +557,7 @@ class SystemObserver {
      * {#UI_MODE_TYPE_APPLIANCE Configuration.UI_MODE_TYPE_APPLIANCE}, or
      * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
      */
-    public String getUIMode() {
+    String getUIMode() {
         String mode;
         switch (((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType()) {
             case 0:
