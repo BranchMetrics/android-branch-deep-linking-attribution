@@ -1374,9 +1374,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } catch (Exception ignore) {
             }
-            
+    
             //Check for link click id or app link
-            if (data != null && data.isHierarchical() && activity != null) {
+            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
+            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
+            if (data != null && data.isHierarchical() && activity != null && !isActivityLaunchedFromHistory(activity)) {
                 try {
                     if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                         prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
@@ -1405,16 +1407,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         String scheme = data.getScheme();
                         Intent intent = activity.getIntent();
                         if (scheme != null && intent != null) {
-                            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
-                            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
-                                if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                        && data.getHost() != null && data.getHost().length() > 0 && !isIntentParamsAlreadyConsumed(activity)) {
-                                    prefHelper_.setAppLink(data.toString());
-                                    intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
-                                    activity.setIntent(intent);
-                                    return false;
-                                }
+                            if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                                    && data.getHost() != null && data.getHost().length() > 0 && !isIntentParamsAlreadyConsumed(activity)) {
+                                prefHelper_.setAppLink(data.toString());
+                                intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                                activity.setIntent(intent);
+                                return false;
                             }
                         }
                     }
@@ -1427,6 +1425,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
         return activity != null && activity.getIntent() != null && activity.getIntent().getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false);
+    }
+    
+    private boolean isActivityLaunchedFromHistory(Activity activity) {
+        return activity != null && activity.getIntent() != null && (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
     }
 
     @Override
