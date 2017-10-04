@@ -202,7 +202,7 @@ class SystemObserver {
         activityManager.getMemoryInfo(mi);
         return mi.lowMemory;
     }
-    
+
     /**
      * <p>Gets the package name of the current application that the SDK is integrated with.</p>
      *
@@ -557,7 +557,34 @@ class SystemObserver {
      * {#UI_MODE_TYPE_APPLIANCE Configuration.UI_MODE_TYPE_APPLIANCE}, or
      * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
      */
-    public int getUIMode() {
-        return ((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType();
+    public String getUIMode() {
+        String mode;
+        switch (((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType()) {
+            case 0:
+                mode = "UI_MODE_TYPE_UNDEFINED";
+                break;
+            case 1:
+                mode = "UI_MODE_TYPE_NORMAL";
+                break;
+            case 2:
+                mode = "UI_MODE_TYPE_DESK";
+                break;
+            case 3:
+                mode = "UI_MODE_TYPE_CAR";
+                break;
+            case 4:
+                mode = "UI_MODE_TYPE_TELEVISION";
+                break;
+            case 5:
+                mode = "UI_MODE_TYPE_APPLIANCE";
+                break;
+            case 6:
+                mode = "UI_MODE_TYPE_WATCH";
+                break;
+            default:
+                mode = "UI_MODE_TYPE_UNDEFINED";
+                break;
+        }
+        return mode;
     }
 }

@@ -60,7 +60,7 @@ class DeviceInfo {
     /**
      * Device type
      */
-    private final int UIMode_;
+    private final String UIMode_;
 
     private final String packageName_;
     private final String appVersion_;
