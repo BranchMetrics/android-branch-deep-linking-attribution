@@ -2807,12 +2807,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     initState_ = SESSION_STATE.INITIALISED;
                                     
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
+
+                                    if (!isInitReportedThroughCallBack) {
+                                        if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
+                                            checkForAutoDeepLinkConfiguration();
+                                        }
+                                    }
                                     // Publish success to listeners
                                     if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
                                         isInitReportedThroughCallBack = true;
-                                    }
-                                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                                        checkForAutoDeepLinkConfiguration();
                                     }
                                     // Count down the latch holding getLatestReferringParamsSync
                                     if (getLatestReferringParamsLatch != null) {
