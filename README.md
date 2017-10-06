@@ -566,15 +566,17 @@ The universal object is where you define all of the custom metadata associated w
 
 ### Tracking User Actions and Events
 Use `BranchEvent` class to track special user actions or application specific events beyond app installs, opens, and sharing . You can track events such as when a user adds an item to an on-line shopping cart, or searches for a keyword etc.
-`BranchEvent` provides interface to add contents represented by BranchUniversalObject inorder to associate contents with events.
+`BranchEvent` provides interface to add contents represented by BranchUniversalObject in order to associate contents with events.
 Analytics about your app's BranchEvents can be found on the Branch dashboard, and BranchEvents also provide tight integration with many third party analytics providers.
-`BRANCH_STANDARD_EVENT` enumerate a lot of standard events and event parameters that can be used with `BranchEvent` for the best results. You can always use custom event names and event parameters.
+`BRANCH_STANDARD_EVENT` enumerate the most commonly tracked events and event parameters that can be used with `BranchEvent` for the best results. You can always use custom event names and event parameters.
 
 ```java
 new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
     .setAffiliation("affiliation_value")
     .setCoupon("coupon_value")
     .setCurrency(CurrencyType.USD)
+    .setTax(12.3)
+    .setRevenue(1.5)
     .setDescription("Event_description")
     .setSearchQuery("related_search_query")
     .addCustomProperty("Custom_Event_Property_Key", "Custom_Event_Property_Val")
