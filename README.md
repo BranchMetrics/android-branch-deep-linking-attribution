@@ -579,15 +579,15 @@ new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
     .setRevenue(1.5)
     .setDescription("Event_description")
     .setSearchQuery("related_search_query")
-    .addCustomProperty("Custom_Event_Property_Key", "Custom_Event_Property_Val")
+    .addCustomDataProperty("Custom_Event_Property_Key", "Custom_Event_Property_Val")
     .addContentItems(contentBUO1, contentBUO2)
     .logEvent(context);
 ```
 
 ```java
 new BranchEvent("My_Custom_Event")
-    .addCustomProperty("key1", "value1")
-    .addCustomProperty("key2", "value2")
+    .addCustomDataProperty("key1", "value1")
+    .addCustomDataProperty("key2", "value2")
     .logEvent(context);
 ```
 

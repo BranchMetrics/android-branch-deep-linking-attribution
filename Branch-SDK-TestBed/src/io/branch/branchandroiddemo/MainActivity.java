@@ -337,8 +337,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
-                        .addCustomProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
-                        .addCustomProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
+                        .addCustomDataProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
+                        .addCustomDataProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
                         .logEvent(MainActivity.this);
             }
         });
@@ -353,11 +353,13 @@ public class MainActivity extends Activity {
                         .setDescription("Event _description")
                         .setShipping(10.2)
                         .setTax(12.3)
+           
+           
                         .setRevenue(1.5)
                         .setTransactionID("12344555")
                         .setSearchQuery("Test Search query")
-                        .addCustomProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
-                        .addCustomProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this);
             }
