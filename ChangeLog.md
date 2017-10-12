@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.12.2 Fixing play store referrer capture issue on Android 6. Changes to collect UI_Mode to identity different platforms.  Fix for stale intents when activities are launched from history.
+
 - v2.12.1 Fixing discrepancy in Branch driven app open count in Answers' dashboard. Adding bounds to share sheet and option to set bounds.
 
 - v2.12.0 Adding support for Firebase based app indexing and local content indexing. Few proactive protections for parcel errors caused by malformed parcels in the intent. Url encoding for long link params.
