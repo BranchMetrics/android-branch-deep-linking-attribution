@@ -392,10 +392,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
 
     private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
-
+    
     /* List of keys whose values are collected from the Intent Extra.*/
     private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[]{
-            "extra_launch_uri"   // Key for embedded uri in FB ads triggered intents
+            "extra_launch_uri",   // Key for embedded uri in FB ads triggered intents
+            "branch_intent"       // A boolean that specifies if this intent is originated by Branch
     };
 
     private CountDownLatch getFirstReferringParamsLatch = null;
