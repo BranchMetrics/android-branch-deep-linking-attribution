@@ -1310,13 +1310,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             initState_ = SESSION_STATE.UNINITIALISED;
         }
     }
-
+    
     private boolean readAndStripParam(Uri data, Activity activity) {
-
+        
         if (intentState_ == INTENT_STATE.READY) {
             // Capture the intent URI and extra for analytics in case started by external intents such as  google app search
             try {
-                if (data != null) {
+                if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
                     boolean foundSchemeMatch;
                     boolean skipThisHost = false;
                     if (externalUriWhiteList_.size() > 0) {
@@ -1324,7 +1324,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     } else {
                         foundSchemeMatch = true;
                     }
-
+                    
                     if (skipExternalUriHosts_.size() > 0) {
                         for (String host : skipExternalUriHosts_) {
                             String externalHost = data.getHost();
@@ -1337,11 +1337,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (foundSchemeMatch && !skipThisHost) {
                         sessionReferredLink_ = data.toString();
                         prefHelper_.setExternalIntentUri(data.toString());
-
+                        
                         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                             Bundle bundle = activity.getIntent().getExtras();
                             Set<String> extraKeys = bundle.keySet();
-
+                            
                             if (extraKeys.size() > 0) {
                                 JSONObject extrasJson = new JSONObject();
                                 for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
@@ -1358,11 +1358,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } catch (Exception ignore) {
             }
-
+            
             //Check for any push identifier in case app is launched by a push notification
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                    if (activity.getIntent().getExtras().getBoolean(Defines.Jsonkey.BranchLinkUsed.getKey()) == false) {
+                    if (!isIntentParamsAlreadyConsumed(activity)) {
                         String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
                         if (pushIdentifier != null && pushIdentifier.length() > 0) {
                             prefHelper_.setPushIdentifier(pushIdentifier);
@@ -1375,9 +1375,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } catch (Exception ignore) {
             }
-
+    
             //Check for link click id or app link
-            if (data != null && data.isHierarchical() && activity != null) {
+            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
+            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
+            if (data != null && data.isHierarchical() && activity != null && !isActivityLaunchedFromHistory(activity)) {
                 try {
                     if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                         prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
@@ -1396,6 +1398,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (uriString != null) {
                             Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
                             activity.getIntent().setData(newData);
+                            activity.getIntent().putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
                         } else {
                             Log.w(TAG, "Branch Warning. URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
                         }
@@ -1405,16 +1408,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         String scheme = data.getScheme();
                         Intent intent = activity.getIntent();
                         if (scheme != null && intent != null) {
-                            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
-                            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-                            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
-                                if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                                        && data.getHost() != null && data.getHost().length() > 0 && !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
-                                    prefHelper_.setAppLink(data.toString());
-                                    intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
-                                    activity.setIntent(intent);
-                                    return false;
-                                }
+                            if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                                    && data.getHost() != null && data.getHost().length() > 0 && !isIntentParamsAlreadyConsumed(activity)) {
+                                prefHelper_.setAppLink(data.toString());
+                                intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                                activity.setIntent(intent);
+                                return false;
                             }
                         }
                     }
@@ -1423,6 +1422,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
+    }
+    
+    private boolean isIntentParamsAlreadyConsumed(Activity activity) {
+        return activity != null && activity.getIntent() != null && activity.getIntent().getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false);
+    }
+    
+    private boolean isActivityLaunchedFromHistory(Activity activity) {
+        return activity != null && activity.getIntent() != null && (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
     }
 
     @Override
