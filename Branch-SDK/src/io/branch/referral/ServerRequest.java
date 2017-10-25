@@ -392,6 +392,7 @@ public abstract class ServerRequest {
                     if (userDataObj != null) {
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), sysObserver.GAIDString_);
                         userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), sysObserver.LATVal_);
+                        userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), false);
                     }
                 } else {
                     params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
