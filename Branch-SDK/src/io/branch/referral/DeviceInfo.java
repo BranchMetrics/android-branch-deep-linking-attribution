@@ -206,7 +206,8 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper.getIdentity());
             }
             requestObj.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
-            requestObj.put(Defines.Jsonkey.SDK.getKey(), "android" + BuildConfig.VERSION_NAME);
+            requestObj.put(Defines.Jsonkey.SDK.getKey(), "android");
+            requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
             requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
         } catch (JSONException ignore) {
         }
