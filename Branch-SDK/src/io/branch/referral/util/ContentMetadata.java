@@ -313,12 +313,11 @@ public class ContentMetadata implements Parcelable {
                     imageCaptionsArray.put(caption);
                 }
             }
+
             if (customMetadata.size() > 0) {
-                JSONObject customFieldsObject = new JSONObject();
                 for (String customDataKey : customMetadata.keySet()) {
-                    customFieldsObject.put(customDataKey, customMetadata.get(customDataKey));
+                    metadataJson.put(customDataKey, customMetadata.get(customDataKey));
                 }
-                metadataJson.put(Defines.Jsonkey.BUOCustomFields.getKey(), customFieldsObject.toString());
             }
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -354,15 +353,16 @@ public class ContentMetadata implements Parcelable {
                 contentMetadata.imageCaptions.add(imageCaptionJsonArray.optString(i));
             }
         }
+
+        //  If any this left in the JsonObject now , it should be the custom data
         try {
-            JSONObject customFieldsObj = new JSONObject(jsonReader.readOutString(Defines.Jsonkey.BUOCustomFields.getKey(), new JSONObject().toString()));
+            JSONObject customFieldsObj = jsonReader.getJsonObject();
             Iterator<String> keys = customFieldsObj.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
                 contentMetadata.customMetadata.put(key, customFieldsObj.optString(key));
             }
-
-        } catch (JSONException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return contentMetadata;

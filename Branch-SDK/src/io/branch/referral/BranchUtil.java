@@ -116,6 +116,10 @@ public class BranchUtil {
             this.jsonObject = tempJsonObj;
         }
 
+        public JSONObject getJsonObject() {
+            return jsonObject;
+        }
+
         public int readOutInt(String key) {
             int val = jsonObject.optInt(key);
             jsonObject.remove(key);

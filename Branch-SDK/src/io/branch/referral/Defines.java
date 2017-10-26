@@ -103,7 +103,6 @@ public class Defines {
         Params("params"),
         SharedLink("$shared_link"),
         ShareError("$share_error"),
-        BUOCustomFields("$custom_fields"),
         
         
         External_Intent_URI("external_intent_uri"),
