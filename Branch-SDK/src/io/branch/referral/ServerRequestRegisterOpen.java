@@ -93,7 +93,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
             }
 
-            if (callback_ != null) {
+            if (callback_ != null && !branch.isInitReportedThroughCallBack) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
 

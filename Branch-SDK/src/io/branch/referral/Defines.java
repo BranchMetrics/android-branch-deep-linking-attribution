@@ -21,6 +21,7 @@ public class Defines {
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
+        BranchData("branch_data"),
         
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -104,6 +105,7 @@ public class Defines {
         Branch_Round_Trip_Time("brtt"),
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
+        InstantDeepLinkSession("instant_dl_session"),
         
         BranchViewData("branch_view_data"),
         BranchViewID("id"),
