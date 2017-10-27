@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -17,10 +18,6 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -33,6 +30,8 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
+
+import static android.content.Context.UI_MODE_SERVICE;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
@@ -203,7 +202,7 @@ class SystemObserver {
         activityManager.getMemoryInfo(mi);
         return mi.lowMemory;
     }
-    
+
     /**
      * <p>Gets the package name of the current application that the SDK is integrated with.</p>
      *
@@ -547,5 +546,45 @@ class SystemObserver {
         }
 
         return ipAddress;
+    }
+
+    /**
+     * Return the current running mode type.  May be one of
+     * {UI_MODE_TYPE_NORMAL Configuration.UI_MODE_TYPE_NORMAL},
+     * {UI_MODE_TYPE_DESK Configuration.UI_MODE_TYPE_DESK},
+     * {UI_MODE_TYPE_CAR Configuration.UI_MODE_TYPE_CAR},
+     * {UI_MODE_TYPE_TELEVISION Configuration.UI_MODE_TYPE_TELEVISION},
+     * {#UI_MODE_TYPE_APPLIANCE Configuration.UI_MODE_TYPE_APPLIANCE}, or
+     * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
+     */
+    String getUIMode() {
+        String mode;
+        switch (((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType()) {
+            case 0:
+                mode = "UI_MODE_TYPE_UNDEFINED";
+                break;
+            case 1:
+                mode = "UI_MODE_TYPE_NORMAL";
+                break;
+            case 2:
+                mode = "UI_MODE_TYPE_DESK";
+                break;
+            case 3:
+                mode = "UI_MODE_TYPE_CAR";
+                break;
+            case 4:
+                mode = "UI_MODE_TYPE_TELEVISION";
+                break;
+            case 5:
+                mode = "UI_MODE_TYPE_APPLIANCE";
+                break;
+            case 6:
+                mode = "UI_MODE_TYPE_WATCH";
+                break;
+            default:
+                mode = "UI_MODE_TYPE_UNDEFINED";
+                break;
+        }
+        return mode;
     }
 }
