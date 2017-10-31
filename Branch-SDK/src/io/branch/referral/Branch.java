@@ -1198,6 +1198,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //If already initialised
         if ((hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED)) {
             reportInitSession(callback);
+            isInstantDeepLinkPossible = false;
         }
         //If uninitialised or initialising
         else {
@@ -1327,7 +1328,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean readAndStripParam(Uri data, Activity activity) {
         // Check for instant deep linking possibility first
-        if (activity != null && activity.getIntent() != null) {
+        if (activity != null && activity.getIntent() != null && initState_ == SESSION_STATE.UNINITIALISED) {
             Intent intent = activity.getIntent();
             // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
             if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
@@ -1424,7 +1425,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } catch (Exception ignore) {
             }
-    
+            
             //Check for link click id or app link
             // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
@@ -1480,7 +1481,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isActivityLaunchedFromHistory(Activity activity) {
         return activity != null && activity.getIntent() != null && (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
     }
-
+    
     @Override
     public void onGAdsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
@@ -2810,7 +2811,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     initState_ = SESSION_STATE.INITIALISED;
                                     
                                     thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-
+                                    
                                     if (!isInitReportedThroughCallBack) {
                                         if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
                                             checkForAutoDeepLinkConfiguration();
