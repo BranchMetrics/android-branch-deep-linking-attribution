@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.13.1 Hot fix : Referral params are not returned when initSession is called mutiple times while an init session is in progress
+
 - v2.13.0 Adding instant deeplinking support
 
 - v2.12.2 Fixing play store referrer capture issue on Android 6. Changes to collect UI_Mode to identity different platforms.  Fix for stale intents when activities are launched from history.
