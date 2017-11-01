@@ -336,7 +336,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                new BranchEvent("Logged_In")
                         .addCustomDataProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
                         .addCustomDataProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
                         .logEvent(MainActivity.this);

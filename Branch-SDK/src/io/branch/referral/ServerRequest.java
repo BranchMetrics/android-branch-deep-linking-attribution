@@ -392,7 +392,7 @@ public abstract class ServerRequest {
                     if (userDataObj != null) {
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), sysObserver.GAIDString_);
                         userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), sysObserver.LATVal_);
-                        userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), false);
+                        userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                     }
                 } else {
                     params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
@@ -400,6 +400,21 @@ public abstract class ServerRequest {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+        } else { // Add unidentified_device when neither aaid nor AndoridID present
+            if (version == BRANCH_API_VERSION.V2) {
+                try {
+                    if (version == BRANCH_API_VERSION.V2) {
+                        JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                        if (userDataObj != null) {
+                            if (!userDataObj.has(Defines.Jsonkey.AndroidID.getKey())) {
+                                userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
+                            }
+                        }
+                    }
+                } catch (JSONException ignore) {
+
+                }
             }
         }
     }
@@ -412,18 +427,19 @@ public abstract class ServerRequest {
      *
      * @return True if application has internet permission.
      */
+
     protected boolean doesAppHasInternetPermission(Context context) {
         int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
         return result == PackageManager.PERMISSION_GRANTED;
     }
-    
+
     /**
      * Called when request is added to teh queue
      */
     public void onRequestQueued() {
         queueWaitTime_ = System.currentTimeMillis();
     }
-    
+
     /**
      * Returns the amount of time this request was in queque
      *
@@ -436,7 +452,7 @@ public abstract class ServerRequest {
         }
         return waitTime;
     }
-    
+
     /**
      * <p>
      * Set the specified process wait lock for this request. This request will not be blocked from
@@ -450,7 +466,7 @@ public abstract class ServerRequest {
             locks_.add(lock);
         }
     }
-    
+
     /**
      * Unlock the specified lock from the request. Call this when the locked process finishes
      *
@@ -459,8 +475,8 @@ public abstract class ServerRequest {
     public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
         locks_.remove(lock);
     }
-    
-    
+
+
     /**
      * Check if this request is waiting on any operation to finish before processing
      *
@@ -469,14 +485,14 @@ public abstract class ServerRequest {
     public boolean isWaitingOnProcessToFinish() {
         return locks_.size() > 0;
     }
-    
+
     /**
      * Called on UI thread just before executing a request. Do any final updates to the request here
      */
     public void onPreExecute() {
-        
+
     }
-    
+
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
             String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
@@ -491,7 +507,7 @@ public abstract class ServerRequest {
         } catch (Exception ignore) {
         }
     }
-    
+
     private static boolean isPackageInstalled(Context context) {
         final PackageManager packageManager = context.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
