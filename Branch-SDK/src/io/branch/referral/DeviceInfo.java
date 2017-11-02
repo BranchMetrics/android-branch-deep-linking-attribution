@@ -60,6 +60,10 @@ class DeviceInfo {
      * Device OS version
      */
     private final int osVersion_;
+    /**
+     * Device type
+     */
+    private final String UIMode_;
 
     private final String packageName_;
     private final String appVersion_;
@@ -117,6 +121,8 @@ class DeviceInfo {
         appVersion_ = sysObserver.getAppVersion();
         countryCode_ = sysObserver.getISO2CountryCode();
         languageCode_ = sysObserver.getISO2LanguageCode();
+
+        UIMode_ = sysObserver.getUIMode();
     }
 
     /**
@@ -136,11 +142,12 @@ class DeviceInfo {
             if (!modelName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.Model.getKey(), modelName_);
             }
+
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
-
+            requestObj.put(Defines.Jsonkey.UIMode.getKey(), UIMode_);
 
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);

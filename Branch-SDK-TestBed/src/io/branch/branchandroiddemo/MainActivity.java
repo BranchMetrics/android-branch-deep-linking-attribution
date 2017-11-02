@@ -353,8 +353,6 @@ public class MainActivity extends Activity {
                         .setDescription("Event _description")
                         .setShipping(10.2)
                         .setTax(12.3)
-           
-           
                         .setRevenue(1.5)
                         .setTransactionID("12344555")
                         .setSearchQuery("Test Search query")

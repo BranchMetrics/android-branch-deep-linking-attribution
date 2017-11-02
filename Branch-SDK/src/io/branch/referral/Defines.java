@@ -21,6 +21,7 @@ public class Defines {
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
+        BranchData("branch_data"),
         
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -79,6 +80,7 @@ public class Defines {
         UserAgent("user_agent"),
         SDK("sdk"),
         SdkVersion("sdk_version"),
+        UIMode("ui_mode"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),
@@ -98,6 +100,7 @@ public class Defines {
         
         ContentType("$content_type"),
         PublicallyIndexable("$publicly_indexable"),
+        LocallyIndexable("$locally_indexable"),
         ContentKeyWords("$keywords"),
         ContentExpiryTime("$exp_date"),
         Params("params"),
@@ -111,6 +114,7 @@ public class Defines {
         Branch_Round_Trip_Time("brtt"),
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
+        InstantDeepLinkSession("instant_dl_session"),
         
         BranchViewData("branch_view_data"),
         BranchViewID("id"),
@@ -148,7 +152,6 @@ public class Defines {
         EventData("event_data"),
         ContentItems("content_items"),
         ContentSchema("$content_schema"),
-        LocallyIndexable("$locally_indexable"),
         Price("$price"),
         PriceCurrency("$currency"),
         Quantity("$quantity"),
@@ -200,7 +203,6 @@ public class Defines {
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
         RegisterView("v1/register-view"),
-        Referrals("v1/referrals/"),
         GetCredits("v1/credits/"),
         GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),

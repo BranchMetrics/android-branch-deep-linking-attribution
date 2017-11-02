@@ -1,4 +1,15 @@
 Branch Android SDK change log
+
+- v2.13.1 Hot fix : Referral params are not returned when initSession is called mutiple times while an init session is in progress
+
+- v2.13.0 Adding instant deeplinking support
+
+- v2.12.2 Fixing play store referrer capture issue on Android 6. Changes to collect UI_Mode to identity different platforms.  Fix for stale intents when activities are launched from history.
+
+- v2.12.1 Fixing discrepancy in Branch driven app open count in Answers' dashboard. Adding bounds to share sheet and option to set bounds.
+
+- v2.12.0 Adding support for Firebase based app indexing and local content indexing. Few proactive protections for parcel errors caused by malformed parcels in the intent. Url encoding for long link params.
+
 - v2.11.1 Removing app listing related implementations.
 
 - v2.11.0 Disabling external app listing is by default.
