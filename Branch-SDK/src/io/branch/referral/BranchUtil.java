@@ -104,7 +104,7 @@ public class BranchUtil {
         }
         return filteredObj;
     }
-
+    
     public static class JsonReader {
         private final JSONObject jsonObject;
 
@@ -196,8 +196,7 @@ public class BranchUtil {
         }
 
     }
-
-
+    
     public static Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return context.getResources().getDrawable(drawableID, context.getTheme());

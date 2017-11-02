@@ -58,7 +58,7 @@ public class BranchUniversalObject implements Parcelable {
     /* Index mode for  local content indexing */
     private CONTENT_INDEX_MODE localIndexMode_;
     private long creationTimeStamp_;
-
+    
     /**
      * Defines the Content indexing modes
      * PUBLIC | PRIVATE
@@ -177,7 +177,7 @@ public class BranchUniversalObject implements Parcelable {
         this.metadata_ = metadata;
         return this;
     }
-
+    
     /**
      * @deprecated Please use {@link ContentMetadata#contentSchema}.
      * Please see {@link #setContentMetadata(ContentMetadata)}
@@ -213,7 +213,7 @@ public class BranchUniversalObject implements Parcelable {
         this.localIndexMode_ = localIndexMode;
         return this;
     }
-
+    
     /**
      * <p>
      * Adds any keywords associated with the content referred
@@ -336,7 +336,7 @@ public class BranchUniversalObject implements Parcelable {
     public void userCompletedAction(BRANCH_STANDARD_EVENT action) {
         userCompletedAction(action.getName(), null);
     }
-
+    
     /**
      * <p>
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
@@ -405,7 +405,7 @@ public class BranchUniversalObject implements Parcelable {
     public HashMap<String, String> getMetadata() {
         return null;
     }
-
+    
     /**
      * Get the {@link ContentMetadata} associated with this BUO which holds the metadata for content represented
      *
@@ -817,14 +817,13 @@ public class BranchUniversalObject implements Parcelable {
             while (keys.hasNext()) {
                 String key = keys.next();
                 branchUniversalObject.metadata_.addCustomMetadata(key, jsonReader.readOutString(key));
-
             }
             
         } catch (Exception ignore) {
         }
         return branchUniversalObject;
     }
-
+    
     //-------------Object flattening methods--------------------//
     
     /**
@@ -870,7 +869,7 @@ public class BranchUniversalObject implements Parcelable {
             buoJsonModel.put(Defines.Jsonkey.PublicallyIndexable.getKey(), isPublicallyIndexable());
             buoJsonModel.put(Defines.Jsonkey.LocallyIndexable.getKey(), isLocallyIndexable());
             buoJsonModel.put(Defines.Jsonkey.CreationTimestamp.getKey(), creationTimeStamp_);
-
+            
         } catch (JSONException ignore) {
         }
         return buoJsonModel;
@@ -934,7 +933,7 @@ public class BranchUniversalObject implements Parcelable {
     private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
         private final Branch.BranchLinkShareListener originalCallback_;
         
-        public LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback) {
+        LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback) {
             originalCallback_ = originalCallback;
         }
         
@@ -962,7 +961,6 @@ public class BranchUniversalObject implements Parcelable {
             }
             //noinspection deprecation
             userCompletedAction(BRANCH_STANDARD_EVENT.SHARE.getName(), metaData);
-
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
             }
