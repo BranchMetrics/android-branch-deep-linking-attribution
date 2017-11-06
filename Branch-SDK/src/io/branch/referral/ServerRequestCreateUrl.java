@@ -96,6 +96,12 @@ class ServerRequestCreateUrl extends ServerRequest {
 
     public ServerRequestCreateUrl(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+        // Retrieve persisted link data
+        linkPost_ = new BranchLinkData();
+        if (post.has(Defines.Jsonkey.CustomBranchLinkDataObj.getKey())) {
+            linkPost_.setLinkData(post.optJSONObject(Defines.Jsonkey.CustomBranchLinkDataObj.getKey()));
+            post.remove(Defines.Jsonkey.CustomBranchLinkDataObj.getKey());
+        }
     }
 
     public BranchLinkData getLinkPost() {
@@ -256,6 +262,20 @@ class ServerRequestCreateUrl extends ServerRequest {
     boolean isReqStartedFromBranchShareSheet() {
         return isReqStartedFromBranchShareSheet_;
     }
+    
+    @Override
+    public JSONObject toJSON() {
+        JSONObject jsonObject = super.toJSON();
+        try {
+            jsonObject.putOpt(Defines.Jsonkey.CustomBranchLinkDataObj.getKey(), linkPost_.getLinkDataJsonObject());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
+        
+    }
+    
+    
 
     private void updateShareEventToFabric(String url) {
         JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();

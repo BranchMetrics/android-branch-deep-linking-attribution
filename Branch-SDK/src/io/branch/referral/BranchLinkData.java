@@ -461,5 +461,22 @@ class BranchLinkData extends JSONObject {
         }
         return linkDataJson;
     }
-
+    
+    public void setLinkData(JSONObject linkData) {
+        if (linkData != null) {
+            try {
+                this.channel = linkData.optString(Defines.LinkParam.Channel.getKey());
+                this.alias = linkData.optString(Defines.LinkParam.Alias.getKey());
+                this.feature = linkData.optString(Defines.LinkParam.Feature.getKey());
+                this.stage = linkData.optString(Defines.LinkParam.Stage.getKey());
+                this.campaign = linkData.optString(Defines.LinkParam.Campaign.getKey());
+                this.type = linkData.optInt(Defines.LinkParam.Type.getKey());
+                this.duration = linkData.optInt(Defines.LinkParam.Duration.getKey());
+                this.putOpt(Defines.LinkParam.Tags.getKey(), linkData.optJSONArray(Defines.LinkParam.Tags.getKey()));
+            } catch (JSONException ignore) {
+            }
+        }
+    }
+    
+    
 }
