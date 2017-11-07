@@ -22,7 +22,6 @@ public class Defines {
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
         BranchData("branch_data"),
-        CustomBranchLinkDataObj("custom_branch_link_data_obj"),
         
         Bucket("bucket"),
         DefaultBucket("default"),
