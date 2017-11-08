@@ -68,9 +68,11 @@ class ServerRequestQueue {
                 synchronized (queue) {
                     JSONArray jsonArr = new JSONArray();
                     for (ServerRequest aQueue : queue) {
-                        JSONObject json = aQueue.toJSON();
-                        if (json != null) {
-                            jsonArr.put(json);
+                        if(aQueue.isPersistable()) {
+                            JSONObject json = aQueue.toJSON();
+                            if (json != null) {
+                                jsonArr.put(json);
+                            }
                         }
                     }
                     boolean succeeded = false;
@@ -92,11 +94,11 @@ class ServerRequestQueue {
             }
         }).start();
     }
-
+    
     private List<ServerRequest> retrieve(Context context) {
         List<ServerRequest> result = Collections.synchronizedList(new LinkedList<ServerRequest>());
         String jsonStr = sharedPref.getString(PREF_KEY, null);
-
+        
         if (jsonStr != null) {
             try {
                 JSONArray jsonArr = new JSONArray(jsonStr);
@@ -104,16 +106,13 @@ class ServerRequestQueue {
                     JSONObject json = jsonArr.getJSONObject(i);
                     ServerRequest req = ServerRequest.fromJSON(json, context);
                     if (req != null) {
-                        // No need to retrieve close or logout from previous session
-                        if (!(req instanceof ServerRequestRegisterClose || req instanceof ServerRequestLogout)) {
-                            result.add(req);
-                        }
+                        result.add(req);
                     }
                 }
             } catch (JSONException ignored) {
             }
         }
-
+        
         return result;
     }
 

@@ -461,5 +461,4 @@ class BranchLinkData extends JSONObject {
         }
         return linkDataJson;
     }
-
 }
