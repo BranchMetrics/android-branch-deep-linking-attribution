@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
                 .setTitle("My Content Title")
                 .setContentDescription("my_product_description1")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
-                .setContentExpiration(new Date(212123232544L))
+                .setContentExpiration(new Date(1573415635000L))
                 .setContentImageUrl("https://test_img_url")
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
