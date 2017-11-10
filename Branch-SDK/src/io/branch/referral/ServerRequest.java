@@ -136,6 +136,15 @@ public abstract class ServerRequest {
     public boolean shouldRetryOnFail() {
         return false;
     }
+
+    /**
+     * Specifies whether this request should be persisted to memory in order to re send in the next session
+     *
+     * @return {@code true} by default. Should be override for request that need not to be persisted
+     */
+    boolean isPersistable() {
+        return true;
+    }
     
     /**
      * <p>Provides the path to server for this request.
