@@ -2686,6 +2686,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected void onPreExecute() {
             super.onPreExecute();
             thisReq_.onPreExecute();
+            // Update request metadata
+            thisReq_.updateRequestMetadata();
         }
         
         @Override
@@ -2693,7 +2695,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (thisReq_ instanceof ServerRequestInitSession) {
                 ((ServerRequestInitSession) thisReq_).updateLinkReferrerParams();
             }
-            //Update queue wait time
+            // update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
             
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread

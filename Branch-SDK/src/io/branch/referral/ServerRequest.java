@@ -173,27 +173,6 @@ public abstract class ServerRequest {
      *             as key-value pairs.
      */
     protected void setPost(JSONObject post) {
-        // Take event level metadata, merge with top level metadata
-        // event level metadata takes precedence
-        try {
-            JSONObject metadata = new JSONObject();
-            Iterator<String> i = prefHelper_.getRequestMetadata().keys();
-            while (i.hasNext()) {
-                String k = i.next();
-                metadata.put(k, prefHelper_.getRequestMetadata().get(k));
-            }
-            if (post.has(Defines.Jsonkey.Metadata.getKey())) {
-                Iterator<String> postIter = post.getJSONObject(Defines.Jsonkey.Metadata.getKey()).keys();
-                while (postIter.hasNext()) {
-                    String key = postIter.next();
-                    // override keys from above
-                    metadata.put(key, post.getJSONObject(Defines.Jsonkey.Metadata.getKey()).get(key));
-                }
-            }
-            post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
-        } catch (JSONException e) {
-            Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
-        }
         params_ = post;
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
             try {
@@ -428,6 +407,33 @@ public abstract class ServerRequest {
         }
     }
     
+    /**
+     * Update the additional metadata provided using {@link Branch#setRequestMetadata(String, String)} to the requests.
+     */
+    void updateRequestMetadata() {
+        // Take event level metadata, merge with top level metadata
+        // event level metadata takes precedence
+        try {
+            JSONObject metadata = new JSONObject();
+            Iterator<String> i = prefHelper_.getRequestMetadata().keys();
+            while (i.hasNext()) {
+                String k = i.next();
+                metadata.put(k, prefHelper_.getRequestMetadata().get(k));
+            }
+            JSONObject originalMetadata = params_.optJSONObject(Defines.Jsonkey.Metadata.getKey());
+            if (originalMetadata != null) {
+                Iterator<String> postIter = originalMetadata.keys();
+                while (postIter.hasNext()) {
+                    String key = postIter.next();
+                    // override keys from above
+                    metadata.put(key, originalMetadata.get(key));
+                }
+            }
+            params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
+        } catch (JSONException e) {
+            Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
+        }
+    }
     
     /*
      * Checks if this Application has internet permissions.
