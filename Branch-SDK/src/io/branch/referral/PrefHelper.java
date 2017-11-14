@@ -94,6 +94,7 @@ public class PrefHelper {
 
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
+    private static final String KEY_LIMIT_FB_APP_TRACKING = "bnc_limit_fb_app_tracking";
 
 
     private static String Branch_Key = null;
@@ -708,6 +709,21 @@ public class PrefHelper {
     public void clearSystemReadStatus() {
         Calendar c = Calendar.getInstance();
         setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis() / 1000);
+    }
+    
+    /*
+     * Enables or disables FB app tracking.
+     * @param isLimitFBAppTracking {@code true} to enable the app tracking.
+     */
+    void setLimitFBAppTracking(boolean isLimitFBAppTracking) {
+        setBool(KEY_LIMIT_FB_APP_TRACKING, isLimitFBAppTracking);
+    }
+    
+    /*
+       Returns true if FB app tracking is enabled.
+     */
+    boolean isFBAppTrackingLimited() {
+        return getBool(KEY_LIMIT_FB_APP_TRACKING);
     }
 
     /**
