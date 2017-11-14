@@ -337,8 +337,6 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
-        
-        branch.setRequestMetadata("test_request_metadata", "Test_request_metadata_val");
     }
 
     @Override
