@@ -448,7 +448,7 @@ public abstract class ServerRequest {
     private void updateLimitAppTracking() {
         JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
         if (updateJson != null) {
-            boolean isLimitAppTracking = prefHelper_.isFBAppTrackingLimited(); // Currently only FB app tracking
+            boolean isLimitAppTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
             if (isLimitAppTracking) {
                 try {
                     updateJson.putOpt(Defines.Jsonkey.LimitedAppTracking.getKey(), isLimitAppTracking);
