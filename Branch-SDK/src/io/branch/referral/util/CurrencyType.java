@@ -1,5 +1,7 @@
 package io.branch.referral.util;
 
+import android.text.TextUtils;
+
 /**
  * Created by sojanpr on 8/31/16.
  * ISO 4217 code enumeration for currency
@@ -31,4 +33,18 @@ public enum CurrencyType {
     public String toString() {
         return iso4217Code;
     }
+
+    public static CurrencyType getValue(String name) {
+        CurrencyType currencyType = null;
+        if (!TextUtils.isEmpty(name)) {
+            for (CurrencyType type : CurrencyType.values()) {
+                if (type.iso4217Code.equals(name)) {
+                    currencyType = type;
+                    break;
+                }
+            }
+        }
+        return currencyType;
+    }
+
 }

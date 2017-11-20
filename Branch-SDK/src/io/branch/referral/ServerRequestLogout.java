@@ -94,4 +94,9 @@ class ServerRequestLogout extends ServerRequest {
     public void clearCallbacks() {
         callback_ = null;
     }
+    
+    @Override
+    boolean isPersistable() {
+        return false; // No need to retrieve logout from previous session
+    }
 }
