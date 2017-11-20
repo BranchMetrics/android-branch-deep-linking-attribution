@@ -3663,17 +3663,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * it will not succeed if obfuscated (ProGuarded).
      * @param s String to pass
      */
-    private void isProGuardedTestFunction(String s) {}
+    private static void isProGuardedTestFunction(String s) {}
 
     /**
      * Method uses reflection to get method isProGuardedTestFunction. If method cannot be accessed,
      * code has been obfuscated, and thus returns true.
      */
-    public boolean isProGuarded() {
+    public static boolean isProGuarded() {
         boolean isProGuarded;
         try {
-            String s = "isProGuardedTestFunction";
-            Method m = Branch.class.getDeclaredMethod(s, String.class);
+            Method m = Branch.class.getDeclaredMethod("isProGuardedTestFunction", String.class);
             isProGuarded = false;
         } catch (NoSuchMethodException e) {
             isProGuarded = true;
