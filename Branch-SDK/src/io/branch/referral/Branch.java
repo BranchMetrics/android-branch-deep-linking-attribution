@@ -50,6 +50,8 @@ import java.util.concurrent.TimeoutException;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.network.BranchRemoteInterface;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
+import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
@@ -2699,7 +2701,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Google ADs ID  and LAT value are updated using reflection. These method need background thread
             //So updating them for install and open on background thread.
             if (thisReq_.isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
-                thisReq_.updateGAdsParams(systemObserver_);
+                thisReq_.updateGAdsParams(systemObserver_, thisReq_.getBranchRemoteAPIVersion());
             }
             
             if (thisReq_.isGetRequest()) {
@@ -3568,11 +3570,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void registerView(BranchUniversalObject
                                      branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
-            ServerRequest req;
-            req = new ServerRequestRegisterView(context_, branchUniversalObject, systemObserver_, callback);
-            if (!req.constructError_ && !req.handleErrors(context_)) {
-                handleNewRequest(req);
-            }
+            new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
+                    .addContentItems(branchUniversalObject)
+                    .logEvent(context_);
         }
     }
     
