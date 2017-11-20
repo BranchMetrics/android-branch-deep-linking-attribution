@@ -226,7 +226,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * Gets the list of Image Captions
      *
-     * @return {@link ArrayList<String>} containing the collection of image captions
+     * @return {@link ArrayList} containing the collection of image captions
      */
     public ArrayList<String> getImageCaptions() {
         return imageCaptions;
@@ -235,7 +235,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * Returns a Map of custom metadata associated with the qualifying content item
      *
-     * @return {@link HashMap custom metadata keys and values
+     * @return {@link HashMap} custom metadata keys and values
      */
     public HashMap<String, String> getCustomMetadata() {
         return customMetadata;

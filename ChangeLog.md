@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.14.0 Adding support for Branch reserved events. Support to update delayed request metadata. Skipping instant deep linking on forcing new session.
+
 - v2.13.1 Hot fix : Referral params are not returned when initSession is called mutiple times while an init session is in progress
 
 - v2.13.0 Adding instant deeplinking support
