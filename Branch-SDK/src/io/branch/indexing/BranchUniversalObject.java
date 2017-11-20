@@ -17,13 +17,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
+import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ShareSheetStyle;
@@ -45,10 +47,8 @@ public class BranchUniversalObject implements Parcelable {
     private String description_;
     /* An image url associated with the content referred */
     private String imageUrl_;
-    /* Meta data provided for the content. This meta data is used as the link parameters for links created from this object */
-    private final HashMap<String, String> metadata_;
-    /* Mime type for the content referred */
-    private String type_;
+    /* Meta data provided for the content. {@link ContentMetadata} object holds the metadata for this content */
+    private ContentMetadata metadata_;
     /* Content index mode */
     private CONTENT_INDEX_MODE indexMode_;
     /* Any keyword associated with the content. Used for indexing */
@@ -57,10 +57,7 @@ public class BranchUniversalObject implements Parcelable {
     private long expirationInMilliSec_;
     /* Index mode for  local content indexing */
     private CONTENT_INDEX_MODE localIndexMode_;
-    /* Price associated with the content of this BUO */
-    private Double price_;
-    /* Type of the currency associated with the price */
-    private CurrencyType currency_;
+    private long creationTimeStamp_;
     
     /**
      * Defines the Content indexing modes
@@ -79,17 +76,16 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      */
     public BranchUniversalObject() {
-        metadata_ = new HashMap<>();
+        metadata_ = new ContentMetadata();
         keywords_ = new ArrayList<>();
         canonicalIdentifier_ = "";
         canonicalUrl_ = "";
         title_ = "";
         description_ = "";
-        type_ = "";
         indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         localIndexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default local indexing mode is public
         expirationInMilliSec_ = 0L;
-        currency_ = CurrencyType.USD;
+        creationTimeStamp_ = System.currentTimeMillis();
     }
     
     /**
@@ -158,43 +154,35 @@ public class BranchUniversalObject implements Parcelable {
     }
     
     /**
-     * <p>
-     * Adds the the given set of key value pairs to the metadata associated with this content. These key values are passed to another user on deep linking.
-     * </p>
-     *
-     * @param metadata A {@link HashMap} with {@link String} key value pairs
-     * @return This instance to allow for chaining of calls to set methods
+     * @deprecated please use #setContentMetadata instead
      */
-    @SuppressWarnings("unused")
     public BranchUniversalObject addContentMetadata(HashMap<String, String> metadata) {
-        this.metadata_.putAll(metadata);
         return this;
     }
     
     /**
-     * <p>
-     * Adds the the given set of key value pair to the metadata associated with this content. These key value is passed to another user on deep linking.
-     * </p>
-     *
-     * @param key   A {@link String} value for metadata key
-     * @param value A {@link String} value for metadata value
-     * @return This instance to allow for chaining of calls to set methods
+     * @deprecated please use #setContentMetadata instead
      */
     public BranchUniversalObject addContentMetadata(String key, String value) {
-        this.metadata_.put(key, value);
         return this;
     }
     
     /**
-     * <p>
-     * Sets the content type for this Object
-     * </p>
+     * Set the metadata associated with the content. Please see {@link ContentMetadata}
      *
-     * @param type {@link String} with value for the mime type of the content referred
+     * @param metadata Instance of {@link ContentMetadata}. Holds the metadata for the contents of this BUO
      * @return This instance to allow for chaining of calls to set methods
      */
+    public BranchUniversalObject setContentMetadata(ContentMetadata metadata) {
+        this.metadata_ = metadata;
+        return this;
+    }
+    
+    /**
+     * @deprecated Please use {@link ContentMetadata#contentSchema}.
+     * Please see {@link #setContentMetadata(ContentMetadata)}
+     */
     public BranchUniversalObject setContentType(String type) {
-        this.type_ = type;
         return this;
     }
     
@@ -274,10 +262,9 @@ public class BranchUniversalObject implements Parcelable {
      * @param price    A {@link Double} value specifying the price info associated with BUO
      * @param currency ISO 4217 currency code defined in {@link CurrencyType} for the price
      * @return This instance to allow for chaining of calls to set methods
+     * @deprecated use {@link ContentMetadata#price} instead. Please check {@link BranchEvent} for more info on commerce event tracking with Branch
      */
     public BranchUniversalObject setPrice(double price, CurrencyType currency) {
-        price_ = price;
-        currency_ = currency;
         return this;
     }
     
@@ -332,7 +319,8 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
-     * @param action A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @param action A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
+     * NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT)} instead
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
@@ -343,15 +331,26 @@ public class BranchUniversalObject implements Parcelable {
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *
-     * @param action   A {@link String }with value of user action name.  See {@link io.branch.referral.util.BranchEvent} for Branch defined user events.
+     * @param action A {@link BRANCH_STANDARD_EVENT }with value of user action name.  See {@link BRANCH_STANDARD_EVENT} for Branch defined user events.
+     */
+    public void userCompletedAction(BRANCH_STANDARD_EVENT action) {
+        userCompletedAction(action.getName(), null);
+    }
+    
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action   A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
+     * NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT, HashMap)} instead
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
         try {
             JSONArray canonicalIDList = new JSONArray();
             canonicalIDList.put(canonicalIdentifier_);
-            actionCompletedPayload.put(BranchEvent.CANONICAL_ID_LIST, canonicalIDList);
             actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
             if (metadata != null) {
                 for (String key : metadata.keySet()) {
@@ -365,6 +364,19 @@ public class BranchUniversalObject implements Parcelable {
         }
     }
     
+    /**
+     * <p>
+     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
+     * </p>
+     *
+     * @param action   A {@link BRANCH_STANDARD_EVENT }with value of user action name.  See {@link BRANCH_STANDARD_EVENT} for Branch defined user events.
+     * @param metadata A HashMap containing any additional metadata need to add to this user event
+     */
+    @SuppressWarnings("deprecation")
+    public void userCompletedAction(BRANCH_STANDARD_EVENT action, HashMap<String, String> metadata) {
+        userCompletedAction(action.getName(), metadata);
+    }
+
     /**
      * <p>
      * Specifies whether the contents referred by this object is publically indexable
@@ -386,15 +398,20 @@ public class BranchUniversalObject implements Parcelable {
     public boolean isLocallyIndexable() {
         return localIndexMode_ == CONTENT_INDEX_MODE.PUBLIC;
     }
-    
+
     /**
-     * <p>
-     * Get the meta data provided for the content referred bt this object
-     * </p>
-     *
-     * @return A {@link HashMap} containing metadata for the provided for this {@link BranchUniversalObject}
+     * @deprecated Please use #getContentMetadata() instead.
      */
     public HashMap<String, String> getMetadata() {
+        return null;
+    }
+    
+    /**
+     * Get the {@link ContentMetadata} associated with this BUO which holds the metadata for content represented
+     *
+     * @return {@link ContentMetadata} object representing the content metadata
+     */
+    public ContentMetadata getContentMetadata() {
         return metadata_;
     }
     
@@ -465,14 +482,10 @@ public class BranchUniversalObject implements Parcelable {
     }
     
     /**
-     * <p>
-     * Get a title for the content referred by this object
-     * </p>
-     *
-     * @return A {@link String} with value of for the content title
+     * @deprecated please use {@link ContentMetadata#contentSchema}
      */
     public String getType() {
-        return type_;
+        return null;
     }
     
     /**
@@ -481,9 +494,10 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @return A {@link Double} with value for price of the content of BUO
+     * @deprecated please use {@link ContentMetadata#price} instead
      */
     public double getPrice() {
-        return price_ != null ? price_ : 0.0;
+        return 0.0;
     }
     
     /**
@@ -492,9 +506,10 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @return {@link String} with ISO 4217 for this currency. Empty string if there is no currency type set
+     * @deprecated Please check {@link BranchEvent} for more info on commerce event tracking with Branch
      */
     public String getCurrencyType() {
-        return currency_.toString();
+        return null;
     }
     
     /**
@@ -660,7 +675,6 @@ public class BranchUniversalObject implements Parcelable {
             if (style.getExcludedFromShareSheet() != null && style.getExcludedFromShareSheet().size() > 0) {
                 shareLinkBuilder.excludeFromShareSheet(style.getExcludedFromShareSheet());
             }
-            
             shareLinkBuilder.shareLink();
         }
     }
@@ -708,25 +722,24 @@ public class BranchUniversalObject implements Parcelable {
         if (!TextUtils.isEmpty(imageUrl_)) {
             shortLinkBuilder.addParameters(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
         }
-        if (!TextUtils.isEmpty(type_)) {
-            shortLinkBuilder.addParameters(Defines.Jsonkey.ContentType.getKey(), type_);
-        }
         if (expirationInMilliSec_ > 0) {
             shortLinkBuilder.addParameters(Defines.Jsonkey.ContentExpiryTime.getKey(), "" + expirationInMilliSec_);
         }
         shortLinkBuilder.addParameters(Defines.Jsonkey.PublicallyIndexable.getKey(), "" + isPublicallyIndexable());
-        if (price_ != null) {
-            shortLinkBuilder.addParameters(BranchEvent.PURCHASE_AMOUNT, "" + price_);
-            shortLinkBuilder.addParameters(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
-        }
-        for (String key : metadata_.keySet()) {
-            shortLinkBuilder.addParameters(key, metadata_.get(key));
+        JSONObject metadataJson = metadata_.convertToJson();
+        try {
+            Iterator<String> keys = metadataJson.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                shortLinkBuilder.addParameters(key, metadataJson.getString(key));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         HashMap<String, String> controlParam = linkProperties.getControlParams();
         for (String key : controlParam.keySet()) {
             shortLinkBuilder.addParameters(key, controlParam.get(key));
         }
-        
         return shortLinkBuilder;
     }
     
@@ -763,68 +776,47 @@ public class BranchUniversalObject implements Parcelable {
      * @return A {@link BranchUniversalObject} corresponding to the Json data passed in
      */
     public static BranchUniversalObject createInstance(JSONObject jsonObject) {
+
         BranchUniversalObject branchUniversalObject = null;
         try {
             branchUniversalObject = new BranchUniversalObject();
-            
-            if (jsonObject.has(Defines.Jsonkey.ContentTitle.getKey())) {
-                branchUniversalObject.title_ = jsonObject.getString(Defines.Jsonkey.ContentTitle.getKey());
+            BranchUtil.JsonReader jsonReader = new BranchUtil.JsonReader(jsonObject);
+            branchUniversalObject.title_ = jsonReader.readOutString(Defines.Jsonkey.ContentTitle.getKey());
+            branchUniversalObject.canonicalIdentifier_ = jsonReader.readOutString(Defines.Jsonkey.CanonicalIdentifier.getKey());
+            branchUniversalObject.canonicalUrl_ = jsonReader.readOutString(Defines.Jsonkey.CanonicalUrl.getKey());
+            branchUniversalObject.description_ = jsonReader.readOutString(Defines.Jsonkey.ContentDesc.getKey());
+            branchUniversalObject.imageUrl_ = jsonReader.readOutString(Defines.Jsonkey.ContentImgUrl.getKey());
+            branchUniversalObject.expirationInMilliSec_ = jsonReader.readOutLong(Defines.Jsonkey.ContentExpiryTime.getKey());
+            JSONArray keywordJsonArray = null;
+            Object keyWordArrayObject = jsonReader.readOut(Defines.Jsonkey.ContentKeyWords.getKey());
+            if (keyWordArrayObject instanceof JSONArray) {
+                keywordJsonArray = (JSONArray) keyWordArrayObject;
+            } else if (keyWordArrayObject instanceof String) {
+                keywordJsonArray = new JSONArray((String) keyWordArrayObject);
             }
-            if (jsonObject.has(Defines.Jsonkey.CanonicalIdentifier.getKey())) {
-                branchUniversalObject.canonicalIdentifier_ = jsonObject.getString(Defines.Jsonkey.CanonicalIdentifier.getKey());
+            if (keywordJsonArray != null) {
+                for (int i = 0; i < keywordJsonArray.length(); i++) {
+                    branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
+                }
             }
-            if (jsonObject.has(Defines.Jsonkey.CanonicalUrl.getKey())) {
-                branchUniversalObject.canonicalUrl_ = jsonObject.getString(Defines.Jsonkey.CanonicalUrl.getKey());
+            Object indexableVal = jsonReader.readOut(Defines.Jsonkey.PublicallyIndexable.getKey());
+            if (indexableVal instanceof Boolean) {
+                branchUniversalObject.indexMode_ = (Boolean) indexableVal ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+            } else if (indexableVal instanceof Integer) {
+                // iOS compatibility issue. iOS send 0/1 instead of true or false
+                branchUniversalObject.indexMode_ = (Integer) indexableVal == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
             }
-            if (jsonObject.has(Defines.Jsonkey.ContentDesc.getKey())) {
-                branchUniversalObject.description_ = jsonObject.getString(Defines.Jsonkey.ContentDesc.getKey());
-            }
-            if (jsonObject.has(Defines.Jsonkey.ContentImgUrl.getKey())) {
-                branchUniversalObject.imageUrl_ = jsonObject.getString(Defines.Jsonkey.ContentImgUrl.getKey());
-            }
-            if (jsonObject.has(Defines.Jsonkey.ContentType.getKey())) {
-                branchUniversalObject.type_ = jsonObject.getString(Defines.Jsonkey.ContentType.getKey());
-            }
-            if (jsonObject.has(Defines.Jsonkey.ContentExpiryTime.getKey())) {
-                branchUniversalObject.expirationInMilliSec_ = jsonObject.getLong(Defines.Jsonkey.ContentExpiryTime.getKey());
-            }
-            if (jsonObject.has(BranchEvent.PURCHASE_AMOUNT)) {
-                branchUniversalObject.price_ = jsonObject.getDouble(BranchEvent.PURCHASE_AMOUNT);
-            }
-            if (jsonObject.has(BranchEvent.PURCHASE_CURRENCY)) {
-                branchUniversalObject.currency_ = CurrencyType.valueOf(jsonObject.getString(BranchEvent.PURCHASE_CURRENCY));
-            }
-            
-            Iterator<String> keys = jsonObject.keys();
+            branchUniversalObject.localIndexMode_ = jsonReader.readOutBoolean(Defines.Jsonkey.LocallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
+            branchUniversalObject.creationTimeStamp_ = jsonReader.readOutLong(Defines.Jsonkey.CreationTimestamp.getKey());
+
+            branchUniversalObject.metadata_ = ContentMetadata.createFromJson(jsonReader);
+            // PRS : Handling a  backward compatibility issue here. Previous version of BUO Allows adding metadata key value pairs to the Object.
+            // If the Json is received from a previous version of BUO it may have metadata set in the object. Adding them to custom metadata for now.
+            // Please note that #getMetadata() is deprecated and #getContentMetadata() should be the new way of getting metadata
+            Iterator<String> keys = jsonReader.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                branchUniversalObject.addContentMetadata(key, jsonObject.getString(key));
-            }
-            
-            if (jsonObject.has(Defines.Jsonkey.ContentKeyWords.getKey())) {
-                JSONArray keywordJsonArray = null;
-                Object keyWordArrayObject = jsonObject.get(Defines.Jsonkey.ContentKeyWords.getKey());
-                if (keyWordArrayObject instanceof JSONArray) {
-                    keywordJsonArray = (JSONArray) keyWordArrayObject;
-                } else if (keyWordArrayObject instanceof String) {
-                    keywordJsonArray = new JSONArray((String) keyWordArrayObject);
-                }
-                if (keywordJsonArray != null) {
-                    for (int i = 0; i < keywordJsonArray.length(); i++) {
-                        branchUniversalObject.keywords_.add((String) keywordJsonArray.get(i));
-                    }
-                }
-            }
-            
-            if (jsonObject.has(Defines.Jsonkey.PublicallyIndexable.getKey())) {
-                try {
-                    branchUniversalObject.indexMode_ = jsonObject.getBoolean(Defines.Jsonkey.PublicallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-                    branchUniversalObject.localIndexMode_ = jsonObject.getBoolean(Defines.Jsonkey.LocallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-                } catch (JSONException ignore) {
-                    // iOS compatibility issue. iOS send 0/1 instead of true or false
-                    branchUniversalObject.indexMode_ = jsonObject.getInt(Defines.Jsonkey.PublicallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-                    branchUniversalObject.localIndexMode_ = jsonObject.getInt(Defines.Jsonkey.LocallyIndexable.getKey()) == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-                }
+                branchUniversalObject.metadata_.addCustomMetadata(key, jsonReader.readOutString(key));
             }
             
         } catch (Exception ignore) {
@@ -842,6 +834,13 @@ public class BranchUniversalObject implements Parcelable {
     public JSONObject convertToJson() {
         JSONObject buoJsonModel = new JSONObject();
         try {
+            // Add all keys in plane format  initially. All known keys will be replaced with corresponding data type in the following section
+            JSONObject metadataJsonObject = metadata_.convertToJson();
+            Iterator<String> keys = metadataJsonObject.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                buoJsonModel.put(key, metadataJsonObject.get(key));
+            }
             if (!TextUtils.isEmpty(title_)) {
                 buoJsonModel.put(Defines.Jsonkey.ContentTitle.getKey(), title_);
             }
@@ -864,22 +863,12 @@ public class BranchUniversalObject implements Parcelable {
             if (!TextUtils.isEmpty(imageUrl_)) {
                 buoJsonModel.put(Defines.Jsonkey.ContentImgUrl.getKey(), imageUrl_);
             }
-            if (!TextUtils.isEmpty(type_)) {
-                buoJsonModel.put(Defines.Jsonkey.ContentType.getKey(), type_);
-            }
             if (expirationInMilliSec_ > 0) {
                 buoJsonModel.put(Defines.Jsonkey.ContentExpiryTime.getKey(), expirationInMilliSec_);
             }
             buoJsonModel.put(Defines.Jsonkey.PublicallyIndexable.getKey(), isPublicallyIndexable());
-            if (price_ != null) {
-                buoJsonModel.put(BranchEvent.PURCHASE_AMOUNT, price_);
-                buoJsonModel.put(BranchEvent.PURCHASE_CURRENCY, currency_.toString());
-            }
-            
-            Set<String> metadataKeys = metadata_.keySet();
-            for (String metadataKey : metadataKeys) {
-                buoJsonModel.put(metadataKey, metadata_.get(metadataKey));
-            }
+            buoJsonModel.put(Defines.Jsonkey.LocallyIndexable.getKey(), isLocallyIndexable());
+            buoJsonModel.put(Defines.Jsonkey.CreationTimestamp.getKey(), creationTimeStamp_);
             
         } catch (JSONException ignore) {
         }
@@ -904,51 +893,38 @@ public class BranchUniversalObject implements Parcelable {
     
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(creationTimeStamp_);
         dest.writeString(canonicalIdentifier_);
         dest.writeString(canonicalUrl_);
         dest.writeString(title_);
         dest.writeString(description_);
         dest.writeString(imageUrl_);
-        dest.writeString(type_);
         dest.writeLong(expirationInMilliSec_);
         dest.writeInt(indexMode_.ordinal());
-        dest.writeInt(localIndexMode_.ordinal());
-        double priceVal = price_ != null ? price_ : -1;
-        dest.writeDouble(priceVal);
-        dest.writeInt(currency_.ordinal());
         dest.writeSerializable(keywords_);
-        
-        int metaDataSize = metadata_.size();
-        dest.writeInt(metaDataSize);
-        for (HashMap.Entry<String, String> entry : metadata_.entrySet()) {
-            dest.writeString(entry.getKey());
-            dest.writeString(entry.getValue());
-        }
+        dest.writeParcelable(metadata_, flags);
+        dest.writeInt(localIndexMode_.ordinal());
     }
     
     private BranchUniversalObject(Parcel in) {
         this();
+        creationTimeStamp_ = in.readLong();
         canonicalIdentifier_ = in.readString();
         canonicalUrl_ = in.readString();
         title_ = in.readString();
         description_ = in.readString();
         imageUrl_ = in.readString();
-        type_ = in.readString();
         expirationInMilliSec_ = in.readLong();
         indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
-        localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
-        price_ = in.readDouble();
-        if (price_ < 0) {
-            price_ = null;
-        }
-        currency_ = CurrencyType.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
-        keywords_.addAll(keywordsTemp);
-        int metadataSize = in.readInt();
-        for (int i = 0; i < metadataSize; i++) {
-            metadata_.put(in.readString(), in.readString());
+        if (keywordsTemp != null) {
+            keywords_.addAll(keywordsTemp);
         }
+        metadata_ = in.readParcelable(ContentMetadata.class.getClassLoader());
+        localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
+        @SuppressWarnings("unchecked")
+        ArrayList<String> imageCaptionsTemp = (ArrayList<String>) in.readSerializable();
     }
     
     /**
@@ -957,13 +933,12 @@ public class BranchUniversalObject implements Parcelable {
     private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
         private final Branch.BranchLinkShareListener originalCallback_;
         
-        public LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback) {
+        LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback) {
             originalCallback_ = originalCallback;
         }
         
         @Override
         public void onShareLinkDialogLaunched() {
-            userCompletedAction(BranchEvent.SHARE_STARTED);
             if (originalCallback_ != null) {
                 originalCallback_.onShareLinkDialogLaunched();
             }
@@ -984,8 +959,8 @@ public class BranchUniversalObject implements Parcelable {
             } else {
                 metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
-            userCompletedAction(BranchEvent.SHARE_COMPLETED, metaData);
-            
+            //noinspection deprecation
+            userCompletedAction(BRANCH_STANDARD_EVENT.SHARE.getName(), metaData);
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
             }

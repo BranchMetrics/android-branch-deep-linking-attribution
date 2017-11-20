@@ -563,7 +563,36 @@ The universal object is where you define all of the custom metadata associated w
 
 **expirationDate**: The date when the content will not longer be available or valid. Currently, this is only used for Spotlight indexing but will be used by Branch in the future.
 
+
+### Tracking User Actions and Events
+Use `BranchEvent` class to track special user actions or application specific events beyond app installs, opens, and sharing. You can track events such as when a user adds an item to an on-line shopping cart, or searches for a keyword etc.
+`BranchEvent` provides an interface to add content(s) represented by a BranchUniversalObject in order to associate content(s) with events.
+You can view analytics for the BranchEvents you fire on the Branch dashboard. BranchEvents provide a seamless integration with many third party analytics providers like Google Analytics, Criteo.
+`BRANCH_STANDARD_EVENT` enumerate the most commonly tracked events and event parameters that can be used with `BranchEvent` for the best results. You can always use custom event names and event parameters.
+
+```java
+new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+    .setAffiliation("affiliation_value")
+    .setCoupon("coupon_value")
+    .setCurrency(CurrencyType.USD)
+    .setTax(12.3)
+    .setRevenue(1.5)
+    .setDescription("Event_description")
+    .setSearchQuery("related_search_query")
+    .addCustomDataProperty("Custom_Event_Property_Key", "Custom_Event_Property_Val")
+    .addContentItems(contentBUO1, contentBUO2)
+    .logEvent(context);
+```
+
+```java
+new BranchEvent("My_Custom_Event")
+    .addCustomDataProperty("key1", "value1")
+    .addCustomDataProperty("key2", "value2")
+    .logEvent(context);
+```
+
 ### Register User Actions On An Object
+This functionality is deprecated. Please consider using `BranchEvent` for tracking user action and events as described [here](#tracking-user-actions-and-events).
 
 We've added a series of custom events that you'll want to start tracking for rich analytics and targeting. Here's a list below with a sample snippet that calls the register view event.
 

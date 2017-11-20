@@ -31,8 +31,8 @@ public class CommerceEvent {
         return currencyType;
     }
 
-    public void setCurrencyType(CurrencyType currencyType) {
-        this.currencyType = currencyType;
+    public void setCurrencyType(CurrencyType currency) {
+        this.currencyType = currency;
     }
 
     public String getTransactionID() {
@@ -89,9 +89,9 @@ public class CommerceEvent {
     public CommerceEvent() {
     }
 
-    public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, List<Product> products) {
+    public CommerceEvent(Double revenue, CurrencyType currency, String transactionID, Double shipping, Double tax, String coupon, String affiliation, List<Product> products) {
         this.revenue = revenue;
-        this.currencyType = currencyType;
+        this.currencyType = currency;
         this.transactionID = transactionID;
         this.shipping = shipping;
         this.tax = tax;
@@ -100,9 +100,9 @@ public class CommerceEvent {
         this.products = products;
     }
 
-    public CommerceEvent(Double revenue, CurrencyType currencyType, String transactionID, Double shipping, Double tax, String coupon, String affiliation, Product product) {
+    public CommerceEvent(Double revenue, CurrencyType currency, String transactionID, Double shipping, Double tax, String coupon, String affiliation, Product product) {
         this.revenue = revenue;
-        this.currencyType = currencyType;
+        this.currencyType = currency;
         this.transactionID = transactionID;
         this.shipping = shipping;
         this.tax = tax;

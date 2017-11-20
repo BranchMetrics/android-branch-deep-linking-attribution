@@ -13,6 +13,9 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
+import io.branch.branchandroiddemo.test.BUOTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -21,9 +24,15 @@ import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
+import io.branch.referral.util.BranchContentSchema;
+import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+
 
 public class MainActivity extends Activity {
     Branch branch;
@@ -47,17 +56,31 @@ public class MainActivity extends Activity {
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
                 .setCanonicalUrl("https://branch.io/deepviews")
+                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
                 .setTitle("My Content Title")
-                .setContentDescription("My Content Description ")
+                .setContentDescription("my_product_description1")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                .setContentType("application/vnd.businessobjects")
-                //.setContentExpiration(new Date(1476566432000L)) // set contents expiration time if applicable
-                .setPrice(5.00, CurrencyType.USD)
+                .setContentExpiration(new Date(1573415635000L))
+                .setContentImageUrl("https://test_img_url")
                 .addKeyWord("My_Keyword1")
                 .addKeyWord("My_Keyword2")
-                .addContentMetadata("Metadata_Key1", "Metadata_value1")
-                .addContentMetadata("Metadata_Key2", "Metadata_value2");
+                .setContentMetadata(
+                        new ContentMetadata().setProductName("my_product_name1")
+                                .setProductBrand("my_prod_Brand1")
+                                .setProductVariant("3T")
+                                .setProductCategory(ProductCategory.BABY_AND_TODDLER)
+                                .setProductCondition(ContentMetadata.CONDITION.EXCELLENT)
+                                .setAddress("Street_name1", "city1", "Region1", "Country1", "postal_code")
+                                .setLocation(12.07, -97.5)
+                                .setSku("1994320302")
+                                .setRating(5.0, 7.0, 5)
+                                .addImageCaptions("my_img_caption1", "my_img_caption_2")
+                                .setQuantity(2.0)
+                                .setPrice(23.2, CurrencyType.USD)
+                                .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
+                                .addCustomMetadata("Custom_Content_metadata_key1", "Custom_Content_metadata_val1")
+                );
 
 
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
@@ -240,7 +263,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-                        //.setAlias("mylinkName") // In case you need to white label your link
+//                        .setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -309,6 +332,38 @@ public class MainActivity extends Activity {
         //        }catch (JSONException ignore){
         //        }
 
+        // Tracking events
+        findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new BranchEvent("Logged_In")
+                        .addCustomDataProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
+                        .addCustomDataProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
+                        .logEvent(MainActivity.this);
+            }
+        });
+
+        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                        .setAffiliation("test_affiliation")
+                        .setCoupon("test_coupon")
+                        .setCurrency(CurrencyType.USD)
+                        .setDescription("Event _description")
+                        .setShipping(10.2)
+                        .setTax(12.3)
+                        .setRevenue(1.5)
+                        .setTransactionID("12344555")
+                        .setSearchQuery("Test Search query")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+            }
+        });
+
+        BUOTestRoutines.TestBUOSerialisation();
     }
 
 
@@ -326,8 +381,7 @@ public class MainActivity extends Activity {
                     if (branchUniversalObject != null) {
                         Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
                         Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getMetadata());
-
+                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
 
                     if (linkProperties != null) {
@@ -337,6 +391,7 @@ public class MainActivity extends Activity {
                 }
             }
         }, this.getIntent().getData(), this);
+
     }
 
     @Override
