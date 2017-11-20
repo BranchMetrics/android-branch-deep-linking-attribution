@@ -13,7 +13,6 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.BadParcelableException;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -29,6 +28,7 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -479,7 +479,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Since play store referrer broadcast from google play is few millisecond delayed Branch will delay the collecting deep link data on app install by {@link #playStoreReferrerFetchTime} millisecond
      * This will allow branch to provide for more accurate tracking and attribution. This will delay branch init only the first time user open the app.
      * This method allows to override the maximum wait time for play store referrer to arrive. Set it to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
-     *
+     * <p>
      * Note:  as of our testing 4/2017  a 1500 milli sec wait time is enough to capture more than 90% of the install referrer case
      *
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds. Set to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
@@ -807,7 +807,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @deprecated Branch is not listing external apps any more from v2.11.0
      */
     public void disableAppList() {
-      // Do nothing
+        // Do nothing
     }
 
     /**
@@ -3493,7 +3493,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return styleResourceID_;
         }
 
-        public int getIconSize() { return iconSize_; }
+        public int getIconSize() {
+            return iconSize_;
+        }
     }
 
     //------------------------ Content Indexing methods----------------------//
@@ -3656,4 +3658,26 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return false;
     }
 
+    /**
+     * Method used by IsProGuarded to detect code obfuscation. We try to call the function by name,
+     * it will not succeed if obfuscated (ProGuarded).
+     * @param s String to pass
+     */
+    private void isProGuardedTestFunction(String s) {}
+
+    /**
+     * Method uses reflection to get method isProGuardedTestFunction. If method cannot be accessed,
+     * code has been obfuscated, and thus returns true.
+     */
+    public boolean isProGuarded() {
+        boolean isProGuarded;
+        try {
+            String s = "isProGuardedTestFunction";
+            Method m = Branch.class.getDeclaredMethod(s, String.class);
+            isProGuarded = false;
+        } catch (NoSuchMethodException e) {
+            isProGuarded = true;
+        }
+        return isProGuarded;
+    }
 }
