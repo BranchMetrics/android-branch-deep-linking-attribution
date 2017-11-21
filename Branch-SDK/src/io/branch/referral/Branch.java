@@ -3659,24 +3659,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Method used by IsProGuarded to detect code obfuscation. We try to call the function by name,
-     * it will not succeed if obfuscated (ProGuarded).
+     * Method used by isObfuscated to detect code obfuscation. We try to call the function by name,
+     * it will not succeed if obfuscated.
      * @param s String to pass
      */
-    private static void isProGuardedTestFunction(String s) {}
+    private static void isObfuscatedTestFunction(String s) {}
 
     /**
-     * Method uses reflection to get method isProGuardedTestFunction. If method cannot be accessed,
+     * Method uses reflection to get method isObfuscatedTestFunction. If method cannot be accessed,
      * code has been obfuscated, and thus returns true.
      */
-    public static boolean isProGuarded() {
-        boolean isProGuarded;
+    public static boolean isObfuscated() {
+        boolean isObfuscated;
         try {
-            Method m = Branch.class.getDeclaredMethod("isProGuardedTestFunction", String.class);
-            isProGuarded = false;
+            Method m = Branch.class.getDeclaredMethod("isObfuscatedTestFunction", String.class);
+            isObfuscated = false;
         } catch (NoSuchMethodException e) {
-            isProGuarded = true;
+            isObfuscated = true;
         }
-        return isProGuarded;
+        return isObfuscated;
     }
 }
