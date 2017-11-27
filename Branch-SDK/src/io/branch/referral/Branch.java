@@ -1329,43 +1329,44 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private boolean readAndStripParam(Uri data, Activity activity) {
-        // Check for instant deep linking possibility first
-        if (activity != null && activity.getIntent() != null && initState_ == SESSION_STATE.UNINITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
-            Intent intent = activity.getIntent();
-            // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-            if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
-                // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
-                // So skipping instant deep link feature until first Branch open happens
-                if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                    JSONObject nonLinkClickJson = new JSONObject();
-                    try {
-                        nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
-                        nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                        prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                        isInstantDeepLinkPossible = true;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+        if (intentState_ == INTENT_STATE.READY) {
+            // Check for instant deep linking possibility first
+            if (activity != null && activity.getIntent() != null && initState_ == SESSION_STATE.UNINITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+                Intent intent = activity.getIntent();
+                // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
+                if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
+                    // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
+                    // So skipping instant deep link feature until first Branch open happens
+                    if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                        JSONObject nonLinkClickJson = new JSONObject();
+                        try {
+                            nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
+                            nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
+                            prefHelper_.setSessionParams(nonLinkClickJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            } else { // if not check the intent data to see if there is deep link params
-                if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                    try {
-                        String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                        // Make sure the data received is complete and in correct format
-                        JSONObject branchDataJson = new JSONObject(rawBranchData);
-                        branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                        prefHelper_.setSessionParams(branchDataJson.toString());
-                        isInstantDeepLinkPossible = true;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                } else { // if not check the intent data to see if there is deep link params
+                    if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
+                        try {
+                            String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
+                            // Make sure the data received is complete and in correct format
+                            JSONObject branchDataJson = new JSONObject(rawBranchData);
+                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                            prefHelper_.setSessionParams(branchDataJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        // Remove Branch data from the intent once used
+                        intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
+                        activity.setIntent(intent);
                     }
-                    // Remove Branch data from the intent once used
-                    intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                    activity.setIntent(intent);
                 }
             }
-        }
-        if (intentState_ == INTENT_STATE.READY) {
+            
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             try {
                 if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
