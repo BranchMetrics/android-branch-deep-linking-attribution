@@ -32,18 +32,8 @@ public class BranchEvent {
     private final List<BranchUniversalObject> buoList;
     
     public enum PURCHASE_TYPE {
-        STANDARD("BranchPurchaseTypeStandard"),
-        IN_APP("BranchPurchaseTypeInApp");
-        
-        private final String typeName;
-        
-        PURCHASE_TYPE(String typeName) {
-            this.typeName = typeName;
-        }
-        
-        public String getTypeName() {
-            return typeName;
-        }
+        STANDARD,
+        IN_APP
     }
     
     public BranchEvent(BRANCH_STANDARD_EVENT branchStandardEvent) {
@@ -98,7 +88,7 @@ public class BranchEvent {
      * @return This object for chaining builder methods
      */
     public BranchEvent setPurchaseType(PURCHASE_TYPE type) {
-        return addStandardProperty(Defines.Jsonkey.PurchaseType.getKey(), type.getTypeName());
+        return addStandardProperty(Defines.Jsonkey.PurchaseType.getKey(), type.name());
     }
     
     /**
