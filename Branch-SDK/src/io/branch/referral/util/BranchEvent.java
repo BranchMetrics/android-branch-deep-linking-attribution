@@ -30,15 +30,30 @@ public class BranchEvent {
     private final JSONObject standardProperties;
     private final JSONObject customProperties;
     private final List<BranchUniversalObject> buoList;
-
+    
+    public enum PURCHASE_TYPE {
+        STANDARD("BranchPurchaseTypeStandard"),
+        IN_APP("BranchPurchaseTypeInApp");
+        
+        private final String typeName;
+        
+        PURCHASE_TYPE(String typeName) {
+            this.typeName = typeName;
+        }
+        
+        public String getTypeName() {
+            return typeName;
+        }
+    }
+    
     public BranchEvent(BRANCH_STANDARD_EVENT branchStandardEvent) {
         this(branchStandardEvent.getName(), true);
     }
-
+    
     public BranchEvent(String eventName) {
         this(eventName, false);
     }
-
+    
     private BranchEvent(String eventName, boolean isStandardEvent) {
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
@@ -46,7 +61,7 @@ public class BranchEvent {
         this.isStandardEvent = isStandardEvent;
         buoList = new ArrayList<>();
     }
-
+    
     /**
      * Set the transaction id associated with this event if there in any
      *
@@ -55,7 +70,7 @@ public class BranchEvent {
     public BranchEvent setTransactionID(String transactionID) {
         return addStandardProperty(Defines.Jsonkey.TransactionID.getKey(), transactionID);
     }
-
+    
     /**
      * Set the currency related with this transaction event
      *
@@ -65,9 +80,9 @@ public class BranchEvent {
     public BranchEvent setCurrency(CurrencyType currency) {
         return addStandardProperty(Defines.Jsonkey.Currency.getKey(), currency.toString());
     }
-
+    
     /**
-     * Set the revenue value  related with this transaction event
+     * Set the revenue value related with this transaction event
      *
      * @param revenue {@link double } revenue value
      * @return This object for chaining builder methods
@@ -75,9 +90,19 @@ public class BranchEvent {
     public BranchEvent setRevenue(double revenue) {
         return addStandardProperty(Defines.Jsonkey.Revenue.getKey(), revenue);
     }
-
+    
     /**
-     * Set the shipping value  related with this transaction event
+     * Set the purchase type related with this transaction event
+     *
+     * @param type {@link PURCHASE_TYPE} value
+     * @return This object for chaining builder methods
+     */
+    public BranchEvent setPurchaseType(PURCHASE_TYPE type) {
+        return addStandardProperty(Defines.Jsonkey.PurchaseType.getKey(), type.getTypeName());
+    }
+    
+    /**
+     * Set the shipping value related with this transaction event
      *
      * @param shipping {@link double } shipping value
      * @return This object for chaining builder methods
@@ -85,9 +110,9 @@ public class BranchEvent {
     public BranchEvent setShipping(double shipping) {
         return addStandardProperty(Defines.Jsonkey.Shipping.getKey(), shipping);
     }
-
+    
     /**
-     * Set the tax value  related with this transaction event
+     * Set the tax value related with this transaction event
      *
      * @param tax {@link double } tax value
      * @return This object for chaining builder methods
@@ -95,7 +120,7 @@ public class BranchEvent {
     public BranchEvent setTax(double tax) {
         return addStandardProperty(Defines.Jsonkey.Tax.getKey(), tax);
     }
-
+    
     /**
      * Set any coupons associated with this transaction event
      *
@@ -105,7 +130,7 @@ public class BranchEvent {
     public BranchEvent setCoupon(String coupon) {
         return addStandardProperty(Defines.Jsonkey.Coupon.getKey(), coupon);
     }
-
+    
     /**
      * Set any affiliation for this transaction event
      *
@@ -115,7 +140,7 @@ public class BranchEvent {
     public BranchEvent setAffiliation(String affiliation) {
         return addStandardProperty(Defines.Jsonkey.Affiliation.getKey(), affiliation);
     }
-
+    
     /**
      * Set description for this transaction event
      *
@@ -125,7 +150,7 @@ public class BranchEvent {
     public BranchEvent setDescription(String description) {
         return addStandardProperty(Defines.Jsonkey.Description.getKey(), description);
     }
-
+    
     /**
      * Set any search query associated with the event
      *
@@ -135,7 +160,7 @@ public class BranchEvent {
     public BranchEvent setSearchQuery(String searchQuery) {
         return addStandardProperty(Defines.Jsonkey.SearchQuery.getKey(), searchQuery);
     }
-
+    
     private BranchEvent addStandardProperty(String propertyName, Object propertyValue) {
         if (propertyValue != null) {
             try {
@@ -148,7 +173,7 @@ public class BranchEvent {
         }
         return this;
     }
-
+    
     /**
      * Adds a custom data property associated with this Branch Event
      *
@@ -164,7 +189,7 @@ public class BranchEvent {
         }
         return this;
     }
-
+    
     /**
      * Use this method to add any {@link BranchUniversalObject} associated with this event.
      *
@@ -176,7 +201,7 @@ public class BranchEvent {
         Collections.addAll(buoList, contentItems);
         return this;
     }
-
+    
     /**
      * Use this method to add any {@link BranchUniversalObject} associated with this event.
      *
@@ -188,7 +213,7 @@ public class BranchEvent {
         buoList.addAll(contentItems);
         return this;
     }
-
+    
     /**
      * Logs this BranchEvent to Branch for tracking and analytics
      *
@@ -204,9 +229,9 @@ public class BranchEvent {
         }
         return isReqQueued;
     }
-
+    
     private class ServerRequestLogEvent extends ServerRequest {
-        public ServerRequestLogEvent(Context context, String requestPath) {
+        private ServerRequestLogEvent(Context context, String requestPath) {
             super(context, requestPath);
             JSONObject reqBody = new JSONObject();
             try {
@@ -214,7 +239,7 @@ public class BranchEvent {
                 if (customProperties.length() > 0) {
                     reqBody.put(Defines.Jsonkey.CustomData.getKey(), customProperties);
                 }
-
+                
                 if (standardProperties.length() > 0) {
                     reqBody.put(Defines.Jsonkey.EventData.getKey(), standardProperties);
                 }
@@ -231,41 +256,41 @@ public class BranchEvent {
             setPost(reqBody);
             updateEnvironment(context, reqBody);
         }
-
+        
         @Override
         public boolean handleErrors(Context context) {
             return false;
         }
-
+        
         @Override
         public void onRequestSucceeded(ServerResponse response, Branch branch) {
         }
-
+        
         @Override
         public void handleFailure(int statusCode, String causeMsg) {
         }
-
+        
         @Override
         public boolean isGetRequest() {
             return false;
         }
-
+        
         @Override
         public void clearCallbacks() {
         }
-
+        
         @Override
         public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
             return BRANCH_API_VERSION.V2; //This is a v2 event
         }
-
+        
         @Override
         public boolean isGAdsParamsRequired() {
             return true;
         }
     }
-
-
+    
+    
     /**
      * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
      */

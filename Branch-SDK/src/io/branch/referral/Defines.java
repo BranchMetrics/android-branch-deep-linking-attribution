@@ -146,6 +146,7 @@ public class Defines {
         Affiliation("affiliation"),
         Description("description"),
         SearchQuery("search_query"),
+        PurchaseType("purchaseType"),
 
         Name("name"),
         CustomData("custom_data"),

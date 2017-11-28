@@ -354,6 +354,7 @@ public class MainActivity extends Activity {
                         .setShipping(10.2)
                         .setTax(12.3)
                         .setRevenue(1.5)
+                        .setPurchaseType(BranchEvent.PURCHASE_TYPE.STANDARD)
                         .setTransactionID("12344555")
                         .setSearchQuery("Test Search query")
                         .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
