@@ -80,7 +80,9 @@ class ServerRequestQueue {
                         editor.putString(PREF_KEY, jsonArr.toString()).commit();
                         succeeded = true;
                     } catch (ConcurrentModificationException ex) {
-                        PrefHelper.Debug("Persisting Queue: ", "Failed to persit queue " + ex.getMessage());
+                        PrefHelper.Debug("Persisting Queue: ", "Failed to persist queue " + ex.getMessage());
+                    } catch (NullPointerException ex) {
+                        PrefHelper.Debug("Persisting Queue: ", "Failed to persist queue " + ex.getMessage());
                     } finally {
                         if (!succeeded) {
                             try {
