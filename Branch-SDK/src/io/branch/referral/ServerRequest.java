@@ -152,7 +152,7 @@ public abstract class ServerRequest {
      * @return {@code true} to add the limit app tracking value to the request else false.
      * {@code false} by default. Should override for requests that need limited app tracking value.
      */
-    protected boolean shouldUpdateLimitAppTracking() {
+    protected boolean shouldUpdateLimitFacebookTracking() {
         return false;
     }
     
@@ -445,13 +445,13 @@ public abstract class ServerRequest {
     /*
      * Update the the limit app tracking value to the request
      */
-    private void updateLimitAppTracking() {
+    private void updateLimitFacebookTracking() {
         JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
         if (updateJson != null) {
-            boolean isLimitAppTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
-            if (isLimitAppTracking) {
+            boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
+            if (isLimitFacebookTracking) {
                 try {
-                    updateJson.putOpt(Defines.Jsonkey.LimitedAppTracking.getKey(), isLimitAppTracking);
+                    updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
                 } catch (JSONException ignore) {
                 }
             }
@@ -460,8 +460,8 @@ public abstract class ServerRequest {
     
     void doFinalUpdateOnMainThread() {
         updateRequestMetadata();
-        if (shouldUpdateLimitAppTracking()) {
-            updateLimitAppTracking();
+        if (shouldUpdateLimitFacebookTracking()) {
+            updateLimitFacebookTracking();
         }
     }
     

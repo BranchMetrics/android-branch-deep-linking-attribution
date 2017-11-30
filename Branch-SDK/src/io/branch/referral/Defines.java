@@ -67,7 +67,7 @@ public class Defines {
         AAID("aaid"),
         LATVal("lat_val"),
         LimitedAdTracking("limit_ad_tracking"),
-        LimitedAppTracking("limit_app_tracking"),
+        limitFacebookTracking ("limit_facebook_tracking "),
         Debug("debug"),
         Brand("brand"),
         Model("model"),

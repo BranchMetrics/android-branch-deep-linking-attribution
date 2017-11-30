@@ -827,10 +827,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
      *
-     * @param isLimitAppTracking {@code true} to limit app tracking
+     * @param isLimitFacebookTracking {@code true} to limit app tracking
      */
-    public void setLimitAppTracking(boolean isLimitAppTracking) {
-        prefHelper_.setLimitAppTracking(isLimitAppTracking);
+    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
+        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
     }
     
     /**

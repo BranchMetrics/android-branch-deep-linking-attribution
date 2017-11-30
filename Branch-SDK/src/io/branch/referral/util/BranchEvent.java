@@ -265,7 +265,7 @@ public class BranchEvent {
         }
     
         @Override
-        protected boolean shouldUpdateLimitAppTracking() {
+        protected boolean shouldUpdateLimitFacebookTracking() {
             return true;
         }
     }

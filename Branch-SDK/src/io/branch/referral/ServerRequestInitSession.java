@@ -51,7 +51,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
     
     @Override
-    protected boolean shouldUpdateLimitAppTracking() {
+    protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
     }
     
