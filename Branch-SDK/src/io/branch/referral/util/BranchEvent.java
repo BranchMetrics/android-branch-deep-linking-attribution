@@ -263,6 +263,11 @@ public class BranchEvent {
         public boolean isGAdsParamsRequired() {
             return true;
         }
+    
+        @Override
+        public boolean shouldRetryOnFail() {
+            return true; // Branch event need to be retried on failure.
+        }
     }
 
 

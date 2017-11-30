@@ -311,7 +311,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private Semaphore serverSema_;
     
-    private ServerRequestQueue requestQueue_;
+    private final ServerRequestQueue requestQueue_;
     
     private int networkCount_;
     
@@ -2746,7 +2746,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             }
                             //Remove the requests from the request queue first
                             for (ServerRequest req : requestToFail) {
-                                if (req == null || !req.shouldRetryOnFail()) { // Should remove any nullified request object also from queque
+                                if (req == null || !req.shouldRetryOnFail()) { // Should remove any nullified request object also from queue
                                     requestQueue_.remove(req);
                                 }
                             }

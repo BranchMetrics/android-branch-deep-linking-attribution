@@ -65,7 +65,7 @@ class ServerRequestQueue {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                synchronized (queue) {
+                synchronized (ServerRequestQueue.this) {
                     JSONArray jsonArr = new JSONArray();
                     for (ServerRequest aQueue : queue) {
                         if(aQueue.isPersistable()) {
@@ -79,13 +79,13 @@ class ServerRequestQueue {
                     try {
                         editor.putString(PREF_KEY, jsonArr.toString()).commit();
                         succeeded = true;
-                    } catch (ConcurrentModificationException ex) {
+                    } catch (Exception ex) {
                         PrefHelper.Debug("Persisting Queue: ", "Failed to persit queue " + ex.getMessage());
                     } finally {
                         if (!succeeded) {
                             try {
                                 editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                            } catch (ConcurrentModificationException ignored) {
+                            } catch (Exception ignored) {
                             }
                         }
                     }
