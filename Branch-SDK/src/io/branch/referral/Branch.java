@@ -1331,7 +1331,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean readAndStripParam(Uri data, Activity activity) {
         if (intentState_ == INTENT_STATE.READY) {
             // Check for instant deep linking possibility first
-            if (activity != null && activity.getIntent() != null && initState_ == SESSION_STATE.UNINITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+            if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
                 Intent intent = activity.getIntent();
                 // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
                 if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
