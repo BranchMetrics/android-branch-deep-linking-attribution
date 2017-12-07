@@ -408,6 +408,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
     
     boolean isInstantDeepLinkPossible = false;
+    /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
+    private boolean isActivityCreatedAndLaunched = false;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1329,7 +1331,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private boolean readAndStripParam(Uri data, Activity activity) {
-        if (intentState_ == INTENT_STATE.READY) {
+        // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
+        // If activity is created and launched then the intent can be readily consumed.
+        // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
+        if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
             // Check for instant deep linking possibility first
             if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
                 Intent intent = activity.getIntent();
@@ -1366,7 +1371,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     }
                 }
             }
-            
+        }
+        if (intentState_ == INTENT_STATE.READY) {
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             try {
                 if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
@@ -2401,6 +2407,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
             intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
+            isActivityCreatedAndLaunched = true;
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
@@ -2433,6 +2440,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 startSession(activity);
             }
             activityCnt_++;
+            isActivityCreatedAndLaunched = false;
         }
         
         @Override
@@ -2464,6 +2472,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             ContentDiscoverer.getInstance().onActivityStopped(activity);
             activityCnt_--; // Check if this is the last activity. If so, stop the session.
             if (activityCnt_ < 1) {
+                isInstantDeepLinkPossible = false;
                 closeSessionInternal();
             }
         }
