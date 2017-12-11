@@ -825,6 +825,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
+     * Enables or disables app tracking with Branch or any other third parties that Branch use internally
+     *
+     * @param isLimitFacebookTracking {@code true} to limit app tracking
+     */
+    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
+        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
+    }
+    
+    /**
      * <p>Add key value pairs to all requests</p>
      */
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
@@ -2681,29 +2690,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
         }
-        
+    
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             thisReq_.onPreExecute();
-            // Update request metadata
-            thisReq_.updateRequestMetadata();
+            thisReq_.doFinalUpdateOnMainThread();
         }
-        
+    
         @Override
         protected ServerResponse doInBackground(Void... voids) {
-            if (thisReq_ instanceof ServerRequestInitSession) {
-                ((ServerRequestInitSession) thisReq_).updateLinkReferrerParams();
-            }
             // update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
-            
-            //Google ADs ID  and LAT value are updated using reflection. These method need background thread
-            //So updating them for install and open on background thread.
-            if (thisReq_.isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
-                thisReq_.updateGAdsParams(systemObserver_, thisReq_.getBranchRemoteAPIVersion());
-            }
-            
+            thisReq_.doFinalUpdateOnBackgroundThread();
             if (thisReq_.isGetRequest()) {
                 return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             } else {
