@@ -345,8 +345,8 @@ public class ContentMetadata implements Parcelable {
         contentMetadata.addressRegion = jsonReader.readOutString(Defines.Jsonkey.AddressRegion.getKey());
         contentMetadata.addressCountry = jsonReader.readOutString(Defines.Jsonkey.AddressCountry.getKey());
         contentMetadata.addressPostalCode = jsonReader.readOutString(Defines.Jsonkey.AddressPostalCode.getKey());
-        contentMetadata.latitude = jsonReader.readOutDouble(Defines.Jsonkey.Latitude.getKey());
-        contentMetadata.longitude = jsonReader.readOutDouble(Defines.Jsonkey.Longitude.getKey());
+        contentMetadata.latitude = jsonReader.readOutDouble(Defines.Jsonkey.Latitude.getKey(), null);
+        contentMetadata.longitude = jsonReader.readOutDouble(Defines.Jsonkey.Longitude.getKey(), null);
         JSONArray imageCaptionJsonArray = jsonReader.readOutJsonArray(Defines.Jsonkey.ImageCaptions.getKey());
         if (imageCaptionJsonArray != null) {
             for (int i = 0; i < imageCaptionJsonArray.length(); i++) {

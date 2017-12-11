@@ -389,6 +389,7 @@ class SystemObserver {
      * <li><i>false</i> - Not connected to WiFi.</li>
      * </ul>
      */
+    @SuppressWarnings("MissingPermission")
     public boolean getWifiConnected() {
         if (PackageManager.PERMISSION_GRANTED == context_.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             ConnectivityManager connManager = (ConnectivityManager) context_.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -549,7 +550,7 @@ class SystemObserver {
     }
 
     /**
-     * Return the current running mode type.  May be one of
+     * Return the current running mode type. May be one of
      * {UI_MODE_TYPE_NORMAL Configuration.UI_MODE_TYPE_NORMAL},
      * {UI_MODE_TYPE_DESK Configuration.UI_MODE_TYPE_DESK},
      * {UI_MODE_TYPE_CAR Configuration.UI_MODE_TYPE_CAR},

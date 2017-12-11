@@ -311,7 +311,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private Semaphore serverSema_;
     
-    private ServerRequestQueue requestQueue_;
+    private final ServerRequestQueue requestQueue_;
     
     private int networkCount_;
     
@@ -408,6 +408,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
     
     boolean isInstantDeepLinkPossible = false;
+    /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
+    private boolean isActivityCreatedAndLaunched = false;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1329,39 +1331,44 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private boolean readAndStripParam(Uri data, Activity activity) {
-        // Check for instant deep linking possibility first
-        if (activity != null && activity.getIntent() != null && initState_ == SESSION_STATE.UNINITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
-            Intent intent = activity.getIntent();
-            // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-            if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
-                // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
-                // So skipping instant deep link feature until first Branch open happens
-                if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                    JSONObject nonLinkClickJson = new JSONObject();
-                    try {
-                        nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
-                        nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                        prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                        isInstantDeepLinkPossible = true;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+        // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
+        // If activity is created and launched then the intent can be readily consumed.
+        // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
+        if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
+            // Check for instant deep linking possibility first
+            if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+                Intent intent = activity.getIntent();
+                // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
+                if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
+                    // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
+                    // So skipping instant deep link feature until first Branch open happens
+                    if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                        JSONObject nonLinkClickJson = new JSONObject();
+                        try {
+                            nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
+                            nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
+                            prefHelper_.setSessionParams(nonLinkClickJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            } else { // if not check the intent data to see if there is deep link params
-                if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                    try {
-                        String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                        // Make sure the data received is complete and in correct format
-                        JSONObject branchDataJson = new JSONObject(rawBranchData);
-                        branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                        prefHelper_.setSessionParams(branchDataJson.toString());
-                        isInstantDeepLinkPossible = true;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                } else { // if not check the intent data to see if there is deep link params
+                    if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
+                        try {
+                            String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
+                            // Make sure the data received is complete and in correct format
+                            JSONObject branchDataJson = new JSONObject(rawBranchData);
+                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                            prefHelper_.setSessionParams(branchDataJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        // Remove Branch data from the intent once used
+                        intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
+                        activity.setIntent(intent);
                     }
-                    // Remove Branch data from the intent once used
-                    intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                    activity.setIntent(intent);
                 }
             }
         }
@@ -2400,6 +2407,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
             intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
+            isActivityCreatedAndLaunched = true;
             if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
                 BranchViewHandler.getInstance().showPendingBranchView(activity);
             }
@@ -2432,6 +2440,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 startSession(activity);
             }
             activityCnt_++;
+            isActivityCreatedAndLaunched = false;
         }
         
         @Override
@@ -2463,6 +2472,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             ContentDiscoverer.getInstance().onActivityStopped(activity);
             activityCnt_--; // Check if this is the last activity. If so, stop the session.
             if (activityCnt_ < 1) {
+                isInstantDeepLinkPossible = false;
                 closeSessionInternal();
             }
         }
@@ -2746,7 +2756,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             }
                             //Remove the requests from the request queue first
                             for (ServerRequest req : requestToFail) {
-                                if (req == null || !req.shouldRetryOnFail()) { // Should remove any nullified request object also from queque
+                                if (req == null || !req.shouldRetryOnFail()) { // Should remove any nullified request object also from queue
                                     requestQueue_.remove(req);
                                 }
                             }

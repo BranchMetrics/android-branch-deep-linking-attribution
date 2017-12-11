@@ -112,7 +112,7 @@ class DeviceInfo {
         screenWidth_ = dMetrics.widthPixels;
 
         isWifiConnected_ = sysObserver.getWifiConnected();
-        localIpAddr_ = sysObserver.getLocalIPAddress();
+        localIpAddr_ = SystemObserver.getLocalIPAddress();
 
         osName_ = sysObserver.getOS();
         osVersion_ = sysObserver.getOSVersion();
@@ -190,7 +190,6 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
-
 
             if (!osName_.equals(SystemObserver.BLANK)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);

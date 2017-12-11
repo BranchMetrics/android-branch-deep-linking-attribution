@@ -931,8 +931,6 @@ public class BranchUniversalObject implements Parcelable {
         }
         metadata_ = in.readParcelable(ContentMetadata.class.getClassLoader());
         localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
-        @SuppressWarnings("unchecked")
-        ArrayList<String> imageCaptionsTemp = (ArrayList<String>) in.readSerializable();
     }
     
     /**
