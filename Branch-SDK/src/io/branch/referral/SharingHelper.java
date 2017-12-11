@@ -22,6 +22,7 @@ public class SharingHelper {
         HANGOUT("com.google.android.talk"),
         INSTAGRAM("com.instagram.android"),
         WECHAT("jom.tencent.mm"),
+        SNAPCHAT("com.snapchat.android"),
         GMAIL("com.google.android.gm");
 
         private String name = "";
