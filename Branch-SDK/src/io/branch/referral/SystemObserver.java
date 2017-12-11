@@ -51,7 +51,7 @@ class SystemObserver {
     private static final int STATE_NO_CHANGE = 1;
 
     private static final int GAID_FETCH_TIME_OUT = 1500;
-    String GAIDString_ = null;
+    static String GAIDString_ = null;
     int LATVal_ = 0;
 
 
