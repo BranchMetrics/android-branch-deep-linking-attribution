@@ -1339,7 +1339,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
                 Intent intent = activity.getIntent();
                 // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
+                if (intent.getData() == null || (!isActivityCreatedAndLaunched && isIntentParamsAlreadyConsumed(activity))) {
                     // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
                     // So skipping instant deep link feature until first Branch open happens
                     if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
