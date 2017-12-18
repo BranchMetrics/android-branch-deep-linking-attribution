@@ -62,36 +62,41 @@ class ServerRequestQueue {
     }
 
     private void persist() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (ServerRequestQueue.this) {
-                    JSONArray jsonArr = new JSONArray();
-                    for (ServerRequest aQueue : queue) {
-                        if (aQueue.isPersistable()) {
-                            JSONObject json = aQueue.toJSON();
-                            if (json != null) {
-                                jsonArr.put(json);
+        try {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (queue) {
+                        JSONArray jsonArr = new JSONArray();
+                        for (ServerRequest aQueue : queue) {
+                            if (aQueue.isPersistable()) {
+                                JSONObject json = aQueue.toJSON();
+                                if (json != null) {
+                                    jsonArr.put(json);
+                                }
                             }
                         }
-                    }
-                    boolean succeeded = false;
-                    try {
-                        editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                        succeeded = true;
-                    } catch (Exception ex) {
-                        PrefHelper.Debug("Persisting Queue: ", "Failed to persit queue " + ex.getMessage());
-                    } finally {
-                        if (!succeeded) {
-                            try {
-                                editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                            } catch (Exception ignored) {
+                        boolean succeeded = false;
+                        try {
+                            editor.putString(PREF_KEY, jsonArr.toString()).commit();
+                            succeeded = true;
+                        } catch (Exception ex) {
+                            PrefHelper.Debug("Persisting Queue: ", "Failed to persit queue " + ex.getMessage());
+                        } finally {
+                            if (!succeeded) {
+                                try {
+                                    editor.putString(PREF_KEY, jsonArr.toString()).commit();
+                                } catch (Exception ignored) {
+                                }
                             }
                         }
                     }
                 }
-            }
-        }).start();
+            }).start();
+        } catch (Throwable ignore) {
+            // PRS: Concurrent modification of the queue has been seen here irrespective of sync. This could be happen when queue elements are modified on a different thread in some weired condition
+            // No need to persist a request while it is been modified again. Only need to persist the request with last modification.
+        }
     }
 
     private List<ServerRequest> retrieve(Context context) {
