@@ -141,7 +141,7 @@ class ServerRequestQueue {
             if (request != null) {
                 queue.add(request);
                 if (getSize() >= MAX_ITEMS) {
-                    queue.remove(1);
+                    removeAt(1);
                 }
                 persist();
             }
@@ -155,14 +155,8 @@ class ServerRequestQueue {
      * @return The {@link ServerRequest} object at position with index 0 within the queue.
      */
     ServerRequest dequeue() {
-        ServerRequest req = null;
         synchronized (sQueueLockObject) {
-            try {
-                req = queue.remove(0);
-                persist();
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
-            }
-            return req;
+            return removeAt(0);
         }
     }
 
@@ -173,13 +167,8 @@ class ServerRequestQueue {
      * @return The {@link ServerRequest} object at position with index 0 within the queue.
      */
     ServerRequest peek() {
-        ServerRequest req = null;
         synchronized (sQueueLockObject) {
-            try {
-                req = queue.get(0);
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
-            }
-            return req;
+            return peekAt(0);
         }
     }
 
@@ -242,7 +231,7 @@ class ServerRequestQueue {
             try {
                 req = queue.remove(index);
                 persist();
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
             }
             return req;
         }
