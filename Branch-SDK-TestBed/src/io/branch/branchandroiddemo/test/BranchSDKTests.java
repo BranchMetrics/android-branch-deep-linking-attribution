@@ -225,4 +225,5 @@ public class BranchSDKTests extends InstrumentationTestCase {
 
         signalFinal.await(1, TimeUnit.SECONDS);
     }
+
 }
