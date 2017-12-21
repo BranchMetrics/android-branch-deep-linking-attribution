@@ -199,6 +199,7 @@ public class Defines {
     public enum RequestPath {
         RedeemRewards("v1/redeem"),
         GetURL("v1/url"),
+        GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),

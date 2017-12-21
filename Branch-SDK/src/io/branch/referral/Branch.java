@@ -473,7 +473,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-    
+
+    public void validateIntegration() { new IntegrationValidator().validateIntegration(context_); }
+
     /**
      * @deprecated This method is deprecated since play store referrer is enabled by default from v2.9.1.
      * Please use {@link #setPlayStoreReferrerCheckTimeout(long)} instead.
@@ -2027,8 +2029,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return null;
     }
-    
-    
+
+    /**
+     * <p>Gets the Branch Internal App Configuration for the last given live key</p>
+     *
+     */
+
+    JSONObject generateAppConfigInternal() {
+        ServerResponse response = null;
+        try {
+            response = new getAppConfigTask().execute().get(PrefHelper.TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException ignore) { }
+        if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+            return response.getObject();
+        }
+        return null;
+    }
+
     /**
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
      * user selected clients.</p>
@@ -2679,6 +2696,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
+    /**
+     * Async Task to create a shorlink for synchronous methods
+     */
+    private class getAppConfigTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
+        @Override
+        protected ServerResponse doInBackground(ServerRequest... serverRequests) {
+            JSONObject appendedParams = new JSONObject();
+            return branchRemoteInterface_.make_restful_get(prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetApp.getPath() +  "/" + prefHelper_.getBranchKey(), appendedParams, Defines.RequestPath.GetApp.getPath(), prefHelper_.getBranchKey());
+        }
+    }
+
     /**
      * Asynchronous task handling execution of server requests. Execute the network task on background
      * thread and request are  executed in sequential manner. Handles the request execution in

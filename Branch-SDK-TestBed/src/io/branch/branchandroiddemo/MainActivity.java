@@ -371,6 +371,7 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
+        branch.validateIntegration();
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
