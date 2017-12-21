@@ -140,10 +140,10 @@ class ServerRequestQueue {
         synchronized (sQueueLockObject) {
             if (request != null) {
                 queue.add(request);
+                persist();
                 if (getSize() >= MAX_ITEMS) {
                     removeAt(1);
                 }
-                persist();
             }
         }
     }
