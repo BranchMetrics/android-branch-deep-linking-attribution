@@ -21,6 +21,7 @@ public class Defines {
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
+        BranchData("branch_data"),
         
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -47,6 +48,8 @@ public class Defines {
         Data("data"),
         OS("os"),
         HardwareID("hardware_id"),
+        AndroidID("android_id"),
+        UnidentifiedDevice("unidentified_device"),
         HardwareIDType("hardware_id_type"),
         HardwareIDTypeVendor("vendor_id"),
         HardwareIDTypeRandom("random"),
@@ -61,7 +64,9 @@ public class Defines {
         AppIdentifier("app_identifier"),
         LinkIdentifier("link_identifier"),
         GoogleAdvertisingID("google_advertising_id"),
+        AAID("aaid"),
         LATVal("lat_val"),
+        LimitedAdTracking("limit_ad_tracking"),
         Debug("debug"),
         Brand("brand"),
         Model("model"),
@@ -70,6 +75,12 @@ public class Defines {
         ScreenWidth("screen_width"),
         WiFi("wifi"),
         LocalIP("local_ip"),
+        UserData("user_data"),
+        DeveloperIdentity("developer_identity"),
+        UserAgent("user_agent"),
+        SDK("sdk"),
+        SdkVersion("sdk_version"),
+        UIMode("ui_mode"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),
@@ -103,6 +114,7 @@ public class Defines {
         Branch_Round_Trip_Time("brtt"),
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
+        InstantDeepLinkSession("instant_dl_session"),
         
         BranchViewData("branch_view_data"),
         BranchViewID("id"),
@@ -123,7 +135,45 @@ public class Defines {
         ContentDiscovery("cd"),
         Environment("environment"),
         InstantApp("INSTANT_APP"),
-        NativeApp("FULL_APP");
+        NativeApp("FULL_APP"),
+
+        TransactionID("transaction_id"),
+        Currency("currency"),
+        Revenue("revenue"),
+        Shipping("shipping"),
+        Tax("tax"),
+        Coupon("coupon"),
+        Affiliation("affiliation"),
+        Description("description"),
+        SearchQuery("search_query"),
+
+        Name("name"),
+        CustomData("custom_data"),
+        EventData("event_data"),
+        ContentItems("content_items"),
+        ContentSchema("$content_schema"),
+        Price("$price"),
+        PriceCurrency("$currency"),
+        Quantity("$quantity"),
+        SKU("$sku"),
+        ProductName("$product_name"),
+        ProductBrand("$product_brand"),
+        ProductCategory("$product_category"),
+        ProductVariant("$product_variant"),
+        RatingAverage("$rating_average"),
+        RatingCount("$rating_count"),
+        RatingMax("$rating_max"),
+        AddressStreet("$address_street"),
+        AddressCity("$address_city"),
+        AddressRegion("$address_region"),
+        AddressCountry("$address_country"),
+        AddressPostalCode("$address_postal_code"),
+        Latitude("$latitude"),
+        Longitude("$longitude"),
+        ImageCaptions("$image_captions"),
+        Condition("$condition"),
+        CreationTimestamp("$creation_timestamp");
+
         
         private String key = "";
         
@@ -158,7 +208,14 @@ public class Defines {
         GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
-        Logout("v1/logout");
+        Logout("v1/logout"),
+        GetReferralCode("v1/referralcode"),
+        ValidateReferralCode("v1/referralcode/"),
+        ApplyReferralCode("v1/applycode/"),
+        DebugConnect("v1/debug/connect"),
+        ContentEvent("v1/content-events"),
+        TrackStandardEvent("v2/event/standard"),
+        TrackCustomEvent("v2/event/custom");
         
         private String key = "";
         

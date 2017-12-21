@@ -256,11 +256,17 @@ class ServerRequestCreateUrl extends ServerRequest {
     boolean isReqStartedFromBranchShareSheet() {
         return isReqStartedFromBranchShareSheet_;
     }
+    
 
     private void updateShareEventToFabric(String url) {
         JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();
         if (isReqStartedFromBranchShareSheet() && linkDataJsonObj != null) {
             new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj, prefHelper_.getIdentityID());
         }
+    }
+    
+    @Override
+    boolean isPersistable() {
+        return false; // No need to retrieve create url request from previous session
     }
 }

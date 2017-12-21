@@ -79,4 +79,9 @@ class ServerRequestRegisterClose extends ServerRequest {
     public void clearCallbacks() {
         //No implementation on purpose
     }
+    
+    @Override
+    boolean isPersistable() {
+        return false; // No need to retrieve close from previous session
+    }
 }
