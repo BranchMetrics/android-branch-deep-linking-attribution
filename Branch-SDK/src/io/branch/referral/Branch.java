@@ -3732,5 +3732,5 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
-    
+
 }

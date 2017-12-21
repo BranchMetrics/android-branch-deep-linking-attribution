@@ -104,7 +104,7 @@ class ServerRequestQueue {
         if (jsonStr != null) {
             try {
                 JSONArray jsonArr = new JSONArray(jsonStr);
-                for (int i = 0; i < Math.min(jsonArr.length(), MAX_ITEMS); i++) {
+                for (int i = 0, size = Math.min(jsonArr.length(), MAX_ITEMS); i < size; i++) {
                     JSONObject json = jsonArr.getJSONObject(i);
                     ServerRequest req = ServerRequest.fromJSON(json, context);
                     if (req != null) {
