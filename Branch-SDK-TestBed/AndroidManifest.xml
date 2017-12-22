@@ -48,7 +48,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="bnctestbed.app.link" /> <!-- Custom App link - Live -->
+                <data android:scheme="https" android:host="bnctestbed-alternate.app.link" /> <!-- Custom App Alternate link - Live -->
                 <data android:scheme="https" android:host="bnctestbed.test-app.link" /> <!-- Custom App link - Test -->
+                <data android:scheme="https" android:host="bnctestbed-alternate.test-app.link" /> <!-- Custom App Alternate link - Test -->
             </intent-filter>
         </activity>
 

@@ -133,9 +133,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
                     public void handleMessage(Message inputMessage) {
                         try {
                             if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
-                                new IntegrationValidator().validateDeeplinkRouting(response_data, branch.currentActivityReference_);
-                            } else {
-                                new IntegrationValidator().displayErrorMessage(branch.currentActivityReference_);
+                                if(response_data.getBoolean("+clicked_branch_link"))
+                                    new IntegrationValidator().validateDeeplinkRouting(response_data, branch.currentActivityReference_);
+                                else
+                                    new IntegrationValidator().displayErrorMessage(branch.currentActivityReference_);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

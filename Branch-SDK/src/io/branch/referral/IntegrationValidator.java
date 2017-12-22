@@ -188,7 +188,7 @@ public class IntegrationValidator {
         } else {
             builder = new AlertDialog.Builder(current_activity);
         }
-        builder.setTitle("Branch Deeplinking Routing")
+        builder.setTitle("Branch Deeplink Routing Support")
                 .setMessage("Bummer. It seems like +clicked_branch_link is false - we didn't deep link.  Double check that the link you're clicking has the same branch_key that is being used in your Manifest file. Return to Chrome when you're ready to test again.")
                 .setNeutralButton("Got it", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
@@ -246,7 +246,7 @@ public class IntegrationValidator {
         }
     }
 
-    private String attachTestResults(JSONObject blob,String result) {
+    public String attachTestResults(JSONObject blob,String result) {
         String link = "";
         try{
             link = blob.getString("~referring_link");
