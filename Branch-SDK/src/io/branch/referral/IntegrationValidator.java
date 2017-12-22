@@ -71,14 +71,14 @@ public class IntegrationValidator {
                 logLine = logLine + "Dashboard Link Settings page '" + serverSideAppConfig.getString("android_uri_scheme").replace("://", "") + "' compared to client side '"  + integrationModel.deeplinkUriScheme + "'";
                 Log.d("BranchSDK", logLine);
 
-                if (integrationModel.applinkSheme.isEmpty()) {
+                if (integrationModel.applinkScheme == null || integrationModel.applinkScheme.isEmpty()) {
                     Log.d("BranchSDK", "ERROR: Could not find any App Link hosts to support Android App Links");
                 } else {
                     boolean found = false;
 
                     if (serverSideAppConfig.getString("short_url_domain").length() > 0) {
                         Log.d("BranchSDK", " ----- looking for custom domain App Links intent filter -----");
-                        for (String host : integrationModel.applinkSheme) {
+                        for (String host : integrationModel.applinkScheme) {
                             if (host.equals(serverSideAppConfig.getString("short_url_domain"))) {
                                 found = true;
                                 break;
@@ -93,7 +93,7 @@ public class IntegrationValidator {
 
                     Log.d("BranchSDK", " ----- looking for default link domain App Links intent filter -----");
                     found = false;
-                    for (String host : integrationModel.applinkSheme) {
+                    for (String host : integrationModel.applinkScheme) {
                         if (host.equals(serverSideAppConfig.getString("default_short_url_domain"))) {
                             found = true;
                             break;
@@ -107,7 +107,7 @@ public class IntegrationValidator {
 
                     Log.d("BranchSDK", " ----- looking for alternate link domain App Links intent filter -----");
                     found = false;
-                    for (String host : integrationModel.applinkSheme) {
+                    for (String host : integrationModel.applinkScheme) {
                         if (host.equals(serverSideAppConfig.getString("alternate_short_url_domain"))) {
                             found = true;
                             break;
@@ -201,10 +201,10 @@ public class IntegrationValidator {
                         integrationModel.deeplinkUriScheme = obj.getString("scheme");
                     }
                     if (obj.has("hosts")) {
-                        integrationModel.applinkSheme = new ArrayList<String>();
+                        integrationModel.applinkScheme = new ArrayList<String>();
                         JSONArray jsonHosts = obj.getJSONArray("hosts");
                         for (int i = 0; i<jsonHosts.length(); i++){
-                            integrationModel.applinkSheme.add(jsonHosts.getString(i));
+                            integrationModel.applinkScheme.add(jsonHosts.getString(i));
                         }
                     }
                 } catch (Exception ignored) {
@@ -260,7 +260,7 @@ public class IntegrationValidator {
         private String deeplinkUriScheme;
         private String branchKeyTest;
         private String branchKeyLive;
-        private ArrayList<String> applinkSheme;
+        private ArrayList<String> applinkScheme;
         private String packageName;
     }
 }
