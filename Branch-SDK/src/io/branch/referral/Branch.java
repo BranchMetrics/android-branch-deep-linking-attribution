@@ -474,7 +474,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         enableTestMode();
     }
 
-    public void validateIntegration() { new IntegrationValidator().validateIntegration(context_); }
+    public void validateSDKIntegration() { new IntegrationValidator().validateSDKIntegration(context_); }
 
     /**
      * @deprecated This method is deprecated since play store referrer is enabled by default from v2.9.1.

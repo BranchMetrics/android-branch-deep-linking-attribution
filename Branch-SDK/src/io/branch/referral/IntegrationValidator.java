@@ -1,9 +1,17 @@
 package io.branch.referral;
 
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Browser;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -12,6 +20,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.jar.JarFile;
 
@@ -21,7 +30,7 @@ import java.util.jar.JarFile;
 
 public class IntegrationValidator {
 
-    public void validateIntegration (Context context){
+    public void validateSDKIntegration (Context context){
         Log.d("BranchSDK", "** Initiating Branch integration verification **");
         Log.d("BranchSDK", "-------------------------------------------------");
         Log.d("BranchSDK", "----- checking for package name correctness -----");
@@ -166,6 +175,78 @@ public class IntegrationValidator {
             } catch (PackageManager.NameNotFoundException ignored) {
             }
         }
+    }
+
+    public void validateDeeplinkRouting(final JSONObject validate_json,final WeakReference<Activity> currentActivityReference_) {
+        Activity current_activity = currentActivityReference_.get();
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(current_activity, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(current_activity);
+        }
+        builder.setTitle("Branch Deeplinking Routing")
+                .setMessage("Did the Deeplink route you to the correct content?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Test Succeeded
+                        String launch_link = attachTestResults(validate_json,"g");
+                        launchTestTemplate(currentActivityReference_,launch_link);
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Test Failed
+                        String launch_link = attachTestResults(validate_json,"r");
+                        launchTestTemplate(currentActivityReference_,launch_link);
+                    }
+                })
+                .setNeutralButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                })
+                .setCancelable(false)
+                .setIcon(android.R.drawable.sym_def_app_icon)
+                .show();
+    }
+
+    public void launchTestTemplate(WeakReference<Activity> activity,String url){
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        i.putExtra(Browser.EXTRA_APPLICATION_ID, activity.get().getPackageName());
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.setPackage("com.android.chrome");
+        try {
+            activity.get().startActivity(i);
+        } catch (ActivityNotFoundException e) {
+            // Chrome is probably not installed
+            // Try with the default browser
+            i.setPackage(null);
+            activity.get().startActivity(i);
+        }
+    }
+
+    private String attachTestResults(JSONObject blob,String result) {
+        String link = "";
+        try{
+            link = blob.getString("~referring_link");
+            link = link.split("\\?")[0];
+        } catch (Exception e) {
+            Log.e("BRANCH SDK","Failed to get referring link");
+        }
+        link += "?validate=true";
+        link += "&$uri_redirect_mode=2";
+        try {
+            link += blob.getString("ct").equals("t1")? "&t1="+result: "&t1="+blob.getString("t1");
+            link += blob.getString("ct").equals("t2")? "&t2="+result: "&t2="+blob.getString("t2");
+            link += blob.getString("ct").equals("t3")? "&t3="+result: "&t3="+blob.getString("t3");
+            link += blob.getString("ct").equals("t4")? "&t4="+result: "&t4="+blob.getString("t4");
+            link += blob.getString("ct").equals("t5")? "&t5="+result: "&t5="+blob.getString("t5");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        link += "&os=android";
+        return link;
     }
     
     private boolean isLowOnMemory(Context context) {
