@@ -49,7 +49,7 @@ public class IntegrationValidator {
                 } else {
                     logLine = "PASS: ";
                 }
-                logLine = logLine + "Dashboard setting of '" + serverSideAppConfig.getString("android_package_name") + "' compared to client side '"  + integrationModel.packageName + "'";
+                logLine = logLine + "Dashboard Link Settings page '" + serverSideAppConfig.getString("android_package_name") + "' compared to client side '"  + integrationModel.packageName + "'";
                 Log.d("BranchSDK", logLine);
 
                 Log.d("BranchSDK", " ----- checking for URI scheme correctness -----");
@@ -59,7 +59,7 @@ public class IntegrationValidator {
                 } else {
                     logLine = "PASS: ";
                 }
-                logLine = logLine + "Dashboard setting of '" + serverSideAppConfig.getString("android_uri_scheme").replace("://", "") + "' compared to client side '"  + integrationModel.deeplinkUriScheme + "'";
+                logLine = logLine + "Dashboard Link Settings page '" + serverSideAppConfig.getString("android_uri_scheme").replace("://", "") + "' compared to client side '"  + integrationModel.deeplinkUriScheme + "'";
                 Log.d("BranchSDK", logLine);
 
                 if (integrationModel.applinkSheme.isEmpty()) {
@@ -117,7 +117,8 @@ public class IntegrationValidator {
                 e.printStackTrace();
             }
         } else {
-            Log.d("BranchSDK", "ERROR: Unable to read dashboard config. Please confirm that your Branch key is properly added to the manifest");
+            Log.d("BranchSDK", "ERROR: Unable to read Dashboard config. Please confirm that your Branch key is properly added to the manifest");
+            Log.d("BranchSDK", "ERROR: To fix your Dashboard settings head over to https://branch.app.link/link-settings-page");
         }
     }
 

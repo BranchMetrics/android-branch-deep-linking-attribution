@@ -143,8 +143,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                     public void handleMessage(Message inputMessage) {
                         try {
                             if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
-                                //Deeplink Validate Code comes here
-                                validateCode(response_data, branch.currentActivityReference_);
+                                ValidateDeeplinkRouting(response_data, branch.currentActivityReference_);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -168,9 +167,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
     }
-
-    //Start validating code snippet
-    void validateCode(final JSONObject validate_json,final WeakReference<Activity> currentActivityReference_) {
+    
+    void ValidateDeeplinkRouting(final JSONObject validate_json,final WeakReference<Activity> currentActivityReference_) {
         Activity current_activity = currentActivityReference_.get();
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

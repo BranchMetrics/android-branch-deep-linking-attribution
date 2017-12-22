@@ -175,7 +175,7 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
-        return "https://rebar.api.beta.branch.io/";
+        return "https://api.branch.io/";
     }
 
     /**
