@@ -140,7 +140,7 @@ public class IntegrationValidator {
             builder = new AlertDialog.Builder(current_activity);
         }
         builder.setTitle("Branch Deeplinking Routing")
-                .setMessage("Did the Deeplink route you to the correct content?")
+                .setMessage("Good news - we got link data. Now a question for you, astute developer: did the app deep link to the specific piece of content you expected to see?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // Test Succeeded
@@ -178,6 +178,26 @@ public class IntegrationValidator {
             i.setPackage(null);
             activity.get().startActivity(i);
         }
+    }
+
+    public void displayErrorMessage(final WeakReference<Activity> currentActivityReference_) {
+        Activity current_activity = currentActivityReference_.get();
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(current_activity, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(current_activity);
+        }
+        builder.setTitle("Branch Deeplinking Routing")
+                .setMessage("Bummer. It seems like +clicked_branch_link is false - we didn't deep link.  Double check that the link you're clicking has the same branch_key that is being used in your Manifest file. Return to Chrome when you're ready to test again.")
+                .setNeutralButton("Got it", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                })
+                .setCancelable(false)
+                .setIcon(android.R.drawable.sym_def_app_icon)
+                .show();
     }
 
     private void updateIntegrationModel(Context context, BranchIntegrationModel integrationModel) {
