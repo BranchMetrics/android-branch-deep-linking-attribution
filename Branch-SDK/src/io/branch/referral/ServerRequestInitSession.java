@@ -1,23 +1,13 @@
 package io.branch.referral;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.Browser;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.lang.ref.WeakReference;
 
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.indexing.ContentDiscoveryManifest;
@@ -135,7 +125,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 final JSONObject response_data = new JSONObject(response.getObject().getString("data"));
                 if (response_data.has("validate") && response_data.getBoolean("validate")) {
                     //Launch the Deepview template
-                    launchTestTemplate(branch.currentActivityReference_,response_data.getString("~referring_link"));
+                    new IntegrationValidator().launchTestTemplate(branch.currentActivityReference_,response_data.getString("~referring_link"));
                 }
                 final Handler validate_handle = new Handler(Looper.getMainLooper()) {
 
@@ -143,7 +133,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                     public void handleMessage(Message inputMessage) {
                         try {
                             if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
-                                validateDeeplinkRouting(response_data, branch.currentActivityReference_);
+                                new IntegrationValidator().validateDeeplinkRouting(response_data, branch.currentActivityReference_);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

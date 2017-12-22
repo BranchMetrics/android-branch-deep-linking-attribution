@@ -131,52 +131,6 @@ public class IntegrationValidator {
         }
     }
 
-    void updateIntegrationModel(Context context, BranchIntegrationModel integrationModel) {
-        
-        if (!isLowOnMemory(context)) {
-            PackageManager pm = context.getPackageManager();
-            try {
-                ApplicationInfo ai = pm.getApplicationInfo(integrationModel.packageName, 0);
-                String sourceApk = ai.publicSourceDir;
-                JarFile jf = null;
-                InputStream is = null;
-                byte[] xml;
-                try {
-                    jf = new JarFile(sourceApk);
-                    is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-                    xml = new byte[is.available()];
-                    //noinspection ResultOfMethodCallIgnored
-                    is.read(xml);
-                    JSONObject obj = new ApkParser().decompressXML(xml);
-                    if (obj.has("scheme")) {
-                        integrationModel.deeplinkUriScheme = obj.getString("scheme");
-                    }
-                    if (obj.has("hosts")) {
-                        integrationModel.applinkSheme = new ArrayList<String>();
-                        JSONArray jsonHosts = obj.getJSONArray("hosts");
-                        for (int i = 0; i<jsonHosts.length(); i++){
-                            integrationModel.applinkSheme.add(jsonHosts.getString(i));
-                        }
-                    }
-                } catch (Exception ignored) {
-                } finally {
-                    try {
-                        if (is != null) {
-                            is.close();
-                            // noinspection unused
-                            is = null;
-                        }
-                        if (jf != null) {
-                            jf.close();
-                        }
-                    } catch (IOException ignored) {
-                    }
-                }
-            } catch (PackageManager.NameNotFoundException ignored) {
-            }
-        }
-    }
-
     public void validateDeeplinkRouting(final JSONObject validate_json,final WeakReference<Activity> currentActivityReference_) {
         Activity current_activity = currentActivityReference_.get();
         AlertDialog.Builder builder;
@@ -226,6 +180,52 @@ public class IntegrationValidator {
         }
     }
 
+    private void updateIntegrationModel(Context context, BranchIntegrationModel integrationModel) {
+
+        if (!isLowOnMemory(context)) {
+            PackageManager pm = context.getPackageManager();
+            try {
+                ApplicationInfo ai = pm.getApplicationInfo(integrationModel.packageName, 0);
+                String sourceApk = ai.publicSourceDir;
+                JarFile jf = null;
+                InputStream is = null;
+                byte[] xml;
+                try {
+                    jf = new JarFile(sourceApk);
+                    is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+                    xml = new byte[is.available()];
+                    //noinspection ResultOfMethodCallIgnored
+                    is.read(xml);
+                    JSONObject obj = new ApkParser().decompressXML(xml);
+                    if (obj.has("scheme")) {
+                        integrationModel.deeplinkUriScheme = obj.getString("scheme");
+                    }
+                    if (obj.has("hosts")) {
+                        integrationModel.applinkSheme = new ArrayList<String>();
+                        JSONArray jsonHosts = obj.getJSONArray("hosts");
+                        for (int i = 0; i<jsonHosts.length(); i++){
+                            integrationModel.applinkSheme.add(jsonHosts.getString(i));
+                        }
+                    }
+                } catch (Exception ignored) {
+                } finally {
+                    try {
+                        if (is != null) {
+                            is.close();
+                            // noinspection unused
+                            is = null;
+                        }
+                        if (jf != null) {
+                            jf.close();
+                        }
+                    } catch (IOException ignored) {
+                    }
+                }
+            } catch (PackageManager.NameNotFoundException ignored) {
+            }
+        }
+    }
+
     private String attachTestResults(JSONObject blob,String result) {
         String link = "";
         try{
@@ -262,6 +262,5 @@ public class IntegrationValidator {
         private String branchKeyLive;
         private ArrayList<String> applinkSheme;
         private String packageName;
-        
     }
 }
