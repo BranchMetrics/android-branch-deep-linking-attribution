@@ -93,11 +93,11 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
      * <p>Adds the the given key value pair to the parameters associated with this link.</p>
      *
      * @param key   A {@link String} with value of key for the parameter
-     * @param value A {@link String} with value of value for the parameter
+     * @param value A {@link Object} with value of value for the parameter
      * @return This Builder object to allow for chaining of calls to set methods.
      */
     @SuppressWarnings("unchecked")
-    public T addParameters(String key, String value) {
+    public T addParameters(String key, Object value) {
         try {
             if (this.params_ == null) {
                 this.params_ = new JSONObject();
@@ -108,20 +108,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         }
         return (T) this;
     }
-
-    @SuppressWarnings("unchecked")
-    public T addParameters(String key, JSONArray value) {
-        try {
-            if (this.params_ == null) {
-                this.params_ = new JSONObject();
-            }
-            this.params_.put(key, value);
-        } catch (JSONException ignore) {
-
-        }
-        return (T) this;
-    }
-
+    
     public T setDefaultToLongUrl(boolean defaultToLongUrl) {
         defaultToLongUrl_ = defaultToLongUrl;
         return (T) this;

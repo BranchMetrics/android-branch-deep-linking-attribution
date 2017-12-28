@@ -739,7 +739,7 @@ public class BranchUniversalObject implements Parcelable {
             Iterator<String> keys = metadataJson.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                shortLinkBuilder.addParameters(key, metadataJson.getString(key));
+                shortLinkBuilder.addParameters(key, metadataJson.get(key));
             }
         } catch (JSONException e) {
             e.printStackTrace();
