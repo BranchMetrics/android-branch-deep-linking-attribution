@@ -302,7 +302,7 @@ public class PrefHelper {
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
             }
-        } catch (final PackageManager.NameNotFoundException ignore) {
+        } catch (final Exception ignore) {
         }
 
         // If Branch key is not specified in the manifest check String resource
