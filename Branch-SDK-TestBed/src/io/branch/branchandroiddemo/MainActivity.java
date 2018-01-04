@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
                                 .setAddress("Street_name1", "city1", "Region1", "Country1", "postal_code")
                                 .setLocation(12.07, -97.5)
                                 .setSku("1994320302")
-                                .setRating(5.0, 7.0, 5)
+                                .setRating(6.0, 5.0, 7.0, 5)
                                 .addImageCaptions("my_img_caption1", "my_img_caption_2")
                                 .setQuantity(2.0)
                                 .setPrice(23.2, CurrencyType.USD)

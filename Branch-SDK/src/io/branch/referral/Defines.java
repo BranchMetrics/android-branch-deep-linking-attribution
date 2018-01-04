@@ -160,6 +160,7 @@ public class Defines {
         ProductBrand("$product_brand"),
         ProductCategory("$product_category"),
         ProductVariant("$product_variant"),
+        Rating("$rating"),
         RatingAverage("$rating_average"),
         RatingCount("$rating_count"),
         RatingMax("$rating_max"),
