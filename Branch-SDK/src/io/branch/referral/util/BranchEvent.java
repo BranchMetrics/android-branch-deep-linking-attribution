@@ -265,6 +265,10 @@ public class BranchEvent {
         }
     
         @Override
+        protected boolean shouldUpdateLimitFacebookTracking() {
+            return true;
+        }
+
         public boolean shouldRetryOnFail() {
             return true; // Branch event need to be retried on failure.
         }
