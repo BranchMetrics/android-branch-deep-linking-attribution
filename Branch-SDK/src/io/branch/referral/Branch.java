@@ -410,6 +410,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean isInstantDeepLinkPossible = false;
     /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
     private boolean isActivityCreatedAndLaunched = false;
+    /* Flag to turn on or off instant deeplinking feature. IDL is enabled by default */
+    private static boolean disableInstantDeepLinking = false;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -494,6 +496,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void setPlayStoreReferrerCheckTimeout(long delay) {
         checkInstallReferrer_ = delay > 0;
         playStoreReferrerFetchTime = delay;
+    }
+    
+    /**
+     * <p>
+     *    Disables or enables the instant deep link functionality.
+     * </p>
+     * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
+     */
+    public static void disableInstantDeepLinking(boolean disableIDL){
+        disableInstantDeepLinking = disableIDL;
     }
     
     /**
@@ -1334,40 +1346,42 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
         // If activity is created and launched then the intent can be readily consumed.
         // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
-        if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
-            // Check for instant deep linking possibility first
-            if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
-                Intent intent = activity.getIntent();
-                // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                if (intent.getData() == null || (!isActivityCreatedAndLaunched && isIntentParamsAlreadyConsumed(activity))) {
-                    // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
-                    // So skipping instant deep link feature until first Branch open happens
-                    if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                        JSONObject nonLinkClickJson = new JSONObject();
-                        try {
-                            nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
-                            nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                            prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                            isInstantDeepLinkPossible = true;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+        if (!disableInstantDeepLinking) {
+            if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
+                // Check for instant deep linking possibility first
+                if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+                    Intent intent = activity.getIntent();
+                    // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
+                    if (intent.getData() == null || (!isActivityCreatedAndLaunched && isIntentParamsAlreadyConsumed(activity))) {
+                        // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
+                        // So skipping instant deep link feature until first Branch open happens
+                        if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                            JSONObject nonLinkClickJson = new JSONObject();
+                            try {
+                                nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
+                                nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
+                                prefHelper_.setSessionParams(nonLinkClickJson.toString());
+                                isInstantDeepLinkPossible = true;
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                } else { // if not check the intent data to see if there is deep link params
-                    if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                        try {
-                            String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                            // Make sure the data received is complete and in correct format
-                            JSONObject branchDataJson = new JSONObject(rawBranchData);
-                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                            prefHelper_.setSessionParams(branchDataJson.toString());
-                            isInstantDeepLinkPossible = true;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                    } else { // if not check the intent data to see if there is deep link params
+                        if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
+                            try {
+                                String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
+                                // Make sure the data received is complete and in correct format
+                                JSONObject branchDataJson = new JSONObject(rawBranchData);
+                                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                                prefHelper_.setSessionParams(branchDataJson.toString());
+                                isInstantDeepLinkPossible = true;
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            // Remove Branch data from the intent once used
+                            intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
+                            activity.setIntent(intent);
                         }
-                        // Remove Branch data from the intent once used
-                        intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                        activity.setIntent(intent);
                     }
                 }
             }
