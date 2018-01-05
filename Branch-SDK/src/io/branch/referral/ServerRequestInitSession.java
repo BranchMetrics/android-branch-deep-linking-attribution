@@ -50,6 +50,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
         return true; //Session start requests need GAds params
     }
     
+    @Override
+    protected boolean shouldUpdateLimitFacebookTracking() {
+        return true;
+    }
+    
     public abstract String getRequestActionName();
     
     static boolean isInitSessionAction(String actionName) {
