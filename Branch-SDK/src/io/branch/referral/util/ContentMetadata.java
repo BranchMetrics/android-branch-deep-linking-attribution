@@ -226,7 +226,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * Gets the list of Image Captions
      *
-     * @return {@link ArrayList<String>} containing the collection of image captions
+     * @return {@link ArrayList} containing the collection of image captions
      */
     public ArrayList<String> getImageCaptions() {
         return imageCaptions;
@@ -235,7 +235,7 @@ public class ContentMetadata implements Parcelable {
     /**
      * Returns a Map of custom metadata associated with the qualifying content item
      *
-     * @return {@link HashMap custom metadata keys and values
+     * @return {@link HashMap} custom metadata keys and values
      */
     public HashMap<String, String> getCustomMetadata() {
         return customMetadata;
@@ -345,8 +345,8 @@ public class ContentMetadata implements Parcelable {
         contentMetadata.addressRegion = jsonReader.readOutString(Defines.Jsonkey.AddressRegion.getKey());
         contentMetadata.addressCountry = jsonReader.readOutString(Defines.Jsonkey.AddressCountry.getKey());
         contentMetadata.addressPostalCode = jsonReader.readOutString(Defines.Jsonkey.AddressPostalCode.getKey());
-        contentMetadata.latitude = jsonReader.readOutDouble(Defines.Jsonkey.Latitude.getKey());
-        contentMetadata.longitude = jsonReader.readOutDouble(Defines.Jsonkey.Longitude.getKey());
+        contentMetadata.latitude = jsonReader.readOutDouble(Defines.Jsonkey.Latitude.getKey(), null);
+        contentMetadata.longitude = jsonReader.readOutDouble(Defines.Jsonkey.Longitude.getKey(), null);
         JSONArray imageCaptionJsonArray = jsonReader.readOutJsonArray(Defines.Jsonkey.ImageCaptions.getKey());
         if (imageCaptionJsonArray != null) {
             for (int i = 0; i < imageCaptionJsonArray.length(); i++) {

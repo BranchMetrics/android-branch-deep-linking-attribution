@@ -157,6 +157,13 @@ public class BranchUniversalObject implements Parcelable {
      * @deprecated please use #setContentMetadata instead
      */
     public BranchUniversalObject addContentMetadata(HashMap<String, String> metadata) {
+        if (metadata != null) {
+            Iterator<String> keys = metadata.keySet().iterator();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                metadata_.addCustomMetadata(key, metadata.get(key));
+            }
+        }
         return this;
     }
     
@@ -164,6 +171,7 @@ public class BranchUniversalObject implements Parcelable {
      * @deprecated please use #setContentMetadata instead
      */
     public BranchUniversalObject addContentMetadata(String key, String value) {
+        metadata_.addCustomMetadata(key, value);
         return this;
     }
     
@@ -403,7 +411,7 @@ public class BranchUniversalObject implements Parcelable {
      * @deprecated Please use #getContentMetadata() instead.
      */
     public HashMap<String, String> getMetadata() {
-        return null;
+        return metadata_.getCustomMetadata();
     }
     
     /**
@@ -923,8 +931,6 @@ public class BranchUniversalObject implements Parcelable {
         }
         metadata_ = in.readParcelable(ContentMetadata.class.getClassLoader());
         localIndexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
-        @SuppressWarnings("unchecked")
-        ArrayList<String> imageCaptionsTemp = (ArrayList<String>) in.readSerializable();
     }
     
     /**

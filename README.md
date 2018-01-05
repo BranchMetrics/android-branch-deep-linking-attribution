@@ -316,12 +316,13 @@ if (Branch.isInstantApp(this)) {
     @Override
     public void onClick(View v) {
        BranchUniversalObject branchUniversalObject = new BranchUniversalObject()
-            .setCanonicalIdentifier("item/12345")
-            .setTitle("My Content Title")
-            .setContentDescription("My Content Description")
-            .setContentImageUrl("https://example.com/mycontent-12345.png")
-            .addContentMetadata("property1", "blue")
-            .addContentMetadata("property2", "red");
+           .setCanonicalIdentifier("item/12345")
+           .setTitle("My Content Title")
+           .setContentDescription("My Content Description")
+           .setContentImageUrl("https://example.com/mycontent-12345.png")
+           .setContentMetadata(new ContentMetadata()
+                 .addCustomMetadata("property1", "blue")
+                 .addCustomMetadata("property2", "red"));
 
       Branch.showInstallPrompt(myActivity, activity_ret_code, branchUniversalObject);
     }
@@ -539,8 +540,9 @@ The universal object is where you define all of the custom metadata associated w
             .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
 
      		// Here is where you can add custom keys/values to the deep link data
-            .addContentMetadata("property1", "blue")
-            .addContentMetadata("property2", "red");
+            .setContentMetadata(new ContentMetadata()
+                             .addCustomMetadata("property1", "blue")
+                             .addCustomMetadata("property2", "red"));
 ```
 
 #### Parameters

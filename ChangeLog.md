@@ -1,5 +1,13 @@
 Branch Android SDK change log
 
+- v2.14.3 Fixing a corner case crash from concurrent modification case. Fixing issue with deep link param delivery after orientation change.
+
+- v2.14.2 Adding FB limit app tracking. Fix for instant deep liking when activities are launched from the stack. Few other minor fixes.
+
+- v2.14.1 Ensure backward compatibility in case deprecated BUO methods are used.
+
+- v2.14.0 Adding support for Branch reserved events. Support to update delayed request metadata. Skipping instant deep linking on forcing new session.
+
 - v2.13.1 Hot fix : Referral params are not returned when initSession is called mutiple times while an init session is in progress
 
 - v2.13.0 Adding instant deeplinking support
