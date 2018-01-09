@@ -66,6 +66,10 @@ public class ContentMetadata implements Parcelable {
      */
     public String productVariant;
     /**
+     * Rating for the qualifying content item
+     */
+    public Double rating;
+    /**
      * Average rating for the qualifying content item
      */
     public Double ratingAverage;
@@ -178,7 +182,18 @@ public class ContentMetadata implements Parcelable {
         this.longitude = longitude;
         return this;
     }
-
+    
+    public ContentMetadata setRating(@Nullable Double rating, @Nullable Double averageRating, @Nullable Double maximumRating, @Nullable Integer ratingCount) {
+        this.rating = rating;
+        this.ratingAverage = averageRating;
+        this.ratingMax = maximumRating;
+        this.ratingCount = ratingCount;
+        return this;
+    }
+    
+    /**
+     * @deprecated  please use {@link #setRating(Double, Double, Double, Integer)} instead
+     */
     public ContentMetadata setRating(@Nullable Double averageRating, @Nullable Double maximumRating, @Nullable Integer ratingCount) {
         this.ratingAverage = averageRating;
         this.ratingMax = maximumRating;
@@ -276,6 +291,9 @@ public class ContentMetadata implements Parcelable {
             if (!TextUtils.isEmpty(productVariant)) {
                 metadataJson.put(Defines.Jsonkey.ProductVariant.getKey(), productVariant);
             }
+            if (rating != null) {
+                metadataJson.put(Defines.Jsonkey.Rating.getKey(), rating);
+            }
             if (ratingAverage != null) {
                 metadataJson.put(Defines.Jsonkey.RatingAverage.getKey(), ratingAverage);
             }
@@ -337,6 +355,7 @@ public class ContentMetadata implements Parcelable {
         contentMetadata.productCategory = ProductCategory.getValue(jsonReader.readOutString(Defines.Jsonkey.ProductCategory.getKey()));
         contentMetadata.condition = CONDITION.getValue(jsonReader.readOutString(Defines.Jsonkey.Condition.getKey()));
         contentMetadata.productVariant = jsonReader.readOutString(Defines.Jsonkey.ProductVariant.getKey());
+        contentMetadata.rating = jsonReader.readOutDouble(Defines.Jsonkey.Rating.getKey(), null);
         contentMetadata.ratingAverage = jsonReader.readOutDouble(Defines.Jsonkey.RatingAverage.getKey(), null);
         contentMetadata.ratingCount = jsonReader.readOutInt(Defines.Jsonkey.RatingCount.getKey(), null);
         contentMetadata.ratingMax = jsonReader.readOutDouble(Defines.Jsonkey.RatingMax.getKey(), null);
@@ -397,6 +416,7 @@ public class ContentMetadata implements Parcelable {
         dest.writeString(productCategory != null ? productCategory.getName() : "");
         dest.writeString(condition != null ? condition.name() : "");
         dest.writeString(productVariant);
+        dest.writeSerializable(rating);
         dest.writeSerializable(ratingAverage);
         dest.writeSerializable(ratingCount);
         dest.writeSerializable(ratingMax);
@@ -425,6 +445,7 @@ public class ContentMetadata implements Parcelable {
         productCategory = ProductCategory.getValue(in.readString());
         condition = CONDITION.getValue(in.readString());
         productVariant = in.readString();
+        rating = (Double) in.readSerializable();
         ratingAverage = (Double) in.readSerializable();
         ratingCount = (Integer) in.readSerializable();
         ratingMax = (Double) in.readSerializable();

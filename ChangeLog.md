@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.14.4 Fixing a possible request queue concurrent execution. Adding support for opt-out IDL. Fix for maintaining strong typing for arrays when BUO is serialised. Adding extended catch for dealing with dead object. Support for "rating" property in content metadata.
+
 - v2.14.3 Fixing a corner case crash from concurrent modification case. Fixing issue with deep link param delivery after orientation change.
 
 - v2.14.2 Adding FB limit app tracking. Fix for instant deep liking when activities are launched from the stack. Few other minor fixes.

@@ -44,8 +44,7 @@ public class BranchUtil {
                 Resources resources = context.getResources();
                 isTestMode_ = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
             }
-
-        } catch (Exception ignore) {
+        } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
         }
 
         return isTestMode_;

@@ -94,6 +94,7 @@ public class PrefHelper {
 
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
+    private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
 
 
     private static String Branch_Key = null;
@@ -302,7 +303,7 @@ public class PrefHelper {
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
             }
-        } catch (final PackageManager.NameNotFoundException ignore) {
+        } catch (final Exception ignore) {
         }
 
         // If Branch key is not specified in the manifest check String resource
@@ -708,6 +709,21 @@ public class PrefHelper {
     public void clearSystemReadStatus() {
         Calendar c = Calendar.getInstance();
         setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis() / 1000);
+    }
+    
+    /*
+     * Enables or disables FB app tracking.
+     * @param isLimitFBAppTracking {@code true} to enable the app tracking.
+     */
+    void setLimitFacebookTracking(boolean isLimitFBAppTracking) {
+        setBool(KEY_LIMIT_FACEBOOK_TRACKING, isLimitFBAppTracking);
+    }
+    
+    /*
+       Returns true if FB app tracking is enabled.
+     */
+    boolean isAppTrackingLimited() {
+        return getBool(KEY_LIMIT_FACEBOOK_TRACKING);
     }
 
     /**

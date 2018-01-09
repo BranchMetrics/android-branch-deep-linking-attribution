@@ -51,7 +51,7 @@ class SystemObserver {
     private static final int STATE_NO_CHANGE = 1;
 
     private static final int GAID_FETCH_TIME_OUT = 1500;
-    String GAIDString_ = null;
+    static String GAIDString_ = null;
     int LATVal_ = 0;
 
 
@@ -139,7 +139,7 @@ class SystemObserver {
     String getURIScheme() {
         return getURIScheme(context_.getPackageName());
     }
-
+    
     /**
      * <p>Gets the URI scheme of the specified package from its AndroidManifest.xml file.</p>
      * <p>This method should be used for retrieving the URI scheme of the another application of
@@ -151,36 +151,35 @@ class SystemObserver {
     private String getURIScheme(String packageName) {
         String scheme = BLANK;
         if (!isLowOnMemory()) {
-            PackageManager pm = context_.getPackageManager();
+            
+            JarFile jf = null;
+            InputStream is = null;
+            byte[] xml;
             try {
+                PackageManager pm = context_.getPackageManager();
                 ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
                 String sourceApk = ai.publicSourceDir;
-                JarFile jf = null;
-                InputStream is = null;
-                byte[] xml;
+                jf = new JarFile(sourceApk);
+                is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+                xml = new byte[is.available()];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(xml);
+                scheme = new ApkParser().decompressXML(xml);
+            } catch (Exception ignored) {
+            } finally {
                 try {
-                    jf = new JarFile(sourceApk);
-                    is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-                    xml = new byte[is.available()];
-                    //noinspection ResultOfMethodCallIgnored
-                    is.read(xml);
-                    scheme = new ApkParser().decompressXML(xml);
-                } catch (Exception ignored) {
-                } finally {
-                    try {
-                        if (is != null) {
-                            is.close();
-                            // noinspection unused
-                            is = null;
-                        }
-                        if (jf != null) {
-                            jf.close();
-                        }
-                    } catch (IOException ignored) {
+                    if (is != null) {
+                        is.close();
+                        // noinspection unused
+                        is = null;
                     }
+                    if (jf != null) {
+                        jf.close();
+                    }
+                } catch (IOException ignored) {
                 }
-            } catch (NameNotFoundException ignored) {
             }
+            
         }
         return scheme;
     }
