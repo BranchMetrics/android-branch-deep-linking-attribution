@@ -34,7 +34,8 @@ public class InstallListener extends BroadcastReceiver {
     //       This will be reported when SDK ask for it
     private static boolean unReportedReferrerAvailable;
     
-    public static void captureInstallReferrer(final long maxWaitTime) {
+    public static void captureInstallReferrer(final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
+        callback_ = installReferrerFetch;
         if (unReportedReferrerAvailable) {
             reportInstallReferrer();
         } else {
@@ -116,13 +117,8 @@ public class InstallListener extends BroadcastReceiver {
         }
     }
     
-    public static void setListener(IInstallReferrerEvents installReferrerFetch) {
-        callback_ = installReferrerFetch;
-    }
-    
     interface IInstallReferrerEvents {
         void onInstallReferrerEventsFinished();
     }
-    
     
 }
