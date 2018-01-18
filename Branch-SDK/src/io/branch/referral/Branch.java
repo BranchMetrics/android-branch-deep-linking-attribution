@@ -432,7 +432,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
-        InstallListener.setListener(this);
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
         if (android.os.Build.VERSION.SDK_INT >= 15) {
@@ -2315,7 +2314,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime);
+            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime, this);
         }
         
         registerInstallOrOpen(request, callback);
