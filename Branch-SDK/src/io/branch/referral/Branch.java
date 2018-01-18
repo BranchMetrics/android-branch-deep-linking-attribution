@@ -432,7 +432,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
-        InstallListener.setListener(this);
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
         if (android.os.Build.VERSION.SDK_INT >= 15) {
@@ -2315,7 +2314,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime);
+            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime, this);
         }
         
         registerInstallOrOpen(request, callback);
@@ -2636,6 +2635,26 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
         void onChannelSelected(String channelName);
+    }
+    
+    /**
+     * <p>An extended version of {@link BranchLinkShareListener} with callback that supports updating link data or properties after user select a channel to share
+     * This will provide the extended callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} only when sharing a link using Branch Universal Object.</p>
+     */
+    public interface ExtendedBranchLinkShareListener extends BranchLinkShareListener {
+        /**
+         * <p>
+         * Called when user select a channel for sharing a deep link.
+         * This method allows modifying the link data and properties by providing the params  {@link BranchUniversalObject} and {@link LinkProperties}
+         * </p>
+         *
+         * @param channelName    The name of the channel user selected for sharing a link
+         * @param buo            {@link BranchUniversalObject} BUO used for sharing link for updating any params
+         * @param linkProperties {@link LinkProperties} associated with the sharing link for updating the properties
+         * @return Return {@code true} to create link with any updates added to the data ({@link BranchUniversalObject}) or to the properties ({@link LinkProperties}).
+         * Return {@code false} otherwise.
+         */
+        boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
     }
     
     /**

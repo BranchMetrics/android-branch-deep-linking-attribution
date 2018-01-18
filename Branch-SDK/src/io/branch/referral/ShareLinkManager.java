@@ -223,6 +223,7 @@ class ShareLinkManager {
                         if (view.getTag() != null && context_ != null && ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()) != null) {
                             selectedChannelName = ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString();
                         }
+                        builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
                     adapter.selectedPos = pos;
@@ -268,7 +269,6 @@ class ShareLinkManager {
         isShareInProgress_ = true;
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
-        shortLinkBuilder.setChannel(channelName);
 
         shortLinkBuilder.generateShortUrlInternal(new Branch.BranchLinkCreateListener() {
             @Override
