@@ -286,7 +286,7 @@ public class MainActivity extends Activity {
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
-
+            
                             @Override
                             public void onShareLinkDialogLaunched() {
                             }
@@ -302,6 +302,17 @@ public class MainActivity extends Activity {
                             @Override
                             public void onChannelSelected(String channelName) {
                             }
+            
+                            /**
+                             * Use {@link io.branch.referral.Branch.ExtendedBranchLinkShareListener} if the params need to be modified according to the channel selected by the user.
+                             * This allows modification of content or link properties through callback {@link #onChannelSelected(String,BranchUniversalObject,LinkProperties)} }
+                             */
+//                            @Override
+//                            public boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties) {
+//                                linkProperties.setAlias("http://bnc.lt/alias_link");
+//                                buo.setTitle("Custom Title for selected channel : " + channelName);
+//                                return true;
+//                            }
 
                         },
                         new Branch.IChannelProperties() {
