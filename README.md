@@ -696,7 +696,7 @@ To show the share sheet, call the following on your Branch Universal Object. The
 branchUniversalObject.showShareSheet(this, 
                                       linkProperties,
                                       shareSheetStyle,
-                                       new Branch.BranchLinkShareListener() {
+                                       new Branch.ExtendedBranchLinkShareListener() {
     @Override
     public void onShareLinkDialogLaunched() {
     }
@@ -708,6 +708,10 @@ branchUniversalObject.showShareSheet(this,
     }
     @Override
     public void onChannelSelected(String channelName) {
+    }
+    @Override
+    public boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties) {
+        return false;
     }
 });
 ```
