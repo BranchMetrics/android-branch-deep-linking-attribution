@@ -14,8 +14,6 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-    final SystemObserver systemObserver_;
-
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
@@ -25,11 +23,10 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param sysObserver {@link SystemObserver} instance.
      * @param installID   installation ID.                                   .
      */
-    public ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
+    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
                                         SystemObserver sysObserver, String installID) {
 
-        super(context, Defines.RequestPath.RegisterInstall.getPath());
-        systemObserver_ = sysObserver;
+        super(context, Defines.RequestPath.RegisterInstall.getPath(),sysObserver);
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
@@ -47,11 +44,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 if (!uriScheme.equals(SystemObserver.BLANK))
                     installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
             }
-
-            installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
-            installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
-            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
             setPost(installPost);
 
         } catch (JSONException ex) {
@@ -62,9 +54,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     }
 
-    public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
+    ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
-        systemObserver_ = new SystemObserver(context);
     }
 
     @Override
@@ -120,7 +111,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         onInitSessionCompleted(resp, branch);
     }
 
-    public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
+    void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
         if (callback != null) {  // Update callback if set with valid callback instance.
             callback_ = callback;
         }

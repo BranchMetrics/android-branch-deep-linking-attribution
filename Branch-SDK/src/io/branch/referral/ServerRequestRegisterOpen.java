@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,7 +14,6 @@ import org.json.JSONObject;
 class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     Branch.BranchReferralInitListener callback_;
-    final SystemObserver systemObserver_;
 
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
@@ -25,26 +23,17 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
      *                    the data associated with new install registration.
      * @param sysObserver {@link SystemObserver} instance.
      */
-    public ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback,
+    ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback,
                                      SystemObserver sysObserver) {
-        super(context, Defines.RequestPath.RegisterOpen.getPath());
-
-        systemObserver_ = sysObserver;
+        super(context, Defines.RequestPath.RegisterOpen.getPath(),sysObserver);
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
             openPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             openPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
-            openPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-
             if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
                 openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
             }
-
-            openPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
-            openPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
-            openPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
-
             setPost(openPost);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -53,9 +42,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     }
 
-    public ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
+    ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
-        systemObserver_ = new SystemObserver(context);
     }
 
     @Override
@@ -105,7 +93,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         onInitSessionCompleted(resp, branch);
     }
 
-    public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
+    void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
         if (callback != null) {      // Update callback if set with valid callback instance.
             callback_ = callback;
         }

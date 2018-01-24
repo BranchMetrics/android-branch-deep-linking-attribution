@@ -19,22 +19,30 @@ abstract class ServerRequestInitSession extends ServerRequest {
     static final String ACTION_INSTALL = "install";
     private final Context context_;
     private final ContentDiscoveryManifest contentDiscoveryManifest_;
+    final SystemObserver systemObserver_;
     
-    ServerRequestInitSession(Context context, String requestPath) {
+    ServerRequestInitSession(Context context, String requestPath, SystemObserver systemObserver) {
         super(context, requestPath);
         context_ = context;
+        systemObserver_ = systemObserver;
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
     
     ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
+        systemObserver_ = new SystemObserver(context);
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
     
     @Override
-    protected void setPost(JSONObject post) {
+    protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
+        post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
+        post.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
+        post.put(Defines.Jsonkey.Update.getKey(), systemObserver_.getUpdateState());
+        post.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
+        
         updateEnvironment(context_, post);
     }
     
