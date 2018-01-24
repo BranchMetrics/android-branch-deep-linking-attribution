@@ -235,6 +235,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     
     /*
      * Method to update the install or update state along with the timestamps.
+     * PRS NOTE
      * The Original install time will have a the very first install time only if the app allows preference back up.
      * Apps that need to distinguish between a fresh install and re-install need to allow backing up of preferences.
      * Previous install time stamp always carry the last last known update time. the value will be zero for any fresh install and will be the last update time with successive opens.
