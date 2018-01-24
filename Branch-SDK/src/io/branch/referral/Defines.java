@@ -60,6 +60,10 @@ public class Defines {
         Language("language"),
         IsReferrable("is_referrable"),
         Update("update"),
+        OriginalInstallTime("original_install_time"),
+        FirstInstallTime("first_install_time"),
+        LastUpdateTime("last_update_time"),
+        PreviousUpdateTime("previous_update_time"),
         URIScheme("uri_scheme"),
         AppIdentifier("app_identifier"),
         LinkIdentifier("link_identifier"),
@@ -137,7 +141,7 @@ public class Defines {
         Environment("environment"),
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
-
+        
         TransactionID("transaction_id"),
         Currency("currency"),
         Revenue("revenue"),
@@ -147,7 +151,7 @@ public class Defines {
         Affiliation("affiliation"),
         Description("description"),
         SearchQuery("search_query"),
-
+        
         Name("name"),
         CustomData("custom_data"),
         EventData("event_data"),
@@ -175,7 +179,7 @@ public class Defines {
         ImageCaptions("$image_captions"),
         Condition("$condition"),
         CreationTimestamp("$creation_timestamp");
-
+        
         
         private String key = "";
         

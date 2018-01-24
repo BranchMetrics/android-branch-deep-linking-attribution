@@ -31,9 +31,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         try {
             openPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
             openPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
-            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
-                openPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
-            }
             setPost(openPost);
         } catch (JSONException ex) {
             ex.printStackTrace();

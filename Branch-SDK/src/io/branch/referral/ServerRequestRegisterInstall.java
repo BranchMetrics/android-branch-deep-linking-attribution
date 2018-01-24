@@ -33,19 +33,11 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
             }
-
-            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
-                installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
-            }
-
+            setPost(installPost);
             // Read and update the URI scheme only if running in debug mode
             if (prefHelper_.getExternDebug()) {
-                String uriScheme = sysObserver.getURIScheme();
-                if (!uriScheme.equals(SystemObserver.BLANK))
-                    installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
+                updateURIScheme();
             }
-            setPost(installPost);
-
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
