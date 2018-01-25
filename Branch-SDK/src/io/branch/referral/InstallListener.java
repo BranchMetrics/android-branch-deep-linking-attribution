@@ -52,6 +52,13 @@ public class InstallListener extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String rawReferrerString = intent.getStringExtra("referrer");
+        processRawReferrer(context, rawReferrerString);
+        if (isWaitingForReferrer) {
+            reportInstallReferrer();
+        }
+    }
+    
+    private void processRawReferrer(Context context, String rawReferrerString) {
         if (rawReferrerString != null) {
             try {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
@@ -89,11 +96,6 @@ public class InstallListener extends BroadcastReceiver {
                     prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
                     prefHelper.setGooglePlayReferrer(rawReferrerString);
                 }
-                unReportedReferrerAvailable = true;
-                
-                if (isWaitingForReferrer) {
-                    reportInstallReferrer();
-                }
                 
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -101,7 +103,6 @@ public class InstallListener extends BroadcastReceiver {
                 e.printStackTrace();
                 Log.w("BranchSDK", "Illegal characters in url encoded string");
             }
-            
         }
     }
     
@@ -110,6 +111,7 @@ public class InstallListener extends BroadcastReceiver {
     }
     
     private static void reportInstallReferrer() {
+        unReportedReferrerAvailable = true;
         if (callback_ != null) {
             callback_.onInstallReferrerEventsFinished();
             callback_ = null;
