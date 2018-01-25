@@ -288,7 +288,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean enableFacebookAppLinkCheck_ = false;
     
-    private static boolean isSimulatingInstalls_;
+    static boolean isSimulatingInstalls_;
     
     private static boolean isLogging_ = false;
     
@@ -2342,8 +2342,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private void performCookieBasedStrongMatch() {
-        boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
-        DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
+        DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
         Activity currentActivity = null;
         if (currentActivityReference_ != null) {
             currentActivity = currentActivityReference_.get();
@@ -3034,10 +3033,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public static void disableSimulateInstalls() {
         isSimulatingInstalls_ = false;
-    }
-    
-    public static boolean isSimulatingInstalls() {
-        return isSimulatingInstalls_;
     }
     
     public static void enableLogging() {
