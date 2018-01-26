@@ -95,6 +95,9 @@ public class PrefHelper {
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
+    
+    static final String KEY_REFERRER_CLICK_TS = "bnc_referrer_click_ts";
+    static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
 
 
     private static String Branch_Key = null;
