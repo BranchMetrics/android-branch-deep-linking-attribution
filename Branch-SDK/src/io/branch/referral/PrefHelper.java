@@ -99,7 +99,8 @@ public class PrefHelper {
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
     static final String KEY_LAST_KNOWN_UPDATE_TIME = "bnc_last_known_update_time";
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
-
+    static final String KEY_REFERRER_CLICK_TS = "bnc_referrer_click_ts";
+    static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
 
     private static String Branch_Key = null;
     /**

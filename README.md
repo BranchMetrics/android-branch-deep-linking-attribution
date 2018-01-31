@@ -848,6 +848,7 @@ This is often caused when you exclude the `answers-shim` module from Branch SDK 
 `-dontwarn com.crashlytics.android.answers.shim.**`
 
 ### Proguard warning or errors with `appindexing` module
-Branch SDK has optional dependency on Firebase app indexing classes to provide new Firebase content listing features. This may cause a proguard warning depending on your proguard settings.
+Branch SDK has optional dependencies on Firebase app indexing and Android install referrer classes to provide new Firebase content listing features and support new Android install referrer library. This may cause a proguard warning depending on your proguard settings.
 Please add the following to your proguard file to solve this issue
 `-dontwarn com.google.firebase.appindexing.**`
+`-dontwarn com.android.installreferrer.api.**`

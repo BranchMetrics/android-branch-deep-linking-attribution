@@ -16,6 +16,8 @@ public class Defines {
         LinkClickID("link_click_id"),
         GoogleSearchInstallReferrer("google_search_install_referrer"),
         GooglePlayInstallReferrer("install_referrer_extras"),
+        ClickedReferrerTimeStamp("clicked_referrer_ts"),
+        InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         BranchLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
