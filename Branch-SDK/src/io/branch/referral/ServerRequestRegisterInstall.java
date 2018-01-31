@@ -52,15 +52,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
             installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
             installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
-            
-            long clickedReferrerTS = InstallListener.getReferrerClickTS(context);
-            long installBeginTS = InstallListener.getInstallBeginTS(context);
-            if (clickedReferrerTS > 0) {
-                installPost.put(Defines.Jsonkey.ClickedReferrerTimeStamp.getKey(), clickedReferrerTS);
-            }
-            if (installBeginTS > 0) {
-                installPost.put(Defines.Jsonkey.InstallBeginTimeStamp.getKey(), installBeginTS);
-            }
             setPost(installPost);
             
         } catch (JSONException ex) {
@@ -74,6 +65,23 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         systemObserver_ = new SystemObserver(context);
+    }
+    
+    @Override
+    public void onPreExecute() {
+        super.onPreExecute();
+        long clickedReferrerTS = prefHelper_.getLong(PrefHelper.KEY_REFERRER_CLICK_TS);
+        long installBeginTS = prefHelper_.getLong(PrefHelper.KEY_INSTALL_BEGIN_TS);
+        try {
+            if (clickedReferrerTS > 0) {
+                getPost().put(Defines.Jsonkey.ClickedReferrerTimeStamp.getKey(), clickedReferrerTS);
+            }
+            if (installBeginTS > 0) {
+                getPost().put(Defines.Jsonkey.InstallBeginTimeStamp.getKey(), installBeginTS);
+            }
+        } catch (JSONException ignore) {
+        
+        }
     }
     
     @Override

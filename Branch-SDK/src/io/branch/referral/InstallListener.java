@@ -18,19 +18,18 @@ import java.util.HashMap;
 
 /**
  * <p> Class for listening installation referrer params. Install params are captured by either of the following methods
- *  1) Add the install referrer library to your application "com.android.installreferrer:installreferrer" (Recommended)
- *          dependencies {
- *               compile 'com.android.installreferrer:installreferrer:1.0'
- *          }
- *
- *  2) Add to a braodcast listener to manifest as follows to receive Install Referrer
- *  <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
- *       <intent-filter>
- *           <action android:name="com.android.vending.INSTALL_REFERRER" />
- *       </intent-filter>
- *  </receiver> -->
+ * 1) Add the install referrer library to your application "com.android.installreferrer:installreferrer" (Recommended)
+ * dependencies {
+ * compile 'com.android.installreferrer:installreferrer:1.0'
+ * }
+ * <p>
+ * 2) Add to a braodcast listener to manifest as follows to receive Install Referrer
+ * <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
+ * <intent-filter>
+ * <action android:name="com.android.vending.INSTALL_REFERRER" />
+ * </intent-filter>
+ * </receiver> -->
  * </p>
- *
  */
 public class InstallListener extends BroadcastReceiver {
     
@@ -85,8 +84,8 @@ public class InstallListener extends BroadcastReceiver {
     
     /**
      * <p>
-     *     Class for getting the referrer info using the install referrer client. This is need `installreferrer` lib added to the application.
-     *     This will be working only with compatible version of Play store app. In case of an error this fallback to the install-referrer broadcast
+     * Class for getting the referrer info using the install referrer client. This is need `installreferrer` lib added to the application.
+     * This will be working only with compatible version of Play store app. In case of an error this fallback to the install-referrer broadcast
      * </p>
      */
     private static class ReferrerClientWrapper {
@@ -155,7 +154,7 @@ public class InstallListener extends BroadcastReceiver {
             prefHelper.setLong(PrefHelper.KEY_REFERRER_CLICK_TS, referrerClickTS);
         }
         if (installClickTS > 0) {
-            prefHelper.setLong(PrefHelper.KEY_REFERRER_CLICK_TS, installClickTS);
+            prefHelper.setLong(PrefHelper.KEY_INSTALL_BEGIN_TS, installClickTS);
         }
         if (rawReferrerString != null) {
             try {
@@ -203,14 +202,6 @@ public class InstallListener extends BroadcastReceiver {
     
     public static String getInstallationID() {
         return installID_;
-    }
-    
-    public static long getReferrerClickTS(Context context) {
-        return PrefHelper.getInstance(context).getLong(PrefHelper.KEY_REFERRER_CLICK_TS);
-    }
-    
-    public static long getInstallBeginTS(Context context) {
-        return PrefHelper.getInstance(context).getLong(PrefHelper.KEY_INSTALL_BEGIN_TS);
     }
     
     private static void reportInstallReferrer() {
