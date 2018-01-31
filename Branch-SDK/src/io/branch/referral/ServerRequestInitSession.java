@@ -256,6 +256,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private void updateInstallStateAndTimestamps(JSONObject post) throws JSONException {
         int installOrUpdateState = STATE_NO_CHANGE;
         String currAppVersion = systemObserver_.getAppVersion();
+        long updateBufferTime = 1 * (24 * 60 * 60 * 1000); // Update buffer time is a day.
         PackageInfo packageInfo = null;
         try {
             packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
@@ -264,8 +265,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (PrefHelper.NO_STRING_VALUE.equals(prefHelper_.getAppVersion())) {
             // Default, just register an install
             installOrUpdateState = STATE_FRESH_INSTALL;
-            // if no app version is in storage, this must be the first time Branch is here
-            if (packageInfo != null && packageInfo.lastUpdateTime != packageInfo.firstInstallTime) {
+            // if no app version is in storage, this must be the first time Branch is here. 24 hour buffer for updating as an update state
+            if (packageInfo != null && (packageInfo.lastUpdateTime - packageInfo.firstInstallTime) >= updateBufferTime) {
                 installOrUpdateState = STATE_UPDATE;
             }
         } else if (!prefHelper_.getAppVersion().equals(currAppVersion)) {
