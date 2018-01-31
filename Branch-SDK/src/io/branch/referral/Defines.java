@@ -16,6 +16,8 @@ public class Defines {
         LinkClickID("link_click_id"),
         GoogleSearchInstallReferrer("google_search_install_referrer"),
         GooglePlayInstallReferrer("install_referrer_extras"),
+        ClickedReferrerTimeStamp("clicked_referrer_ts"),
+        InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         BranchLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
@@ -137,7 +139,7 @@ public class Defines {
         Environment("environment"),
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
-
+        
         TransactionID("transaction_id"),
         Currency("currency"),
         Revenue("revenue"),
@@ -147,7 +149,7 @@ public class Defines {
         Affiliation("affiliation"),
         Description("description"),
         SearchQuery("search_query"),
-
+        
         Name("name"),
         CustomData("custom_data"),
         EventData("event_data"),
@@ -175,7 +177,7 @@ public class Defines {
         ImageCaptions("$image_captions"),
         Condition("$condition"),
         CreationTimestamp("$creation_timestamp");
-
+        
         
         private String key = "";
         
