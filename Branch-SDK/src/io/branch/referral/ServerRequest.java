@@ -182,7 +182,7 @@ public abstract class ServerRequest {
      * @param post A {@link JSONObject} containing the post data supplied with the current request
      *             as key-value pairs.
      */
-    protected void setPost(JSONObject post) {
+    protected void setPost(JSONObject post) throws JSONException {
         params_ = post;
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
             try {

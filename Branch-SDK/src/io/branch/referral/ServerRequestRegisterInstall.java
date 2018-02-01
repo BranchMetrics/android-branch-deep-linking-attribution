@@ -14,7 +14,6 @@ import org.json.JSONObject;
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
     
     Branch.BranchReferralInitListener callback_;
-    final SystemObserver systemObserver_;
     
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
@@ -25,46 +24,28 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param sysObserver {@link SystemObserver} instance.
      * @param installID   installation ID.                                   .
      */
-    public ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
-                                        SystemObserver sysObserver, String installID) {
-        
-        super(context, Defines.RequestPath.RegisterInstall.getPath());
-        systemObserver_ = sysObserver;
+    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
+                                 SystemObserver sysObserver, String installID) {
+        super(context, Defines.RequestPath.RegisterInstall.getPath(), sysObserver);
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
             if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
             }
-            
-            if (!sysObserver.getAppVersion().equals(SystemObserver.BLANK)) {
-                installPost.put(Defines.Jsonkey.AppVersion.getKey(), sysObserver.getAppVersion());
-            }
-            
+            setPost(installPost);
             // Read and update the URI scheme only if running in debug mode
             if (prefHelper_.getExternDebug()) {
-                String uriScheme = sysObserver.getURIScheme();
-                if (!uriScheme.equals(SystemObserver.BLANK))
-                    installPost.put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
+                updateURIScheme();
             }
-            
-            installPost.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
-            installPost.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-            installPost.put(Defines.Jsonkey.Update.getKey(), sysObserver.getUpdateState());
-            installPost.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
-            setPost(installPost);
-            
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
         }
-        
-        
     }
     
     public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
-        systemObserver_ = new SystemObserver(context);
     }
     
     @Override
@@ -136,6 +117,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         }
         onInitSessionCompleted(resp, branch);
     }
+    
     
     public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
         if (callback != null) {  // Update callback if set with valid callback instance.
