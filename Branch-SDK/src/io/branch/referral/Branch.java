@@ -410,8 +410,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean isInstantDeepLinkPossible = false;
     /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
     private boolean isActivityCreatedAndLaunched = false;
-    /* Flag to turn on or off instant deeplinking feature. IDL is enabled by default */
-    private static boolean disableInstantDeepLinking = false;
+    /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
+    private static boolean disableInstantDeepLinking = true;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
