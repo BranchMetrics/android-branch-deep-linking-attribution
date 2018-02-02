@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.15.0 Adding support for Android install referrer lib. Changing instant deep linking into opt-in feature. Collecting install timestamps for better install or update attributions.
+
 - v2.14.5 Hot fix: Re-open after offline install event fails. Support for modifying deep link data and link params on share sheet events.
 
 - v2.14.4 Fixing a possible request queue concurrent execution. Adding support for opt-out IDL. Fix for maintaining strong typing for arrays when BUO is serialised. Adding extended catch for dealing with dead object. Support for "rating" property in content metadata.

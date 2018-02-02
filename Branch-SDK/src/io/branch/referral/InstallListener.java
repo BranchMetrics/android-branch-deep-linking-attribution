@@ -24,7 +24,7 @@ import java.util.HashMap;
  * }
  * <p>
  * 2) Add to a braodcast listener to manifest as follows to receive Install Referrer
- * <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
+ * <!-- <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
  * <intent-filter>
  * <action android:name="com.android.vending.INSTALL_REFERRER" />
  * </intent-filter>
