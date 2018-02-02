@@ -288,7 +288,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean enableFacebookAppLinkCheck_ = false;
     
-    private static boolean isSimulatingInstalls_;
+    static boolean isSimulatingInstalls_;
     
     private static boolean isLogging_ = false;
     
@@ -410,8 +410,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean isInstantDeepLinkPossible = false;
     /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
     private boolean isActivityCreatedAndLaunched = false;
-    /* Flag to turn on or off instant deeplinking feature. IDL is enabled by default */
-    private static boolean disableInstantDeepLinking = false;
+    /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
+    private static boolean disableInstantDeepLinking = true;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -2314,7 +2314,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime, this);
+            InstallListener.captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
         }
         
         registerInstallOrOpen(request, callback);
@@ -2342,8 +2342,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private void performCookieBasedStrongMatch() {
-        boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
-        DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
+        DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
         Activity currentActivity = null;
         if (currentActivityReference_ != null) {
             currentActivity = currentActivityReference_.get();
@@ -3034,10 +3033,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public static void disableSimulateInstalls() {
         isSimulatingInstalls_ = false;
-    }
-    
-    public static boolean isSimulatingInstalls() {
-        return isSimulatingInstalls_;
     }
     
     public static void enableLogging() {
