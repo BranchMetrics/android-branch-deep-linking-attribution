@@ -226,7 +226,7 @@ class ShareLinkManager {
                         builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
-                    adapter.selectedPos = pos;
+                    adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
                     invokeSharingClient((ResolveInfo) view.getTag());
                     if (shareDlg_ != null) {
