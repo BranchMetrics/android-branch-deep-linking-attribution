@@ -386,9 +386,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean isGAParamsFetchInProgress_ = false;
     
-    private List<String> externalUriWhiteList_;
-    private List<String> skipExternalUriHosts_;
-    
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
     
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
@@ -441,9 +438,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleDelayedNewIntents_ = false;
             intentState_ = INTENT_STATE.READY;
         }
-        externalUriWhiteList_ = new ArrayList<>();
-        skipExternalUriHosts_ = new ArrayList<>();
-        
     }
     
     /**
@@ -499,11 +493,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>
-     *    Disables or enables the instant deep link functionality.
+     * Disables or enables the instant deep link functionality.
      * </p>
+     *
      * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
      */
-    public static void disableInstantDeepLinking(boolean disableIDL){
+    public static void disableInstantDeepLinking(boolean disableIDL) {
         disableInstantDeepLinking = disableIDL;
     }
     
@@ -1398,27 +1393,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             try {
                 if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
-                    boolean foundSchemeMatch;
-                    boolean skipThisHost = false;
-                    if (externalUriWhiteList_.size() > 0) {
-                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
-                    } else {
-                        foundSchemeMatch = true;
-                    }
+                    String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+                    sessionReferredLink_ = strippedUrl;
+                    prefHelper_.setExternalIntentUri(strippedUrl);
                     
-                    if (skipExternalUriHosts_.size() > 0) {
-                        for (String host : skipExternalUriHosts_) {
-                            String externalHost = data.getHost();
-                            if (externalHost != null && externalHost.equals(host)) {
-                                skipThisHost = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (foundSchemeMatch && !skipThisHost) {
-                        sessionReferredLink_ = data.toString();
-                        prefHelper_.setExternalIntentUri(data.toString());
-                        
+                    if (strippedUrl != null && strippedUrl.equals(data.toString())) {
                         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                             Bundle bundle = activity.getIntent().getExtras();
                             Set<String> extraKeys = bundle.keySet();
@@ -1532,56 +1511,59 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Add the given URI Scheme to the external Uri white list. Branch will collect
-     * external intent uri only if white list matches with the app opened URL properties
-     * If no URI is added to the white list branch will collect all external intent uris.
-     * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
-     *
-     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.(eg. "my_scheme://")
-     * @return {@link Branch} instance for successive method calls
-     */
-    public Branch addWhiteListedScheme(String uriScheme) {
-        if (uriScheme == null) {
-            return this;
-        }
-        
-        uriScheme = uriScheme.replace("://", "");
-        
-        externalUriWhiteList_.add(uriScheme);
-        return this;
-    }
-    
-    /**
-     * <p>Set the given list of URI Scheme as the external Uri white list. Branch will collect
-     * external intent uri only for Uris in white list.
-     * </p>
-     * If no URI is added to the white list branch will collect all external intent uris
-     * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
-     * <!-- @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list -->
-     *
-     * @return {@link Branch} instance for successive method calls
-     */
-    public Branch setWhiteListedSchemes(List<String> uriSchemes) {
-        externalUriWhiteList_ = uriSchemes;
-        return this;
-    }
-    
-    /**
+     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
+     * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
+     * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * Add the given URI host to the external Uri skip list. Branch will not collect
-     * external intent uri if skip list contains with the app opened URL.
-     * If no host is added to the skip list, Branch will collect all external Intent uris.
-     * Skip list hosts should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
-     * </p>
+     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param hostName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "product" to skip my-scheme://product/*)
+     * @param urlWhiteListPattern A regular expression with a URI white listing pattern
      * @return {@link Branch} instance for successive method calls
      */
-    public Branch addUriHostsToSkip(String hostName) {
-        if ((hostName != null) && (!hostName.equals("")))
-            skipExternalUriHosts_.add(hostName);
-        
+    public Branch addWhiteListedScheme(String urlWhiteListPattern) {
+        if (urlWhiteListPattern != null) {
+            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPattern);
+        }
         return this;
+    }
+    
+    /**
+     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
+     * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
+     * If whitelist is not empty SDK will collect only the URLs that matches the white list.
+     * <p>
+     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch setWhiteListedSchemes(List<String> urlWhiteListPatternList) {
+        if (urlWhiteListPatternList != null) {
+            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPatternList);
+        }
+        return this;
+    }
+    
+    /**
+     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
+     * This method allows applications specify SDK to skip any additional URL patterns to be skipped
+     * <p>
+     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addUriHostsToSkip(String urlSkipPattern) {
+        if (!TextUtils.isEmpty(urlSkipPattern))
+            UniversalResourceAnalyser.getInstance(context_).addToSkipURLFormats(urlSkipPattern);
+        return this;
+    }
+    
+    /**
+     * Check and update the URL / URI Skip list in case an update is available.
+     */
+    void updateSkipURLFormats() {
+        UniversalResourceAnalyser.getInstance(context_).checkAndUpdateSkipURLFormats(context_);
     }
     
     /**
@@ -2732,14 +2714,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
         }
-    
+        
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             thisReq_.onPreExecute();
             thisReq_.doFinalUpdateOnMainThread();
         }
-    
+        
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             // update queue wait time
