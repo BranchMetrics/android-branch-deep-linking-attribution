@@ -9,6 +9,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by sojanpr on 2/8/18.
@@ -24,18 +26,10 @@ class UniversalResourceAnalyser {
     private static final String SKIP_URL_FORMATS_KEY = "skip_url_format_key";
     private static final String VERSION_KEY = "version";
     private static final String SKIP_LIST_KEY = "uri_skip_list";
-    private static final String UPDATE_URL_PATH = "https://raw.githubusercontent.com/BranchMetrics/uriskiplist/v#.json";
-    private static final String DEFAULT_SKIP_URL_FORMAT = "{" +
-            "\"version\" : 0," +
-            "\"uri_skip_list\" : [" +
-            "\"^fb\\\\d+:\"," +
-            "\"^li\\\\d+:\"," +
-            "\"^pdk\\\\d+:\"," +
-            "\"^twitterkit-.*\":," +
-            "^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth" +
-            "\"^(?!(http|https):).*:.*(?i)(oauth|password|auth(.)?token|access(.)?token)\"," +
-            "\"^((http|https):\\/\\/).*[\\/|?|#].*(?i)(oauth|password|auth(.)?token|access(.)?token)\"" +
-            "}";
+    // This is the path for updating skip url list. Check for the next version of the file
+    private static final String UPDATE_URL_PATH = "https://cdn.branch.io/sdk/uriskiplist_v#.json";
+    
+    private final JSONObject DEFAULT_SKIP_URL_LIST;
     
     private static UniversalResourceAnalyser instance;
     
@@ -48,6 +42,20 @@ class UniversalResourceAnalyser {
     }
     
     private UniversalResourceAnalyser(Context context) {
+        DEFAULT_SKIP_URL_LIST = new JSONObject();
+        try {
+            DEFAULT_SKIP_URL_LIST.putOpt("version", 0);
+            JSONArray skipURIArray = new JSONArray();
+            DEFAULT_SKIP_URL_LIST.putOpt("uri_skip_list", skipURIArray);
+            skipURIArray.put("^fb\\d+:");
+            skipURIArray.put("^li\\d+:");
+            skipURIArray.put("^pdk\\d+:");
+            skipURIArray.put("^twitterkit-.*:");
+            skipURIArray.put("^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth");
+            skipURIArray.put("^(?i)(?!(http|https):).*:.*(oauth|password|auth|access)");
+            skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*(oauth|password|auth|access)");
+        } catch (JSONException ignore) {
+        }
         skipURLFormats = retrieveSkipURLFormats(context);
         acceptURLFormats = new ArrayList<>();
     }
@@ -57,11 +65,12 @@ class UniversalResourceAnalyser {
         JSONObject urlFormat = new JSONObject();
         String latestUrlFormats = prefHelper.getString(SKIP_URL_FORMATS_KEY);
         if (TextUtils.isEmpty(latestUrlFormats) || PrefHelper.NO_STRING_VALUE.equals(latestUrlFormats)) {
-            latestUrlFormats = DEFAULT_SKIP_URL_FORMAT;
-        }
-        try {
-            urlFormat = new JSONObject(latestUrlFormats);
-        } catch (JSONException ignore) {
+            urlFormat = DEFAULT_SKIP_URL_LIST;
+        } else {
+            try {
+                urlFormat = new JSONObject(latestUrlFormats);
+            } catch (JSONException ignore) {
+            }
         }
         return urlFormat;
     }
@@ -95,30 +104,37 @@ class UniversalResourceAnalyser {
     
     String getStrippedURL(String url) {
         String strippedURL = null;
-        JSONArray skipURLArray = skipURLFormats.optJSONArray(SKIP_LIST_KEY);
-        if (skipURLArray != null) {
-            for (int i = 0; i < skipURLArray.length(); i++) {
-                try {
-                    String skipPattern = skipURLArray.getString(i);
-                    if (url.matches(skipPattern)) {
-                        strippedURL = skipPattern;
-                        break;
-                    }
-                } catch (JSONException ignore) {
-                }
-            }
-        }
-        if (strippedURL == null) {
-            if (acceptURLFormats.size() > 0) {
-                for (String skipPattern : acceptURLFormats) {
-                    if (url.matches(skipPattern)) {
-                        strippedURL = url;
-                        break;
+        try {
+            JSONArray skipURLArray = skipURLFormats.optJSONArray(SKIP_LIST_KEY);
+            if (skipURLArray != null) {
+                for (int i = 0; i < skipURLArray.length(); i++) {
+                    try {
+                        String skipPattern = skipURLArray.getString(i);
+                        Pattern p = Pattern.compile(skipPattern);
+                        Matcher m = p.matcher(url);
+                        if (m.find()) {
+                            strippedURL = skipPattern;
+                            break;
+                        }
+                        
+                    } catch (JSONException ignore) {
                     }
                 }
-            } else {
-                strippedURL = url;
             }
+            if (strippedURL == null) {
+                if (acceptURLFormats.size() > 0) {
+                    for (String skipPattern : acceptURLFormats) {
+                        if (url.matches(skipPattern)) {
+                            strippedURL = url;
+                            break;
+                        }
+                    }
+                } else {
+                    strippedURL = url;
+                }
+            }
+        } catch (Exception ex) {
+            strippedURL = url;
         }
         return strippedURL;
     }

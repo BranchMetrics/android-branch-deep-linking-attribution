@@ -1470,7 +1470,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (scheme != null && intent != null) {
                             if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
                                     && data.getHost() != null && data.getHost().length() > 0 && !isIntentParamsAlreadyConsumed(activity)) {
-                                prefHelper_.setAppLink(data.toString());
+                                String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+                                if (data.toString().equalsIgnoreCase(strippedUrl)) { // Send app links only if URL is not skipped.
+                                    prefHelper_.setAppLink(data.toString());
+                                }
                                 intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
                                 activity.setIntent(intent);
                                 return false;
