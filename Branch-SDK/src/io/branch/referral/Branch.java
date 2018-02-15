@@ -499,11 +499,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>
-     *    Disables or enables the instant deep link functionality.
+     * Disables or enables the instant deep link functionality.
      * </p>
+     *
      * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
      */
-    public static void disableInstantDeepLinking(boolean disableIDL){
+    public static void disableInstantDeepLinking(boolean disableIDL) {
         disableInstantDeepLinking = disableIDL;
     }
     
@@ -2312,7 +2313,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
-        if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
+        if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             InstallListener.captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
         }
@@ -2732,14 +2733,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public BranchPostTask(ServerRequest request) {
             thisReq_ = request;
         }
-    
+        
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             thisReq_.onPreExecute();
             thisReq_.doFinalUpdateOnMainThread();
         }
-    
+        
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             // update queue wait time
