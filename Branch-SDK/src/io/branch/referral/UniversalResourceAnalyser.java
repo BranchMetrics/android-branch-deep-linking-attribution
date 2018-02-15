@@ -52,8 +52,8 @@ class UniversalResourceAnalyser {
             skipURIArray.put("^pdk\\d+:");
             skipURIArray.put("^twitterkit-.*:");
             skipURIArray.put("^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth");
-            skipURIArray.put("^(?i)(?!(http|https):).*:.*(oauth|password|auth|access)");
-            skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*(oauth|password|auth|access)");
+            skipURIArray.put("^(?i)(?!(http|https):).*:.*\\b(oauth|password|auth|auth.?token|access|access.?token)\\b");
+            skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*\\b(oauth|password|auth|auth.?token|access|access.?token)\\b");
         } catch (JSONException ignore) {
         }
         skipURLFormats = retrieveSkipURLFormats(context);
