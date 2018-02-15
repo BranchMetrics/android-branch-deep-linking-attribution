@@ -43,7 +43,7 @@ public class InstallListener extends BroadcastReceiver {
     private static boolean isReferrerClientAvailable;
     // PRS : In case play store referrer get reported really fast as google fix bugs , this implementation will let the referrer parsed and stored
     //       This will be reported when SDK ask for it
-    private static boolean unReportedReferrerAvailable;
+    static boolean unReportedReferrerAvailable;
     
     public static void captureInstallReferrer(Context context, final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
         callback_ = installReferrerFetch;
