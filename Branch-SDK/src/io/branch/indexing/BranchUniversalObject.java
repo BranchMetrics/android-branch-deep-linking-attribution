@@ -328,7 +328,7 @@ public class BranchUniversalObject implements Parcelable {
      * </p>
      *
      * @param action A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
-     * NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT)} instead
+     *               NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT)} instead
      */
     public void userCompletedAction(String action) {
         userCompletedAction(action, null);
@@ -352,7 +352,7 @@ public class BranchUniversalObject implements Parcelable {
      *
      * @param action   A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
      * @param metadata A HashMap containing any additional metadata need to add to this user event
-     * NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT, HashMap)} instead
+     *                 NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT, HashMap)} instead
      */
     public void userCompletedAction(String action, HashMap<String, String> metadata) {
         JSONObject actionCompletedPayload = new JSONObject();
@@ -384,7 +384,7 @@ public class BranchUniversalObject implements Parcelable {
     public void userCompletedAction(BRANCH_STANDARD_EVENT action, HashMap<String, String> metadata) {
         userCompletedAction(action.getName(), metadata);
     }
-
+    
     /**
      * <p>
      * Specifies whether the contents referred by this object is publically indexable
@@ -406,7 +406,7 @@ public class BranchUniversalObject implements Parcelable {
     public boolean isLocallyIndexable() {
         return localIndexMode_ == CONTENT_INDEX_MODE.PUBLIC;
     }
-
+    
     /**
      * @deprecated Please use #getContentMetadata() instead.
      */
@@ -651,7 +651,7 @@ public class BranchUniversalObject implements Parcelable {
             }
         } else {
             Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties));
-            shareLinkBuilder.setCallback(new LinkShareListenerWrapper(callback,shareLinkBuilder, linkProperties))
+            shareLinkBuilder.setCallback(new LinkShareListenerWrapper(callback, shareLinkBuilder, linkProperties))
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
                     .setMessage(style.getMessageBody());
@@ -787,7 +787,7 @@ public class BranchUniversalObject implements Parcelable {
      * @return A {@link BranchUniversalObject} corresponding to the Json data passed in
      */
     public static BranchUniversalObject createInstance(JSONObject jsonObject) {
-
+        
         BranchUniversalObject branchUniversalObject = null;
         try {
             branchUniversalObject = new BranchUniversalObject();
@@ -819,15 +819,16 @@ public class BranchUniversalObject implements Parcelable {
             }
             branchUniversalObject.localIndexMode_ = jsonReader.readOutBoolean(Defines.Jsonkey.LocallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
             branchUniversalObject.creationTimeStamp_ = jsonReader.readOutLong(Defines.Jsonkey.CreationTimestamp.getKey());
-
+            
             branchUniversalObject.metadata_ = ContentMetadata.createFromJson(jsonReader);
             // PRS : Handling a  backward compatibility issue here. Previous version of BUO Allows adding metadata key value pairs to the Object.
             // If the Json is received from a previous version of BUO it may have metadata set in the object. Adding them to custom metadata for now.
             // Please note that #getMetadata() is deprecated and #getContentMetadata() should be the new way of getting metadata
-            Iterator<String> keys = jsonReader.keys();
+            JSONObject pendingJson = jsonReader.getJsonObject();
+            Iterator<String> keys = pendingJson.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                branchUniversalObject.metadata_.addCustomMetadata(key, jsonReader.readOutString(key));
+                branchUniversalObject.metadata_.addCustomMetadata(key, pendingJson.optString(key));
             }
             
         } catch (Exception ignore) {
@@ -943,7 +944,7 @@ public class BranchUniversalObject implements Parcelable {
         private final Branch.BranchLinkShareListener originalCallback_;
         private final Branch.ShareLinkBuilder shareLinkBuilder_;
         private final LinkProperties linkProperties_;
-    
+        
         LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback, Branch.ShareLinkBuilder shareLinkBuilder, LinkProperties linkProperties) {
             originalCallback_ = originalCallback;
             shareLinkBuilder_ = shareLinkBuilder;
