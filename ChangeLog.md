@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.16.0 Adding support for collecting data from selected URIs with remote skip list update feature. Fixing an issue with handling BUO metadata.
+
 - v2.15.1 Hot fix : Install requests getting stuck in the request queue if failed once. Caused by improper install referrer wait lock addition to install request.
 
 - v2.15.0 Adding support for Android install referrer lib. Changing instant deep linking into opt-in feature. Collecting install timestamps for better install or update attributions.
