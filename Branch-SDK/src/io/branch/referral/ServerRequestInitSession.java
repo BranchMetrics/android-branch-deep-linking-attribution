@@ -159,6 +159,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 }
             }
         }
+        branch.updateSkipURLFormats();
     }
     
     /**
