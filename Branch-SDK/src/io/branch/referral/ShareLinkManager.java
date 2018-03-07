@@ -107,6 +107,8 @@ class ShareLinkManager {
         }
     }
 
+    private ChooserArrayAdapter adapter;
+
     /**
      * Create a custom chooser dialog with available share options.
      *
@@ -180,7 +182,7 @@ class ShareLinkManager {
         }
 
         /* Copy link option will be always there for sharing. */
-        final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
+        adapter = new ChooserArrayAdapter();
         final ListView shareOptionListView;
         if (shareDialogThemeID_ > 1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             shareOptionListView = new ListView(context_, null, 0, shareDialogThemeID_);
@@ -216,7 +218,7 @@ class ShareLinkManager {
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 if (view.getTag() instanceof MoreShareItem) {
                     appList_ = cleanedMatchingAppsFinal;
-                    adapter.notifyDataSetChanged();
+                    shareOptionListView.setAdapter(adapter = new ChooserArrayAdapter());
                 } else {
                     if (callback_ != null) {
                         String selectedChannelName = "";
@@ -226,7 +228,7 @@ class ShareLinkManager {
                         builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
-                    adapter.selectedPos = pos;
+                    adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
                     invokeSharingClient((ResolveInfo) view.getTag());
                     if (shareDlg_ != null) {
