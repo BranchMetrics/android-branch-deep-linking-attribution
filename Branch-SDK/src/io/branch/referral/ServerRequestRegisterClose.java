@@ -15,14 +15,14 @@ import io.branch.indexing.ContentDiscoverer;
  * </p>
  */
 class ServerRequestRegisterClose extends ServerRequest {
-
+    
     /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
      *
      * @param context Current {@link Application} context
      */
-    public ServerRequestRegisterClose(Context context) {
+    public ServerRequestRegisterClose(Context context, boolean isTrackingDisabled) {
         super(context, Defines.RequestPath.RegisterClose.getPath());
         JSONObject closePost = new JSONObject();
         try {
@@ -39,17 +39,20 @@ class ServerRequestRegisterClose extends ServerRequest {
             if (DeviceInfo.getInstance() != null) {
                 closePost.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
             }
+            if (isTrackingDisabled) {
+                closePost.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
+            }
             setPost(closePost);
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
         }
     }
-
+    
     public ServerRequestRegisterClose(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
-
+    
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
@@ -58,23 +61,23 @@ class ServerRequestRegisterClose extends ServerRequest {
         }
         return false;
     }
-
+    
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         // Clear the latest session params on close
         prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
     }
-
+    
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         //No implementation on purpose
     }
-
+    
     @Override
     public boolean isGetRequest() {
         return false;
     }
-
+    
     @Override
     public void clearCallbacks() {
         //No implementation on purpose

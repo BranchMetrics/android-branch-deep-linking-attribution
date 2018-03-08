@@ -13,7 +13,6 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.BadParcelableException;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -409,6 +408,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isActivityCreatedAndLaunched = false;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean disableInstantDeepLinking = true;
+    private final TrackingController trackingController;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -419,6 +419,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private Branch(@NonNull Context context) {
         prefHelper_ = PrefHelper.getInstance(context);
+        trackingController = new TrackingController(context);
         branchRemoteInterface_ = BranchRemoteInterface.getDefaultBranchRemoteInterface(context);
         systemObserver_ = new SystemObserver(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
@@ -467,6 +468,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public void setDebug() {
         enableTestMode();
+    }
+    
+    /**
+     * Method to change the Tracking state.If disabled SDK will not track any user data or state. SDK will not send any network calls when tracking is disabled
+     */
+    public void disableTracking(boolean disableTracking) {
+        trackingController.disableTracking(context_, disableTracking);
+    }
+    
+    /**
+     * Checks if tracking is disabled. See {@link #disableTracking(boolean)}
+     *
+     * @return {@code true} if tracking is disabled
+     */
+    public boolean isTrackingDisabled() {
+        return trackingController.isTrackingDisabled();
     }
     
     /**
@@ -1273,7 +1290,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>Closes the current session, dependent on the state of the
      * PrefHelper#getSmartSession() {@link Boolean} value. If <i>true</i>, take no action.
-     * If false, close the session via the {@link #executeClose()} method.</p>
+     * If false, close the session via the {@link #executeClose(boolean)} )} method.</p>
      * <p>Note that if smartSession is enabled, closeSession cannot be called within
      * a 2 second time span of another Branch action. This has to do with the method that
      * Branch uses to keep a session alive during Activity transitions</p>
@@ -1292,9 +1309,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
      */
-    private void closeSessionInternal() {
-        executeClose();
+    void closeSessionInternal(boolean isTrackingDisabled) {
+        executeClose(isTrackingDisabled);
         sessionReferredLink_ = null;
+        // Clear all pending requests if tracking is disabled
+        if (isTrackingDisabled) {
+            requestQueue_.clear();
+        }
+        trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
     
     /**
@@ -1326,7 +1348,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
      */
-    private void executeClose() {
+    private void executeClose(boolean isTrackingDisabled) {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
             if (!hasNetwork_) {
                 // if there's no network connectivity, purge the old install/open
@@ -1336,10 +1358,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } else {
                 if (!requestQueue_.containsClose()) {
-                    ServerRequest req = new ServerRequestRegisterClose(context_);
+                    ServerRequest req = new ServerRequestRegisterClose(context_, isTrackingDisabled);
                     handleNewRequest(req);
                 }
-                
             }
             initState_ = SESSION_STATE.UNINITIALISED;
         }
@@ -2353,6 +2374,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
+        // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
+        if (trackingController.isTrackingDisabled()) {
+            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+            return;
+        }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             
@@ -2479,7 +2505,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             activityCnt_--; // Check if this is the last activity. If so, stop the session.
             if (activityCnt_ < 1) {
                 isInstantDeepLinkPossible = false;
-                closeSessionInternal();
+                closeSessionInternal(trackingController.isTrackingDisabled());
             }
         }
         
