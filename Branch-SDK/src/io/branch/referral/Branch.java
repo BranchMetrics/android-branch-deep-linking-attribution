@@ -2358,21 +2358,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private void performCookieBasedStrongMatch() {
-        DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
-        Activity currentActivity = null;
-        if (currentActivityReference_ != null) {
-            currentActivity = currentActivityReference_.get();
-        }
-        Context context = (currentActivity != null) ? currentActivity.getApplicationContext() : null;
-        if (context != null) {
-            requestQueue_.setStrongMatchWaitLock();
-            BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
-                @Override
-                public void onStrongMatchCheckFinished() {
-                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
-                    processNextQueueItem();
-                }
-            });
+        if (!trackingController.isTrackingDisabled()) {
+            DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
+            Activity currentActivity = null;
+            if (currentActivityReference_ != null) {
+                currentActivity = currentActivityReference_.get();
+            }
+            Context context = (currentActivity != null) ? currentActivity.getApplicationContext() : null;
+            if (context != null) {
+                requestQueue_.setStrongMatchWaitLock();
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
+                    @Override
+                    public void onStrongMatchCheckFinished() {
+                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
+                        processNextQueueItem();
+                    }
+                });
+            }
         }
     }
     
