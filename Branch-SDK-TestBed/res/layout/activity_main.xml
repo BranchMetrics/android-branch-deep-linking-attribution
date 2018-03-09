@@ -18,7 +18,9 @@
                 android:layout_centerHorizontal="true"
                 android:gravity="center"
                 android:hint="short referral url"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:maxLines="3"
+                android:ellipsize="end"/>
 
             <Button
                 android:id="@+id/cmdRefreshShortURL"

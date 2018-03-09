@@ -2093,6 +2093,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
+        if (trackingController.isTrackingDisabled()) {
+            return req.getLongUrl();
+        }
         if (initState_ == SESSION_STATE.INITIALISED) {
             ServerResponse response = null;
             try {
