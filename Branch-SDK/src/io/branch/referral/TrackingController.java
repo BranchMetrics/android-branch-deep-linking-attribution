@@ -35,9 +35,8 @@ class TrackingController {
     }
     
     private void onTrackingDisabled(Context context) {
-        Branch.getInstance().closeSessionInternal(true);
-        // Disabling tracking should take immediate effect where as tracking enable will take effect from next open
-        trackingDisabled = true;
+        // Clear all pending requests
+        Branch.getInstance().clearPendingRequests();
         
         // Clear  any tracking specific preference items
         PrefHelper prefHelper = PrefHelper.getInstance(context);
@@ -64,6 +63,8 @@ class TrackingController {
         prefHelper.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, 0);
         prefHelper.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, 0);
         prefHelper.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, 0);
-        
+    
+        // Disabling tracking should take immediate effect where as tracking enable will take effect from next open
+        trackingDisabled = true;
     }
 }

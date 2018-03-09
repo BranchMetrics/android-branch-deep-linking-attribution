@@ -1309,14 +1309,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
      */
-    void closeSessionInternal(boolean isTrackingDisabled) {
-        executeClose(isTrackingDisabled);
+    void closeSessionInternal() {
+        executeClose();
         sessionReferredLink_ = null;
-        // Clear all pending requests if tracking is disabled
-        if (isTrackingDisabled) {
-            requestQueue_.clear();
-        }
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
+    }
+    
+    /**
+     * Clears all pending requests in the queue
+     */
+    void clearPendingRequests() {
+        requestQueue_.clear();
     }
     
     /**
@@ -1348,7 +1351,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
      */
-    private void executeClose(boolean isTrackingDisabled) {
+    private void executeClose() {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
             if (!hasNetwork_) {
                 // if there's no network connectivity, purge the old install/open
@@ -1358,7 +1361,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             } else {
                 if (!requestQueue_.containsClose()) {
-                    ServerRequest req = new ServerRequestRegisterClose(context_, isTrackingDisabled);
+                    ServerRequest req = new ServerRequestRegisterClose(context_);
                     handleNewRequest(req);
                 }
             }
@@ -2245,6 +2248,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
+        if (trackingController.isTrackingDisabled()) {
+            req.reportTrackingDisabledError();
+            return;
+        }
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
             insertRequestAtFront(req);
@@ -2379,7 +2386,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void handleNewRequest(ServerRequest req) {
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled()) {
-            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+            req.reportTrackingDisabledError();
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
@@ -2508,7 +2515,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             activityCnt_--; // Check if this is the last activity. If so, stop the session.
             if (activityCnt_ < 1) {
                 isInstantDeepLinkPossible = false;
-                closeSessionInternal(trackingController.isTrackingDisabled());
+                closeSessionInternal();
             }
         }
         

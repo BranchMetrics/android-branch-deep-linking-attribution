@@ -22,7 +22,7 @@ class ServerRequestRegisterClose extends ServerRequest {
      *
      * @param context Current {@link Application} context
      */
-    public ServerRequestRegisterClose(Context context, boolean isTrackingDisabled) {
+    public ServerRequestRegisterClose(Context context) {
         super(context, Defines.RequestPath.RegisterClose.getPath());
         JSONObject closePost = new JSONObject();
         try {
@@ -38,9 +38,6 @@ class ServerRequestRegisterClose extends ServerRequest {
             }
             if (DeviceInfo.getInstance() != null) {
                 closePost.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
-            }
-            if (isTrackingDisabled) {
-                closePost.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
             }
             setPost(closePost);
         } catch (JSONException ex) {

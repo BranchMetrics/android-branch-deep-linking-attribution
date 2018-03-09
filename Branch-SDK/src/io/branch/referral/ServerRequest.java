@@ -583,4 +583,8 @@ public abstract class ServerRequest {
     public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
         return BRANCH_API_VERSION.V1;  // Default is v1
     }
+    
+    public void reportTrackingDisabledError() {
+        handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+    }
 }
