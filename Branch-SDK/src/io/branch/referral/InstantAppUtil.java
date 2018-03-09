@@ -25,7 +25,7 @@ class InstantAppUtil {
     private static Boolean isInstantApp = null;
     private static Context lastApplicationContext = null;
     private static PackageManagerWrapper packageManagerWrapper = null;
-
+    
     static boolean isInstantApp(@NonNull Context context) {
         Context applicationContext = context.getApplicationContext();
         if (applicationContext == null) {
@@ -52,28 +52,28 @@ class InstantAppUtil {
                     isInstantApp = Boolean.FALSE;
                 }
             }
-
+            
             return isInstantApp;
         }
     }
-
+    
     private static boolean isAtLeastO() {
         return Build.VERSION.SDK_INT > 25 || isPreReleaseOBuild();
     }
-
+    
     private static boolean isPreReleaseOBuild() {
         return !"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR"));
     }
-
+    
     @SuppressWarnings("ConstantConditions")
     static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
-            if (Branch.getIsLogging()) {
+            if (Branch.isLogging_ != null && Branch.isLogging_) {
                 Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
             }
             return false;
         } else if (!isInstantApp(activity)) {
-            if (Branch.getIsLogging()) {
+            if (Branch.isLogging_ != null && Branch.isLogging_) {
                 Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
             }
             return false;
@@ -85,22 +85,22 @@ class InstantAppUtil {
             if (!TextUtils.isEmpty(referrer)) {
                 uriBuilder.appendQueryParameter("referrer", referrer);
             }
-
+            
             intent.setData(uriBuilder.build());
             activity.startActivityForResult(intent, requestCode);
             return true;
         }
     }
-
+    
     @SuppressWarnings("RedundantArrayCreation")
     private static class PackageManagerWrapper {
         private final PackageManager packageManager;
         private static Method isInstantAppMethod;
-
+        
         PackageManagerWrapper(PackageManager packageManager) {
             this.packageManager = packageManager;
         }
-
+        
         Boolean isInstantApp() {
             if (!isAtLeastO()) {
                 return null;
@@ -112,7 +112,7 @@ class InstantAppUtil {
                         return null;
                     }
                 }
-
+                
                 try {
                     return (Boolean) isInstantAppMethod.invoke(this.packageManager, new Object[0]);
                 } catch (IllegalAccessException var2) {

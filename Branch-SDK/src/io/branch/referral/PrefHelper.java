@@ -25,35 +25,30 @@ import java.util.Collections;
  * preference values.</p>
  */
 public class PrefHelper {
-
+    
     /**
      * {@link Boolean} value that enables/disables Branch developer external debug mode.
      */
     private static boolean BNC_Dev_Debug = false;
-
-    /**
-     * {@link Boolean} value that enables/disables Branch logging.
-     */
-    private static boolean BNC_Logging = false;
-
+    
     /**
      * A {@link String} value used where no string value is available.
      */
     public static final String NO_STRING_VALUE = "bnc_no_value";
-
+    
     // We should keep this non-zero to give the connection time to recover after a failure
     private static final int INTERVAL_RETRY = 1000;
-
+    
     /**
      * Number of times to reattempt connection to the Branch server before giving up and throwing an
      * exception.
      */
     private static final int MAX_RETRIES = 3; // Default retry count is 3
-
+    
     private static final int TIMEOUT = 5500; // Default timeout id 5.5 sec
-
+    
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
-
+    
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
     private static final String KEY_APP_VERSION = "bnc_app_version";
     private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
@@ -71,27 +66,27 @@ public class PrefHelper {
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
     private static final String KEY_IS_REFERRABLE = "bnc_is_referrable";
-
+    
     private static final String KEY_BUCKETS = "bnc_buckets";
     private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
-
+    
     private static final String KEY_ACTIONS = "bnc_actions";
     private static final String KEY_TOTAL_BASE = "bnc_total_base_";
     private static final String KEY_UNIQUE_BASE = "bnc_balance_base_";
-
+    
     private static final String KEY_RETRY_COUNT = "bnc_retry_count";
     private static final String KEY_RETRY_INTERVAL = "bnc_retry_interval";
     private static final String KEY_TIMEOUT = "bnc_timeout";
-
+    
     private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
-
+    
     private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
-
+    
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
     private static final String KEY_BRANCH_ANALYTICAL_DATA = "bnc_branch_analytical_data";
     private static final String KEY_LAST_STRONG_MATCH_TIME = "bnc_branch_strong_match_time";
-
+    
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
@@ -101,49 +96,49 @@ public class PrefHelper {
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
     static final String KEY_REFERRER_CLICK_TS = "bnc_referrer_click_ts";
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
-
+    
     private static String Branch_Key = null;
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
      */
     private static PrefHelper prefHelper_;
-
+    
     /**
      * A single variable that holds a reference to the application's {@link SharedPreferences}
      * object for use whenever {@link SharedPreferences} values are read or written via this helper
      * class.
      */
     private SharedPreferences appSharedPrefs_;
-
+    
     /**
      * A single variable that holds a reference to an {@link Editor} object that is used by the
      * helper class whenever the preferences for the application are changed.
      */
     private Editor prefsEditor_;
-
+    
     /**
      * Arbitrary key values added to all requests.
      */
     private JSONObject requestMetadata;
-
+    
     /**
      * Reference of application {@link Context}, normally the base context of the application.
      */
     private Context context_;
-
+    
     /**
      * Branch Content discovery data
      */
     private static JSONObject savedAnalyticsData_;
-
+    
     /**
      * <p>Empty, but required constructor for the {@link PrefHelper} {@link SharedPreferences}
      * helper class.</p>
      */
     public PrefHelper() {
     }
-
+    
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
      *
@@ -157,7 +152,7 @@ public class PrefHelper {
         this.context_ = context;
         this.requestMetadata = new JSONObject();
     }
-
+    
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link PrefHelper}.</p>
@@ -173,7 +168,7 @@ public class PrefHelper {
         }
         return prefHelper_;
     }
-
+    
     /**
      * <p>Returns the base URL to use for all calls to the Branch API as a {@link String}.</p>
      *
@@ -183,7 +178,7 @@ public class PrefHelper {
     public String getAPIBaseUrl() {
         return "https://api.branch.io/";
     }
-
+    
     /**
      * <p>Sets the duration in milliseconds to override the timeout value for calls to the Branch API.</p>
      *
@@ -192,7 +187,7 @@ public class PrefHelper {
     public void setTimeout(int timeout) {
         setInteger(KEY_TIMEOUT, timeout);
     }
-
+    
     /**
      * <p>Returns the currently set timeout value for calls to the Branch API. This will be the default
      * SDK setting unless it has been overridden manually between Branch object instantiation and
@@ -204,10 +199,10 @@ public class PrefHelper {
     public int getTimeout() {
         return getInteger(KEY_TIMEOUT, TIMEOUT);
     }
-
+    
     /**
      * <p>Sets the value specifying the number of times that a Branch API call has been re-attempted.</p>
-     *
+     * <p>
      * <p>This overrides the default retry value.</p>
      *
      * @param retry An {@link Integer} value specifying the value to be specified in preferences
@@ -217,7 +212,7 @@ public class PrefHelper {
     public void setRetryCount(int retry) {
         setInteger(KEY_RETRY_COUNT, retry);
     }
-
+    
     /**
      * <p>Gets the current count of the number of times that a Branch API call has been re-attempted.</p>
      *
@@ -227,7 +222,7 @@ public class PrefHelper {
     public int getRetryCount() {
         return getInteger(KEY_RETRY_COUNT, MAX_RETRIES);
     }
-
+    
     /**
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
      * to the Branch API.</p>
@@ -238,7 +233,7 @@ public class PrefHelper {
     public void setRetryInterval(int retryInt) {
         setInteger(KEY_RETRY_INTERVAL, retryInt);
     }
-
+    
     /**
      * <p>Gets the amount of time in milliseconds to wait before re-attempting a timed-out request
      * to the Branch API.</p>
@@ -249,7 +244,7 @@ public class PrefHelper {
     public int getRetryInterval() {
         return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
     }
-
+    
     /**
      * <p>Sets the value of {@link #KEY_APP_VERSION} in preferences.</p>
      *
@@ -258,7 +253,7 @@ public class PrefHelper {
     public void setAppVersion(String version) {
         setString(KEY_APP_VERSION, version);
     }
-
+    
     /**
      * <p>Returns the current value of {@link #KEY_APP_VERSION} as stored in preferences.</p>
      *
@@ -267,7 +262,7 @@ public class PrefHelper {
     public String getAppVersion() {
         return getString(KEY_APP_VERSION);
     }
-
+    
     /**
      * Set the given Branch Key to preference. Clears the preference data if the key is a new key.
      *
@@ -284,22 +279,22 @@ public class PrefHelper {
         }
         return false;
     }
-
-
+    
+    
     public String getBranchKey() {
         if (Branch_Key == null) {
             Branch_Key = getString(KEY_BRANCH_KEY);
         }
         return Branch_Key;
     }
-
+    
     public String readBranchKey(boolean isLive) {
         String branchKey = null;
         String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
         if (!isLive) {
             setExternDebug();
         }
-
+        
         try {
             final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
@@ -310,7 +305,7 @@ public class PrefHelper {
             }
         } catch (final Exception ignore) {
         }
-
+        
         // If Branch key is not specified in the manifest check String resource
         if (TextUtils.isEmpty(branchKey)) {
             try {
@@ -322,10 +317,10 @@ public class PrefHelper {
         if (branchKey == null) {
             branchKey = NO_STRING_VALUE;
         }
-
+        
         return branchKey;
     }
-
+    
     /**
      * <p>Sets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
      * as a {@link String} in preferences.</p>
@@ -335,7 +330,7 @@ public class PrefHelper {
     public void setDeviceFingerPrintID(String device_fingerprint_id) {
         setString(KEY_DEVICE_FINGERPRINT_ID, device_fingerprint_id);
     }
-
+    
     /**
      * <p>Gets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
      * as a {@link String} from preferences.</p>
@@ -345,7 +340,7 @@ public class PrefHelper {
     public String getDeviceFingerPrintID() {
         return getString(KEY_DEVICE_FINGERPRINT_ID);
     }
-
+    
     /**
      * <p>Sets the ID of the {@link #KEY_SESSION_ID} {@link String} value in preferences.</p>
      *
@@ -355,7 +350,7 @@ public class PrefHelper {
     public void setSessionID(String session_id) {
         setString(KEY_SESSION_ID, session_id);
     }
-
+    
     /**
      * <p>Gets the ID of the {@link #KEY_SESSION_ID} {@link String} value from preferences.</p>
      *
@@ -365,13 +360,13 @@ public class PrefHelper {
     public String getSessionID() {
         return getString(KEY_SESSION_ID);
     }
-
+    
     /**
      * <p>Sets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p>
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     *
+     * <p>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
      *
      * @param identity_id A {@link String} value containing the currently configured identity
@@ -380,7 +375,7 @@ public class PrefHelper {
     public void setIdentityID(String identity_id) {
         setString(KEY_IDENTITY_ID, identity_id);
     }
-
+    
     /**
      * <p>Gets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
      *
@@ -390,13 +385,13 @@ public class PrefHelper {
     public String getIdentityID() {
         return getString(KEY_IDENTITY_ID);
     }
-
+    
     /**
      * <p>Sets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
-     *
+     * <p>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentityID(String)} - the UID reference of the user</p>
      *
      * @param identity A {@link String} value containing the currently configured identity
@@ -405,10 +400,10 @@ public class PrefHelper {
     public void setIdentity(String identity) {
         setString(KEY_IDENTITY, identity);
     }
-
+    
     /**
      * <p>Gets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
-     *
+     * <p>
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      *
@@ -417,7 +412,7 @@ public class PrefHelper {
     public String getIdentity() {
         return getString(KEY_IDENTITY);
     }
-
+    
     /**
      * <p>Sets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
      *
@@ -427,8 +422,8 @@ public class PrefHelper {
     public void setLinkClickID(String link_click_id) {
         setString(KEY_LINK_CLICK_ID, link_click_id);
     }
-
-
+    
+    
     /**
      * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>
      *
@@ -437,7 +432,7 @@ public class PrefHelper {
     public String getLinkClickID() {
         return getString(KEY_LINK_CLICK_ID);
     }
-
+    
     /**
      * Set the value to specify if the current init is triggered by an FB app link
      *
@@ -446,7 +441,7 @@ public class PrefHelper {
     public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
         setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
     }
-
+    
     /**
      * Specifies the value to specify if the current init is triggered by an FB app link
      *
@@ -455,7 +450,7 @@ public class PrefHelper {
     public boolean getIsAppLinkTriggeredInit() {
         return getBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK);
     }
-
+    
     /**
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_URI} with value with given intent URI String.</p>
      *
@@ -464,7 +459,7 @@ public class PrefHelper {
     public void setExternalIntentUri(String uri) {
         setString(KEY_EXTERNAL_INTENT_URI, uri);
     }
-
+    
     /**
      * <p>Gets the {@link #KEY_EXTERNAL_INTENT_URI} {@link String} value that has been set via the Branch API.</p>
      *
@@ -473,8 +468,8 @@ public class PrefHelper {
     public String getExternalIntentUri() {
         return getString(KEY_EXTERNAL_INTENT_URI);
     }
-
-
+    
+    
     /**
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_EXTRA} with value with given intent extras in string format.</p>
      *
@@ -483,7 +478,7 @@ public class PrefHelper {
     public void setExternalIntentExtra(String extras) {
         setString(KEY_EXTERNAL_INTENT_EXTRA, extras);
     }
-
+    
     /**
      * <p>Gets the {@link #KEY_EXTERNAL_INTENT_EXTRA} {@link String} value that has been set via the Branch API.</p>
      *
@@ -492,7 +487,7 @@ public class PrefHelper {
     public String getExternalIntentExtra() {
         return getString(KEY_EXTERNAL_INTENT_EXTRA);
     }
-
+    
     /**
      * <p>Sets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
@@ -502,8 +497,8 @@ public class PrefHelper {
     public void setLinkClickIdentifier(String identifier) {
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
     }
-
-
+    
+    
     /**
      * <p>Gets the KEY_LINK_CLICK_IDENTIFIER {@link String} value that has been set via the Branch API.</p>
      *
@@ -512,7 +507,7 @@ public class PrefHelper {
     public String getLinkClickIdentifier() {
         return getString(KEY_LINK_CLICK_IDENTIFIER);
     }
-
+    
     /**
      * Sets the Google install referrer identifier to the pref
      *
@@ -521,7 +516,7 @@ public class PrefHelper {
     public void setGoogleSearchInstallIdentifier(String identifier) {
         setString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER, identifier);
     }
-
+    
     /**
      * Gets the google install referrer identifier
      *
@@ -530,7 +525,7 @@ public class PrefHelper {
     public String getGoogleSearchInstallIdentifier() {
         return getString(KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER);
     }
-
+    
     /**
      * Sets the Google play install referrer string
      *
@@ -539,7 +534,7 @@ public class PrefHelper {
     public void setGooglePlayReferrer(String referrer) {
         setString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA, referrer);
     }
-
+    
     /**
      * Gets the google play install referrer string
      *
@@ -548,8 +543,8 @@ public class PrefHelper {
     public String getGooglePlayReferrer() {
         return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
     }
-
-
+    
+    
     /**
      * <p> Set the KEY_APP_LINK {@link String} values that has been started the application. </p>
      *
@@ -558,7 +553,7 @@ public class PrefHelper {
     public void setAppLink(String appLinkUrl) {
         setString(KEY_APP_LINK, appLinkUrl);
     }
-
+    
     /**
      * <p> Get the App link which statrted the application.</p>
      *
@@ -567,7 +562,7 @@ public class PrefHelper {
     public String getAppLink() {
         return getString(KEY_APP_LINK);
     }
-
+    
     /**
      * Set the value for the full app conversion state. If set true indicate that this session is
      * initiated by a full app conversion flow
@@ -577,7 +572,7 @@ public class PrefHelper {
     public void setIsFullAppConversion(boolean isFullAppConversion) {
         setBool(KEY_IS_FULL_APP_CONVERSION, isFullAppConversion);
     }
-
+    
     /**
      * Get the value for the full app conversion state.
      *
@@ -586,7 +581,7 @@ public class PrefHelper {
     public boolean isFullAppConversion() {
         return getBool(KEY_IS_FULL_APP_CONVERSION);
     }
-
+    
     /**
      * <p> Set the KEY_PUSH_IDENTIFIER {@link String} values that has been started the application. </p>
      *
@@ -595,7 +590,7 @@ public class PrefHelper {
     public void setPushIdentifier(String pushIdentifier) {
         setString(KEY_PUSH_IDENTIFIER, pushIdentifier);
     }
-
+    
     /**
      * <p> Get the branch url in push payload which started the application.</p>
      *
@@ -604,10 +599,10 @@ public class PrefHelper {
     public String getPushIdentifier() {
         return getString(KEY_PUSH_IDENTIFIER);
     }
-
+    
     /**
      * <p>Gets the session parameters as currently set in preferences.</p>
-     *
+     * <p>
      * <p>Parameters are stored in JSON format, and must be parsed prior to access.</p>
      *
      * @return A {@link String} value containing the JSON-encoded structure of parameters for
@@ -616,7 +611,7 @@ public class PrefHelper {
     public String getSessionParams() {
         return getString(KEY_SESSION_PARAMS);
     }
-
+    
     /**
      * <p>Sets the session parameters as currently set in preferences.</p>
      *
@@ -626,7 +621,7 @@ public class PrefHelper {
     public void setSessionParams(String params) {
         setString(KEY_SESSION_PARAMS, params);
     }
-
+    
     /**
      * <p>Gets the session parameters as originally set at time of app installation, in preferences.</p>
      *
@@ -636,7 +631,7 @@ public class PrefHelper {
     public String getInstallParams() {
         return getString(KEY_INSTALL_PARAMS);
     }
-
+    
     /**
      * <p>Sets the session parameters as originally set at time of app installation, in preferences.</p>
      *
@@ -646,15 +641,15 @@ public class PrefHelper {
     public void setInstallParams(String params) {
         setString(KEY_INSTALL_PARAMS, params);
     }
-
+    
     public void setInstallReferrerParams(String params) {
         setString(KEY_INSTALL_REFERRER, params);
     }
-
+    
     public String getInstallReferrerParams() {
         return getString(KEY_INSTALL_REFERRER);
     }
-
+    
     /**
      * <p>Sets the user URL from preferences.</p>
      *
@@ -663,7 +658,7 @@ public class PrefHelper {
     public void setUserURL(String user_url) {
         setString(KEY_USER_URL, user_url);
     }
-
+    
     /**
      * <p>Sets the user URL from preferences.</p>
      *
@@ -672,7 +667,7 @@ public class PrefHelper {
     public String getUserURL() {
         return getString(KEY_USER_URL);
     }
-
+    
     /**
      * <p>Gets the {@link Integer} value of the preference setting {@link #KEY_IS_REFERRABLE}, which
      * indicates whether or not the current session should be considered referrable.</p>
@@ -683,7 +678,7 @@ public class PrefHelper {
     public int getIsReferrable() {
         return getInteger(KEY_IS_REFERRABLE);
     }
-
+    
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 1, or <i>true</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
@@ -694,11 +689,11 @@ public class PrefHelper {
     public void setIsReferrable() {
         setInteger(KEY_IS_REFERRABLE, 1);
     }
-
+    
     /**
      * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}.
      * This value is used by the {@link Branch} object.</p>
-     *
+     * <p>
      * <ul>
      * <li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
      * </ul>
@@ -706,7 +701,7 @@ public class PrefHelper {
     public void clearIsReferrable() {
         setInteger(KEY_IS_REFERRABLE, 0);
     }
-
+    
     /**
      * <p>Resets the time that the system was last read. This is used to calculate how "stale" the
      * values are that are in use in preferences.</p>
@@ -730,7 +725,7 @@ public class PrefHelper {
     boolean isAppTrackingLimited() {
         return getBool(KEY_LIMIT_FACEBOOK_TRACKING);
     }
-
+    
     /**
      * <p>Resets the user-related values that have been stored in preferences. This will cause a
      * sync to occur whenever a method reads any of the values and finds the value to be 0 or unset.</p>
@@ -741,7 +736,7 @@ public class PrefHelper {
             setCreditCount(bucket, 0);
         }
         setBuckets(new ArrayList<String>());
-
+        
         ArrayList<String> actions = getActions();
         for (String action : actions) {
             setActionTotalCount(action, 0);
@@ -749,9 +744,9 @@ public class PrefHelper {
         }
         setActions(new ArrayList<String>());
     }
-
+    
     // REWARD TRACKING CALLS
-
+    
     private ArrayList<String> getBuckets() {
         String bucketList = getString(KEY_BUCKETS);
         if (bucketList.equals(NO_STRING_VALUE)) {
@@ -760,7 +755,7 @@ public class PrefHelper {
             return deserializeString(bucketList);
         }
     }
-
+    
     private void setBuckets(ArrayList<String> buckets) {
         if (buckets.size() == 0) {
             setString(KEY_BUCKETS, NO_STRING_VALUE);
@@ -768,10 +763,10 @@ public class PrefHelper {
             setString(KEY_BUCKETS, serializeArrayList(buckets));
         }
     }
-
+    
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     *
+     * <p>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
@@ -783,10 +778,10 @@ public class PrefHelper {
     public void setCreditCount(int count) {
         setCreditCount(Defines.Jsonkey.DefaultBucket.getKey(), count);
     }
-
+    
     /**
      * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     *
+     * <p>
      * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
      * but only the cached value as stored in preferences for the current app. The age of that value
      * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
@@ -804,7 +799,7 @@ public class PrefHelper {
         }
         setInteger(KEY_CREDIT_BASE + bucket, count);
     }
-
+    
     /**
      * <p>Get the current cached credit count for the default bucket, as currently stored in
      * preferences for the current app.</p>
@@ -815,7 +810,7 @@ public class PrefHelper {
     public int getCreditCount() {
         return getCreditCount(Defines.Jsonkey.DefaultBucket.getKey());
     }
-
+    
     /**
      * <p>Get the current cached credit count for the default bucket, as currently stored in
      * preferences for the current app.</p>
@@ -827,9 +822,9 @@ public class PrefHelper {
     public int getCreditCount(String bucket) {
         return getInteger(KEY_CREDIT_BASE + bucket);
     }
-
+    
     // EVENT REFERRAL INSTALL CALLS
-
+    
     private ArrayList<String> getActions() {
         String actionList = getString(KEY_ACTIONS);
         if (actionList.equals(NO_STRING_VALUE)) {
@@ -838,7 +833,7 @@ public class PrefHelper {
             return deserializeString(actionList);
         }
     }
-
+    
     private void setActions(ArrayList<String> actions) {
         if (actions.size() == 0) {
             setString(KEY_ACTIONS, NO_STRING_VALUE);
@@ -846,7 +841,7 @@ public class PrefHelper {
             setString(KEY_ACTIONS, serializeArrayList(actions));
         }
     }
-
+    
     /**
      * <p>Sets the count of total number of times that the specified action has been carried out
      * during the current session, as defined in preferences.</p>
@@ -864,7 +859,7 @@ public class PrefHelper {
         }
         setInteger(KEY_TOTAL_BASE + action, count);
     }
-
+    
     /**
      * <p>Sets the count of the unique number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
@@ -877,7 +872,7 @@ public class PrefHelper {
     public void setActionUniqueCount(String action, int count) {
         setInteger(KEY_UNIQUE_BASE + action, count);
     }
-
+    
     /**
      * <p>Gets the count of total number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
@@ -890,7 +885,7 @@ public class PrefHelper {
     public int getActionTotalCount(String action) {
         return getInteger(KEY_TOTAL_BASE + action);
     }
-
+    
     /**
      * <p>Gets the count of the unique number of times that the specified action has been carried
      * out during the current session, as defined in preferences.</p>
@@ -903,9 +898,9 @@ public class PrefHelper {
     public int getActionUniqueCount(String action) {
         return getInteger(KEY_UNIQUE_BASE + action);
     }
-
+    
     // ALL GENERIC CALLS
-
+    
     private String serializeArrayList(ArrayList<String> strings) {
         String retString = "";
         for (String value : strings) {
@@ -914,14 +909,14 @@ public class PrefHelper {
         retString = retString.substring(0, retString.length() - 1);
         return retString;
     }
-
+    
     private ArrayList<String> deserializeString(String list) {
         ArrayList<String> strings = new ArrayList<>();
         String[] stringArr = list.split(",");
         Collections.addAll(strings, stringArr);
         return strings;
     }
-
+    
     /**
      * <p>A basic method that returns an integer value from a specified preferences Key.</p>
      *
@@ -931,7 +926,7 @@ public class PrefHelper {
     public int getInteger(String key) {
         return getInteger(key, 0);
     }
-
+    
     /**
      * <p>A basic method that returns an {@link Integer} value from a specified preferences Key, with a
      * default value supplied in case the value is null.</p>
@@ -945,7 +940,7 @@ public class PrefHelper {
     public int getInteger(String key, int defaultValue) {
         return prefHelper_.appSharedPrefs_.getInt(key, defaultValue);
     }
-
+    
     /**
      * <p>A basic method that returns a {@link Long} value from a specified preferences Key.</p>
      *
@@ -955,7 +950,7 @@ public class PrefHelper {
     public long getLong(String key) {
         return prefHelper_.appSharedPrefs_.getLong(key, 0);
     }
-
+    
     /**
      * <p>A basic method that returns a {@link Float} value from a specified preferences Key.</p>
      *
@@ -965,7 +960,7 @@ public class PrefHelper {
     public float getFloat(String key) {
         return prefHelper_.appSharedPrefs_.getFloat(key, 0);
     }
-
+    
     /**
      * <p>A basic method that returns a {@link String} value from a specified preferences Key.</p>
      *
@@ -975,7 +970,7 @@ public class PrefHelper {
     public String getString(String key) {
         return prefHelper_.appSharedPrefs_.getString(key, NO_STRING_VALUE);
     }
-
+    
     /**
      * <p>A basic method that returns a {@link Boolean} value from a specified preferences Key.</p>
      *
@@ -985,7 +980,7 @@ public class PrefHelper {
     public boolean getBool(String key) {
         return prefHelper_.appSharedPrefs_.getBoolean(key, false);
     }
-
+    
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
@@ -996,7 +991,7 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.putInt(key, value);
         prefHelper_.prefsEditor_.apply();
     }
-
+    
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
@@ -1007,7 +1002,7 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.putLong(key, value);
         prefHelper_.prefsEditor_.apply();
     }
-
+    
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
@@ -1018,7 +1013,7 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.putFloat(key, value);
         prefHelper_.prefsEditor_.apply();
     }
-
+    
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
@@ -1029,7 +1024,7 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.putString(key, value);
         prefHelper_.prefsEditor_.apply();
     }
-
+    
     /**
      * <p>Sets the value of the {@link String} key value supplied in preferences.</p>
      *
@@ -1040,19 +1035,19 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.putBoolean(key, value);
         prefHelper_.prefsEditor_.apply();
     }
-
+    
     public void updateBranchViewUsageCount(String branchViewId) {
         String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
         int currentUsage = getBranchViewUsageCount(branchViewId) + 1;
         setInteger(key, currentUsage);
     }
-
+    
     public int getBranchViewUsageCount(String branchViewId) {
         String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
         return getInteger(key, 0);
     }
-
-
+    
+    
     public JSONObject getBranchAnalyticsData() {
         JSONObject analyticsDataObject;
         if (savedAnalyticsData_ != null) {
@@ -1069,14 +1064,14 @@ public class PrefHelper {
         }
         return analyticsDataObject;
     }
-
-
+    
+    
     public void clearBranchAnalyticsData() {
         savedAnalyticsData_ = null;
         setString(KEY_BRANCH_ANALYTICAL_DATA, "");
     }
-
-
+    
+    
     public void saveBranchAnalyticsData(JSONObject analyticsData) {
         String sessionID = getSessionID();
         if (!sessionID.equals(NO_STRING_VALUE)) {
@@ -1087,7 +1082,7 @@ public class PrefHelper {
                 JSONArray viewDataArray;
                 if (savedAnalyticsData_.has(sessionID)) {
                     viewDataArray = savedAnalyticsData_.getJSONArray(sessionID);
-
+                    
                 } else {
                     viewDataArray = new JSONArray();
                     savedAnalyticsData_.put(sessionID, viewDataArray);
@@ -1098,7 +1093,7 @@ public class PrefHelper {
             }
         }
     }
-
+    
     /**
      * Saves the last strong match epoch time stamp
      *
@@ -1107,7 +1102,7 @@ public class PrefHelper {
     public void saveLastStrongMatchTime(long strongMatchCheckTime) {
         setLong(KEY_LAST_STRONG_MATCH_TIME, strongMatchCheckTime);
     }
-
+    
     /**
      * Get the last strong match check epoch time
      *
@@ -1116,7 +1111,7 @@ public class PrefHelper {
     public long getLastStrongMatchTime() {
         return getLong(KEY_LAST_STRONG_MATCH_TIME);
     }
-
+    
     /**
      * <p>Clears all the Branch referral shared preferences related to the current key.
      * Should be called before setting an new Branch-Key. </p>
@@ -1129,21 +1124,21 @@ public class PrefHelper {
         String appLink = getAppLink();
         String pushIdentifier = getPushIdentifier();
         prefsEditor_.clear();
-
+        
         setLinkClickID(linkClickID);
         setLinkClickIdentifier(linkClickIdentifier);
         setAppLink(appLink);
         setPushIdentifier(pushIdentifier);
         prefHelper_.prefsEditor_.apply();
     }
-
+    
     /**
      * <p>Switches external debugging on.</p>
      */
     public void setExternDebug() {
         BNC_Dev_Debug = true;
     }
-
+    
     /**
      * <p>Gets the value of the debug status {@link Boolean} value.</p>
      *
@@ -1152,46 +1147,28 @@ public class PrefHelper {
     public boolean getExternDebug() {
         return BNC_Dev_Debug;
     }
-
-    /**
-     * <p>Toggles debugging on/off.</p>
-     */
-    public void setLogging(final boolean logging) {
-        BNC_Logging = logging;
-    }
-
+    
+    
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         if (key == null) {
             return;
         }
-
+        
         if (this.requestMetadata.has(key) && value == null) {
             this.requestMetadata.remove(key);
         }
-
+        
         try {
             this.requestMetadata.put(key, value);
         } catch (JSONException e) {
             // no-op
         }
     }
-
+    
     public JSONObject getRequestMetadata() {
         return this.requestMetadata;
     }
-
-    /**
-     * <p>Creates a <b>Log</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
-     *
-     * @param tag     A {@link String} value specifying the logging tag to use for the message.
-     * @param message A {@link String} value containing the logging message to record.
-     */
-    public void log(final String tag, final String message) {
-        if (BNC_Dev_Debug || BNC_Logging) {
-            Log.i(tag, message);
-        }
-    }
-
+    
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
@@ -1199,12 +1176,8 @@ public class PrefHelper {
      * @param message A {@link String} value containing the debug message to record.
      */
     public static void Debug(String tag, String message) {
-        if (prefHelper_ != null) {
-            prefHelper_.log(tag, message);
-        } else {
-            if (BNC_Dev_Debug || BNC_Logging) {
-                Log.i(tag, message);
-            }
+        if ((Branch.isLogging_ == null && BNC_Dev_Debug) || (Branch.isLogging_ != null && Branch.isLogging_)) {
+            Log.i(tag, message);
         }
     }
 }

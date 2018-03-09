@@ -290,7 +290,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     static boolean isSimulatingInstalls_;
     
-    private static boolean isLogging_ = false;
+    static Boolean isLogging_ = null;
     
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
@@ -2438,7 +2438,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
-                prefHelper_.setLogging(getIsLogging());
                 startSession(activity);
             } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
                 initState_ = SESSION_STATE.UNINITIALISED;
@@ -3026,10 +3025,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public static void disableLogging() {
         isLogging_ = false;
-    }
-    
-    public static boolean getIsLogging() {
-        return isLogging_;
     }
     
     //-------------------------- Branch Builders--------------------------------------//
