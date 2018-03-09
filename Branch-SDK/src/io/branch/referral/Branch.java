@@ -289,7 +289,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     static boolean isSimulatingInstalls_;
     
-    private static boolean isLogging_ = false;
+    static Boolean isLogging_ = null;
     
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
@@ -945,7 +945,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
         return initSession(callback, data, null);
     }
     
@@ -961,7 +961,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, Uri data) {
         return initSession(callback, data, null);
     }
     
@@ -978,7 +978,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         initSession(callback, activity);
         return true;
@@ -997,7 +997,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         return initSession(callback, activity);
     }
@@ -1030,7 +1030,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *             initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSessionWithData(@NonNull Uri data) {
+    public boolean initSessionWithData(Uri data) {
         return initSessionWithData(data, null);
     }
     
@@ -1109,7 +1109,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
     
@@ -1128,7 +1128,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         return initSession(callback, isReferrable, activity);
     }
@@ -1148,7 +1148,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         return initSession(callback, isReferrable, activity);
     }
@@ -2491,7 +2491,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
-                prefHelper_.setLogging(getIsLogging());
                 startSession(activity);
             } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
                 initState_ = SESSION_STATE.UNINITIALISED;
@@ -3079,10 +3078,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public static void disableLogging() {
         isLogging_ = false;
-    }
-    
-    public static boolean getIsLogging() {
-        return isLogging_;
     }
     
     //-------------------------- Branch Builders--------------------------------------//
