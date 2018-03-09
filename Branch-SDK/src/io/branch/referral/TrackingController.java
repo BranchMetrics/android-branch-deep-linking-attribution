@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.app.Activity;
 import android.content.Context;
 
 /**
@@ -20,10 +21,15 @@ class TrackingController {
     }
     
     void disableTracking(Context context, boolean disableTracking) {
-        if (disableTracking) {
-            onTrackingDisabled(context);
+        if (trackingDisabled != disableTracking) {
+            trackingDisabled = disableTracking;
+            if (disableTracking) {
+                onTrackingDisabled(context);
+            } else {
+                onTrackingEnabled();
+            }
+            PrefHelper.getInstance(context).setBool(PrefHelper.KEY_TRACKING_STATE, disableTracking);
         }
-        PrefHelper.getInstance(context).setBool(PrefHelper.KEY_TRACKING_STATE, disableTracking);
     }
     
     boolean isTrackingDisabled() {
@@ -63,8 +69,12 @@ class TrackingController {
         prefHelper.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, 0);
         prefHelper.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, 0);
         prefHelper.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, 0);
+    }
     
-        // Disabling tracking should take immediate effect where as tracking enable will take effect from next open
-        trackingDisabled = true;
+    private void onTrackingEnabled() {
+        if (Branch.getInstance() != null) {
+            Activity activity = null;
+            Branch.getInstance().registerAppReInit();
+        }
     }
 }

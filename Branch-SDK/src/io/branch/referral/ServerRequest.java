@@ -585,6 +585,7 @@ public abstract class ServerRequest {
     }
     
     public void reportTrackingDisabledError() {
+        PrefHelper.Debug("BranchSDK", "Requested operation cannot be completed since tracking is disabled [" + requestPath_ + "]");
         handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
     }
 }

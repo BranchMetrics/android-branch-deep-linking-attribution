@@ -2311,16 +2311,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
+    /**
+     * Registers app init with params filtered from the intent. This will wait on the wait locks to complete any pending operations
+     */
     private void registerAppInit(BranchReferralInitListener
                                          callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
-        ServerRequest request;
-        if (hasUser()) {
-            // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback, systemObserver_);
-        } else {
-            // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, systemObserver_, InstallListener.getInstallationID());
-        }
+        ServerRequest request = getInstallOrOpenRequest(callback);
         request.addProcessWaitLock(lock);
         if (isGAParamsFetchInProgress_) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
@@ -2334,6 +2330,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         
         registerInstallOrOpen(request, callback);
+    }
+    
+    /*
+     * Register app init without any wait on wait locks. This will not be getting any params from the intent
+     */
+    void registerAppReInit() {
+        registerInstallOrOpen(getInstallOrOpenRequest(null), null);
+    }
+    
+    private ServerRequest getInstallOrOpenRequest(BranchReferralInitListener callback) {
+        ServerRequest request;
+        if (hasUser()) {
+            // If there is user this is open
+            request = new ServerRequestRegisterOpen(context_, callback, systemObserver_);
+        } else {
+            // If no user this is an Install
+            request = new ServerRequestRegisterInstall(context_, callback, systemObserver_, InstallListener.getInstallationID());
+        }
+        return request;
     }
     
     private void onIntentReady(Activity activity, boolean grabIntentParams) {
