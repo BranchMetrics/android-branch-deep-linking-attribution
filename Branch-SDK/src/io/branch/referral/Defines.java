@@ -180,7 +180,8 @@ public class Defines {
         Longitude("$longitude"),
         ImageCaptions("$image_captions"),
         Condition("$condition"),
-        CreationTimestamp("$creation_timestamp");
+        CreationTimestamp("$creation_timestamp"),
+        TrackingDisabled("tracking_disabled");
         
         private String key = "";
         

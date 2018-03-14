@@ -588,4 +588,17 @@ public abstract class ServerRequest {
         PrefHelper.Debug("BranchSDK", "Requested operation cannot be completed since tracking is disabled [" + requestPath_ + "]");
         handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
     }
+    
+    /**
+     * Method to notify that this request is being executed when tracking is disabled.
+     * Remove all PII data from the request added to the request
+     *
+     * @return {@code true} if the request needed to be executed in tracking disabled mode
+     */
+    protected boolean prepareExecuteWithoutTracking() {
+        // Default return false. Return true for request need to be executed when tracking is disabled
+        return false;
+    }
+    
+    
 }
