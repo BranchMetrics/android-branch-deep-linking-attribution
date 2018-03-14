@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="3dp"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#776C6C6C"
+        android:orientation="vertical"
+        android:padding="5dp">
+
+        <EditText
+            android:id="@+id/branch_key_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter Branch key"
+            android:textSize="14sp"/>
+
+        <EditText
+            android:id="@+id/branch_api_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter Branch API Url"
+            android:textSize="14sp"/>
+
+        <Button
+            android:id="@+id/run_tests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Run Tests"
+            android:textAppearance="@android:style/TextAppearance.Small"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:text="OR"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#776C6C6C"
+        android:orientation="vertical"
+        android:padding="5dp">
+
+        <Button
+            android:id="@+id/generate_test_docs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Generate Request models"
+            android:textAppearance="@android:style/TextAppearance.Small"
+            android:textColor="@android:color/white"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#776C6C6C"
+        android:orientation="vertical"
+        android:padding="5dp"
+        android:layout_marginTop="0dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:gravity="left"
+            android:text="Logs"/>
+
+
+        <TextView
+            android:id="@+id/log_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"
+            android:textColor="@android:color/black"
+            android:maxLines = "999999"
+            android:scrollbars = "vertical"
+            android:gravity="bottom"
+            android:paddingBottom="50dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

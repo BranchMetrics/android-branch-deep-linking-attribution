@@ -2873,6 +2873,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
                         processNextQueueItem();
                     }
+                    if (qaEventCallbacks != null) {
+                        qaEventCallbacks.onRequestCompleted(thisReq_, serverResponse);
+                    }
                 } catch (JSONException ex) {
                     ex.printStackTrace();
                 }
@@ -3743,6 +3746,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
+    }
+    
+    
+    private IQAInternalEvents qaEventCallbacks;
+    
+    public void setToQAInternalMode(String branchKey, String apiUrl, IQAInternalEvents callback) {
+        qaEventCallbacks = callback;
+        if (!TextUtils.isEmpty(branchKey)) {
+            prefHelper_.setBranchKey(branchKey);
+        }
+        if (!TextUtils.isEmpty(apiUrl)) {
+            prefHelper_.baseApiUrl = apiUrl;
+        }
+    }
+    
+    public interface IQAInternalEvents {
+        void onRequestCompleted(ServerRequest request, ServerResponse response);
     }
     
 }

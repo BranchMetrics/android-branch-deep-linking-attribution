@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
@@ -16,6 +17,7 @@ import org.json.JSONObject;
 import java.util.Date;
 
 import io.branch.branchandroiddemo.test.BUOTestRoutines;
+import io.branch.branchandroiddemo.test.QAInternalActivity;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -375,6 +377,16 @@ public class MainActivity extends Activity {
         });
 
         BUOTestRoutines.TestBUOSerialisation();
+    
+        findViewById(R.id.main_view).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(MainActivity.this, QAInternalActivity.class);
+                MainActivity.this.startActivity(intent);
+                return false;
+            }
+        });
+        
     }
 
 

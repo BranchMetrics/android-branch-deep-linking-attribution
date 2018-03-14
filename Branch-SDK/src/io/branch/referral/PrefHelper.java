@@ -25,6 +25,8 @@ import java.util.Collections;
  * preference values.</p>
  */
 public class PrefHelper {
+    
+    public String baseApiUrl = "https://api.branch.io/";
 
     /**
      * {@link Boolean} value that enables/disables Branch developer external debug mode.
@@ -181,7 +183,8 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
-        return "https://api.branch.io/";
+        //return "https://api.branch.io/";
+        return baseApiUrl;
     }
 
     /**
