@@ -62,13 +62,6 @@ class TrackingController {
         prefHelper.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.setInstallParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.saveLastStrongMatchTime(0);
-        
-        // Clear install time stamps
-        prefHelper.setLong(PrefHelper.KEY_REFERRER_CLICK_TS, 0);
-        prefHelper.setLong(PrefHelper.KEY_INSTALL_BEGIN_TS, 0);
-        prefHelper.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, 0);
-        prefHelper.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, 0);
-        prefHelper.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, 0);
     }
     
     private void onTrackingEnabled() {
