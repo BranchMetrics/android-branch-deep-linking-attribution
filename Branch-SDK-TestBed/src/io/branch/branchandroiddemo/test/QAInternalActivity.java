@@ -197,10 +197,10 @@ public class QAInternalActivity extends Activity implements Branch.IQAInternalEv
                 intentShareFile.setType("application/pdf");
                 intentShareFile.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+file.getAbsolutePath()));
                 intentShareFile.putExtra(Intent.EXTRA_SUBJECT,
-                        "Sharing File...");
-                intentShareFile.putExtra(Intent.EXTRA_TEXT, "Request demo file");
+                        "Branch Android Request Model :" +file.getAbsolutePath());
+                intentShareFile.putExtra(Intent.EXTRA_TEXT, "Branch Android Request Model");
         
-                startActivity(Intent.createChooser(intentShareFile, "Request demo file"));
+                startActivity(Intent.createChooser(intentShareFile, "Branch Android Request Model"));
             }
         } catch (IOException e) {
             return null;
