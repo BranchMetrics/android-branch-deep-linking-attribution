@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,12 +51,14 @@ class ApkParser {
      *
      * String manifestStr = decompressXML(systemObserver.getURIScheme());</pre>
      *
-     * @param xml A {@link Byte[]} containing the XML to be decompressed.
+     * @param xml A {@link Byte[]} containing the XML to be decompr
+     *            essed.
      *
-     * @return A {@link String} containing the result of the decompression action.
+     * @return A {@link JSONObject} containing the result of the decompression action.
      */
     public JSONObject decompressXML(byte[] xml) {
         JSONObject intentFilters = new JSONObject();
+        JSONArray hostSchemeList = new JSONArray();
         // Compressed XML file/bytes starts with 24x bytes of data,
         // 9 32 bit words in little endian order (LSB first):
         //   0th word is 03 00 08 00
@@ -109,6 +113,7 @@ class ApkParser {
             // Step through the XML tree element tags and attributes
             String attrValue;
             String attrName;
+            String scheme = "";
             int off = xmlTagOff;
             while (off < xml.length) {
                 int tag0 = LEW(xml, off);
@@ -126,18 +131,37 @@ class ApkParser {
                         if (attrName.equals("scheme")) {
                             attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
                             if (validURI(attrValue)) {
-                                intentFilters.put("scheme", attrValue);
+                                scheme = attrValue;
+                                if(!intentFilters.has(scheme)) {
+                                    // Setting a scheme when it shows up for the first time.
+                                    JSONArray host = new JSONArray();
+                                    intentFilters.put(scheme, host);
+                                } else if (intentFilters.has("0")) {
+                                    // If host list shows up before scheme name store them in a dummy scheme.
+                                    JSONArray domainList = (JSONArray) intentFilters.get("0");
+                                    intentFilters.put(scheme, domainList);
+                                    intentFilters.remove("0");
+                                }
                             }
                         } else if (attrName.equals("host")) {
                             attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
                             JSONArray domainList;
-                            if (intentFilters.has("hosts")) {
-                                domainList = intentFilters.getJSONArray("hosts");
+                            if (intentFilters.has(scheme) && scheme != null) {
+                                // add to existing domainList
+                                domainList = intentFilters.getJSONArray(scheme);
+                                domainList.put(attrValue);
+                                intentFilters.put(scheme,domainList);
                             } else {
                                 domainList = new JSONArray();
+                                domainList.put(attrValue);
+                                intentFilters.put("0",domainList);
                             }
-                            domainList.put(attrValue);
-                            intentFilters.put("hosts", domainList);
+                        } else if(attrName.equals("name")) {
+                            //reset the scheme name
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
+                            if(attrValue.equals("android.intent.action.VIEW")) {
+                                scheme = null;
+                            }
                         }
                     }
 
