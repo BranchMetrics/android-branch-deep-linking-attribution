@@ -58,7 +58,8 @@ class ApkParser {
      */
     public JSONObject decompressXML(byte[] xml) {
         JSONObject intentFilters = new JSONObject();
-        JSONArray hostSchemeList = new JSONArray();
+        JSONArray applinkFilters = new JSONArray();
+        JSONObject results = new JSONObject();
         // Compressed XML file/bytes starts with 24x bytes of data,
         // 9 32 bit words in little endian order (LSB first):
         //   0th word is 03 00 08 00
@@ -114,6 +115,7 @@ class ApkParser {
             String attrValue;
             String attrName;
             String scheme = "";
+
             int off = xmlTagOff;
             while (off < xml.length) {
                 int tag0 = LEW(xml, off);
@@ -143,15 +145,22 @@ class ApkParser {
                                     intentFilters.remove("0");
                                 }
                             }
+                            // for applink filters
+                            if (attrValue.equals("http") || attrValue.equals("https")){
+                                scheme = attrValue;
+                            }
                         } else if (attrName.equals("host")) {
                             attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
                             JSONArray domainList;
-                            if (intentFilters.has(scheme) && scheme != null) {
+                            if (intentFilters.has(scheme) && scheme != null
+                                    && !scheme.equals("https") && !scheme.equals("http")) {
                                 // add to existing domainList
                                 domainList = intentFilters.getJSONArray(scheme);
                                 domainList.put(attrValue);
-                                intentFilters.put(scheme,domainList);
-                            } else {
+                                intentFilters.put(scheme, domainList);
+                            } else if (scheme.equals("https") || scheme.equals("http")) {
+                                applinkFilters.put(attrValue);
+                            }else {
                                 domainList = new JSONArray();
                                 domainList.put(attrValue);
                                 intentFilters.put("0",domainList);
@@ -173,11 +182,13 @@ class ApkParser {
                     break;
                 }
             } // end of while loop scanning tags and attributes of XML tree
+            intentFilters.remove("0");
+            results.put("urischeme",intentFilters);
+            results.put("applinks",applinkFilters);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        return intentFilters;
+        return results;
     }
 
     /**

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.jar.JarFile;
 
 /**
@@ -63,12 +64,27 @@ public class IntegrationValidator {
 
                 Log.d("BranchSDK", " ----- checking for URI scheme correctness -----");
 
-                if (!serverSideAppConfig.getString("android_uri_scheme").replace("://", "").equals(integrationModel.deeplinkUriScheme)) {
-                    logLine = "ERROR: ";
-                } else {
-                    logLine = "PASS: ";
+                Iterator<?> keys = integrationModel.deeplinkUriScheme.keys();
+                logLine = "ERROR: ";
+                logLine = logLine + "Dashboard Link Settings page '" + serverSideAppConfig.getString("android_uri_scheme").replace("://", "") + "' missing on the client side or using invalid host ";
+
+                while( keys.hasNext() ) {
+                    String key = (String)keys.next();
+                    if (serverSideAppConfig.getString("android_uri_scheme").replace("://", "").equals(key)) {
+                        JSONArray hosts = (JSONArray) integrationModel.deeplinkUriScheme.get(key);
+                        // iterate over the hosts to make sure that either they are null or have open
+                        if(hosts.length() == 0) {
+                            logLine = "PASS: Successfully found '" + serverSideAppConfig.getString("android_uri_scheme") + "' as the Deeplink URI scheme";
+                            break;
+                        }
+                        for (int i = 0; i < hosts.length(); ++i) {
+                            if(hosts.getString(i).toString().equals("open")) {
+                                logLine = "PASS: Successfully found '" + serverSideAppConfig.getString("android_uri_scheme") + "' as the Deeplink URI scheme";
+                                break;
+                            }
+                        }
+                    }
                 }
-                logLine = logLine + "Dashboard Link Settings page '" + serverSideAppConfig.getString("android_uri_scheme").replace("://", "") + "' compared to client side '"  + integrationModel.deeplinkUriScheme + "'";
                 Log.d("BranchSDK", logLine);
 
                 if (integrationModel.applinkScheme == null || integrationModel.applinkScheme.isEmpty()) {
@@ -217,12 +233,12 @@ public class IntegrationValidator {
                     //noinspection ResultOfMethodCallIgnored
                     is.read(xml);
                     JSONObject obj = new ApkParser().decompressXML(xml);
-                    if (obj.has("scheme")) {
-                        integrationModel.deeplinkUriScheme = obj.getString("scheme");
+                    if (obj != null) {
+                        integrationModel.deeplinkUriScheme = obj.getJSONObject("urischeme");
                     }
-                    if (obj.has("hosts")) {
+                    if (obj.has("applinks")) {
                         integrationModel.applinkScheme = new ArrayList<String>();
-                        JSONArray jsonHosts = obj.getJSONArray("hosts");
+                        JSONArray jsonHosts = obj.getJSONArray("applinks");
                         for (int i = 0; i<jsonHosts.length(); i++){
                             integrationModel.applinkScheme.add(jsonHosts.getString(i));
                         }
@@ -277,7 +293,7 @@ public class IntegrationValidator {
     }
     
     private class BranchIntegrationModel {
-        private String deeplinkUriScheme;
+        private JSONObject deeplinkUriScheme;
         private String branchKeyTest;
         private String branchKeyLive;
         private ArrayList<String> applinkScheme;
