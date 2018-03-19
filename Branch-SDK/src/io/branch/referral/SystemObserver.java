@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.UiModeManager;
@@ -48,12 +47,8 @@ class SystemObserver {
      */
     public static final String BLANK = "bnc_no_value";
 
-    private static final int STATE_FRESH_INSTALL = 0;
-    private static final int STATE_UPDATE = 2;
-    private static final int STATE_NO_CHANGE = 1;
-
     private static final int GAID_FETCH_TIME_OUT = 1500;
-    String GAIDString_ = null;
+    static String GAIDString_ = null;
     int LATVal_ = 0;
 
 
@@ -90,7 +85,7 @@ class SystemObserver {
     String getUniqueID(boolean debug) {
         if (context_ != null) {
             String androidID = null;
-            if (!debug) {
+            if (!debug && !Branch.isSimulatingInstalls_) {
                 androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
             }
             if (androidID == null) {
@@ -141,7 +136,7 @@ class SystemObserver {
     String getURIScheme() {
         return getURIScheme(context_.getPackageName());
     }
-
+    
     /**
      * <p>Gets the URI scheme of the specified package from its AndroidManifest.xml file.</p>
      * <p>This method should be used for retrieving the URI scheme of the another application of
@@ -153,39 +148,35 @@ class SystemObserver {
     private String getURIScheme(String packageName) {
         String scheme = BLANK;
         if (!isLowOnMemory()) {
-            PackageManager pm = context_.getPackageManager();
+
+            JarFile jf = null;
+            InputStream is = null;
+            byte[] xml;
             try {
+                PackageManager pm = context_.getPackageManager();
                 ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
                 String sourceApk = ai.publicSourceDir;
-                JarFile jf = null;
-                InputStream is = null;
-                byte[] xml;
+                jf = new JarFile(sourceApk);
+                is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+                xml = new byte[is.available()];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(xml);
+                scheme = new ApkParser().decompressXML(xml);
+            } catch (Exception ignored) {
+            } finally {
                 try {
-                    jf = new JarFile(sourceApk);
-                    is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-                    xml = new byte[is.available()];
-                    //noinspection ResultOfMethodCallIgnored
-                    is.read(xml);
-                    JSONObject obj = new ApkParser().decompressXML(xml);
-                    if (obj.has("scheme")) {
-                        scheme = obj.getString("scheme");
+                    if (is != null) {
+                        is.close();
+                        // noinspection unused
+                        is = null;
                     }
-                } catch (Exception ignored) {
-                } finally {
-                    try {
-                        if (is != null) {
-                            is.close();
-                            // noinspection unused
-                            is = null;
-                        }
-                        if (jf != null) {
-                            jf.close();
-                        }
-                    } catch (IOException ignored) {
+                    if (jf != null) {
+                        jf.close();
                     }
+                } catch (IOException ignored) {
                 }
-            } catch (NameNotFoundException ignored) {
             }
+
         }
         return scheme;
     }
@@ -311,55 +302,7 @@ class SystemObserver {
     }
 
 
-    /**
-     * <p>This method returns an {@link Integer} value dependent on whether the application has been
-     * updated since its installation on the device. If the application has just been installed and
-     * launched immediately, this will always return 1.</p>
-     * <p>If however the application has already been installed for more than the duration of a
-     * single update cycle, and has received one or more updates, the time in
-     * {@link PackageInfo#firstInstallTime} will be different from that in
-     * {@link PackageInfo#lastUpdateTime} so the return value will be 0; indicative of an update
-     * having occurred whilst the app has been installed.</p>
-     * <p>This is useful to know when the manner of handling of deep-link data has changed betwen
-     * application versions and where migration of SharedPrefs may be required. This method provides
-     * a condition upon which a consistency check or migration validation operation can be carried
-     * out.</p>
-     * <p>This will not work on Android SDK versions lower than 9, as the {@link PackageInfo#firstInstallTime}
-     * and {@link PackageInfo#lastUpdateTime} values did not exist in older versions of the
-     * {@link PackageInfo} class.</p>
-     *
-     * @return <p>A {@link Integer} value indicating the update state of the application package.</p>
-     * <ul>
-     * <li><i>1</i> - App not updated since install.</li>
-     * <li><i>0</i> - App has been updated since initial install.</li>
-     * </ul>
-     */
-    @SuppressLint("NewApi")
-    int getUpdateState() {
-        PrefHelper pHelper = PrefHelper.getInstance(context_);
-        String currAppVersion = getAppVersion();
-        if (PrefHelper.NO_STRING_VALUE.equals(pHelper.getAppVersion())) {
-            // if no app version is in storage, this must be the first time Branch is here
-            if (android.os.Build.VERSION.SDK_INT >= 9) {
-                // if we can access update/install time, use that to check if it's a fresh install or update
-                try {
-                    PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-                    if (packageInfo.lastUpdateTime != packageInfo.firstInstallTime) {
-                        return STATE_UPDATE;
-                    }
-                    return STATE_FRESH_INSTALL;
-                } catch (NameNotFoundException ignored) {
-                }
-            }
-            // otherwise, just register an install
-            return STATE_FRESH_INSTALL;
-        } else if (!pHelper.getAppVersion().equals(currAppVersion)) {
-            // if the current app version doesn't match the stored, it's an update
-            return STATE_UPDATE;
-        }
-        // otherwise it's an open
-        return STATE_NO_CHANGE;
-    }
+    
 
     /**
      * <p>This method returns a {@link DisplayMetrics} object that contains the attributes of the

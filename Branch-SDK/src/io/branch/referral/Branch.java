@@ -288,9 +288,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean enableFacebookAppLinkCheck_ = false;
     
-    private static boolean isSimulatingInstalls_;
+    static boolean isSimulatingInstalls_;
     
-    private static boolean isLogging_ = false;
+    static Boolean isLogging_ = null;
     
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
@@ -386,9 +386,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean isGAParamsFetchInProgress_ = false;
     
-    private List<String> externalUriWhiteList_;
-    private List<String> skipExternalUriHosts_;
-    
     String sessionReferredLink_; // Link which opened this application session if opened by a link click.
     
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
@@ -410,6 +407,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean isInstantDeepLinkPossible = false;
     /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
     private boolean isActivityCreatedAndLaunched = false;
+    /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
+    private static boolean disableInstantDeepLinking = true;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -430,7 +429,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
-        InstallListener.setListener(this);
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
         if (android.os.Build.VERSION.SDK_INT >= 15) {
@@ -440,9 +438,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleDelayedNewIntents_ = false;
             intentState_ = INTENT_STATE.READY;
         }
-        externalUriWhiteList_ = new ArrayList<>();
-        skipExternalUriHosts_ = new ArrayList<>();
-        
     }
     
     /**
@@ -496,6 +491,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void setPlayStoreReferrerCheckTimeout(long delay) {
         checkInstallReferrer_ = delay > 0;
         playStoreReferrerFetchTime = delay;
+    }
+    
+    /**
+     * <p>
+     * Disables or enables the instant deep link functionality.
+     * </p>
+     *
+     * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
+     */
+    public static void disableInstantDeepLinking(boolean disableIDL) {
+        disableInstantDeepLinking = disableIDL;
     }
     
     /**
@@ -829,6 +835,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
+     * Enables or disables app tracking with Branch or any other third parties that Branch use internally
+     *
+     * @param isLimitFacebookTracking {@code true} to limit app tracking
+     */
+    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
+        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
+    }
+    
+    /**
      * <p>Add key value pairs to all requests</p>
      */
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
@@ -915,7 +930,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
         return initSession(callback, data, null);
     }
     
@@ -931,7 +946,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, Uri data) {
         return initSession(callback, data, null);
     }
     
@@ -948,7 +963,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         initSession(callback, activity);
         return true;
@@ -967,7 +982,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
      */
-    public boolean initSession(BranchReferralInitListener callback, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         return initSession(callback, activity);
     }
@@ -1000,7 +1015,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *             initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSessionWithData(@NonNull Uri data) {
+    public boolean initSessionWithData(Uri data) {
         return initSessionWithData(data, null);
     }
     
@@ -1079,7 +1094,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
         return initSession(callback, isReferrable, data, null);
     }
     
@@ -1098,7 +1113,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         return initSession(callback, isReferrable, activity);
     }
@@ -1118,7 +1133,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, @NonNull Uri data, Activity activity) {
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
         readAndStripParam(data, activity);
         return initSession(callback, isReferrable, activity);
     }
@@ -1336,40 +1351,42 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
         // If activity is created and launched then the intent can be readily consumed.
         // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
-        if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
-            // Check for instant deep linking possibility first
-            if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
-                Intent intent = activity.getIntent();
-                // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                if (intent.getData() == null || (!isActivityCreatedAndLaunched && isIntentParamsAlreadyConsumed(activity))) {
-                    // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
-                    // So skipping instant deep link feature until first Branch open happens
-                    if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                        JSONObject nonLinkClickJson = new JSONObject();
-                        try {
-                            nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
-                            nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                            prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                            isInstantDeepLinkPossible = true;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+        if (!disableInstantDeepLinking) {
+            if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
+                // Check for instant deep linking possibility first
+                if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+                    Intent intent = activity.getIntent();
+                    // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
+                    if (intent.getData() == null || (!isActivityCreatedAndLaunched && isIntentParamsAlreadyConsumed(activity))) {
+                        // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
+                        // So skipping instant deep link feature until first Branch open happens
+                        if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                            JSONObject nonLinkClickJson = new JSONObject();
+                            try {
+                                nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
+                                nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
+                                prefHelper_.setSessionParams(nonLinkClickJson.toString());
+                                isInstantDeepLinkPossible = true;
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                } else { // if not check the intent data to see if there is deep link params
-                    if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                        try {
-                            String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                            // Make sure the data received is complete and in correct format
-                            JSONObject branchDataJson = new JSONObject(rawBranchData);
-                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                            prefHelper_.setSessionParams(branchDataJson.toString());
-                            isInstantDeepLinkPossible = true;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                    } else { // if not check the intent data to see if there is deep link params
+                        if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
+                            try {
+                                String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
+                                // Make sure the data received is complete and in correct format
+                                JSONObject branchDataJson = new JSONObject(rawBranchData);
+                                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                                prefHelper_.setSessionParams(branchDataJson.toString());
+                                isInstantDeepLinkPossible = true;
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            // Remove Branch data from the intent once used
+                            intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
+                            activity.setIntent(intent);
                         }
-                        // Remove Branch data from the intent once used
-                        intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                        activity.setIntent(intent);
                     }
                 }
             }
@@ -1378,27 +1395,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             try {
                 if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
-                    boolean foundSchemeMatch;
-                    boolean skipThisHost = false;
-                    if (externalUriWhiteList_.size() > 0) {
-                        foundSchemeMatch = externalUriWhiteList_.contains(data.getScheme());
-                    } else {
-                        foundSchemeMatch = true;
-                    }
+                    String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+                    sessionReferredLink_ = strippedUrl;
+                    prefHelper_.setExternalIntentUri(strippedUrl);
                     
-                    if (skipExternalUriHosts_.size() > 0) {
-                        for (String host : skipExternalUriHosts_) {
-                            String externalHost = data.getHost();
-                            if (externalHost != null && externalHost.equals(host)) {
-                                skipThisHost = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (foundSchemeMatch && !skipThisHost) {
-                        sessionReferredLink_ = data.toString();
-                        prefHelper_.setExternalIntentUri(data.toString());
-                        
+                    if (strippedUrl != null && strippedUrl.equals(data.toString())) {
                         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                             Bundle bundle = activity.getIntent().getExtras();
                             Set<String> extraKeys = bundle.keySet();
@@ -1471,7 +1472,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (scheme != null && intent != null) {
                             if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
                                     && data.getHost() != null && data.getHost().length() > 0 && !isIntentParamsAlreadyConsumed(activity)) {
-                                prefHelper_.setAppLink(data.toString());
+                                String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+                                if (data.toString().equalsIgnoreCase(strippedUrl)) { // Send app links only if URL is not skipped.
+                                    prefHelper_.setAppLink(data.toString());
+                                }
                                 intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
                                 activity.setIntent(intent);
                                 return false;
@@ -1512,56 +1516,59 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Add the given URI Scheme to the external Uri white list. Branch will collect
-     * external intent uri only if white list matches with the app opened URL properties
-     * If no URI is added to the white list branch will collect all external intent uris.
-     * White list schemes should be added immediately after calling {@link Branch#getAutoInstance(Context)}
-     *
-     * @param uriScheme {@link String} Case sensitive Uri scheme to be added to the  external intent uri white list.(eg. "my_scheme://")
-     * @return {@link Branch} instance for successive method calls
-     */
-    public Branch addWhiteListedScheme(String uriScheme) {
-        if (uriScheme == null) {
-            return this;
-        }
-        
-        uriScheme = uriScheme.replace("://", "");
-        
-        externalUriWhiteList_.add(uriScheme);
-        return this;
-    }
-    
-    /**
-     * <p>Set the given list of URI Scheme as the external Uri white list. Branch will collect
-     * external intent uri only for Uris in white list.
-     * </p>
-     * If no URI is added to the white list branch will collect all external intent uris
-     * White list should be set immediately after calling {@link Branch#getAutoInstance(Context)}
-     * <!-- @param uriSchemes {@link List<String>} List of case sensitive Uri schemes to set as the white list -->
-     *
-     * @return {@link Branch} instance for successive method calls
-     */
-    public Branch setWhiteListedSchemes(List<String> uriSchemes) {
-        externalUriWhiteList_ = uriSchemes;
-        return this;
-    }
-    
-    /**
+     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
+     * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
+     * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * Add the given URI host to the external Uri skip list. Branch will not collect
-     * external intent uri if skip list contains with the app opened URL.
-     * If no host is added to the skip list, Branch will collect all external Intent uris.
-     * Skip list hosts should be added immediately after calling {@link Branch#getAutoInstance(Context)}.
-     * </p>
+     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param hostName {@link String} Case sensitive Uri path to be added to the external Intent uri skip list. (e.g. "product" to skip my-scheme://product/*)
+     * @param urlWhiteListPattern A regular expression with a URI white listing pattern
      * @return {@link Branch} instance for successive method calls
      */
-    public Branch addUriHostsToSkip(String hostName) {
-        if ((hostName != null) && (!hostName.equals("")))
-            skipExternalUriHosts_.add(hostName);
-        
+    public Branch addWhiteListedScheme(String urlWhiteListPattern) {
+        if (urlWhiteListPattern != null) {
+            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPattern);
+        }
         return this;
+    }
+    
+    /**
+     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
+     * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
+     * If whitelist is not empty SDK will collect only the URLs that matches the white list.
+     * <p>
+     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch setWhiteListedSchemes(List<String> urlWhiteListPatternList) {
+        if (urlWhiteListPatternList != null) {
+            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPatternList);
+        }
+        return this;
+    }
+    
+    /**
+     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
+     * This method allows applications specify SDK to skip any additional URL patterns to be skipped
+     * <p>
+     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
+     * @return {@link Branch} instance for successive method calls
+     */
+    public Branch addUriHostsToSkip(String urlSkipPattern) {
+        if (!TextUtils.isEmpty(urlSkipPattern))
+            UniversalResourceAnalyser.getInstance(context_).addToSkipURLFormats(urlSkipPattern);
+        return this;
+    }
+    
+    /**
+     * Check and update the URL / URI Skip list in case an update is available.
+     */
+    void updateSkipURLFormats() {
+        UniversalResourceAnalyser.getInstance(context_).checkAndUpdateSkipURLFormats(context_);
     }
     
     /**
@@ -2307,9 +2314,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
-        if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
+        if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.captureInstallReferrer(playStoreReferrerFetchTime);
+            InstallListener.captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
         }
         
         registerInstallOrOpen(request, callback);
@@ -2337,8 +2344,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private void performCookieBasedStrongMatch() {
-        boolean simulateInstall = (prefHelper_.getExternDebug() || isSimulatingInstalls());
-        DeviceInfo deviceInfo = DeviceInfo.getInstance(simulateInstall, systemObserver_, disableDeviceIDFetch_);
+        DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
         Activity currentActivity = null;
         if (currentActivityReference_ != null) {
             currentActivity = currentActivityReference_.get();
@@ -2449,7 +2455,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (BranchUtil.isTestModeEnabled(context_)) {
                     prefHelper_.setExternDebug();
                 }
-                prefHelper_.setLogging(getIsLogging());
                 startSession(activity);
             } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
                 initState_ = SESSION_STATE.UNINITIALISED;
@@ -2633,6 +2638,26 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
+     * <p>An extended version of {@link BranchLinkShareListener} with callback that supports updating link data or properties after user select a channel to share
+     * This will provide the extended callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} only when sharing a link using Branch Universal Object.</p>
+     */
+    public interface ExtendedBranchLinkShareListener extends BranchLinkShareListener {
+        /**
+         * <p>
+         * Called when user select a channel for sharing a deep link.
+         * This method allows modifying the link data and properties by providing the params  {@link BranchUniversalObject} and {@link LinkProperties}
+         * </p>
+         *
+         * @param channelName    The name of the channel user selected for sharing a link
+         * @param buo            {@link BranchUniversalObject} BUO used for sharing link for updating any params
+         * @param linkProperties {@link LinkProperties} associated with the sharing link for updating the properties
+         * @return Return {@code true} to create link with any updates added to the data ({@link BranchUniversalObject}) or to the properties ({@link LinkProperties}).
+         * Return {@code false} otherwise.
+         */
+        boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
+    }
+    
+    /**
      * <p>An interface class for customizing sharing properties with selected channel.</p>
      */
     public interface IChannelProperties {
@@ -2724,24 +2749,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected void onPreExecute() {
             super.onPreExecute();
             thisReq_.onPreExecute();
-            // Update request metadata
-            thisReq_.updateRequestMetadata();
+            thisReq_.doFinalUpdateOnMainThread();
         }
         
         @Override
         protected ServerResponse doInBackground(Void... voids) {
-            if (thisReq_ instanceof ServerRequestInitSession) {
-                ((ServerRequestInitSession) thisReq_).updateLinkReferrerParams();
-            }
             // update queue wait time
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
-            
-            //Google ADs ID  and LAT value are updated using reflection. These method need background thread
-            //So updating them for install and open on background thread.
-            if (thisReq_.isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
-                thisReq_.updateGAdsParams(systemObserver_, thisReq_.getBranchRemoteAPIVersion());
-            }
-            
+            thisReq_.doFinalUpdateOnBackgroundThread();
             if (thisReq_.isGetRequest()) {
                 return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             } else {
@@ -3032,20 +3047,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isSimulatingInstalls_ = false;
     }
     
-    public static boolean isSimulatingInstalls() {
-        return isSimulatingInstalls_;
-    }
-    
     public static void enableLogging() {
         isLogging_ = true;
     }
     
     public static void disableLogging() {
         isLogging_ = false;
-    }
-    
-    public static boolean getIsLogging() {
-        return isLogging_;
     }
     
     //-------------------------- Branch Builders--------------------------------------//

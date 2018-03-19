@@ -1,5 +1,15 @@
 Branch Android SDK change log
 
+- v2.16.0 Adding support for collecting data from selected URIs with remote skip list update feature. Fixing an issue with handling BUO metadata.
+
+- v2.15.1 Hot fix : Install requests getting stuck in the request queue if failed once. Caused by improper install referrer wait lock addition to install request.
+
+- v2.15.0 Adding support for Android install referrer lib. Changing instant deep linking into opt-in feature. Collecting install timestamps for better install or update attributions.
+
+- v2.14.5 Hot fix: Re-open after offline install event fails. Support for modifying deep link data and link params on share sheet events.
+
+- v2.14.4 Fixing a possible request queue concurrent execution. Adding support for opt-out IDL. Fix for maintaining strong typing for arrays when BUO is serialised. Adding extended catch for dealing with dead object. Support for "rating" property in content metadata.
+
 - v2.14.3 Fixing a corner case crash from concurrent modification case. Fixing issue with deep link param delivery after orientation change.
 
 - v2.14.2 Adding FB limit app tracking. Fix for instant deep liking when activities are launched from the stack. Few other minor fixes.

@@ -29,7 +29,7 @@ public abstract class ServerRequest {
     
     private JSONObject params_;
     protected String requestPath_;
-    protected PrefHelper prefHelper_;
+    protected final PrefHelper prefHelper_;
     private final SystemObserver systemObserver_;
     long queueWaitTime_ = 0;
     private boolean disableAndroidIDFetch_;
@@ -47,8 +47,8 @@ public abstract class ServerRequest {
     
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
-
-    public static enum BRANCH_API_VERSION {
+    
+    public enum BRANCH_API_VERSION {
         V1,
         V2
     }
@@ -136,7 +136,7 @@ public abstract class ServerRequest {
     public boolean shouldRetryOnFail() {
         return false;
     }
-
+    
     /**
      * Specifies whether this request should be persisted to memory in order to re send in the next session
      *
@@ -144,6 +144,16 @@ public abstract class ServerRequest {
      */
     boolean isPersistable() {
         return true;
+    }
+    
+    /**
+     * Specifies whether this request should add the limit app tracking value
+     *
+     * @return {@code true} to add the limit app tracking value to the request else false.
+     * {@code false} by default. Should override for requests that need limited app tracking value.
+     */
+    protected boolean shouldUpdateLimitFacebookTracking() {
+        return false;
     }
     
     /**
@@ -172,15 +182,13 @@ public abstract class ServerRequest {
      * @param post A {@link JSONObject} containing the post data supplied with the current request
      *             as key-value pairs.
      */
-    protected void setPost(JSONObject post) {
+    protected void setPost(JSONObject post) throws JSONException {
         params_ = post;
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
                 DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
-
-
             } catch (JSONException ignore) {
             }
         } else {
@@ -369,22 +377,21 @@ public abstract class ServerRequest {
     
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
-     *
-     * @param sysObserver {@link SystemObserver} instance.
      */
-    public void updateGAdsParams(final SystemObserver sysObserver, BRANCH_API_VERSION version) {
-        if (!TextUtils.isEmpty(sysObserver.GAIDString_)) {
+    public void updateGAdsParams() {
+        BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
+        if (!TextUtils.isEmpty(systemObserver_.GAIDString_)) {
             try {
                 if (version == BRANCH_API_VERSION.V2) {
                     JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                     if (userDataObj != null) {
-                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), sysObserver.GAIDString_);
-                        userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), sysObserver.LATVal_);
+                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), systemObserver_.GAIDString_);
+                        userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), systemObserver_.LATVal_);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                     }
                 } else {
-                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), sysObserver.GAIDString_);
-                    params_.put(Defines.Jsonkey.LATVal.getKey(), sysObserver.LATVal_);
+                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), systemObserver_.GAIDString_);
+                    params_.put(Defines.Jsonkey.LATVal.getKey(), systemObserver_.LATVal_);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -401,7 +408,7 @@ public abstract class ServerRequest {
                         }
                     }
                 } catch (JSONException ignore) {
-
+                
                 }
             }
         }
@@ -410,7 +417,7 @@ public abstract class ServerRequest {
     /**
      * Update the additional metadata provided using {@link Branch#setRequestMetadata(String, String)} to the requests.
      */
-    void updateRequestMetadata() {
+    private void updateRequestMetadata() {
         // Take event level metadata, merge with top level metadata
         // event level metadata takes precedence
         try {
@@ -436,25 +443,60 @@ public abstract class ServerRequest {
     }
     
     /*
+     * Update the the limit app tracking value to the request
+     */
+    private void updateLimitFacebookTracking() {
+        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        if (updateJson != null) {
+            boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
+            if (isLimitFacebookTracking) {
+                try {
+                    updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
+                } catch (JSONException ignore) {
+                }
+            }
+        }
+    }
+    
+    void doFinalUpdateOnMainThread() {
+        updateRequestMetadata();
+        if (shouldUpdateLimitFacebookTracking()) {
+            updateLimitFacebookTracking();
+        }
+    }
+    
+    void doFinalUpdateOnBackgroundThread() {
+        if (this instanceof ServerRequestInitSession) {
+            ((ServerRequestInitSession) this).updateLinkReferrerParams();
+        }
+        
+        //Google ADs ID  and LAT value are updated using reflection. These method need background thread
+        //So updating them for install and open on background thread.
+        if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
+            updateGAdsParams();
+        }
+    }
+    
+    /*
      * Checks if this Application has internet permissions.
      *
      * @param context Application context.
      *
      * @return True if application has internet permission.
      */
-
+    
     protected boolean doesAppHasInternetPermission(Context context) {
         int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
         return result == PackageManager.PERMISSION_GRANTED;
     }
-
+    
     /**
      * Called when request is added to teh queue
      */
     public void onRequestQueued() {
         queueWaitTime_ = System.currentTimeMillis();
     }
-
+    
     /**
      * Returns the amount of time this request was in queque
      *
@@ -467,7 +509,7 @@ public abstract class ServerRequest {
         }
         return waitTime;
     }
-
+    
     /**
      * <p>
      * Set the specified process wait lock for this request. This request will not be blocked from
@@ -481,7 +523,7 @@ public abstract class ServerRequest {
             locks_.add(lock);
         }
     }
-
+    
     /**
      * Unlock the specified lock from the request. Call this when the locked process finishes
      *
@@ -490,8 +532,8 @@ public abstract class ServerRequest {
     public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
         locks_.remove(lock);
     }
-
-
+    
+    
     /**
      * Check if this request is waiting on any operation to finish before processing
      *
@@ -500,14 +542,14 @@ public abstract class ServerRequest {
     public boolean isWaitingOnProcessToFinish() {
         return locks_.size() > 0;
     }
-
+    
     /**
      * Called on UI thread just before executing a request. Do any final updates to the request here
      */
     public void onPreExecute() {
-
+    
     }
-
+    
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
             String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
@@ -522,7 +564,7 @@ public abstract class ServerRequest {
         } catch (Exception ignore) {
         }
     }
-
+    
     private static boolean isPackageInstalled(Context context) {
         final PackageManager packageManager = context.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
@@ -532,7 +574,7 @@ public abstract class ServerRequest {
         List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return (list != null && list.size() > 0);
     }
-
+    
     /**
      * Returns the Branch API version
      *

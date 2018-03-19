@@ -696,7 +696,7 @@ To show the share sheet, call the following on your Branch Universal Object. The
 branchUniversalObject.showShareSheet(this, 
                                       linkProperties,
                                       shareSheetStyle,
-                                       new Branch.BranchLinkShareListener() {
+                                       new Branch.ExtendedBranchLinkShareListener() {
     @Override
     public void onShareLinkDialogLaunched() {
     }
@@ -708,6 +708,10 @@ branchUniversalObject.showShareSheet(this,
     }
     @Override
     public void onChannelSelected(String channelName) {
+    }
+    @Override
+    public boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties) {
+        return false;
     }
 });
 ```
@@ -844,6 +848,7 @@ This is often caused when you exclude the `answers-shim` module from Branch SDK 
 `-dontwarn com.crashlytics.android.answers.shim.**`
 
 ### Proguard warning or errors with `appindexing` module
-Branch SDK has optional dependency on Firebase app indexing classes to provide new Firebase content listing features. This may cause a proguard warning depending on your proguard settings.
+Branch SDK has optional dependencies on Firebase app indexing and Android install referrer classes to provide new Firebase content listing features and support new Android install referrer library. This may cause a proguard warning depending on your proguard settings.
 Please add the following to your proguard file to solve this issue
 `-dontwarn com.google.firebase.appindexing.**`
+`-dontwarn com.android.installreferrer.api.**`

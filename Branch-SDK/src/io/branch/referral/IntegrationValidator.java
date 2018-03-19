@@ -232,7 +232,7 @@ public class IntegrationValidator {
                     xml = new byte[is.available()];
                     //noinspection ResultOfMethodCallIgnored
                     is.read(xml);
-                    JSONObject obj = new ApkParser().decompressXML(xml);
+                    JSONObject obj = new ApkParser().decompressXMLForValidator(xml);
                     if (obj != null) {
                         integrationModel.deeplinkUriScheme = obj.getJSONObject("urischeme");
                     }

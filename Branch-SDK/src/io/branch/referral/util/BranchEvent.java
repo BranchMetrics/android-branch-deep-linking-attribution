@@ -206,7 +206,7 @@ public class BranchEvent {
     }
 
     private class ServerRequestLogEvent extends ServerRequest {
-        public ServerRequestLogEvent(Context context, String requestPath) {
+        ServerRequestLogEvent(Context context, String requestPath) {
             super(context, requestPath);
             JSONObject reqBody = new JSONObject();
             try {
@@ -225,10 +225,10 @@ public class BranchEvent {
                         contentItemsArray.put(buo.convertToJson());
                     }
                 }
+                setPost(reqBody);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            setPost(reqBody);
             updateEnvironment(context, reqBody);
         }
 
@@ -265,6 +265,10 @@ public class BranchEvent {
         }
     
         @Override
+        protected boolean shouldUpdateLimitFacebookTracking() {
+            return true;
+        }
+
         public boolean shouldRetryOnFail() {
             return true; // Branch event need to be retried on failure.
         }
