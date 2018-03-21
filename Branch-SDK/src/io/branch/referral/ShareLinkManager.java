@@ -236,7 +236,12 @@ class ShareLinkManager {
             }
         });
 
-        shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
+        if (builder_.getDialogThemeResourceID() > 0){
+            shareDlg_ = new AnimatedDialog(context_, builder_.getDialogThemeResourceID());
+        } else {
+            shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
+        }
+
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {

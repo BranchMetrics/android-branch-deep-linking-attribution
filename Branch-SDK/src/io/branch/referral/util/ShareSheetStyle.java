@@ -40,6 +40,7 @@ public class ShareSheetStyle {
     private String defaultURL_;
 
     private int styleResourceID_ = -1;
+    private int dialogThemeResourceID_ = -1;
     final Context context_;
     private boolean setFullWidthStyle_;
     private int dividerHeight_ = -1;
@@ -159,6 +160,16 @@ public class ShareSheetStyle {
      */
     public ShareSheetStyle setStyleResourceID(@StyleRes int styleResourceID) {
         styleResourceID_ = styleResourceID;
+        return this;
+    }
+
+    /**
+     * <p> Set the given style to the dialog showing the share sheet</p>
+     *
+     * @param styleResourceID A Styleable resource to be applied to the share sheet dialog view
+     */
+    public ShareSheetStyle setDialogThemeResourceID(@StyleRes int styleResourceID) {
+        dialogThemeResourceID_ = styleResourceID;
         return this;
     }
 
@@ -349,6 +360,10 @@ public class ShareSheetStyle {
 
     public boolean getIsFullWidthStyle() {
         return setFullWidthStyle_;
+    }
+
+    public int getDialogThemeResourceID() {
+        return dialogThemeResourceID_;
     }
 
     private Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
