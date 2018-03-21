@@ -126,6 +126,7 @@ public class BranchError {
             errorCode_ = ERR_BRANCH_REQ_TIMED_OUT;
             errMsg = " Request to Branch server timed out. Please check your internet connectivity";
         } else if (statusCode == ERR_BRANCH_TRACKING_DISABLED) {
+            errorCode_ = ERR_BRANCH_TRACKING_DISABLED;
             errMsg = " Tracking is disabled. Requested operation cannot be completed when tracking is disabled";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
             errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
