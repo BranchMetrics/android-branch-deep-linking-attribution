@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import java.util.Date;
 
 import io.branch.branchandroiddemo.test.BUOTestRoutines;
+import io.branch.branchandroiddemo.test.TrackingControlTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -410,6 +411,7 @@ public class MainActivity extends Activity {
                         Log.i("BranchTestBed", "control params " + linkProperties.getControlParams());
                     }
                 }
+               // QA purpose only  TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
             }
         }, this.getIntent().getData(), this);
         
