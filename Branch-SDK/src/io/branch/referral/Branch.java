@@ -2334,6 +2334,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Register app init without any wait on wait locks. This will not be getting any params from the intent
      */
     void registerAppReInit() {
+        if(networkCount_ != 0) {
+            networkCount_ = 0;
+            requestQueue_.clear();
+        }
         registerInstallOrOpen(getInstallOrOpenRequest(null), null);
     }
     
