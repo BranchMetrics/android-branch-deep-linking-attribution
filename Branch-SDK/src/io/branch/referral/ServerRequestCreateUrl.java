@@ -198,7 +198,8 @@ class ServerRequestCreateUrl extends ServerRequest {
                 // By def the base url contains identity id as query param. This should be removed when tracking is disabled.
                 longUrl = longUrl.replace(new URL(longUrl).getQuery(), "");
             }
-            longUrl += longUrl.contains("?") ? "&" : "?";
+            longUrl += longUrl.contains("?") ? "" : "?";
+            longUrl += longUrl.endsWith("?") ? "" : "&";
             
             Collection<String> tags = linkPost_.getTags();
             if (tags != null) {
