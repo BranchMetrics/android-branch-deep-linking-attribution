@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.TextUtils;
@@ -189,6 +190,7 @@ class ShareLinkManager {
         }
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
+        shareOptionListView.setSelector(new ColorDrawable(Color.TRANSPARENT));
         
         if (builder_.getSharingTitleView() != null) {
             shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
@@ -226,7 +228,7 @@ class ShareLinkManager {
                         builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
-                    adapter.selectedPos = pos;
+                    adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
                     invokeSharingClient((ResolveInfo) view.getTag());
                     if (shareDlg_ != null) {
