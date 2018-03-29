@@ -47,10 +47,7 @@ class TrackingController {
         // Clear  any tracking specific preference items
         PrefHelper prefHelper = PrefHelper.getInstance(context);
         prefHelper.clearBranchAnalyticsData();
-        prefHelper.setDeviceFingerPrintID(PrefHelper.NO_STRING_VALUE);
         prefHelper.setSessionID(PrefHelper.NO_STRING_VALUE);
-        prefHelper.setIdentityID(PrefHelper.NO_STRING_VALUE);
-        prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
         prefHelper.setLinkClickID(PrefHelper.NO_STRING_VALUE);
         prefHelper.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
         prefHelper.setAppLink(PrefHelper.NO_STRING_VALUE);
@@ -60,7 +57,6 @@ class TrackingController {
         prefHelper.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
         prefHelper.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
         prefHelper.setSessionParams(PrefHelper.NO_STRING_VALUE);
-        prefHelper.setInstallParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.saveLastStrongMatchTime(0);
     }
     
