@@ -6,6 +6,7 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collection;
 
@@ -191,55 +192,61 @@ class ServerRequestCreateUrl extends ServerRequest {
      * @return A {@link String} url with given deep link parameters
      */
     private String generateLongUrlWithParams(String baseUrl) {
-        String longUrl = baseUrl + "?";
-        Collection<String> tags = linkPost_.getTags();
-        if (tags != null) {
-            for (String tag : tags) {
-                if (tag != null && tag.length() > 0)
-                    longUrl = longUrl + Defines.LinkParam.Tags + "=" + tag + "&";
+        String longUrl = baseUrl;
+        try {
+            if (Branch.getInstance().isTrackingDisabled() && !longUrl.contains(DEF_BASE_URL)) {
+                // By def the base url contains identity id as query param. This should be removed when tracking is disabled.
+                longUrl = longUrl.replace(new URL(longUrl).getQuery(), "");
             }
-        }
-        String alias = linkPost_.getAlias();
-        if (alias != null && alias.length() > 0) {
-            longUrl = longUrl + Defines.LinkParam.Alias + "=" + alias + "&";
-        }
-        
-        String channel = linkPost_.getChannel();
-        if (channel != null && channel.length() > 0) {
-            longUrl = longUrl + Defines.LinkParam.Channel + "=" + channel + "&";
-        }
-        
-        String feature = linkPost_.getFeature();
-        if (feature != null && feature.length() > 0) {
-            longUrl = longUrl + Defines.LinkParam.Feature + "=" + feature + "&";
-        }
-        
-        String stage = linkPost_.getStage();
-        if (stage != null && stage.length() > 0) {
-            longUrl = longUrl + Defines.LinkParam.Stage + "=" + stage + "&";
-        }
-        
-        String campaign = linkPost_.getCampaign();
-        if (campaign != null && campaign.length() > 0) {
-            longUrl = longUrl + Defines.LinkParam.Campaign + "=" + campaign + "&";
-        }
-        
-        long type = linkPost_.getType();
-        longUrl = longUrl + Defines.LinkParam.Type + "=" + type + "&";
-        
-        long duration = linkPost_.getDuration();
-        longUrl = longUrl + Defines.LinkParam.Duration + "=" + duration + "&";
-        
-        String params = linkPost_.getParams();
-        if (params != null && params.length() > 0) {
-            byte[] data = params.getBytes();
-            String base64Data = Base64.encodeToString(data, android.util.Base64.NO_WRAP);
-            try {
+            longUrl += longUrl.contains("?") ? "&" : "?";
+            
+            Collection<String> tags = linkPost_.getTags();
+            if (tags != null) {
+                for (String tag : tags) {
+                    if (tag != null && tag.length() > 0)
+                        longUrl = longUrl + Defines.LinkParam.Tags + "=" + URLEncoder.encode(tag, "UTF8") + "&";
+                }
+            }
+            String alias = linkPost_.getAlias();
+            if (alias != null && alias.length() > 0) {
+                longUrl = longUrl + Defines.LinkParam.Alias + "=" + URLEncoder.encode(alias, "UTF8") + "&";
+            }
+            
+            String channel = linkPost_.getChannel();
+            if (channel != null && channel.length() > 0) {
+                longUrl = longUrl + Defines.LinkParam.Channel + "=" + URLEncoder.encode(channel, "UTF8") + "&";
+            }
+            
+            String feature = linkPost_.getFeature();
+            if (feature != null && feature.length() > 0) {
+                longUrl = longUrl + Defines.LinkParam.Feature + "=" + URLEncoder.encode(feature, "UTF8") + "&";
+            }
+            
+            String stage = linkPost_.getStage();
+            if (stage != null && stage.length() > 0) {
+                longUrl = longUrl + Defines.LinkParam.Stage + "=" + URLEncoder.encode(stage, "UTF8") + "&";
+            }
+            
+            String campaign = linkPost_.getCampaign();
+            if (campaign != null && campaign.length() > 0) {
+                longUrl = longUrl + Defines.LinkParam.Campaign + "=" + URLEncoder.encode(campaign, "UTF8") + "&";
+            }
+            
+            long type = linkPost_.getType();
+            longUrl = longUrl + Defines.LinkParam.Type + "=" + type + "&";
+            
+            long duration = linkPost_.getDuration();
+            longUrl = longUrl + Defines.LinkParam.Duration + "=" + duration;
+            
+            String params = linkPost_.getParams();
+            if (params != null && params.length() > 0) {
+                byte[] data = params.getBytes();
+                String base64Data = Base64.encodeToString(data, android.util.Base64.NO_WRAP);
                 String urlEncodedBase64Data = URLEncoder.encode(base64Data, "UTF8");
-                longUrl = longUrl + "source=android&data=" + urlEncodedBase64Data;
-            } catch (Exception ignore) {
-                callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_BRANCH_INVALID_REQUEST));
+                longUrl = longUrl + "&source=android&data=" + urlEncodedBase64Data;
             }
+        } catch (Exception ignore) {
+            callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_BRANCH_INVALID_REQUEST));
         }
         
         return longUrl;
