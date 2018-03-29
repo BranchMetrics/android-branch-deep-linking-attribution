@@ -3119,6 +3119,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private String urlCopiedMessage_;
         private int styleResourceID_;
         private boolean setFullWidthStyle_;
+        private int dialogThemeResourceID_;
         private int dividerHeight = -1;
         private String sharingTitle = null;
         private View sharingTitleView = null;
@@ -3421,6 +3422,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         
         /**
+         * <p>
+         * Sets the given resource id as the theme id for share sheet dialog view.
+         * </p>
+         *
+         * @param styleResourceID the id of the theme to be applied to the share sheet dialog.
+         * @return This Builder object to allow for chaining of calls to set methods.
+         */
+        public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) {
+            this.dialogThemeResourceID_ = styleResourceID;
+            return this;
+        }
+        
+        /**
          * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
          *
          * @param height The new height of the divider in pixels.
@@ -3623,6 +3637,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         
         public boolean getIsFullWidthStyle() {
             return setFullWidthStyle_;
+        }
+        
+        public int getDialogThemeResourceID() {
+            return dialogThemeResourceID_;
         }
         
         public int getDividerHeight() {

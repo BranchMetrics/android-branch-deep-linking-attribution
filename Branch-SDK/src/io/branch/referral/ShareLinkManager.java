@@ -236,7 +236,15 @@ class ShareLinkManager {
             }
         });
         
+<<<<<<< HEAD
         shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
+=======
+        if (builder_.getDialogThemeResourceID() > 0) {
+            shareDlg_ = new AnimatedDialog(context_, builder_.getDialogThemeResourceID());
+        } else {
+            shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
+        }
+>>>>>>> Staging
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {
@@ -286,7 +294,6 @@ class ShareLinkManager {
                         } else {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
-                        
                         if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY
                                 || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
                             shareWithClient(selectedResolveInfo, url, channelName);
