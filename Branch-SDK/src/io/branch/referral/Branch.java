@@ -473,7 +473,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Method to change the Tracking state.If disabled SDK will not track any user data or state. SDK will not send any network calls when tracking is disabled
+     * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      */
     public void disableTracking(boolean disableTracking) {
         trackingController.disableTracking(context_, disableTracking);

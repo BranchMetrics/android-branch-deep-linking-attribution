@@ -63,7 +63,7 @@ task clearJar(type: Delete) {
 }
 
 task makeJar(type: Copy) {
-    from('build/intermediates/bundles/default/')
+    from('build/intermediates/bundles/release/')
     into('../')
     include('classes.jar')
     rename ('classes.jar', 'Branch-'+project.VERSION_NAME+'.jar')
