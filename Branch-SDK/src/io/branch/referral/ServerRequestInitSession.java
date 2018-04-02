@@ -161,7 +161,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 final JSONObject response_data = new JSONObject(response.getObject().getString("data"));
                 if (response_data.has("validate") && response_data.getBoolean("validate")) {
                     //Launch the Deepview template
-                    new IntegrationValidator().launchTestTemplate(branch.currentActivityReference_,response_data.getString("~referring_link"));
+                    new IntegrationValidator().launchTestTemplate(branch.context_,response_data.getString("~referring_link"));
                 }
                 final Handler validate_handle = new Handler(Looper.getMainLooper()) {
 
@@ -170,9 +170,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
                         try {
                             if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
                                 if(response_data.getBoolean("+clicked_branch_link"))
-                                    new IntegrationValidator().validateDeeplinkRouting(response_data, branch.currentActivityReference_);
+                                    new IntegrationValidator().validateDeeplinkRouting(response_data, branch.context_);
                                 else
-                                    new IntegrationValidator().displayErrorMessage(branch.currentActivityReference_);
+                                    new IntegrationValidator().displayErrorMessage(branch.context_);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

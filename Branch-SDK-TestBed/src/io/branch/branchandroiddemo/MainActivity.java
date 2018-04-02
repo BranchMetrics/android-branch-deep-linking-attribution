@@ -383,6 +383,7 @@ public class MainActivity extends Activity {
         super.onStart();
         branch = Branch.getInstance();
         //Test out your Branch Integration
+        // Do not make this call in your production app
         branch.validateSDKIntegration();
 
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {

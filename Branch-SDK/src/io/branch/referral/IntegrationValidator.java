@@ -147,13 +147,12 @@ public class IntegrationValidator {
         }
     }
 
-    public void validateDeeplinkRouting(final JSONObject validate_json,final WeakReference<Activity> currentActivityReference_) {
-        Activity current_activity = currentActivityReference_.get();
+    public void validateDeeplinkRouting(final JSONObject validate_json, final Context context) {
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder = new AlertDialog.Builder(current_activity, android.R.style.Theme_Material_Dialog_Alert);
+            builder = new AlertDialog.Builder(context, android.R.style.Theme_Material_Dialog_Alert);
         } else {
-            builder = new AlertDialog.Builder(current_activity);
+            builder = new AlertDialog.Builder(context);
         }
         builder.setTitle("Branch Deeplinking Routing")
                 .setMessage("Good news - we got link data. Now a question for you, astute developer: did the app deep link to the specific piece of content you expected to see?")
@@ -161,14 +160,14 @@ public class IntegrationValidator {
                     public void onClick(DialogInterface dialog, int which) {
                         // Test Succeeded
                         String launch_link = attachTestResults(validate_json,"g");
-                        launchTestTemplate(currentActivityReference_,launch_link);
+                        launchTestTemplate(context,launch_link);
                     }
                 })
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // Test Failed
                         String launch_link = attachTestResults(validate_json,"r");
-                        launchTestTemplate(currentActivityReference_,launch_link);
+                        launchTestTemplate(context,launch_link);
                     }
                 })
                 .setNeutralButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -181,28 +180,27 @@ public class IntegrationValidator {
                 .show();
     }
 
-    public void launchTestTemplate(WeakReference<Activity> activity,String url){
+    public void launchTestTemplate(final Context context,String url){
         Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        i.putExtra(Browser.EXTRA_APPLICATION_ID, activity.get().getPackageName());
+        i.putExtra(Browser.EXTRA_APPLICATION_ID, context.getPackageName());
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setPackage("com.android.chrome");
         try {
-            activity.get().startActivity(i);
+            context.startActivity(i);
         } catch (ActivityNotFoundException e) {
             // Chrome is probably not installed
             // Try with the default browser
             i.setPackage(null);
-            activity.get().startActivity(i);
+            context.startActivity(i);
         }
     }
 
-    public void displayErrorMessage(final WeakReference<Activity> currentActivityReference_) {
-        Activity current_activity = currentActivityReference_.get();
+    public void displayErrorMessage(final Context context) {
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder = new AlertDialog.Builder(current_activity, android.R.style.Theme_Material_Dialog_Alert);
+            builder = new AlertDialog.Builder(context, android.R.style.Theme_Material_Dialog_Alert);
         } else {
-            builder = new AlertDialog.Builder(current_activity);
+            builder = new AlertDialog.Builder(context);
         }
         builder.setTitle("Branch Deeplink Routing Support")
                 .setMessage("Bummer. It seems like +clicked_branch_link is false - we didn't deep link.  Double check that the link you're clicking has the same branch_key that is being used in your Manifest file. Return to Chrome when you're ready to test again.")

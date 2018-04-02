@@ -305,8 +305,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private BranchRemoteInterface branchRemoteInterface_;
     private PrefHelper prefHelper_;
     private final SystemObserver systemObserver_;
-    private Context context_;
-    
+    Context context_;
+
     final Object lock;
     
     private Semaphore serverSema_;
