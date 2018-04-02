@@ -1178,7 +1178,11 @@ public class PrefHelper {
      */
     public static void Debug(String tag, String message) {
         if ((Branch.isLogging_ == null && BNC_Dev_Debug) || (Branch.isLogging_ != null && Branch.isLogging_)) {
-            Log.i(tag, message);
+            if(message != null) {
+                Log.i(tag,  message);
+            } else {
+                Log.i(tag,  "An error occurred. Unable to print the log message");
+            }
         }
     }
 }
