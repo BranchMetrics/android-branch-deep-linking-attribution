@@ -7,4 +7,19 @@
         <item name="android:cacheColorHint">#FF00FF00</item>
     </style>
 
+    <style name="testbed_button_style">
+        <item name="android:layout_width">150dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:textAppearance">@android:style/TextAppearance.Small</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="testbed_text_view">
+        <item name="android:layout_width">150dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:padding">5dp</item>
+    </style>
+
 </resources>
