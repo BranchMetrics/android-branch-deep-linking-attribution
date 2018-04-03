@@ -378,7 +378,7 @@ public abstract class ServerRequest {
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      */
-    public void updateGAdsParams() {
+    private void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         if (!TextUtils.isEmpty(systemObserver_.GAIDString_)) {
             try {
@@ -413,6 +413,21 @@ public abstract class ServerRequest {
             }
         }
     }
+    
+    private void updateDeviceInfo() {
+        BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
+        if (version == BRANCH_API_VERSION.V2) {
+            JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+            if (userDataObj != null) {
+                try {
+                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
+                    userDataObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                } catch (JSONException ignore) {
+                }
+            }
+        }
+    }
+    
     
     /**
      * Update the additional metadata provided using {@link Branch#setRequestMetadata(String, String)} to the requests.
@@ -470,6 +485,8 @@ public abstract class ServerRequest {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
         }
         
+        // Update the dynamic device info params
+        updateDeviceInfo();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
         if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
@@ -583,4 +600,22 @@ public abstract class ServerRequest {
     public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
         return BRANCH_API_VERSION.V1;  // Default is v1
     }
+    
+    public void reportTrackingDisabledError() {
+        PrefHelper.Debug("BranchSDK", "Requested operation cannot be completed since tracking is disabled [" + requestPath_ + "]");
+        handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+    }
+    
+    /**
+     * Method to notify that this request is being executed when tracking is disabled.
+     * Remove all PII data from the request added to the request
+     *
+     * @return {@code true} if the request needed to be executed in tracking disabled mode
+     */
+    protected boolean prepareExecuteWithoutTracking() {
+        // Default return false. Return true for request need to be executed when tracking is disabled
+        return false;
+    }
+    
+    
 }

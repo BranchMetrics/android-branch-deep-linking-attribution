@@ -18,177 +18,128 @@
                 android:layout_centerHorizontal="true"
                 android:gravity="center"
                 android:hint="short referral url"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:maxLines="3"
+                android:ellipsize="end"/>
 
             <Button
                 android:id="@+id/cmdRefreshShortURL"
+                style="@style/testbed_button_style"
                 android:layout_width="180dp"
-                android:layout_height="wrap_content"
                 android:layout_below="@+id/editReferralShortUrl"
                 android:layout_centerHorizontal="true"
-                android:text="Refresh Short URL"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"
-                />
+                android:text="Refresh Short URL"/>
 
             <TextView
                 android:id="@+id/txtRewardBalance"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/testbed_text_view"
                 android:layout_below="@+id/cmdRefreshShortURL"
                 android:layout_marginTop="5dp"
-                android:padding="5dp"
                 android:text="credits = "
-                android:textColor="@android:color/white"/>
+                android:layout_alignParentRight="true"/>
 
             <TextView
                 android:id="@+id/txtInstallCount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/txtRewardBalance"
-                android:padding="5dp"
-                android:text="install count = "
-                android:textColor="@android:color/white"
-                />
+                style="@style/testbed_text_view"
+                android:layout_below="@+id/cmdRefreshShortURL"
+                android:text="install count = "/>
 
 
             <Button
                 android:id="@+id/cmdIdentifyUser"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentRight="true"
                 android:layout_below="@+id/txtInstallCount"
-                android:text="Identify User"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Identify User"/>
 
             <Button
                 android:id="@+id/cmdRedeemFive"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/txtInstallCount"
-                android:layout_marginTop="5dp"
-                android:text="Redeem 5"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Redeem 5"/>
 
             <Button
                 android:id="@+id/cmdClearUser"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentRight="true"
                 android:layout_below="@+id/cmdIdentifyUser"
-                android:layout_marginTop="5dp"
-                android:text="Clear User"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Clear User"/>
 
             <Button
                 android:id="@+id/cmdRefreshReward"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/cmdRedeemFive"
-                android:layout_marginTop="5dp"
-                android:text="Refresh Rewards"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Refresh Rewards"/>
 
 
             <Button
                 android:id="@+id/cmdCommitBuyAction"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/cmdRefreshReward"
-                android:layout_marginTop="5dp"
-                android:text="Execute Buy"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Execute Buy"/>
 
             <Button
                 android:id="@+id/cmdCommitBuyMetadataAction"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentRight="true"
                 android:layout_below="@+id/cmdRefreshReward"
-                android:layout_marginTop="5dp"
-                android:text="Buy with metadata"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Buy with metadata"/>
 
             <Button
                 android:id="@+id/cmdGetCreditHistory"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/cmdCommitBuyAction"
-                android:layout_marginTop="5dp"
-                android:text="Get Credit History"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Get Credit History"/>
 
 
             <Button
                 android:id="@+id/cmdPrintInstallParam"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentRight="true"
                 android:layout_below="@+id/cmdCommitBuyMetadataAction"
-                android:layout_marginTop="5dp"
-                android:text="Print Install Param"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
-
+                android:text="Print Install Param"/>
 
             <Button
                 android:id="@+id/cmdTrackCustomEvent"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/cmdGetCreditHistory"
-                android:layout_marginTop="5dp"
-                android:text="Track Custom Evt"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
-
+                android:text="Track Custom Evt"/>
 
             <Button
                 android:id="@+id/cmdTrackStandardEvent"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_alignParentRight="true"
                 android:layout_below="@+id/cmdPrintInstallParam"
-                android:layout_marginTop="5dp"
-                android:text="Track Standard Evt"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:text="Track Standard Evt"/>
 
 
             <Button
                 android:id="@+id/report_view_btn"
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_below="@+id/cmdTrackStandardEvent"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="20dp"
-                android:gravity="center"
-                android:text="Report View"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:layout_alignParentLeft="true"
+                android:text="Report View"/>
+
+            <ToggleButton
+                android:id="@+id/tracking_cntrl_btn"
+                style="@style/testbed_button_style"
+                android:layout_below="@+id/cmdTrackStandardEvent"
+                android:layout_alignParentRight="true"
+                android:textOn="Tracking Disabled"
+                android:textOff="Tracking Enabled"/>
 
             <Button
                 android:id="@+id/share_btn"
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
+                style="@style/testbed_button_style"
                 android:layout_below="@+id/report_view_btn"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="5dp"
-                android:gravity="center"
                 android:text="Share Link"
-                android:textAppearance="@android:style/TextAppearance.Small"
-                android:textColor="@android:color/white"/>
+                android:layout_marginTop="20dp"/>
 
         </RelativeLayout>
 

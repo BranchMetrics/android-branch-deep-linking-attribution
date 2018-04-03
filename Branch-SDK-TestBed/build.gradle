@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile project(':Branch-SDK')
-    //debugCompile 'com.squareup.leakcanary:leakcanary-android:1.+'
-    compile ('com.google.android.gms:play-services-ads:10.0.1')
+    implementation project(':Branch-SDK')
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.+'
+    implementation ('com.google.android.gms:play-services-ads:10.0.1')
 
     /* Add chrome custom tabs for guaranteed matching */
-    compile ('com.android.support:customtabs:23.3.0'){
+    implementation ('com.android.support:customtabs:23.3.0') {
         exclude module: 'support-v4'
     }
 }
@@ -54,7 +54,6 @@ android {
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
     }
-    buildToolsVersion '25.0.0'
 }
 
 File propFile = file('signing.properties');
