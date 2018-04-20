@@ -573,11 +573,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchReferral_;
     }
     
-    private static Branch getBranchInstance(@NonNull Context context, boolean isLive) {
+    private static Branch getBranchInstance(@NonNull Context context, boolean isLive, String branchKey) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
             
-            String branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
+            // If a Branch key is passed already use it. Else read the key
+            if (TextUtils.isEmpty(branchKey)) {
+                branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
+            }
             boolean isNewBranchKeySet;
             if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 // If Branch key is not available check for Fabric provided Branch key
@@ -609,8 +612,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.setActivityLifeCycleObserver((Application) context);
             }
         }
-        
-        
         return branchReferral_;
     }
     
@@ -626,7 +627,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * one was not already requested during the current app lifecycle.
      */
     public static Branch getInstance(@NonNull Context context) {
-        return getBranchInstance(context, true);
+        return getBranchInstance(context, true, null);
     }
     
     /**
@@ -637,7 +638,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return An initialised {@link Branch} object.
      */
     public static Branch getTestInstance(@NonNull Context context) {
-        return getBranchInstance(context, false);
+        return getBranchInstance(context, false, null);
     }
     
     /**
@@ -655,7 +656,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
-        getBranchInstance(context, isLive);
+        getBranchInstance(context, isLive, null);
         return branchReferral_;
     }
     
@@ -677,7 +678,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isDebug = BranchUtil.isTestModeEnabled(context);
-        getBranchInstance(context, !isDebug);
+        getBranchInstance(context, !isDebug, null);
         return branchReferral_;
     }
     
@@ -697,7 +698,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isLive = !BranchUtil.isTestModeEnabled(context);
-        getBranchInstance(context, isLive);
+        getBranchInstance(context, isLive, branchKey);
         
         if (branchKey.startsWith("key_")) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
@@ -724,7 +725,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-        getBranchInstance(context, false);
+        getBranchInstance(context, false, null);
         return branchReferral_;
     }
     
@@ -743,7 +744,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
-        getBranchInstance(context, false);
+        getBranchInstance(context, false, null);
         return branchReferral_;
     }
     
@@ -2334,7 +2335,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Register app init without any wait on wait locks. This will not be getting any params from the intent
      */
     void registerAppReInit() {
-        if(networkCount_ != 0) {
+        if (networkCount_ != 0) {
             networkCount_ = 0;
             requestQueue_.clear();
         }
