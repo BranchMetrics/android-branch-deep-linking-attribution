@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.17.1 Hot fix : Preference items cleared over app re-open if Branch key is missing in manifest file.
+
 - v2.17.0 Adding tracking disable feature, this is useful for GDPR compliance. Fixing share sheet to show correct selection. Fix for updating device params to Branch requests before sending. Updating to latest Gradle version. Few other minor fixes.
 
 - v2.16.0 Adding support for collecting data from selected URIs with remote skip list update feature. Fixing an issue with handling BUO metadata.
