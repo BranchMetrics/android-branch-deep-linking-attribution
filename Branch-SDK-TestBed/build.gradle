@@ -14,7 +14,7 @@ dependencies {
 android {
     compileSdkVersion 23
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
-    
+
     defaultConfig {
         applicationId "io.branch.branchandroiddemo"
         minSdkVersion 15
@@ -43,7 +43,7 @@ android {
         }
 
         // Move the tests to tests/java, tests/res, etc...
-        instrumentTest.setRoot('tests')
+        androidTest.setRoot('tests')
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
