@@ -330,4 +330,35 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
         }
     }
+    
+    @Override
+    protected boolean prepareExecuteWithoutTracking() {
+        JSONObject post = getPost();
+        if ((post.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
+                || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
+                || post.has(Defines.Jsonkey.LinkIdentifier.getKey()))) {
+            
+            post.remove(Defines.Jsonkey.DeviceFingerprintID.getKey());
+            post.remove(Defines.Jsonkey.IdentityID.getKey());
+            post.remove(Defines.Jsonkey.FaceBookAppLinkChecked.getKey());
+            post.remove(Defines.Jsonkey.External_Intent_Extra.getKey());
+            post.remove(Defines.Jsonkey.External_Intent_URI.getKey());
+            post.remove(Defines.Jsonkey.FirstInstallTime.getKey());
+            post.remove(Defines.Jsonkey.LastUpdateTime.getKey());
+            post.remove(Defines.Jsonkey.OriginalInstallTime.getKey());
+            post.remove(Defines.Jsonkey.PreviousUpdateTime.getKey());
+            post.remove(Defines.Jsonkey.InstallBeginTimeStamp.getKey());
+            post.remove(Defines.Jsonkey.ClickedReferrerTimeStamp.getKey());
+            post.remove(Defines.Jsonkey.HardwareID.getKey());
+            post.remove(Defines.Jsonkey.IsHardwareIDReal.getKey());
+            post.remove(Defines.Jsonkey.LocalIP.getKey());
+            try {
+                post.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
+            } catch (JSONException ignore) {
+            }
+            return true;
+        } else {
+            return super.prepareExecuteWithoutTracking();
+        }
+    }
 }

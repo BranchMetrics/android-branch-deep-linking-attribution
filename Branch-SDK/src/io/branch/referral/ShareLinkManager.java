@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.TextUtils;
@@ -33,7 +34,7 @@ class ShareLinkManager {
     AnimatedDialog shareDlg_;
     Branch.BranchLinkShareListener callback_;
     Branch.IChannelProperties channelPropertiesCallback_;
-
+    
     /* List of apps available for sharing. */
     private List<ResolveInfo> appList_;
     /* Intent for sharing with selected application.*/
@@ -57,7 +58,7 @@ class ShareLinkManager {
     final int leftMargin = 100;
     private List<String> includeInShareSheet = new ArrayList<>();
     private List<String> excludeFromShareSheet = new ArrayList<>();
-
+    
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
@@ -87,7 +88,7 @@ class ShareLinkManager {
         }
         return shareDlg_;
     }
-
+    
     /**
      * Dismiss the share dialog if showing. Should be called on activity stopping.
      *
@@ -106,7 +107,7 @@ class ShareLinkManager {
             }
         }
     }
-
+    
     /**
      * Create a custom chooser dialog with available share options.
      *
@@ -138,7 +139,7 @@ class ShareLinkManager {
         /* Create all app list with copy link item. */
         matchingApps.removeAll(preferredApps);
         matchingApps.addAll(0, preferredApps);
-
+        
         //if apps are explicitly being included, add only those, otherwise at the else statement add them all
         if (includeInShareSheet.size() > 0) {
             for (ResolveInfo r : matchingApps) {
@@ -149,14 +150,14 @@ class ShareLinkManager {
         } else {
             cleanedMatchingApps = matchingApps;
         }
-
+        
         //does our list contain explicitly excluded items? do not carry them into the next list
         for (ResolveInfo r : cleanedMatchingApps) {
             if (!excludeFromShareSheet.contains(r.activityInfo.packageName)) {
                 cleanedMatchingAppsFinal.add(r);
             }
         }
-
+        
         //make sure our "show more" option includes preferred apps
         for (ResolveInfo r : matchingApps) {
             for (SharingHelper.SHARE_WITH shareWith : packagesFilterList)
@@ -164,11 +165,11 @@ class ShareLinkManager {
                     cleanedMatchingAppsFinal.add(r);
                 }
         }
-
+        
         cleanedMatchingAppsFinal.add(new CopyLinkItem());
         matchingApps.add(new CopyLinkItem());
         preferredApps.add(new CopyLinkItem());
-
+        
         if (preferredApps.size() > 1) {
             /* Add more and copy link option to preferred app.*/
             if (matchingApps.size() > preferredApps.size()) {
@@ -189,7 +190,8 @@ class ShareLinkManager {
         }
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
-
+        shareOptionListView.setSelector(new ColorDrawable(Color.TRANSPARENT));
+        
         if (builder_.getSharingTitleView() != null) {
             shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
         } else if (!TextUtils.isEmpty(builder_.getSharingTitle())) {
@@ -202,15 +204,15 @@ class ShareLinkManager {
             textView.setPadding(leftMargin, padding, padding, padding);
             shareOptionListView.addHeaderView(textView, null, false);
         }
-
+        
         shareOptionListView.setAdapter(adapter);
-
+        
         if (builder_.getDividerHeight() >= 0) { //User set height
             shareOptionListView.setDividerHeight(builder_.getDividerHeight());
         } else if (builder_.getIsFullWidthStyle()) {
             shareOptionListView.setDividerHeight(0); // Default no divider for full width dialog
         }
-
+        
         shareOptionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -226,7 +228,7 @@ class ShareLinkManager {
                         builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
-                    adapter.selectedPos = pos;
+                    adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
                     invokeSharingClient((ResolveInfo) view.getTag());
                     if (shareDlg_ != null) {
@@ -235,8 +237,11 @@ class ShareLinkManager {
                 }
             }
         });
-
-        shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
+        if (builder_.getDialogThemeResourceID() > 0) {
+            shareDlg_ = new AnimatedDialog(context_, builder_.getDialogThemeResourceID());
+        } else {
+            shareDlg_ = new AnimatedDialog(context_, builder_.getIsFullWidthStyle());
+        }
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
         if (callback_ != null) {
@@ -258,8 +263,8 @@ class ShareLinkManager {
             }
         });
     }
-
-
+    
+    
     /**
      * Invokes a sharing client with a link created by the given json objects.
      *
@@ -269,7 +274,7 @@ class ShareLinkManager {
         isShareInProgress_ = true;
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
-
+        
         shortLinkBuilder.generateShortUrlInternal(new Branch.BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
@@ -286,8 +291,8 @@ class ShareLinkManager {
                         } else {
                             Log.i("BranchSDK", "Unable to share link " + error.getMessage());
                         }
-
-                        if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY) {
+                        if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY
+                                || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
                             shareWithClient(selectedResolveInfo, url, channelName);
                         } else {
                             cancelShareLinkDialog(false);
@@ -298,7 +303,7 @@ class ShareLinkManager {
             }
         }, true);
     }
-
+    
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {
         if (callback_ != null) {
             callback_.onLinkShareResponse(url, channelName, null);
@@ -311,7 +316,7 @@ class ShareLinkManager {
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
             String shareSub = builder_.getShareSub();
             String shareMsg = builder_.getShareMsg();
-
+            
             if (channelPropertiesCallback_ != null) {
                 String customShareSub = channelPropertiesCallback_.getSharingTitleForChannel(channelName);
                 String customShareMsg = channelPropertiesCallback_.getSharingMessageForChannel(channelName);
@@ -329,7 +334,7 @@ class ShareLinkManager {
             context_.startActivity(shareLinkIntent_);
         }
     }
-
+    
     /**
      * Adds a given link to the clip board.
      *
@@ -350,28 +355,28 @@ class ShareLinkManager {
         }
         Toast.makeText(context_, builder_.getUrlCopiedMessage(), Toast.LENGTH_SHORT).show();
     }
-
+    
     /*
      * Adapter class for creating list of available share options
      */
     private class ChooserArrayAdapter extends BaseAdapter {
         public int selectedPos = -1;
-
+        
         @Override
         public int getCount() {
             return appList_.size();
         }
-
+        
         @Override
         public Object getItem(int position) {
             return appList_.get(position);
         }
-
+        
         @Override
         public long getItemId(int position) {
             return position;
         }
-
+        
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             ShareItemView itemView;
@@ -387,20 +392,20 @@ class ShareLinkManager {
             itemView.setClickable(false);
             return itemView;
         }
-
+        
         @Override
         public boolean isEnabled(int position) {
             return selectedPos < 0;
         }
     }
-
+    
     /**
      * Class for sharing item view to be displayed in the list with Application icon and Name.
      */
     private class ShareItemView extends TextView {
         Context context_;
         int iconSizeDP_;
-
+        
         public ShareItemView(Context context) {
             super(context);
             context_ = context;
@@ -409,7 +414,7 @@ class ShareLinkManager {
             this.setMinWidth(context_.getResources().getDisplayMetrics().widthPixels);
             this.iconSizeDP_ = iconSize_ != 0 ? BranchUtil.dpToPx(context, iconSize_) : 0;
         }
-
+        
         public void setLabel(String appName, Drawable appIcon, boolean isEnabled) {
             this.setText("\t" + appName);
             this.setTag(appName);
@@ -435,7 +440,7 @@ class ShareLinkManager {
             }
         }
     }
-
+    
     /**
      * Class for sharing item more
      */
@@ -445,14 +450,14 @@ class ShareLinkManager {
         public CharSequence loadLabel(PackageManager pm) {
             return builder_.getMoreOptionText();
         }
-
+        
         @SuppressWarnings("NullableProblems")
         @Override
         public Drawable loadIcon(PackageManager pm) {
             return builder_.getMoreOptionIcon();
         }
     }
-
+    
     /**
      * Class for Sharing Item copy URl
      */
@@ -462,13 +467,13 @@ class ShareLinkManager {
         public CharSequence loadLabel(PackageManager pm) {
             return builder_.getCopyURlText();
         }
-
+        
         @SuppressWarnings("NullableProblems")
         @Override
         public Drawable loadIcon(PackageManager pm) {
             return builder_.getCopyUrlIcon();
         }
-
+        
     }
-
+    
 }

@@ -96,6 +96,7 @@ public class PrefHelper {
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
     static final String KEY_REFERRER_CLICK_TS = "bnc_referrer_click_ts";
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
+    static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     
     private static String Branch_Key = null;
     /**
@@ -1177,7 +1178,11 @@ public class PrefHelper {
      */
     public static void Debug(String tag, String message) {
         if ((Branch.isLogging_ == null && BNC_Dev_Debug) || (Branch.isLogging_ != null && Branch.isLogging_)) {
-            Log.i(tag, message);
+            if(message != null) {
+                Log.i(tag,  message);
+            } else {
+                Log.i(tag,  "An error occurred. Unable to print the log message");
+            }
         }
     }
 }

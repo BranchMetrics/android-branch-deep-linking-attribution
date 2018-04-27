@@ -813,6 +813,17 @@ The response will return an array that has been parsed from the following JSON:
 3. _3_ - This is a very unique case where we will subtract credits automatically when we detect fraud
 
 
+### Enable or Disable User Tracking
+In order to comply with tracking requirements, you can disable tracking at the SDK level. Simply call:
+ ```java
+Branch.getInstance().disableTracking(true);
+```
+
+This will prevent any Branch requests from being sent across the network, except for the case of deep linking. If someone clicks a Branch link, but has expressed not to be tracked, we will return deep linking data back to the client but without tracking information captured.
+
+In do-not-track mode, you will still be able to create and share links. They will not have identifiable information. Event tracking won’t pass data back to the server if a user has expressed to not be tracked. You can change this behavior at any time, but calling the above function. This information will be saved and persisted.
+
+
 ## Troubleshooting
 
 ### ClassNotFoundException : Branch.Java

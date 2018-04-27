@@ -15,7 +15,7 @@ import io.branch.indexing.ContentDiscoverer;
  * </p>
  */
 class ServerRequestRegisterClose extends ServerRequest {
-
+    
     /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
@@ -45,11 +45,11 @@ class ServerRequestRegisterClose extends ServerRequest {
             constructError_ = true;
         }
     }
-
+    
     public ServerRequestRegisterClose(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
-
+    
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
@@ -58,23 +58,23 @@ class ServerRequestRegisterClose extends ServerRequest {
         }
         return false;
     }
-
+    
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         // Clear the latest session params on close
         prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
     }
-
+    
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         //No implementation on purpose
     }
-
+    
     @Override
     public boolean isGetRequest() {
         return false;
     }
-
+    
     @Override
     public void clearCallbacks() {
         //No implementation on purpose

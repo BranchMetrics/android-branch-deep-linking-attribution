@@ -4,10 +4,10 @@ package io.branch.referral;
  * Returns a general error if the server back-end is down.
  */
 public class BranchError {
-
+    
     String errorMessage_ = "";
     int errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
-
+    
     /* Error processing request since session not initialised yet. */
     public static final int ERR_NO_SESSION = -101;
     /* Error processing request since app doesn't have internet permission. */
@@ -40,7 +40,9 @@ public class BranchError {
     public static final int ERR_BRANCH_RESOURCE_CONFLICT = -115;
     /* Branch request is invalid */
     public static final int ERR_BRANCH_INVALID_REQUEST = -116;
-
+    /* Tracking is disabled. Requested operations will not work when tracking is disabled */
+    public static final int ERR_BRANCH_TRACKING_DISABLED = -117;
+    
     /**
      * <p>Returns the message explaining the error.</p>
      *
@@ -50,7 +52,7 @@ public class BranchError {
     public String getMessage() {
         return errorMessage_;
     }
-
+    
     /**
      * <p>Returns an error code for this Branch Error. </p>
      *
@@ -59,7 +61,7 @@ public class BranchError {
     public int getErrorCode() {
         return errorCode_;
     }
-
+    
     /**
      * <p>Overridden toString method for this object; returns the error message rather than the
      * object's address.</p>
@@ -70,11 +72,11 @@ public class BranchError {
     public String toString() {
         return getMessage();
     }
-
+    
     public BranchError(String failMsg, int statusCode) {
         errorMessage_ = failMsg + initErrorCodeAndGetLocalisedMessage(statusCode);
     }
-
+    
     /*
      * <p> Provides localised error messages for the gives status code </p>
      *
@@ -123,6 +125,9 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_REQ_TIMED_OUT) {
             errorCode_ = ERR_BRANCH_REQ_TIMED_OUT;
             errMsg = " Request to Branch server timed out. Please check your internet connectivity";
+        } else if (statusCode == ERR_BRANCH_TRACKING_DISABLED) {
+            errorCode_ = ERR_BRANCH_TRACKING_DISABLED;
+            errMsg = " Tracking is disabled. Requested operation cannot be completed when tracking is disabled";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
             errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
