@@ -1,2 +1,2 @@
-include ':Branch-SDK-TestBed'
+include ':Branch-SDK-TestBed', ':branch-sdk-uitestbed'
 include ':Branch-SDK'

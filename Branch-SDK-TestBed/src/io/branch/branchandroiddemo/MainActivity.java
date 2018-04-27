@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
                 txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
                 
                 // Async Link creation example
-               /* branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
+               /*branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         String shortUrl = url;
