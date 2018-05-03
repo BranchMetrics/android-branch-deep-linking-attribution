@@ -149,7 +149,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
     }
 
-    void onInitSessionCompleted(final ServerResponse response, final Branch branch) {
+    void onInitSessionCompleted(ServerResponse response, Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
             if (branch.currentActivityReference_ != null) {

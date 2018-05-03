@@ -1,8 +1,6 @@
 package io.branch.referral;
 
 import android.Manifest;
-import android.app.ActivityManager;
-import android.app.ActivityManager.MemoryInfo;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -16,8 +14,6 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
-
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
