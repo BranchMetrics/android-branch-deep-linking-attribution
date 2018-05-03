@@ -442,7 +442,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             intentState_ = INTENT_STATE.READY;
         }
     }
-    
+
+
+    public Context getApplicationContext() {
+        return context_;
+    }
+
     /**
      * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
      * Branch SDK and remote Branch server
@@ -471,8 +476,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-
-    public void validateSDKIntegration() { new IntegrationValidator().validateSDKIntegration(context_); }
 
     /**
      * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
@@ -2064,21 +2067,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return null;
     }
 
-    /**
-     * <p>Gets the Branch Internal App Configuration for the last given live key</p>
-     *
-     */
 
-    JSONObject generateAppConfigInternal() {
-        ServerResponse response = null;
-        try {
-            response = new getAppConfigTask().execute().get(PrefHelper.TIMEOUT, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException ignore) { }
-        if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-            return response.getObject();
-        }
-        return null;
-    }
 
     /**
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
@@ -2775,17 +2764,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         protected ServerResponse doInBackground(ServerRequest... serverRequests) {
             String urlExtend = "v1/url";
             return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(), prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
-    
-    /**
-     * Async Task to create a shorlink for synchronous methods
-     */
-    private class getAppConfigTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override
-        protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            JSONObject appendedParams = new JSONObject();
-            return branchRemoteInterface_.make_restful_get(prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetApp.getPath() +  "/" + prefHelper_.getBranchKey(), appendedParams, Defines.RequestPath.GetApp.getPath(), prefHelper_.getBranchKey());
         }
     }
 

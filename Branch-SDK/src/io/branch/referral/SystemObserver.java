@@ -147,7 +147,7 @@ class SystemObserver {
      */
     private String getURIScheme(String packageName) {
         String scheme = BLANK;
-        if (!isLowOnMemory()) {
+        if (!BranchUtil.isLowOnMemory(context_)) {
 
             JarFile jf = null;
             InputStream is = null;
@@ -181,23 +181,6 @@ class SystemObserver {
         return scheme;
     }
 
-    /**
-     * <p>Checks the current device's {@link ActivityManager} system service and returns the value
-     * of the lowMemory flag.</p>
-     *
-     * @return <p>A {@link Boolean} value representing the low memory flag of the current device.</p>
-     * <ul>
-     * <li><i>true</i> - the free memory on the current device is below the system-defined threshold
-     * that triggers the low memory flag.</li>
-     * <li><i>false</i> - the device has plenty of free memory.</li>
-     * </ul>
-     */
-    boolean isLowOnMemory() {
-        ActivityManager activityManager = (ActivityManager) context_.getSystemService(Context.ACTIVITY_SERVICE);
-        MemoryInfo mi = new MemoryInfo();
-        activityManager.getMemoryInfo(mi);
-        return mi.lowMemory;
-    }
 
     /**
      * <p>Gets the package name of the current application that the SDK is integrated with.</p>

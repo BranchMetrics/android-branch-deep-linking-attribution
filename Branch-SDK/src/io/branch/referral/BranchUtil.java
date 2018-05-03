@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -14,7 +15,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
+import java.util.jar.JarFile;
 
 
 /**
@@ -30,9 +34,9 @@ public class BranchUtil {
      * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
-    static boolean isTestModeEnabled(Context context) {
+    public static boolean isTestModeEnabled(Context context) {
         if (isCustomDebugEnabled_) {
-            return isCustomDebugEnabled_;
+            return true;
         }
         boolean isTestMode_ = false;
         String testModeKey = "io.branch.sdk.TestMode";
@@ -66,7 +70,7 @@ public class BranchUtil {
      * @param params JSONObject to convert to string
      * @return A {@link String} value representing the JSONObject
      */
-    static String stringifyAndAddSource(JSONObject params) {
+    private static String stringifyAndAddSource(JSONObject params) {
         if (params == null) {
             params = new JSONObject();
         }
@@ -103,7 +107,7 @@ public class BranchUtil {
         }
         return filteredObj;
     }
-    
+
     public static class JsonReader {
         private final JSONObject jsonObject;
 
@@ -195,7 +199,7 @@ public class BranchUtil {
         }
 
     }
-    
+
     public static Drawable getDrawable(@NonNull Context context, @DrawableRes int drawableID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return context.getResources().getDrawable(drawableID, context.getTheme());
@@ -208,6 +212,56 @@ public class BranchUtil {
     public static int dpToPx(Context context, int dp) {
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+    }
+
+
+    /**
+     * <p>Checks the current device's {@link ActivityManager} system service and returns the value
+     * of the lowMemory flag.</p>
+     *
+     * @return <p>A {@link Boolean} value representing the low memory flag of the current device.</p>
+     * <ul>
+     * <li><i>true</i> - the free memory on the current device is below the system-defined threshold
+     * that triggers the low memory flag.</li>
+     * <li><i>false</i> - the device has plenty of free memory.</li>
+     * </ul>
+     */
+    public static boolean isLowOnMemory(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(mi);
+        return mi.lowMemory;
+    }
+
+    public static JSONObject getDeepLinkSchemes(Context context) {
+        JSONObject obj = null;
+        if (!isLowOnMemory(context)) {
+            JarFile jf = null;
+            InputStream is = null;
+            byte[] xml;
+            try {
+                jf = new JarFile(context.getPackageManager().getApplicationInfo(context.getPackageName(), 0).publicSourceDir);
+                is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
+                xml = new byte[is.available()];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(xml);
+                obj = new ApkParser().decompressXMLForValidator(xml);
+            } catch (Exception ignored) {
+            } finally {
+                try {
+                    if (is != null) {
+                        is.close();
+                        // noinspection unused
+                        is = null;
+                    }
+                    if (jf != null) {
+                        jf.close();
+                    }
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return obj;
     }
 
 }

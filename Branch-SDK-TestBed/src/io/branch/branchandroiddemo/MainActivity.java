@@ -18,7 +18,6 @@ import org.json.JSONObject;
 import java.util.Date;
 
 import io.branch.branchandroiddemo.test.BUOTestRoutines;
-import io.branch.branchandroiddemo.test.TrackingControlTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -26,6 +25,8 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
+import io.branch.referral.validators.DeepLinkRoutingValidator;
+import io.branch.referral.validators.IntegrationValidator;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -393,10 +394,6 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-        //Test out your Branch Integration
-        // Do not make this call in your production app
-        branch.validateSDKIntegration();
-
         branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
@@ -416,8 +413,19 @@ public class MainActivity extends Activity {
                     }
                 }
                // QA purpose only  TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+
+                // Branch integration validation: Validate Branch deep link routing
+                // NOTE : The below method can validate the Deep link routing with Branch link in your application
+                // IMP : Do not make this call in your production app
+                // DeepLinkRoutingValidator.validate(MainActivity.this);
             }
         }, this.getIntent().getData(), this);
+
+        // Branch integration validation: Validate Branch integration with your app
+        // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
+        // Please look for "BranchSDK_Doctor" in the logcat to see the results.
+        // IMP : Do not make this call in your production app
+        // IntegrationValidator.validate(MainActivity.this);
         
     }
     

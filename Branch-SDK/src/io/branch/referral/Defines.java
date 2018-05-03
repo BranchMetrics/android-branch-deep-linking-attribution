@@ -67,6 +67,7 @@ public class Defines {
         LastUpdateTime("latest_update_time"),
         PreviousUpdateTime("previous_update_time"),
         URIScheme("uri_scheme"),
+        AppLinks("app_links"),
         AppIdentifier("app_identifier"),
         LinkIdentifier("link_identifier"),
         GoogleAdvertisingID("google_advertising_id"),

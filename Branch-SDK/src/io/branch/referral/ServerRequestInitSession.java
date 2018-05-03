@@ -4,9 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +26,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private static final int STATE_FRESH_INSTALL = 0;
     private static final int STATE_UPDATE = 2;
     private static final int STATE_NO_CHANGE = 1;
-    private PackageInfo packageInfo;
+
 
     ServerRequestInitSession(Context context, String requestPath, SystemObserver systemObserver) {
         super(context, requestPath);
@@ -54,11 +51,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
         post.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
         post.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
-        
+
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
     }
-    
+
     void updateURIScheme() throws JSONException {
         if (getPost() != null) {
             String uriScheme = systemObserver_.getURIScheme();
@@ -79,7 +76,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     public boolean isGAdsParamsRequired() {
         return true; //Session start requests need GAds params
     }
-    
+
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
@@ -146,53 +143,20 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         } catch (JSONException ignore) {
         }
-        
+
         if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
             prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));
         }
     }
 
-    void onInitSessionCompleted(final ServerResponse response,final Branch branch) {
+    void onInitSessionCompleted(final ServerResponse response, final Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
-            if (branch.currentActivityReference_ != null) try {
-                ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
-                //Session Referring Link
-                final JSONObject response_data = new JSONObject(response.getObject().getString("data"));
-                if (response_data.has("validate") && response_data.getBoolean("validate")) {
-                    //Launch the Deepview template
-                    new IntegrationValidator().launchTestTemplate(branch.context_,response_data.getString("~referring_link"));
+            if (branch.currentActivityReference_ != null) {
+                try {
+                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+                } catch (Exception ignore) {
                 }
-                final Handler validate_handle = new Handler(Looper.getMainLooper()) {
-
-                    @Override
-                    public void handleMessage(Message inputMessage) {
-                        try {
-                            if (response_data.has("_branch_validate") && response_data.getInt("_branch_validate") == 60514) {
-                                if(response_data.getBoolean("+clicked_branch_link"))
-                                    new IntegrationValidator().validateDeeplinkRouting(response_data, branch.context_);
-                                else
-                                    new IntegrationValidator().displayErrorMessage(branch.context_);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(2000);
-                            Message validatemessage = validate_handle.obtainMessage(1);
-                            validatemessage.sendToTarget();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.run();
-
-            } catch (Exception ignore) {
             }
         }
         branch.updateSkipURLFormats();
@@ -269,7 +233,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
         }
     }
-    
+
     /*
      * Method to update the install or update state along with the timestamps.
      * PRS NOTE
@@ -310,7 +274,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             // if the current app version doesn't match the stored, it's an update
             installOrUpdateState = STATE_UPDATE;
         }
-        
+
         post.put(Defines.Jsonkey.Update.getKey(), installOrUpdateState);
         if (packageInfo != null) {
             post.put(Defines.Jsonkey.FirstInstallTime.getKey(), packageInfo.firstInstallTime);
@@ -321,7 +285,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 prefHelper_.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, packageInfo.firstInstallTime);
             }
             post.put(Defines.Jsonkey.OriginalInstallTime.getKey(), originalInstallTime);
-            
+
             long lastKnownUpdateTime = prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME);
             if (lastKnownUpdateTime < packageInfo.lastUpdateTime) {
                 prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, lastKnownUpdateTime);
@@ -330,14 +294,14 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
         }
     }
-    
+
     @Override
     protected boolean prepareExecuteWithoutTracking() {
         JSONObject post = getPost();
         if ((post.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
                 || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
                 || post.has(Defines.Jsonkey.LinkIdentifier.getKey()))) {
-            
+
             post.remove(Defines.Jsonkey.DeviceFingerprintID.getKey());
             post.remove(Defines.Jsonkey.IdentityID.getKey());
             post.remove(Defines.Jsonkey.FaceBookAppLinkChecked.getKey());
