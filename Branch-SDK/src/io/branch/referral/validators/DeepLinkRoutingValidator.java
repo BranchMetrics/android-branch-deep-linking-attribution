@@ -21,6 +21,8 @@ public class DeepLinkRoutingValidator {
     private static final String VALIDATE_LINK_PARAM_KEY = "validate";
     private static final String BRANCH_VALIDATE_TEST_KEY = "_branch_validate";
     private static final int BRANCH_VALIDATE_TEST_VALUE = 60514;
+    private static final String URI_REDIRECT_KEY = "$uri_redirect_mode=";
+    private static final String URI_REDIRECT_MODE = "2";
     private static final int LAUNCH_TEST_TEMPLATE_DELAY = 500; // .5 sec delay to settle any auto deep linking
 
     public static void validate(final Activity activity) {
@@ -79,7 +81,12 @@ public class DeepLinkRoutingValidator {
     }
 
     private static void launchTestTemplate(final Context context, String url) {
-        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        Uri launchUri = Uri.parse(url)
+                .buildUpon()
+                .appendQueryParameter(URI_REDIRECT_KEY,URI_REDIRECT_MODE)
+                .build();
+        // Appending URI redirect mode to the the URL
+        Intent i = new Intent(Intent.ACTION_VIEW, launchUri);
         //i.putExtra(Browser.EXTRA_APPLICATION_ID, context.getPackageName());
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setPackage("com.android.chrome");
@@ -104,7 +111,7 @@ public class DeepLinkRoutingValidator {
             Log.e("BRANCH SDK", "Failed to get referring link");
         }
         link += "?" + VALIDATE_LINK_PARAM_KEY + "=true";
-        link += "&$uri_redirect_mode=2";
+        link += "&" + URI_REDIRECT_KEY + "=" + URI_REDIRECT_MODE;
         if (!TextUtils.isEmpty(result)) {
             try {
                 link += blob.getString("ct").equals("t1") ? "&t1=" + result : "&t1=" + blob.getString("t1");
