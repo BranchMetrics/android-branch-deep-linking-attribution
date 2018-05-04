@@ -20,6 +20,7 @@ import io.branch.referral.Branch;
 import io.branch.referral.Defines;
 
 public class DeepLinkRoutingValidator {
+    private static final String VALIDATE_SDK_LINK_PARAM_KEY = "bnc_validate";
     private static final String VALIDATE_LINK_PARAM_KEY = "validate";
     private static final String BRANCH_VALIDATE_TEST_KEY = "_branch_validate";
     private static final int BRANCH_VALIDATE_TEST_VALUE = 60514;
@@ -39,7 +40,7 @@ public class DeepLinkRoutingValidator {
                 } else {
                     displayErrorMessage();
                 }
-            } else if (!response_data.optBoolean(VALIDATE_LINK_PARAM_KEY)) {
+            } else if (response_data.optBoolean(VALIDATE_SDK_LINK_PARAM_KEY)) {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -88,7 +89,11 @@ public class DeepLinkRoutingValidator {
 
     private static void launchTestTemplate(String url) {
         if(current_activity_reference.get() != null) {
-            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            Uri launch_url = Uri.parse(url)
+                    .buildUpon()
+                    .appendQueryParameter(URI_REDIRECT_KEY,URI_REDIRECT_MODE)
+                    .build();
+            Intent i = new Intent(Intent.ACTION_VIEW, launch_url);
 //        i.putExtra(Browser.EXTRA_APPLICATION_ID, context.getPackageName());
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             i.setPackage("com.android.chrome");
@@ -114,7 +119,6 @@ public class DeepLinkRoutingValidator {
             Log.e("BRANCH SDK", "Failed to get referring link");
         }
         link += "?" + VALIDATE_LINK_PARAM_KEY + "=true";
-        link += "&" + URI_REDIRECT_KEY + "=" + URI_REDIRECT_MODE;
         if (!TextUtils.isEmpty(result)) {
             try {
                 link += blob.getString("ct").equals("t1") ? "&t1=" + result : "&t1=" + blob.getString("t1");
