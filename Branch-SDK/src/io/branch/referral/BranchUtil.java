@@ -57,7 +57,7 @@ public class BranchUtil {
      * @return A {@link String} representation of link params.
      */
     static JSONObject formatLinkParam(JSONObject params) {
-        return addSource(filterOutBadCharacters(params));
+        return addSource(params);
     }
 
     /**
