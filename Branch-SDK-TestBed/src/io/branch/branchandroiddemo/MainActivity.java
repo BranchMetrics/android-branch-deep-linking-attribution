@@ -26,7 +26,6 @@ import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
 import io.branch.referral.validators.DeepLinkRoutingValidator;
-import io.branch.referral.validators.IntegrationValidator;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -413,11 +412,6 @@ public class MainActivity extends Activity {
                     }
                 }
                // QA purpose only  TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-
-                // Branch integration validation: Validate Branch deep link routing
-                // NOTE : The below method can validate the Deep link routing with Branch link in your application
-                // IMP : Do not make this call in your production app
-                // DeepLinkRoutingValidator.validate(MainActivity.this);
             }
         }, this.getIntent().getData(), this);
 

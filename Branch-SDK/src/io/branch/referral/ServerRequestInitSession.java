@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.indexing.ContentDiscoveryManifest;
+import io.branch.referral.validators.DeepLinkRoutingValidator;
 
 /**
  * <p>
@@ -159,6 +160,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 }
             }
         }
+        DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
     }
 
