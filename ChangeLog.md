@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.18.0 [10-05-18] Removing unnecessary String conversion for deeplink data JSONObject. This will fix the issue of additional escape characters present in the deep link data
+
 - v2.17.1 Hot fix : Preference items cleared over app re-open if Branch key is missing in manifest file.
 
 - v2.17.0 Adding tracking disable feature, this is useful for GDPR compliance. Fixing share sheet to show correct selection. Fix for updating device params to Branch requests before sending. Updating to latest Gradle version. Few other minor fixes.

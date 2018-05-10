@@ -120,7 +120,7 @@ class BranchLinkData extends JSONObject {
      *
      * @see {@link #putParams} - to set this value.
      */
-    private String params;
+    private JSONObject params;
 
     /**
      * <p>An {@link int} the time that Branch allows a click to remain outstanding and be eligible
@@ -308,12 +308,12 @@ class BranchLinkData extends JSONObject {
      * @throws JSONException The parameter value must be in valid JSON format, or a
      *                       {@link JSONException} will be thrown.
      */
-    public void putParams(String params) throws JSONException {
+    public void putParams(JSONObject params) throws JSONException {
         this.params = params;
         this.put(Defines.LinkParam.Data.getKey(), params);
     }
 
-    public String getParams() {
+    public JSONObject getParams() {
         return params;
     }
 
@@ -417,7 +417,7 @@ class BranchLinkData extends JSONObject {
         result = prime * result
                 + ((campaign == null) ? 0 : campaign.toLowerCase().hashCode());
         result = prime * result
-                + ((params == null) ? 0 : params.toLowerCase().hashCode());
+                + ((params == null) ? 0 : params.toString().toLowerCase().hashCode());
         result = prime * result + this.duration;
 
         if (this.tags != null) {
