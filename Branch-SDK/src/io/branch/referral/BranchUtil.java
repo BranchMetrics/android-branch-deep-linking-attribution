@@ -30,7 +30,7 @@ public class BranchUtil {
      * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
-    static boolean isTestModeEnabled(Context context) {
+    public static boolean isTestModeEnabled(Context context) {
         if (isCustomDebugEnabled_) {
             return isCustomDebugEnabled_;
         }
