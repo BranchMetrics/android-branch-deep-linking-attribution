@@ -60,7 +60,7 @@ class AppIndexingHelper {
                     }
                 }
             }
-        }).run();
+        }).start();
     }
     
     static void removeFromFirebaseLocalIndex(final Context context, final BranchUniversalObject buo, final LinkProperties linkProperties) {
