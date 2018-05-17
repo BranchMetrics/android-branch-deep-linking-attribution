@@ -1,5 +1,7 @@
 Branch Android SDK change log
 
+- v2.18.1 [17-05-18] Fixing issue with facebook app link check caused by incorrect value for facebook_app_link_checked state. Fix for app indexing to run on separate thread.
+
 - v2.18.0 [10-05-18] Removing unnecessary String conversion for deeplink data JSONObject. This will fix the issue of additional escape characters present in the deep link data
 
 - v2.17.1 Hot fix : Preference items cleared over app re-open if Branch key is missing in manifest file.
