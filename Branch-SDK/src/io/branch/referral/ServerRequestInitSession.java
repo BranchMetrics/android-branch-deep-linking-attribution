@@ -178,6 +178,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
+                getPost().put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
             } catch (JSONException ignore) {
             }
         }

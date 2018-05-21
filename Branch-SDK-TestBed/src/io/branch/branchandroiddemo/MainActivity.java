@@ -35,27 +35,28 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.validators.IntegrationValidator;
 
 
 public class MainActivity extends Activity {
     Branch branch;
-    
+
     EditText txtShortUrl;
     TextView txtInstallCount;
     TextView txtRewardBalance;
-    
+
     BranchUniversalObject branchUniversalObject;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
+
         txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
         txtInstallCount = (TextView) findViewById(R.id.txtInstallCount);
         txtRewardBalance = (TextView) findViewById(R.id.txtRewardBalance);
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
-        
+
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
@@ -85,8 +86,8 @@ public class MainActivity extends Activity {
                                 .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
                                 .addCustomMetadata("Custom_Content_metadata_key1", "Custom_Content_metadata_val1")
                 );
-        
-        
+
+
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,7 +103,7 @@ public class MainActivity extends Activity {
                 });
             }
         });
-        
+
         findViewById(R.id.cmdClearUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -112,12 +113,12 @@ public class MainActivity extends Activity {
                         Log.i("BranchTestBed", "onLogoutFinished " + loggedOut + " errorMessage " + error);
                     }
                 });
-                
+
                 txtRewardBalance.setText("rewards = ");
                 txtInstallCount.setText("install count =");
             }
         });
-        
+
         findViewById(R.id.cmdPrintInstallParam).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,11 +126,11 @@ public class MainActivity extends Activity {
                 Log.i("BranchTestBed", "install params = " + obj.toString());
             }
         });
-        
+
         findViewById(R.id.cmdRefreshShortURL).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                
+
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("Tag1")
                         .setChannel("Sharing_Channel_name")
@@ -138,10 +139,10 @@ public class MainActivity extends Activity {
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
                 //.setAlias("myContentName") // in case you need to white label your link
-                
+
                 // Sync link create example
                 txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
-                
+
                 // Async Link creation example
                /* branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
@@ -149,12 +150,12 @@ public class MainActivity extends Activity {
                         String shortUrl = url;
                     }
                 });*/
-                
+
             }
-            
+
         });
-        
-        
+
+
         findViewById(R.id.cmdRefreshReward).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -171,7 +172,7 @@ public class MainActivity extends Activity {
                 });
             }
         });
-        
+
         findViewById(R.id.cmdRedeemFive).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -192,7 +193,7 @@ public class MainActivity extends Activity {
                 });
             }
         });
-        
+
         findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -201,17 +202,17 @@ public class MainActivity extends Activity {
                     public void onBranchViewVisible(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewVisible");
                     }
-                    
+
                     @Override
                     public void onBranchViewAccepted(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewAccepted");
                     }
-                    
+
                     @Override
                     public void onBranchViewCancelled(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewCancelled");
                     }
-                    
+
                     @Override
                     public void onBranchViewError(int errorCode, String errorMsg, String action) {
                         Log.i("BranchTestBed", "onBranchViewError " + errorMsg);
@@ -219,9 +220,9 @@ public class MainActivity extends Activity {
                 });
             }
         });
-        
+
         findViewById(R.id.cmdCommitBuyMetadataAction).setOnClickListener(new OnClickListener() {
-            
+
             @Override
             public void onClick(View arg0) {
                 JSONObject params = new JSONObject();
@@ -235,9 +236,9 @@ public class MainActivity extends Activity {
                 }
                 branch.userCompletedAction("buy", params);
             }
-            
+
         });
-        
+
         findViewById(R.id.cmdGetCreditHistory).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -249,8 +250,8 @@ public class MainActivity extends Activity {
                 startActivity(i);
             }
         });
-        
-        
+
+
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -259,7 +260,7 @@ public class MainActivity extends Activity {
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
             }
         });
-        
+
         findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -275,7 +276,7 @@ public class MainActivity extends Activity {
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
-                
+
                 //noinspection deprecation
                 ShareSheetStyle shareSheetStyle = new ShareSheetStyle(MainActivity.this, "My Sharing Message Title", "My Sharing message body")
                         .setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Save this URl", "Link added to clipboard")
@@ -288,25 +289,25 @@ public class MainActivity extends Activity {
                         .setSharingTitle("Share With");
                 // Define custom style for the share sheet list view
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
-                
+
                 branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
-                            
+
                             @Override
                             public void onShareLinkDialogLaunched() {
                             }
-                            
+
                             @Override
                             public void onShareLinkDialogDismissed() {
                             }
-                            
+
                             @Override
                             public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
                             }
-                            
+
                             @Override
                             public void onChannelSelected(String channelName) {
                             }
-                            
+
                             /**
                              * Use {@link io.branch.referral.Branch.ExtendedBranchLinkShareListener} if the params need to be modified according to the channel selected by the user.
                              * This allows modification of content or link properties through callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} }
@@ -317,7 +318,7 @@ public class MainActivity extends Activity {
 //                                buo.setTitle("Custom Title for selected channel : " + channelName);
 //                                return true;
 //                            }
-                        
+
                         },
                         new Branch.IChannelProperties() {
                             @Override
@@ -326,7 +327,7 @@ public class MainActivity extends Activity {
                                         channel.contains("Slack") ? "title for slack" :
                                                 channel.contains("Gmail") ? "title for gmail" : null;
                             }
-                            
+
                             @Override
                             public String getSharingMessageForChannel(String channel) {
                                 return channel.contains("Messaging") ? "message for SMS" :
@@ -334,10 +335,10 @@ public class MainActivity extends Activity {
                                                 channel.contains("Gmail") ? "message for gmail" : null;
                             }
                         });
-                
+
             }
         });
-        
+
         // Add optional deep link debug params
         //        try {
         //            JSONObject debugObj = new JSONObject();
@@ -346,7 +347,7 @@ public class MainActivity extends Activity {
         //            Branch.getInstance().setDeepLinkDebugMode(debugObj);
         //        }catch (JSONException ignore){
         //        }
-        
+
         // Tracking events
         findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
             @Override
@@ -357,7 +358,7 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this);
             }
         });
-        
+
         findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -377,18 +378,17 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this);
             }
         });
-        
+
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 branch.getInstance().disableTracking(isChecked);
             }
         });
-        
-        BUOTestRoutines.TestBUOSerialisation();
+
     }
-    
-    
+
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -405,13 +405,18 @@ public class MainActivity extends Activity {
                         Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
                         Log.i("ContentMetaData", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
-                    
+
                     if (linkProperties != null) {
                         Log.i("BranchTestBed", "Channel " + linkProperties.getChannel());
                         Log.i("BranchTestBed", "control params " + linkProperties.getControlParams());
                     }
                 }
-               // QA purpose only  TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+
+
+                // QA purpose only
+                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+
             }
         }, this.getIntent().getData(), this);
 
@@ -419,19 +424,19 @@ public class MainActivity extends Activity {
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
         // Please look for "BranchSDK_Doctor" in the logcat to see the results.
         // IMP : Do not make this call in your production app
-        // IntegrationValidator.validate(MainActivity.this);
-        
+         IntegrationValidator.validate(MainActivity.this);
+
     }
-    
+
     @Override
     public void onNewIntent(Intent intent) {
         this.setIntent(intent);
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
+
         //Checking if the previous activity is launched on branch Auto deep link.
         if (requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)) {
             //Decide here where  to navigate  when an auto deep linked activity finishes.
