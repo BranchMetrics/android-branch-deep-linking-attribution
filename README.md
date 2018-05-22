@@ -826,6 +826,18 @@ In do-not-track mode, you will still be able to create and share links. They wil
 
 ## Troubleshooting
 
+### Troubleshooting your Branch SDK Integration
+
+Test your Branch Integration by calling `IntegrationValidator.validate` in your MainActivity's onStart(). Check your ADB Logcat to make sure all the SDK Integration tests pass and make sure to comment out or remove `IntegrationValidator.validate` in your production code.
+
+```java
+IntegrationValidator.validate(MainActivity.this);
+```
+
+### Troubleshooting Deeplink routing for your Branch links
+
+Append `?bnc_validate=true` to any of your app's Branch links and click it on your mobile device (not the Simulator!) to start the test. For instance, to validate a link like: `"https://<yourapp\>.app.link/NdJ6nFzRbK"` click on: `"https://<yourapp\>.app.link/NdJ6nFzRbK?bnc_validate=true"`
+
 ### ClassNotFoundException : Branch.Java
 
 In case of having other SDKs along with Branch and exceeding the Dex limit, please make sure you have enabled multi-dex support for your application. Check the following to ensure multi-dex is configured properly
