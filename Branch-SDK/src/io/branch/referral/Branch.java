@@ -1898,9 +1898,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void userCompletedAction(@NonNull final String action, JSONObject
             metadata, BranchViewHandler.IBranchViewEvents callback) {
-        if (metadata != null) {
-            metadata = BranchUtil.filterOutBadCharacters(metadata);
-        }
         ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
@@ -1909,9 +1906,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject
             metadata, BranchViewHandler.IBranchViewEvents callback) {
-        if (metadata != null) {
-            metadata = BranchUtil.filterOutBadCharacters(metadata);
-        }
         ServerRequest req = new ServerRequestRActionCompleted(context_, commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);

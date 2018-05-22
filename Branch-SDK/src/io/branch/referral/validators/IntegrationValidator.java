@@ -144,6 +144,12 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         }
         logValidationPassed();
         Log.d(TAG, "--------------------------------------------\nSuccessfully completed Branch integration validation. Everything looks good!");
+        Log.d(TAG, "\n         Great! Comment out the 'validateSDKIntegration' line in your app. Next check your deep link routing.\n" +
+                "         Append '?bnc_validate=true' to any of your app's Branch links and click it on your mobile device (not the Simulator!) to start the test.\n" +
+                "         For instance, to validate a link like:\n" +
+                "         https://<yourapp>.app.link/NdJ6nFzRbK\n" +
+                "         click on:\n" +
+                "         https://<yourapp>.app.link/NdJ6nFzRbK?bnc_validate=true");
     }
 
     private boolean checkIfIntentAddedForURIScheme(String uriScheme) {
