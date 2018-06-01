@@ -60,13 +60,13 @@ This is the readme file of our open source Android SDK. There's a full demo app 
 
 ### Install library project
 
-Just add `compile 'io.branch.sdk.android:library:2.+'` to the dependencies section of your `build.gradle` file.
+Just add `implementation 'io.branch.sdk.android:library:2.+'` to the dependencies section of your `build.gradle` file.
 
 #### Some notes:
 
 - If you don't plan to use the `Fabric Answers` integration, and don't want to import the `answers-shim`, just import your project as follows:
 ```
-compile ('io.branch.sdk.android:library:2.+') {
+implementation ('io.branch.sdk.android:library:2.+') {
   exclude module: 'answers-shim'
 }
 ```
@@ -173,7 +173,7 @@ Branch support hundred percent guaranteed matching with cookie based matching us
 Just add the following to your build.gradle file to enable guaranteed matching
 
 ```
-    compile 'com.android.support:customtabs:23.3.0'
+    implementation 'com.android.support:customtabs:23.3.0'
 ```
 
 Note : Adding additional dependencies may overrun the dex limit and lead to `NoClassDefFoundError` or `ClassNotFoundException`. Please make sure you have enabled multi-dex support to solve this issue. For more information on enabling multi-dex support please refer to [Troubleshooting](#troubleshooting)
@@ -665,7 +665,7 @@ branchUniversalObject.listOnGoogleSearch(context);
 ```
 **NOTE** Please make sure Firebase app indexing is enabled for your application and has Firebase app indexing dependency added
 ```java
-'compile 'com.google.firebase:firebase-appindexing:10.0.1'
+'implementation 'com.google.firebase:firebase-appindexing:10.0.1'
 ```
 To test content indexing follow instructions[here](https://firebase.google.com/docs/app-indexing/android/test#test-public-content-indexing). 
 Please enable debug mode and check the logs to get the Branch link used for indexing and use it with the above link to verify content indexing.
