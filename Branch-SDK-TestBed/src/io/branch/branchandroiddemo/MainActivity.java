@@ -424,7 +424,8 @@ public class MainActivity extends Activity {
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
         // Please look for "BranchSDK_Doctor" in the logcat to see the results.
         // IMP : Do not make this call in your production app
-         IntegrationValidator.validate(MainActivity.this);
+        
+        //IntegrationValidator.validate(MainActivity.this);
 
     }
 
