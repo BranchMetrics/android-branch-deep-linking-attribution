@@ -67,6 +67,7 @@ public class Defines {
         LastUpdateTime("latest_update_time"),
         PreviousUpdateTime("previous_update_time"),
         URIScheme("uri_scheme"),
+        AppLinks("app_links"),
         AppIdentifier("app_identifier"),
         LinkIdentifier("link_identifier"),
         GoogleAdvertisingID("google_advertising_id"),
@@ -207,6 +208,7 @@ public class Defines {
     public enum RequestPath {
         RedeemRewards("v1/redeem"),
         GetURL("v1/url"),
+        GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),

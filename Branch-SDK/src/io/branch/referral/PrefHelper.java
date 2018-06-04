@@ -44,9 +44,9 @@ public class PrefHelper {
      * exception.
      */
     private static final int MAX_RETRIES = 3; // Default retry count is 3
-    
+
     private static final int TIMEOUT = 5500; // Default timeout id 5.5 sec
-    
+
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
