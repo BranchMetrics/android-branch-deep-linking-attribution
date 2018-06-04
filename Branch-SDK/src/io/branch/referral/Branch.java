@@ -2815,8 +2815,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             if (thisReq_ instanceof ServerRequestInitSession) {
                                 initState_ = SESSION_STATE.UNINITIALISED;
                             }
-                            // On a bad request notify with call back and remove the request.
-                            if (status == 409) {
+                            // On a bad request or in canse of a conflict notify with call back and remove the request.
+                            if (status == 400 || status == 409) {
                                 requestQueue_.remove(thisReq_);
                                 if (thisReq_ instanceof ServerRequestCreateUrl) {
                                     ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
