@@ -26,9 +26,9 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_alignParentBottom="true"
-        android:textColor="#FF121212"
+        android:textColor="#FFFEFEFE"
         android:layout_margin="1dp"
         android:padding="5dp"
-        android:background="@drawable/text_view_bg"/>
+        android:background="@drawable/text_view_bg" />
 
 </RelativeLayout>

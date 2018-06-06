@@ -5,6 +5,8 @@ import android.view.View;
 
 import org.json.JSONObject;
 
+import io.branch.uitestbed.test.data.TestResponse;
+
 public abstract class BasicButton extends android.support.v7.widget.AppCompatButton implements View.OnClickListener {
     private final ITestEvents testEvents;
 
@@ -29,7 +31,7 @@ public abstract class BasicButton extends android.support.v7.widget.AppCompatBut
     }
 
     // public methods
-    public void onActionResponse( resp) {
+    public void onActionResponse(TestResponse resp) {
         if (testEvents != null) {
             testEvents.onTestResponse(resp);
         }

@@ -7,6 +7,8 @@ import android.util.AttributeSet;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.uitestbed.test.data.TestResponse;
+
 public class ResultView extends android.support.v7.widget.AppCompatTextView implements ITestEvents {
     public ResultView(Context context) {
         super(context);
@@ -23,15 +25,11 @@ public class ResultView extends android.support.v7.widget.AppCompatTextView impl
 
     @Override
     public void onTestStart(String message) {
-        this.setText(message);
+        this.append("\n" + message);
     }
 
     @Override
-    public void onTestResponse(JSONObject resp) {
-        try {
-            this.setText(resp.toString(4));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public void onTestResponse(TestResponse resp) {
+        this.append("\n" + resp.toString());
     }
 }
