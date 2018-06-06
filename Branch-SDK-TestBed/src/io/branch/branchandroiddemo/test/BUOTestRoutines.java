@@ -1,18 +1,29 @@
 package io.branch.branchandroiddemo.test;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.concurrent.ExecutionException;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.BranchAsyncTask;
+import io.branch.referral.BranchUtil;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
+import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 
 /**
@@ -22,7 +33,7 @@ import io.branch.referral.util.ProductCategory;
  * </p>
  */
 public class BUOTestRoutines {
-    public static boolean TestBUOSerialisation() {
+    public static boolean TestBUOFunctionalities(Context context) {
         boolean succeeded = false;
 
         //Step 1 test buo with min params
@@ -60,13 +71,14 @@ public class BUOTestRoutines {
                     )
                     .addKeyWord("keyword1")
                     .addKeyWord("keyword2");
-            succeeded = doTestBUOSerialisation(testBuo);
+            succeeded = doTestBUOSerialisation(testBuo) && doLinkCreationTest(context, testBuo);
         }
         if (succeeded) {
             Log.d("BranchTestBed", "Passed BUO serialisation - de-serialisation test.");
         } else {
             Log.d("BranchTestBed", "Failed BUO serialisation - de-serialisation test.");
         }
+
         return succeeded;
     }
 
@@ -81,27 +93,63 @@ public class BUOTestRoutines {
         parcel.setDataPosition(0);
         BranchUniversalObject buoCreatedFromParcel = (BranchUniversalObject) BranchUniversalObject.CREATOR.createFromParcel(parcel);
 
-        return (checkIfIdenticalJson(buo.getContentMetadata().convertToJson(), buo2.getContentMetadata().convertToJson()))
-                && (checkIfIdenticalJson(testBuoJson1, testBuoJson2))
-                && (checkIfIdenticalJson(testBuoJson1, buoCreatedFromParcel.convertToJson()));
+        return (checkIfIdenticalJson(buo.getContentMetadata().convertToJson(), buo2.getContentMetadata().convertToJson(), false))
+                && (checkIfIdenticalJson(testBuoJson1, testBuoJson2, false))
+                && (checkIfIdenticalJson(testBuoJson1, buoCreatedFromParcel.convertToJson(), false));
     }
 
-    private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2) {
+    private static boolean doLinkCreationTest(Context context, BranchUniversalObject buo) {
+        boolean isLinkTestPassed = false;
+        String url = buo.getShortUrl(context, new LinkProperties());
+        try {
+            JSONObject linkdata = new URLContentViewer().execute(url, PrefHelper.getInstance(context).readBranchKey(!BranchUtil.isTestModeEnabled(context))).get();
+            isLinkTestPassed = checkIfIdenticalJson(buo.convertToJson(), linkdata.optJSONObject("data"), true);
+            if (isLinkTestPassed) {
+                isLinkTestPassed = checkIfIdenticalJson(BranchUniversalObject.createInstance(linkdata).convertToJson(), linkdata.optJSONObject("data"), true);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return isLinkTestPassed;
+
+    }
+
+    private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2, boolean expectBranchExtras) {
         boolean isIdentical = false;
-        if (obj1.length() == obj2.length()) {
-            Iterator<String> keys = obj1.keys();
+        if (obj1.length() == obj2.length() || expectBranchExtras) {
             try {
+                Iterator<String> keys = obj1.keys();
                 while (keys.hasNext()) {
                     String currKey = keys.next();
                     if (obj1.get(currKey).equals(obj2.opt(currKey))) {
                         obj2.remove(currKey);
                     }
                 }
-                if (obj2.length() == 0) {
+
+                Iterator<String> obj2Keys = obj2.keys();
+
+                if (expectBranchExtras) {
                     isIdentical = true;
+                    while (obj2Keys.hasNext()) {
+                        String currKey = obj2Keys.next();
+                        if (!(currKey.startsWith("~")
+                                || currKey.startsWith("+")
+                                || currKey.startsWith("$")
+                                || currKey.equals("url")
+                                || currKey.equals("source"))) {
+                            isIdentical = false;
+                            break;
+                        }
+                    }
                 } else {
+                    isIdentical = obj2.length() == 0;
+                }
+                if (!isIdentical) {
                     Log.e("BranchTestBed", "Error : BUO serialisation error. Reason: Additional entries in de-serialised object " + obj2);
                 }
+
             } catch (JSONException e) {
                 e.printStackTrace();
                 Log.e("BranchTestBed", "Error : BUO serialisation error.");
@@ -111,6 +159,35 @@ public class BUOTestRoutines {
         }
 
         return isIdentical;
+    }
+
+    private static class URLContentViewer extends BranchAsyncTask<String, Void, JSONObject> {
+
+        @Override
+        protected JSONObject doInBackground(String... strings) {
+            HttpsURLConnection connection = null;
+            JSONObject respObject = new JSONObject();
+            try {
+                URL urlObject = new URL("https://api.branch.io/v1/url?url=" + strings[0] + "&" + "branch_key=" + strings[1]);
+                connection = (HttpsURLConnection) urlObject.openConnection();
+                connection.setConnectTimeout(1500);
+                connection.setReadTimeout(1500);
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    if (connection.getInputStream() != null) {
+                        BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                        respObject = new JSONObject(rd.readLine());
+                    }
+                }
+            } catch (Throwable ignore) {
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+
+            return respObject;
+        }
     }
 
 }
