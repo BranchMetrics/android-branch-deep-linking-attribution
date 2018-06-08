@@ -122,63 +122,6 @@ class SystemObserver {
     }
 
     /**
-     * <p>Provides the package name of the current app, and passes it to the
-     * {@link SystemObserver#getURIScheme(String)} method to enable the call without a {@link String}
-     * parameter.</p>
-     * <p>This method should be used for retrieving the URI scheme of the current application.</p>
-     *
-     * @return A {@link String} value containing the response from {@link SystemObserver#getURIScheme(String)}.
-     */
-    String getURIScheme() {
-        return getURIScheme(context_.getPackageName());
-    }
-    
-    /**
-     * <p>Gets the URI scheme of the specified package from its AndroidManifest.xml file.</p>
-     * <p>This method should be used for retrieving the URI scheme of the another application of
-     * which the package name is known.</p>
-     *
-     * @param packageName A {@link String} containing the full package name of the app to check.
-     * @return <p>A {@link String} containing the output of {@link ApkParser#decompressXML(byte[])}.</p>
-     */
-    private String getURIScheme(String packageName) {
-        String scheme = BLANK;
-        if (!BranchUtil.isLowOnMemory(context_)) {
-
-            JarFile jf = null;
-            InputStream is = null;
-            byte[] xml;
-            try {
-                PackageManager pm = context_.getPackageManager();
-                ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
-                String sourceApk = ai.publicSourceDir;
-                jf = new JarFile(sourceApk);
-                is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-                xml = new byte[is.available()];
-                //noinspection ResultOfMethodCallIgnored
-                is.read(xml);
-                scheme = new ApkParser().decompressXML(xml);
-            } catch (Exception ignored) {
-            } finally {
-                try {
-                    if (is != null) {
-                        is.close();
-                        // noinspection unused
-                        is = null;
-                    }
-                    if (jf != null) {
-                        jf.close();
-                    }
-                } catch (IOException ignored) {
-                }
-            }
-
-        }
-        return scheme;
-    }
-
-
-    /**
      * <p>Gets the package name of the current application that the SDK is integrated with.</p>
      *
      * @return <p>A {@link String} value containing the full package name of the application that the SDK is

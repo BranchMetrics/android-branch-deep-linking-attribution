@@ -9,16 +9,19 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.branch.referral.BranchAsyncTask;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
 
 class BranchIntegrationModel {
     JSONObject deeplinkUriScheme;
-    final String branchKeyTest;
-    final String branchKeyLive;
+    private final String branchKeyTest;
+    private final String branchKeyLive;
     final List<String> applinkScheme;
     final String packageName;
+    boolean appSettingsAvailable = false;
 
 
     public BranchIntegrationModel(Context context) {
@@ -43,7 +46,13 @@ class BranchIntegrationModel {
     }
 
     private void updateDeepLinkSchemes(Context context) {
-        JSONObject obj = BranchUtil.getDeepLinkSchemes(context);
+        JSONObject obj = null;
+        try {
+            // Avoid ANRs on reading and parsing manifest with a timeout
+            obj = new getDeepLinkSchemeTasks().executeTask(context).get(2500, TimeUnit.MILLISECONDS);
+            appSettingsAvailable = true;
+        } catch (Throwable t) {
+        }
         if (obj != null) {
             deeplinkUriScheme = obj.optJSONObject(Defines.Jsonkey.URIScheme.getKey());
             JSONArray hostArray = obj.optJSONArray(Defines.Jsonkey.AppLinks.getKey());
@@ -52,6 +61,15 @@ class BranchIntegrationModel {
                     applinkScheme.add(hostArray.optString(i));
                 }
             }
+        }
+    }
+
+    // Reading deep linked schemes involves decompressing of apk and parsing manifest. This can lead to a ANR if reading file is slower
+    // Use this only with a timeout
+    private class getDeepLinkSchemeTasks extends BranchAsyncTask<Context, Void, JSONObject> {
+        @Override
+        protected JSONObject doInBackground(Context... contexts) {
+            return BranchUtil.getDeepLinkSchemes(contexts[0]);
         }
     }
 }
