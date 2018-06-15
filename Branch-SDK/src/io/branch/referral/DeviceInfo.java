@@ -253,7 +253,12 @@ class DeviceInfo {
     private String getDefaultBrowserAgent(Context context) {
         String userAgent = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            userAgent = WebSettings.getDefaultUserAgent(context);
+            try {
+                userAgent = WebSettings.getDefaultUserAgent(context);
+            } catch (Exception ignore) {
+                // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
+                // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
+            }
         }
         return userAgent;
     }
