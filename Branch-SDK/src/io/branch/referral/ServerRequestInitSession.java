@@ -57,15 +57,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         updateEnvironment(context_, post);
     }
 
-    void updateURIScheme() throws JSONException {
-        if (getPost() != null) {
-            String uriScheme = systemObserver_.getURIScheme();
-            if (!uriScheme.equals(SystemObserver.BLANK)) {
-                getPost().put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
-            }
-        }
-    }
-
     /**
      * Check if there is a valid callback to return init session result
      *

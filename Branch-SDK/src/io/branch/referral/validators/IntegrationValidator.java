@@ -66,18 +66,24 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             logIntegrationError("Incorrect package name in Branch dashboard. Please correct your package name in dashboard -> link Settings page.",
                     "https://docs.branch.io/pages/dashboard/integrate/#android");
             return;
+        } else {
+            logValidationPassed();
         }
-        logValidationPassed();
 
         // 4. Verify the URI scheme filters are added on the app
         logValidationProgress("4. Checking Android Manifest for URI based deep link config");
         if (integrationModel.deeplinkUriScheme == null || integrationModel.deeplinkUriScheme.length() == 0) {
-            logIntegrationError(String.format("No intent found for opening the app through uri Scheme '%s'." +
-                            "Please add the intent with URI scheme to your Android manifest.", branchAppConfig.optString("android_uri_scheme")),
-                    "https://docs.branch.io/pages/apps/android/#configure-app");
-            return;
+            if (!integrationModel.appSettingsAvailable) {
+                logValidationProgress("- Skipping. Unable to verify the deep link config. Failed to read the Android Manifest");
+            } else {
+                logIntegrationError(String.format("No intent found for opening the app through uri Scheme '%s'." +
+                                "Please add the intent with URI scheme to your Android manifest.", branchAppConfig.optString("android_uri_scheme")),
+                        "https://docs.branch.io/pages/apps/android/#configure-app");
+                return;
+            }
+        } else {
+            logValidationPassed();
         }
-        logValidationPassed();
 
         // 5. Check if URI Scheme is added in the Branch dashboard
         logValidationProgress("5. Verifying URI based deep link config with Branch dash board.");
@@ -92,54 +98,82 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         // 6. Check if URI Scheme matches with the Branch app settings
         logValidationProgress("6. Verifying intent for receiving URI scheme.");
         if (!checkIfIntentAddedForURIScheme(branchAppUriScheme)) {
-            logIntegrationError(String.format("Uri scheme '%s' specified in Branch dashboard doesn't match with the deep link intent in manifest file", branchAppUriScheme),
-                    "https://docs.branch.io/pages/dashboard/integrate/#android");
-            return;
+            if (!integrationModel.appSettingsAvailable) {
+                logValidationProgress("- Skipping. Unable to verify intent for receiving URI scheme. Failed to read the Android Manifest");
+            } else {
+                logIntegrationError(String.format("Uri scheme '%s' specified in Branch dashboard doesn't match with the deep link intent in manifest file", branchAppUriScheme),
+                        "https://docs.branch.io/pages/dashboard/integrate/#android");
+                return;
+            }
+        } else {
+            logValidationPassed();
         }
-        logValidationPassed();
 
         // 5. Check if AppLinks are specified in the Manifest
         logValidationProgress("7. Checking AndroidManifest for AppLink config.");
         if (integrationModel.applinkScheme.isEmpty()) {
-            logIntegrationError("Could not find any App Link hosts to support Android AppLinks. Please add intent filter for handling AppLinks in your Android Manifest file",
-                    "https://docs.branch.io/pages/deep-linking/android-app-links/#add-intent-filter-to-manifest");
-            return;
+            if (!integrationModel.appSettingsAvailable) {
+                logValidationProgress("- Skipping. Unable to verify intent for receiving URI scheme. Failed to read the Android Manifest");
+            } else {
+                logIntegrationError("Could not find any App Link hosts to support Android AppLinks. Please add intent filter for handling AppLinks in your Android Manifest file",
+                        "https://docs.branch.io/pages/deep-linking/android-app-links/#add-intent-filter-to-manifest");
+                return;
+            }
+        } else {
+            logValidationPassed();
         }
-        logValidationPassed();
 
         // 6. Look for any custom domains specified in the dash board and has matching intent filter
         {
             logValidationProgress("8. Verifying any supported custom link domains.");
             String customDomain = branchAppConfig.optString("short_url_domain");
             if (!TextUtils.isEmpty(customDomain) && !checkIfIntentAddedForLinkDomain(customDomain)) {
-                logIntegrationError(String.format("Could not find intent filter to support custom link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", customDomain),
-                        "https://docs.branch.io/pages/apps/android/#configure-app");
-                return;
+                if (!integrationModel.appSettingsAvailable) {
+                    logValidationProgress("- Skipping. Unable to verify supported custom link domains. Failed to read the Android Manifest");
+                } else {
+                    logIntegrationError(String.format("Could not find intent filter to support custom link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", customDomain),
+                            "https://docs.branch.io/pages/apps/android/#configure-app");
+                    return;
+                }
+
+            } else {
+                logValidationPassed();
             }
         }
-        logValidationPassed();
+
 
         // 7. Check for matching intent filter for default app link domains
         {
             logValidationProgress("9. Verifying default link domains integrations.");
             String defAppLinkDomain = branchAppConfig.optString("default_short_url_domain");
             if (!TextUtils.isEmpty(defAppLinkDomain) && !checkIfIntentAddedForLinkDomain(defAppLinkDomain)) {
-                logIntegrationError(String.format("Could not find intent filter to support Branch default link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", defAppLinkDomain),
-                        "https://docs.branch.io/pages/apps/android/#configure-app");
-                return;
+                if (!integrationModel.appSettingsAvailable) {
+                    logValidationProgress("- Skipping. Unable to verify default link domains. Failed to read the Android Manifest");
+                } else {
+                    logIntegrationError(String.format("Could not find intent filter to support Branch default link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", defAppLinkDomain),
+                            "https://docs.branch.io/pages/apps/android/#configure-app");
+                    return;
+                }
+            } else {
+                logValidationPassed();
             }
         }
-        logValidationPassed();
+
 
         // 8. Check for matching intent filter for alternative app link domains
         {
             logValidationProgress("10. Verifying alternate link domains integrations.");
             String alternateAppLinkDomain = branchAppConfig.optString("alternate_short_url_domain");
             if (!TextUtils.isEmpty(alternateAppLinkDomain) && !checkIfIntentAddedForLinkDomain(alternateAppLinkDomain)) {
-                logIntegrationError(String.format("Could not find intent filter to support alternate link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", alternateAppLinkDomain),
-                        "https://docs.branch.io/pages/apps/android/#configure-app");
-                return;
-
+                if (!integrationModel.appSettingsAvailable) {
+                    logValidationProgress("- Skipping.Unable to verify alternate link domains. Failed to read the Android Manifest");
+                } else {
+                    logIntegrationError(String.format("Could not find intent filter to support alternate link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", alternateAppLinkDomain),
+                            "https://docs.branch.io/pages/apps/android/#configure-app");
+                    return;
+                }
+            } else {
+                logValidationPassed();
             }
         }
         logValidationPassed();
@@ -158,20 +192,22 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         String uriPath = branchDeepLinkURI.getHost();
         uriPath = TextUtils.isEmpty(uriPath) ? "open" : uriPath;
         boolean foundMatchingUri = false;
-        for (Iterator<String> it = integrationModel.deeplinkUriScheme.keys(); it.hasNext(); ) {
-            String key = it.next();
-            if (uriHost.equals(key)) {
-                JSONArray hosts = integrationModel.deeplinkUriScheme.optJSONArray(key);
-                if (hosts != null && hosts.length() > 0) {
-                    for (int i = 0; i < hosts.length(); ++i) {
-                        if (uriPath.equals(hosts.optString(i))) {
-                            foundMatchingUri = true;
-                            break;
+        if (integrationModel.deeplinkUriScheme != null) {
+            for (Iterator<String> it = integrationModel.deeplinkUriScheme.keys(); it.hasNext(); ) {
+                String key = it.next();
+                if (uriHost.equals(key)) {
+                    JSONArray hosts = integrationModel.deeplinkUriScheme.optJSONArray(key);
+                    if (hosts != null && hosts.length() > 0) {
+                        for (int i = 0; i < hosts.length(); ++i) {
+                            if (uriPath.equals(hosts.optString(i))) {
+                                foundMatchingUri = true;
+                                break;
+                            }
                         }
+                    } else {
+                        foundMatchingUri = true;
+                        break;
                     }
-                } else {
-                    foundMatchingUri = true;
-                    break;
                 }
             }
         }
@@ -180,7 +216,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
 
     private boolean checkIfIntentAddedForLinkDomain(String domainName) {
         boolean foundIntentFilterMatchingDomainName = false;
-        if (!TextUtils.isEmpty(domainName)) {
+        if (!TextUtils.isEmpty(domainName) && integrationModel.applinkScheme != null) {
             for (String host : integrationModel.applinkScheme) {
                 if (domainName.equals(host)) {
                     foundIntentFilterMatchingDomainName = true;

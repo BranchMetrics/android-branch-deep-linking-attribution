@@ -34,10 +34,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
             }
             setPost(installPost);
-            // Read and update the URI scheme only if running in debug mode
-            if (prefHelper_.getExternDebug()) {
-                updateURIScheme();
-            }
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
