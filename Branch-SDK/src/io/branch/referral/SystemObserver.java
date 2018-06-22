@@ -18,6 +18,8 @@ import android.view.WindowManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -396,7 +398,7 @@ class SystemObserver {
     /**
      * Get IP address from first non local net Interface
      */
-    static String getLocalIPAddress() {
+    static String getLocalIPAddress(boolean isIPv6) {
         String ipAddress = "";
         try {
             List<NetworkInterface> netInterfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -404,11 +406,24 @@ class SystemObserver {
                 List<InetAddress> addresses = Collections.list(netInterface.getInetAddresses());
                 for (InetAddress address : addresses) {
                     if (!address.isLoopbackAddress()) {
-                        String ip = address.getHostAddress();
-                        boolean isIPv4 = ip.indexOf(':') < 0;
-                        if (isIPv4) {
-                            ipAddress = ip;
-                            break;
+                        if (isIPv6) {
+                            if (address instanceof Inet6Address) {
+                                ipAddress = address.getHostAddress();
+                                // Android IPV6 format  is  s1:s2:s3:s4:s5:s6%scope_id. Android support empty split shortening also (s1:::s4:s5:s6) and most devices provide a default scope (%demo) ipv6
+                                // Scope_id determines the interface where the IP is scoped  to. We don't care for the scope but take the first valid ipV6
+                                if (!TextUtils.isEmpty(ipAddress)) {
+                                    if (ipAddress.contains("%")) {
+                                        ipAddress = ipAddress.split("%")[0];
+                                    }
+                                    return ipAddress;
+                                }
+                            }
+                        } else {
+                            if (address instanceof Inet4Address) {
+                                ipAddress = address.getHostAddress();
+                                return ipAddress;
+                            }
+
                         }
                     }
                 }
