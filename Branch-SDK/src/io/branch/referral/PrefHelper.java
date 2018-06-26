@@ -44,9 +44,9 @@ public class PrefHelper {
      * exception.
      */
     private static final int MAX_RETRIES = 3; // Default retry count is 3
-    
+
     private static final int TIMEOUT = 5500; // Default timeout id 5.5 sec
-    
+
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
@@ -121,7 +121,12 @@ public class PrefHelper {
     /**
      * Arbitrary key values added to all requests.
      */
-    private JSONObject requestMetadata;
+    private final JSONObject requestMetadata;
+
+    /**
+     * Arbitrary key values added to Install requests.
+     */
+    private final JSONObject installMetadata;
     
     /**
      * Reference of application {@link Context}, normally the base context of the application.
@@ -132,13 +137,7 @@ public class PrefHelper {
      * Branch Content discovery data
      */
     private static JSONObject savedAnalyticsData_;
-    
-    /**
-     * <p>Empty, but required constructor for the {@link PrefHelper} {@link SharedPreferences}
-     * helper class.</p>
-     */
-    public PrefHelper() {
-    }
+
     
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
@@ -152,6 +151,7 @@ public class PrefHelper {
         this.prefsEditor_ = this.appSharedPrefs_.edit();
         this.context_ = context;
         this.requestMetadata = new JSONObject();
+        this.installMetadata = new JSONObject();
     }
     
     /**
@@ -1169,7 +1169,21 @@ public class PrefHelper {
     public JSONObject getRequestMetadata() {
         return this.requestMetadata;
     }
-    
+
+    void addInstallMetadata(String key, String value) {
+        if (key == null) {
+            return;
+        }
+        try {
+            installMetadata.putOpt(key, value);
+        } catch (JSONException ignore) {
+        }
+    }
+
+    public JSONObject getInstallMetadata() {
+        return installMetadata;
+    }
+
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *

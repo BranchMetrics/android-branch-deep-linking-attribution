@@ -18,7 +18,6 @@ import org.json.JSONObject;
 import java.util.Date;
 
 import io.branch.branchandroiddemo.test.BUOTestRoutines;
-import io.branch.branchandroiddemo.test.TrackingControlTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -26,6 +25,7 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
+import io.branch.referral.validators.DeepLinkRoutingValidator;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -35,6 +35,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.validators.IntegrationValidator;
 
 
 public class MainActivity extends Activity {
@@ -418,6 +419,13 @@ public class MainActivity extends Activity {
 
             }
         }, this.getIntent().getData(), this);
+
+        // Branch integration validation: Validate Branch integration with your app
+        // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
+        // Please look for "BranchSDK_Doctor" in the logcat to see the results.
+        // IMP : Do not make this call in your production app
+        
+        //IntegrationValidator.validate(MainActivity.this);
 
     }
 

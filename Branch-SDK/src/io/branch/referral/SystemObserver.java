@@ -1,8 +1,6 @@
 package io.branch.referral;
 
 import android.Manifest;
-import android.app.ActivityManager;
-import android.app.ActivityManager.MemoryInfo;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -121,80 +119,6 @@ class SystemObserver {
             e.printStackTrace();
         }
         return packageName;
-    }
-
-    /**
-     * <p>Provides the package name of the current app, and passes it to the
-     * {@link SystemObserver#getURIScheme(String)} method to enable the call without a {@link String}
-     * parameter.</p>
-     * <p>This method should be used for retrieving the URI scheme of the current application.</p>
-     *
-     * @return A {@link String} value containing the response from {@link SystemObserver#getURIScheme(String)}.
-     */
-    String getURIScheme() {
-        return getURIScheme(context_.getPackageName());
-    }
-    
-    /**
-     * <p>Gets the URI scheme of the specified package from its AndroidManifest.xml file.</p>
-     * <p>This method should be used for retrieving the URI scheme of the another application of
-     * which the package name is known.</p>
-     *
-     * @param packageName A {@link String} containing the full package name of the app to check.
-     * @return <p>A {@link String} containing the output of {@link ApkParser#decompressXML(byte[])}.</p>
-     */
-    private String getURIScheme(String packageName) {
-        String scheme = BLANK;
-        if (!isLowOnMemory()) {
-            
-            JarFile jf = null;
-            InputStream is = null;
-            byte[] xml;
-            try {
-                PackageManager pm = context_.getPackageManager();
-                ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
-                String sourceApk = ai.publicSourceDir;
-                jf = new JarFile(sourceApk);
-                is = jf.getInputStream(jf.getEntry("AndroidManifest.xml"));
-                xml = new byte[is.available()];
-                //noinspection ResultOfMethodCallIgnored
-                is.read(xml);
-                scheme = new ApkParser().decompressXML(xml);
-            } catch (Exception ignored) {
-            } finally {
-                try {
-                    if (is != null) {
-                        is.close();
-                        // noinspection unused
-                        is = null;
-                    }
-                    if (jf != null) {
-                        jf.close();
-                    }
-                } catch (IOException ignored) {
-                }
-            }
-            
-        }
-        return scheme;
-    }
-
-    /**
-     * <p>Checks the current device's {@link ActivityManager} system service and returns the value
-     * of the lowMemory flag.</p>
-     *
-     * @return <p>A {@link Boolean} value representing the low memory flag of the current device.</p>
-     * <ul>
-     * <li><i>true</i> - the free memory on the current device is below the system-defined threshold
-     * that triggers the low memory flag.</li>
-     * <li><i>false</i> - the device has plenty of free memory.</li>
-     * </ul>
-     */
-    boolean isLowOnMemory() {
-        ActivityManager activityManager = (ActivityManager) context_.getSystemService(Context.ACTIVITY_SERVICE);
-        MemoryInfo mi = new MemoryInfo();
-        activityManager.getMemoryInfo(mi);
-        return mi.lowMemory;
     }
 
     /**

@@ -451,6 +451,10 @@ public abstract class ServerRequest {
                     metadata.put(key, originalMetadata.get(key));
                 }
             }
+            // Install metadata need to be send only with Install request
+            if ((this instanceof ServerRequestRegisterInstall) && prefHelper_.getInstallMetadata().length() > 0) {
+                params_.putOpt(Defines.Jsonkey.InstallMetadata.getKey(), prefHelper_.getInstallMetadata());
+            }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
             Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
