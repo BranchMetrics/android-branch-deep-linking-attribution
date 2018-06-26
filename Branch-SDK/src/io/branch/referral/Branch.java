@@ -880,8 +880,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * A better place to call this  method is right after Branch#getAutoInstance()
      * </p>
      */
-    public void addInstallMetadata(@NonNull String key, @NonNull String value) {
+    public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.addInstallMetadata(key, value);
+        return this;
     }
     
     /**
