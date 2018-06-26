@@ -89,6 +89,7 @@ public class Defines {
         SDK("sdk"),
         SdkVersion("sdk_version"),
         UIMode("ui_mode"),
+        InstallMetadata("install_metadata"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),

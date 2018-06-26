@@ -872,6 +872,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.setRequestMetadata(key, value);
     }
+
+    /**
+     * <p>
+     * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
+     * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
+     * A better place to call this  method is right after Branch#getAutoInstance()
+     * </p>
+     */
+    public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
+        prefHelper_.addInstallMetadata(key, value);
+        return this;
+    }
     
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
