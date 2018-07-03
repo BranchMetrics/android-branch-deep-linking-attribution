@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.indexing.ContentDiscoveryManifest;
+import io.branch.referral.validators.DeepLinkRoutingValidator;
 
 /**
  * <p>
@@ -22,26 +23,26 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private final Context context_;
     private final ContentDiscoveryManifest contentDiscoveryManifest_;
     final SystemObserver systemObserver_;
-    
+
     private static final int STATE_FRESH_INSTALL = 0;
     private static final int STATE_UPDATE = 2;
     private static final int STATE_NO_CHANGE = 1;
-    private PackageInfo packageInfo;
-    
+
+
     ServerRequestInitSession(Context context, String requestPath, SystemObserver systemObserver) {
         super(context, requestPath);
         context_ = context;
         systemObserver_ = systemObserver;
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
-    
+
     ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
         systemObserver_ = new SystemObserver(context);
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
-    
+
     @Override
     protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
@@ -51,39 +52,30 @@ abstract class ServerRequestInitSession extends ServerRequest {
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
         post.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
         post.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
-        
+
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
     }
-    
-    void updateURIScheme() throws JSONException {
-        if (getPost() != null) {
-            String uriScheme = systemObserver_.getURIScheme();
-            if (!uriScheme.equals(SystemObserver.BLANK)) {
-                getPost().put(Defines.Jsonkey.URIScheme.getKey(), uriScheme);
-            }
-        }
-    }
-    
+
     /**
      * Check if there is a valid callback to return init session result
      *
      * @return True if a valid call back is present.
      */
     public abstract boolean hasCallBack();
-    
+
     @Override
     public boolean isGAdsParamsRequired() {
         return true; //Session start requests need GAds params
     }
-    
+
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
     }
-    
+
     public abstract String getRequestActionName();
-    
+
     static boolean isInitSessionAction(String actionName) {
         boolean isInitSessionAction = false;
         if (actionName != null) {
@@ -91,7 +83,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isInitSessionAction;
     }
-    
+
     boolean handleBranchViewIfAvailable(ServerResponse resp) {
         boolean isBranchViewShowing = false;
         if (resp != null && resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
@@ -117,9 +109,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isBranchViewShowing;
     }
-    
+
     @Override
-    
+
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         // Check for any Third party SDK for data handling
         try {
@@ -143,12 +135,12 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         } catch (JSONException ignore) {
         }
-        
+
         if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
             prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));
         }
     }
-    
+
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
@@ -159,9 +151,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 }
             }
         }
+        DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
     }
-    
+
     /**
      * Update link referrer params like play store referrer params
      * For link clicked installs link click id is updated when install referrer broadcast is received
@@ -205,7 +198,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
     }
-    
+
     @Override
     public void onPreExecute() {
         JSONObject post = getPost();
@@ -223,7 +216,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
-            
+
             if (contentDiscoveryManifest_ != null) {
                 JSONObject cdObj = new JSONObject();
                 cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, contentDiscoveryManifest_.getManifestVersion());
@@ -231,10 +224,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
             }
         } catch (JSONException ignore) {
-            
+
         }
     }
-    
+
     /*
      * Method to update the install or update state along with the timestamps.
      * PRS NOTE
@@ -275,7 +268,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             // if the current app version doesn't match the stored, it's an update
             installOrUpdateState = STATE_UPDATE;
         }
-        
+
         post.put(Defines.Jsonkey.Update.getKey(), installOrUpdateState);
         if (packageInfo != null) {
             post.put(Defines.Jsonkey.FirstInstallTime.getKey(), packageInfo.firstInstallTime);
@@ -286,7 +279,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 prefHelper_.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, packageInfo.firstInstallTime);
             }
             post.put(Defines.Jsonkey.OriginalInstallTime.getKey(), originalInstallTime);
-            
+
             long lastKnownUpdateTime = prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME);
             if (lastKnownUpdateTime < packageInfo.lastUpdateTime) {
                 prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, lastKnownUpdateTime);
@@ -295,14 +288,14 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
         }
     }
-    
+
     @Override
     protected boolean prepareExecuteWithoutTracking() {
         JSONObject post = getPost();
         if ((post.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
                 || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
                 || post.has(Defines.Jsonkey.LinkIdentifier.getKey()))) {
-            
+
             post.remove(Defines.Jsonkey.DeviceFingerprintID.getKey());
             post.remove(Defines.Jsonkey.IdentityID.getKey());
             post.remove(Defines.Jsonkey.FaceBookAppLinkChecked.getKey());

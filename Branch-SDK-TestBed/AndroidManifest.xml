@@ -48,9 +48,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="bnctestbed.app.link" /> <!-- Custom App link - Live -->
-                <data android:scheme="https" android:host="bnctestbed-alternate.app.link" />
+                <data android:scheme="https" android:host="bnctestbed-alternate.app.link" /> <!-- Custom App Alternate link - Live -->
                 <data android:scheme="https" android:host="bnctestbed.test-app.link" /> <!-- Custom App link - Test -->
-                <data android:scheme="https" android:host="bnctestbed-alternate.test-app.link" />
+                <data android:scheme="https" android:host="bnctestbed-alternate.test-app.link" /> <!-- Custom App Alternate link - Test -->
             </intent-filter>
         </activity>
 
@@ -59,10 +59,10 @@
         <activity android:name=".AutoDeepLinkTestActivity">
             <!-- Keys for auto deep linking this activity -->
             <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
-            
+
             <!-- Deep link path for auto deep linking -->
             <meta-data android:name="io.branch.sdk.auto_link_path" android:value="custom/path/*,another/path/" />
-            
+
             <!-- Optional request ID for launching this activity on auto deep link key matches -->
             <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
         </activity>
