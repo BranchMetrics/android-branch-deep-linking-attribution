@@ -83,6 +83,7 @@ public class Defines {
         ScreenWidth("screen_width"),
         WiFi("wifi"),
         LocalIP("local_ip"),
+        LocalIPV6("local_ipV6"),
         UserData("user_data"),
         DeveloperIdentity("developer_identity"),
         UserAgent("user_agent"),

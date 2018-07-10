@@ -53,6 +53,10 @@ class DeviceInfo {
      */
     private final String localIpAddr_;
     /**
+     * Local IPv6 address for the device
+     */
+    private final String localIpV6Addr_;
+    /**
      * Device os name
      */
     private final String osName_;
@@ -112,7 +116,8 @@ class DeviceInfo {
         screenWidth_ = dMetrics.widthPixels;
 
         isWifiConnected_ = sysObserver.getWifiConnected();
-        localIpAddr_ = SystemObserver.getLocalIPAddress();
+        localIpAddr_ = SystemObserver.getLocalIPAddress(false);
+        localIpV6Addr_ = SystemObserver.getLocalIPAddress(true);
 
         osName_ = sysObserver.getOS();
         osVersion_ = sysObserver.getOSVersion();
@@ -162,6 +167,9 @@ class DeviceInfo {
             if ((!TextUtils.isEmpty(localIpAddr_))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
             }
+            if ((!TextUtils.isEmpty(localIpV6Addr_))) {
+                requestObj.put(Defines.Jsonkey.LocalIPV6.getKey(), localIpV6Addr_);
+            }
 
         } catch (JSONException ignore) {
 
@@ -203,6 +211,9 @@ class DeviceInfo {
             }
             if ((!TextUtils.isEmpty(localIpAddr_))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
+            }
+            if ((!TextUtils.isEmpty(localIpV6Addr_))) {
+                requestObj.put(Defines.Jsonkey.LocalIPV6.getKey(), localIpV6Addr_);
             }
             if (prefHelper != null && !prefHelper.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
                 requestObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
