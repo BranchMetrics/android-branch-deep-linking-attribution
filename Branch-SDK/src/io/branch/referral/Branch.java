@@ -2344,23 +2344,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /*
-     * Register app init without any wait on intents or other referring params. This will not be getting any params from the intent
+     * Register app init without any wait on wait locks. This will not be getting any params from the intent
      */
     void registerAppReInit() {
-        // on re-init make sure GAID is available
-        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
-        }
         if (networkCount_ != 0) {
             networkCount_ = 0;
             requestQueue_.clear();
         }
-        ServerRequest initRequest = getInstallOrOpenRequest(null);
-        if(isGAParamsFetchInProgress_) {
-            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        }
-        registerInstallOrOpen(initRequest, null);
-
+        registerInstallOrOpen(getInstallOrOpenRequest(null), null);
     }
     
     private ServerRequest getInstallOrOpenRequest(BranchReferralInitListener callback) {
