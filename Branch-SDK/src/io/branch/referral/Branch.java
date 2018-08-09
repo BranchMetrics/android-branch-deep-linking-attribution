@@ -2459,8 +2459,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         req.onRequestQueued();
         processNextQueueItem();
     }
-    
-    
+
+    /**
+     * Notify Branch when network is available in order to process the next request in the queue.
+     */
+    public void notifyNetworkAvailable() {
+        processNextQueueItem();
+    }
+
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
