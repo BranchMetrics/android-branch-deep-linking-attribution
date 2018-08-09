@@ -2454,9 +2454,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        
-        requestQueue_.enqueue(req);
-        req.onRequestQueued();
+
+        if (!(req instanceof ServerRequestPing)) {
+            requestQueue_.enqueue(req);
+            req.onRequestQueued();
+        }
         processNextQueueItem();
     }
     

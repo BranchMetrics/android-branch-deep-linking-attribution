@@ -26,6 +26,7 @@ public abstract class ServerRequest {
     
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
+    protected static final String TAG = "BranchSDK";
     
     private JSONObject params_;
     protected String requestPath_;
