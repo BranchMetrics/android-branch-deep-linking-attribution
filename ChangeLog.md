@@ -1,4 +1,6 @@
 Branch Android SDK change log
+- v2.19.1 [09-AUG-18] Fixed GAID fetch issue.
+
 - v2.19.0 [03-JUL-18] Support for adding custom install metadata. Fix for an ANR in debug mode. Fix for crash caused by reading user agent. SDK Integration validator.
 
 - v2.18.1 [17-JUN-18] Fixing issue with facebook app link check caused by incorrect value for facebook_app_link_checked state. Fix for app indexing to run on separate thread.
