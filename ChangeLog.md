@@ -1,4 +1,9 @@
 Branch Android SDK change log
+
+- v2.19.2
+  * _*Master Release*_ - August 10, 2018
+  * Added notify network API to process requests when network is available. DEVEX-711
+
 - v2.19.1 [09-AUG-18] Fixed GAID fetch issue.
 
 - v2.19.0 [03-JUL-18] Support for adding custom install metadata. Fix for an ANR in debug mode. Fix for crash caused by reading user agent. SDK Integration validator.

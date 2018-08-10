@@ -2454,13 +2454,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        
-        requestQueue_.enqueue(req);
-        req.onRequestQueued();
+
+        if (!(req instanceof ServerRequestPing)) {
+            requestQueue_.enqueue(req);
+            req.onRequestQueued();
+        }
         processNextQueueItem();
     }
-    
-    
+
+    /**
+     * Notify Branch when network is available in order to process the next request in the queue.
+     */
+    public void notifyNetworkAvailable() {
+        ServerRequest req = new ServerRequestPing(context_);
+        handleNewRequest(req);
+    }
+
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
