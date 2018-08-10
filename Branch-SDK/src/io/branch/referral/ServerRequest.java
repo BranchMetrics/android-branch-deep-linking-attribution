@@ -26,7 +26,7 @@ public abstract class ServerRequest {
     
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
-    
+
     private JSONObject params_;
     protected String requestPath_;
     protected final PrefHelper prefHelper_;
