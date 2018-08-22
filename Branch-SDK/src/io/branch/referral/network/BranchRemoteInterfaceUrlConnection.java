@@ -152,7 +152,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             } else {
                 InputStream inputStream = null;
                 try {
-
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         inputStream = connection.getErrorStream();
                     } else {
