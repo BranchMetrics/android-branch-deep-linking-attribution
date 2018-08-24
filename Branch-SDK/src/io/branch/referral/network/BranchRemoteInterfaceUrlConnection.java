@@ -163,8 +163,12 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + url);
                     return new BranchResponse(null, responseCode);
                 } finally {
-                    if (inputStream != null) {
-                        inputStream.close();
+                    try {
+                        if (inputStream != null) {
+                            inputStream.close();
+                        }
+                    } catch(IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
