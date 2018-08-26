@@ -43,6 +43,13 @@ public class BranchEvent {
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
         this.eventName = eventName;
+
+        for (BRANCH_STANDARD_EVENT event : BRANCH_STANDARD_EVENT.values()) {
+            if (eventName == event.getName()) {
+                isStandardEvent = true;
+            }
+        }
+
         this.isStandardEvent = isStandardEvent;
         buoList = new ArrayList<>();
     }
