@@ -47,6 +47,7 @@ public class BranchEvent {
         for (BRANCH_STANDARD_EVENT event : BRANCH_STANDARD_EVENT.values()) {
             if (eventName.equals(event.getName())) {
                 isStandardEvent = true;
+                break;
             }
         }
 
