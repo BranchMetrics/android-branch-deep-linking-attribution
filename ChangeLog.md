@@ -2,7 +2,8 @@ Branch Android SDK change log
 
 - v2.19.3
   * _*Master Release*_ - August 22, 2018
-  * Changed post request logic to close streams [#600](https://github.com/BranchMetrics/android-branch-deep-linking/issues/600)
+  * Changed post request logic to close streams. [#600](https://github.com/BranchMetrics/android-branch-deep-linking/issues/600)
+  * Added check for if `BranchEvent` is same name as `BRANCH_STANDARD_EVENT` name, send with `v2/event/standard` request. DEVEX-751
 
 - v2.19.2
   * _*Master Release*_ - August 10, 2018
