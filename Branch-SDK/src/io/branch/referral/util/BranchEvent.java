@@ -226,7 +226,7 @@ public class BranchEvent {
                 if (standardProperties.length() > 0) {
                     reqBody.put(Defines.Jsonkey.EventData.getKey(), standardProperties);
                 }
-                if (isStandardEvent && buoList.size() > 0) {
+                if (buoList.size() > 0) {
                     JSONArray contentItemsArray = new JSONArray();
                     reqBody.put(Defines.Jsonkey.ContentItems.getKey(), contentItemsArray);
                     for (BranchUniversalObject buo : buoList) {
