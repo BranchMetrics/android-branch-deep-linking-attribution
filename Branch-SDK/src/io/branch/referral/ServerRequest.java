@@ -385,7 +385,7 @@ public abstract class ServerRequest {
                 if (version == BRANCH_API_VERSION.V2) {
                     JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                     if (userDataObj != null) {
-                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), systemObserver_.GAIDString_);
+                        userDataObj.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), systemObserver_.GAIDString_);
                         userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), systemObserver_.LATVal_);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                     }
@@ -396,7 +396,7 @@ public abstract class ServerRequest {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        } else { // Add unidentified_device when neither aaid nor AndoridID present
+        } else { // Add unidentified_device when neither GAID nor AndoridID present
             if (version == BRANCH_API_VERSION.V2) {
                 try {
                     if (version == BRANCH_API_VERSION.V2) {
