@@ -396,7 +396,7 @@ public abstract class ServerRequest {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        } else { // Add unidentified_device when neither AAID nor AndroidID are present
+        } else { // Add unidentified_device when neither GAID nor AndroidID are present
             if (version == BRANCH_API_VERSION.V2) {
                 try {
                     if (version == BRANCH_API_VERSION.V2) {
