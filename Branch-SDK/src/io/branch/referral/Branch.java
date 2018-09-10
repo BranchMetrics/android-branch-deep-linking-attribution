@@ -1413,21 +1413,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 e.printStackTrace();
                             }
                         }
-                    } else { // if not check the intent data to see if there is deep link params
-                        if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                            try {
-                                String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                                // Make sure the data received is complete and in correct format
-                                JSONObject branchDataJson = new JSONObject(rawBranchData);
-                                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                                prefHelper_.setSessionParams(branchDataJson.toString());
-                                isInstantDeepLinkPossible = true;
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                    }
+                    // if not check the intent data to see if there is deep link params
+                    else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
+                        try {
+                            String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
+                            // Make sure the data received is complete and in correct format
+                            JSONObject branchDataJson = new JSONObject(rawBranchData);
+                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                            prefHelper_.setSessionParams(branchDataJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        // Remove Branch data from the intent once used
+                        intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
+                        activity.setIntent(intent);
+                    } else if (data.getQueryParameterNames() != null && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
+                        try {
+                            JSONObject branchDataJson = new JSONObject();
+                            for (String key : data.getQueryParameterNames()) {
+                                branchDataJson.put(key, data.getQueryParameter(key));
                             }
-                            // Remove Branch data from the intent once used
-                            intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                            activity.setIntent(intent);
+                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                            prefHelper_.setSessionParams(branchDataJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
