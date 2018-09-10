@@ -1414,7 +1414,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             }
                         }
                     }
-                    // if not check the intent data to see if there is deep link params
+                    // If not check the intent data to see if there is deep link params
                     else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
                         try {
                             String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
@@ -1429,7 +1429,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         // Remove Branch data from the intent once used
                         intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
                         activity.setIntent(intent);
-                    } else if (data.getQueryParameterNames() != null && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
+                    }
+                    // If instant key is true in query params, use them for instant deep linking
+                    else if (data.getQueryParameterNames() != null && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
                         try {
                             JSONObject branchDataJson = new JSONObject();
                             for (String key : data.getQueryParameterNames()) {
