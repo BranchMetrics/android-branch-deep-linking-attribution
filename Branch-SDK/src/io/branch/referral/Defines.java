@@ -183,7 +183,8 @@ public class Defines {
         ImageCaptions("$image_captions"),
         Condition("$condition"),
         CreationTimestamp("$creation_timestamp"),
-        TrackingDisabled("tracking_disabled");
+        TrackingDisabled("tracking_disabled"),
+        Instant("instant");
         
         private String key = "";
         
