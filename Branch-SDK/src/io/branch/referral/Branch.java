@@ -2560,6 +2560,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 intentState_ = INTENT_STATE.READY;
                 // Grab the intent only for first activity unless this activity is intent to  force new session
                 boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
+                if (isInstantDeepLinkPossible) {
+                    startSession(activity);
+                }
                 onIntentReady(activity, grabIntentParams);
             }
         }
