@@ -213,7 +213,7 @@ public abstract class ServerRequest {
      * By default update GAds params update is turned off. Override this on request which need to have GAds params
      * </p>
      *
-     * @return A {@link Boolean} with value true if this reuest need GAds params
+     * @return A {@link Boolean} with value true if this request need GAds params
      */
     public boolean isGAdsParamsRequired() {
         return false;
@@ -396,7 +396,7 @@ public abstract class ServerRequest {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        } else { // Add unidentified_device when neither aaid nor AndoridID present
+        } else { // Add unidentified_device when neither GAID nor AndroidID are present
             if (version == BRANCH_API_VERSION.V2) {
                 try {
                     if (version == BRANCH_API_VERSION.V2) {

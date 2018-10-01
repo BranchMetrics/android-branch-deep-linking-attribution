@@ -1,5 +1,11 @@
 Branch Android SDK change log
 
+- v2.19.4
+  * _*Master Release*_ - October 1, 2018
+  * Adding Branch Universal Object to custom event request. DEVEX-761
+  * Send GAID with v1/event. DEVEX-766
+  * Adding ability to do instant deep linking with App Links. DEVEX-776
+
 - v2.19.3
   * _*Master Release*_ - August 22, 2018
   * Changed post request logic to close streams. [#600](https://github.com/BranchMetrics/android-branch-deep-linking/issues/600)
