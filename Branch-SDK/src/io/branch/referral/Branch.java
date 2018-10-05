@@ -290,6 +290,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     static boolean isSimulatingInstalls_;
     
     static Boolean isLogging_ = null;
+
+    static boolean isForcedSession_ = false;
     
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
@@ -1040,7 +1042,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(Activity activity) {
         return initSession((BranchReferralInitListener) null, activity);
     }
-    
+
+    /**
+     * <p>Force initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
+     * to perform an action upon successful initialisation. Will not wait for new intent onResume.</p>
+     *
+     * @param callback A {@link BranchReferralInitListener} instance that will be called following
+     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
+     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
+     * unsuccessful.
+     */
+    public boolean initSessionForced(BranchReferralInitListener callback) {
+        enableForcedSession();
+        if (initSession(callback, (Activity) null)) {
+            processNextQueueItem();
+            return true;
+        }
+        return false;
+    }
+
     /**
      * <p>Initialises a session with the Branch API, with associated data from the supplied
      * {@link Uri}.</p>
@@ -2346,7 +2366,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (isGAParamsFetchInProgress_) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
-        if (intentState_ != INTENT_STATE.READY) {
+        // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
+        // In this case need to wait till onResume to get the latest intent. Bypass this if isForceSession_ is true.
+        if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
@@ -3135,7 +3157,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void disableLogging() {
         isLogging_ = false;
     }
-    
+
+    public static void enableForcedSession() {
+        isForcedSession_ = true;
+    }
+
+    public static void disableForcedSession() {
+        isForcedSession_ = false;
+    }
+
+    /**
+     * Returns true if forced session is enabled
+     *
+     * @return {@link Boolean} with value true to enable forced session
+     */
+    public static boolean isForceSessionEnabled() {
+        return isForcedSession_;
+    }
+
     //-------------------------- Branch Builders--------------------------------------//
     
     /**
