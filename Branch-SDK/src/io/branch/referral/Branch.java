@@ -70,7 +70,7 @@ import io.branch.referral.util.LinkProperties;
  * -->
  */
 public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
-
+    
     private static final String TAG = "BranchSDK";
 
     /**
