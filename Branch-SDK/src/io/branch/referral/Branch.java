@@ -1045,7 +1045,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>Force initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
-     * to perform an action upon successful initialisation.</p>
+     * to perform an action upon successful initialisation. Will not wait for new intent onResume.</p>
      *
      * @param callback A {@link BranchReferralInitListener} instance that will be called following
      *                 successful (or unsuccessful) initialisation of the session with the Branch API.
