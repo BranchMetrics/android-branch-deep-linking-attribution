@@ -1,4 +1,8 @@
-Branch Android SDK change log
+# Branch Android SDK change log
+
+- v2.19.5
+  * _*Master Release*_ - October 8, 2018
+  * Added new way to init session for attribution (`initSessionForced`) INTENG-4285
 
 - v2.19.4
   * _*Master Release*_ - October 1, 2018
