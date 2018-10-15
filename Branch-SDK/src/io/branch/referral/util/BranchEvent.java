@@ -43,6 +43,14 @@ public class BranchEvent {
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
         this.eventName = eventName;
+
+        for (BRANCH_STANDARD_EVENT event : BRANCH_STANDARD_EVENT.values()) {
+            if (eventName.equals(event.getName())) {
+                isStandardEvent = true;
+                break;
+            }
+        }
+
         this.isStandardEvent = isStandardEvent;
         buoList = new ArrayList<>();
     }
@@ -218,7 +226,7 @@ public class BranchEvent {
                 if (standardProperties.length() > 0) {
                     reqBody.put(Defines.Jsonkey.EventData.getKey(), standardProperties);
                 }
-                if (isStandardEvent && buoList.size() > 0) {
+                if (buoList.size() > 0) {
                     JSONArray contentItemsArray = new JSONArray();
                     reqBody.put(Defines.Jsonkey.ContentItems.getKey(), contentItemsArray);
                     for (BranchUniversalObject buo : buoList) {

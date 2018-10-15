@@ -290,6 +290,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     static boolean isSimulatingInstalls_;
     
     static Boolean isLogging_ = null;
+
+    static boolean isForcedSession_ = false;
     
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
@@ -305,7 +307,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private PrefHelper prefHelper_;
     private final SystemObserver systemObserver_;
     private Context context_;
-    
+
     final Object lock;
     
     private Semaphore serverSema_;
@@ -442,7 +444,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             intentState_ = INTENT_STATE.READY;
         }
     }
-    
+
+
+    public Context getApplicationContext() {
+        return context_;
+    }
+
     /**
      * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
      * Branch SDK and remote Branch server
@@ -471,7 +478,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setDebug() {
         enableTestMode();
     }
-    
+
     /**
      * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      */
@@ -867,6 +874,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.setRequestMetadata(key, value);
     }
+
+    /**
+     * <p>
+     * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
+     * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
+     * A better place to call this  method is right after Branch#getAutoInstance()
+     * </p>
+     */
+    public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
+        prefHelper_.addInstallMetadata(key, value);
+        return this;
+    }
     
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
@@ -1023,7 +1042,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean initSession(Activity activity) {
         return initSession((BranchReferralInitListener) null, activity);
     }
-    
+
+    /**
+     * <p>Force initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
+     * to perform an action upon successful initialisation. Will not wait for new intent onResume.</p>
+     *
+     * @param callback A {@link BranchReferralInitListener} instance that will be called following
+     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
+     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
+     * unsuccessful.
+     */
+    public boolean initSessionForced(BranchReferralInitListener callback) {
+        enableForcedSession();
+        if (initSession(callback, (Activity) null)) {
+            processNextQueueItem();
+            return true;
+        }
+        return false;
+    }
+
     /**
      * <p>Initialises a session with the Branch API, with associated data from the supplied
      * {@link Uri}.</p>
@@ -1396,21 +1433,35 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 e.printStackTrace();
                             }
                         }
-                    } else { // if not check the intent data to see if there is deep link params
-                        if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                            try {
-                                String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                                // Make sure the data received is complete and in correct format
-                                JSONObject branchDataJson = new JSONObject(rawBranchData);
-                                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                                prefHelper_.setSessionParams(branchDataJson.toString());
-                                isInstantDeepLinkPossible = true;
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                    }
+                    // If not check the intent data to see if there is deep link params
+                    else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
+                        try {
+                            String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
+                            // Make sure the data received is complete and in correct format
+                            JSONObject branchDataJson = new JSONObject(rawBranchData);
+                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                            prefHelper_.setSessionParams(branchDataJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        // Remove Branch data from the intent once used
+                        intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
+                        activity.setIntent(intent);
+                    }
+                    // If instant key is true in query params, use them for instant deep linking
+                    else if (data.getQueryParameterNames() != null && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
+                        try {
+                            JSONObject branchDataJson = new JSONObject();
+                            for (String key : data.getQueryParameterNames()) {
+                                branchDataJson.put(key, data.getQueryParameter(key));
                             }
-                            // Remove Branch data from the intent once used
-                            intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                            activity.setIntent(intent);
+                            branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                            prefHelper_.setSessionParams(branchDataJson.toString());
+                            isInstantDeepLinkPossible = true;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -2055,8 +2106,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return null;
     }
-    
-    
+
+
+
     /**
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
      * user selected clients.</p>
@@ -2314,7 +2366,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (isGAParamsFetchInProgress_) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
-        if (intentState_ != INTENT_STATE.READY) {
+        // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
+        // In this case need to wait till onResume to get the latest intent. Bypass this if isForceSession_ is true.
+        if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
@@ -2324,16 +2378,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         
         registerInstallOrOpen(request, callback);
     }
-    
+
     /*
-     * Register app init without any wait on wait locks. This will not be getting any params from the intent
+     * Register app init without any wait on intents or other referring params. This will not be getting any params from the intent
      */
     void registerAppReInit() {
+        // on re-init make sure GAID is available
+        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
+            isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+        }
         if (networkCount_ != 0) {
             networkCount_ = 0;
             requestQueue_.clear();
         }
-        registerInstallOrOpen(getInstallOrOpenRequest(null), null);
+        ServerRequest initRequest = getInstallOrOpenRequest(null);
+        if(isGAParamsFetchInProgress_) {
+            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        }
+        registerInstallOrOpen(initRequest, null);
     }
     
     private ServerRequest getInstallOrOpenRequest(BranchReferralInitListener callback) {
@@ -2428,13 +2490,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        
-        requestQueue_.enqueue(req);
-        req.onRequestQueued();
+
+        if (!(req instanceof ServerRequestPing)) {
+            requestQueue_.enqueue(req);
+            req.onRequestQueued();
+        }
         processNextQueueItem();
     }
-    
-    
+
+    /**
+     * Notify Branch when network is available in order to process the next request in the queue.
+     */
+    public void notifyNetworkAvailable() {
+        ServerRequest req = new ServerRequestPing(context_);
+        handleNewRequest(req);
+    }
+
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
@@ -2754,7 +2825,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(), prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
     }
-    
+
     /**
      * Asynchronous task handling execution of server requests. Execute the network task on background
      * thread and request are  executed in sequential manner. Handles the request execution in
@@ -2809,8 +2880,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             if (thisReq_ instanceof ServerRequestInitSession) {
                                 initState_ = SESSION_STATE.UNINITIALISED;
                             }
-                            // On a bad request notify with call back and remove the request.
-                            if (status == 409) {
+                            // On a bad request or in canse of a conflict notify with call back and remove the request.
+                            if (status == 400 || status == 409) {
                                 requestQueue_.remove(thisReq_);
                                 if (thisReq_ instanceof ServerRequestCreateUrl) {
                                     ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
@@ -3086,7 +3157,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void disableLogging() {
         isLogging_ = false;
     }
-    
+
+    public static void enableForcedSession() {
+        isForcedSession_ = true;
+    }
+
+    public static void disableForcedSession() {
+        isForcedSession_ = false;
+    }
+
+    /**
+     * Returns true if forced session is enabled
+     *
+     * @return {@link Boolean} with value true to enable forced session
+     */
+    public static boolean isForceSessionEnabled() {
+        return isForcedSession_;
+    }
+
     //-------------------------- Branch Builders--------------------------------------//
     
     /**

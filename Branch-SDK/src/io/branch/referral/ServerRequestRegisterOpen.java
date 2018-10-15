@@ -42,6 +42,18 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
+
+    @Override
+    public void onPreExecute() {
+        super.onPreExecute();
+        // Instant Deep Link if possible
+        if (Branch.getInstance().isInstantDeepLinkPossible) {
+            callback_.onInitFinished(Branch.getInstance().getLatestReferringParams(), null);
+            Branch.getInstance().addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+            Branch.getInstance().isInstantDeepLinkPossible = false;
+            Branch.getInstance().isInitReportedThroughCallBack = true;
+        }
+    }
     
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {

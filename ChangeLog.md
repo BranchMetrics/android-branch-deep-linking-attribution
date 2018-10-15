@@ -1,8 +1,31 @@
-Branch Android SDK change log
+# Branch Android SDK change log
 
-- v2.18.1 [17-05-18] Fixing issue with facebook app link check caused by incorrect value for facebook_app_link_checked state. Fix for app indexing to run on separate thread.
+- v2.19.5
+  * _*Master Release*_ - October 8, 2018
+  * Added new way to init session for attribution (`initSessionForced`) INTENG-4285
 
-- v2.18.0 [10-05-18] Removing unnecessary String conversion for deeplink data JSONObject. This will fix the issue of additional escape characters present in the deep link data
+- v2.19.4
+  * _*Master Release*_ - October 1, 2018
+  * Adding Branch Universal Object to custom event request. DEVEX-761
+  * Send GAID with v1/event. DEVEX-766
+  * Adding ability to do instant deep linking with App Links. DEVEX-776
+
+- v2.19.3
+  * _*Master Release*_ - August 22, 2018
+  * Changed post request logic to close streams. [#600](https://github.com/BranchMetrics/android-branch-deep-linking/issues/600)
+  * Added check for if `BranchEvent` is same name as `BRANCH_STANDARD_EVENT` name, send with `v2/event/standard` request. DEVEX-751
+
+- v2.19.2
+  * _*Master Release*_ - August 10, 2018
+  * Added notify network API to process requests when network is available. DEVEX-711
+
+- v2.19.1 [09-AUG-18] Fixed GAID fetch issue.
+
+- v2.19.0 [03-JUL-18] Support for adding custom install metadata. Fix for an ANR in debug mode. Fix for crash caused by reading user agent. SDK Integration validator.
+
+- v2.18.1 [17-JUN-18] Fixing issue with facebook app link check caused by incorrect value for facebook_app_link_checked state. Fix for app indexing to run on separate thread.
+
+- v2.18.0 [10-JUN-18] Removing unnecessary String conversion for deeplink data JSONObject. This will fix the issue of additional escape characters present in the deep link data
 
 - v2.17.1 Hot fix : Preference items cleared over app re-open if Branch key is missing in manifest file.
 

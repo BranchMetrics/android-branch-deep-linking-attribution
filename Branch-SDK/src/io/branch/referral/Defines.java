@@ -67,6 +67,7 @@ public class Defines {
         LastUpdateTime("latest_update_time"),
         PreviousUpdateTime("previous_update_time"),
         URIScheme("uri_scheme"),
+        AppLinks("app_links"),
         AppIdentifier("app_identifier"),
         LinkIdentifier("link_identifier"),
         GoogleAdvertisingID("google_advertising_id"),
@@ -88,6 +89,7 @@ public class Defines {
         SDK("sdk"),
         SdkVersion("sdk_version"),
         UIMode("ui_mode"),
+        InstallMetadata("install_metadata"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),
@@ -181,7 +183,8 @@ public class Defines {
         ImageCaptions("$image_captions"),
         Condition("$condition"),
         CreationTimestamp("$creation_timestamp"),
-        TrackingDisabled("tracking_disabled");
+        TrackingDisabled("tracking_disabled"),
+        Instant("instant");
         
         private String key = "";
         
@@ -207,6 +210,7 @@ public class Defines {
     public enum RequestPath {
         RedeemRewards("v1/redeem"),
         GetURL("v1/url"),
+        GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),

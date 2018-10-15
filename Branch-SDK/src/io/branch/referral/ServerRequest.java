@@ -26,7 +26,7 @@ public abstract class ServerRequest {
     
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
-    
+
     private JSONObject params_;
     protected String requestPath_;
     protected final PrefHelper prefHelper_;
@@ -213,7 +213,7 @@ public abstract class ServerRequest {
      * By default update GAds params update is turned off. Override this on request which need to have GAds params
      * </p>
      *
-     * @return A {@link Boolean} with value true if this reuest need GAds params
+     * @return A {@link Boolean} with value true if this request need GAds params
      */
     public boolean isGAdsParamsRequired() {
         return false;
@@ -396,7 +396,7 @@ public abstract class ServerRequest {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        } else { // Add unidentified_device when neither aaid nor AndoridID present
+        } else { // Add unidentified_device when neither GAID nor AndroidID are present
             if (version == BRANCH_API_VERSION.V2) {
                 try {
                     if (version == BRANCH_API_VERSION.V2) {
@@ -450,6 +450,10 @@ public abstract class ServerRequest {
                     // override keys from above
                     metadata.put(key, originalMetadata.get(key));
                 }
+            }
+            // Install metadata need to be send only with Install request
+            if ((this instanceof ServerRequestRegisterInstall) && prefHelper_.getInstallMetadata().length() > 0) {
+                params_.putOpt(Defines.Jsonkey.InstallMetadata.getKey(), prefHelper_.getInstallMetadata());
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
