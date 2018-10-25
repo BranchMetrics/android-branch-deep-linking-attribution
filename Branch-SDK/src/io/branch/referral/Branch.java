@@ -293,6 +293,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     static boolean isForcedSession_ = false;
     
+    private static boolean bypassCurrentActivityIntentState_ = false;
+    
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
     public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
@@ -1467,6 +1469,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
+        
+        // set the intentState_ as READY if bypassCurrentActivityIntentState_ is true and intent data is !null
+        if (bypassCurrentActivityIntentState_ && data != null) {
+            intentState_ = INTENT_STATE.READY;
+        }
+
         if (intentState_ == INTENT_STATE.READY) {
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             try {
@@ -2578,7 +2586,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 startSession(activity);
             }
             currentActivityReference_ = new WeakReference<>(activity);
-            if (handleDelayedNewIntents_) {
+
+            // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
+            // activity also to make sure we do not override the intent data
+            if (handleDelayedNewIntents_ && !bypassCurrentActivityIntentState_) {
                 intentState_ = INTENT_STATE.READY;
                 // Grab the intent only for first activity unless this activity is intent to  force new session
                 boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
@@ -3173,6 +3184,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static boolean isForceSessionEnabled() {
         return isForcedSession_;
+    }
+    
+    public static void BypassCurrentActivityIntentState_() {
+        bypassCurrentActivityIntentState_ = true;
     }
 
     //-------------------------- Branch Builders--------------------------------------//
