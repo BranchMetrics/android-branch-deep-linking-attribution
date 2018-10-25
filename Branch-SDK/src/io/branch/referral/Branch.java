@@ -3186,7 +3186,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return isForcedSession_;
     }
     
-    public static void BypassCurrentActivityIntentState_() {
+    public static void enableBypassCurrentActivityIntentState_() {
         bypassCurrentActivityIntentState_ = true;
     }
 
