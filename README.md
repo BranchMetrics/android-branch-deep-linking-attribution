@@ -66,11 +66,11 @@ Just add `implementation 'io.branch.sdk.android:library:2.+'` to the dependencie
 
 - If you don't plan to use the `Fabric Answers` integration, and don't want to import the `answers-shim`, just import your project as follows:
 ```
-implementation ('io.branch.sdk.android:library:2.+') {
+implementation ('io.branch.sdk.android:library:3.+') {
   exclude module: 'answers-shim'
 }
 ```
-- This supports minimum sdk level 15. If you want to support minimum sdk level 9 please consider using version 1.14.5
+- This supports minimum sdk level 16. If you want to support minimum sdk level 9 please consider using version 1.14.5. If you want to to support a minimum SDK of 15, use the 2.x versions.
 - If you want to import the JAR directly, you can find the build in the root of this repository. 
 - Or you can clone this repo and import the source as a library into your project
 
