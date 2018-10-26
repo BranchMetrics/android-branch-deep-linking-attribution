@@ -71,6 +71,7 @@ implementation ('io.branch.sdk.android:library:3.+') {
 }
 ```
 - This supports minimum sdk level 16. If you want to support minimum sdk level 9 please consider using version 1.14.5. If you want to to support a minimum SDK of 15, use the 2.x versions.
+- Android SDK versions 3.x and above communicate over TLS1.2.
 - If you want to import the JAR directly, you can find the build in the root of this repository. 
 - Or you can clone this repo and import the source as a library into your project
 
