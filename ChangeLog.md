@@ -1,5 +1,10 @@
 # Branch Android SDK change log
 
+- v3.0.0
+  * _*Master Release*_ - October 26, 2018
+  * Upgrade to api2.branch.io for TLS 1.1+ support. DEVEX-809
+  * _Breaking Change_ Min SDK version is now 16.
+
 - v2.19.5
   * _*Master Release*_ - October 8, 2018
   * Added new way to init session for attribution (`initSessionForced`) INTENG-4285
