@@ -3,7 +3,7 @@
 - v3.0.0
   * _*Master Release*_ - October 26, 2018
   * Upgrade to api2.branch.io for TLS 1.1+ support. DEVEX-809
-  * _Breaking Change_ Min SDK version is now 16.
+  * _Breaking Change_ Min SDK version is now 16. If you want to support minimum sdk level 9 please consider using version 1.14.5. If you want to to support a minimum SDK of 15, use the 2.x versions.
 
 - v2.19.5
   * _*Master Release*_ - October 8, 2018
