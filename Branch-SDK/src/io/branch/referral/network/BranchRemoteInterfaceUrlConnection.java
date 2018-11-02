@@ -29,6 +29,8 @@ import io.branch.referral.PrefHelper;
  */
 public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private static final int DEFAULT_TIMEOUT = 3000;
+    private static final int THREAD_TAG_POST= 102;
+
     PrefHelper prefHelper;
 
     BranchRemoteInterfaceUrlConnection(Context context) {
@@ -123,6 +125,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         } catch (JSONException ignore) {
         }
         try {
+            // set the setThreadStatsTag for POST if API 26+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+                TrafficStats.setThreadStatsTag(THREAD_TAG_POST);
+            }
+
             URL urlObject = new URL(url);
             connection = (HttpsURLConnection) urlObject.openConnection();
             connection.setConnectTimeout(timeout);
