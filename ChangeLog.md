@@ -4,6 +4,7 @@
   * _*Master Release*_ - November 8, 2018
   * Fix unstable share sheet row height. DEVEX-835
   * Added new method to force init session. INTENG-4322
+  * Support untagged sockets. DEVEX-888
 
 - v3.0.0
   * _*Master Release*_ - October 26, 2018
