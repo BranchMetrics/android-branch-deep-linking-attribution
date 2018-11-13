@@ -48,7 +48,7 @@ class ShareLinkManager {
     /* Default height for the list item.*/
     private static int viewItemMinHeight_ = 100;
     /* Default icon height size multiplier*/
-    private static int ICON_SIZER = 3;
+    private static int ICON_SIZER = 2;
     /* Indicates whether a sharing is in progress*/
     private boolean isShareInProgress_ = false;
     /* Styleable resource for share sheet.*/
