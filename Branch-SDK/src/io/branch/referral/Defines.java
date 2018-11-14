@@ -155,7 +155,17 @@ public class Defines {
         Affiliation("affiliation"),
         Description("description"),
         SearchQuery("search_query"),
-        
+        UserID("user_id"),
+        FacebookUserID("facebook_user_id"),
+        GoogleUserID("google_user_id"),
+        TwitterUserID("twitter_user_id"),
+        UserEmail("user_email"),
+        UserName("user_name"),
+        LocationLatitude("latitude"),
+        LocationLongitude("longitude"),
+        LocationAltitude("altitude"),
+        AdType("ad_type"),
+
         Name("name"),
         CustomData("custom_data"),
         EventData("event_data"),

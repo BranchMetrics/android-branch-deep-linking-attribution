@@ -2,6 +2,7 @@ package io.branch.referral.util;
 
 
 import android.content.Context;
+import android.location.Location;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,13 +44,6 @@ public class BranchEvent {
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
         this.eventName = eventName;
-
-        for (BRANCH_STANDARD_EVENT event : BRANCH_STANDARD_EVENT.values()) {
-            if (eventName.equals(event.getName())) {
-                isStandardEvent = true;
-                break;
-            }
-        }
 
         this.isStandardEvent = isStandardEvent;
         buoList = new ArrayList<>();
@@ -142,6 +136,109 @@ public class BranchEvent {
      */
     public BranchEvent setSearchQuery(String searchQuery) {
         return addStandardProperty(Defines.Jsonkey.SearchQuery.getKey(), searchQuery);
+    }
+
+    /**
+     * Set the User ID associated with the event.
+     * @param userID {@link String} User ID value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setUserID(String userID) {
+        return addStandardProperty(Defines.Jsonkey.UserID.getKey(), userID);
+    }
+
+    /**
+     * Set the Facebook User ID associated with the event.
+     * @param facebookUserID {@link String} Facebook User ID value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setFacebookUserID(String facebookUserID) {
+        return addStandardProperty(Defines.Jsonkey.FacebookUserID.getKey(), facebookUserID);
+    }
+
+    /**
+     * Set the Google User ID associated with the event.
+     * @param googleUserID {@link String} Google User ID value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setGoogleUserID(String googleUserID) {
+        return addStandardProperty(Defines.Jsonkey.GoogleUserID.getKey(), googleUserID);
+    }
+
+    /**
+     * Set the Twitter User ID associated with the event.
+     * @param twitterUserID {@link String} Twitter User ID value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setTwitterUserID(String twitterUserID) {
+        return addStandardProperty(Defines.Jsonkey.TwitterUserID.getKey(), twitterUserID);
+    }
+
+    /**
+     * Set the User Email Address associated with the event.
+     * @param userEmail {@link String} User Email Address value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setUserEmail(String userEmail) {
+        return addStandardProperty(Defines.Jsonkey.UserEmail.getKey(), userEmail);
+    }
+
+    /**
+     * Set the User Name associated with the event.
+     * @param userName {@link String} User Name value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setUserName(String userName) {
+        return addStandardProperty(Defines.Jsonkey.UserName.getKey(), userName);
+    }
+
+    /**
+     * Set the latitude associated with the event.
+     * @param latitude {@link float} latitude value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setLatitude(float latitude) {
+        return addStandardProperty(Defines.Jsonkey.LocationLatitude.getKey(), latitude);
+    }
+
+    /**
+     * Set the longitude associated with the event.
+     * @param longitude {@link float} longitude value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setLongitude(float longitude) {
+        return addStandardProperty(Defines.Jsonkey.LocationLongitude.getKey(), longitude);
+    }
+
+    /**
+     * Set the altitude associated with the event.
+     * @param altitude {@link float} altitude value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setAltitude(float altitude) {
+        return addStandardProperty(Defines.Jsonkey.LocationAltitude.getKey(), altitude);
+    }
+
+    /**
+     * Set the location associated with the event.
+     * @param location {@link Location} location value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setLocation(Location location) {
+        float lat = (float) location.getLatitude();
+        float lon = (float) location.getLongitude();
+        float alt = (float) location.getAltitude();
+
+        return setLatitude(lat).setLongitude(lon).setAltitude(alt);
+    }
+
+    /**
+     * Set the Ad Type associated with the event.
+     * @param adType {@link AdType} Ad Type value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setAdType(AdType adType) {
+        return addStandardProperty(Defines.Jsonkey.AdType.getKey(), adType.getName());
     }
 
     private BranchEvent addStandardProperty(String propertyName, Object propertyValue) {
