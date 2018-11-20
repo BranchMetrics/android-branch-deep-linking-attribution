@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import android.location.Location;
 import android.support.test.runner.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,8 +9,10 @@ import junit.framework.Assert;
 
 import java.lang.reflect.Field;
 
+import io.branch.referral.util.AdType;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.CurrencyType;
 
 /**
  * BranchEvent class tests.
@@ -43,11 +46,54 @@ public class BranchEventTest extends BranchTest {
     @Test
     public void testAllStandardEvents() throws Throwable {
         for (BRANCH_STANDARD_EVENT eventType : BRANCH_STANDARD_EVENT.values()) {
-            String eventName = eventType.getName();
             BranchEvent branchEvent = new BranchEvent(eventType);
-
             Assert.assertTrue(isStandardEvent(branchEvent));
+
+            // We assert that creating an event using a String *will be considered a custom event*
+            String eventName = eventType.getName();
+            BranchEvent branchEventStr = new BranchEvent(eventName);
+            Assert.assertFalse(isStandardEvent(branchEventStr));
         }
+    }
+
+    @Test
+    public void addAllEventExtras() throws Throwable {
+        BranchEvent event = new BranchEvent("CustomEvent");
+
+        event.setTransactionID("123");
+        for (AdType adType : AdType.values()) {
+            event.setAdType(adType);
+        }
+        event.setAffiliation("CustomAffiliation");
+        event.setAltitude(10.0f);
+
+        Location location = new Location("test_provider");
+        location.setAltitude(10);
+        location.setLatitude(47.612710);
+        location.setLongitude(-122.346389);
+        event.setAltitude((float)location.getAltitude());
+        event.setLatitude((float)location.getLatitude());
+        event.setLongitude((float)location.getLongitude());
+        event.setLocation(location);
+
+        event.setCoupon("test coupon");
+        event.setCurrency(CurrencyType.BZD);
+        event.setDescription("Test Event");
+        event.setFacebookUserID("fakeFacebookID");
+        event.setGoogleUserID("fakeGoogleID");
+        event.setTwitterUserID("fakeTwitterID");
+        event.setRevenue(123.456);
+        event.setSearchQuery("Love");
+        event.setShipping(0.001);
+        event.setTax(10);
+        event.setUserEmail("test@foo.bar");
+        event.setUserID("fakeUser");
+        event.setUserName("Fake D. User");
+
+        event.addCustomDataProperty("test", "test value");
+
+        // TODO: This is currently untestable.
+        Assert.assertFalse(event.logEvent(getTestContext()));
     }
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.

@@ -323,7 +323,7 @@ public class BranchEvent {
                 if (standardProperties.length() > 0) {
                     reqBody.put(Defines.Jsonkey.EventData.getKey(), standardProperties);
                 }
-                if (buoList.size() > 0) {
+                if (buoList.size() > 0 && !redactBuo()) {
                     JSONArray contentItemsArray = new JSONArray();
                     reqBody.put(Defines.Jsonkey.ContentItems.getKey(), contentItemsArray);
                     for (BranchUniversalObject buo : buoList) {
@@ -376,6 +376,33 @@ public class BranchEvent {
 
         public boolean shouldRetryOnFail() {
             return true; // Branch event need to be retried on failure.
+        }
+
+        /**
+         * Some V2 Standard Events need to have their BUO redacted.
+         * @return {code true} if the Event BUO should be redacted.
+         */
+        private boolean redactBuo() {
+            boolean redact = false;
+            try {
+                BRANCH_STANDARD_EVENT test = BRANCH_STANDARD_EVENT.valueOf(eventName);
+                switch (test) {
+                    case INVITE:
+                    case LOGIN:
+                    case SUBSCRIBE:
+                    case START_TRIAL:
+                    case CLICK_AD:
+                    case VIEW_AD:
+                        redact = true;
+                        break;
+
+                    default:
+                        break;
+                }
+            } catch (IllegalArgumentException e) {
+            }
+
+            return redact;
         }
     }
 

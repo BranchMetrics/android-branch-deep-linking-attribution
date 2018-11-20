@@ -11,6 +11,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.Field;
+
 /**
  * Base Instrumented test, which will execute on an Android device.
  */
@@ -58,5 +60,13 @@ public class BranchTest {
 
     Context getTestContext() {
         return mContext;
+    }
+
+    // Set the Branch Instance.
+    // This is useful for creating a Mock instance and setting it in the SDK
+    void setBranchInstance(Branch branchInstance) throws Throwable {
+        Field f = Branch.class.getDeclaredField("branchReferral_");
+        f.setAccessible(true);
+        f.set(null, branchInstance);
     }
 }
