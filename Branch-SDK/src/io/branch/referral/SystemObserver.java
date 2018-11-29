@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.Manifest;
 import android.app.UiModeManager;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -15,8 +14,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -26,7 +24,6 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.JarFile;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
@@ -48,7 +45,7 @@ class SystemObserver {
     int LATVal_ = 0;
 
 
-    private Context context_;
+    private WeakReference<Context> contextReference_;
 
     /**
      * <p>Indicates whether or not a real device ID is in use, or if a debug value is in use.</p>
@@ -62,7 +59,7 @@ class SystemObserver {
      * @param context Current application context
      */
     SystemObserver(Context context) {
-        context_ = context;
+        contextReference_ = new WeakReference<>(context);
         isRealHardwareId = true;
     }
 
@@ -79,10 +76,11 @@ class SystemObserver {
      * debug value in place of a real identifier.</p>
      */
     String getUniqueID(boolean debug) {
-        if (context_ != null) {
+        Context context = contextReference_.get();
+        if (context != null) {
             String androidID = null;
             if (!debug && !Branch.isSimulatingInstalls_) {
-                androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
+                androidID = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
             }
             if (androidID == null) {
                 androidID = UUID.randomUUID().toString();
@@ -112,11 +110,14 @@ class SystemObserver {
      */
     String getPackageName() {
         String packageName = "";
-        try {
-            PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-            packageName = info.packageName;
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
+        Context context = contextReference_.get();
+        if (context != null) {
+            try {
+                PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                packageName = info.packageName;
+            } catch (NameNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         return packageName;
     }
@@ -128,12 +129,14 @@ class SystemObserver {
      * currently integrated into.</p>
      */
     String getAppVersion() {
+        Context context = contextReference_.get();
+
         try {
-            PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-            if (packageInfo.versionName != null)
-                return packageInfo.versionName;
-            else
-                return BLANK;
+            if (context != null) {
+                PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                if (packageInfo.versionName != null)
+                    return packageInfo.versionName;
+            }
         } catch (NameNotFoundException ignored) {
         }
         return BLANK;
@@ -238,9 +241,15 @@ class SystemObserver {
      * @see DisplayMetrics
      */
     DisplayMetrics getScreenDisplay() {
+        Context context = contextReference_.get();
         DisplayMetrics displayMetrics = new DisplayMetrics();
-        Display display = ((WindowManager) context_.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        display.getMetrics(displayMetrics);
+        if (context != null) {
+            WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            if (windowManager != null) {
+                Display display = windowManager.getDefaultDisplay();
+                display.getMetrics(displayMetrics);
+            }
+        }
         return displayMetrics;
     }
 
@@ -261,9 +270,13 @@ class SystemObserver {
      */
     @SuppressWarnings("MissingPermission")
     public boolean getWifiConnected() {
-        if (PackageManager.PERMISSION_GRANTED == context_.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            ConnectivityManager connManager = (ConnectivityManager) context_.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        Context context = contextReference_.get();
+        if (context != null && PackageManager.PERMISSION_GRANTED == context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
+            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo wifiInfo = null;
+            if (connManager != null) {
+                wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            }
             return ((wifiInfo != null) && wifiInfo.isConnected());
         }
         return false;
@@ -278,11 +291,14 @@ class SystemObserver {
      */
     private Object getAdInfoObject() {
         Object adInfoObj = null;
-        try {
-            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-            adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
-        } catch (Throwable ignore) {
+        Context context = contextReference_.get();
+        if (context != null) {
+            try {
+                Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+                adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context);
+            } catch (Throwable ignore) {
+            }
         }
         return adInfoObj;
     }
@@ -429,32 +445,39 @@ class SystemObserver {
      * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
      */
     String getUIMode() {
-        String mode;
-        switch (((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType()) {
-            case 0:
-                mode = "UI_MODE_TYPE_UNDEFINED";
-                break;
-            case 1:
-                mode = "UI_MODE_TYPE_NORMAL";
-                break;
-            case 2:
-                mode = "UI_MODE_TYPE_DESK";
-                break;
-            case 3:
-                mode = "UI_MODE_TYPE_CAR";
-                break;
-            case 4:
-                mode = "UI_MODE_TYPE_TELEVISION";
-                break;
-            case 5:
-                mode = "UI_MODE_TYPE_APPLIANCE";
-                break;
-            case 6:
-                mode = "UI_MODE_TYPE_WATCH";
-                break;
-            default:
-                mode = "UI_MODE_TYPE_UNDEFINED";
-                break;
+        String mode = "UI_MODE_TYPE_UNDEFINED";
+        Context context = contextReference_.get();
+        UiModeManager modeManager = null;
+
+        if (context != null) {
+            modeManager = (UiModeManager)context.getSystemService(UI_MODE_SERVICE);
+        }
+
+        if (modeManager != null) {
+            switch (modeManager.getCurrentModeType()) {
+                case 1:
+                    mode = "UI_MODE_TYPE_NORMAL";
+                    break;
+                case 2:
+                    mode = "UI_MODE_TYPE_DESK";
+                    break;
+                case 3:
+                    mode = "UI_MODE_TYPE_CAR";
+                    break;
+                case 4:
+                    mode = "UI_MODE_TYPE_TELEVISION";
+                    break;
+                case 5:
+                    mode = "UI_MODE_TYPE_APPLIANCE";
+                    break;
+                case 6:
+                    mode = "UI_MODE_TYPE_WATCH";
+                    break;
+
+                case 0:
+                default:
+                    break;
+            }
         }
         return mode;
     }
