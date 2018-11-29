@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.Manifest;
 import android.app.UiModeManager;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -15,8 +14,6 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -26,7 +23,6 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.JarFile;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
@@ -112,11 +108,13 @@ class SystemObserver {
      */
     String getPackageName() {
         String packageName = "";
-        try {
-            PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-            packageName = info.packageName;
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
+        if (context_ != null) {
+            try {
+                PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+                packageName = info.packageName;
+            } catch (NameNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         return packageName;
     }
@@ -129,11 +127,12 @@ class SystemObserver {
      */
     String getAppVersion() {
         try {
-            PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-            if (packageInfo.versionName != null)
-                return packageInfo.versionName;
-            else
-                return BLANK;
+            if (context_ != null) {
+                PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+                if (packageInfo.versionName != null) {
+                    return packageInfo.versionName;
+                }
+            }
         } catch (NameNotFoundException ignored) {
         }
         return BLANK;
@@ -239,8 +238,13 @@ class SystemObserver {
      */
     DisplayMetrics getScreenDisplay() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
-        Display display = ((WindowManager) context_.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        display.getMetrics(displayMetrics);
+        if (context_ != null) {
+            WindowManager windowManager = (WindowManager) context_.getSystemService(Context.WINDOW_SERVICE);
+            if (windowManager != null) {
+                Display display = windowManager.getDefaultDisplay();
+                display.getMetrics(displayMetrics);
+            }
+        }
         return displayMetrics;
     }
 
@@ -261,9 +265,12 @@ class SystemObserver {
      */
     @SuppressWarnings("MissingPermission")
     public boolean getWifiConnected() {
-        if (PackageManager.PERMISSION_GRANTED == context_.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
+        if (context_ != null && PackageManager.PERMISSION_GRANTED == context_.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             ConnectivityManager connManager = (ConnectivityManager) context_.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            NetworkInfo wifiInfo = null;
+            if (connManager != null) {
+                wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            }
             return ((wifiInfo != null) && wifiInfo.isConnected());
         }
         return false;
@@ -278,11 +285,13 @@ class SystemObserver {
      */
     private Object getAdInfoObject() {
         Object adInfoObj = null;
-        try {
-            Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-            Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-            adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
-        } catch (Throwable ignore) {
+        if (context_ != null) {
+            try {
+                Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+                adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
+            } catch (Throwable ignore) {
+            }
         }
         return adInfoObj;
     }
@@ -429,32 +438,42 @@ class SystemObserver {
      * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
      */
     String getUIMode() {
-        String mode;
-        switch (((UiModeManager) context_.getSystemService(UI_MODE_SERVICE)).getCurrentModeType()) {
-            case 0:
-                mode = "UI_MODE_TYPE_UNDEFINED";
-                break;
-            case 1:
-                mode = "UI_MODE_TYPE_NORMAL";
-                break;
-            case 2:
-                mode = "UI_MODE_TYPE_DESK";
-                break;
-            case 3:
-                mode = "UI_MODE_TYPE_CAR";
-                break;
-            case 4:
-                mode = "UI_MODE_TYPE_TELEVISION";
-                break;
-            case 5:
-                mode = "UI_MODE_TYPE_APPLIANCE";
-                break;
-            case 6:
-                mode = "UI_MODE_TYPE_WATCH";
-                break;
-            default:
-                mode = "UI_MODE_TYPE_UNDEFINED";
-                break;
+        String mode = "UI_MODE_TYPE_UNDEFINED";
+        UiModeManager modeManager = null;
+
+        try {
+            if (context_ != null) {
+                modeManager = (UiModeManager) context_.getSystemService(UI_MODE_SERVICE);
+            }
+
+            if (modeManager != null) {
+                switch (modeManager.getCurrentModeType()) {
+                    case 1:
+                        mode = "UI_MODE_TYPE_NORMAL";
+                        break;
+                    case 2:
+                        mode = "UI_MODE_TYPE_DESK";
+                        break;
+                    case 3:
+                        mode = "UI_MODE_TYPE_CAR";
+                        break;
+                    case 4:
+                        mode = "UI_MODE_TYPE_TELEVISION";
+                        break;
+                    case 5:
+                        mode = "UI_MODE_TYPE_APPLIANCE";
+                        break;
+                    case 6:
+                        mode = "UI_MODE_TYPE_WATCH";
+                        break;
+
+                    case 0:
+                    default:
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            // Have seen reports of "DeadSystemException" from UiModeManager.
         }
         return mode;
     }
