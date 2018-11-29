@@ -129,8 +129,9 @@ class SystemObserver {
         try {
             if (context_ != null) {
                 PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-                if (packageInfo.versionName != null)
+                if (packageInfo.versionName != null) {
                     return packageInfo.versionName;
+                }
             }
         } catch (NameNotFoundException ignored) {
         }
