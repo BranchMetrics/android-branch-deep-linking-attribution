@@ -294,7 +294,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     static boolean isForcedSession_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
-    
+
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
     public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
@@ -1470,8 +1470,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         
-        // set the intentState_ as READY if bypassCurrentActivityIntentState_ is true and intent data is !null
-        if (bypassCurrentActivityIntentState_ && data != null) {
+        // set the intentState_ as READY if bypassCurrentActivityIntentState_ is true
+        if (bypassCurrentActivityIntentState_) {
             intentState_ = INTENT_STATE.READY;
         }
 
