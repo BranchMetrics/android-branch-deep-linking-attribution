@@ -57,7 +57,26 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void addAllEventExtras() throws Throwable {
+    public void testLogEvent() throws Throwable {
+        Branch.getInstance(getTestContext(), "key_live_testkey");
+
+        BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.LOGIN;
+        BranchEvent branchEvent = new BranchEvent(eventType);
+
+        branchEvent.logEvent(getTestContext());
+
+        // There is some async stuff going on.  Let's wait until that is complete.
+        Thread.sleep(2000);
+
+        // Verify that the server queue has two events
+        // 1. Install Event
+        // 2. This Event
+        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(2, queue.getSize());
+    }
+
+    @Test
+    public void addAllEventExtras() {
         BranchEvent event = new BranchEvent("CustomEvent");
 
         event.setTransactionID("123");
