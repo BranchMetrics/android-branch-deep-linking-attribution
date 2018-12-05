@@ -1,5 +1,9 @@
 # Branch Android SDK change log
 
+- v3.0.2
+  * _*Master Release*_ - November 30, 2018
+  * Fix DeadSystemException crash in System Observer. INTENG-4460
+
 - v3.0.1
   * _*Master Release*_ - November 8, 2018
   * Fix unstable share sheet row height. DEVEX-835
