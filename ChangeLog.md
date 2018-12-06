@@ -1,5 +1,9 @@
 # Branch Android SDK change log
 
+- v3.0.3
+  * _*Master Release*_ - December 6, 2018
+  * Fixed Android InstallListener exception when not on UI thread. SDK-87
+
 - v3.0.2
   * _*Master Release*_ - November 30, 2018
   * Fix DeadSystemException crash in System Observer. INTENG-4460
