@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
@@ -15,6 +14,8 @@ import com.android.installreferrer.api.ReferrerDetails;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * <p> Class for listening installation referrer params. Install params are captured by either of the following methods
@@ -53,7 +54,7 @@ public class InstallListener extends BroadcastReceiver {
             isWaitingForReferrer = true;
             ReferrerClientWrapper referrerClientWrapper = new ReferrerClientWrapper(context);
             isReferrerClientAvailable = referrerClientWrapper.getReferrerUsingReferrerClient();
-            new Handler().postDelayed(new Runnable() {
+            new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
                     reportInstallReferrer();
@@ -131,6 +132,13 @@ public class InstallListener extends BroadcastReceiver {
                             case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                                 // Connection could not be established
                                 onReferrerClientError();
+                                break;
+                            case InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:
+                                // General errors caused by incorrect usage
+                                onReferrerClientError();
+                                break;
+                            case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:
+                                // Play Store service is not connected now - potentially transient state.
                                 break;
                         }
                     }
