@@ -7,6 +7,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -29,7 +30,8 @@ public class PrefHelper {
     /**
      * The base URL to use for all calls to the Branch API.
      */
-    private static final String BRANCH_BASE_URL = "https://api2.branch.io/";
+    private static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
+    private static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
 
     /**
      * {@link Boolean} value that enables/disables Branch developer external debug mode.
@@ -177,12 +179,18 @@ public class PrefHelper {
     
     /**
      * <p>Returns the base URL to use for all calls to the Branch API as a {@link String}.</p>
+     * NOTE: Below API v20, TLS 1.2 does not work reliably, so we will fall back in that case.
      *
      * @return A {@link String} variable containing the hard-coded base URL that the Branch
      * API uses.
      */
     public String getAPIBaseUrl() {
-        return BRANCH_BASE_URL;
+        if (Build.VERSION.SDK_INT >= 20) {
+            return BRANCH_BASE_URL_V2;
+        } else {
+            //
+            return BRANCH_BASE_URL_V1;
+        }
     }
     
     /**
