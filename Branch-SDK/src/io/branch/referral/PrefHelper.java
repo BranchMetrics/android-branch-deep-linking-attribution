@@ -188,7 +188,6 @@ public class PrefHelper {
         if (Build.VERSION.SDK_INT >= 20) {
             return BRANCH_BASE_URL_V2;
         } else {
-            //
             return BRANCH_BASE_URL_V1;
         }
     }
