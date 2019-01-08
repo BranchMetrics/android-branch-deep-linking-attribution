@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 dependencies {
     implementation project(':Branch-SDK')
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.+'
-    implementation ('com.google.android.gms:play-services-ads:10.0.1')
+    implementation ('com.google.android.gms:play-services-ads:16.0.0')
 
     /* Add chrome custom tabs for guaranteed matching */
     implementation ('com.android.support:customtabs:23.3.0') {
