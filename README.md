@@ -7,9 +7,9 @@ ___
 ## Android Reference
 
 1. External resources
-  + [Full integration guide](https://dev.branch.io/getting-started/sdk-integration-guide/guide/android/)
+  + [Full integration guide](https://docs.branch.io/pages/apps/android/)
   + [Change log](https://github.com/BranchMetrics/android-branch-deep-linking/blob/master/ChangeLog.md)
-  + [Testing resources](https://dev.branch.io/getting-started/integration-testing/guide/android/)
+  + [Testing resources](https://docs.branch.io/pages/apps/android/#test-your-branch-integration)
   + [Support portal](http://support.branch.io)
   + [Test app resources](#get-the-demo-app)
 
@@ -271,7 +271,7 @@ Instant Apps can be rather confusing as there are many different manifests, but 
 
 **3. Configure your Branch links as Android App Links**
 
-This guide presumes that you've already configured Branch for Android App Links in the past. If you haven't configured your full native app to use Branch as Android App Links, [please complete this guide](https://dev.branch.io/getting-started/universal-app-links/guide/android/) which will correctly configure the dashboard and manifest.
+This guide presumes that you've already configured Branch for Android App Links in the past. If you haven't configured your full native app to use Branch as Android App Links, [please complete this guide](https://docs.branch.io/pages/deep-linking/android-app-links/) which will correctly configure the dashboard and manifest.
 
 Now, you simply need to edit the above manifest and paste in the following snippet _inside_ the `application` element. Then you'll need to replace the `xxxx` with your own custom subdomain which will be visible on [the Branch link settings dashboard](https://dashboard.branch.io/link-settings) at the bottom of the page. If you're using a custom subdomain, you can find the advanced instructions in the above link regarding configuring Android App Links.
 
@@ -339,7 +339,7 @@ if (Branch.isInstantApp(this)) {
 
 If your minimum sdk level is 15+, To receive the deep link parameters from the Branch SDK, call initSession and pass in the BranchReferralInitListener. This will return the dictionary of referringParams associated with the link that was just clicked. You can call this anywhere at any time to get the params.
 
-If you need to support pre 15, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://dev.branch.io/getting-started/sdk-integration-guide/advanced/android/#supporting-pre-15-android). Basically, if you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
+If you need to support pre 15, Branch must know when the app opens or closes to properly handle the deep link parameters retrieval. You can see more details on how to do this at [this docs site](https://docs.branch.io/pages/apps/android/). Basically, if you don't close the Branch session, you'll see strange behaviors like deep link parameters not showing up after clicking a link the second time.
 
 #### Initialize Branch lifecycle
 
