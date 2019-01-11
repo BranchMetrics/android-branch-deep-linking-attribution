@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v3.0.4
+  * Fixed a TLS1.2 issue with HttpsURLConnection on API Level 16~19 devices
+  * Add SDK version tag to the Android SDK to aid Google Scanning APIs
+  * The SDK now supports deeplinking with enableForcedSession() for apps which choose to finish the Launcher Activity within onStart() method
 
 - v3.0.3
   * _*Master Release*_ - December 6, 2018
