@@ -2,25 +2,31 @@ apply plugin: 'com.android.application'
 
 dependencies {
     implementation project(':Branch-SDK')
-    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.+'
-    implementation ('com.google.android.gms:play-services-ads:10.0.1')
+    implementation ('com.google.android.gms:play-services-ads:16.0.0')
 
     /* Add chrome custom tabs for guaranteed matching */
     implementation ('com.android.support:customtabs:23.3.0') {
         exclude module: 'support-v4'
     }
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
         applicationId "io.branch.branchandroiddemo"
-        minSdkVersion 16
+        minSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_MINIMUM)
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs { release }
@@ -40,10 +46,11 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
-        }
 
-        // Move the tests to tests/java, tests/res, etc...
-        androidTest.setRoot('tests')
+            androidTest {
+                java.srcDirs = ['androidTest']
+            }
+        }
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...

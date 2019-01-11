@@ -17,7 +17,6 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-import io.branch.branchandroiddemo.test.BUOTestRoutines;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;

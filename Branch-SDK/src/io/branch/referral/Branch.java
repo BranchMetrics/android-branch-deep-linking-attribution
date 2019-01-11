@@ -72,7 +72,9 @@ import io.branch.referral.util.LinkProperties;
 public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
     
     private static final String TAG = "BranchSDK";
-    
+    private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + BuildConfig.VERSION_NAME;
+    private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
+
     /**
      * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that
      * are shared with others directly as a user action, via social media for instance.
@@ -294,7 +296,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     static boolean isForcedSession_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
-    
+
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerFetchTime = 1500;
     public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
@@ -464,15 +466,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>
-     * Enables/Disables the test mode for the SDK. This will use the Branch Test Keys.
-     * This will also enable debug logs.
+     * Enables the test mode for the SDK. This will use the Branch Test Keys.
+     * This will also enable debug logs and log the SDK Version Declaration Tag.
      * Note: This is same as setting "io.branch.sdk.TestMode" to "True" in Manifest file
      * </p>
      */
     public static void enableTestMode() {
+        Log.i(TAG, GOOGLE_VERSION_TAG);
         BranchUtil.isCustomDebugEnabled_ = true;
     }
-    
+
+    /**
+     * <p>
+     * Disables the test mode for the SDK.
+     * </p>
+     */
     public static void disableTestMode() {
         BranchUtil.isCustomDebugEnabled_ = false;
     }
@@ -541,11 +549,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getInstance() {
         /* Check if BranchApp is instantiated. */
         if (branchReferral_ == null) {
-            Log.e("BranchSDK", "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
+            Log.e(TAG, "Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
         } else if (isAutoSessionMode_) {
             /* Check if Activity life cycle callbacks are set if in auto session mode. */
             if (!isActivityLifeCycleCallbackRegistered_) {
-                Log.e("BranchSDK", "Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
+                Log.e(TAG, "Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
                         "If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
             }
         }
@@ -577,7 +585,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.requestQueue_.clear();
             }
         } else {
-            Log.e("BranchSDK", "Branch Key is invalid.Please check your BranchKey");
+            Log.e(TAG, "Branch Key is invalid.Please check your BranchKey");
         }
         return branchReferral_;
     }
@@ -602,7 +610,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (!TextUtils.isEmpty(fabricBranchApiKey)) {
                     isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(fabricBranchApiKey);
                 } else {
-                    Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's Manifest file!");
+                    Log.i(TAG, "Branch Warning: Please enter your branch_key in your project's Manifest file!");
                     isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
                 }
             } else {
@@ -717,7 +725,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.requestQueue_.clear();
             }
         } else {
-            Log.e("BranchSDK", "Branch Key is invalid.Please check your BranchKey");
+            Log.e(TAG, "Branch Key is invalid.Please check your BranchKey");
         }
         return branchReferral_;
     }
@@ -1342,7 +1350,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * SDK version 1.14.5
      */
     public void closeSession() {
-        Log.w("BranchSDK", "closeSession() method is deprecated from SDK v1.14.6.Session is  automatically handled by Branch." +
+        Log.w(TAG, "closeSession() method is deprecated from SDK v1.14.6.Session is  automatically handled by Branch." +
                 "In case you need to handle sessions manually inorder to support minimum sdk version less than 14 please consider using " +
                 " SDK version 1.14.5");
     }
@@ -1470,8 +1478,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         
-        // set the intentState_ as READY if bypassCurrentActivityIntentState_ is true and intent data is !null
-        if (bypassCurrentActivityIntentState_ && data != null) {
+        // set the intentState_ as READY if bypassCurrentActivityIntentState_ is true
+        if (bypassCurrentActivityIntentState_) {
             intentState_ = INTENT_STATE.READY;
         }
 
@@ -2179,7 +2187,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             return url;
         } else {
-            Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+            Log.i(TAG, "Branch Warning: User session has not been initialized");
         }
         return null;
     }
@@ -2218,7 +2226,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid IdentityID
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            Log.i("BranchSDK", "Branch Error: User session has not been initialized!");
+                            Log.i(TAG, "Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
                             handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         }
@@ -2330,10 +2338,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (callback != null) {
                 callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
-            Log.i("BranchSDK", "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+            Log.i(TAG, "Branch Warning: Please enter your branch_key in your project's res/values/strings.xml!");
             return;
         } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
-            Log.i("BranchSDK", "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+            Log.i(TAG, "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
         
         if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || !enableFacebookAppLinkCheck_) {
@@ -2897,7 +2905,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 if (thisReq_ instanceof ServerRequestCreateUrl) {
                                     ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
                                 } else {
-                                    Log.i("BranchSDK", "Branch API Error: Conflicting resource error code from API");
+                                    Log.i(TAG, "Branch API Error: Conflicting resource error code from API");
                                     handleFailure(0, status);
                                 }
                             }
@@ -3094,9 +3102,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
-            Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
+            Log.i(TAG, "Branch Warning: Please make sure Activity names set for auto deep link are correct!");
         } catch (ClassNotFoundException e) {
-            Log.i("BranchSDK", "Branch Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
+            Log.i(TAG, "Branch Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
         } catch (Exception ignore) {
             // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
         }
