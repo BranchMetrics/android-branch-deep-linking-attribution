@@ -1,4 +1,4 @@
-package io.branch.branchandroiddemo.test;
+package io.branch.branchandroiddemo;
 
 import android.content.Context;
 import android.text.TextUtils;
