@@ -385,7 +385,9 @@ public abstract class ServerRequest {
                 if (version == BRANCH_API_VERSION.V2) {
                     JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                     if (userDataObj != null) {
+                        // Populate both AAID and GAID keys with GAIDString.
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), systemObserver_.GAIDString_);
+                        userDataObj.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), systemObserver_.GAIDString_);
                         userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), systemObserver_.LATVal_);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                     }
