@@ -26,6 +26,7 @@ public class BranchTest {
 
     @After
     public void tearDown() {
+        Branch.shutDown();
         mContext = null;
     }
 
