@@ -793,7 +793,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         // Release these contexts immediately.
         if (branchReferral_ != null) {
-        branchReferral_.context_ = null;
+            branchReferral_.context_ = null;
         branchReferral_.currentActivityReference_ = null;
         }
 
