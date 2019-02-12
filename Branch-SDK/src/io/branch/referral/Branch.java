@@ -774,7 +774,45 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Branch initInstance(@NonNull Context context) {
         return new Branch(context.getApplicationContext());
     }
-    
+
+    // Package Private
+    // For Unit Testing, we need to reset the Branch state
+    static void shutDown() {
+        ServerRequestQueue.shutDown();
+
+        // BranchStrongMatchHelper.shutDown();
+        // BranchViewHandler.shutDown();
+        // DeepLinkRoutingValidator.shutDown();
+        // DeviceInfo.shutDown();
+        // InstallListener.shutDown();
+        // InstantAppUtil.shutDown();
+        // IntegrationValidator.shutDown();
+        // PrefHelper.shutDown();
+        // ShareLinkManager.shutDown();
+        // UniversalResourceAnalyser.shutDown();
+
+        // Release these contexts immediately.
+        if (branchReferral_ != null) {
+            branchReferral_.context_ = null;
+            branchReferral_.currentActivityReference_ = null;
+        }
+
+        // Reset all of the statics.
+        branchReferral_ = null;
+        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
+        bypassCurrentActivityIntentState_ = false;
+        disableInstantDeepLinking = false;
+        isActivityLifeCycleCallbackRegistered_ = false;
+        isAutoSessionMode_ = false;
+
+        isLogging_ = null;
+        isForcedSession_ = false;
+        isSimulatingInstalls_ = false;
+
+        checkInstallReferrer_ = true;
+    }
+
+
     /**
      * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has
      * been initialised, to false - forcing re-initialisation.</p>

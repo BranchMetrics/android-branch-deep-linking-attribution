@@ -49,6 +49,13 @@ class ServerRequestQueue {
         }
         return SharedInstance;
     }
+
+    // Package Private
+    static void shutDown() {
+        synchronized (reqQueueLockObject) {
+            SharedInstance = null;
+        }
+    }
     
     /**
      * <p>The main constructor of the ServerRequestQueue class is private because the class uses the
