@@ -70,8 +70,8 @@ public class Defines {
         AppLinks("app_links"),
         AppIdentifier("app_identifier"),
         LinkIdentifier("link_identifier"),
-        GoogleAdvertisingID("google_advertising_id"),
-        AAID("aaid"),
+        GoogleAdvertisingID("google_advertising_id"),       // V1 Only, "Google Advertising Id"
+        AAID("aaid"),                                       // V2 Only, "Android Advertising Id"
         LATVal("lat_val"),
         LimitedAdTracking("limit_ad_tracking"),
         limitFacebookTracking("limit_facebook_tracking"),

@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -28,6 +29,24 @@ public class BranchTest {
     public void tearDown() {
         Branch.shutDown();
         mContext = null;
+    }
+
+    @Before
+    @After
+    public void clearSharedPrefs(){
+        // Clear the PrefHelper shared preferences
+        SharedPreferences sharedPreferences =
+                mContext.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.commit();
+
+        // Clear the ServerRequestQueue shared preferences
+        sharedPreferences =
+                mContext.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+        editor.clear();
+        editor.commit();
     }
 
     @Test

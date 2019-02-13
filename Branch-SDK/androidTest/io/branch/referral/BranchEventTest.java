@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.support.test.runner.AndroidJUnit4;
+import android.util.Log;
 
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -19,7 +20,7 @@ import io.branch.referral.util.CurrencyType;
  */
 @RunWith(AndroidJUnit4.class)
 public class BranchEventTest extends BranchTest {
-
+    private static final String TAG = "Branch::EventTest";
     private static final String TEST_KEY = "key_live_testkey";
 
     @Test
@@ -59,6 +60,23 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
+    public void addAllEventExtras() {
+        BranchEvent event = new BranchEvent("CustomEvent");
+
+        event.setTransactionID("123");
+        event.setAffiliation("CustomAffiliation");
+        event.setCoupon("test coupon");
+        event.setCurrency(CurrencyType.BZD);
+        event.setDescription("Test Event");
+        event.setRevenue(123.456);
+        event.setSearchQuery("Love");
+        event.setShipping(0.001);
+        event.setTax(10);
+
+        event.addCustomDataProperty("test", "test value");
+    }
+
+    @Test
     public void testLogEvent() throws Throwable {
         Branch.getInstance(getTestContext(), TEST_KEY);
 
@@ -91,23 +109,6 @@ public class BranchEventTest extends BranchTest {
         Assert.assertEquals(BRANCH_STANDARD_EVENT.PURCHASE.getName(), jsonObject.optString("name"));
     }
 
-    @Test
-    public void addAllEventExtras() throws Throwable {
-        BranchEvent event = new BranchEvent("CustomEvent");
-
-        event.setTransactionID("123");
-        event.setAffiliation("CustomAffiliation");
-        event.setCoupon("test coupon");
-        event.setCurrency(CurrencyType.BZD);
-        event.setDescription("Test Event");
-        event.setRevenue(123.456);
-        event.setSearchQuery("Love");
-        event.setShipping(0.001);
-        event.setTax(10);
-
-        event.addCustomDataProperty("test", "test value");
-    }
-
     // Dig out the variable for isStandardEvent from the BranchEvent object.
     private boolean isStandardEvent(BranchEvent event) throws Throwable {
         // Use Reflection to find if it is considered a "Standard Event"
@@ -116,20 +117,20 @@ public class BranchEventTest extends BranchTest {
         return (boolean) f.get(event); //IllegalAccessException
     }
 
-    // Mark if the queue has been initialized or not
-    private boolean queueInitialized = false;
-
     // This is an attempt to initialize the queue by adding an event and waiting for it to appear.
     // Once it appears, we remove it.
     // Note that adding an event to the queue the first time generates an install event as a side effect.
-    private void initQueue(Context context) throws Throwable {
+    void initQueue(Context context) throws Throwable {
         final String EVENT_NAME = "XXXyyyXXX";
         Branch.getInstance(getTestContext(), TEST_KEY);
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
 
+        // Queue should be empty when we initialize
+        Assert.assertEquals(0, queue.getSize());
+
         // Create a test event and add it to the queue
         BranchEvent testEvent = new BranchEvent(EVENT_NAME);
-        Assert.assertTrue(addEventToQueueAndWait(context, testEvent));
+        Assert.assertNotNull(addEventToQueueAndWait(context, testEvent));
 
         // Remove the event from the queue.  It should be the last one.
         if (queue.getSize() > 0) {
@@ -137,39 +138,38 @@ public class BranchEventTest extends BranchTest {
             queue.removeAt(index);
         }
 
-        // We expect that the install event is still on the queue
+        // We expect that the install event is the only event still on the queue
+        if (queue.getSize() > 1) {
+            for (int i = 0; i < queue.getSize(); i++) {
+                ServerRequest request = queue.peekAt(i);
+                Log.d(TAG, "Request " + i + ": " + request.getGetParams().toString());
+            }
+        }
         Assert.assertEquals(1, queue.getSize());
+    }
 
-        queueInitialized = true;
+    ServerRequest addEventToQueueAndWait(Context context, BranchEvent event) throws Throwable {
+        event.logEvent(context);
+        return findEventOnQueue(context, "name", event.getEventName());
     }
 
     // Obtain the ServerRequest that is on the queue that matches the BranchEvent to be logged.
-    private ServerRequest logEvent(Context context, BranchEvent event) throws Throwable {
+    ServerRequest logEvent(Context context, BranchEvent event) throws Throwable {
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
         int queueSizeIn = queue.getSize();
 
-        Assert.assertTrue(addEventToQueueAndWait(context, event));
-
-        int queueSizeOut = queue.getSize();
-
-        Assert.assertEquals(queueSizeOut, (queueSizeIn + 1));
-
-        ServerRequest queuedEvent = queue.peekAt(queueSizeOut - 1);
+        ServerRequest queuedEvent = addEventToQueueAndWait(context, event);
         Assert.assertNotNull(queuedEvent);
 
-        // Black Magic here.   In order to really find out what is going to be in this request,
-        // we need to pretend like we are updating it right before sending it out.  We obviously
-        // don't *actually* want to send this, we just want to verify that parameters are fully set.
-        queuedEvent.doFinalUpdateOnBackgroundThread();
+        int queueSizeOut = queue.getSize();
+        Assert.assertEquals(queueSizeOut, (queueSizeIn + 1));
 
-        return queuedEvent;
+        return doFinalUpdate(queuedEvent);
     }
 
-    private boolean addEventToQueueAndWait(Context context, BranchEvent event) throws Throwable {
+    ServerRequest findEventOnQueue(Context context, String key, String eventName) throws Throwable {
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
-        event.logEvent(context);
 
-        boolean found = false;
         int wait_remaining = 2000;
         final int interval = 50;
 
@@ -178,21 +178,51 @@ public class BranchEventTest extends BranchTest {
             if (queue.getSize() > 0) {
                 int index = queue.getSize() - 1;
 
-                ServerRequest test = queue.peekAt(index);
-                JSONObject jsonObject = test.getGetParams();
+                ServerRequest request = queue.peekAt(index);
+                JSONObject jsonObject = request.getGetParams();
 
-                String eventName = jsonObject.optString("name");
-                if (eventName.equals(event.getEventName())) {
+                String name = jsonObject.optString(key);
+                if (name.equals(eventName)) {
                     // Found it.
-                    found = true;
-                    break;
+                    return request;
                 }
             }
             wait_remaining -= interval;
         }
 
-        return found;
+        return null;
     }
 
+    ServerRequest getLastEventOnQueue(Context context, int minimumQueueSize) {
+        ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
+
+        int size = queue.getSize();
+        if (size >= minimumQueueSize) {
+            return queue.peekAt(size - 1);
+        }
+
+        return null;
+    }
+
+    // Black Magic here.   In order to really find out what is going to be in this request,
+    // we need to pretend like we are updating it right before sending it out.  We obviously
+    // don't *actually* want to send this, we just want to verify that parameters are fully set.
+    ServerRequest doFinalUpdate(ServerRequest request) {
+        request.doFinalUpdateOnBackgroundThread();
+        return request;
+    }
+
+    void DebugLogQueue(Context context) {
+        ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
+
+        for (int i = 0; i < queue.getSize(); i++) {
+            ServerRequest request = queue.peekAt(i);
+            doFinalUpdate(request);
+
+            JSONObject jsonObject = request.getGetParams();
+            Log.d(TAG, "QUEUE " + i + ": " + jsonObject.toString());
+        }
+
+    }
 }
 
