@@ -779,6 +779,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
         ServerRequestQueue.shutDown();
+        PrefHelper.shutDown();
 
         // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
@@ -787,7 +788,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // InstallListener.shutDown();
         // InstantAppUtil.shutDown();
         // IntegrationValidator.shutDown();
-        // PrefHelper.shutDown();
         // ShareLinkManager.shutDown();
         // UniversalResourceAnalyser.shutDown();
 

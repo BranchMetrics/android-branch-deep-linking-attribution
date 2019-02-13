@@ -176,6 +176,20 @@ public class PrefHelper {
         }
         return prefHelper_;
     }
+
+    // Package Private
+    static void shutDown() {
+        if (prefHelper_ != null) {
+            prefHelper_.context_ = null;
+            prefHelper_.prefsEditor_ = null;
+        }
+
+        // Reset all of the statics.
+        BNC_Dev_Debug = false;
+        Branch_Key = null;
+        savedAnalyticsData_ = null;
+        prefHelper_ = null;
+    }
     
     /**
      * <p>Returns the base URL to use for all calls to the Branch API as a {@link String}.</p>
