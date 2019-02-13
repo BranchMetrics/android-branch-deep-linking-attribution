@@ -74,8 +74,8 @@ class ServerRequestQueue {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                JSONArray jsonArr = new JSONArray();
                 synchronized (reqQueueLockObject) {
-                    JSONArray jsonArr = new JSONArray();
                     for (ServerRequest aQueue : queue) {
                         if (aQueue.isPersistable()) {
                             JSONObject json = aQueue.toJSON();
@@ -84,20 +84,13 @@ class ServerRequestQueue {
                             }
                         }
                     }
-                    boolean succeeded = false;
-                    try {
-                        editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                        succeeded = true;
-                    } catch (Exception ex) {
-                        PrefHelper.Debug("Persisting Queue: ", "Failed to persit queue " + ex.getMessage());
-                    } finally {
-                        if (!succeeded) {
-                            try {
-                                editor.putString(PREF_KEY, jsonArr.toString()).commit();
-                            } catch (Exception ignored) {
-                            }
-                        }
-                    }
+                }
+
+                try {
+                    editor.putString(PREF_KEY, jsonArr.toString()).commit();
+                } catch (Exception ex) {
+                    String msg = ex.getMessage();
+                    PrefHelper.Debug("BranchSDK", "Failed to persit queue" + (msg == null ? "" : msg));
                 }
             }
         }).start();
