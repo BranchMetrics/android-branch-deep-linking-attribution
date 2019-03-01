@@ -31,10 +31,20 @@ public class BranchEvent {
     private final JSONObject customProperties;
     private final List<BranchUniversalObject> buoList;
 
+    /**
+     * Constructor.
+     * @param branchStandardEvent Branch Standard Event
+     */
     public BranchEvent(BRANCH_STANDARD_EVENT branchStandardEvent) {
         this(branchStandardEvent.getName());
     }
 
+    /**
+     * Constructor.
+     * This constructor can be used for free-form Events or Branch Standard Events.
+     * Event names that match Standard Events will be treated as Standard Events.
+     * @param eventName Event Name.
+     */
     public BranchEvent(String eventName) {
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
