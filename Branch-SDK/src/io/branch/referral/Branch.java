@@ -390,9 +390,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
     
     private boolean isGAParamsFetchInProgress_ = false;
-    
-    String sessionReferredLink_; // Link which opened this application session if opened by a link click.
-    
+
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
     
     private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
@@ -1399,7 +1397,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     void closeSessionInternal() {
         executeClose();
-        sessionReferredLink_ = null;
+        resetSessionReferredLink();
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
     
@@ -1526,9 +1524,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
                     String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
-                    sessionReferredLink_ = strippedUrl;
-                    prefHelper_.setExternalIntentUri(strippedUrl);
-                    
+                    setSessionReferredLink(strippedUrl);
+
                     if (strippedUrl != null && strippedUrl.equals(data.toString())) {
                         if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                             Bundle bundle = activity.getIntent().getExtras();
@@ -1555,8 +1552,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     if (!isIntentParamsAlreadyConsumed(activity)) {
-                        String pushIdentifier = activity.getIntent().getExtras().getString(Defines.Jsonkey.AndroidPushNotificationKey.getKey()); // This seems producing unmarshalling errors in some corner cases
-                        if (pushIdentifier != null && pushIdentifier.length() > 0) {
+                        Object object = activity.getIntent().getExtras().get(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+                        String pushIdentifier = null;
+
+                        if (object instanceof String) {
+                            pushIdentifier = (String) object;
+                        } else if (object instanceof Uri) {
+                            Uri uri = (Uri) object;
+                            pushIdentifier = (String) uri.toString();
+                        }
+
+                        if (!TextUtils.isEmpty(pushIdentifier)) {
                             prefHelper_.setPushIdentifier(pushIdentifier);
                             Intent thisIntent = activity.getIntent();
                             thisIntent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
@@ -1625,6 +1631,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean isActivityLaunchedFromHistory(Activity activity) {
         return activity != null && activity.getIntent() != null && (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
+    }
+
+    /**
+     * Package Private.
+     * @return the link which opened this application session if opened by a link click.
+     */
+    String getSessionReferredLink() {
+        String link = prefHelper_.getExternalIntentUri();
+        return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
+    }
+
+    private void setSessionReferredLink(String link) {
+        prefHelper_.setExternalIntentUri(link);
+    }
+
+    private void resetSessionReferredLink() {
+        setSessionReferredLink(null);
     }
     
     @Override
@@ -2382,7 +2405,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Log.i(TAG, "Branch Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
         
-        if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE) || !enableFacebookAppLinkCheck_) {
+        if (getSessionReferredLink() != null || !enableFacebookAppLinkCheck_) {
             registerAppInit(callback, null);
         } else {
             // Check if opened by facebook with deferred install data
@@ -2601,7 +2624,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // If configured on dashboard, trigger content discovery runnable
             if (initState_ == SESSION_STATE.INITIALISED) {
                 try {
-                    ContentDiscoverer.getInstance().discoverContent(activity, sessionReferredLink_);
+                    ContentDiscoverer.getInstance().discoverContent(activity, getSessionReferredLink());
                 } catch (Exception ignore) {
                 }
             }

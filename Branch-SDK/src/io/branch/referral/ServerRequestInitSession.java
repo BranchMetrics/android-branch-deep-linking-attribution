@@ -146,7 +146,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
             if (branch.currentActivityReference_ != null) {
                 try {
-                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.sessionReferredLink_);
+                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.getSessionReferredLink());
                 } catch (Exception ignore) {
                 }
             }
