@@ -32,27 +32,33 @@ public class BranchEvent {
     private final List<BranchUniversalObject> buoList;
 
     public BranchEvent(BRANCH_STANDARD_EVENT branchStandardEvent) {
-        this(branchStandardEvent.getName(), true);
+        this(branchStandardEvent.getName());
     }
 
     public BranchEvent(String eventName) {
-        this(eventName, false);
-    }
-
-    private BranchEvent(String eventName, boolean isStandardEvent) {
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
         this.eventName = eventName;
 
+        boolean standardEvent = false;
         for (BRANCH_STANDARD_EVENT event : BRANCH_STANDARD_EVENT.values()) {
             if (eventName.equals(event.getName())) {
-                isStandardEvent = true;
+                standardEvent = true;
                 break;
             }
         }
 
-        this.isStandardEvent = isStandardEvent;
+        this.isStandardEvent = standardEvent;
         buoList = new ArrayList<>();
+    }
+
+    /**
+     * Set the Ad Type associated with the event.
+     * @param adType {@link AdType} Ad Type value
+     * @return this object for chaining builder methods
+     */
+    public BranchEvent setAdType(AdType adType) {
+        return addStandardProperty(Defines.Jsonkey.AdType.getKey(), adType.getName());
     }
 
     /**
