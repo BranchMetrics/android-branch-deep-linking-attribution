@@ -1306,8 +1306,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initUserSessionInternal(callback, activity, isReferrable);
         return true;
     }
-    
-    
+
+    public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {
+        getFinalIntent(activity, true);
+        return  initSession(callback);
+    }
+
+    public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
+        getFinalIntent(activity, true);
+        return  initSession(callback);
+    }
+
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
         BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
         initUserSessionInternal(branchUniversalReferralInitWrapper, activity, isReferrable);
@@ -2697,7 +2706,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         
     }
-    
+
+    private void getFinalIntent(Activity activity, boolean forceRestart) {
+        // Need to check here again for session restart request in case the intent is created while the activity is already running
+        if (forceRestart || checkIntentForSessionRestart(activity.getIntent())) {
+            initState_ = SESSION_STATE.UNINITIALISED;
+            startSession(activity);
+        }
+        currentActivityReference_ = new WeakReference<>(activity);
+
+        // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
+        // activity also to make sure we do not override the intent data
+        if (handleDelayedNewIntents_ && !bypassCurrentActivityIntentState_) {
+            intentState_ = INTENT_STATE.READY;
+            // Grab the intent only for first activity unless this activity is intent to  force new session
+            boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
+            onIntentReady(activity, grabIntentParams);
+        }
+    }
+
     private void startSession(Activity activity) {
         Uri intentData = null;
         if (activity.getIntent() != null) {
