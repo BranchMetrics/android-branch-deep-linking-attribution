@@ -2660,12 +2660,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isRestartSessionRequested = false;
         if (intent != null) {
             try {
-                isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-            } catch (Throwable ignore) {
-            }
-            if (isRestartSessionRequested) {
-                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-            }
+                // Force new session parameters
+                if (intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false)) {
+                    isRestartSessionRequested = true;
+                    intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+                // Also check if there is a new, unconsumed push notification intent which would indicate it's coming
+                // from foreground
+                } else if (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
+                           !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
+                    isRestartSessionRequested = true;
+                }
+            } catch (Throwable ignore) { }
         }
         return isRestartSessionRequested;
     }
