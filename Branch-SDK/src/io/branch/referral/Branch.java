@@ -1308,12 +1308,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {
-        getFinalIntent(activity, true);
+        handleActivityIntent(activity, true);
         return  initSession(callback);
     }
 
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        getFinalIntent(activity, true);
+        handleActivityIntent(activity, true);
         return  initSession(callback);
     }
 
@@ -2658,21 +2658,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         
         @Override
         public void onActivityResumed(Activity activity) {
-            // Need to check here again for session restart request in case the intent is created while the activity is already running
-            if (checkIntentForSessionRestart(activity.getIntent())) {
-                initState_ = SESSION_STATE.UNINITIALISED;
-                startSession(activity);
-            }
-            currentActivityReference_ = new WeakReference<>(activity);
-
-            // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
-            // activity also to make sure we do not override the intent data
-            if (handleDelayedNewIntents_ && !bypassCurrentActivityIntentState_) {
-                intentState_ = INTENT_STATE.READY;
-                // Grab the intent only for first activity unless this activity is intent to  force new session
-                boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
-                onIntentReady(activity, grabIntentParams);
-            }
+            handleActivityIntent(activity, false);
         }
         
         @Override
@@ -2707,7 +2693,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         
     }
 
-    private void getFinalIntent(Activity activity, boolean forceRestart) {
+    private void handleActivityIntent(Activity activity, boolean forceRestart) {
         // Need to check here again for session restart request in case the intent is created while the activity is already running
         if (forceRestart || checkIntentForSessionRestart(activity.getIntent())) {
             initState_ = SESSION_STATE.UNINITIALISED;
