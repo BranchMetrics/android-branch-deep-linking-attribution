@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 
 import java.lang.reflect.Field;
 
+import io.branch.referral.util.AdType;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
@@ -60,10 +61,13 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void addAllEventExtras() {
+    public void testAddAllEventExtras() {
         BranchEvent event = new BranchEvent("CustomEvent");
 
         event.setTransactionID("123");
+        for (AdType adType : AdType.values()) {
+            event.setAdType(adType);
+        }
         event.setAffiliation("CustomAffiliation");
         event.setCoupon("test coupon");
         event.setCurrency(CurrencyType.BZD);
@@ -107,6 +111,24 @@ public class BranchEventTest extends BranchTest {
         JSONObject jsonObject = serverRequest.getGetParams();
 
         Assert.assertEquals(BRANCH_STANDARD_EVENT.PURCHASE.getName(), jsonObject.optString("name"));
+    }
+
+    @Test
+    public void testAdType() throws Throwable {
+        Branch.getInstance(getTestContext(), TEST_KEY);
+        initQueue(getTestContext());
+
+        BranchEvent branchEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_AD);
+        branchEvent.setAdType(AdType.BANNER);
+
+        ServerRequest serverRequest = logEvent(getTestContext(), branchEvent);
+        JSONObject jsonObject = serverRequest.getGetParams();
+
+        // Verify that the ad_type was set correctly.
+        JSONObject eventData = jsonObject.getJSONObject(Defines.Jsonkey.EventData.getKey());
+        String adType = eventData.getString(Defines.Jsonkey.AdType.getKey());
+
+        Assert.assertEquals(adType, AdType.BANNER.getName());
     }
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.

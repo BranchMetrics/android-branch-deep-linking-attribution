@@ -155,6 +155,7 @@ public class Defines {
         Affiliation("affiliation"),
         Description("description"),
         SearchQuery("search_query"),
+        AdType("ad_type"),
         
         Name("name"),
         CustomData("custom_data"),
