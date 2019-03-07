@@ -342,6 +342,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         PENDING,
         READY
     }
+
+    // Save the last callback
+    private WeakReference<BranchReferralInitListener> deferredInitListener_;
     
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     private boolean handleDelayedNewIntents_ = false;
@@ -1316,6 +1319,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
         if (activity != null) {
             currentActivityReference_ = new WeakReference<>(activity);
+        }
+        if (callback != null) {
+            deferredInitListener_ = new WeakReference<BranchReferralInitListener>(callback);
         }
         //If already initialised
         if ((hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED)) {
@@ -2703,8 +2709,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (activity.getIntent() != null) {
             intentData = activity.getIntent().getData();
         }
+        BranchReferralInitListener deferredCallback = null;
+        if (deferredInitListener_ != null) {
+            deferredCallback = deferredInitListener_.get();
+        }
+
         isInitReportedThroughCallBack = false;
-        initSessionWithData(intentData, activity); // indicate  starting of session.
+        initSession(deferredCallback, intentData, activity); // indicate  starting of session.
     }
     
     /*
