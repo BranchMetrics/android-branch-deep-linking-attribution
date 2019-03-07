@@ -399,22 +399,17 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-        branch.initSession(new Branch.BranchUniversalReferralInitListener() {
+        branch.initSession(new Branch.BranchReferralInitListener() {
             @Override
-            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+            public void onInitFinished(JSONObject params, BranchError error) {
                 if (error != null) {
                     Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
                 } else {
                     Log.i("BranchTestBed", "branch init complete!");
-                    if (branchUniversalObject != null) {
-                        Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
-                        Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-                    }
-
-                    if (linkProperties != null) {
-                        Log.i("BranchTestBed", "Channel " + linkProperties.getChannel());
-                        Log.i("BranchTestBed", "control params " + linkProperties.getControlParams());
+                    try {
+                        Log.i("BranchTestBed", params.toString(2));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
 
@@ -460,7 +455,6 @@ public class MainActivity extends Activity {
         Toast.makeText(this, "notiiiiiiii", Toast.LENGTH_SHORT).show();
         Intent resultIntent = new Intent(this, MainActivity.class);
         resultIntent.putExtra("branch", "https://bnctestbed.test-app.link/?ko=yo&v=" + Math.random());
-        resultIntent.putExtra("branch_force_new_session", true);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "1001")
