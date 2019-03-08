@@ -1,22 +1,15 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import org.json.JSONException;
@@ -399,17 +392,22 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         branch = Branch.getInstance();
-        branch.initSession(new Branch.BranchReferralInitListener() {
+        branch.initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
-            public void onInitFinished(JSONObject params, BranchError error) {
+            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
                     Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
                 } else {
                     Log.i("BranchTestBed", "branch init complete!");
-                    try {
-                        Log.i("BranchTestBed", params.toString(2));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    if (branchUniversalObject != null) {
+                        Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
+                        Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                    }
+
+                    if (linkProperties != null) {
+                        Log.i("BranchTestBed", "Channel " + linkProperties.getChannel());
+                        Log.i("BranchTestBed", "control params " + linkProperties.getControlParams());
                     }
                 }
 
@@ -445,44 +443,6 @@ public class MainActivity extends Activity {
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
             startActivity(i);
-        }
-    }
-
-    public void fireNotification(View view) {
-
-        createNotificationChannel();
-
-        Toast.makeText(this, "notiiiiiiii", Toast.LENGTH_SHORT).show();
-        Intent resultIntent = new Intent(this, MainActivity.class);
-        resultIntent.putExtra("branch", "https://bnctestbed.test-app.link/?ko=yo&v=" + Math.random());
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "1001")
-            .setSmallIcon(R.drawable.ic_launcher)
-            .setContentTitle("My notification")
-            .setContentText("Hello World!")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(resultPendingIntent)
-            .setAutoCancel(true);
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-
-        notificationManager.notify(10, builder.build());
-    }
-
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "channel_name";
-            String description = "channel_desc";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("1001", name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
         }
     }
 }
