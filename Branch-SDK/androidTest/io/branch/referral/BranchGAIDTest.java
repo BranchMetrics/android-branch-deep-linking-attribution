@@ -23,7 +23,7 @@ import io.branch.referral.util.CommerceEvent;
  [-] ServerRequestLogout.java                   testLogout()
  [-] ServerRequestPing.java                     testPing()
  [X] ServerRequestRActionCompleted.java         testCommerceEvent()
- [-] ServerRequestRedeemRewards.java            testRedeemRewards()
+ [X] ServerRequestRedeemRewards.java            testRedeemRewards()
  [-] ServerRequestRegisterClose.java            testClose()
  [ ] ServerRequestRegisterInstall.java
  [ ] ServerRequestRegisterOpen.java
@@ -103,8 +103,6 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testRedeemAwards_hasGAIDv1() throws Throwable {
-        // TODO: redeemRewards() does not have GAID
-
         Branch.getInstance(getTestContext(), TEST_KEY);
         initQueue(getTestContext());
 
@@ -118,14 +116,12 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertFalse(hasV1GAID(serverRequest));
+        Assert.assertTrue(hasV1GAID(serverRequest));
         Assert.assertFalse(hasV2GAID(serverRequest));
     }
 
     @Test
     public void testCreditHistory_hasGAIDv1() throws Throwable {
-        // TODO: getCreditHistory() does not have GAID
-
         Branch.getInstance(getTestContext(), TEST_KEY);
         initQueue(getTestContext());
 
@@ -135,14 +131,12 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertFalse(hasV1GAID(serverRequest));
+        Assert.assertTrue(hasV1GAID(serverRequest));
         Assert.assertFalse(hasV2GAID(serverRequest));
     }
 
     @Test
     public void testIdentity_hasGAIDv1() throws Throwable {
-        // TODO: setIdentity() does not have GAID
-
         Branch.getInstance(getTestContext(), TEST_KEY);
         initQueue(getTestContext());
 
@@ -152,7 +146,7 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertFalse(hasV1GAID(serverRequest));
+        Assert.assertTrue(hasV1GAID(serverRequest));
         Assert.assertFalse(hasV2GAID(serverRequest));
     }
 

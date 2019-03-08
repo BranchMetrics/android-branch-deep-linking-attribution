@@ -86,11 +86,6 @@ class ServerRequestActionCompleted extends ServerRequest {
     }
 
     @Override
-    public boolean isGAdsParamsRequired() {
-        return true;
-    }
-
-    @Override
     public void handleFailure(int statusCode, String causeMsg) {
         //No implementation on purpose
     }

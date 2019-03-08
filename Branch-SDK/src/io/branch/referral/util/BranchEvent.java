@@ -289,11 +289,6 @@ public class BranchEvent {
         }
 
         @Override
-        public boolean isGAdsParamsRequired() {
-            return true;
-        }
-    
-        @Override
         protected boolean shouldUpdateLimitFacebookTracking() {
             return true;
         }
