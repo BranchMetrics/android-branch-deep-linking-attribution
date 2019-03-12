@@ -65,11 +65,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     public abstract boolean hasCallBack();
 
     @Override
-    public boolean isGAdsParamsRequired() {
-        return true; //Session start requests need GAds params
-    }
-
-    @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
     }
