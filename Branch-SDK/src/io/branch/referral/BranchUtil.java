@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONArray;
@@ -26,32 +27,97 @@ import java.util.jar.JarFile;
  */
 public class BranchUtil {
 
-    static boolean isCustomDebugEnabled_ = false; /* For setting debug mode using Branch#setDebug api */
+    /** For setting debug mode using {@link Branch#setDebug()} api */
+    private static boolean isCustomDebugEnabled_ = false;
+
+    /** For setting test mode using {@link Branch#enableTestMode()} */
+    private static boolean isTestModeEnabled_ = false;
+
+    // Only need to check once for Manifest Flags
+    private static Boolean isManifestTestModeEnabled = null;
 
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
+     * This will also set the value of {@link BranchUtil#isTestModeEnabled()}
      *
      * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
-    public static boolean isTestModeEnabled(Context context) {
-        if (isCustomDebugEnabled_) {
-            return true;
-        }
-        boolean isTestMode_ = false;
-        String testModeKey = "io.branch.sdk.TestMode";
-        try {
-            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
-                isTestMode_ = ai.metaData.getBoolean(testModeKey, false);
-            } else {
-                Resources resources = context.getResources();
-                isTestMode_ = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
+    static boolean checkTestMode(Context context) {
+        if (isManifestTestModeEnabled == null) {
+            String testModeKey = "io.branch.sdk.TestMode";
+            try {
+                final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+                if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
+                    isTestModeEnabled_ = ai.metaData.getBoolean(testModeKey, false);
+                } else {
+                    Resources resources = context.getResources();
+                    isTestModeEnabled_ = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
+                }
+            } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
             }
-        } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
+
+            isManifestTestModeEnabled = isTestModeEnabled_;
         }
 
-        return isTestMode_;
+        return isTestModeEnabled_;
+    }
+
+    public static String readBranchKey(Context context) {
+        String branchKey = null;
+        String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
+
+        try {
+            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null) {
+                branchKey = ai.metaData.getString(metaDataKey);
+                if (branchKey == null && isTestModeEnabled()) {
+                    // If test mode is enabled, but the test key cannot be found, fall back to the live key.
+                    branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
+                }
+            }
+        } catch (final Exception ignore) {
+        }
+
+        // If Branch key is not specified in the manifest check String resource
+        if (TextUtils.isEmpty(branchKey)) {
+            try {
+                Resources resources = context.getResources();
+                branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
+            } catch (Exception ignore) {
+            }
+        }
+
+        return branchKey;
+    }
+
+
+
+    /**
+     * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
+     * This value can be overriden via. {@link Branch#enableTestMode()}
+     *
+     * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
+     * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
+     */
+    public static boolean isTestModeEnabled() {
+        return isTestModeEnabled_;
+    }
+
+    static void setTestMode(boolean testMode) {
+        isTestModeEnabled_ = testMode;
+    }
+
+    /**
+     * Determine if Debug Mode is enabled.
+     * @return {@code true} if Debug is enabled, or if {@link BranchUtil#isTestModeEnabled()}
+     */
+    public static boolean isDebugEnabled() {
+        return isCustomDebugEnabled_ || isTestModeEnabled();
+    }
+
+    static void setDebugMode(boolean debugMode) {
+        isCustomDebugEnabled_ = debugMode;
     }
 
     /**

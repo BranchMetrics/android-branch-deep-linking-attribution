@@ -9,7 +9,8 @@
     <application>
         <activity android:name=".mock.MockActivity" />
 
-        <!-- The Branch Key for testing.  Do not use this key for production applications. -->
+        <!-- The Branch Key for testing.  Do not use these keys for production applications. -->
         <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_testing_only" />
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_testing_only" />
     </application>
 </manifest>

@@ -289,10 +289,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean enableFacebookAppLinkCheck_ = false;
     
-    static boolean isSimulatingInstalls_;
+    private static boolean isSimulatingInstalls_;
     
-    static Boolean isLogging_ = null;
-
     static boolean isForcedSession_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
@@ -465,26 +463,47 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * <p>
      * Enables the test mode for the SDK. This will use the Branch Test Keys.
-     * This will also enable debug logs and log the SDK Version Declaration Tag.
+     * This will also enable debug logs.
      * Note: This is same as setting "io.branch.sdk.TestMode" to "True" in Manifest file
      * </p>
      */
     public static void enableTestMode() {
-        Log.i(TAG, GOOGLE_VERSION_TAG);
-        BranchUtil.isCustomDebugEnabled_ = true;
+        BranchUtil.setTestMode(true);
+        enableDebugMode();
     }
 
     /**
      * <p>
      * Disables the test mode for the SDK.
+     * This will also disable debug logs.
      * </p>
      */
     public static void disableTestMode() {
-        BranchUtil.isCustomDebugEnabled_ = false;
+        BranchUtil.setTestMode(false);
+        disableDebugMode();
     }
-    
+
+    /**
+     * Enables debug mode for the SDK.
+     * @deprecated use {@link Branch#enableDebugMode()}
+     */
     public void setDebug() {
-        enableTestMode();
+        enableDebugMode();
+    }
+
+    /**
+     * Enables debug mode for the SDK and log the SDK Version Declaration Tag.
+     */
+    public static void enableDebugMode() {
+        BranchUtil.setDebugMode(true);
+        Log.i(TAG, GOOGLE_VERSION_TAG);
+    }
+
+    /**
+     * Disables debug mode for the SDK.
+     */
+    public static void disableDebugMode() {
+        BranchUtil.setDebugMode(false);
     }
 
     /**
@@ -591,13 +610,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Branch getBranchInstance(@NonNull Context context, boolean isLive, String branchKey) {
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
+
+            // Configure live or test mode
+            boolean testModeAvailable = BranchUtil.checkTestMode(context);
+            BranchUtil.setTestMode(isLive ? false : testModeAvailable);
             
             // If a Branch key is passed already use it. Else read the key
             if (TextUtils.isEmpty(branchKey)) {
-                branchKey = branchReferral_.prefHelper_.readBranchKey(isLive);
+                branchKey = BranchUtil.readBranchKey(context);
             }
             boolean isNewBranchKeySet;
-            if (branchKey == null || branchKey.equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+            if (TextUtils.isEmpty(branchKey)) {
                 // If Branch key is not available check for Fabric provided Branch key
                 String fabricBranchApiKey = null;
                 try {
@@ -670,7 +693,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getAutoInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-        boolean isLive = !BranchUtil.isTestModeEnabled(context);
+        boolean isLive = !BranchUtil.checkTestMode(context);
         getBranchInstance(context, isLive, null);
         return branchReferral_;
     }
@@ -692,7 +715,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
-        boolean isDebug = BranchUtil.isTestModeEnabled(context);
+        boolean isDebug = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isDebug, null);
         return branchReferral_;
     }
@@ -712,7 +735,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
-        boolean isLive = !BranchUtil.isTestModeEnabled(context);
+        boolean isLive = !BranchUtil.checkTestMode(context);
         getBranchInstance(context, isLive, branchKey);
         
         if (branchKey.startsWith("key_")) {
@@ -803,7 +826,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isActivityLifeCycleCallbackRegistered_ = false;
         isAutoSessionMode_ = false;
 
-        isLogging_ = null;
         isForcedSession_ = false;
         isSimulatingInstalls_ = false;
 
@@ -2508,10 +2530,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             processNextQueueItem();
         }
     }
-    
+
     private void performCookieBasedStrongMatch() {
         if (!trackingController.isTrackingDisabled()) {
-            DeviceInfo deviceInfo = DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableDeviceIDFetch_);
+            DeviceInfo deviceInfo = DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableDeviceIDFetch_);
             Activity currentActivity = null;
             if (currentActivityReference_ != null) {
                 currentActivity = currentActivityReference_.get();
@@ -2632,10 +2654,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (initState_ == SESSION_STATE.INITIALISED) {
                     // Handling case :  init session completed previously when app was in background.
                     initState_ = SESSION_STATE.UNINITIALISED;
-                }
-                // Check if debug mode is set in manifest. If so enable debug.
-                if (BranchUtil.isTestModeEnabled(context_)) {
-                    prefHelper_.setExternDebug();
                 }
                 startSession(activity);
             } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
@@ -3229,13 +3247,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void disableSimulateInstalls() {
         isSimulatingInstalls_ = false;
     }
-    
-    public static void enableLogging() {
-        isLogging_ = true;
+
+    static boolean isSimulatingInstalls() {
+        return isSimulatingInstalls_;
     }
-    
+
+    /**
+     * @deprecated use {@link Branch#enableDebugMode()}
+     */
+    public static void enableLogging() {
+        enableDebugMode();
+    }
+
+    /**
+     * @deprecated use {@link Branch#disableDebugMode()}
+     */
     public static void disableLogging() {
-        isLogging_ = false;
+        disableDebugMode();
     }
 
     public static void enableForcedSession() {

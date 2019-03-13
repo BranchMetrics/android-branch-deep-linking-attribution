@@ -68,14 +68,10 @@ class InstantAppUtil {
     @SuppressWarnings("ConstantConditions")
     static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
-            if (Branch.isLogging_ != null && Branch.isLogging_) {
-                Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
-            }
+            Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
             return false;
         } else if (!isInstantApp(activity)) {
-            if (Branch.isLogging_ != null && Branch.isLogging_) {
-                Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
-            }
+            Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
             return false;
         } else {
             Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")

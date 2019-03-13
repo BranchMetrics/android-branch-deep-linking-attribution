@@ -188,11 +188,11 @@ public abstract class ServerRequest {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
+                DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
             } catch (JSONException ignore) {
             }
         } else {
-            DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
+            DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
         }
     }
     
@@ -493,7 +493,7 @@ public abstract class ServerRequest {
         updateDeviceInfo();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
-        if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
+        if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled()) {
             updateGAdsParams();
         }
     }

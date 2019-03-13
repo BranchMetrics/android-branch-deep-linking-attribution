@@ -12,7 +12,6 @@ import java.util.Iterator;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchUtil;
-import io.branch.referral.PrefHelper;
 
 /**
  * Created by sojanpr on 9/15/17.
@@ -48,7 +47,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
 
         // 2. Verify Branch Keys
         logValidationProgress("2. Checking Branch keys");
-        if (TextUtils.isEmpty(PrefHelper.getInstance(context).readBranchKey(!BranchUtil.isTestModeEnabled(context)))) {
+        if (TextUtils.isEmpty(BranchUtil.readBranchKey(context))) {
             logIntegrationError("Unable to read Branch keys from your application. Did you forget to add Branch keys in your application?.",
                     "https://docs.branch.io/pages/apps/android/#configure-app");
             return;
@@ -195,11 +194,11 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         if (integrationModel.deeplinkUriScheme != null) {
             for (Iterator<String> it = integrationModel.deeplinkUriScheme.keys(); it.hasNext(); ) {
                 String key = it.next();
-                if (uriHost.equals(key)) {
+                if (uriHost != null && uriHost.equals(key)) {
                     JSONArray hosts = integrationModel.deeplinkUriScheme.optJSONArray(key);
                     if (hosts != null && hosts.length() > 0) {
                         for (int i = 0; i < hosts.length(); ++i) {
-                            if (uriPath.equals(hosts.optString(i))) {
+                            if (uriPath != null && uriPath.equals(hosts.optString(i))) {
                                 foundMatchingUri = true;
                                 break;
                             }

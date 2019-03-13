@@ -77,7 +77,7 @@ class SystemObserver {
     String getUniqueID(boolean debug) {
         if (context_ != null) {
             String androidID = null;
-            if (!debug && !Branch.isSimulatingInstalls_) {
+            if (!debug && !Branch.isSimulatingInstalls()) {
                 androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
             }
             if (androidID == null) {
