@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -80,7 +79,7 @@ class BranchStrongMatchHelper {
         } else {
             try {
                 if (deviceInfo.getHardwareID() != null) {
-                    final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver);
+                    final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver, context);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
                             @Override
@@ -108,7 +107,7 @@ class BranchStrongMatchHelper {
                                         warmupMethod.invoke(mClient_, 0);
                                         Object customTabsSessionObj = newSessionMethod.invoke(mClient_, new Object[]{null});
                                         if (customTabsSessionObj != null) {
-                                            PrefHelper.Debug("BranchSDK", "Strong match request " + strongMatchUri);
+                                            PrefHelper.Debug("Strong match request " + strongMatchUri);
                                             mayLaunchUrlMethod.invoke(customTabsSessionObj, strongMatchUri, null, null);
                                             prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
                                             isStrongMatchUrlLaunched = true;
@@ -132,7 +131,7 @@ class BranchStrongMatchHelper {
                     }
                 } else {
                     updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
-                    Log.d("BranchSDK", "Cannot use cookie-based matching since device id is not available");
+                    PrefHelper.Debug("Cannot use cookie-based matching since device id is not available");
                 }
             } catch (Throwable ignore) {
                 updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
@@ -155,7 +154,7 @@ class BranchStrongMatchHelper {
         }
     }
 
-    private Uri buildStrongMatchUrl(String matchDomain, DeviceInfo deviceInfo, PrefHelper prefHelper, SystemObserver systemObserver) {
+    private Uri buildStrongMatchUrl(String matchDomain, DeviceInfo deviceInfo, PrefHelper prefHelper, SystemObserver systemObserver, Context context) {
         Uri strongMatchUri = null;
         if (!TextUtils.isEmpty(matchDomain)) {
             String uriString = "https://" + matchDomain + "/_strong_match?os=" + deviceInfo.getOsName();
@@ -164,7 +163,7 @@ class BranchStrongMatchHelper {
             String hardwareIDTypeVal = deviceInfo.isHardwareIDReal() ? Defines.Jsonkey.HardwareIDTypeVendor.getKey() : Defines.Jsonkey.HardwareIDTypeRandom.getKey();
             uriString += "&" + Defines.Jsonkey.HardwareIDType.getKey() + "=" + hardwareIDTypeVal;
             // Add GAID if available
-            if (systemObserver.GAIDString_ != null && !BranchUtil.isTestModeEnabled()) {
+            if (systemObserver.GAIDString_ != null && !BranchUtil.checkTestMode(context)) {
                 uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + systemObserver.GAIDString_;
             }
             // Add device finger print if available

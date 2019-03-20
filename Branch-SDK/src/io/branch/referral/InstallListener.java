@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
@@ -121,7 +120,7 @@ public class InstallListener extends BroadcastReceiver {
                                         onReferrerClientFinished(context_, rawReferrer, clickTimeStamp, installBeginTimeStamp);
                                     }
                                 } catch (RemoteException ex) {
-                                    PrefHelper.Debug("BranchSDK", ex.getMessage());
+                                    PrefHelper.Debug("onInstallReferrerSetupFinished() Exception: " + ex.getMessage());
                                     onReferrerClientError();
                                 }
                                 break;
@@ -150,7 +149,7 @@ public class InstallListener extends BroadcastReceiver {
                 });
                 isReferrerClientAvailable = true;
             } catch (Throwable ex) {
-                PrefHelper.Debug("BranchSDK", ex.getMessage());
+                PrefHelper.Debug("ReferrerClientWrapper Exception: " + ex.getMessage());
             }
             return isReferrerClientAvailable;
         }
@@ -203,7 +202,7 @@ public class InstallListener extends BroadcastReceiver {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
-                Log.w("BranchSDK", "Illegal characters in url encoded string");
+                PrefHelper.Debug("Illegal characters in url encoded string");
             }
         }
     }

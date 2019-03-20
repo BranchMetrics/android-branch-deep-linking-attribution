@@ -12,7 +12,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,7 +84,7 @@ class ShareLinkManager {
             if (callback_ != null) {
                 callback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
             } else {
-                Log.i("BranchSDK", "Unable create share options. Couldn't find applications on device to share the link.");
+                PrefHelper.Debug("Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
         return shareDlg_;
@@ -291,7 +290,7 @@ class ShareLinkManager {
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, error);
                         } else {
-                            Log.i("BranchSDK", "Unable to share link " + error.getMessage());
+                            PrefHelper.Debug("Unable to share link " + error.getMessage());
                         }
                         if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY
                                 || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
@@ -310,7 +309,7 @@ class ShareLinkManager {
         if (callback_ != null) {
             callback_.onLinkShareResponse(url, channelName, null);
         } else {
-            Log.i("BranchSDK", "Shared link with " + channelName);
+            PrefHelper.Debug("Shared link with " + channelName);
         }
         if (selectedResolveInfo instanceof CopyLinkItem) {
             addLinkToClipBoard(url, builder_.getShareMsg());

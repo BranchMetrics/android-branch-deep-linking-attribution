@@ -1147,14 +1147,19 @@ public class PrefHelper {
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
-     * @param tag     A {@link String} value specifying the logging tag to use for the message.
      * @param message A {@link String} value containing the debug message to record.
      */
-    public static void Debug(String tag, String message) {
+    public static void Debug(String message) {
         if (BranchUtil.isDebugEnabled()) {
-            if(message != null) {
-                Log.i(tag,  message);
+            if (!TextUtils.isEmpty(message)) {
+                Log.i("BranchSDK", message);
             }
+        }
+    }
+
+    public static void LogAlways(String message) {
+        if (!TextUtils.isEmpty(message)) {
+            Log.i("BranchSDK", message);
         }
     }
 }

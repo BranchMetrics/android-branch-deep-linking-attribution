@@ -36,6 +36,13 @@ public class BranchUtil {
     // Only need to check once for Manifest Flags
     private static Boolean isManifestTestModeEnabled = null;
 
+    // Package Private
+    static void shutDown() {
+        isCustomDebugEnabled_ = false;
+        isTestModeEnabled_ = false;
+        isManifestTestModeEnabled = null;
+    }
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
      * This will also set the value of {@link BranchUtil#isTestModeEnabled()}
@@ -44,7 +51,8 @@ public class BranchUtil {
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
     static boolean checkTestMode(Context context) {
-        if (isManifestTestModeEnabled == null) {
+        // Test Mode can be enabled independently of checking the manifest.
+        if (!isTestModeEnabled_ && isManifestTestModeEnabled == null) {
             String testModeKey = "io.branch.sdk.TestMode";
             try {
                 final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
