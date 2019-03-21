@@ -3,14 +3,12 @@ package io.branch.referral.validators;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -18,6 +16,7 @@ import java.lang.ref.WeakReference;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Defines;
+import io.branch.referral.PrefHelper;
 
 public class DeepLinkRoutingValidator {
     private static final String VALIDATE_SDK_LINK_PARAM_KEY = "bnc_validate";
@@ -116,7 +115,7 @@ public class DeepLinkRoutingValidator {
             link = blob.getString("~" + Defines.Jsonkey.ReferringLink.getKey());
             link = link.split("\\?")[0];
         } catch (Exception e) {
-            Log.e("BRANCH SDK", "Failed to get referring link");
+            PrefHelper.Debug("Failed to get referring link");
         }
         link += "?" + VALIDATE_LINK_PARAM_KEY + "=true";
         if (!TextUtils.isEmpty(result)) {

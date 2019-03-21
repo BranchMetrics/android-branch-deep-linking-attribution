@@ -90,7 +90,7 @@ class ServerRequestQueue {
                     editor.putString(PREF_KEY, jsonArr.toString()).commit();
                 } catch (Exception ex) {
                     String msg = ex.getMessage();
-                    PrefHelper.Debug("BranchSDK", "Failed to persit queue" + (msg == null ? "" : msg));
+                    PrefHelper.Debug("Failed to persit queue" + (msg == null ? "" : msg));
                 }
             }
         }).start();

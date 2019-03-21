@@ -3,7 +3,6 @@ package io.branch.referral.network;
 import android.content.Context;
 import android.net.TrafficStats;
 import android.os.NetworkOnMainThreadException;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +31,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private static final int DEFAULT_TIMEOUT = 3000;
     private static final int THREAD_TAG_POST= 102;
 
-    PrefHelper prefHelper;
+    private PrefHelper prefHelper;
 
     BranchRemoteInterfaceUrlConnection(Context context) {
         prefHelper = PrefHelper.getInstance(context);
@@ -83,12 +82,12 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
-                    PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + url);
+                    PrefHelper.Debug("A resource conflict occurred with this request " + url);
                     return new BranchResponse(null, responseCode);
                 }
             }
         } catch (SocketException ex) {
-            PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+            PrefHelper.Debug("Http connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
 
         } catch (SocketTimeoutException ex) {
@@ -105,7 +104,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         } catch (IOException ex) {
-            PrefHelper.Debug(getClass().getSimpleName(), "Branch connect exception: " + ex.getMessage());
+            PrefHelper.Debug("Branch connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
         } finally {
             if (connection != null) {
@@ -168,7 +167,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     return new BranchResponse(getResponseString(inputStream), responseCode);
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
-                    PrefHelper.Debug("BranchSDK", "A resource conflict occurred with this request " + url);
+                    PrefHelper.Debug("A resource conflict occurred with this request " + url);
                     return new BranchResponse(null, responseCode);
                 } finally {
                     try {
@@ -196,13 +195,13 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         } catch (IOException ex) {
-            PrefHelper.Debug(getClass().getSimpleName(), "Http connect exception: " + ex.getMessage());
+            PrefHelper.Debug("Http connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
         } catch (Exception ex) {
-            PrefHelper.Debug(getClass().getSimpleName(), "Exception: " + ex.getMessage());
+            PrefHelper.Debug("Exception: " + ex.getMessage());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
                 if (ex instanceof NetworkOnMainThreadException)
-                    Log.i("BranchSDK", "Branch Error: Don't call our synchronous methods on the main thread!!!");
+                    PrefHelper.Debug("Branch Error: Don't call our synchronous methods on the main thread!!!");
             }
             return new BranchResponse(null, 500);
         } finally {

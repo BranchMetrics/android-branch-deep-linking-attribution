@@ -96,7 +96,7 @@ class ServerRequestRegisterView extends ServerRequest {
         if (DeviceInfo.getInstance() != null) {
             uniqueId = DeviceInfo.getInstance().getHardwareID();
         } else {
-            uniqueId = sysObserver.getUniqueID(prefHelper_.getExternDebug());
+            uniqueId = sysObserver.getUniqueID(BranchUtil.isDebugEnabled());
         }
         if (!uniqueId.equals(SystemObserver.BLANK) && sysObserver.hasRealHardwareId()) {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqueId);

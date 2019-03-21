@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,7 +50,7 @@ class ServerRequestActionCompleted extends ServerRequest {
         }
 
         if (action != null && action.equalsIgnoreCase("purchase")) {
-            Log.e("BranchSDK", "Warning: You are sending a purchase event with our non-dedicated purchase function. Please see function sendCommerceEvent");
+            PrefHelper.Debug("Warning: You are sending a purchase event with our non-dedicated purchase function. Please see function sendCommerceEvent");
         }
     }
 
@@ -93,7 +92,6 @@ class ServerRequestActionCompleted extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            Log.i("BranchSDK", "Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
             return true;
         }
         return false;
