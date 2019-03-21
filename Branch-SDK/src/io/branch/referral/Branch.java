@@ -772,6 +772,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Branch initInstance(@NonNull Context context) {
         return new Branch(context.getApplicationContext());
     }
+<<<<<<< HEAD
 
     // Package Private
     // For Unit Testing, we need to reset the Branch state
@@ -811,6 +812,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
 
+=======
+    
+>>>>>>> Revert "INTENG-4632 -- Fix ANR Exception"
     /**
      * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has
      * been initialised, to false - forcing re-initialisation.</p>
