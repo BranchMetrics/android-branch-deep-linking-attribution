@@ -231,14 +231,11 @@ You can check out a [full demo application](https://github.com/BranchMetrics/Bra
 
 **1. Initialize the Branch SDK**
 
-Head to your _core library project_, where your Application class is defined and drop in the snippet of code to the onCreate() method as follows. If you plan on deep linking from your Android Instant App to your full Android app after its installed, you'll need to add the line `enablePlayStoreReferrer`. This adds a delay to the initialization to wait for the Google Play Referrer, which can take up to a second.
+Head to your _core library project_, where your Application class is defined and drop in the snippet of code to the onCreate() method as follows.
 
 ```java
 public void onCreate() {
   super.onCreate();
-  // This is needed to deferred deep link from an Android Instant App to a full app
-  // It tells the Branch initialization to wait for the Google Play Referrer before proceeding.
-  Branch.enablePlayStoreReferrer(1000L);
 
   // Initialize the Branch SDK
   Branch.getAutoInstance(this);
@@ -487,15 +484,6 @@ Some example events you might want to track:
 "wrote_message"
 "finished_level_ten"
 ```
-
-### Matching Through Install Listener
-```java
-Branch.enablePlayStoreReferrer(long delay); //from your Application class before getAutoInstance.
-//test sending broadcasts via:
-adb shell am broadcast -a com.android.vending.INSTALL_REFERRER -n io.branch.branchandroiddemo/io.branch.referral.InstallListener --es "referrer" "link_click_id=123"
-```
-
-Enable to pass link_click_id from Google Play to Branch through your Install Listener. As broadcasts can arrive at different times, you can set the amount of time Branch should wait for the install listener broadcast before posting. Requires including io.branch.referral.InstallListener in your Manifest file. You can test sending broadcasts to your app using the above adb shell command.
 
 # Branch Universal Object
 
