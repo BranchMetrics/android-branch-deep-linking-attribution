@@ -4,9 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -33,11 +30,6 @@ public class PrefHelper {
     private static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
     private static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
 
-    /**
-     * {@link Boolean} value that enables/disables Branch developer external debug mode.
-     */
-    private static boolean BNC_Dev_Debug = false;
-    
     /**
      * A {@link String} value used where no string value is available.
      */
@@ -136,11 +128,6 @@ public class PrefHelper {
     private final JSONObject installMetadata;
     
     /**
-     * Reference of application {@link Context}, normally the base context of the application.
-     */
-    private Context context_;
-    
-    /**
      * Branch Content discovery data
      */
     private static JSONObject savedAnalyticsData_;
@@ -156,7 +143,6 @@ public class PrefHelper {
         this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE,
                 Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
-        this.context_ = context;
         this.requestMetadata = new JSONObject();
         this.installMetadata = new JSONObject();
     }
@@ -175,6 +161,18 @@ public class PrefHelper {
             prefHelper_ = new PrefHelper(context);
         }
         return prefHelper_;
+    }
+
+    // Package Private
+    static void shutDown() {
+        if (prefHelper_ != null) {
+            prefHelper_.prefsEditor_ = null;
+        }
+
+        // Reset all of the statics.
+        Branch_Key = null;
+        savedAnalyticsData_ = null;
+        prefHelper_ = null;
     }
     
     /**
@@ -299,39 +297,6 @@ public class PrefHelper {
             Branch_Key = getString(KEY_BRANCH_KEY);
         }
         return Branch_Key;
-    }
-    
-    public String readBranchKey(boolean isLive) {
-        String branchKey = null;
-        String metaDataKey = isLive ? "io.branch.sdk.BranchKey" : "io.branch.sdk.BranchKey.test";
-        if (!isLive) {
-            setExternDebug();
-        }
-        
-        try {
-            final ApplicationInfo ai = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                branchKey = ai.metaData.getString(metaDataKey);
-                if (branchKey == null && !isLive) {
-                    branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
-                }
-            }
-        } catch (final Exception ignore) {
-        }
-        
-        // If Branch key is not specified in the manifest check String resource
-        if (TextUtils.isEmpty(branchKey)) {
-            try {
-                Resources resources = context_.getResources();
-                branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context_.getPackageName()));
-            } catch (Exception ignore) {
-            }
-        }
-        if (branchKey == null) {
-            branchKey = NO_STRING_VALUE;
-        }
-        
-        return branchKey;
     }
     
     /**
@@ -1145,23 +1110,6 @@ public class PrefHelper {
         prefHelper_.prefsEditor_.apply();
     }
     
-    /**
-     * <p>Switches external debugging on.</p>
-     */
-    public void setExternDebug() {
-        BNC_Dev_Debug = true;
-    }
-    
-    /**
-     * <p>Gets the value of the debug status {@link Boolean} value.</p>
-     *
-     * @return A {@link Boolean} value indicating the current state of external debugging.
-     */
-    public boolean getExternDebug() {
-        return BNC_Dev_Debug;
-    }
-    
-    
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         if (key == null) {
             return;
@@ -1199,16 +1147,19 @@ public class PrefHelper {
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
-     * @param tag     A {@link String} value specifying the logging tag to use for the message.
      * @param message A {@link String} value containing the debug message to record.
      */
-    public static void Debug(String tag, String message) {
-        if ((Branch.isLogging_ == null && BNC_Dev_Debug) || (Branch.isLogging_ != null && Branch.isLogging_)) {
-            if(message != null) {
-                Log.i(tag,  message);
-            } else {
-                Log.i(tag,  "An error occurred. Unable to print the log message");
+    public static void Debug(String message) {
+        if (BranchUtil.isDebugEnabled()) {
+            if (!TextUtils.isEmpty(message)) {
+                Log.i("BranchSDK", message);
             }
+        }
+    }
+
+    public static void LogAlways(String message) {
+        if (!TextUtils.isEmpty(message)) {
+            Log.i("BranchSDK", message);
         }
     }
 }

@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v3.1.0
+  * Fixed a synchronization issue around the event queue saving preferences while in a synchronized block.
+  * Added new standard events for parity with Tune.
+  * Ensure that Google Aid is present in all requests.
+  * Refactored how Debug works, including making sure all Debug messages can be turned off if not in debug mode.
+
 - v3.0.4
   * Fixed a TLS1.2 issue with HttpsURLConnection on API Level 16~19 devices
   * Add SDK version tag to the Android SDK to aid Google Scanning APIs

@@ -35,10 +35,10 @@ class AppIndexingHelper {
                     firebaseUserActionsInstance = FirebaseUserActions.getInstance();
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
-                    PrefHelper.Debug("BranchSDK", "Firebase app indexing is not available. Please consider enabling Firebase app indexing for your app for better indexing experience with Google.");
+                    PrefHelper.Debug("Firebase app indexing is not available. Please consider enabling Firebase app indexing for your app for better indexing experience with Google.");
                 } catch (Throwable ignore) {
                     // unexpected exception
-                    PrefHelper.Debug("BranchSDK", "Failed to index your contents using Firebase. Please make sure Firebase  is enabled and initialised in your app");
+                    PrefHelper.Debug("Failed to index your contents using Firebase. Please make sure Firebase  is enabled and initialised in your app");
                 }
                 String contentUrl;
                 if (linkProperties == null) {
@@ -46,7 +46,7 @@ class AppIndexingHelper {
                 } else {
                     contentUrl = buo.getShortUrl(context, linkProperties);
                 }
-                PrefHelper.Debug("BranchSDK", "Indexing BranchUniversalObject with Google using URL " + contentUrl);
+                PrefHelper.Debug("Indexing BranchUniversalObject with Google using URL " + contentUrl);
                 if (!TextUtils.isEmpty(contentUrl)) {
                     try {
                         if (firebaseUserActionsInstance != null) {
@@ -56,7 +56,7 @@ class AppIndexingHelper {
                             listOnGoogleSearch(contentUrl, context, buo);
                         }
                     } catch (Throwable e) {
-                        PrefHelper.Debug("BranchSDK", "Branch Warning: Unable to list your content in Google search. Please make sure you have added latest Firebase app indexing SDK to your project dependencies.");
+                        PrefHelper.Debug("Warning: Unable to list your content in Google search. Please make sure you have added latest Firebase app indexing SDK to your project dependencies.");
                     }
                 }
             }
@@ -74,14 +74,14 @@ class AppIndexingHelper {
                     } else {
                         contentUrl = buo.getShortUrl(context, linkProperties);
                     }
-                    PrefHelper.Debug("BranchSDK", "Removing indexed BranchUniversalObject with link " + contentUrl);
+                    PrefHelper.Debug("Removing indexed BranchUniversalObject with link " + contentUrl);
                     FirebaseAppIndex.getInstance().remove(contentUrl);
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
-                    PrefHelper.Debug("BranchSDK", "Failed to remove the BranchUniversalObject from Firebase local indexing. Please make sure Firebase is enabled and initialised in your app");
+                    PrefHelper.Debug("Failed to remove the BranchUniversalObject from Firebase local indexing. Please make sure Firebase is enabled and initialised in your app");
                 } catch (Throwable ignore) {
                     // unexpected exception
-                    PrefHelper.Debug("BranchSDK", "Failed to index your contents using Firebase. Please make sure Firebase is enabled and initialised in your app");
+                    PrefHelper.Debug("Failed to index your contents using Firebase. Please make sure Firebase is enabled and initialised in your app");
                 }
             }
         }).run();

@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 /**
  * * <p>
@@ -23,7 +22,6 @@ public class ServerRequestPing extends ServerRequest {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            PrefHelper.Debug("BranchSDK", "Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
             return true;
         }
         return false;

@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,7 +38,7 @@ class ServerRequestRedeemRewards extends ServerRequest {
         actualNumOfCreditsToRedeem_ = numOfCreditsToRedeem;
         if (numOfCreditsToRedeem > availableCredits) {
             actualNumOfCreditsToRedeem_ = availableCredits;
-            Log.i("BranchSDK", "Branch Warning: You're trying to redeem more credits than are available. Have you updated loaded rewards");
+            PrefHelper.Debug("Warning: You're trying to redeem more credits than are available. Have you updated loaded rewards");
         }
         if (actualNumOfCreditsToRedeem_ > 0) {
             JSONObject post = new JSONObject();

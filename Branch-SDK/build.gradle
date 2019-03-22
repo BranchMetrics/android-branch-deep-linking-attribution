@@ -15,6 +15,13 @@ dependencies {
     implementation 'com.google.firebase:firebase-appindexing:17.1.0'
     implementation 'com.android.installreferrer:installreferrer:1.0'
 
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    // Unit tests with Google Ads
+    androidTestImplementation 'com.google.android.gms:play-services-ads:16.0.0'
 }
 
 android {
@@ -26,6 +33,8 @@ android {
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
         minSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_MINIMUM)
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     sourceSets {
@@ -37,10 +46,12 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
-        }
 
-        // Move the tests to tests/java, tests/res, etc...
-        androidTest.setRoot('tests')
+            androidTest {
+                java.srcDirs = ['androidTest']
+                manifest.srcFile 'androidTest/AndroidManifest.xml'
+            }
+        }
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
