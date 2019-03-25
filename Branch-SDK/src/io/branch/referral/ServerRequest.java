@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -188,11 +186,11 @@ public abstract class ServerRequest {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
+                DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
             } catch (JSONException ignore) {
             }
         } else {
-            DeviceInfo.getInstance(prefHelper_.getExternDebug(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
+            DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
         }
     }
     
@@ -457,7 +455,7 @@ public abstract class ServerRequest {
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
-            Log.e("BranchSDK", "Could not merge metadata, ignoring user metadata.");
+           PrefHelper.Debug("Could not merge metadata, ignoring user metadata.");
         }
     }
     
@@ -493,7 +491,7 @@ public abstract class ServerRequest {
         updateDeviceInfo();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
-        if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled(context_)) {
+        if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled()) {
             updateGAdsParams();
         }
     }
@@ -508,6 +506,12 @@ public abstract class ServerRequest {
     
     protected boolean doesAppHasInternetPermission(Context context) {
         int result = context.checkCallingOrSelfPermission(Manifest.permission.INTERNET);
+        boolean permissionGranted = (result == PackageManager.PERMISSION_GRANTED);
+
+        if (!permissionGranted) {
+            PrefHelper.Debug("Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
+        }
+
         return result == PackageManager.PERMISSION_GRANTED;
     }
     
@@ -606,7 +610,7 @@ public abstract class ServerRequest {
     }
     
     public void reportTrackingDisabledError() {
-        PrefHelper.Debug("BranchSDK", "Requested operation cannot be completed since tracking is disabled [" + requestPath_ + "]");
+        PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + requestPath_ + "]");
         handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
     }
     

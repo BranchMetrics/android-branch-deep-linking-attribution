@@ -51,7 +51,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
         post.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
-        post.put(Defines.Jsonkey.Debug.getKey(), prefHelper_.getExternDebug());
+        post.put(Defines.Jsonkey.Debug.getKey(), BranchUtil.isDebugEnabled());
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);

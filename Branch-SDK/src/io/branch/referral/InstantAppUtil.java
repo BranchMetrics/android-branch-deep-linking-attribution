@@ -9,7 +9,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -68,14 +67,10 @@ class InstantAppUtil {
     @SuppressWarnings("ConstantConditions")
     static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
-            if (Branch.isLogging_ != null && Branch.isLogging_) {
-                Log.e("BranchSDK", "Unable to show install prompt. Activity is null");
-            }
+            PrefHelper.Debug("Unable to show install prompt. Activity is null");
             return false;
         } else if (!isInstantApp(activity)) {
-            if (Branch.isLogging_ != null && Branch.isLogging_) {
-                Log.e("BranchSDK", "Unable to show install prompt. Application is not an instant app");
-            }
+            PrefHelper.Debug("Unable to show install prompt. Application is not an instant app");
             return false;
         } else {
             Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")

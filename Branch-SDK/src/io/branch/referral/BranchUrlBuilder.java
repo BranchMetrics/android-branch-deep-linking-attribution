@@ -1,9 +1,7 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -142,7 +140,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
             if (callback != null) {
                 callback.onLinkCreate(null, new BranchError("session has not been initialized", BranchError.ERR_NO_SESSION));
             }
-            Log.i("BranchSDK", "Branch Warning: User session has not been initialized");
+            PrefHelper.Debug("Warning: User session has not been initialized");
         }
     }
 

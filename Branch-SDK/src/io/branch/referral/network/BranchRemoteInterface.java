@@ -93,7 +93,7 @@ public abstract class BranchRemoteInterface {
         }
 
         long reqStartTime = System.currentTimeMillis();
-        PrefHelper.Debug("BranchSDK", "getting " + modifiedUrl);
+        PrefHelper.Debug("getting " + modifiedUrl);
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
@@ -129,8 +129,8 @@ public abstract class BranchRemoteInterface {
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID);
         }
-        PrefHelper.Debug("BranchSDK", "posting to " + url);
-        PrefHelper.Debug("BranchSDK", "Post value = " + body.toString());
+        PrefHelper.Debug("posting to " + url);
+        PrefHelper.Debug("Post value = " + body.toString());
 
         try {
             BranchResponse response = doRestfulPost(url, body);
@@ -180,7 +180,7 @@ public abstract class BranchRemoteInterface {
      */
     private ServerResponse processEntityForJSON(String responseString, int statusCode, String tag) {
         ServerResponse result = new ServerResponse(tag, statusCode);
-        PrefHelper.Debug("BranchSDK", "returned " + responseString);
+        PrefHelper.Debug("returned " + responseString);
 
         if (responseString != null) {
             try {
@@ -191,7 +191,7 @@ public abstract class BranchRemoteInterface {
                     JSONArray jsonArray = new JSONArray(responseString);
                     result.setPost(jsonArray);
                 } catch (JSONException ex2) {
-                    PrefHelper.Debug(getClass().getSimpleName(), "JSON exception: " + ex2.getMessage());
+                    PrefHelper.Debug("JSON exception: " + ex2.getMessage());
                 }
             }
         }

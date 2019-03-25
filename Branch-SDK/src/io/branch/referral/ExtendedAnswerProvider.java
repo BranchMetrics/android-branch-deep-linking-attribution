@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.crashlytics.android.answers.shim.AnswersOptionalLogger;
 import com.crashlytics.android.answers.shim.KitEvent;
