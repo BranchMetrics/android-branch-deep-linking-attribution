@@ -49,6 +49,13 @@ class ServerRequestQueue {
         }
         return SharedInstance;
     }
+
+    // Package Private
+    static void shutDown() {
+        synchronized (reqQueueLockObject) {
+            SharedInstance = null;
+        }
+    }
     
     /**
      * <p>The main constructor of the ServerRequestQueue class is private because the class uses the
@@ -67,8 +74,8 @@ class ServerRequestQueue {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                JSONArray jsonArr = new JSONArray();
                 synchronized (reqQueueLockObject) {
-                    JSONArray jsonArr = new JSONArray();
                     for (ServerRequest aQueue : queue) {
                         if (aQueue.isPersistable()) {
                             JSONObject json = aQueue.toJSON();
