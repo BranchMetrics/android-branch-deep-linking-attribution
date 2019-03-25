@@ -213,11 +213,6 @@ public class BranchEvent {
         return this;
     }
 
-    // Undocumented
-    public String getEventName() {
-        return eventName;
-    }
-
     /**
      * Logs this BranchEvent to Branch for tracking and analytics
      *
