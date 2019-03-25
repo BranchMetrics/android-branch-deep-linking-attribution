@@ -338,9 +338,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         PENDING,
         READY
     }
-
-    // Save the last callback
-    private WeakReference<BranchReferralInitListener> deferredInitListener_;
     
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     private boolean handleDelayedNewIntents_ = false;
@@ -1340,9 +1337,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
         if (activity != null) {
             currentActivityReference_ = new WeakReference<>(activity);
-        }
-        if (callback != null) {
-            deferredInitListener_ = new WeakReference<BranchReferralInitListener>(callback);
         }
         //If already initialised
         if ((hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED)) {
@@ -2726,13 +2720,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (activity.getIntent() != null) {
             intentData = activity.getIntent().getData();
         }
-        BranchReferralInitListener deferredCallback = null;
-        if (deferredInitListener_ != null) {
-            deferredCallback = deferredInitListener_.get();
-        }
-
         isInitReportedThroughCallBack = false;
-        initSession(deferredCallback, intentData, activity); // indicate  starting of session.
+        initSessionWithData(intentData, activity); // indicate  starting of session.
     }
     
     /*
@@ -2749,17 +2738,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isRestartSessionRequested = false;
         if (intent != null) {
             try {
-                // Force new session parameters
-                if (intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false)) {
-                    isRestartSessionRequested = true;
-                    intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-                    // Also check if there is a new, unconsumed push notification intent which would indicate it's coming
-                    // from foreground
-                } else if (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
-                    !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
-                    isRestartSessionRequested = true;
-                }
-            } catch (Throwable ignore) { }
+                isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            } catch (Throwable ignore) {
+            }
+            if (isRestartSessionRequested) {
+                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+            }
         }
         return isRestartSessionRequested;
     }
