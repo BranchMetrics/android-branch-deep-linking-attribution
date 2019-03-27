@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v3.1.1
+  * Added support for push notifications while the application is in the foreground
+
 - v3.1.0
   * Fixed a synchronization issue around the event queue saving preferences while in a synchronized block.
   * Added new standard events for parity with Tune.
