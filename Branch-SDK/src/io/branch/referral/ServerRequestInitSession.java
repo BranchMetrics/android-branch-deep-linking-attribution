@@ -14,7 +14,7 @@ import io.branch.referral.validators.DeepLinkRoutingValidator;
 
 /**
  * <p>
- * Abstract for Session init request. All request which do initilaise session should extend from this.
+ * Abstract for Session init request. All request which do initialize session should extend from this.
  * </p>
  */
 abstract class ServerRequestInitSession extends ServerRequest {
@@ -22,32 +22,30 @@ abstract class ServerRequestInitSession extends ServerRequest {
     static final String ACTION_INSTALL = "install";
     private final Context context_;
     private final ContentDiscoveryManifest contentDiscoveryManifest_;
-    final SystemObserver systemObserver_;
 
     private static final int STATE_FRESH_INSTALL = 0;
     private static final int STATE_UPDATE = 2;
     private static final int STATE_NO_CHANGE = 1;
 
 
-    ServerRequestInitSession(Context context, String requestPath, SystemObserver systemObserver) {
+    ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
         context_ = context;
-        systemObserver_ = systemObserver;
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
-        systemObserver_ = new SystemObserver(context);
         contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     @Override
     protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
-        if (!systemObserver_.getAppVersion().equals(SystemObserver.BLANK)) {
-            post.put(Defines.Jsonkey.AppVersion.getKey(), systemObserver_.getAppVersion());
+        String appVersion = DeviceInfo.getInstance().getAppVersion();
+        if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
+            post.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
         }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
         post.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
@@ -245,8 +243,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
      */
     private void updateInstallStateAndTimestamps(JSONObject post) throws JSONException {
         int installOrUpdateState = STATE_NO_CHANGE;
-        String currAppVersion = systemObserver_.getAppVersion();
-        long updateBufferTime = 1 * (24 * 60 * 60 * 1000); // Update buffer time is a day.
+        String currAppVersion = DeviceInfo.getInstance().getAppVersion();
+        long updateBufferTime = (24 * 60 * 60 * 1000); // Update buffer time is a day.
         PackageInfo packageInfo = null;
         try {
             packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);

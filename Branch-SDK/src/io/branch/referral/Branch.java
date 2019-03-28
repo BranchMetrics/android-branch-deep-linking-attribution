@@ -305,7 +305,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private BranchRemoteInterface branchRemoteInterface_;
     private PrefHelper prefHelper_;
-    private final SystemObserver systemObserver_;
+    private final DeviceInfo deviceInfo_;
     private Context context_;
 
     final Object lock;
@@ -421,7 +421,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         prefHelper_ = PrefHelper.getInstance(context);
         trackingController = new TrackingController(context);
         branchRemoteInterface_ = BranchRemoteInterface.getDefaultBranchRemoteInterface(context);
-        systemObserver_ = new SystemObserver(context);
+        deviceInfo_ = DeviceInfo.initialize(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         serverSema_ = new Semaphore(1);
         lock = new Object();
@@ -430,7 +430,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
         }
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
@@ -800,11 +800,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
+        DeviceInfo.shutDown();
 
         // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
         // DeepLinkRoutingValidator.shutDown();
-        // DeviceInfo.shutDown();
         // InstallListener.shutDown();
         // InstantAppUtil.shutDown();
         // IntegrationValidator.shutDown();
@@ -2483,7 +2483,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void registerAppReInit() {
         // on re-init make sure GAID is available
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = systemObserver_.prefetchGAdsParams(this);
+            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchGAdsParams(context_, this);
         }
         if (networkCount_ != 0) {
             networkCount_ = 0;
@@ -2500,10 +2500,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequest request;
         if (hasUser()) {
             // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback, systemObserver_);
+            request = new ServerRequestRegisterOpen(context_, callback);
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, systemObserver_, InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, InstallListener.getInstallationID());
         }
         return request;
     }
@@ -2532,7 +2532,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void performCookieBasedStrongMatch() {
         if (!trackingController.isTrackingDisabled()) {
-            DeviceInfo deviceInfo = DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableDeviceIDFetch_);
             Activity currentActivity = null;
             if (currentActivityReference_ != null) {
                 currentActivity = currentActivityReference_.get();
@@ -2540,7 +2539,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Context context = (currentActivity != null) ? currentActivity.getApplicationContext() : null;
             if (context != null) {
                 requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo, prefHelper_, systemObserver_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
                     @Override
                     public void onStrongMatchCheckFinished() {
                         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);

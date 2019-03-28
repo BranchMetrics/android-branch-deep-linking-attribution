@@ -21,11 +21,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
      * @param context     Current {@link Application} context
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
-     * @param sysObserver {@link SystemObserver} instance.
      */
-    ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback,
-                              SystemObserver sysObserver) {
-        super(context, Defines.RequestPath.RegisterOpen.getPath(), sysObserver);
+    ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback) {
+        super(context, Defines.RequestPath.RegisterOpen.getPath());
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
@@ -94,7 +92,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             
-            prefHelper_.setAppVersion(systemObserver_.getAppVersion());
+            prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {
             ex.printStackTrace();

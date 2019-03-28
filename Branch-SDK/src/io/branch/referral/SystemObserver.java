@@ -14,6 +14,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -31,36 +32,17 @@ import static android.content.Context.UI_MODE_SERVICE;
  * attributes and parameters used by the Branch class, and made publicly available for use by
  * other classes.</p>
  */
-class SystemObserver {
+abstract class SystemObserver {
 
     /**
      * Default value for when no value has been returned by a system information call, but where
      * null is not supported or desired.
      */
-    public static final String BLANK = "bnc_no_value";
+    static final String BLANK = "bnc_no_value";
 
     private static final int GAID_FETCH_TIME_OUT = 1500;
-    static String GAIDString_ = null;
-    int LATVal_ = 0;
-
-
-    private Context context_;
-
-    /**
-     * <p>Indicates whether or not a real device ID is in use, or if a debug value is in use.</p>
-     */
-    private boolean isRealHardwareId;
-
-    /**
-     * <p>Sole constructor method of the {@link SystemObserver} class. Instantiates the value of
-     * <i>isRealHardware</i> {@link Boolean} value as <i>true</i>.</p>
-     *
-     * @param context Current application context
-     */
-    SystemObserver(Context context) {
-        context_ = context;
-        isRealHardwareId = true;
-    }
+    private String GAIDString_ = null;
+    private int LATVal_ = 0;
 
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
@@ -71,46 +53,23 @@ class SystemObserver {
      * user devices with different ANDROID_ID values with a single physical device or emulator.</p>
      *
      * @param debug A {@link Boolean} value indicating whether to run in <i>real</i> or <i>debug mode</i>.
-     * @return <p>A {@link String} value representing the unique ANDROID_ID of the device, or a randomly-generated
+     * @return <p>A {@link UniqueId} value representing the unique ANDROID_ID of the device, or a randomly-generated
      * debug value in place of a real identifier.</p>
      */
-    String getUniqueID(boolean debug) {
-        if (context_ != null) {
-            String androidID = null;
-            if (!debug && !Branch.isSimulatingInstalls()) {
-                androidID = Secure.getString(context_.getContentResolver(), Secure.ANDROID_ID);
-            }
-            if (androidID == null) {
-                androidID = UUID.randomUUID().toString();
-                isRealHardwareId = false;
-            }
-            return androidID;
-        } else
-            return BLANK;
+    static UniqueId getUniqueID(Context context, boolean debug) {
+        return new UniqueId(context, debug);
     }
 
     /**
-     * <p>Checks the value of the <i>isRealHardWareId</i> {@link Boolean} value within the current
-     * instance of the class. If not set by the {@link SystemObserver#isRealHardwareId}
-     * or will default to true upon class instantiation.</p>
-     *
-     * @return <p>A {@link Boolean} value indicating whether or not the current device has a hardware
-     * identifier; {@link Secure#ANDROID_ID}</p>
-     */
-    boolean hasRealHardwareId() {
-        return isRealHardwareId;
-    }
-
-    /**
-     * Get the package name for this application
-     *
+     * Get the package name for this application.
+     * @param context Context.
      * @return {@link String} with value as package name. Empty String in case of error
      */
-    String getPackageName() {
+    static String getPackageName(Context context) {
         String packageName = "";
-        if (context_ != null) {
+        if (context != null) {
             try {
-                PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+                PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 packageName = info.packageName;
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
@@ -120,15 +79,16 @@ class SystemObserver {
     }
 
     /**
-     * <p>Gets the package name of the current application that the SDK is integrated with.</p>
+     * <p>Gets the App Version Name of the current application that the SDK is integrated with.</p>
      *
+     * @param context Context.
      * @return <p>A {@link String} value containing the full package name of the application that the SDK is
      * currently integrated into.</p>
      */
-    String getAppVersion() {
+    static String getAppVersion(Context context) {
         try {
-            if (context_ != null) {
-                PackageInfo packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
+            if (context != null) {
+                PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 if (packageInfo.versionName != null) {
                     return packageInfo.versionName;
                 }
@@ -146,7 +106,7 @@ class SystemObserver {
      * @see <a href="http://developer.android.com/reference/android/os/Build.html#MANUFACTURER">
      * Build.MANUFACTURER</a>
      */
-    String getPhoneBrand() {
+    static String getPhoneBrand() {
         return android.os.Build.MANUFACTURER;
     }
 
@@ -158,7 +118,7 @@ class SystemObserver {
      * Build.MODEL
      * </a>
      */
-    String getPhoneModel() {
+    static String getPhoneModel() {
         return android.os.Build.MODEL;
     }
 
@@ -167,7 +127,7 @@ class SystemObserver {
      *
      * @return A string representing the ISO2 Country code (eg US, IN)
      */
-    String getISO2CountryCode() {
+    static String getISO2CountryCode() {
         if (Locale.getDefault() != null) {
             return Locale.getDefault().getCountry();
         } else {
@@ -180,7 +140,7 @@ class SystemObserver {
      *
      * @return A string representing the ISO2 language code (eg en, ml)
      */
-    String getISO2LanguageCode() {
+    static String getISO2LanguageCode() {
         if (Locale.getDefault() != null) {
             return Locale.getDefault().getLanguage();
         } else {
@@ -196,7 +156,7 @@ class SystemObserver {
      *
      * @return A {@link String} value that indicates the broad OS type that is in use on the device.
      */
-    String getOS() {
+    static String getOS() {
         return "Android";
     }
 
@@ -218,12 +178,9 @@ class SystemObserver {
      * @see <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels">
      * Android Developers - API Level and Platform Version</a>
      */
-    int getOSVersion() {
+    static int getOSVersion() {
         return android.os.Build.VERSION.SDK_INT;
     }
-
-
-    
 
     /**
      * <p>This method returns a {@link DisplayMetrics} object that contains the attributes of the
@@ -233,13 +190,14 @@ class SystemObserver {
      * <p>Especially useful when operating without an Activity context, e.g. from a background
      * service.</p>
      *
+     * @param context Context.
      * @return <p>A {@link DisplayMetrics} object representing the default display of the device.</p>
      * @see DisplayMetrics
      */
-    DisplayMetrics getScreenDisplay() {
+    static DisplayMetrics getScreenDisplay(Context context) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
-        if (context_ != null) {
-            WindowManager windowManager = (WindowManager) context_.getSystemService(Context.WINDOW_SERVICE);
+        if (context != null) {
+            WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (windowManager != null) {
                 Display display = windowManager.getDefaultDisplay();
                 display.getMetrics(displayMetrics);
@@ -255,6 +213,7 @@ class SystemObserver {
      * a viable Internet connection available; if connected to an offline WiFi router for instance,
      * the boolean will still return <i>true</i>.
      *
+     * @param context Context.
      * @return <p>
      * A {@link boolean} value that indicates whether a WiFi connection exists and is open.
      * </p>
@@ -264,9 +223,9 @@ class SystemObserver {
      * </ul>
      */
     @SuppressWarnings("MissingPermission")
-    public boolean getWifiConnected() {
-        if (context_ != null && PackageManager.PERMISSION_GRANTED == context_.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            ConnectivityManager connManager = (ConnectivityManager) context_.getSystemService(Context.CONNECTIVITY_SERVICE);
+    static boolean getWifiConnected(Context context) {
+        if (context != null && PackageManager.PERMISSION_GRANTED == context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
+            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo wifiInfo = null;
             if (connManager != null) {
                 wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
@@ -276,91 +235,35 @@ class SystemObserver {
         return false;
     }
 
-
     /**
-     * Returns an instance of com.google.android.gms.ads.identifier.AdvertisingIdClient class  to be used
-     * for getting GAId and LAT value
+     * Method to prefetch the GAID and LAT values.
      *
-     * @return {@link Object} instance of AdvertisingIdClient class
-     */
-    private Object getAdInfoObject() {
-        Object adInfoObj = null;
-        if (context_ != null) {
-            try {
-                Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-                Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-                adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context_);
-            } catch (Throwable ignore) {
-            }
-        }
-        return adInfoObj;
-    }
-
-
-    /**
-     * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
-     * actions within Android apps.</p>
-     * <p>The Google Play services APIs expose the advertising tracking ID as UUID such as this:</p>
-     * <pre>38400000-8cf0-11bd-b23e-10b96e40000d</pre>
-     *
-     * @return <p>A {@link String} value containing the client ad UUID as supplied by Google Play.</p>
-     * @see <a href="https://developer.android.com/google/play-services/id.html">
-     * Android Developers - Advertising ID</a>
-     */
-    private String getAdvertisingId(Object adInfoObj) {
-        try {
-            Method getIdMethod = adInfoObj.getClass().getMethod("getId");
-            GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
-        } catch (Exception ignore) {
-        }
-        return GAIDString_;
-    }
-
-    /**
-     * <p>Get the limit-ad-tracking status of the advertising identifier.</p>
-     * <p>Check the Google Play services to for LAT enabled or disabled and return the LAT value as an integer.</p>
-     *
-     * @return <p> 0 if LAT is disabled else 1.</p>
-     * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
-     * Android Developers - Limit Ad Tracking</a>
-     */
-    private int getLATValue(Object adInfoObj) {
-        try {
-            Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
-            LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
-        } catch (Exception ignore) {
-        }
-        return LATVal_;
-    }
-
-    /**
-     * <p>
-     * Method to prefetch the GAID and LAT values
-     * </p>
-     *
+     * @param context Context.
      * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion
      * @return {@link Boolean} with true if GAID fetch process started.
      */
-    boolean prefetchGAdsParams(GAdsParamsFetchEvents callback) {
+    boolean prefetchGAdsParams(Context context, GAdsParamsFetchEvents callback) {
         boolean isPrefetchStarted = false;
         if (TextUtils.isEmpty(GAIDString_)) {
             isPrefetchStarted = true;
-            new GAdsPrefetchTask(callback).executeTask();
+            new GAdsPrefetchTask(context, callback).executeTask();
         }
         return isPrefetchStarted;
     }
 
     /**
      * <p>
-     * Async task to fetch GAID and LAT value
+     * Async task to fetch GAID and LAT value.
      * This task fetch the GAID and LAT in background. The Background task times out
      * After GAID_FETCH_TIME_OUT
      * </p>
      */
     private class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
+        private WeakReference<Context> contextRef_;
         private final GAdsParamsFetchEvents callback_;
 
-        public GAdsPrefetchTask(GAdsParamsFetchEvents callback) {
+        public GAdsPrefetchTask(Context context, GAdsParamsFetchEvents callback) {
+            contextRef_ = new WeakReference<>(context);
             callback_ = callback;
         }
 
@@ -371,10 +274,13 @@ class SystemObserver {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-                    Object adInfoObj = getAdInfoObject();
-                    getAdvertisingId(adInfoObj);
-                    getLATValue(adInfoObj);
+                    Context context = contextRef_.get();
+                    if (context != null) {
+                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+                        Object adInfoObj = getAdInfoObject(context);
+                        setAdvertisingId(adInfoObj);
+                        setLATValue(adInfoObj);
+                    }
                     latch.countDown();
                 }
             }).start();
@@ -394,6 +300,62 @@ class SystemObserver {
             super.onPostExecute(aVoid);
             if (callback_ != null) {
                 callback_.onGAdsFetchFinished();
+            }
+        }
+
+        /**
+         * Returns an instance of com.google.android.gms.ads.identifier.AdvertisingIdClient class  to be used
+         * for getting GAId and LAT value
+         *
+         * @param context Context.
+         * @return {@link Object} instance of AdvertisingIdClient class
+         */
+        private Object getAdInfoObject(Context context) {
+            Object adInfoObj = null;
+            if (context != null) {
+                try {
+                    Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                    Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+                    adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context);
+                } catch (Throwable ignore) {
+                }
+            }
+            return adInfoObj;
+        }
+
+        /**
+         * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
+         * actions within Android apps.</p>
+         * <p>The Google Play services APIs expose the advertising tracking ID as UUID such as this:</p>
+         * <pre>38400000-8cf0-11bd-b23e-10b96e40000d</pre>
+         *
+         * @param adInfoObj AdvertisingIdClient.
+         * @return <p>A {@link String} value containing the client ad UUID as supplied by Google Play.</p>
+         * @see <a href="https://developer.android.com/google/play-services/id.html">
+         * Android Developers - Advertising ID</a>
+         */
+        private void setAdvertisingId(Object adInfoObj) {
+            try {
+                Method getIdMethod = adInfoObj.getClass().getMethod("getId");
+                GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
+            } catch (Exception ignore) {
+            }
+        }
+
+        /**
+         * <p>Set the limit-ad-tracking status of the advertising identifier.</p>
+         * <p>Check the Google Play services to for LAT enabled or disabled and return the LAT value as an integer.</p>
+         *
+         * @param adInfoObj AdvertisingIdClient.
+         * @return <p> 0 if LAT is disabled else 1.</p>
+         * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
+         * Android Developers - Limit Ad Tracking</a>
+         */
+        private void setLATValue(Object adInfoObj) {
+            try {
+                Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
+                LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
+            } catch (Exception ignore) {
             }
         }
     }
@@ -437,13 +399,13 @@ class SystemObserver {
      * {#UI_MODE_TYPE_APPLIANCE Configuration.UI_MODE_TYPE_APPLIANCE}, or
      * {#UI_MODE_TYPE_WATCH Configuration.UI_MODE_TYPE_WATCH}.
      */
-    String getUIMode() {
+    static String getUIMode(Context context) {
         String mode = "UI_MODE_TYPE_UNDEFINED";
         UiModeManager modeManager = null;
 
         try {
-            if (context_ != null) {
-                modeManager = (UiModeManager) context_.getSystemService(UI_MODE_SERVICE);
+            if (context != null) {
+                modeManager = (UiModeManager) context.getSystemService(UI_MODE_SERVICE);
             }
 
             if (modeManager != null) {
@@ -477,4 +439,78 @@ class SystemObserver {
         }
         return mode;
     }
+
+    /**
+     * Unique Hardware Id.
+     * This wraps both the fetching of the ANDROID_ID with knowledge if it is a "fake" id used
+     * for debugging or simulating installs.
+     */
+    static class UniqueId {
+        private String uniqueId;
+        private boolean isRealId;
+
+        UniqueId(Context context, boolean isDebug) {
+            this.isRealId = !isDebug;
+            this.uniqueId = BLANK;
+
+            String androidID = null;
+            if (context != null) {
+                if (!isDebug && !Branch.isSimulatingInstalls()) {
+                    androidID = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
+                }
+            }
+
+            if (androidID == null) {
+                androidID = UUID.randomUUID().toString();
+                isRealId = false;
+            }
+            uniqueId = androidID;
+        }
+
+        String getId() {
+            return this.uniqueId;
+        }
+
+        boolean isReal() {
+            return this.isRealId;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            // self check
+            if (this == other)
+                return true;
+
+            // null check
+            if (other == null)
+                return false;
+
+            // type check and cast
+            if (getClass() != other.getClass())
+                return false;
+
+            UniqueId uidOther = (UniqueId) other;
+
+            // field comparison
+            return this.uniqueId.equals(uidOther.uniqueId)
+                    && this.isRealId == uidOther.isRealId;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1 + (isRealId ? 1 : 0);
+
+            return (prime * result + ((uniqueId == null) ? 0 : uniqueId.hashCode()));
+        }
+    }
+
+    String getGAID() {
+        return GAIDString_;
+    }
+
+    int getLATVal() {
+        return LATVal_;
+    }
+
 }

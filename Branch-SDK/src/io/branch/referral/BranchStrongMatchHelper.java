@@ -25,26 +25,26 @@ import java.util.List;
 class BranchStrongMatchHelper {
 
     private static BranchStrongMatchHelper branchStrongMatchHelper_;
-    Object mClient_ = null;
+    private Object mClient_ = null;
     private static final int STRONG_MATCH_CHECK_TIME_OUT = 500; // Time to wait for strong match check
-    public static final int STRONG_MATCH_URL_HIT_DELAY = 750; // Time default delay time in ms between a Strong match uri call and v1/install
+    private static final int STRONG_MATCH_URL_HIT_DELAY = 750; // Time default delay time in ms between a Strong match uri call and v1/install
     private static final long THIRTY_DAYS_EPOCH_MILLI_SEC = 30 * 24 * 60 * 60 * 1000L;
     private final Handler timeOutHandler_;
     private static int StrongMatchUrlHitDelay = BranchStrongMatchHelper.STRONG_MATCH_URL_HIT_DELAY;
 
     private boolean isCustomTabsAvailable_ = true;
-    boolean isStrongMatchUrlLaunched = false;
+    private boolean isStrongMatchUrlLaunched = false;
 
-    Class<?> CustomTabsClientClass;
-    Class<?> CustomServiceTabConnectionClass;
-    Class<?> CustomTabsCallbackClass;
-    Class<?> CustomTabsSessionClass;
-    Class<?> ICustomTabsServiceClass;
+    private Class<?> CustomTabsClientClass;
+    // private Class<?> CustomServiceTabConnectionClass;
+    private Class<?> CustomTabsCallbackClass;
+    private Class<?> CustomTabsSessionClass;
+    private Class<?> ICustomTabsServiceClass;
 
     {
         try {
             CustomTabsClientClass = Class.forName("android.support.customtabs.CustomTabsClient");
-            CustomServiceTabConnectionClass = Class.forName("android.support.customtabs.CustomTabsServiceConnection");
+            // CustomServiceTabConnectionClass = Class.forName("android.support.customtabs.CustomTabsServiceConnection");
             CustomTabsCallbackClass = Class.forName("android.support.customtabs.CustomTabsCallback");
             CustomTabsSessionClass = Class.forName("android.support.customtabs.CustomTabsSession");
             ICustomTabsServiceClass = Class.forName("android.support.customtabs.ICustomTabsService");
@@ -65,11 +65,11 @@ class BranchStrongMatchHelper {
         return branchStrongMatchHelper_;
     }
 
-    public void setStrongMatchUrlHitDelay(int delay) {
+    void setStrongMatchUrlHitDelay(int delay) {
         StrongMatchUrlHitDelay = delay;
     }
 
-    public void checkForStrongMatch(Context context, String cookieMatchDomain, DeviceInfo deviceInfo, final PrefHelper prefHelper, SystemObserver systemObserver, final StrongMatchCheckEvents callback) {
+    void checkForStrongMatch(Context context, String cookieMatchDomain, DeviceInfo deviceInfo, final PrefHelper prefHelper, final StrongMatchCheckEvents callback) {
         isStrongMatchUrlLaunched = false;
         //Check if strong match checked in last 30 days
         if (System.currentTimeMillis() - prefHelper.getLastStrongMatchTime() < THIRTY_DAYS_EPOCH_MILLI_SEC) {
@@ -79,7 +79,7 @@ class BranchStrongMatchHelper {
         } else {
             try {
                 if (deviceInfo.getHardwareID() != null) {
-                    final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, systemObserver, context);
+                    final Uri strongMatchUri = buildStrongMatchUrl(cookieMatchDomain, deviceInfo, prefHelper, context);
                     if (strongMatchUri != null) {
                         timeOutHandler_.postDelayed(new Runnable() {
                             @Override
@@ -88,7 +88,7 @@ class BranchStrongMatchHelper {
                             }
                         }, STRONG_MATCH_CHECK_TIME_OUT);
 
-                        Method bindCustomTabsServiceMethod = CustomTabsClientClass.getMethod("bindCustomTabsService", Context.class, String.class, CustomServiceTabConnectionClass);
+                        //Method bindCustomTabsServiceMethod = CustomTabsClientClass.getMethod("bindCustomTabsService", Context.class, String.class, CustomServiceTabConnectionClass);
                         final Method warmupMethod = CustomTabsClientClass.getMethod("warmup", long.class);
                         final Method newSessionMethod = CustomTabsClientClass.getMethod("newSession", CustomTabsCallbackClass);
                         final Method mayLaunchUrlMethod = CustomTabsSessionClass.getMethod("mayLaunchUrl", Uri.class, Bundle.class, List.class);
@@ -154,17 +154,21 @@ class BranchStrongMatchHelper {
         }
     }
 
-    private Uri buildStrongMatchUrl(String matchDomain, DeviceInfo deviceInfo, PrefHelper prefHelper, SystemObserver systemObserver, Context context) {
+    private Uri buildStrongMatchUrl(String matchDomain, DeviceInfo deviceInfo, PrefHelper prefHelper, Context context) {
         Uri strongMatchUri = null;
         if (!TextUtils.isEmpty(matchDomain)) {
             String uriString = "https://" + matchDomain + "/_strong_match?os=" + deviceInfo.getOsName();
             // Add HW ID
             uriString += "&" + Defines.Jsonkey.HardwareID.getKey() + "=" + deviceInfo.getHardwareID();
-            String hardwareIDTypeVal = deviceInfo.isHardwareIDReal() ? Defines.Jsonkey.HardwareIDTypeVendor.getKey() : Defines.Jsonkey.HardwareIDTypeRandom.getKey();
+
+            SystemObserver.UniqueId uniqueId = deviceInfo.getHardwareID();
+            String hardwareIDTypeVal = uniqueId.isReal() ? Defines.Jsonkey.HardwareIDTypeVendor.getKey() : Defines.Jsonkey.HardwareIDTypeRandom.getKey();
             uriString += "&" + Defines.Jsonkey.HardwareIDType.getKey() + "=" + hardwareIDTypeVal;
+
             // Add GAID if available
-            if (systemObserver.GAIDString_ != null && !BranchUtil.checkTestMode(context)) {
-                uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + systemObserver.GAIDString_;
+            String gaid = deviceInfo.getSystemObserver().getGAID();
+            if (gaid != null && !BranchUtil.checkTestMode(context)) {
+                uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + gaid;
             }
             // Add device finger print if available
             if (!prefHelper.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
@@ -195,7 +199,7 @@ class BranchStrongMatchHelper {
     // Note : Since Custom service connection is an abstract class in ChromeCustomTab SDK making it impossible to reflect ,
     //        creating a custom service connection class for Chrome tab service connection and adding implementation for retrieving the CustomTabClient from Binder
     private abstract class MockCustomTabServiceConnection implements ServiceConnection {
-        public MockCustomTabServiceConnection() {
+        MockCustomTabServiceConnection() {
         }
 
         public final void onServiceConnected(final ComponentName name, IBinder service) {
