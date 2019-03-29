@@ -1150,7 +1150,7 @@ public class PrefHelper {
      * @param message A {@link String} value containing the debug message to record.
      */
     public static void Debug(String message) {
-        if (BranchUtil.isDebugEnabled()) {
+        if (BranchUtil.isDebugEnabled() || enableLogging_) {
             if (!TextUtils.isEmpty(message)) {
                 Log.i("BranchSDK", message);
             }
@@ -1161,5 +1161,11 @@ public class PrefHelper {
         if (!TextUtils.isEmpty(message)) {
             Log.i("BranchSDK", message);
         }
+    }
+
+    private static boolean enableLogging_ = false;
+
+    static void enableLogging(boolean fEnable) {
+        enableLogging_ = fEnable;
     }
 }

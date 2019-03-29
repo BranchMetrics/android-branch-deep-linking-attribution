@@ -3251,15 +3251,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * @deprecated use {@link Branch#enableDebugMode()}
+     * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
+        PrefHelper.enableLogging(true);
     }
 
     /**
-     * @deprecated use {@link Branch#disableDebugMode()}
+     * Disable Logging, independent of Debug Mode.
      */
     public static void disableLogging() {
+        PrefHelper.enableLogging(false);
     }
 
     public static void enableForcedSession() {
