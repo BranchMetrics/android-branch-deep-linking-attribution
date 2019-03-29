@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.os.Build;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,7 +11,7 @@ import java.util.Set;
 import io.branch.indexing.BranchUniversalObject;
 
 /**
- * * <p>
+ * <p>
  * The server request for registering a view event of a specific content specified by user given attributes
  * </p>
  */
@@ -23,14 +22,14 @@ class ServerRequestRegisterView extends ServerRequest {
     /**
      * <p>Create an instance of {@link ServerRequestRegisterView} to notify Branch on a content view event.</p>
      *
-     * @param branchUniversalObject An instance of {@link BranchUniversalObject} to mar as viewed
+     * @param branchUniversalObject An instance of {@link BranchUniversalObject} to mark as viewed
      */
-    public ServerRequestRegisterView(Context context, BranchUniversalObject branchUniversalObject, SystemObserver sysObserver, BranchUniversalObject.RegisterViewStatusListener callback) {
+    public ServerRequestRegisterView(Context context, BranchUniversalObject branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
         super(context, Defines.RequestPath.RegisterView.getPath());
         callback_ = callback;
         JSONObject registerViewPost;
         try {
-            registerViewPost = createContentViewJson(branchUniversalObject, sysObserver);
+            registerViewPost = createContentViewJson(branchUniversalObject);
             setPost(registerViewPost);
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -80,30 +79,21 @@ class ServerRequestRegisterView extends ServerRequest {
      * @return A {@link JSONObject} for post data for register view request
      * @throws JSONException {@link JSONException} on any Json errors
      */
-    private JSONObject createContentViewJson(BranchUniversalObject universalObject,
-                                             SystemObserver sysObserver) throws JSONException {
-
+    private JSONObject createContentViewJson(BranchUniversalObject universalObject) throws JSONException {
         JSONObject contentObject = new JSONObject();
 
-
-        String os_Info = "Android " + Build.VERSION.SDK_INT;
         String sessionID = prefHelper_.getSessionID();
 
         contentObject.put(Defines.Jsonkey.SessionID.getKey(), sessionID);
         contentObject.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
 
-        String uniqueId;
-        if (DeviceInfo.getInstance() != null) {
-            uniqueId = DeviceInfo.getInstance().getHardwareID();
-        } else {
-            uniqueId = sysObserver.getUniqueID(BranchUtil.isDebugEnabled());
-        }
-        if (!uniqueId.equals(SystemObserver.BLANK) && sysObserver.hasRealHardwareId()) {
+        SystemObserver.UniqueId uniqueId = DeviceInfo.getInstance().getHardwareID();
+        if (!DeviceInfo.isNullOrEmptyOrBlank(uniqueId.getId()) && uniqueId.isReal()) {
             contentObject.put(Defines.Jsonkey.HardwareID.getKey(), uniqueId);
         }
 
-        String appVersion = sysObserver.getAppVersion();
-        if (!appVersion.equals(SystemObserver.BLANK)) {
+        String appVersion = DeviceInfo.getInstance().getAppVersion();
+        if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
             contentObject.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
         }
 
