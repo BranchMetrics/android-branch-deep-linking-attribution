@@ -36,7 +36,6 @@ class BranchStrongMatchHelper {
     private boolean isStrongMatchUrlLaunched = false;
 
     private Class<?> CustomTabsClientClass;
-    // private Class<?> CustomServiceTabConnectionClass;
     private Class<?> CustomTabsCallbackClass;
     private Class<?> CustomTabsSessionClass;
     private Class<?> ICustomTabsServiceClass;
@@ -44,7 +43,6 @@ class BranchStrongMatchHelper {
     {
         try {
             CustomTabsClientClass = Class.forName("android.support.customtabs.CustomTabsClient");
-            // CustomServiceTabConnectionClass = Class.forName("android.support.customtabs.CustomTabsServiceConnection");
             CustomTabsCallbackClass = Class.forName("android.support.customtabs.CustomTabsCallback");
             CustomTabsSessionClass = Class.forName("android.support.customtabs.CustomTabsSession");
             ICustomTabsServiceClass = Class.forName("android.support.customtabs.ICustomTabsService");
@@ -88,7 +86,6 @@ class BranchStrongMatchHelper {
                             }
                         }, STRONG_MATCH_CHECK_TIME_OUT);
 
-                        //Method bindCustomTabsServiceMethod = CustomTabsClientClass.getMethod("bindCustomTabsService", Context.class, String.class, CustomServiceTabConnectionClass);
                         final Method warmupMethod = CustomTabsClientClass.getMethod("warmup", long.class);
                         final Method newSessionMethod = CustomTabsClientClass.getMethod("newSession", CustomTabsCallbackClass);
                         final Method mayLaunchUrlMethod = CustomTabsSessionClass.getMethod("mayLaunchUrl", Uri.class, Bundle.class, List.class);
