@@ -170,6 +170,7 @@ public class PrefHelper {
         }
 
         // Reset all of the statics.
+        enableLogging_ = false;
         Branch_Key = null;
         savedAnalyticsData_ = null;
         prefHelper_ = null;
