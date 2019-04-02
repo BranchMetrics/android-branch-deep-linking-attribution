@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.util.Log;
 import android.widget.TextView;
 
-import java.util.Iterator;
-
 import io.branch.referral.Branch;
 
 /**
@@ -21,19 +19,17 @@ public class AutoDeepLinkTestActivity extends Activity {
         super.onResume();
         setContentView(R.layout.auto_deep_link_test);
 
-        TextView launch_mode_txt = (TextView) findViewById(R.id.launch_mode_txt);
+        TextView launch_mode_txt = findViewById(R.id.launch_mode_txt);
         if (Branch.isAutoDeepLinkLaunch(this)) {
-            launch_mode_txt.setText("Launched by Branch on auto deep linking!");
+            launch_mode_txt.setText(R.string.launch_mode_branch);
             Branch.getInstance().getLatestReferringParams();
         } else {
-            launch_mode_txt.setText("Launched by normal application flow");
+            launch_mode_txt.setText(R.string.launch_mode_normal);
         }
 
         //You can also get linked params for the intent extra.
         if (getIntent().getExtras() != null && getIntent().getExtras().keySet() != null) {
-            Iterator<?> keys = getIntent().getExtras().keySet().iterator();
-            while (keys.hasNext()) {
-                String key = (String) keys.next();
+            for (String key : getIntent().getExtras().keySet()) {
                 Log.i("BranchTestBed:", "Deep Linked Param " +
                         key + " = " + getIntent().getExtras().getString(key));
             }

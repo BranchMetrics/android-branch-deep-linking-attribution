@@ -8,4 +8,7 @@
 
     <string name="install_count_empty">install count =</string>
 
+    <string name="launch_mode_branch">"Launched by Branch on auto deep linking!"</string>
+    <string name="launch_mode_normal">"Launched by normal application flow"</string>
+
 </resources>
