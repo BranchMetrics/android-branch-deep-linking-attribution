@@ -1,6 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;

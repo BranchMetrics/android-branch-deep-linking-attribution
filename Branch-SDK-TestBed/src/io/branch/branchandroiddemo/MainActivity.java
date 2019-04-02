@@ -24,7 +24,6 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
-import io.branch.referral.validators.DeepLinkRoutingValidator;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -34,26 +33,23 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.referral.validators.IntegrationValidator;
 
 
 public class MainActivity extends Activity {
-    Branch branch;
+    private EditText txtShortUrl;
+    private TextView txtInstallCount;
+    private TextView txtRewardBalance;
 
-    EditText txtShortUrl;
-    TextView txtInstallCount;
-    TextView txtRewardBalance;
-
-    BranchUniversalObject branchUniversalObject;
+    private BranchUniversalObject branchUniversalObject;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        txtShortUrl = (EditText) findViewById(R.id.editReferralShortUrl);
-        txtInstallCount = (TextView) findViewById(R.id.txtInstallCount);
-        txtRewardBalance = (TextView) findViewById(R.id.txtRewardBalance);
+        txtShortUrl = findViewById(R.id.editReferralShortUrl);
+        txtInstallCount = findViewById(R.id.txtInstallCount);
+        txtRewardBalance = findViewById(R.id.txtRewardBalance);
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
 
         // Create a BranchUniversal object for the content referred on this activity instance
@@ -90,7 +86,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.setIdentity("test_user_10", new BranchReferralInitListener() {
+                Branch.getInstance().setIdentity("test_user_10", new BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(JSONObject referringParams, BranchError error) {
                         if (error != null) {
@@ -106,22 +102,22 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdClearUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.logout(new Branch.LogoutStatusListener() {
+                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.i("BranchTestBed", "onLogoutFinished " + loggedOut + " errorMessage " + error);
                     }
                 });
 
-                txtRewardBalance.setText("rewards = ");
-                txtInstallCount.setText("install count =");
+                txtRewardBalance.setText(R.string.rewards_empty);
+                txtInstallCount.setText(R.string.install_count_empty);
             }
         });
 
         findViewById(R.id.cmdPrintInstallParam).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                JSONObject obj = branch.getFirstReferringParams();
+                JSONObject obj = Branch.getInstance().getFirstReferringParams();
                 Log.i("BranchTestBed", "install params = " + obj.toString());
             }
         });
@@ -139,33 +135,35 @@ public class MainActivity extends Activity {
                         .setDuration(100);
                 //.setAlias("myContentName") // in case you need to white label your link
 
-                // Sync link create example
-                txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
+                // Sync link create example.  This makes a network call on the UI thread
+                // txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
 
                 // Async Link creation example
-               /* branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
+                branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        String shortUrl = url;
+                        if (error != null) {
+                            txtShortUrl.setText(error.getMessage());
+                        } else {
+                            txtShortUrl.setText(url);
+                        }
                     }
-                });*/
-
+                });
             }
-
         });
 
 
         findViewById(R.id.cmdRefreshReward).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                branch.loadRewards(new BranchReferralStateChangedListener() {
+                Branch.getInstance().loadRewards(new BranchReferralStateChangedListener() {
                     @Override
                     public void onStateChanged(boolean changed, BranchError error) {
                         if (error != null) {
                             Log.i("BranchTestBed", "branch load rewards failed. Caused by -" + error.getMessage());
                         } else {
                             Log.i("BranchTestBed", "changed = " + changed);
-                            txtRewardBalance.setText("rewards = " + branch.getCredits());
+                            txtRewardBalance.setText(getString(R.string.rewards, Branch.getInstance().getCredits()));
                         }
                     }
                 });
@@ -175,7 +173,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdRedeemFive).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.redeemRewards(5, new BranchReferralStateChangedListener() {
+                Branch.getInstance().redeemRewards(5, new BranchReferralStateChangedListener() {
                     @Override
                     public void onStateChanged(boolean changed, BranchError error) {
                         if (error != null) {
@@ -183,7 +181,7 @@ public class MainActivity extends Activity {
                         } else {
                             if (changed) {
                                 Log.i("BranchTestBed", "redeemed rewards = " + true);
-                                txtRewardBalance.setText("rewards = " + branch.getCredits());
+                                txtRewardBalance.setText(getString(R.string.rewards, Branch.getInstance().getCredits()));
                             } else {
                                 Log.i("BranchTestBed", "redeem rewards unknown error ");
                             }
@@ -196,7 +194,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branch.userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
+                Branch.getInstance().userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
                     @Override
                     public void onBranchViewVisible(String action, String branchViewID) {
                         Log.i("BranchTestBed", "onBranchViewVisible");
@@ -233,7 +231,7 @@ public class MainActivity extends Activity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                branch.userCompletedAction("buy", params);
+                Branch.getInstance().userCompletedAction("buy", params);
             }
 
         });
@@ -263,7 +261,6 @@ public class MainActivity extends Activity {
         findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                JSONObject obj = new JSONObject();
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
@@ -307,7 +304,7 @@ public class MainActivity extends Activity {
                             public void onChannelSelected(String channelName) {
                             }
 
-                            /**
+                            /*
                              * Use {@link io.branch.referral.Branch.ExtendedBranchLinkShareListener} if the params need to be modified according to the channel selected by the user.
                              * This allows modification of content or link properties through callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} }
                              */
@@ -381,7 +378,7 @@ public class MainActivity extends Activity {
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                branch.getInstance().disableTracking(isChecked);
+                Branch.getInstance().disableTracking(isChecked);
             }
         });
 
@@ -391,8 +388,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        branch = Branch.getInstance();
-        branch.initSession(new Branch.BranchUniversalReferralInitListener() {
+        Branch.getInstance().initSession(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {

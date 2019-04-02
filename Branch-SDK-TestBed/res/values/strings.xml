@@ -3,4 +3,9 @@
 
     <string name="app_name">Branch-SDK-TestBed</string>
 
+    <string name="rewards_empty">rewards =</string>
+    <string name="rewards">rewards = %1$d</string>
+
+    <string name="install_count_empty">install count =</string>
+
 </resources>
