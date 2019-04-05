@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.net.TrafficStats;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
