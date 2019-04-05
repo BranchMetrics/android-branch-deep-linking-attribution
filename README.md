@@ -1,5 +1,8 @@
 # Branch Metrics Android SDK
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.branch.sdk.android/library/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.branch.sdk.android/library)
+[![Javadocs](http://javadoc-badge.appspot.com/io.branch.sdk.android/library.svg?label=javadoc)](http://javadoc-badge.appspot.com/io.branch.sdk.android/library)
+
 This is a repository of our open source Android SDK, and the information presented here serves as a reference manual for our Android SDK. See the table of contents below for a complete list of the content featured in this document.
 
 ___
