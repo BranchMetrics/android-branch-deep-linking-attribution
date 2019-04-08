@@ -2319,7 +2319,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         }
                         //All request except open and install need a session to execute
-                        else if (!(req instanceof ServerRequestInitSession) && (!hasSession() || !hasDeviceFingerPrint())) {
+                        else if (needsSession(req)) {
                             networkCount_ = 0;
                             handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         } else {
@@ -2338,6 +2338,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean needsSession(ServerRequest request) {
+        // All request except open and install need a session to execute (TODO -- Incorrect comment)
+        if (request instanceof ServerRequestInitSession) {
+            return false;
+        } else if (request instanceof ServerRequestCreateUrl) {
+            return false;
+        }
+
+        boolean sessionAvailable = (hasSession() || hasDeviceFingerPrint());
+        return !sessionAvailable;
     }
     
     private void handleFailure(int index, int statusCode) {
@@ -2565,7 +2577,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void handleNewRequest(ServerRequest req) {
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
-        if (trackingController.isTrackingDisabled()) {
+        if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             req.reportTrackingDisabledError();
             return;
         }
