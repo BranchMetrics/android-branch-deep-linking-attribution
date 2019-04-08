@@ -2341,7 +2341,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private boolean needsSession(ServerRequest request) {
-        // All request except open and install need a session to execute (TODO -- Incorrect comment)
         if (request instanceof ServerRequestInitSession) {
             return false;
         } else if (request instanceof ServerRequestCreateUrl) {
