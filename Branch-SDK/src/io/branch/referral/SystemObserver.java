@@ -3,9 +3,10 @@ package io.branch.referral;
 import android.Manifest;
 import android.app.UiModeManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
@@ -69,33 +70,94 @@ abstract class SystemObserver {
         String packageName = "";
         if (context != null) {
             try {
-                PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                packageName = info.packageName;
-            } catch (NameNotFoundException e) {
-                e.printStackTrace();
+                final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                packageName = packageInfo.packageName;
+            } catch (Exception e) {
+                PrefHelper.LogException("Error obtaining PackageName", e);
             }
         }
         return packageName;
     }
 
     /**
-     * <p>Gets the App Version Name of the current application that the SDK is integrated with.</p>
-     *
+     * Get the App Version Name of the current application that the SDK is integrated with.
      * @param context Context.
-     * @return <p>A {@link String} value containing the full package name of the application that the SDK is
-     * currently integrated into.</p>
+     * @return {@link String} value containing the full package name.  BLANK in case of error
      */
     static String getAppVersion(Context context) {
-        try {
-            if (context != null) {
-                PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                if (packageInfo.versionName != null) {
-                    return packageInfo.versionName;
-                }
+        String appVersion = "";
+        if (context != null) {
+            try {
+                final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                appVersion = packageInfo.versionName;
+            } catch (Exception e) {
+                PrefHelper.LogException("Error obtaining AppVersion", e);
             }
-        } catch (NameNotFoundException ignored) {
         }
-        return BLANK;
+        return (TextUtils.isEmpty(appVersion) ? BLANK : appVersion);
+    }
+
+    /**
+     * Get the time at which the app was first installed, in milliseconds.
+     * @param context Context.
+     * @return the time at which the app was first installed.
+     */
+    static long getFirstInstallTime(Context context) {
+        long firstTime = 0L;
+        if (context != null) {
+            try {
+                final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                firstTime = packageInfo.firstInstallTime;
+            } catch (Exception e) {
+                PrefHelper.LogException("Error obtaining FirstInstallTime", e);
+            }
+        }
+
+        return firstTime;
+    }
+
+    /**
+     * Determine if the package is installed.
+     * @param context Context
+     * @return true if the package is installed.
+     */
+    static boolean isPackageInstalled(Context context) {
+        boolean isInstalled = false;
+        if (context != null) {
+            try {
+                final PackageManager packageManager = context.getPackageManager();
+                Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                if (intent == null) {
+                    return false;
+                }
+                List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+
+                isInstalled = (list != null && list.size() > 0);
+            } catch (Exception e) {
+                PrefHelper.LogException("Error obtaining PackageInfo", e);
+            }
+        }
+
+        return isInstalled;
+    }
+
+    /**
+     * Get the time at which the app was last updated, in milliseconds.
+     * @param context Context.
+     * @return the time at which the app was last updated.
+     */
+    static long getLastUpdateTime(Context context) {
+        long lastTime = 0L;
+        if (context != null) {
+            try {
+                final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                lastTime = packageInfo.lastUpdateTime;
+            } catch (Exception e) {
+                PrefHelper.LogException("Error obtaining LastUpdateTime", e);
+            }
+        }
+
+        return lastTime;
     }
 
     /**
@@ -330,9 +392,7 @@ abstract class SystemObserver {
          * <pre>38400000-8cf0-11bd-b23e-10b96e40000d</pre>
          *
          * @param adInfoObj AdvertisingIdClient.
-         * @return <p>A {@link String} value containing the client ad UUID as supplied by Google Play.</p>
-         * @see <a href="https://developer.android.com/google/play-services/id.html">
-         * Android Developers - Advertising ID</a>
+         * @see <a href="https://developer.android.com/google/play-services/id.html"> Android Developers - Advertising ID</a>
          */
         private void setAdvertisingId(Object adInfoObj) {
             try {
@@ -347,7 +407,6 @@ abstract class SystemObserver {
          * <p>Check the Google Play services to for LAT enabled or disabled and return the LAT value as an integer.</p>
          *
          * @param adInfoObj AdvertisingIdClient.
-         * @return <p> 0 if LAT is disabled else 1.</p>
          * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
          * Android Developers - Limit Ad Tracking</a>
          */

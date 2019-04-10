@@ -573,7 +573,7 @@ public abstract class ServerRequest {
     
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
-            String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
+            String environment = DeviceInfo.getInstance().isPackageInstalled() ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
             if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
                 JSONObject userData = post.optJSONObject(Defines.Jsonkey.UserData.getKey());
                 if (userData != null) {
@@ -585,17 +585,7 @@ public abstract class ServerRequest {
         } catch (Exception ignore) {
         }
     }
-    
-    private static boolean isPackageInstalled(Context context) {
-        final PackageManager packageManager = context.getPackageManager();
-        Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
-        if (intent == null) {
-            return false;
-        }
-        List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        return (list != null && list.size() > 0);
-    }
-    
+
     /**
      * Returns the Branch API version
      *

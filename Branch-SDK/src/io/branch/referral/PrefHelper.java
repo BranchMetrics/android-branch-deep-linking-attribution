@@ -23,6 +23,7 @@ import java.util.Collections;
  * preference values.</p>
  */
 public class PrefHelper {
+    private static final String TAG = "BranchSDK";
 
     /**
      * The base URL to use for all calls to the Branch API.
@@ -1153,14 +1154,20 @@ public class PrefHelper {
     public static void Debug(String message) {
         if (BranchUtil.isDebugEnabled() || enableLogging_) {
             if (!TextUtils.isEmpty(message)) {
-                Log.i("BranchSDK", message);
+                Log.i(TAG, message);
             }
+        }
+    }
+
+    public static void LogException(String message, Throwable t) {
+        if (!TextUtils.isEmpty(message)) {
+            Log.e(TAG, message, t);
         }
     }
 
     public static void LogAlways(String message) {
         if (!TextUtils.isEmpty(message)) {
-            Log.i("BranchSDK", message);
+            Log.i(TAG, message);
         }
     }
 
