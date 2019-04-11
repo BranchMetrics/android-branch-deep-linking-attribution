@@ -2,9 +2,7 @@ package io.branch.referral;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
 
 import org.json.JSONException;
@@ -13,7 +11,6 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,10 +23,9 @@ public abstract class ServerRequest {
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    protected String requestPath_;
+    private String requestPath_;
     protected final PrefHelper prefHelper_;
-    long queueWaitTime_ = 0;
-    private int waitLockCnt = 0;
+    private long queueWaitTime_ = 0;
     private final Context context_;
     
     // Various process wait locks for Branch server request
@@ -39,7 +35,7 @@ public abstract class ServerRequest {
     }
     
     // Set for holding any active wait locks
-    final Set<PROCESS_WAIT_LOCK> locks_;
+    private final Set<PROCESS_WAIT_LOCK> locks_;
     
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
