@@ -2,8 +2,6 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -245,16 +243,15 @@ abstract class ServerRequestInitSession extends ServerRequest {
         int installOrUpdateState = STATE_NO_CHANGE;
         String currAppVersion = DeviceInfo.getInstance().getAppVersion();
         long updateBufferTime = (24 * 60 * 60 * 1000); // Update buffer time is a day.
-        PackageInfo packageInfo = null;
-        try {
-            packageInfo = context_.getPackageManager().getPackageInfo(context_.getPackageName(), 0);
-        } catch (PackageManager.NameNotFoundException ignored) {
-        }
+
+        long firstInstallTime = DeviceInfo.getInstance().getFirstInstallTime();
+        long lastUpdateTime = DeviceInfo.getInstance().getLastUpdateTime();
+
         if (PrefHelper.NO_STRING_VALUE.equals(prefHelper_.getAppVersion())) {
             // Default, just register an install
             installOrUpdateState = STATE_FRESH_INSTALL;
             // if no app version is in storage, this must be the first time Branch is here. 24 hour buffer for updating as an update state
-            if (packageInfo != null && (packageInfo.lastUpdateTime - packageInfo.firstInstallTime) >= updateBufferTime) {
+            if ((lastUpdateTime - firstInstallTime) >= updateBufferTime) {
                 installOrUpdateState = STATE_UPDATE;
             }
         } else if (!prefHelper_.getAppVersion().equals(currAppVersion)) {
@@ -263,23 +260,21 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
 
         post.put(Defines.Jsonkey.Update.getKey(), installOrUpdateState);
-        if (packageInfo != null) {
-            post.put(Defines.Jsonkey.FirstInstallTime.getKey(), packageInfo.firstInstallTime);
-            post.put(Defines.Jsonkey.LastUpdateTime.getKey(), packageInfo.lastUpdateTime);
-            long originalInstallTime = prefHelper_.getLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME);
-            if (originalInstallTime == 0) {
-                originalInstallTime = packageInfo.firstInstallTime;
-                prefHelper_.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, packageInfo.firstInstallTime);
-            }
-            post.put(Defines.Jsonkey.OriginalInstallTime.getKey(), originalInstallTime);
-
-            long lastKnownUpdateTime = prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME);
-            if (lastKnownUpdateTime < packageInfo.lastUpdateTime) {
-                prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, lastKnownUpdateTime);
-                prefHelper_.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, packageInfo.lastUpdateTime);
-            }
-            post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
+        post.put(Defines.Jsonkey.FirstInstallTime.getKey(), firstInstallTime);
+        post.put(Defines.Jsonkey.LastUpdateTime.getKey(), lastUpdateTime);
+        long originalInstallTime = prefHelper_.getLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME);
+        if (originalInstallTime == 0) {
+            originalInstallTime = firstInstallTime;
+            prefHelper_.setLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME, firstInstallTime);
         }
+        post.put(Defines.Jsonkey.OriginalInstallTime.getKey(), originalInstallTime);
+
+        long lastKnownUpdateTime = prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME);
+        if (lastKnownUpdateTime < lastUpdateTime) {
+            prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, lastKnownUpdateTime);
+            prefHelper_.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, lastUpdateTime);
+        }
+        post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
     }
 
     @Override

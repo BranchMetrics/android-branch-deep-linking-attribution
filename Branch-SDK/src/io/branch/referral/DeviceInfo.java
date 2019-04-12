@@ -57,7 +57,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    public void updateRequestWithV1Params(JSONObject requestObj) {
+    void updateRequestWithV1Params(JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
@@ -115,7 +115,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    public void updateRequestWithV2Params(Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
@@ -185,7 +185,7 @@ class DeviceInfo {
      * @return {@link String} with package name value
      */
     public String getPackageName() {
-        return systemObserver_.getPackageName(context_);
+        return SystemObserver.getPackageName(context_);
     }
 
     /**
@@ -194,7 +194,29 @@ class DeviceInfo {
      * @return {@link String} with app version value
      */
     public String getAppVersion() {
-        return systemObserver_.getAppVersion(context_);
+        return SystemObserver.getAppVersion(context_);
+    }
+
+    /**
+     * @return the time at which the app was first installed, in milliseconds.
+     */
+    public long getFirstInstallTime() {
+        return SystemObserver.getFirstInstallTime(context_);
+    }
+
+    /**
+     * @return the time at which the app was last updated, in milliseconds.
+     */
+    public long getLastUpdateTime() {
+        return SystemObserver.getLastUpdateTime(context_);
+    }
+
+    /**
+     * Determine if the package is installed, vs. if this is an "Instant" app.
+     * @return true if the package is installed.
+     */
+    public boolean isPackageInstalled() {
+        return SystemObserver.isPackageInstalled(context_);
     }
 
     /**
