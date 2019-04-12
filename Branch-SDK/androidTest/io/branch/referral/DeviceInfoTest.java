@@ -80,6 +80,5 @@ public class DeviceInfoTest extends BranchTest {
         }
 
         Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getGAID()));
-        Assert.assertNotEquals(0, DeviceInfo.getInstance().getSystemObserver().getLATVal());
     }
 }
