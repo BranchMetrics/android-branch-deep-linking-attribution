@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v3.1.2
+  * _*Master Release*_ - April 16, 2019
+  * Hardware ID is now included in every request
+  * Cleaned up compiler warnings, and updated tools to the latest versions
+
 - v3.1.1
   * Added support for push notifications while the application is in the foreground
 
