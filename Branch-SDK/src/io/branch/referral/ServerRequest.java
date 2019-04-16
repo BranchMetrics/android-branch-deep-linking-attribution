@@ -2,9 +2,7 @@ package io.branch.referral;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
 
 import org.json.JSONException;
@@ -13,7 +11,6 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,12 +23,9 @@ public abstract class ServerRequest {
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    protected String requestPath_;
+    private String requestPath_;
     protected final PrefHelper prefHelper_;
-    private final SystemObserver systemObserver_;
-    long queueWaitTime_ = 0;
-    private boolean disableAndroidIDFetch_;
-    private int waitLockCnt = 0;
+    private long queueWaitTime_ = 0;
     private final Context context_;
     
     // Various process wait locks for Branch server request
@@ -41,7 +35,7 @@ public abstract class ServerRequest {
     }
     
     // Set for holding any active wait locks
-    final Set<PROCESS_WAIT_LOCK> locks_;
+    private final Set<PROCESS_WAIT_LOCK> locks_;
     
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
@@ -61,9 +55,7 @@ public abstract class ServerRequest {
         context_ = context;
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
-        systemObserver_ = new SystemObserver(context);
         params_ = new JSONObject();
-        disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
         locks_ = new HashSet<>();
     }
     
@@ -80,8 +72,6 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        systemObserver_ = new SystemObserver(context);
-        disableAndroidIDFetch_ = Branch.isDeviceIDFetchDisabled();
         locks_ = new HashSet<>();
     }
     
@@ -186,11 +176,11 @@ public abstract class ServerRequest {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableAndroidIDFetch_).updateRequestWithUserData(context_, prefHelper_, userDataObj);
+                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
             } catch (JSONException ignore) {
             }
         } else {
-            DeviceInfo.getInstance(BranchUtil.isDebugEnabled(), systemObserver_, disableAndroidIDFetch_).updateRequestWithDeviceParams(params_);
+            DeviceInfo.getInstance().updateRequestWithV1Params(params_);
         }
     }
     
@@ -378,18 +368,20 @@ public abstract class ServerRequest {
      */
     private void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
-        if (!TextUtils.isEmpty(systemObserver_.GAIDString_)) {
+        int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
+        String gaid = DeviceInfo.getInstance().getSystemObserver().getGAID();
+        if (!TextUtils.isEmpty(gaid)) {
             try {
                 if (version == BRANCH_API_VERSION.V2) {
                     JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                     if (userDataObj != null) {
-                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), systemObserver_.GAIDString_);
-                        userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), systemObserver_.LATVal_);
+                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
+                        userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                     }
                 } else {
-                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), systemObserver_.GAIDString_);
-                    params_.put(Defines.Jsonkey.LATVal.getKey(), systemObserver_.LATVal_);
+                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                    params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -577,7 +569,7 @@ public abstract class ServerRequest {
     
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
-            String environment = isPackageInstalled(context) ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
+            String environment = DeviceInfo.getInstance().isPackageInstalled() ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
             if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
                 JSONObject userData = post.optJSONObject(Defines.Jsonkey.UserData.getKey());
                 if (userData != null) {
@@ -589,17 +581,7 @@ public abstract class ServerRequest {
         } catch (Exception ignore) {
         }
     }
-    
-    private static boolean isPackageInstalled(Context context) {
-        final PackageManager packageManager = context.getPackageManager();
-        Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
-        if (intent == null) {
-            return false;
-        }
-        List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        return (list != null && list.size() > 0);
-    }
-    
+
     /**
      * Returns the Branch API version
      *

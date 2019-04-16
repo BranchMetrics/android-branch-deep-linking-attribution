@@ -23,6 +23,7 @@ import java.util.Collections;
  * preference values.</p>
  */
 public class PrefHelper {
+    private static final String TAG = "BranchSDK";
 
     /**
      * The base URL to use for all calls to the Branch API.
@@ -170,6 +171,7 @@ public class PrefHelper {
         }
 
         // Reset all of the statics.
+        enableLogging_ = false;
         Branch_Key = null;
         savedAnalyticsData_ = null;
         prefHelper_ = null;
@@ -1150,16 +1152,28 @@ public class PrefHelper {
      * @param message A {@link String} value containing the debug message to record.
      */
     public static void Debug(String message) {
-        if (BranchUtil.isDebugEnabled()) {
+        if (BranchUtil.isDebugEnabled() || enableLogging_) {
             if (!TextUtils.isEmpty(message)) {
-                Log.i("BranchSDK", message);
+                Log.i(TAG, message);
             }
+        }
+    }
+
+    public static void LogException(String message, Throwable t) {
+        if (!TextUtils.isEmpty(message)) {
+            Log.e(TAG, message, t);
         }
     }
 
     public static void LogAlways(String message) {
         if (!TextUtils.isEmpty(message)) {
-            Log.i("BranchSDK", message);
+            Log.i(TAG, message);
         }
+    }
+
+    private static boolean enableLogging_ = false;
+
+    static void enableLogging(boolean fEnable) {
+        enableLogging_ = fEnable;
     }
 }

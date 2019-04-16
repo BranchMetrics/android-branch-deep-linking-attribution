@@ -1,6 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -20,6 +19,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchListResponseListener;
@@ -27,9 +27,8 @@ import io.branch.referral.BranchError;
 
 public class CreditHistoryActivity extends Activity {
 
-    private static SimpleDateFormat DateParseFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
-    private static SimpleDateFormat DatePrintFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-    private Branch branch;
+    private static SimpleDateFormat DateParseFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'", Locale.US);
+    private static SimpleDateFormat DatePrintFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
     private ListView listview;
 
     @Override
@@ -37,7 +36,7 @@ public class CreditHistoryActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_credit_history);
 
-        listview = (ListView) findViewById(R.id.list);
+        listview = findViewById(R.id.list);
     }
 
     @Override
@@ -45,12 +44,12 @@ public class CreditHistoryActivity extends Activity {
         super.onStart();
 
         final CreditHistoryActivity self = this;
-        branch = Branch.getInstance();
+        Branch branch = Branch.getInstance();
 
         branch.getCreditHistory(new BranchListResponseListener() {
 
             public void onReceivingResponse(JSONArray history, BranchError error) {
-                ArrayList<CreditTransaction> list = new ArrayList<CreditTransaction>();
+                ArrayList<CreditTransaction> list = new ArrayList<>();
                 if (error != null) {
                     Log.i("BranchTestBed", "branch load credit history failed. Caused by -" + error.getMessage());
                 } else {
@@ -96,7 +95,7 @@ public class CreditHistoryActivity extends Activity {
 
         private LayoutInflater layoutInflater;
 
-        public CreditHistoryArrayAdaptor(Context context, ArrayList<CreditTransaction> listData) {
+        CreditHistoryArrayAdaptor(Context context, ArrayList<CreditTransaction> listData) {
             this.listData = listData;
             layoutInflater = LayoutInflater.from(context);
         }
@@ -121,17 +120,17 @@ public class CreditHistoryActivity extends Activity {
             if (convertView == null) {
                 convertView = layoutInflater.inflate(R.layout.activity_credit_transaction, parent, false);
                 holder = new ViewHolder();
-                holder.transactionView = (TextView) convertView.findViewById(R.id.transaction);
-                holder.referrerView = (TextView) convertView.findViewById(R.id.referrer);
-                holder.dateView = (TextView) convertView.findViewById(R.id.date);
+                holder.transactionView = convertView.findViewById(R.id.transaction);
+                holder.referrerView = convertView.findViewById(R.id.referrer);
+                holder.dateView = convertView.findViewById(R.id.date);
                 convertView.setTag(holder);
             } else {
                 holder = (ViewHolder) convertView.getTag();
             }
 
-            holder.transactionView.setText(((CreditTransaction)listData.get(position)).getTransaction());
-            holder.referrerView.setText(((CreditTransaction)listData.get(position)).getReferInfo());
-            holder.dateView.setText(((CreditTransaction)listData.get(position)).getDate());
+            holder.transactionView.setText((listData.get(position)).getTransaction());
+            holder.referrerView.setText((listData.get(position)).getReferInfo());
+            holder.dateView.setText((listData.get(position)).getDate());
 
             return convertView;
         }
@@ -150,42 +149,44 @@ public class CreditHistoryActivity extends Activity {
         private String referree;
         private Date date;
 
-        public CreditTransaction(String bucket) {
+        CreditTransaction(String bucket) {
             this(bucket, null, null, null);
         }
 
-        public CreditTransaction(String transaction, String referrer, String referree, Date date) {
+        CreditTransaction(String transaction, String referrer, String referree, Date date) {
             this.transaction = transaction;
             this.referrer = referrer;
             this.referree = referree;
             this.date = date;
         }
 
-        public String getTransaction() {
+        String getTransaction() {
             return this.transaction;
         }
 
-        public String getReferInfo() {
+        String getReferInfo() {
             StringBuilder sb = new StringBuilder();
             if (this.referrer != null || this.referree != null) {
                 boolean hasReferrer = false;
                 sb.append("(");
                 if (this.referrer != null) {
                     hasReferrer = true;
-                    sb.append("referrer: " + this.referrer);
+                    sb.append("referrer: ");
+                    sb.append(this.referrer);
                 }
                 if (this.referree != null) {
                     if (hasReferrer) {
                         sb.append(" -> ");
                     }
-                    sb.append("referree: " + this.referree);
+                    sb.append("referree: ");
+                    sb.append(this.referree);
                 }
                 sb.append(")");
             }
             return sb.toString();
         }
 
-        public String getDate() {
+        String getDate() {
             return this.date != null ? DatePrintFormat.format(this.date) : "";
         }
     }

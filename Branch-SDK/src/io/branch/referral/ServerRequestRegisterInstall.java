@@ -21,12 +21,11 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param context     Current {@link Application} context
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
-     * @param sysObserver {@link SystemObserver} instance.
      * @param installID   installation ID.                                   .
      */
     ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
-                                 SystemObserver sysObserver, String installID) {
-        super(context, Defines.RequestPath.RegisterInstall.getPath(), sysObserver);
+                                 String installID) {
+        super(context, Defines.RequestPath.RegisterInstall.getPath());
         callback_ = callback;
         JSONObject installPost = new JSONObject();
         try {
@@ -40,7 +39,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         }
     }
     
-    public ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
+    ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
     
@@ -106,7 +105,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             
-            prefHelper_.setAppVersion(systemObserver_.getAppVersion());
+            prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -115,7 +114,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     }
     
     
-    public void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
+    void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
         if (callback != null) {  // Update callback if set with valid callback instance.
             callback_ = callback;
         }

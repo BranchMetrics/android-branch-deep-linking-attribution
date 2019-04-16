@@ -16,72 +16,19 @@ import org.json.JSONObject;
  * </p>
  */
 class DeviceInfo {
-    /**
-     * Immutable device hardware id
-     */
-    private final String hardwareID_;
-    /**
-     * Status for test vs real hardware ID
-     */
-    private final boolean isHardwareIDReal_;
-    /*
-     * Device manufacturer name
-     */
-    private final String brandName_;
-    /**
-     * Device model name
-     */
-    private final String modelName_;
-    /**
-     * Screen pixel density
-     */
-    private final int screenDensity_;
-    /**
-     * Height of the screen in pixels
-     */
-    private final int screenHeight_;
-    /**
-     * Width of the screen in pixels
-     */
-    private final int screenWidth_;
-    /**
-     * Status for connected to wifi or not
-     */
-    private final boolean isWifiConnected_;
-    /**
-     * Local IP address for the device
-     */
-    private final String localIpAddr_;
-    /**
-     * Device os name
-     */
-    private final String osName_;
-    /**
-     * Device OS version
-     */
-    private final int osVersion_;
-    /**
-     * Device type
-     */
-    private final String UIMode_;
-
-    private final String packageName_;
-    private final String appVersion_;
-    private final String countryCode_;
-    private final String languageCode_;
+    private final SystemObserver systemObserver_;
+    private final Context context_;
 
     private static DeviceInfo thisInstance_ = null;
 
-
     /**
-     * Get the singleton instance for deviceInfo class
+     * Initialize the singleton instance for deviceInfo class
      *
-     * @param sysObserver {@link SystemObserver} instance to get device info
      * @return {@link DeviceInfo} global instance
      */
-    public static DeviceInfo getInstance(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
+    static DeviceInfo initialize(Context context) {
         if (thisInstance_ == null) {
-            thisInstance_ = new DeviceInfo(isExternalDebug, sysObserver, disableAndroidIDFetch);
+            thisInstance_ = new DeviceInfo(context);
         }
         return thisInstance_;
     }
@@ -91,38 +38,18 @@ class DeviceInfo {
      *
      * @return {@link DeviceInfo} instance if already initialised or null
      */
-    public static DeviceInfo getInstance() {
+    static DeviceInfo getInstance() {
         return thisInstance_;
     }
 
+    // Package Private
+    static void shutDown() {
+        thisInstance_ = null;
+    }
 
-    private DeviceInfo(boolean isExternalDebug, SystemObserver sysObserver, boolean disableAndroidIDFetch) {
-        if (disableAndroidIDFetch) {
-            hardwareID_ = sysObserver.getUniqueID(true);
-        } else {
-            hardwareID_ = sysObserver.getUniqueID(isExternalDebug);
-        }
-        isHardwareIDReal_ = sysObserver.hasRealHardwareId();
-        brandName_ = sysObserver.getPhoneBrand();
-        modelName_ = sysObserver.getPhoneModel();
-
-        DisplayMetrics dMetrics = sysObserver.getScreenDisplay();
-        screenDensity_ = dMetrics.densityDpi;
-        screenHeight_ = dMetrics.heightPixels;
-        screenWidth_ = dMetrics.widthPixels;
-
-        isWifiConnected_ = sysObserver.getWifiConnected();
-        localIpAddr_ = SystemObserver.getLocalIPAddress();
-
-        osName_ = sysObserver.getOS();
-        osVersion_ = sysObserver.getOSVersion();
-
-        packageName_ = sysObserver.getPackageName();
-        appVersion_ = sysObserver.getAppVersion();
-        countryCode_ = sysObserver.getISO2CountryCode();
-        languageCode_ = sysObserver.getISO2LanguageCode();
-
-        UIMode_ = sysObserver.getUIMode();
+    private DeviceInfo(Context context) {
+        context_ = context;
+        systemObserver_ = new SystemObserverInstance();
     }
 
     /**
@@ -130,37 +57,52 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    public void updateRequestWithDeviceParams(JSONObject requestObj) {
+    void updateRequestWithV1Params(JSONObject requestObj) {
         try {
-            if (!hardwareID_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID_);
-                requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), isHardwareIDReal_);
-            }
-            if (!brandName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName_);
-            }
-            if (!modelName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.Model.getKey(), modelName_);
+            SystemObserver.UniqueId hardwareID = getHardwareID();
+            if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
+                requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID.getId());
+                requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), hardwareID.isReal());
             }
 
-            requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
-            requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
-            requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
-            requestObj.put(Defines.Jsonkey.WiFi.getKey(), isWifiConnected_);
-            requestObj.put(Defines.Jsonkey.UIMode.getKey(), UIMode_);
+            String brandName = SystemObserver.getPhoneBrand();
+            if (!isNullOrEmptyOrBlank(brandName)) {
+                requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName);
+            }
 
-            if (!osName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
+            String modelName = SystemObserver.getPhoneModel();
+            if (!isNullOrEmptyOrBlank(modelName)) {
+                requestObj.put(Defines.Jsonkey.Model.getKey(), modelName);
             }
-            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
-            if (!TextUtils.isEmpty(countryCode_)) {
-                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+
+            DisplayMetrics displayMetrics = SystemObserver.getScreenDisplay(context_);
+            requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), displayMetrics.densityDpi);
+            requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
+            requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
+
+            requestObj.put(Defines.Jsonkey.WiFi.getKey(), SystemObserver.getWifiConnected(context_));
+            requestObj.put(Defines.Jsonkey.UIMode.getKey(), SystemObserver.getUIMode(context_));
+
+            String osName = SystemObserver.getOS();
+            if (!isNullOrEmptyOrBlank(osName)) {
+                requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
-            if (!TextUtils.isEmpty(languageCode_)) {
-                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+
+            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+
+            String countryCode = SystemObserver.getISO2CountryCode();
+            if (!TextUtils.isEmpty(countryCode)) {
+                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode);
             }
-            if ((!TextUtils.isEmpty(localIpAddr_))) {
-                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
+
+            String languageCode = SystemObserver.getISO2LanguageCode();
+            if (!TextUtils.isEmpty(languageCode)) {
+                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode);
+            }
+
+            String localIpAddr = SystemObserver.getLocalIPAddress();
+            if ((!TextUtils.isEmpty(localIpAddr))) {
+                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
 
         } catch (JSONException ignore) {
@@ -173,45 +115,63 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    public void updateRequestWithUserData(Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
-            if (!hardwareID_.equals(SystemObserver.BLANK) && isHardwareIDReal_) {
-                requestObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID_);
+            SystemObserver.UniqueId hardwareID = getHardwareID();
+            if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
+                requestObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
             } else {
                 requestObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
             }
 
-            if (!brandName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName_);
+            String brandName = SystemObserver.getPhoneBrand();
+            if (!isNullOrEmptyOrBlank(brandName)) {
+                requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName);
             }
-            if (!modelName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.Model.getKey(), modelName_);
-            }
-            requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), screenDensity_);
-            requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), screenHeight_);
-            requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), screenWidth_);
 
-            if (!osName_.equals(SystemObserver.BLANK)) {
-                requestObj.put(Defines.Jsonkey.OS.getKey(), osName_);
+            String modelName = SystemObserver.getPhoneModel();
+            if (!isNullOrEmptyOrBlank(modelName)) {
+                requestObj.put(Defines.Jsonkey.Model.getKey(), modelName);
             }
-            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), osVersion_);
-            if (!TextUtils.isEmpty(countryCode_)) {
-                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode_);
+
+            DisplayMetrics displayMetrics = SystemObserver.getScreenDisplay(context_);
+            requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), displayMetrics.densityDpi);
+            requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
+            requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
+
+            String osName = SystemObserver.getOS();
+            if (!isNullOrEmptyOrBlank(osName)) {
+                requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
-            if (!TextUtils.isEmpty(languageCode_)) {
-                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode_);
+
+            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+
+            String countryCode = SystemObserver.getISO2CountryCode();
+            if (!TextUtils.isEmpty(countryCode)) {
+                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode);
             }
-            if ((!TextUtils.isEmpty(localIpAddr_))) {
-                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr_);
+
+            String languageCode = SystemObserver.getISO2LanguageCode();
+            if (!TextUtils.isEmpty(languageCode)) {
+                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode);
             }
-            if (prefHelper != null && !prefHelper.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
-                requestObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
+
+            String localIpAddr = SystemObserver.getLocalIPAddress();
+            if ((!TextUtils.isEmpty(localIpAddr))) {
+                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
-            String devId = prefHelper.getIdentity();
-            if (devId != null && !devId.equals(PrefHelper.NO_STRING_VALUE)) {
-                requestObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper.getIdentity());
+
+            if (prefHelper != null) {
+                if (!isNullOrEmptyOrBlank(prefHelper.getDeviceFingerPrintID())) {
+                    requestObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
+                }
+                String devId = prefHelper.getIdentity();
+                if (!isNullOrEmptyOrBlank(devId)) {
+                    requestObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), devId);
+                }
             }
-            requestObj.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
+
+            requestObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
             requestObj.put(Defines.Jsonkey.SDK.getKey(), "android");
             requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
             requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
@@ -225,7 +185,7 @@ class DeviceInfo {
      * @return {@link String} with package name value
      */
     public String getPackageName() {
-        return packageName_;
+        return SystemObserver.getPackageName(context_);
     }
 
     /**
@@ -234,19 +194,50 @@ class DeviceInfo {
      * @return {@link String} with app version value
      */
     public String getAppVersion() {
-        return appVersion_;
+        return SystemObserver.getAppVersion(context_);
     }
 
-    public boolean isHardwareIDReal() {
-        return isHardwareIDReal_;
+    /**
+     * @return the time at which the app was first installed, in milliseconds.
+     */
+    public long getFirstInstallTime() {
+        return SystemObserver.getFirstInstallTime(context_);
     }
 
-    public String getHardwareID() {
-        return hardwareID_.equals(SystemObserver.BLANK) ? null : hardwareID_;
+    /**
+     * @return the time at which the app was last updated, in milliseconds.
+     */
+    public long getLastUpdateTime() {
+        return SystemObserver.getLastUpdateTime(context_);
+    }
+
+    /**
+     * Determine if the package is installed, vs. if this is an "Instant" app.
+     * @return true if the package is installed.
+     */
+    public boolean isPackageInstalled() {
+        return SystemObserver.isPackageInstalled(context_);
+    }
+
+    /**
+     * @return true if a Debug HardwareId is needed.
+     * Note that if either Debug is enabled or Fetch has been disabled, then requests for a Hardware Id will return a "fake" ID.
+     */
+    static public boolean isDebugHardwareIdNeeded() {
+        boolean isDebugHardwareIdNeeded = Branch.isDeviceIDFetchDisabled() || BranchUtil.isDebugEnabled();
+        return isDebugHardwareIdNeeded;
+    }
+
+    /**
+     * @return the device Hardware ID.
+     * Note that if either Debug is enabled or Fetch has been disabled, then return a "fake" ID.
+     */
+    public SystemObserver.UniqueId getHardwareID() {
+        return getSystemObserver().getUniqueID(context_, isDebugHardwareIdNeeded());
     }
 
     public String getOsName() {
-        return osName_;
+        return systemObserver_.getOS();
     }
 
     // PRS : User agent is checked only from api-17
@@ -262,5 +253,26 @@ class DeviceInfo {
         }
         return userAgent;
     }
+
+    /**
+     * Concrete SystemObserver implementation
+     */
+    private class SystemObserverInstance extends SystemObserver {
+        public SystemObserverInstance() {
+            super();
+        }
+    }
+
+    /**
+     * @return the current SystemObserver instance
+     */
+    SystemObserver getSystemObserver() {
+        return systemObserver_;
+    }
+
+    public static boolean isNullOrEmptyOrBlank(String str) {
+        return TextUtils.isEmpty(str) || str.equals(SystemObserver.BLANK);
+    }
+
 
 }

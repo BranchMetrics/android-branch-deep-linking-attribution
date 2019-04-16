@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.net.TrafficStats;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
@@ -155,7 +156,7 @@ class UniversalResourceAnalyser {
         
         @Override
         protected JSONObject doInBackground(Void... params) {
-            
+            TrafficStats.setThreadStatsTag(0);
             JSONObject respObject = new JSONObject();
             HttpsURLConnection connection = null;
             try {
