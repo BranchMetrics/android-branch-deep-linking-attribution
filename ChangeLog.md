@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v3.2.0
+  * _*Master Release*_ - May 2, 2019
+  * SDK-271 Allow short link creation while privacy is enabled
+
 - v3.1.2
   * _*Master Release*_ - April 16, 2019
   * Hardware ID is now included in every request
