@@ -1,16 +1,30 @@
 version: 2
 jobs:
   build:
+    working_directory: ~/code
     docker:
-      - image: circleci/android:api-26-alpha
+      - image: circleci/android:api-28
     steps:
+      - checkout
+      - run:
+          name: Pre-Emulator Setup 
+          command: uname -srm && 
+                   sudo apt-get install libpulse-dev &&
+                   yes | sdkmanager --licenses || exit 0 &&
+                   yes | sdkmanager --update || exit 0
       - run:
           name: Setup emulator
-          command: sdkmanager "system-images;android-22;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-22;default;armeabi-v7a"
+          command: sdkmanager "system-images;android-25;google_apis;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-25;google_apis;armeabi-v7a" &&
+                   cat ~/.android/avd/test.avd/config.ini &&
+                   mkdir -p ~/.android/avd/test.avd/snapshots/default_boot/ && touch ~/.android/avd/test.avd/snapshots/default_boot/ram.img &&
+                   mksdcard 32M ~/.android/avd/test.avd/snapshots/default_boot/ram.img
       - run:
           name: Launch emulator
-          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-boot-anim -no-window -accel on
+          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator -avd test -noaudio -no-boot-anim -no-window -gpu off -memory 256
           background: true
       - run:
-          name: Run Tests
-          command: ./gradlew :Branch-SDK/connectedAndroidTest
+          name: Run Lint
+          command: ./gradlew lint
+      - run:
+          name: Run Android Tests
+          command: ./gradlew Branch-SDK:connectedAndroidTest
