@@ -2494,7 +2494,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
+            new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
         }
         
         registerInstallOrOpen(request, callback);
