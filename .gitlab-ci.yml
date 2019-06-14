@@ -41,4 +41,4 @@ assembleDebug:
 debugTests:
   stage: test
   script:
-    - ./gradlew lint
+    - ./gradlew test
