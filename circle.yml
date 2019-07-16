@@ -8,7 +8,7 @@ dependencies:
     #- ~/.android
     #- ~/android
   pre:
-    - echo 'y' | android update sdk --filter build-tools-23.0.1 --no-ui --all
+    - echo 'y' | android update sdk --filter build-tools-28.0.0 --no-ui --all
         
   override:
     #- ./install-dependencies.sh
