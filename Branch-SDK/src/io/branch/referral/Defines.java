@@ -278,5 +278,31 @@ public class Defines {
         }
         
     }
+
+    /**
+     * <p>
+     * Defines preinstall parameter keys
+     * </p>
+     */
+    public enum PreinstallKey {
+        campaign("preinstall_campaign"),
+        partner("preinstall_partner");
+
+        private String key = "";
+
+        PreinstallKey(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
     
 }

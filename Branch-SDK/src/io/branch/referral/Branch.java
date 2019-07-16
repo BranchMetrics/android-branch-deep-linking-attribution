@@ -21,6 +21,7 @@ import android.support.annotation.StyleRes;
 import android.text.TextUtils;
 import android.view.View;
 
+import io.branch.referral.Defines.PreinstallKey;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -956,7 +957,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         prefHelper_.addInstallMetadata(key, value);
         return this;
     }
-    
+
+    /**
+     * <p>
+     *   wrapper method to add the pre-install campaign analytics
+     * </p>
+     */
+    public Branch setPreinstallCampaign(@NonNull String preInstallCampaign) {
+        addInstallMetadata(PreinstallKey.campaign.getKey(), preInstallCampaign);
+        return this;
+    }
+
+    /**
+     * <p>
+     *   wrapper method to add the pre-install campaign analytics
+     * </p>
+     */
+    public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
+        addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
+        return this;
+    }
+
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
      * to perform an action upon successful initialisation.</p>
