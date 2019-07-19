@@ -20,6 +20,7 @@ before_script:
 - set +o pipefail
 - yes | android-sdk-linux/tools/bin/sdkmanager --licenses
 - set -o pipefail
+- android-sdk-linux/tools/bin/sdkmanager sdkmanager "build-tools;29.0.0"
 
 stages:
 - build
@@ -28,7 +29,7 @@ stages:
 lintDebug:
   stage: build
   script:
-  - ./gradlew lint
+  - ./gradlew build
 
 assembleDebug:
   stage: build
@@ -41,4 +42,4 @@ assembleDebug:
 debugTests:
   stage: test
   script:
-  - ./gradlew build
+  - ./gradlew test
