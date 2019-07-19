@@ -20,7 +20,7 @@ before_script:
 - set +o pipefail
 - yes | android-sdk-linux/tools/bin/sdkmanager --licenses
 - set -o pipefail
-- android-sdk-linux/tools/bin/sdkmanager sdkmanager "build-tools;29.0.0"
+- android-sdk-linux/tools/bin/sdkmanager "build-tools;29.0.0"
 
 stages:
 - build
