@@ -36,7 +36,7 @@ buildDebug:
   - ./gradlew assembleDebug
   artifacts:
     paths:
-    - app/build/outputs/
+    - ./Branch-SDK/build/outputs/aar/
 
 debugTests:
   stage: test
