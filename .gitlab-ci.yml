@@ -54,7 +54,7 @@ emulatorTests:
   - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager --update
   - android-sdk-linux/tools/bin/sdkmanager "platform-tools" "emulator" "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86"  > installEmulator.log
   - echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -k "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86" -n test
-  - ${ANDROID_HOME}/emulaor/emulator -avd test -no-window -no-audio 
+  - ${ANDROID_HOME}/emulator/emulator -avd test -no-window -no-audio 
   - ./android-wait-for-emulator
   - adb shell input keyevent 82
   - ./gradlew connectedCheck --info
