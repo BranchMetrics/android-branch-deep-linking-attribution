@@ -1,58 +1,60 @@
-image: openjdk:8-jdk
+image: jangrewe/gitlab-ci-android
 
 variables:
   ANDROID_COMPILE_SDK: "29"
-  ANDROID_BUILD_TOOLS: "28.0.3"
-  ANDROID_SDK_TOOLS:   "4333796"
 
-before_script:
-- apt-get --quiet update --yes
-- apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
-- wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip
-- unzip -d android-sdk-linux android-sdk.zip
-- echo y | android-sdk-linux/tools/bin/sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" >/dev/null
-- echo y | android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
-- echo y | android-sdk-linux/tools/bin/sdkmanager "build-tools;${ANDROID_BUILD_TOOLS}" >/dev/null
-- export ANDROID_HOME=$PWD/android-sdk-linux
-- export PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
-- chmod +x ./gradlew
-# temporarily disable checking for EPIPE error and use yes to accept all licenses
-- set +o pipefail
-- yes | android-sdk-linux/tools/bin/sdkmanager --licenses
-- set -o pipefail
+cache:
+  key: ${CI_PROJECT_ID}
+  paths:
+    - .m2/
+    - .gradle/
 
 stages:
-- build
-- test
+  - build
+  - test
 
-lintDebug:
-  stage: build
-  script:
-  - ./gradlew lint
+before_script:
+  - export GRADLE_USER_HOME=$(pwd)/.gradle
+  - chmod +x ./gradlew
+  - apt-get update -y && apt-get install wget -y
 
-buildDebug:
+.build_template: &build
   stage: build
-  script:
-  - ./gradlew assembleDebug
   artifacts:
+    expire_in: 4 hours
     paths:
-    - ./Branch-SDK/build/outputs/aar/
+      - app/build/outputs/
 
-debugTests:
-  stage: test
+build:develop:
+  <<: *build
   script:
-  - ./gradlew test
+    - ./gradlew build
 
-emulatorTests:
-  stage: test
+build:release:
+  <<: *build
+  only:
+    - master
   script:
-  - wget --quiet --output-document=android-wait-for-emulator https://raw.githubusercontent.com/travis-ci/travis-cookbooks/0f497eb71291b52a703143c5cd63a217c8766dc9/community-cookbooks/android-sdk/files/default/android-wait-for-emulator
-  - chmod +x android-wait-for-emulator
-  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86"
-  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager --update
-  - echo n | ${ANDROID_HOME}/tools/bin/avdmanager create avd -k "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86" -n test
-  - ${ANDROID_HOME}/tools/emulator -avd test -no-window -no-audio 
-  - ./android-wait-for-emulator
-  - adb shell input keyevent 82
-  - ./gradlew connectedCheck --info
+    - ./gradlew lint
 
+.test_template: &test
+  stage: test
+
+test:unit:
+  <<: *test
+  script:
+    - ./gradlew test
+
+test:functional:
+  <<: *test
+  when: manual
+  script:
+    - wget --quiet --output-document=android-wait-for-emulator https://raw.githubusercontent.com/travis-ci/travis-cookbooks/0f497eb71291b52a703143c5cd63a217c8766dc9/community-cookbooks/android-sdk/files/default/android-wait-for-emulator
+    - chmod +x android-wait-for-emulator
+    - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86"
+    - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager --update
+    - echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -k "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86" -n test
+    - ${ANDROID_HOME}/tools/emulator -avd test -no-window -no-audio
+    - ./android-wait-for-emulator
+    - adb shell input keyevent 82
+    - ./gradlew cAT
