@@ -6,7 +6,6 @@ variables:
   ANDROID_SDK_TOOLS:   "4333796"
 
 stages:
-- build
 - test
 
 lintDebug:
