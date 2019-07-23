@@ -51,8 +51,8 @@ if __name__ == '__main__':
 
         # Start the newly created AVD
         print formatted_text.in_bold("Spinning up the AVD...")
-        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd Nexus_5X_API_27 -wipe-data &")
-        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd Nexus_5X_API_27 &")
+        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd Nexus_5X_API_27 -wipe-data  &")
+        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd Nexus_5X_API_27  &")
         print formatted_text.in_bold_green("Finished spinning up the AVD.\n")
 
         # Wait for the AVD to finish booting up
