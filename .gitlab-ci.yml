@@ -30,27 +30,4 @@ debugTests:
 emulatorTests:
   stage: test
   script:
-  - wget --quiet --output-document=android-wait-for-emulator https://raw.githubusercontent.com/travis-ci/travis-cookbooks/0f497eb71291b52a703143c5cd63a217c8766dc9/community-cookbooks/android-sdk/files/default/android-wait-for-emulator
-  - chmod +x android-wait-for-emulator
-  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86"
-  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager --update
-  - ${ANDROID_HOME}/tools/bin/sdkmanager "platform-tools" "emulator" "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86"  > installEmulator.log
-  - echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -k "system-images;android-${ANDROID_COMPILE_SDK};google_apis_playstore;x86" -n test
-  - ${ANDROID_HOME}/emulator/emulator -avd test -no-window -no-audio&
-  - ./android-wait-for-emulator
-  - adb shell input keyevent 82
-  - ./gradlew connectedCheck --info
-
-emulatorTests2:
-  stage: test
-  script:
-  - wget --quiet --output-document=android-wait-for-emulator https://raw.githubusercontent.com/travis-ci/travis-cookbooks/0f497eb71291b52a703143c5cd63a217c8766dc9/community-cookbooks/android-sdk/files/default/android-wait-for-emulator
-  - chmod +x android-wait-for-emulator
-  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-24;default;armeabi-v7a"
-  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager --update
-  - ${ANDROID_HOME}/tools/bin/sdkmanager "platform-tools" "emulator" "system-images;android-24;default;armeabi-v7a"  > installEmulator.log
-  - echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -k "system-images;android-24;default;armeabi-v7a" -n test2
-  - ${ANDROID_HOME}/emulator/emulator -avd test -no-window -no-audio&
-  - ./android-wait-for-emulator
-  - adb shell input keyevent 82
-  - ./gradlew connectedCheck --info
+  - python2 deploy/build_test.py
