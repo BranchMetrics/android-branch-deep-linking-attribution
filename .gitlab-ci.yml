@@ -30,4 +30,4 @@ debugTests:
 emulatorTests:
   stage: test
   script:
-  - python2 -u deploy/build_and_test.py
+  - python2 -u ./deploy/build_and_test.py
