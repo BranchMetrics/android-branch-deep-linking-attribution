@@ -32,10 +32,10 @@ if __name__ == '__main__':
         os.chdir(sdk_android_dir)
         print "Changed to the '{0}' directory\n".format(os.getcwd())
 
-        # Execute the gradle 'generateRelease' task
-        print formatted_text.in_bold("Building the Android SDK...")
-        execute_command("./gradlew build")
-        print formatted_text.in_bold_green("Successfully finished building the Android SDK.\n")
+        # # Execute the gradle 'generateRelease' task
+        # print formatted_text.in_bold("Building the Android SDK...")
+        # execute_command("./gradlew build")
+        # print formatted_text.in_bold_green("Successfully finished building the Android SDK.\n")
 
         # Create a new AVD
         print formatted_text.in_bold("Creating a new AVD...")
