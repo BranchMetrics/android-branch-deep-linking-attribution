@@ -19,7 +19,7 @@ def execute_command(cmd, stdout=None, stderr=None):
         if stderr:
             print formatted_text.in_bold_red("{0}".format(stderr))
         print formatted_text.in_bold_red("Exit code: {0}".format(p.returncode))
-        raise subprocess.CalledProcessError(p.returncode, cmd, output=stdout)
+        # raise subprocess.CalledProcessError(p.returncode, cmd, output=stdout)
 
 
 # NOTE The build and test script starts here
