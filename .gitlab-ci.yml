@@ -8,18 +8,18 @@ variables:
 stages:
 - test
 
-lintDebug:
-  stage: build
-  script:
-  - ./gradlew lint
+# lintDebug:
+#   stage: build
+#   script:
+#   - ./gradlew lint
 
-buildDebug:
-  stage: build
-  script:
-  - ./gradlew build
-  artifacts:
-    paths:
-    - ./Branch-SDK/build/outputs/aar/
+# buildDebug:
+#   stage: build
+#   script:
+#   - ./gradlew build
+#   artifacts:
+#     paths:
+#     - ./Branch-SDK/build/outputs/aar/
 
 debugTests:
   stage: test
