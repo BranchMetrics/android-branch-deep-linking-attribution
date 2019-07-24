@@ -20,8 +20,6 @@ class BranchPreinstall {
   private String SYSTEM_PROPERTIES_CLASS_KEY = "android.os.SystemProperties";
   private String BRANCH_PREINSTALL_PROP_KEY = "ro.branch.preinstall.apps.path";
 
-  private Map<String, String> preinstallCustomData;
-
   public void getPreinstallSystemData(Context context) {
 
     // check if the SystemProperties has the branch file path added
@@ -43,7 +41,6 @@ class BranchPreinstall {
                 JSONObject branchPreinstallData = branchFileContentJson
                     .getJSONObject(key).getJSONObject(SystemObserver.getPackageName(context));
 
-                preinstallCustomData = new HashMap<>();
                 // find the preinstalls keys and any custom data
                 Iterator<String> preinstallDataKeys = branchPreinstallData.keys();
                 while (preinstallDataKeys.hasNext()) {
@@ -55,8 +52,7 @@ class BranchPreinstall {
                     Branch.getInstance()
                         .setPreinstallPartner(branchPreinstallData.get(datakey).toString());
                   } else {
-                    preinstallCustomData
-                        .put(datakey, branchPreinstallData.get(datakey).toString());
+                    Branch.getInstance().setRequestMetadata(datakey, branchPreinstallData.get(datakey).toString());
                   }
                 }
               }
