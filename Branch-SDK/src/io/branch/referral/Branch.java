@@ -697,6 +697,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, null);
+        new BranchPreinstall().getPreinstallSystemData(context);
         return branchReferral_;
     }
     
@@ -719,6 +720,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, null);
+        new BranchPreinstall().getPreinstallSystemData(context);
         return branchReferral_;
     }
     
@@ -750,6 +752,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } else {
             PrefHelper.Debug("Branch Key is invalid. Please check your BranchKey");
         }
+        new BranchPreinstall().getPreinstallSystemData(context);
         return branchReferral_;
     }
     
@@ -766,6 +769,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false, null);
+        new BranchPreinstall().getPreinstallSystemData(context);
         return branchReferral_;
     }
     
@@ -785,6 +789,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false, null);
+        new BranchPreinstall().getPreinstallSystemData(context);
         return branchReferral_;
     }
     
