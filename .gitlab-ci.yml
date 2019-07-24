@@ -59,3 +59,6 @@ emulatorTests:
   - ./android-wait-for-emulator
   - adb shell input keyevent 82
   - ./gradlew connectedCheck --info
+  artifacts:
+    paths:
+    - ./Branch-SDK/build/reports/androidTests/connected/
