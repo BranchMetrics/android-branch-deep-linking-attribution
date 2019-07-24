@@ -38,7 +38,7 @@ emulatortest_py:
   tags:
   - mac_mini
   script:
-  - python -u ./deploy/build_test.py
+  - python2 -u ./deploy/build_and_test.py
   artifacts:
     paths:
     - ./Branch-SDK/build/reports/androidTests/connected/
