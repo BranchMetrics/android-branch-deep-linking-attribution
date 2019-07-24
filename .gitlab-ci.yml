@@ -62,3 +62,14 @@ emulatorTests:
   artifacts:
     paths:
     - ./Branch-SDK/build/reports/androidTests/connected/
+
+emulatorTest_py:
+  stage: test
+  script:
+  - apt-get install python-setuptools python-dev build-essential   
+  - apt-get update
+  - apt-get install python2 
+  - python -u ./deploy/build_test.py
+  artifacts:
+    paths:
+    - ./Branch-SDK/build/reports/androidTests/connected/
