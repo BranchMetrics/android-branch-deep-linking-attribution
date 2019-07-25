@@ -1,4 +1,4 @@
-# Branch Metrics Android SDK
+# Branch Metrics Android SDK 
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.branch.sdk.android/library/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.branch.sdk.android/library)
 [![Javadocs](http://javadoc-badge.appspot.com/io.branch.sdk.android/library.svg?label=javadoc)](http://javadoc-badge.appspot.com/io.branch.sdk.android/library)
