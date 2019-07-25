@@ -48,8 +48,7 @@ emulatorTests:
   script:
   - apt-get --quiet update --yes
   - apt-get --quiet install --yes libx11-dev libpulse0 libgl1
-  - apt-get install python2
-  - apt-get install 
+  - apt-get install python2 --yes
   - wget --quiet --output-document=android-wait-for-emulator https://raw.githubusercontent.com/travis-ci/travis-cookbooks/0f497eb71291b52a703143c5cd63a217c8766dc9/community-cookbooks/android-sdk/files/default/android-wait-for-emulator
   - chmod +x android-wait-for-emulator
   - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-24;default;armeabi-v7a"
