@@ -68,10 +68,10 @@ emulatorTests_py:
   script:
   - apt-get --quiet update --yes
   - apt-get --quiet install --yes libx11-dev libpulse0 libgl1
-  - apt update
-  - apt upgrade
-  - apt install python2.7 python-pip
-  - python -u ./deploy/build_test.py
+  - apt update --yes
+  - apt upgrade --yes
+  - apt install python2.7 python-pip --yes
+  - python -u ./deploy/build_test.py 
   artifacts:
     paths:
     - ./Branch-SDK/build/reports/androidTests/connected/
