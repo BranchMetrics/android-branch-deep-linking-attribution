@@ -58,6 +58,7 @@ emulatorTests:
   - ./android-wait-for-emulator
   - adb shell input keyevent 82
   - ./gradlew connectedCheck --info
+  - $ANDROID_HOME/platform-tools/adb devices | grep emulator | cut -f1 | while read line; do echo \"Killing $line\" && $ANDROID_HOME/platform-tools/adb -s $line emu kill; done
   artifacts:
     when: always
     paths:
