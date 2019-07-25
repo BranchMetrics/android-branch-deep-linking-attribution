@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
         # Create a new AVD
         print formatted_text.in_bold("Creating a new AVD...")
-        execute_command("echo n | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd -f -n emu -k 'system-images;android-27;default;armeabi-v7a'")
+        execute_command("echo n | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd -f -n emu -k 'system-images;android-24;default;armeabi-v7a'")
         print formatted_text.in_bold_green("\nSuccessfully created a new AVD.\n")
 
         # Restart the adb service
@@ -51,8 +51,11 @@ if __name__ == '__main__':
 
         # Start the newly created AVD
         print formatted_text.in_bold("Spinning up the AVD...")
-        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd Nexus_5X_API_27 -wipe-data &")
-        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd test -no-window -no-audio&")
+        execute_command("SHELL=/bin/bash  $ANDROID_HOME/tools/bin/sdkmanager 'system-images;android-24;default;armeabi-v7a'")
+        execute_command("SHELL=/bin/bash  $ANDROID_HOME/tools/bin/sdkmanager --update")
+        execute_command("SHELL=/bin/bash $ANDROID_HOME/tools/bin/sdkmanager 'platform-tools' 'emulator' 'system-images;android-24;default;armeabi-v7a'")
+        execute_command("SHELL=/bin/bash $ANDROID_HOME/tools/bin/avdmanager create avd -k 'system-images;android-24;default;armeabi-v7a' -n test")
+        execute_command("SHELL=/bin/bash $ANDROID_HOME/emulator/emulator -avd test -no-window -no-audio& ")
         print formatted_text.in_bold_green("Finished spinning up the AVD.\n")
 
         # Wait for the AVD to finish booting up
