@@ -5,6 +5,21 @@ variables:
   ANDROID_BUILD_TOOLS: "28.0.3"
   ANDROID_SDK_TOOLS:   "4333796"
 
+before_script:
+- apt-get --quiet update --yes
+- apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
+- wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip
+- unzip -d android-sdk-linux android-sdk.zip
+- echo y | android-sdk-linux/tools/bin/sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" >/dev/null
+- echo y | android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
+- echo y | android-sdk-linux/tools/bin/sdkmanager "build-tools;${ANDROID_BUILD_TOOLS}" >/dev/null
+- export ANDROID_HOME=$PWD/android-sdk-linux
+- export PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
+- chmod +x ./gradlew
+- set +o pipefail
+- yes | android-sdk-linux/tools/bin/sdkmanager --licenses
+- set -o pipefail
+
 stages:
 - build
 - test
@@ -22,10 +37,27 @@ buildDebug:
     paths:
     - ./Branch-SDK/build/outputs/aar/
 
+debugTests:
+  stage: test
+  script:
+  - ./gradlew test
+
+
 emulatorTests:
   stage: test
   script:
-  - python2 -u ./deploy/build_and_test.py
+  - apt-get --quiet update --yes
+  - apt-get --quiet install --yes libx11-dev libpulse0 libgl1
+  - wget --quiet --output-document=android-wait-for-emulator https://raw.githubusercontent.com/travis-ci/travis-cookbooks/0f497eb71291b52a703143c5cd63a217c8766dc9/community-cookbooks/android-sdk/files/default/android-wait-for-emulator
+  - chmod +x android-wait-for-emulator
+  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-24;default;armeabi-v7a"
+  - echo y | ${ANDROID_HOME}/tools/bin/sdkmanager --update
+  - android-sdk-linux/tools/bin/sdkmanager "platform-tools" "emulator" "system-images;android-24;default;armeabi-v7a"  > installEmulator.log
+  - echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -k "system-images;android-24;default;armeabi-v7a" -n test
+  - ${ANDROID_HOME}/emulator/emulator -avd test -no-window -no-audio&
+  - ./android-wait-for-emulator
+  - adb shell input keyevent 82
+  - ./gradlew connectedCheck --info
   artifacts:
     paths:
     - ./Branch-SDK/build/reports/androidTests/connected/
