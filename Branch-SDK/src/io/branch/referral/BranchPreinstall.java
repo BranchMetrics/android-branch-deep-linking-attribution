@@ -16,8 +16,8 @@ import org.json.JSONObject;
  */
 class BranchPreinstall {
 
-    private static String SYSTEM_PROPERTIES_CLASS_KEY = "android.os.SystemProperties";
-    private static String BRANCH_PREINSTALL_PROP_KEY = "io.branch.preinstall.apps.path";
+    private static final String SYSTEM_PROPERTIES_CLASS_KEY = "android.os.SystemProperties";
+    private static final String BRANCH_PREINSTALL_PROP_KEY = "io.branch.preinstall.apps.path";
 
     public static void getPreinstallSystemData(Branch branchInstance, Context context) {
         if (branchInstance != null) {
