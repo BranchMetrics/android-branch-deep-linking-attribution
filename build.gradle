@@ -23,3 +23,6 @@ allprojects {
         }
     }
 }
+subprojects {
+    tasks.withType(Javadoc).all { enabled = false }
+}
