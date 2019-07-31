@@ -1,0 +1,44 @@
+image: openjdk:8-jdk
+
+variables:
+  ANDROID_COMPILE_SDK: "29"
+  ANDROID_BUILD_TOOLS: "28.0.3"
+  ANDROID_SDK_TOOLS:   "4333796"
+
+stages:
+- build
+- test
+
+lintDebug:
+  stage: build
+  tags:
+  - mac_mini
+  script:
+  - ./gradlew lint
+
+buildDebug:
+  stage: build
+  tags:
+  - mac_mini
+  script:
+  - ./gradlew build
+  artifacts:
+    paths:
+    - ./Branch-SDK/build/outputs/aar/
+
+debugTests:
+  stage: build
+  tags:
+  - mac_mini
+  script:
+  - ./gradlew test
+
+emulatortest_py:
+  stage: test
+  tags:
+  - mac_mini
+  script:
+  - python -u ./deploy/build_and_test.py
+  artifacts:
+    paths:
+    - ./Branch-SDK/build/reports/androidTests/connected/
