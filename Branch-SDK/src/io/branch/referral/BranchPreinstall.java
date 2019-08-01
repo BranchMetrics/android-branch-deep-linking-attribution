@@ -24,7 +24,7 @@ class BranchPreinstall {
         if (branchInstance != null) {
             // check if the SystemProperties has the branch file path added
             String branchFilePath = checkForBranchPreinstallInSystem();
-            if (branchFilePath != null && !TextUtils.isEmpty(branchFilePath)) {
+            if (!TextUtils.isEmpty(branchFilePath)) {
                 // after getting the file path get the file contents
                 readBranchFile(branchFilePath, branchInstance, context);
             }
@@ -60,7 +60,11 @@ class BranchPreinstall {
                     br.close();
                     branchFileContentJson = new JSONObject(branchFileContent.toString().trim());
 
-                    getBranchFileContent(branchFileContentJson, branchInstance, context);
+                    if (!TextUtils.isEmpty(branchFileContentJson.toString())) {
+                        getBranchFileContent(branchFileContentJson, branchInstance, context);
+                    } else {
+                        throw new FileNotFoundException();
+                    }
                 } catch (FileNotFoundException ignore) {
                 } catch (IOException ignore) {
                 } catch (JSONException ignore) {
@@ -71,44 +75,42 @@ class BranchPreinstall {
 
     public static void getBranchFileContent(JSONObject branchFileContentJson,
             Branch branchInstance, Context context) {
-        if (branchFileContentJson != null) {
-            // check if the current app package exists in the json
-            Iterator<String> keys = branchFileContentJson.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                try {
-                    if (key.equals("apps") && branchFileContentJson
-                            .get(key) instanceof JSONObject) {
-                        if (branchFileContentJson.getJSONObject(key)
-                                .get(SystemObserver.getPackageName(context)) != null) {
-                            JSONObject branchPreinstallData = branchFileContentJson
-                                    .getJSONObject(key)
-                                    .getJSONObject(SystemObserver.getPackageName(context));
+        // check if the current app package exists in the json
+        Iterator<String> keys = branchFileContentJson.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            try {
+                if (key.equals("apps") && branchFileContentJson
+                        .get(key) instanceof JSONObject) {
+                    if (branchFileContentJson.getJSONObject(key)
+                            .get(SystemObserver.getPackageName(context)) != null) {
+                        JSONObject branchPreinstallData = branchFileContentJson
+                                .getJSONObject(key)
+                                .getJSONObject(SystemObserver.getPackageName(context));
 
-                            // find the preinstalls keys and any custom data
-                            Iterator<String> preinstallDataKeys = branchPreinstallData
-                                    .keys();
-                            while (preinstallDataKeys.hasNext()) {
-                                String datakey = preinstallDataKeys.next();
-                                if (datakey.equals(PreinstallKey.campaign.getKey())) {
-                                    branchInstance
-                                            .setPreinstallCampaign(
-                                                    branchPreinstallData.get(datakey)
-                                                            .toString());
-                                } else if (datakey.equals(PreinstallKey.partner.getKey())) {
-                                    branchInstance
-                                            .setPreinstallPartner(
-                                                    branchPreinstallData.get(datakey)
-                                                            .toString());
-                                } else {
-                                    branchInstance.setRequestMetadata(datakey,
-                                            branchPreinstallData.get(datakey).toString());
-                                }
+                        // find the preinstalls keys and any custom data
+                        Iterator<String> preinstallDataKeys = branchPreinstallData
+                                .keys();
+                        while (preinstallDataKeys.hasNext()) {
+                            String datakey = preinstallDataKeys.next();
+                            if (datakey.equals(PreinstallKey.campaign.getKey())) {
+                                branchInstance
+                                        .setPreinstallCampaign(
+                                                branchPreinstallData.get(datakey)
+                                                        .toString());
+                            } else if (datakey.equals(PreinstallKey.partner.getKey())) {
+                                branchInstance
+                                        .setPreinstallPartner(
+                                                branchPreinstallData.get(datakey)
+                                                        .toString());
+                            } else {
+                                branchInstance.setRequestMetadata(datakey,
+                                        branchPreinstallData.get(datakey).toString());
                             }
                         }
                     }
-                } catch (JSONException ignore) {
                 }
+            } catch (JSONException ignore) {
             }
         }
     }
