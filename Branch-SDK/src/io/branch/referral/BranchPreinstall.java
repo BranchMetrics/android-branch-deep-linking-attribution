@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.text.TextUtils;
 import io.branch.referral.Defines.PreinstallKey;
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,7 +24,7 @@ class BranchPreinstall {
         if (branchInstance != null) {
             // check if the SystemProperties has the branch file path added
             String branchFilePath = checkForBranchPreinstallInSystem();
-            if (branchFilePath != null) {
+            if (branchFilePath != null && !TextUtils.isEmpty(branchFilePath)) {
                 // after getting the file path get the file contents
                 readBranchFile(branchFilePath, branchInstance, context);
             }
