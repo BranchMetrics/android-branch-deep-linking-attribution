@@ -7,6 +7,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Update SDK Tools
+          command: $ANDROID_HOME/tools/bin/sdkmanager --update
+      - run:
           name: Run Lint
           command: ./gradlew lint
       - run:
