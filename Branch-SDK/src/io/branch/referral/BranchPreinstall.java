@@ -68,7 +68,7 @@ class BranchPreinstall {
         }).start();
     }
 
-    private static void getBranchFileContent(JSONObject branchFileContentJson,
+    public static void getBranchFileContent(JSONObject branchFileContentJson,
             Branch branchInstance, Context context) {
         if (branchFileContentJson != null) {
             // check if the current app package exists in the json

@@ -1,0 +1,9 @@
+{
+    "apps": {
+        "io.branch.referral.test": {
+            "preinstall_partner": "branch_",
+            "preinstall_campaign": "branch_campaign",
+            "custom_key": "custom_value"
+        }
+    }
+}
