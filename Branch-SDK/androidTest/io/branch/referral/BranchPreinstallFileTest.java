@@ -1,6 +1,6 @@
 package io.branch.referral;
 
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.utils.AssetUtils;
 import org.json.JSONObject;
