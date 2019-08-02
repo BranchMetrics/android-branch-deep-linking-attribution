@@ -23,7 +23,11 @@ public class HashHelperTest {
 
     @Test
     public void testHelloWoldMD5() {
-        String expected = "^�;��\u001E�Г�\"��Z��";
+        byte[] hash = new byte[] {
+                94, -17, -65, -67, 59, -17, -65, -67, -17, -65, -67, 30, -17, -65, -67, -48, -109, -17, -65, -67, 34, -17, -65, -67, -17, -65, -67, 90, -17, -65, -67, -17, -65, -67
+        };
+        String expected = new String(hash);
+
         HashHelper helper = new HashHelper();
         String actual = helper.hashContent("hello world");
 
@@ -33,7 +37,12 @@ public class HashHelperTest {
 
     @Test
     public void testHelloWorldSHA256() {
-        String expected = "�M'��M>\b�.R��}��Ą��zS�\uE408������";
+        //String expected = "�M'��M>\b�.R��}��Ą��zS�\uE408������";
+        byte[] hash = new byte[] {
+                -17, -65, -67, 77, 39, -17, -65, -67, -17, -65, -67, 77, 62, 8, -17, -65, -67, 46, 82, -17, -65, -67, -17, -65, -67, 125, -17, -65, -67, -17, -65, -67, -60, -124, -17, -65, -67, -17, -65, -67, 122, 83, -17, -65, -67, -18, -112, -120, -17, -65, -67, -17, -65, -67, -17, -65, -67, -17, -65, -67, -17, -65, -67, -17, -65, -67
+        };
+        String expected = new String(hash);
+
         HashHelper helper = new HashHelper();
         String actual = helper.hashContent("hello world");
 
