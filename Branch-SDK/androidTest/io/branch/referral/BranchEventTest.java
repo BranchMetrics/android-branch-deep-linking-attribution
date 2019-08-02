@@ -234,6 +234,11 @@ public class BranchEventTest extends BranchTest {
         return request;
     }
 
+    ServerRequest doFinalUpdateOnMainThread(ServerRequest request) {
+        request.doFinalUpdateOnMainThread();
+        return request;
+    }
+
     void DebugLogQueue(Context context) {
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
 
