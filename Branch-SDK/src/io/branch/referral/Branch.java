@@ -511,6 +511,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
+     * @param url The {@link String} URL base URL that the Branch API uses.
+     */
+    public static void setAPIUrl(String url) {
+        PrefHelper.setAPIUrl(url);
+    }
+
+    /**
      * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      */
     public void disableTracking(boolean disableTracking) {

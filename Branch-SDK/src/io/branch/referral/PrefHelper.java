@@ -8,6 +8,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
+import android.webkit.URLUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,8 +29,8 @@ public class PrefHelper {
     /**
      * The base URL to use for all calls to the Branch API.
      */
-    private static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
-    private static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
+    static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
+    static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
 
     /**
      * A {@link String} value used where no string value is available.
@@ -133,7 +134,12 @@ public class PrefHelper {
      */
     private static JSONObject savedAnalyticsData_;
 
-    
+    /**
+     * Branch Custom server url.  Used by clients that want to proxy all requests.
+     */
+    private static String customServerURL_ = null;
+
+
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
      *
@@ -175,8 +181,17 @@ public class PrefHelper {
         Branch_Key = null;
         savedAnalyticsData_ = null;
         prefHelper_ = null;
+        customServerURL_ = null;
     }
-    
+
+    /**
+     * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
+     * @param url The {@link String} URL base URL that the Branch API uses.
+     */
+    public static void setAPIUrl(String url) {
+        customServerURL_ = url;
+    }
+
     /**
      * <p>Returns the base URL to use for all calls to the Branch API as a {@link String}.</p>
      * NOTE: Below API v20, TLS 1.2 does not work reliably, so we will fall back in that case.
@@ -185,6 +200,10 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
+        if (URLUtil.isHttpsUrl(customServerURL_)) {
+            return customServerURL_;
+        }
+
         if (Build.VERSION.SDK_INT >= 20) {
             return BRANCH_BASE_URL_V2;
         } else {
