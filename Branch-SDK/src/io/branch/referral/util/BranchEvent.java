@@ -297,38 +297,4 @@ public class BranchEvent {
             return true; // Branch event need to be retried on failure.
         }
     }
-
-
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String VIEW = "View";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String ADD_TO_WISH_LIST = "Add to Wishlist";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String ADD_TO_CART = "Add to Cart";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String PURCHASE_STARTED = "Purchase Started";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String PURCHASED = "Purchased";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String SHARE_STARTED = "Share Started";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String SHARE_COMPLETED = "Share Completed";
-    /**
-     * @deprecated Please use #BranchEvent(BRANCH_STANDARD_EVENT) instead
-     */
-    public static final String CANONICAL_ID_LIST = "$canonical_identifier_list";
 }
