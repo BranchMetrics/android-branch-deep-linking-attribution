@@ -1151,6 +1151,12 @@ public class PrefHelper {
         return this.requestMetadata;
     }
 
+    /**
+     * adds the custom key-value pairs in the install request metadata
+     *
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link String} value of the specified key to be added in the request
+     */
     void addInstallMetadata(String key, String value) {
         if (key == null) {
             return;
@@ -1161,6 +1167,11 @@ public class PrefHelper {
         }
     }
 
+    /**
+     * gets the value for the specified key from the custom data from install request metadata
+     *
+     * @param key   A {@link String} value containing the key in the install meta data
+     */
     String getInstallMetaData(String key) {
         if (key == null) {
             return null;
