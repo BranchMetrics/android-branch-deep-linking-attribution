@@ -127,6 +127,6 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     // Check to see if the preinstall data from the app overrides the data from the system file
     private String getPreinstallData(Branch branch, String key) {
-        return branch.getInstallMetaData(key);
+        return PrefHelper.getInstance(getTestContext()).getInstallMetaData(key);
     }
 }
