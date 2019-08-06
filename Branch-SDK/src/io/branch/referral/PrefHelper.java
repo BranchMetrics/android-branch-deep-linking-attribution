@@ -29,8 +29,8 @@ public class PrefHelper {
     /**
      * The base URL to use for all calls to the Branch API.
      */
-    static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
-    static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
+    static final String BRANCH_BASE_URL_V2 = "https://release.api.beta.branch.io/";
+    static final String BRANCH_BASE_URL_V1 = "https://release.api.beta.branch.io/";
 
     /**
      * A {@link String} value used where no string value is available.
@@ -1158,6 +1158,18 @@ public class PrefHelper {
         try {
             installMetadata.putOpt(key, value);
         } catch (JSONException ignore) {
+        }
+    }
+
+    String getInstallMetaData(String key) {
+        if (key == null) {
+            return null;
+        }
+
+        try {
+           return this.installMetadata.get(key).toString();
+        } catch (JSONException ignore) {
+            return null;
         }
     }
 

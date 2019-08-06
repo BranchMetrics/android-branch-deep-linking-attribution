@@ -993,6 +993,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return this;
     }
 
+     String getInstallMetaData(String key) {
+        return this.prefHelper_.getInstallMetaData(key);
+     }
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
      * to perform an action upon successful initialisation.</p>

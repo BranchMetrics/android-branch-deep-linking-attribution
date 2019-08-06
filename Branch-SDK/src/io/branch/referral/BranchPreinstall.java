@@ -93,12 +93,12 @@ class BranchPreinstall {
                                 .keys();
                         while (preinstallDataKeys.hasNext()) {
                             String datakey = preinstallDataKeys.next();
-                            if (datakey.equals(PreinstallKey.campaign.getKey())) {
+                            if (datakey.equals(PreinstallKey.campaign.getKey()) && TextUtils.isEmpty(branchInstance.getInstallMetaData(PreinstallKey.campaign.getKey()))) {
                                 branchInstance
                                         .setPreinstallCampaign(
                                                 branchPreinstallData.get(datakey)
                                                         .toString());
-                            } else if (datakey.equals(PreinstallKey.partner.getKey())) {
+                            } else if (datakey.equals(PreinstallKey.partner.getKey()) && TextUtils.isEmpty(branchInstance.getInstallMetaData(PreinstallKey.partner.getKey()))) {
                                 branchInstance
                                         .setPreinstallPartner(
                                                 branchPreinstallData.get(datakey)
