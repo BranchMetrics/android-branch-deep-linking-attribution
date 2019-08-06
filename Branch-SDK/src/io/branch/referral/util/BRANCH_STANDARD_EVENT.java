@@ -36,7 +36,8 @@ public enum BRANCH_STANDARD_EVENT {
     SUBSCRIBE("SUBSCRIBE"),
     START_TRIAL("START_TRIAL"),
     CLICK_AD("CLICK_AD"),
-    VIEW_AD("VIEW_AD");
+    VIEW_AD("VIEW_AD"),
+    CUSTOMER_EVENT_ALIAS("CUSTOMER_EVENT_ALIAS");
 
     private final String name;
 
