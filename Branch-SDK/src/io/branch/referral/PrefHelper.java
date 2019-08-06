@@ -29,8 +29,8 @@ public class PrefHelper {
     /**
      * The base URL to use for all calls to the Branch API.
      */
-    static final String BRANCH_BASE_URL_V2 = "https://release.api.beta.branch.io/";
-    static final String BRANCH_BASE_URL_V1 = "https://release.api.beta.branch.io/";
+    static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
+    static final String BRANCH_BASE_URL_V1 = "https://api2.branch.io/";
 
     /**
      * A {@link String} value used where no string value is available.
