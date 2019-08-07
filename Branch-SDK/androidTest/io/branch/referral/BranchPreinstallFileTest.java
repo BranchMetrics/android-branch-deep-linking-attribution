@@ -75,6 +75,35 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         Assert.assertFalse(branchFileData.length() > 0);
     }
 
+    @Test
+    public void testAppLevelDataOverride() throws Throwable {
+        Branch branch = Branch.getInstance(getTestContext());
+        branch.setPreinstallPartner("partner1");
+        branch.setPreinstallCampaign("campaign1");
+
+        initQueue(getTestContext());
+
+        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(1, queue.getSize());
+
+        String branchFileData = AssetUtils
+                .readJsonFile(getTestContext(), "io/assets/pre_install_apps.branch");
+        Assert.assertTrue(branchFileData.length() > 0);
+
+        JSONObject branchFileJson = new JSONObject(branchFileData);
+        BranchPreinstall.getBranchFileContent(branchFileJson, branch,
+                getTestContext());
+
+        ServerRequest initRequest = queue.peekAt(0);
+        doFinalUpdate(initRequest);
+        doFinalUpdateOnMainThread(initRequest);
+
+        Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
+        Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
+        Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
+        Assert.assertEquals(getPreinstallData(branch, PreinstallKey.partner.getKey()), "partner1");
+    }
+
     // Check to see if the preinstall campaign is available (V1)
     private boolean hasV1InstallPreinstallCampaign(ServerRequest request) {
         JSONObject jsonObject = request.getGetParams();
@@ -94,5 +123,10 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         JSONObject jsonObject = request.getGetParams().getJSONObject("metadata");
         String custom_key = jsonObject.optString("custom_key");
         return (custom_key.length() > 0);
+    }
+
+    // Check to see if the preinstall data from the app overrides the data from the system file
+    private String getPreinstallData(Branch branch, String key) {
+        return PrefHelper.getInstance(getTestContext()).getInstallMetaData(key);
     }
 }
