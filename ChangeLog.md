@@ -1,4 +1,11 @@
 # Branch Android SDK change log
+- v4.0.0
+  * _*Master Release*_ - August 6, 2019
+  * Switched to using Android X from the Android Support Library
+  * Added new standard event type: customer_event_alias
+  * Implemented support for pre-install analytics
+  * Added the option to set a custom base URL
+
 - v3.2.0
   * _*Master Release*_ - May 2, 2019
   * SDK-271 Allow short link creation while privacy is enabled

@@ -443,7 +443,12 @@ public abstract class ServerRequest {
             }
             // Install metadata need to be send only with Install request
             if ((this instanceof ServerRequestRegisterInstall) && prefHelper_.getInstallMetadata().length() > 0) {
-                params_.putOpt(Defines.Jsonkey.InstallMetadata.getKey(), prefHelper_.getInstallMetadata());
+                Iterator<String> postIterInstallMetaData = prefHelper_.getInstallMetadata().keys();
+                while (postIterInstallMetaData.hasNext()) {
+                    String key = postIterInstallMetaData.next();
+                    // override keys from above
+                    params_.putOpt(key,  prefHelper_.getInstallMetadata().get(key));
+                }
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {

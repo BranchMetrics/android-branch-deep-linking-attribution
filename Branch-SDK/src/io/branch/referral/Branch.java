@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
@@ -15,12 +17,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StyleRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StyleRes;
 import android.text.TextUtils;
 import android.view.View;
 
+import io.branch.referral.Defines.PreinstallKey;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -508,6 +511,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
+     * @param url The {@link String} URL base URL that the Branch API uses.
+     */
+    public static void setAPIUrl(String url) {
+        PrefHelper.setAPIUrl(url);
+    }
+
+    /**
      * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      */
     public void disableTracking(boolean disableTracking) {
@@ -696,6 +707,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, null);
+        getPreinstallSystemData(branchReferral_, context);
         return branchReferral_;
     }
     
@@ -718,6 +730,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, null);
+        getPreinstallSystemData(branchReferral_, context);
         return branchReferral_;
     }
     
@@ -749,6 +762,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } else {
             PrefHelper.Debug("Branch Key is invalid. Please check your BranchKey");
         }
+        getPreinstallSystemData(branchReferral_, context);
         return branchReferral_;
     }
     
@@ -765,6 +779,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false, null);
+        getPreinstallSystemData(branchReferral_, context);
         return branchReferral_;
     }
     
@@ -784,6 +799,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false, null);
+        getPreinstallSystemData(branchReferral_, context);
         return branchReferral_;
     }
     
@@ -956,7 +972,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         prefHelper_.addInstallMetadata(key, value);
         return this;
     }
-    
+
+    /**
+     * <p>
+     *   wrapper method to add the pre-install campaign analytics
+     * </p>
+     */
+    public Branch setPreinstallCampaign(@NonNull String preInstallCampaign) {
+        addInstallMetadata(PreinstallKey.campaign.getKey(), preInstallCampaign);
+        return this;
+    }
+
+    /**
+     * <p>
+     *   wrapper method to add the pre-install campaign analytics
+     * </p>
+     */
+    public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
+        addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
+        return this;
+    }
+
     /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
      * to perform an action upon successful initialisation.</p>
@@ -2494,7 +2530,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            InstallListener.captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
+            new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
         }
         
         registerInstallOrOpen(request, callback);

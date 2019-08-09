@@ -1,7 +1,7 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -28,6 +28,15 @@ public class BranchEventTest extends BranchTest {
     public void testStandardEvent() throws Throwable {
         BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
         Assert.assertEquals("PURCHASE", eventType.getName());
+
+        BranchEvent branchEvent = new BranchEvent(eventType);
+        Assert.assertTrue(isStandardEvent(branchEvent));
+    }
+
+    @Test
+    public void testCustomerEventAlias() throws Throwable {
+        BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.CUSTOMER_EVENT_ALIAS;
+        Assert.assertEquals("CUSTOMER_EVENT_ALIAS", eventType.getName());
 
         BranchEvent branchEvent = new BranchEvent(eventType);
         Assert.assertTrue(isStandardEvent(branchEvent));
@@ -231,6 +240,11 @@ public class BranchEventTest extends BranchTest {
     // don't *actually* want to send this, we just want to verify that parameters are fully set.
     ServerRequest doFinalUpdate(ServerRequest request) {
         request.doFinalUpdateOnBackgroundThread();
+        return request;
+    }
+
+    ServerRequest doFinalUpdateOnMainThread(ServerRequest request) {
+        request.doFinalUpdateOnMainThread();
         return request;
     }
 
