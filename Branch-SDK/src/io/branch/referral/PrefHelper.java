@@ -128,7 +128,12 @@ public class PrefHelper {
      * Arbitrary key values added to Install requests.
      */
     private final JSONObject installMetadata;
-    
+
+    /**
+     * Module injected key values added to all requests.
+     */
+    private final JSONObject secondaryRequestMetadata;
+
     /**
      * Branch Content discovery data
      */
@@ -152,6 +157,7 @@ public class PrefHelper {
         this.prefsEditor_ = this.appSharedPrefs_.edit();
         this.requestMetadata = new JSONObject();
         this.installMetadata = new JSONObject();
+        this.secondaryRequestMetadata = new JSONObject();
     }
     
     /**
@@ -1188,6 +1194,40 @@ public class PrefHelper {
         return installMetadata;
     }
 
+    /**
+     * adds the Mohule injected key-value pairs in the all the requests
+     * adds the Module injected key-value pairs in the all the requests
+     *
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link String} value of the specified key to be added in the request
+     */
+    void addSecondaryRequestMetadata(String key, String value) {
+        if (key == null) {
+            return;
+        }
+        try {
+            secondaryRequestMetadata.putOpt(key, value);
+        } catch (JSONException ignore) {
+        }
+    }
+
+    /**
+     * gets the Module injected value
+     *
+     * @param key   A {@link String} value containing the key to reference.
+     * @return value A {@link String} value of the specified key to be added in the request
+     */
+    String getSecondaryRequestMetaData(String key) {
+        if (key == null) {
+            return null;
+        }
+
+        try {
+            return this.secondaryRequestMetadata.get(key).toString();
+        } catch (JSONException ignore) {
+            return null;
+        }
+    }
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
