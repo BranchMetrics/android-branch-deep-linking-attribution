@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.URLUtil;
 
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,6 +134,9 @@ public class PrefHelper {
      * Module injected key values added to all requests.
      */
     private final JSONObject secondaryRequestMetadata;
+
+
+    //private final List<Module> factories = new ArrayList<>();
 
     /**
      * Branch Content discovery data
@@ -1228,6 +1232,20 @@ public class PrefHelper {
             return null;
         }
     }
+
+    /**
+     * helper method to check of the modules need to be added in the requests
+     *
+     * @return value A {@link Boolean} returns true if the module data is present else false
+     */
+    boolean shouldAddModules () {
+        try {
+            return secondaryRequestMetadata.length() != 0;
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
     /**
      * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *

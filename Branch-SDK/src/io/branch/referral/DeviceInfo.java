@@ -106,9 +106,11 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
 
-            String imei = SystemObserver.getImei(context_);
-            if (!isNullOrEmptyOrBlank(imei)) {
-                requestObj.put(ModuleNameKeys.imei.getKey(), imei);
+            if (PrefHelper.getInstance(context_).shouldAddModules()) {
+                String imei = SystemObserver.getImei(context_);
+                if (!isNullOrEmptyOrBlank(imei)) {
+                    requestObj.put(ModuleNameKeys.imei.getKey(), imei);
+                }
             }
         } catch (JSONException ignore) {
 
@@ -176,9 +178,11 @@ class DeviceInfo {
                 }
             }
 
-            String imei = SystemObserver.getImei(context_);
-            if (!isNullOrEmptyOrBlank(imei)) {
-                requestObj.put(ModuleNameKeys.imei.getKey(), imei);
+            if (prefHelper != null && prefHelper.shouldAddModules()) {
+                String imei = SystemObserver.getImei(context_);
+                if (!isNullOrEmptyOrBlank(imei)) {
+                    requestObj.put(ModuleNameKeys.imei.getKey(), imei);
+                }
             }
 
             requestObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
