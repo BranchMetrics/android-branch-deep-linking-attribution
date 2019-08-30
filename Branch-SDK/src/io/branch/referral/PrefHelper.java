@@ -1199,7 +1199,7 @@ public class PrefHelper {
     }
 
     /**
-     * adds the Mohule injected key-value pairs in the all the requests
+     * adds the Module injected key-value pairs in the all the requests
      * adds the Module injected key-value pairs in the all the requests
      *
      * @param key   A {@link String} value containing the key to reference.
