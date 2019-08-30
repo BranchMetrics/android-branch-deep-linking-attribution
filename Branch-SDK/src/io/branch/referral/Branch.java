@@ -1366,7 +1366,52 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         initUserSessionInternal(callback, activity, isReferrable);
         return true;
     }
-    
+
+    /**
+     * Re-Initialize a session.
+     * This solves a very specific use case, whereas the app is already in the foreground and a new
+     * intent with a Uri is delivered to the activity.  In this case we want to re-initialize the
+     * session and call back with the decoded parameters.
+     *
+     * @param activity  The calling {@link Activity} for context.
+     * @param callback  A {@link BranchReferralInitListener} instance that will be called
+     *                  following successful (or unsuccessful) initialization of the session
+     *                  with the Branch API.
+     * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
+     */
+    public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
+        if (activity == null) {
+            return false;
+        }
+
+        Intent intent = activity.getIntent();
+        if (intent != null) {
+            // Check to see if the intent has Uri data.
+            Uri uri = intent.getData();
+            if (uri != null) {
+                // Here is where it gets interesting.  Re-Initializing with a Uri indicates that
+                // we want to fetch the data before we return.
+                initState_ = SESSION_STATE.INITIALISING;
+
+                // Let's indicate that the app was initialized with this uri.
+                setSessionReferredLink(uri.toString());
+
+                // We need to set the AndroidAppLinkURL as well
+                prefHelper_.setAppLink(uri.toString());
+
+                // In order to report to the callback a second time, we need to reset this flag.
+                isInitReportedThroughCallBack = false;
+
+                // This will put an open event on the queue
+                initializeSession(callback);
+
+                // Now, actually initialize the new session.
+                initSession(callback, uri, activity);
+            }
+        }
+
+        return true;
+    }
     
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
         BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
