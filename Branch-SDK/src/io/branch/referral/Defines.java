@@ -304,5 +304,29 @@ public class Defines {
         }
 
     }
-    
+
+    /**
+     * <p>
+     * Defines module name keys
+     * </p>
+     */
+    public enum ModuleNameKeys {
+        imei("imei");
+
+        private String key = "";
+
+        ModuleNameKeys(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
 }

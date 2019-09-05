@@ -994,6 +994,26 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>
+     *     Add key value pairs from the injected modules to all requests
+     * </p>
+     */
+    public void addModule(JSONObject module) {
+        if (module!=null) {
+            Iterator<String> keys = module.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if (!TextUtils.isEmpty(key)) {
+                    try {
+                        prefHelper_.addSecondaryRequestMetadata(key, module.getString(key));
+                    } catch (JSONException ignore) {
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
      * to perform an action upon successful initialisation.</p>
      *

@@ -15,6 +15,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import io.branch.referral.Defines.ModuleNameKeys;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -572,4 +573,15 @@ abstract class SystemObserver {
         return LATVal_;
     }
 
+    /**
+     * Get IP address from the Module injected key-value pairs
+     */
+    static String getImei(Context context_) {
+        String imei = PrefHelper.getInstance(context_)
+                .getSecondaryRequestMetaData(ModuleNameKeys.imei.getKey());
+        if (!TextUtils.isEmpty(imei)) {
+            return imei;
+        }
+        return null;
+    }
 }

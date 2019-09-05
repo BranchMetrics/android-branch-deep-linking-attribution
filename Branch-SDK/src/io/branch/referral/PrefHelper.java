@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.URLUtil;
 
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -128,7 +129,15 @@ public class PrefHelper {
      * Arbitrary key values added to Install requests.
      */
     private final JSONObject installMetadata;
-    
+
+    /**
+     * Module injected key values added to all requests.
+     */
+    private final JSONObject secondaryRequestMetadata;
+
+
+    //private final List<Module> factories = new ArrayList<>();
+
     /**
      * Branch Content discovery data
      */
@@ -152,6 +161,7 @@ public class PrefHelper {
         this.prefsEditor_ = this.appSharedPrefs_.edit();
         this.requestMetadata = new JSONObject();
         this.installMetadata = new JSONObject();
+        this.secondaryRequestMetadata = new JSONObject();
     }
     
     /**
@@ -1186,6 +1196,54 @@ public class PrefHelper {
 
     public JSONObject getInstallMetadata() {
         return installMetadata;
+    }
+
+    /**
+     * adds the Module injected key-value pairs in the all the requests
+     * adds the Module injected key-value pairs in the all the requests
+     *
+     * @param key   A {@link String} value containing the key to reference.
+     * @param value A {@link String} value of the specified key to be added in the request
+     */
+    void addSecondaryRequestMetadata(String key, String value) {
+        if (key == null) {
+            return;
+        }
+        try {
+            secondaryRequestMetadata.putOpt(key, value);
+        } catch (JSONException ignore) {
+        }
+    }
+
+    /**
+     * gets the Module injected value
+     *
+     * @param key   A {@link String} value containing the key to reference.
+     * @return value A {@link String} value of the specified key to be added in the request
+     */
+    String getSecondaryRequestMetaData(String key) {
+        if (key == null) {
+            return null;
+        }
+
+        try {
+            return this.secondaryRequestMetadata.get(key).toString();
+        } catch (JSONException ignore) {
+            return null;
+        }
+    }
+
+    /**
+     * helper method to check of the modules need to be added in the requests
+     *
+     * @return value A {@link Boolean} returns true if the module data is present else false
+     */
+    boolean shouldAddModules () {
+        try {
+            return secondaryRequestMetadata.length() != 0;
+        } catch (Exception ignore) {
+            return false;
+        }
     }
 
     /**
