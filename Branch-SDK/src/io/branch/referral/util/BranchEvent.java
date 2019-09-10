@@ -63,6 +63,15 @@ public class BranchEvent {
     }
 
     /**
+     * Set the Event Alias associated with the event.
+     *
+     * @param eventAlias {@link String eventAlias}
+     */
+    public BranchEvent setAlias(String eventAlias) {
+        return addStandardProperty(Defines.Jsonkey.EventAlias.getKey(), eventAlias);
+    }
+
+    /**
      * Set the Ad Type associated with the event.
      * @param adType {@link AdType} Ad Type value
      * @return this object for chaining builder methods

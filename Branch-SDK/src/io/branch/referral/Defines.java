@@ -146,6 +146,7 @@ public class Defines {
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
         
+        EventAlias("event_alias"),
         TransactionID("transaction_id"),
         Currency("currency"),
         Revenue("revenue"),
