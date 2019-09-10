@@ -76,6 +76,7 @@ public class BranchEventTest extends BranchTest {
         event.setSearchQuery("Love");
         event.setShipping(0.001);
         event.setTax(10);
+        event.setCustomerEventAlias("potato_event");
 
         event.addCustomDataProperty("test", "test value");
     }

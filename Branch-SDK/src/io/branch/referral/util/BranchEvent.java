@@ -65,10 +65,10 @@ public class BranchEvent {
     /**
      * Set the Event Alias associated with the event.
      *
-     * @param eventAlias {@link String eventAlias}
+     * @param customerEventAlias {@link String customerEventAlias}
      */
-    public BranchEvent setAlias(String eventAlias) {
-        return addStandardProperty(Defines.Jsonkey.EventAlias.getKey(), eventAlias);
+    public BranchEvent setCustomerEventAlias(String customerEventAlias) {
+        return addStandardProperty(Defines.Jsonkey.CustomerEventAlias.getKey(), customerEventAlias);
     }
 
     /**
