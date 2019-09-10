@@ -34,15 +34,6 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testCustomerEventAlias() throws Throwable {
-        BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.CUSTOMER_EVENT_ALIAS;
-        Assert.assertEquals("CUSTOMER_EVENT_ALIAS", eventType.getName());
-
-        BranchEvent branchEvent = new BranchEvent(eventType);
-        Assert.assertTrue(isStandardEvent(branchEvent));
-    }
-
-    @Test
     public void testCustomEvent() throws Throwable {
         BranchEvent branchEvent = new BranchEvent("CustomEvent");
         Assert.assertFalse(isStandardEvent(branchEvent));
@@ -85,6 +76,7 @@ public class BranchEventTest extends BranchTest {
         event.setSearchQuery("Love");
         event.setShipping(0.001);
         event.setTax(10);
+        event.setCustomerEventAlias("potato_event");
 
         event.addCustomDataProperty("test", "test value");
     }
