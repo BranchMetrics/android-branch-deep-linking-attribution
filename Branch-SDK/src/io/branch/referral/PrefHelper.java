@@ -68,7 +68,8 @@ public class PrefHelper {
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
     private static final String KEY_IS_REFERRABLE = "bnc_is_referrable";
-    
+    private static final String KEY_LATD_ATTRIBUTION_WINDOW = "bnc_latd_attributon_window";
+
     private static final String KEY_BUCKETS = "bnc_buckets";
     private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
     
@@ -906,6 +907,24 @@ public class PrefHelper {
      */
     public int getActionUniqueCount(String action) {
         return getInteger(KEY_UNIQUE_BASE + action);
+    }
+
+    /**
+     * <p>Sets the latd attribution window</p>
+     *
+     * @param attributonWindow A {@link Integer} value containing the current attribution window passed
+     */
+    public void setLATDAttributonWindow(int attributonWindow){
+        setInteger(KEY_LATD_ATTRIBUTION_WINDOW, attributonWindow);
+    }
+
+    /**
+     * <p>Gets the latd attribution window</p>
+     *
+     * @return attributonWindow A {@link Integer} value containing the current attribution window set
+     */
+    public int getLATDAttributonWindow(){
+        return getInteger(KEY_LATD_ATTRIBUTION_WINDOW);
     }
     
     // ALL GENERIC CALLS

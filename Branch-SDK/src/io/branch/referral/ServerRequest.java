@@ -43,6 +43,7 @@ public abstract class ServerRequest {
     public enum BRANCH_API_VERSION {
         V1,
         V1_CPID,
+        V1_LATD,
         V2
     }
     
@@ -186,7 +187,16 @@ public abstract class ServerRequest {
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
                 DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
             } catch (JSONException ignore) {
-            }        }
+            }
+        } else if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_LATD) {
+            try {
+                JSONObject userDataObj = new JSONObject();
+                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
+                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
+                DeviceInfo.getInstance().updateRequestWithAttributionWindow(prefHelper_, userDataObj);
+            } catch (Exception ignore) {
+            }
+        }
         else {
             DeviceInfo.getInstance().updateRequestWithV1Params(params_);
         }

@@ -90,6 +90,7 @@ public class Defines {
         SdkVersion("sdk_version"),
         UIMode("ui_mode"),
         InstallMetadata("install_metadata"),
+        LATDAttributionWindow("attribution_window"),
         
         Clicked_Branch_Link("+clicked_branch_link"),
         IsFirstSession("+is_first_session"),

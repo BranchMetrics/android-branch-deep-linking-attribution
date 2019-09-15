@@ -26,6 +26,8 @@ import android.view.View;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.util.BranchCrossPlatformId;
 import io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener;
+import io.branch.referral.util.BranchLastAttributedTouchData;
+import io.branch.referral.util.BranchLastAttributedTouchData.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1887,6 +1889,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public void getCrossPlatformIds(BranchCrossPlatformIdListener callback) {
         new BranchCrossPlatformId(callback, context_);
+    }
+
+    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
+        prefHelper_.setLATDAttributonWindow(attributionWindow);
+        new BranchLastAttributedTouchData(callback, context_);
     }
 
     /**

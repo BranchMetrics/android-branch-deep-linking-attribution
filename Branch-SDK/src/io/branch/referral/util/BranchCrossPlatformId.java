@@ -57,7 +57,7 @@ public class BranchCrossPlatformId {
                     callback.onDataFetched(new BranchCPID(response.getObject()), null);
                 }
             } else {
-                callback.onDataFetched(new BranchCPID(),
+                callback.onDataFetched(null,
                         new BranchError("Failed to get the Cross Platform IDs",
                                 BranchError.ERR_BRANCH_INVALID_REQUEST));
             }
@@ -65,6 +65,9 @@ public class BranchCrossPlatformId {
 
         @Override
         public void handleFailure(int statusCode, String causeMsg) {
+            callback.onDataFetched(null,
+                    new BranchError("Failed to get the Cross Platform IDs",
+                            BranchError.ERR_BRANCH_INVALID_REQUEST));
         }
 
         @Override
