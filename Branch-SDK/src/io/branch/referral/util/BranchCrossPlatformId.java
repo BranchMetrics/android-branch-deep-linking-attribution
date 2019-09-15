@@ -78,7 +78,7 @@ public class BranchCrossPlatformId {
 
         @Override
         public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
-            return BRANCH_API_VERSION.V2_CPID; //This is a v2 event
+            return BRANCH_API_VERSION.V1_CPID;
         }
 
         @Override
