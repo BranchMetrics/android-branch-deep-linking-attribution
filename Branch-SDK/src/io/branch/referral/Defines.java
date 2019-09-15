@@ -227,7 +227,9 @@ public class Defines {
         DebugConnect("v1/debug/connect"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),
-        TrackCustomEvent("v2/event/custom");
+        TrackCustomEvent("v2/event/custom"),
+        GetCPID("v1/cpid"),
+        GetLATD("v1/cpid/latd");
         
         private String key = "";
         

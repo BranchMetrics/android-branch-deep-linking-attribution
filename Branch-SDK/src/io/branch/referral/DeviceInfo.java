@@ -180,6 +180,22 @@ class DeviceInfo {
     }
 
     /**
+     * ONLY used for CPID/LATD endpoints
+     * Update the given server request JSON with device params
+     *
+     * @param requestObj JSON object for Branch server request
+     */
+    void updateRequestWithV2CPIDParams(Context context, PrefHelper prefHelper, JSONObject requestObj) {
+        try {
+
+            requestObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
+            //requestObj.put(Jsonkey.DeviceFingerprintID.getKey(), "694966626071736477");
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * get the package name for the this application
      *
      * @return {@link String} with package name value
