@@ -2,6 +2,7 @@
 - v4.0.1
   * _*Master Release*_ - September 18, 2019
   * SDK-237 corrected customer_event_alias function
+  * SDK-211 support for optional plugin
 
 - v4.0.0
   * _*Master Release*_ - August 6, 2019
