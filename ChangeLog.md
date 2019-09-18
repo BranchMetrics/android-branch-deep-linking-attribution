@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v4.0.1
+  * _*Master Release*_ - September 18, 2019
+  * SDK-237 corrected customer_event_alias function
+
 - v4.0.0
   * _*Master Release*_ - August 6, 2019
   * Switched to using Android X from the Android Support Library
