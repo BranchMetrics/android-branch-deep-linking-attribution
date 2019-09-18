@@ -146,6 +146,7 @@ public class Defines {
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
         
+        CustomerEventAlias("customer_event_alias"),
         TransactionID("transaction_id"),
         Currency("currency"),
         Revenue("revenue"),
@@ -304,5 +305,29 @@ public class Defines {
         }
 
     }
-    
+
+    /**
+     * <p>
+     * Defines module name keys
+     * </p>
+     */
+    public enum ModuleNameKeys {
+        imei("imei");
+
+        private String key = "";
+
+        ModuleNameKeys(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
 }
