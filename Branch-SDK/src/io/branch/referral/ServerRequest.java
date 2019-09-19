@@ -390,7 +390,8 @@ public abstract class ServerRequest {
         String gaid = DeviceInfo.getInstance().getSystemObserver().getGAID();
         if (!TextUtils.isEmpty(gaid)) {
             try {
-                if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID) {
+                if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID ||
+                        version == BRANCH_API_VERSION.V1_LATD) {
                     JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                     if (userDataObj != null) {
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
@@ -407,7 +408,8 @@ public abstract class ServerRequest {
         } else { // Add unidentified_device when neither GAID nor AndroidID are present
             if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID) {
                 try {
-                    if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID) {
+                    if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID ||
+                            version == BRANCH_API_VERSION.V1_LATD) {
                         JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                         if (userDataObj != null) {
                             if (!userDataObj.has(Defines.Jsonkey.AndroidID.getKey())) {
