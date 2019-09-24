@@ -216,6 +216,9 @@ abstract class SystemObserver {
         }
     }
 
+    /**
+    * Helper function to determine of the device is running Fire OS
+    */
     private static boolean isFireOSDevice() {
         return getPhoneBrand().equalsIgnoreCase("amazon");
     }
@@ -229,7 +232,9 @@ abstract class SystemObserver {
      */
     static String getOS(Context context) {
         if (isFireOSDevice()) {
-            if (context.getPackageManager().hasSystemFeature("amazon.hardware.fire_tv")) {
+            if (context == null) {
+                return getPhoneModel().contains("AFT") ? "AMAZON_FIRE_TV" : "AMAZON_FIRE";
+            } else if (context.getPackageManager().hasSystemFeature("amazon.hardware.fire_tv")) {
                 return "AMAZON_FIRE_TV";
             }
             return "AMAZON_FIRE";
@@ -323,6 +328,7 @@ abstract class SystemObserver {
         boolean isPrefetchStarted = false;
         if (TextUtils.isEmpty(GAIDString_)) {
             if (isFireOSDevice()) {
+                if (context == null) return isPrefetchStarted;
                 try {
                     ContentResolver cr = context.getContentResolver();
                     LATVal_ = Secure.getInt(cr, "limit_ad_tracking");
