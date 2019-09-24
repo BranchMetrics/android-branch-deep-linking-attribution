@@ -163,7 +163,7 @@ class BranchStrongMatchHelper {
             uriString += "&" + Defines.Jsonkey.HardwareIDType.getKey() + "=" + hardwareIDTypeVal;
 
             // Add GAID if available
-            String gaid = deviceInfo.getSystemObserver().getGAID();
+            String gaid = deviceInfo.getSystemObserver().getAID();
             if (gaid != null && !BranchUtil.checkTestMode(context)) {
                 uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + gaid;
             }

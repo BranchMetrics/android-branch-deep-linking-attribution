@@ -70,9 +70,9 @@ public class DeviceInfoTest extends BranchTest {
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        DeviceInfo.getInstance().getSystemObserver().prefetchGAdsParams(getTestContext(), new SystemObserver.GAdsParamsFetchEvents() {
+        DeviceInfo.getInstance().getSystemObserver().prefetchAdsParams(getTestContext(), new SystemObserver.AdsParamsFetchEvents() {
             @Override
-            public void onGAdsFetchFinished() {
+            public void onAdsParamsFetchFinished() {
                 latch.countDown();
             }
         });
@@ -83,6 +83,6 @@ public class DeviceInfoTest extends BranchTest {
             Assert.fail();
         }
 
-        Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getGAID()));
+        Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
     }
 }

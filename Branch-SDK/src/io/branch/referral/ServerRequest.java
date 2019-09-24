@@ -369,7 +369,7 @@ public abstract class ServerRequest {
     private void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
-        String gaid = DeviceInfo.getInstance().getSystemObserver().getGAID();
+        String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
         if (!TextUtils.isEmpty(gaid)) {
             try {
                 if (version == BRANCH_API_VERSION.V2) {
