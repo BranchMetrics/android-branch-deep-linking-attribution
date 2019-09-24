@@ -194,6 +194,21 @@ class DeviceInfo {
     }
 
     /**
+     * Update the given server request JSON with the set attribution window in the user data
+     *
+     * @param requestObj JSON object for Branch server request
+     */
+    void updateRequestWithAttributionWindow(PrefHelper prefHelper, JSONObject requestObj) {
+        try {
+            if (prefHelper != null) {
+                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(), prefHelper.getLATDAttributonWindow());
+            }
+            } catch (JSONException ignore) {
+
+        }
+    }
+
+    /**
      * get the package name for the this application
      *
      * @return {@link String} with package name value
