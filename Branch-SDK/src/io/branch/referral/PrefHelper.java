@@ -358,6 +358,7 @@ public class PrefHelper {
      *                   Branch API upon successful initialisation.
      */
     public void setSessionID(String session_id) {
+        Log.i("TESTIN", "setting session ID to " + session_id);
         setString(KEY_SESSION_ID, session_id);
     }
     

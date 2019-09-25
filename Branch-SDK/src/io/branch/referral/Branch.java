@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StyleRes;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import io.branch.referral.Defines.PreinstallKey;
@@ -440,7 +441,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
+            isGAParamsFetchInProgress_ = true;
+            deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
         }
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
@@ -1483,6 +1485,32 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 initState_ = SESSION_STATE.INITIALISING;
                 initializeSession(callback);
             }
+        }
+    }
+
+    private void maybeRefreshAdvertisingID(Context context) {
+        boolean fullyInitialized = trackingController != null &&
+                deviceInfo_ != null && deviceInfo_.getSystemObserver() != null &&
+                prefHelper_ != null && prefHelper_.getSessionID() != null;
+        if (!fullyInitialized) {
+            Log.i("TESTIN", "fullyInitialized = false");
+            Log.i("TESTIN", "trackingController = " + trackingController +
+                    "deviceInfo_ = " + deviceInfo_ +
+                    "prefHelper_ = " + prefHelper_);
+            return;
+        }
+
+        // prefHelper_.getSessionID() is a shared pref that gets set using a value from server response
+        // deviceInfo_.getSystemObserver().getGAIDInitializationSessionID() gets set in do in background of the AAID prefetch task
+
+        // what if
+        boolean aaidInitializedInThisSession = prefHelper_.getSessionID().equals(deviceInfo_.getSystemObserver().getGAIDInitializationSessionID());
+        Log.i("TESTIN", "prefHelper_.getSessionID() = " + prefHelper_.getSessionID());
+        Log.i("TESTIN", "getGAIDInitializationSessionID() = " + deviceInfo_.getSystemObserver().getGAIDInitializationSessionID());
+        if (!aaidInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
+            Log.i("TESTIN", "FETCHING AGAIN!");
+            isGAParamsFetchInProgress_ = true;
+            deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
         }
     }
     
@@ -2620,7 +2648,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void registerAppReInit() {
         // on re-init make sure GAID is available
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchGAdsParams(context_, this);
+            isGAParamsFetchInProgress_ = true;
+            deviceInfo_.getSystemObserver().prefetchGAdsParams(context_, this);
         }
         if (networkCount_ != 0) {
             networkCount_ = 0;
@@ -2798,6 +2827,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             activityCnt_++;
             isActivityCreatedAndLaunched = false;
+
+            maybeRefreshAdvertisingID(activity);
         }
         
         @Override
