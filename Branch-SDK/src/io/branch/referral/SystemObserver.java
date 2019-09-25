@@ -12,7 +12,6 @@ import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -307,7 +306,6 @@ abstract class SystemObserver {
      * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion.
      */
     void prefetchGAdsParams(Context context, GAdsParamsFetchEvents callback) {
-        Log.i("TESTIN", "prefetchGAdsParams called");
         GAIDInitializationSessionID = PrefHelper.getInstance(context).getSessionID();
         new GAdsPrefetchTask(context, callback).executeTask();
     }
