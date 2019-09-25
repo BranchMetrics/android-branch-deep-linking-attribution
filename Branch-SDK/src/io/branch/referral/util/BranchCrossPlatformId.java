@@ -113,7 +113,7 @@ public class BranchCrossPlatformId {
         public String getCrossPlatformID() {
             if (cpidData != null && cpidData.length() != 0) {
                 try {
-                    cpidData.getJSONObject("user_data").getString("cross_platform_id");
+                    return cpidData.getJSONObject("user_data").getString("cross_platform_id");
                 } catch (JSONException e) {
                     return null;
                 }
@@ -124,7 +124,8 @@ public class BranchCrossPlatformId {
         public JSONArray getPastCrossPlatformIds() {
             if (cpidData != null && cpidData.length() != 0) {
                 try {
-                    cpidData.getJSONObject("user_data").getJSONArray("past_cross_platform_ids");
+                    return cpidData.getJSONObject("user_data")
+                            .getJSONArray("past_cross_platform_ids");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -156,7 +157,7 @@ public class BranchCrossPlatformId {
         public String getDeveloperIdentity() {
             if (cpidData != null && cpidData.length() != 0) {
                 try {
-                    cpidData.getJSONObject("user_data").getString("developer_identity");
+                    return cpidData.getJSONObject("user_data").getString("developer_identity");
                 } catch (JSONException e) {
                     return null;
                 }
