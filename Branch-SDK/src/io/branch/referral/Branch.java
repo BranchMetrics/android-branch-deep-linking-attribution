@@ -24,6 +24,10 @@ import android.text.TextUtils;
 import android.view.View;
 
 import io.branch.referral.Defines.PreinstallKey;
+import io.branch.referral.util.BranchCrossPlatformId;
+import io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener;
+import io.branch.referral.util.BranchLastAttributedTouchData;
+import io.branch.referral.util.BranchLastAttributedTouchData.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1882,7 +1886,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-    
+
+    public void getCrossPlatformIds(BranchCrossPlatformIdListener callback) {
+        new BranchCrossPlatformId(callback, context_);
+    }
+
+    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
+        prefHelper_.setLATDAttributonWindow(attributionWindow);
+        new BranchLastAttributedTouchData(callback, context_);
+    }
+
     /**
      * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
      * If you call setIdentity, this device will have that identity associated with this user until logout is called.
