@@ -1493,8 +1493,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 prefHelper_ != null && prefHelper_.getSessionID() != null;
         if (!fullyInitialized) return;
 
-        boolean aaidInitializedInThisSession = prefHelper_.getSessionID().equals(deviceInfo_.getSystemObserver().getGAIDInitializationSessionID());
-        if (!aaidInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
+        final String AIDInitializationSessionID = deviceInfo_.getSystemObserver().getAIDInitializationSessionID();
+        boolean AIDInitializedInThisSession = prefHelper_.getSessionID().equals(AIDInitializationSessionID);
+
+        if (!AIDInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
             isGAParamsFetchInProgress_ = true;
             deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
         }

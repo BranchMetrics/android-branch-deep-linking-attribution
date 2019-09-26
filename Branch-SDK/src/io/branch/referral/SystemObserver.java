@@ -44,8 +44,10 @@ abstract class SystemObserver {
 
     private static final int GAID_FETCH_TIME_OUT = 1500;
     private String GAIDString_ = null;
-    private String GAIDInitializationSessionID;
     private int LATVal_ = 0;
+
+    /* Needed to avoid duplicating GAID initialization from App.onCreate and Activity.onStart */
+    private String AIDInitializationSessionID_;
 
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
@@ -306,7 +308,7 @@ abstract class SystemObserver {
      * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion.
      */
     void prefetchGAdsParams(Context context, GAdsParamsFetchEvents callback) {
-        GAIDInitializationSessionID = PrefHelper.getInstance(context).getSessionID();
+        AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         new GAdsPrefetchTask(context, callback).executeTask();
     }
 
@@ -585,7 +587,7 @@ abstract class SystemObserver {
         return null;
     }
 
-    public String getGAIDInitializationSessionID() {
-        return GAIDInitializationSessionID;
+    String getAIDInitializationSessionID() {
+        return AIDInitializationSessionID_;
     }
 }
