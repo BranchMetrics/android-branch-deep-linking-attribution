@@ -46,8 +46,8 @@ public class BranchGAIDTest extends BranchEventTest {
         ServerRequest initRequest = queue.peekAt(0);
         doFinalUpdate(initRequest);
 
-        Assert.assertTrue(hasV1GAID(initRequest));
-        Assert.assertFalse(hasV2GAID(initRequest));
+        assumingLatIsDisabledHasGAIDv1(initRequest, true);
+        assumingLatIsDisabledHasGAIDv2(initRequest, false);
     }
 
     @Test
@@ -69,8 +69,8 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertTrue(hasV1GAID(serverRequest));
-        Assert.assertFalse(hasV2GAID(serverRequest));
+        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
     }
 
     @Test
@@ -90,8 +90,8 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertTrue(hasV1GAID(serverRequest));
-        Assert.assertFalse(hasV2GAID(serverRequest));
+        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
 
         DebugLogQueue(getTestContext());
     }
@@ -116,8 +116,8 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertTrue(hasV1GAID(serverRequest));
-        Assert.assertFalse(hasV2GAID(serverRequest));
+        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
     }
 
     @Test
@@ -131,8 +131,8 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertTrue(hasV1GAID(serverRequest));
-        Assert.assertFalse(hasV2GAID(serverRequest));
+        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
     }
 
     @Test
@@ -146,8 +146,8 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
 
-        Assert.assertTrue(hasV1GAID(serverRequest));
-        Assert.assertFalse(hasV2GAID(serverRequest));
+        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
     }
 
     @Test
@@ -177,10 +177,43 @@ public class BranchGAIDTest extends BranchEventTest {
         ServerRequest serverRequest = logEvent(getTestContext(), branchEvent);
         Assert.assertNotNull(serverRequest);
 
-        Assert.assertFalse(hasV1GAID(serverRequest));
-        Assert.assertTrue(hasV2GAID(serverRequest));
+        assumingLatIsDisabledHasGAIDv1(serverRequest, false);
+        assumingLatIsDisabledHasGAIDv2(serverRequest, true);
     }
 
+    // Check to see if the LAT is available (V1)
+    private boolean hasV1LAT(ServerRequest request) {
+        JSONObject jsonObject = request.getGetParams();
+        int lat = jsonObject.optInt(Defines.Jsonkey.LATVal.getKey(), -1);
+        return lat >= 0;
+    }
+
+    // Check to see if the LAT is available (V2)
+    private boolean hasV2LAT(ServerRequest request) {
+        JSONObject jsonObject = request.getGetParams();
+        JSONObject userDataObj = jsonObject.optJSONObject(Defines.Jsonkey.UserData.getKey());
+
+        if (userDataObj == null) {
+            return false;
+        }
+
+        int lat = userDataObj.optInt(Defines.Jsonkey.LimitedAdTracking.getKey(), -1);
+        return lat >= 0;
+    }
+
+    private boolean LATIsEnabledV1(ServerRequest request) {
+        JSONObject jsonObject = request.getGetParams();
+        return jsonObject.optInt(Defines.Jsonkey.LATVal.getKey(), -1) == 1;
+    }
+
+    private boolean LATIsEnabledV2(ServerRequest request) {
+        JSONObject jsonObject = request.getGetParams();
+        JSONObject userDataObj = jsonObject.optJSONObject(Defines.Jsonkey.UserData.getKey());
+
+        Assert.assertNotNull(userDataObj);
+
+        return userDataObj.optInt(Defines.Jsonkey.LimitedAdTracking.getKey(), -1) == 1;
+    }
 
     // Check to see if the GAID is available (V1)
     private boolean hasV1GAID(ServerRequest request) {
@@ -202,5 +235,34 @@ public class BranchGAIDTest extends BranchEventTest {
         return (gaid.length() > 0);
     }
 
+    private void assumingLatIsDisabledHasGAIDv1(ServerRequest serverRequest, boolean assertTrue) {
+        if (assertTrue) {
+            Assert.assertTrue(hasV1LAT(serverRequest));
+
+            if (LATIsEnabledV1(serverRequest)) {
+                Assert.assertFalse(hasV1GAID(serverRequest));
+            } else {
+                Assert.assertTrue(hasV1GAID(serverRequest));
+            }
+        } else {
+            Assert.assertFalse(hasV1LAT(serverRequest));
+            Assert.assertFalse(hasV1GAID(serverRequest));
+        }
+    }
+
+    private void assumingLatIsDisabledHasGAIDv2(ServerRequest serverRequest, boolean assertTrue) {
+        if (assertTrue) {
+            Assert.assertTrue(hasV2LAT(serverRequest));
+
+            if (LATIsEnabledV2(serverRequest)) {
+                Assert.assertFalse(hasV2GAID(serverRequest));
+            } else {
+                Assert.assertTrue(hasV2GAID(serverRequest));
+            }
+        } else {
+            Assert.assertFalse(hasV2LAT(serverRequest));
+            Assert.assertFalse(hasV2GAID(serverRequest));
+        }
+    }
 }
 
