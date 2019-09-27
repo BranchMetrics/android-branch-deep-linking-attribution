@@ -398,8 +398,7 @@ public abstract class ServerRequest {
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                         // for future use
-                        JSONObject advertisingIDs = new JSONObject().put(Defines.Jsonkey.AAID.getKey(), gaid);
-                        params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIDs);
+                        addAdvertisingIdsObject(userDataObj, gaid);
                     } else if (payloadContainsNoDeviceIdentifiers(userDataObj)) {
                         userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
@@ -408,8 +407,7 @@ public abstract class ServerRequest {
                 if (!TextUtils.isEmpty(gaid)) {
                     params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
                     // for future use
-                    JSONObject advertisingIDs = new JSONObject().put(Defines.Jsonkey.AAID.getKey(), gaid);
-                    params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIDs);
+                    addAdvertisingIdsObject(params_, gaid);
                 } else if (payloadContainsNoDeviceIdentifiers(params_)) {
                     params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                 }
@@ -425,7 +423,21 @@ public abstract class ServerRequest {
                 !payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) &&
                 !payload.has(Defines.ModuleNameKeys.imei.getKey()) &&
                 (!payload.has(Defines.Jsonkey.UnidentifiedDevice.getKey()) ||
-                        !payload.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey()))
+                        !payload.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey()));
+    }
+
+    private void addAdvertisingIdsObject(JSONObject payload, String aid) {
+        String os = payload.optString(Defines.Jsonkey.OS.getKey());
+        if (TextUtils.isEmpty(os)) return;
+
+        String aid_key = os.toLowerCase().contains("amazon") ? Defines.Jsonkey.FireAdId.getKey() :
+                Defines.Jsonkey.AAID.getKey();
+        try {
+            JSONObject advertisingIdsObject = new JSONObject().put(aid_key, aid);
+            payload.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
     
     private void updateDeviceInfo() {
