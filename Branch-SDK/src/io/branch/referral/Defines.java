@@ -84,6 +84,7 @@ public class Defines {
         WiFi("wifi"),
         LocalIP("local_ip"),
         UserData("user_data"),
+        AdvertisingIDs("advertising_ids"),
         DeveloperIdentity("developer_identity"),
         UserAgent("user_agent"),
         SDK("sdk"),

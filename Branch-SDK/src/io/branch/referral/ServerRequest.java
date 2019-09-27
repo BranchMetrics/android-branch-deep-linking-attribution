@@ -397,19 +397,35 @@ public abstract class ServerRequest {
                     if (!TextUtils.isEmpty(gaid)) {
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
-                    } else if (!userDataObj.has(Defines.Jsonkey.AndroidID.getKey())) {
+                        // for future use
+                        JSONObject advertisingIDs = new JSONObject().put(Defines.Jsonkey.AAID.getKey(), gaid);
+                        params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIDs);
+                    } else if (payloadContainsNoDeviceIdentifiers(userDataObj)) {
                         userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
                 }
             } else {
                 if (!TextUtils.isEmpty(gaid)) {
                     params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                    // for future use
+                    JSONObject advertisingIDs = new JSONObject().put(Defines.Jsonkey.AAID.getKey(), gaid);
+                    params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIDs);
+                } else if (payloadContainsNoDeviceIdentifiers(params_)) {
+                    params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                 }
                 params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean payloadContainsNoDeviceIdentifiers(JSONObject payload) {
+        return !payload.has(Defines.Jsonkey.AndroidID.getKey()) &&
+                !payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) &&
+                !payload.has(Defines.ModuleNameKeys.imei.getKey()) &&
+                (!payload.has(Defines.Jsonkey.UnidentifiedDevice.getKey()) ||
+                        !payload.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey()))
     }
     
     private void updateDeviceInfo() {
