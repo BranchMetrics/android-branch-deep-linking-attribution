@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v4.1.0
+  * _*Master Release*_ - September 26, 2019
+  * Support for CPID
+  * Support for Last Attributed Touch Data
+
 - v4.0.1
   * _*Master Release*_ - September 18, 2019
   * SDK-237 corrected customer_event_alias function
