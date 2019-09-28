@@ -47,7 +47,9 @@ public class BranchGAIDTest extends BranchEventTest {
         doFinalUpdate(initRequest);
 
         assumingLatIsDisabledHasGAIDv1(initRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(initRequest, true);
         assumingLatIsDisabledHasGAIDv2(initRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(initRequest, false);
     }
 
     @Test
@@ -70,7 +72,9 @@ public class BranchGAIDTest extends BranchEventTest {
         doFinalUpdate(serverRequest);
 
         assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
         assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
     }
 
     @Test
@@ -91,7 +95,9 @@ public class BranchGAIDTest extends BranchEventTest {
         doFinalUpdate(serverRequest);
 
         assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
         assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
 
         DebugLogQueue(getTestContext());
     }
@@ -117,7 +123,9 @@ public class BranchGAIDTest extends BranchEventTest {
         doFinalUpdate(serverRequest);
 
         assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
         assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
     }
 
     @Test
@@ -132,7 +140,9 @@ public class BranchGAIDTest extends BranchEventTest {
         doFinalUpdate(serverRequest);
 
         assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
         assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
     }
 
     @Test
@@ -147,7 +157,9 @@ public class BranchGAIDTest extends BranchEventTest {
         doFinalUpdate(serverRequest);
 
         assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
         assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
     }
 
     @Test
@@ -178,7 +190,9 @@ public class BranchGAIDTest extends BranchEventTest {
         Assert.assertNotNull(serverRequest);
 
         assumingLatIsDisabledHasGAIDv1(serverRequest, false);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, false);
         assumingLatIsDisabledHasGAIDv2(serverRequest, true);
+        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, true);
     }
 
     // Check to see if the LAT is available (V1)
@@ -262,6 +276,48 @@ public class BranchGAIDTest extends BranchEventTest {
         } else {
             Assert.assertFalse(hasV2LAT(serverRequest));
             Assert.assertFalse(hasV2GAID(serverRequest));
+        }
+    }
+
+    private String getAdIdFromAdIdsObject(ServerRequest request) {
+        JSONObject jsonObject = request.getGetParams();
+        JSONObject adIdsObject = jsonObject.optJSONObject(Defines.Jsonkey.AdvertisingIDs.getKey());
+        if (adIdsObject == null) return "";
+
+        if (jsonObject.optString(Defines.Jsonkey.OS.getKey()).toLowerCase().contains("amazon")) {
+            return adIdsObject.optString(Defines.Jsonkey.FireAdId.getKey());
+        } else {
+            return adIdsObject.optString(Defines.Jsonkey.AAID.getKey());
+        }
+    }
+
+    private void assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(ServerRequest serverRequest, boolean assertTrue) {
+        boolean hasAdIdFromAdIdsObject = getAdIdFromAdIdsObject(serverRequest).length() > 0;
+        if (assertTrue) {
+            Assert.assertTrue(hasV1LAT(serverRequest));
+
+            if (LATIsEnabledV1(serverRequest)) {
+                Assert.assertFalse(hasAdIdFromAdIdsObject);
+            } else {
+                Assert.assertTrue(hasAdIdFromAdIdsObject);
+            }
+        } else {
+            Assert.assertFalse(hasV1LAT(serverRequest));
+        }
+    }
+
+    private void assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(ServerRequest serverRequest, boolean assertTrue) {
+        boolean hasAdIdFromAdIdsObject = getAdIdFromAdIdsObject(serverRequest).length() > 0;
+        if (assertTrue) {
+            Assert.assertTrue(hasV2LAT(serverRequest));
+
+            if (LATIsEnabledV2(serverRequest)) {
+                Assert.assertFalse(hasAdIdFromAdIdsObject);
+            } else {
+                Assert.assertTrue(hasAdIdFromAdIdsObject);
+            }
+        } else {
+            Assert.assertFalse(hasV2LAT(serverRequest));
         }
     }
 }

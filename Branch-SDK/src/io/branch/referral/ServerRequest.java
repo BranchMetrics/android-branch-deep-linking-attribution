@@ -388,6 +388,7 @@ public abstract class ServerRequest {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
         String gaid = DeviceInfo.getInstance().getSystemObserver().getGAID();
+        String keyToBeUsedInAdIdsObject = null;
         try {
             if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID ||
                     version == BRANCH_API_VERSION.V1_LATD) {
@@ -398,7 +399,7 @@ public abstract class ServerRequest {
                         userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                         // for future use
-                        addAdvertisingIdsObject(userDataObj, gaid);
+                        keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(userDataObj);
                     } else if (payloadContainsNoDeviceIdentifiers(userDataObj)) {
                         userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
@@ -407,12 +408,17 @@ public abstract class ServerRequest {
                 if (!TextUtils.isEmpty(gaid)) {
                     params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
                     // for future use
-                    addAdvertisingIdsObject(params_, gaid);
+                    keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(params_);
                 } else if (payloadContainsNoDeviceIdentifiers(params_)) {
                     params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                 }
                 params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
             }
+
+            if (keyToBeUsedInAdIdsObject == null) return;
+
+            JSONObject advertisingIdsObject = new JSONObject().put(keyToBeUsedInAdIdsObject, gaid);
+            params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -424,6 +430,14 @@ public abstract class ServerRequest {
                 !payload.has(Defines.ModuleNameKeys.imei.getKey()) &&
                 (!payload.has(Defines.Jsonkey.UnidentifiedDevice.getKey()) ||
                         !payload.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey()));
+    }
+
+    private String getKeyToBeUsedInAdIdsObject(JSONObject payload) {
+        String os = payload.optString(Defines.Jsonkey.OS.getKey());
+        if (TextUtils.isEmpty(os)) return null;
+
+        return os.toLowerCase().contains("amazon") ? Defines.Jsonkey.FireAdId.getKey() :
+                Defines.Jsonkey.AAID.getKey();
     }
 
     private void addAdvertisingIdsObject(JSONObject payload, String aid) {
