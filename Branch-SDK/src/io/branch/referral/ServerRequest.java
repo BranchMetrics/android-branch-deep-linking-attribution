@@ -439,20 +439,6 @@ public abstract class ServerRequest {
         return os.toLowerCase().contains("amazon") ? Defines.Jsonkey.FireAdId.getKey() :
                 Defines.Jsonkey.AAID.getKey();
     }
-
-    private void addAdvertisingIdsObject(JSONObject payload, String aid) {
-        String os = payload.optString(Defines.Jsonkey.OS.getKey());
-        if (TextUtils.isEmpty(os)) return;
-
-        String aid_key = os.toLowerCase().contains("amazon") ? Defines.Jsonkey.FireAdId.getKey() :
-                Defines.Jsonkey.AAID.getKey();
-        try {
-            JSONObject advertisingIdsObject = new JSONObject().put(aid_key, aid);
-            payload.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
     
     private void updateDeviceInfo() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
