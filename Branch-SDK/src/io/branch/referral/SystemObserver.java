@@ -46,6 +46,9 @@ abstract class SystemObserver {
     private String GAIDString_ = null;
     private int LATVal_ = 0;
 
+    /* Needed to avoid duplicating GAID initialization from App.onCreate and Activity.onStart */
+    private String AIDInitializationSessionID_;
+
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
      * immutable value is generated upon initial device setup, and re-used throughout the life of
@@ -302,16 +305,11 @@ abstract class SystemObserver {
      * Method to prefetch the GAID and LAT values.
      *
      * @param context Context.
-     * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion
-     * @return {@link Boolean} with true if GAID fetch process started.
+     * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion.
      */
-    boolean prefetchGAdsParams(Context context, GAdsParamsFetchEvents callback) {
-        boolean isPrefetchStarted = false;
-        if (TextUtils.isEmpty(GAIDString_)) {
-            isPrefetchStarted = true;
-            new GAdsPrefetchTask(context, callback).executeTask();
-        }
-        return isPrefetchStarted;
+    void prefetchGAdsParams(Context context, GAdsParamsFetchEvents callback) {
+        AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
+        new GAdsPrefetchTask(context, callback).executeTask();
     }
 
     /**
@@ -341,8 +339,12 @@ abstract class SystemObserver {
                     if (context != null) {
                         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                         Object adInfoObj = getAdInfoObject(context);
-                        setAdvertisingId(adInfoObj);
                         setLATValue(adInfoObj);
+                        if (LATVal_ == 1) {
+                            GAIDString_ = null;
+                        } else {
+                            setAdvertisingId(adInfoObj);
+                        }
                     }
                     latch.countDown();
                 }
@@ -583,5 +585,9 @@ abstract class SystemObserver {
             return imei;
         }
         return null;
+    }
+
+    String getAIDInitializationSessionID() {
+        return AIDInitializationSessionID_;
     }
 }

@@ -72,6 +72,7 @@ public class Defines {
         LinkIdentifier("link_identifier"),
         GoogleAdvertisingID("google_advertising_id"),       // V1 Only, "Google Advertising Id"
         AAID("aaid"),                                       // V2 Only, "Android Advertising Id"
+        FireAdId("fire_ad_id"),
         LATVal("lat_val"),
         LimitedAdTracking("limit_ad_tracking"),
         limitFacebookTracking("limit_facebook_tracking"),
@@ -84,6 +85,7 @@ public class Defines {
         WiFi("wifi"),
         LocalIP("local_ip"),
         UserData("user_data"),
+        AdvertisingIDs("advertising_ids"),
         DeveloperIdentity("developer_identity"),
         UserAgent("user_agent"),
         SDK("sdk"),

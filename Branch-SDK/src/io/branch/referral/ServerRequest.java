@@ -388,40 +388,54 @@ public abstract class ServerRequest {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
         String gaid = DeviceInfo.getInstance().getSystemObserver().getGAID();
-        if (!TextUtils.isEmpty(gaid)) {
-            try {
-                if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID ||
-                        version == BRANCH_API_VERSION.V1_LATD) {
-                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-                    if (userDataObj != null) {
-                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
-                        userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
-                        userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
-                    }
-                } else {
+        String keyToBeUsedInAdIdsObject = null;
+        try {
+            if (version == BRANCH_API_VERSION.V1) {
+                params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
+                if (!TextUtils.isEmpty(gaid)) {
                     params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
-                    params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
+                    params_.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
+                    // for future use
+                    keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(params_);
+                } else if (!payloadContainsDeviceIdentifiers(params_) &&
+                        !params_.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
+                    params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        } else { // Add unidentified_device when neither GAID nor AndroidID are present
-            if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID) {
-                try {
-                    if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID ||
-                            version == BRANCH_API_VERSION.V1_LATD) {
-                        JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-                        if (userDataObj != null) {
-                            if (!userDataObj.has(Defines.Jsonkey.AndroidID.getKey())) {
-                                userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
-                            }
-                        }
+            } else {
+                JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                if (userDataObj != null) {
+                    userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
+                    if (!TextUtils.isEmpty(gaid)) {
+                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
+                        userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
+                        // for future use
+                        keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(userDataObj);
+                    } else if (!payloadContainsDeviceIdentifiers(userDataObj) &&
+                            !userDataObj.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
+                        userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
-                } catch (JSONException ignore) {
-                
                 }
             }
-        }
+
+            if (keyToBeUsedInAdIdsObject == null) return;
+
+            JSONObject advertisingIdsObject = new JSONObject().put(keyToBeUsedInAdIdsObject, gaid);
+            params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
+        } catch (JSONException ignored) {}
+    }
+
+    private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
+        return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
+                payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||
+                payload.has(Defines.ModuleNameKeys.imei.getKey());
+    }
+
+    private String getKeyToBeUsedInAdIdsObject(JSONObject payload) {
+        String os = payload.optString(Defines.Jsonkey.OS.getKey());
+        if (TextUtils.isEmpty(os)) return null;
+
+        return os.toLowerCase().contains("amazon") ? Defines.Jsonkey.FireAdId.getKey() :
+                Defines.Jsonkey.AAID.getKey();
     }
     
     private void updateDeviceInfo() {

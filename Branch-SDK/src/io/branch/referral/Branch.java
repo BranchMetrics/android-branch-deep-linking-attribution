@@ -440,7 +440,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
+            isGAParamsFetchInProgress_ = true;
+            deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
         }
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
@@ -2620,7 +2621,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void registerAppReInit() {
         // on re-init make sure GAID is available
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchGAdsParams(context_, this);
+            isGAParamsFetchInProgress_ = true;
+            deviceInfo_.getSystemObserver().prefetchGAdsParams(context_, this);
         }
         if (networkCount_ != 0) {
             networkCount_ = 0;
@@ -2798,6 +2800,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             activityCnt_++;
             isActivityCreatedAndLaunched = false;
+
+            maybeRefreshAdvertisingID(activity);
         }
         
         @Override
@@ -2848,7 +2852,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
-        
+
+        private void maybeRefreshAdvertisingID(Context context) {
+            boolean fullyInitialized = trackingController != null &&
+                    deviceInfo_ != null && deviceInfo_.getSystemObserver() != null &&
+                    prefHelper_ != null && prefHelper_.getSessionID() != null;
+            if (!fullyInitialized) return;
+
+            final String AIDInitializationSessionID = deviceInfo_.getSystemObserver().getAIDInitializationSessionID();
+            boolean AIDInitializedInThisSession = prefHelper_.getSessionID().equals(AIDInitializationSessionID);
+
+            if (!AIDInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
+                isGAParamsFetchInProgress_ = true;
+                deviceInfo_.getSystemObserver().prefetchGAdsParams(context,Branch.this);
+            }
+        }
     }
     
     private void startSession(Activity activity) {
