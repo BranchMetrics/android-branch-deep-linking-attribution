@@ -84,7 +84,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.WiFi.getKey(), SystemObserver.getWifiConnected(context_));
             requestObj.put(Defines.Jsonkey.UIMode.getKey(), SystemObserver.getUIMode(context_));
 
-            String osName = SystemObserver.getOS();
+            String osName = SystemObserver.getOS(context_);
             if (!isNullOrEmptyOrBlank(osName)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
@@ -146,7 +146,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
 
-            String osName = SystemObserver.getOS();
+            String osName = SystemObserver.getOS(context_);
             if (!isNullOrEmptyOrBlank(osName)) {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
@@ -266,7 +266,7 @@ class DeviceInfo {
     }
 
     public String getOsName() {
-        return systemObserver_.getOS();
+        return systemObserver_.getOS(context_);
     }
 
     // PRS : User agent is checked only from api-17

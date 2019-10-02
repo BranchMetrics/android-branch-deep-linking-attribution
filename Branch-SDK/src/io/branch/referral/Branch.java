@@ -75,7 +75,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.GAdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
     
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + BuildConfig.VERSION_NAME;
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -440,8 +440,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = true;
-            deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
+            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
         // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
         // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
@@ -669,7 +668,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return branchReferral_;
     }
-    
     
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
@@ -1784,7 +1782,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     @Override
-    public void onGAdsFetchFinished() {
+    public void onAdsParamsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         if (performCookieBasedStrongMatchingOnGAIDAvailable) {
@@ -2621,8 +2619,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void registerAppReInit() {
         // on re-init make sure GAID is available
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = true;
-            deviceInfo_.getSystemObserver().prefetchGAdsParams(context_, this);
+            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context_, this);
         }
         if (networkCount_ != 0) {
             networkCount_ = 0;
@@ -2863,8 +2860,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             boolean AIDInitializedInThisSession = prefHelper_.getSessionID().equals(AIDInitializationSessionID);
 
             if (!AIDInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
-                isGAParamsFetchInProgress_ = true;
-                deviceInfo_.getSystemObserver().prefetchGAdsParams(context,Branch.this);
+                isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,Branch.this);
             }
         }
     }
