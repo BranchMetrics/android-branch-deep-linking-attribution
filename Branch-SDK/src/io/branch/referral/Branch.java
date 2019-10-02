@@ -669,7 +669,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return branchReferral_;
     }
     
-    
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
      * object of the type {@link Branch}.</p>
