@@ -1486,21 +1486,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
     }
-
-    private void maybeRefreshAdvertisingID(Context context) {
-        boolean fullyInitialized = trackingController != null &&
-                deviceInfo_ != null && deviceInfo_.getSystemObserver() != null &&
-                prefHelper_ != null && prefHelper_.getSessionID() != null;
-        if (!fullyInitialized) return;
-
-        final String AIDInitializationSessionID = deviceInfo_.getSystemObserver().getAIDInitializationSessionID();
-        boolean AIDInitializedInThisSession = prefHelper_.getSessionID().equals(AIDInitializationSessionID);
-
-        if (!AIDInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
-            isGAParamsFetchInProgress_ = true;
-            deviceInfo_.getSystemObserver().prefetchGAdsParams(context,this);
-        }
-    }
     
     private boolean reportInitSession(BranchReferralInitListener callback) {
         if (callback != null) {
@@ -2867,7 +2852,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
         }
-        
+
+        private void maybeRefreshAdvertisingID(Context context) {
+            boolean fullyInitialized = trackingController != null &&
+                    deviceInfo_ != null && deviceInfo_.getSystemObserver() != null &&
+                    prefHelper_ != null && prefHelper_.getSessionID() != null;
+            if (!fullyInitialized) return;
+
+            final String AIDInitializationSessionID = deviceInfo_.getSystemObserver().getAIDInitializationSessionID();
+            boolean AIDInitializedInThisSession = prefHelper_.getSessionID().equals(AIDInitializationSessionID);
+
+            if (!AIDInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
+                isGAParamsFetchInProgress_ = true;
+                deviceInfo_.getSystemObserver().prefetchGAdsParams(context,Branch.this);
+            }
+        }
     }
     
     private void startSession(Activity activity) {

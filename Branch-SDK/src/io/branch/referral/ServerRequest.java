@@ -390,8 +390,18 @@ public abstract class ServerRequest {
         String gaid = DeviceInfo.getInstance().getSystemObserver().getGAID();
         String keyToBeUsedInAdIdsObject = null;
         try {
-            if (version == BRANCH_API_VERSION.V2 || version == BRANCH_API_VERSION.V1_CPID ||
-                    version == BRANCH_API_VERSION.V1_LATD) {
+            if (version == BRANCH_API_VERSION.V1) {
+                params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
+                if (!TextUtils.isEmpty(gaid)) {
+                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                    params_.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
+                    // for future use
+                    keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(params_);
+                } else if (!payloadContainsDeviceIdentifiers(params_) &&
+                        !params_.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
+                    params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
+                }
+            } else {
                 JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
                 if (userDataObj != null) {
                     userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
@@ -400,36 +410,24 @@ public abstract class ServerRequest {
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                         // for future use
                         keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(userDataObj);
-                    } else if (payloadContainsNoDeviceIdentifiers(userDataObj)) {
+                    } else if (!payloadContainsDeviceIdentifiers(userDataObj) &&
+                            !userDataObj.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
                         userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
                 }
-            } else {
-                if (!TextUtils.isEmpty(gaid)) {
-                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
-                    // for future use
-                    keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(params_);
-                } else if (payloadContainsNoDeviceIdentifiers(params_)) {
-                    params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
-                }
-                params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
             }
 
             if (keyToBeUsedInAdIdsObject == null) return;
 
             JSONObject advertisingIdsObject = new JSONObject().put(keyToBeUsedInAdIdsObject, gaid);
             params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException ignored) {}
     }
 
-    private boolean payloadContainsNoDeviceIdentifiers(JSONObject payload) {
-        return !payload.has(Defines.Jsonkey.AndroidID.getKey()) &&
-                !payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) &&
-                !payload.has(Defines.ModuleNameKeys.imei.getKey()) &&
-                (!payload.has(Defines.Jsonkey.UnidentifiedDevice.getKey()) ||
-                        !payload.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey()));
+    private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
+        return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
+                payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||
+                payload.has(Defines.ModuleNameKeys.imei.getKey());
     }
 
     private String getKeyToBeUsedInAdIdsObject(JSONObject payload) {
