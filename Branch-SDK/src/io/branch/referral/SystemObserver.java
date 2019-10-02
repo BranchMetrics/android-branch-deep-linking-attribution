@@ -51,6 +51,9 @@ abstract class SystemObserver {
     private String GAIDString_ = null;
     private int LATVal_ = 0;
 
+    /* Needed to avoid duplicating GAID initialization from App.onCreate and Activity.onStart */
+    private String AIDInitializationSessionID_;
+
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
      * immutable value is generated upon initial device setup, and re-used throughout the life of
@@ -325,27 +328,25 @@ abstract class SystemObserver {
      * @return {@link Boolean} with true if GAID fetch process started.
      */
     boolean prefetchAdsParams(Context context, AdsParamsFetchEvents callback) {
+        AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         boolean isPrefetchStarted = false;
-        if (TextUtils.isEmpty(GAIDString_)) {
-            if (isFireOSDevice()) {
-                if (context == null) return isPrefetchStarted;
-                try {
-                    ContentResolver cr = context.getContentResolver();
-                    LATVal_ = Secure.getInt(cr, "limit_ad_tracking");
-                    GAIDString_ = Secure.getString(cr, "advertising_id");
-
-                    // Don't save advertising id if it's all zeroes
-                    if (Strings.isEmptyOrWhitespace(GAIDString_) || GAIDString_.equals(UUID_EMPTY)) {
-                        GAIDString_ = null;
-                    }
-                    if (callback != null) {
-                        callback.onAdsParamsFetchFinished();
-                    }
-                } catch (Settings.SettingNotFoundException ignored) {}
-            } else {
-                isPrefetchStarted = true;
-                new GAdsPrefetchTask(context, callback).executeTask();
-            }
+        if (isFireOSDevice()) {
+            if (context == null) return isPrefetchStarted;
+            try {
+                ContentResolver cr = context.getContentResolver();
+                LATVal_ = Secure.getInt(cr, "limit_ad_tracking");
+                GAIDString_ = Secure.getString(cr, "advertising_id");
+                // Don't save advertising id if it's empty/all zeroes/lat=true
+                if (Strings.isEmptyOrWhitespace(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
+                    GAIDString_ = null;
+                }
+                if (callback != null) {
+                    callback.onAdsParamsFetchFinished();
+                }
+            } catch (Settings.SettingNotFoundException ignored) {}
+        } else {
+            isPrefetchStarted = true;
+            new GAdsPrefetchTask(context, callback).executeTask();
         }
         return isPrefetchStarted;
     }
@@ -377,8 +378,12 @@ abstract class SystemObserver {
                     if (context != null) {
                         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                         Object adInfoObj = getAdInfoObject(context);
-                        setGAID(adInfoObj);
                         setGoogleLATValue(adInfoObj);
+                        if (LATVal_ == 1) {
+                            GAIDString_ = null;
+                        } else {
+                            setGAID(adInfoObj);
+                        }
                     }
                     latch.countDown();
                 }
@@ -619,5 +624,9 @@ abstract class SystemObserver {
             return imei;
         }
         return null;
+    }
+
+    String getAIDInitializationSessionID() {
+        return AIDInitializationSessionID_;
     }
 }
