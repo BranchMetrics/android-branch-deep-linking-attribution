@@ -17,8 +17,6 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-import com.google.android.gms.common.util.Strings;
-
 import io.branch.referral.Defines.ModuleNameKeys;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -337,7 +335,7 @@ abstract class SystemObserver {
                 LATVal_ = Secure.getInt(cr, "limit_ad_tracking");
                 GAIDString_ = Secure.getString(cr, "advertising_id");
                 // Don't save advertising id if it's empty/all zeroes/lat=true
-                if (Strings.isEmptyOrWhitespace(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
+                if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
                     GAIDString_ = null;
                 }
                 if (callback != null) {
