@@ -2,8 +2,7 @@
 - v4.1.1
   * _*Master Release*_ - October 7, 2019
   * Support for Fire OS
-  * Do not collect advertising ID when limit ad tracking is enabled
-  * Reset advertising ID and limit ad tracking values every time app becomes visible
+  * Do not collect advertising ID when limit ad tracking is enabled after the app was initialized
 
 - v4.1.0
   * _*Master Release*_ - September 26, 2019
