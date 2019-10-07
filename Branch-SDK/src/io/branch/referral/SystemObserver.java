@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.Manifest;
 import android.app.UiModeManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -9,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -43,8 +45,12 @@ abstract class SystemObserver {
     static final String BLANK = "bnc_no_value";
 
     private static final int GAID_FETCH_TIME_OUT = 1500;
+    private static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
     private String GAIDString_ = null;
     private int LATVal_ = 0;
+
+    /* Needed to avoid duplicating GAID initialization from App.onCreate and Activity.onStart */
+    private String AIDInitializationSessionID_;
 
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
@@ -211,6 +217,12 @@ abstract class SystemObserver {
         }
     }
 
+    /**
+    * Helper function to determine of the device is running Fire OS
+    */
+    private static boolean isFireOSDevice() {
+        return getPhoneBrand().equalsIgnoreCase("amazon");
+    }
 
     /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android
@@ -219,7 +231,15 @@ abstract class SystemObserver {
      *
      * @return A {@link String} value that indicates the broad OS type that is in use on the device.
      */
-    static String getOS() {
+    static String getOS(Context context) {
+        if (isFireOSDevice()) {
+            if (context == null) {
+                return getPhoneModel().contains("AFT") ? "AMAZON_FIRE_TV" : "AMAZON_FIRE";
+            } else if (context.getPackageManager().hasSystemFeature("amazon.hardware.fire_tv")) {
+                return "AMAZON_FIRE_TV";
+            }
+            return "AMAZON_FIRE";
+        }
         return "Android";
     }
 
@@ -302,12 +322,27 @@ abstract class SystemObserver {
      * Method to prefetch the GAID and LAT values.
      *
      * @param context Context.
-     * @param callback {@link GAdsParamsFetchEvents} instance to notify process completion
+     * @param callback {@link AdsParamsFetchEvents} instance to notify process completion
      * @return {@link Boolean} with true if GAID fetch process started.
      */
-    boolean prefetchGAdsParams(Context context, GAdsParamsFetchEvents callback) {
+    boolean prefetchAdsParams(Context context, AdsParamsFetchEvents callback) {
+        AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         boolean isPrefetchStarted = false;
-        if (TextUtils.isEmpty(GAIDString_)) {
+        if (isFireOSDevice()) {
+            if (context == null) return isPrefetchStarted;
+            try {
+                ContentResolver cr = context.getContentResolver();
+                LATVal_ = Secure.getInt(cr, "limit_ad_tracking");
+                GAIDString_ = Secure.getString(cr, "advertising_id");
+                // Don't save advertising id if it's empty/all zeroes/lat=true
+                if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
+                    GAIDString_ = null;
+                }
+                if (callback != null) {
+                    callback.onAdsParamsFetchFinished();
+                }
+            } catch (Settings.SettingNotFoundException ignored) {}
+        } else {
             isPrefetchStarted = true;
             new GAdsPrefetchTask(context, callback).executeTask();
         }
@@ -323,9 +358,9 @@ abstract class SystemObserver {
      */
     private class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
         private WeakReference<Context> contextRef_;
-        private final GAdsParamsFetchEvents callback_;
+        private final AdsParamsFetchEvents callback_;
 
-        public GAdsPrefetchTask(Context context, GAdsParamsFetchEvents callback) {
+        public GAdsPrefetchTask(Context context, AdsParamsFetchEvents callback) {
             contextRef_ = new WeakReference<>(context);
             callback_ = callback;
         }
@@ -341,8 +376,12 @@ abstract class SystemObserver {
                     if (context != null) {
                         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                         Object adInfoObj = getAdInfoObject(context);
-                        setAdvertisingId(adInfoObj);
-                        setLATValue(adInfoObj);
+                        setGoogleLATValue(adInfoObj);
+                        if (LATVal_ == 1) {
+                            GAIDString_ = null;
+                        } else {
+                            setGAID(adInfoObj);
+                        }
                     }
                     latch.countDown();
                 }
@@ -362,7 +401,7 @@ abstract class SystemObserver {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             if (callback_ != null) {
-                callback_.onGAdsFetchFinished();
+                callback_.onAdsParamsFetchFinished();
             }
         }
 
@@ -395,7 +434,7 @@ abstract class SystemObserver {
          * @param adInfoObj AdvertisingIdClient.
          * @see <a href="https://developer.android.com/google/play-services/id.html"> Android Developers - Advertising ID</a>
          */
-        private void setAdvertisingId(Object adInfoObj) {
+        private void setGAID(Object adInfoObj) {
             try {
                 Method getIdMethod = adInfoObj.getClass().getMethod("getId");
                 GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
@@ -411,7 +450,7 @@ abstract class SystemObserver {
          * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
          * Android Developers - Limit Ad Tracking</a>
          */
-        private void setLATValue(Object adInfoObj) {
+        private void setGoogleLATValue(Object adInfoObj) {
             try {
                 Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
                 LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
@@ -420,8 +459,8 @@ abstract class SystemObserver {
         }
     }
 
-    interface GAdsParamsFetchEvents {
-        void onGAdsFetchFinished();
+    interface AdsParamsFetchEvents {
+        void onAdsParamsFetchFinished();
     }
 
     /**
@@ -565,7 +604,7 @@ abstract class SystemObserver {
         }
     }
 
-    String getGAID() {
+    String getAID() {
         return GAIDString_;
     }
 
@@ -583,5 +622,9 @@ abstract class SystemObserver {
             return imei;
         }
         return null;
+    }
+
+    String getAIDInitializationSessionID() {
+        return AIDInitializationSessionID_;
     }
 }
