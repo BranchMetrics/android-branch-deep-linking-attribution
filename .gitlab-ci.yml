@@ -12,14 +12,14 @@ stages:
 lintDebug:
   stage: build
   tags:
-  - mac_mini
+  - test
   script:
   - ./gradlew lint
 
 buildDebug:
   stage: build
   tags:
-  - mac_mini
+  - test
   script:
   - ./gradlew build
   artifacts:
@@ -29,14 +29,14 @@ buildDebug:
 debugTests:
   stage: build
   tags:
-  - mac_mini
+  - test
   script:
   - ./gradlew test
 
 emulatortest_py:
   stage: test
   tags:
-  - mac_mini
+  - test
   script:
   - python -u ./deploy/build_and_test.py
   artifacts:
