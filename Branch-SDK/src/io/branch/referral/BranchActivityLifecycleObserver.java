@@ -1,14 +1,12 @@
 package io.branch.referral;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
 
@@ -18,15 +16,14 @@ import io.branch.indexing.ContentDiscoverer;
  * <p>Class that observes activity life cycle events and determines when to start and stop
  * session.</p>
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks {
+class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCallbacks {
     private int activityCnt_ = 0; //Keep the count of live  activities.
 
     /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
-    boolean isActivityCreatedAndLaunched = false;
+    private boolean isActivityCreatedAndLaunched = false;
 
     @Override
-    public void onActivityCreated(Activity activity, Bundle bundle) {
+    public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -38,7 +35,7 @@ class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCa
     }
 
     @Override
-    public void onActivityStarted(Activity activity) {
+    public void onActivityStarted(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -68,7 +65,7 @@ class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCa
     }
 
     @Override
-    public void onActivityResumed(Activity activity) {
+    public void onActivityResumed(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -91,7 +88,7 @@ class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCa
     }
 
     @Override
-    public void onActivityPaused(Activity activity) {
+    public void onActivityPaused(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -102,24 +99,24 @@ class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCa
     }
 
     @Override
-    public void onActivityStopped(Activity activity) {
+    public void onActivityStopped(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
         ContentDiscoverer.getInstance().onActivityStopped(activity);
         activityCnt_--; // Check if this is the last activity. If so, stop the session.
         if (activityCnt_ < 1) {
-            branch.isInstantDeepLinkPossible = false;
+            branch.setInstantDeepLinkPossible(false);
             branch.closeSessionInternal();
         }
     }
 
     @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+    public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle bundle) {
     }
 
     @Override
-    public void onActivityDestroyed(Activity activity) {
+    public void onActivityDestroyed(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -144,5 +141,9 @@ class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCa
         if (!AIDInitializedInThisSession && !branch.isGAParamsFetchInProgress() && !branch.getTrackingController().isTrackingDisabled()) {
             branch.setGAParamsFetchInProgress(branch.getDeviceInfo().getSystemObserver().prefetchAdsParams(context, branch));
         }
+    }
+
+    boolean isActivityCreatedAndLaunched() {
+        return isActivityCreatedAndLaunched;
     }
 }

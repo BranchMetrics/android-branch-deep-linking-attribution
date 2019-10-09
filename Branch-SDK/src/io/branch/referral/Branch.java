@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -15,7 +14,6 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
@@ -413,9 +410,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /* Flag for checking of Strong matching is waiting on GAID fetch */
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
-    
-    boolean isInstantDeepLinkPossible = false;
-    private BranchActivityLifeCycleObserver activityLifeCycleObserver;
+    private boolean isInstantDeepLinkPossible = false;
+    private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean disableInstantDeepLinking = true;
     private final TrackingController trackingController;
@@ -569,7 +565,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * @return An initialised singleton {@link Branch} object
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getInstance() {
         /* Check if BranchApp is instantiated. */
         if (branchReferral_ == null) {
@@ -695,7 +690,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -718,7 +712,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
@@ -739,7 +732,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -767,8 +759,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-    
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -787,8 +777,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
      * @return An initialised {@link Branch} object.
      */
-    
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
@@ -1749,7 +1737,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private boolean isActivityCreatedAndLaunched() {
         if (activityLifeCycleObserver == null) return false;
-        return activityLifeCycleObserver.isActivityCreatedAndLaunched;
+        return activityLifeCycleObserver.isActivityCreatedAndLaunched();
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -2545,6 +2533,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean hasSession() {
         return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
     }
+
+    public void setInstantDeepLinkPossible(boolean instantDeepLinkPossible) {
+        isInstantDeepLinkPossible = instantDeepLinkPossible;
+    }
     
     private boolean hasDeviceFingerPrint() {
         return !prefHelper_.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE);
@@ -2771,10 +2763,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         handleNewRequest(req);
     }
 
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
-            activityLifeCycleObserver = new BranchActivityLifeCycleObserver();
+            activityLifeCycleObserver = new BranchActivityLifecycleObserver();
             /* Set an observer for activity life cycle events. */
             application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
             application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
