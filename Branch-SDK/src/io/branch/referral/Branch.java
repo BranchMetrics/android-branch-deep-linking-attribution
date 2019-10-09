@@ -311,8 +311,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Branch branchReferral_;
     
     private BranchRemoteInterface branchRemoteInterface_;
-    PrefHelper prefHelper_;
-    final DeviceInfo deviceInfo_;
+    private PrefHelper prefHelper_;
+    private final DeviceInfo deviceInfo_;
     private Context context_;
 
     final Object lock;
@@ -349,13 +349,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     // INTENG-4676 Save the last callback
     private WeakReference<BranchReferralInitListener> deferredInitListener_;
 
-    INTENT_STATE intentState_ = INTENT_STATE.PENDING;
+    /* Holds the current intent state. Default is set to PENDING. */
+    private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
-    SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
-    
+    private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
+
     /* Instance  of share link manager to share links automatically with third party applications. */
-    ShareLinkManager shareLinkManager_;
+    private ShareLinkManager shareLinkManager_;
     
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
@@ -393,8 +394,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /* Name of the key for getting Fabric Branch API key from string resource */
     private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
-    
-    boolean isGAParamsFetchInProgress_ = false;
+
+    /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
+    private boolean isGAParamsFetchInProgress_ = false;
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
     
@@ -416,7 +418,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private BranchActivityLifeCycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean disableInstantDeepLinking = true;
-    final TrackingController trackingController;
+    private final TrackingController trackingController;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -440,7 +442,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
-        intentState_ = INTENT_STATE.PENDING;
     }
 
 
@@ -2503,6 +2504,42 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public TrackingController getTrackingController() {
+        return trackingController;
+    }
+
+    public DeviceInfo getDeviceInfo() {
+        return deviceInfo_;
+    }
+
+    PrefHelper getPrefHelper() {
+        return prefHelper_;
+    }
+
+    boolean isGAParamsFetchInProgress() {
+        return isGAParamsFetchInProgress_;
+    }
+
+    void setGAParamsFetchInProgress(boolean GAParamsFetchInProgress) {
+        isGAParamsFetchInProgress_ = GAParamsFetchInProgress;
+    }
+
+    ShareLinkManager getShareLinkManager() {
+        return shareLinkManager_;
+    }
+
+    void setIntentState(INTENT_STATE intentState) {
+        this.intentState_ = intentState;
+    }
+
+    void setInitState(SESSION_STATE initState) {
+        this.initState_ = initState;
+    }
+
+    SESSION_STATE getInitState() {
+        return initState_;
     }
     
     private boolean hasSession() {
