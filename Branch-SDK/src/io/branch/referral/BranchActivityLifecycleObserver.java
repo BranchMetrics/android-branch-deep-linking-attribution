@@ -20,7 +20,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     private int activityCnt_ = 0; //Keep the count of live  activities.
 
     /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
-    private boolean isActivityCreatedAndLaunched = false;
+    private boolean isActivityCreatedAndLaunched_ = false;
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
@@ -28,7 +28,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (branch == null) return;
 
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
-        isActivityCreatedAndLaunched = true;
+        isActivityCreatedAndLaunched_ = true;
         if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
             BranchViewHandler.getInstance().showPendingBranchView(activity);
         }
@@ -59,7 +59,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             branch.startSession(activity);
         }
         activityCnt_++;
-        isActivityCreatedAndLaunched = false;
+        isActivityCreatedAndLaunched_ = false;
 
         maybeRefreshAdvertisingID(activity);
     }
@@ -144,6 +144,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     }
 
     boolean isActivityCreatedAndLaunched() {
-        return isActivityCreatedAndLaunched;
+        return isActivityCreatedAndLaunched_;
     }
 }
