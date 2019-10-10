@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.URLUtil;
 
-import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,6 +31,11 @@ public class PrefHelper {
      */
     static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
     static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
+
+    /**
+     * The base URL to use for all CDN calls.
+     */
+    static final String BRANCH_CDN_BASE_URL = "https://cdn.branch.io/";
 
     /**
      * A {@link String} value used where no string value is available.
@@ -149,6 +153,11 @@ public class PrefHelper {
      */
     private static String customServerURL_ = null;
 
+    /**
+     * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
+     */
+    private static String customCDNBaseURL_ = null;
+
 
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
@@ -193,13 +202,14 @@ public class PrefHelper {
         savedAnalyticsData_ = null;
         prefHelper_ = null;
         customServerURL_ = null;
+        customCDNBaseURL_ = null;
     }
 
     /**
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
-    public static void setAPIUrl(String url) {
+    static void setAPIUrl(String url) {
         customServerURL_ = url;
     }
 
@@ -220,6 +230,28 @@ public class PrefHelper {
         } else {
             return BRANCH_BASE_URL_V1;
         }
+    }
+
+    /**
+     * <p>Sets a custom CDN base URL.</p>
+     * @param url The {@link String} base URL for CDN endpoints.
+     */
+    static void setCDNBaseUrl(String url) {
+        customCDNBaseURL_ = url;
+    }
+
+    /**
+     * <p>Returns the CDN base URL.
+     *
+     * @return A {@link String} variable containing the hard-coded CDN base URL that Branch uses or
+     * custom CDN base URL set by the user.
+     */
+    static String getCDNBaseUrl() {
+        if (!TextUtils.isEmpty(customCDNBaseURL_)) {
+            return customCDNBaseURL_;
+        }
+
+        return BRANCH_CDN_BASE_URL;
     }
     
     /**

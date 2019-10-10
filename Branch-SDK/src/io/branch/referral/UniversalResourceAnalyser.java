@@ -33,10 +33,10 @@ class UniversalResourceAnalyser {
     private static final String VERSION_KEY = "version";
     private static final String SKIP_LIST_KEY = "uri_skip_list";
     // This is the path for updating skip url list. Check for the next version of the file
-    private static final String UPDATE_URL_PATH = "https://cdn.branch.io/sdk/uriskiplist_v#.json";
+    private static final String UPDATE_URL_PATH = "%sdk/uriskiplist_v#.json";
     
     private final JSONObject DEFAULT_SKIP_URL_LIST;
-    
+
     private static UniversalResourceAnalyser instance;
     
     
@@ -160,7 +160,8 @@ class UniversalResourceAnalyser {
             JSONObject respObject = new JSONObject();
             HttpsURLConnection connection = null;
             try {
-                URL urlObject = new URL(UPDATE_URL_PATH.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
+                String update_url_path = UPDATE_URL_PATH.replace("%", PrefHelper.getCDNBaseUrl());
+                URL urlObject = new URL(update_url_path.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
                 connection = (HttpsURLConnection) urlObject.openConnection();
                 connection.setConnectTimeout(TIME_OUT);
                 connection.setReadTimeout(TIME_OUT);
