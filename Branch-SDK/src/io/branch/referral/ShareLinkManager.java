@@ -192,7 +192,7 @@ class ShareLinkManager {
         }
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
-        shareOptionListView.setSelector(new ColorDrawable(Color.BLACK));
+        shareOptionListView.setSelector(new ColorDrawable(Color.TRANSPARENT));
         
         if (builder_.getSharingTitleView() != null) {
             shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
@@ -216,23 +216,24 @@ class ShareLinkManager {
         }
         
         shareOptionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+            @Override public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+                if (view == null) return;
                 if (view.getTag() instanceof MoreShareItem) {
                     appList_ = cleanedMatchingAppsFinal;
                     adapter.notifyDataSetChanged();
-                } else {
+                } else if (view.getTag() instanceof ResolveInfo) {
+                    ResolveInfo resolveInfo = (ResolveInfo) view.getTag();
                     if (callback_ != null) {
                         String selectedChannelName = "";
-                        if (view.getTag() != null && context_ != null && ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()) != null) {
-                            selectedChannelName = ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString();
+                        if (context_ != null && resolveInfo.loadLabel(context_.getPackageManager()) != null) {
+                            selectedChannelName = resolveInfo.loadLabel(context_.getPackageManager()).toString();
                         }
-                        builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
                     adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
-                    invokeSharingClient((ResolveInfo) view.getTag());
+                    invokeSharingClient(resolveInfo);
                     if (shareDlg_ != null) {
                         shareDlg_.cancel();
                     }
@@ -270,8 +271,14 @@ class ShareLinkManager {
                 boolean handled = false;
 
                 switch (keyCode){
+                    case KeyEvent.KEYCODE_ENTER:
                     case KeyEvent.KEYCODE_DPAD_CENTER:
-                        shareOptionListView.getChildAt(adapter.selectedPos).performClick();
+                        if (adapter.selectedPos >= 0 && adapter.selectedPos < adapter.getCount()) {
+                            shareOptionListView.performItemClick(
+                                    adapter.getView(adapter.selectedPos, null, null),
+                                    adapter.selectedPos,
+                                    shareOptionListView.getItemIdAtPosition(adapter.selectedPos));
+                        }
                         break;
                     case KeyEvent.KEYCODE_BACK:
                         shareDlg_.dismiss();
@@ -393,7 +400,7 @@ class ShareLinkManager {
      * Adapter class for creating list of available share options
      */
     private class ChooserArrayAdapter extends BaseAdapter {
-        public int selectedPos = 0;
+        public int selectedPos = -1;
         
         @Override
         public int getCount() {
