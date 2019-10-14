@@ -434,6 +434,11 @@ class ShareLinkManager {
             itemView.setClickable(true);
             return itemView;
         }
+
+        @Override
+        public boolean isEnabled(int position) {
+            return selectedPos < 0;
+        }
     }
     
     /**
