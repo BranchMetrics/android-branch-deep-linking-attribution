@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -191,7 +192,7 @@ class ShareLinkManager {
         }
         shareOptionListView.setHorizontalFadingEdgeEnabled(false);
         shareOptionListView.setBackgroundColor(Color.WHITE);
-        shareOptionListView.setSelector(new ColorDrawable(Color.TRANSPARENT));
+        shareOptionListView.setSelector(new ColorDrawable(Color.BLACK));
         
         if (builder_.getSharingTitleView() != null) {
             shareOptionListView.addHeaderView(builder_.getSharingTitleView(), null, false);
@@ -261,6 +262,37 @@ class ShareLinkManager {
                     builder_ = null;
                 }
                 shareDlg_ = null;
+            }
+        });
+        shareDlg_.setOnKeyListener(new DialogInterface.OnKeyListener() {
+            @Override public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                if (event.getAction() != KeyEvent.ACTION_UP) return false;
+                boolean handled = false;
+
+                switch (keyCode){
+                    case KeyEvent.KEYCODE_DPAD_CENTER:
+                        shareOptionListView.getChildAt(adapter.selectedPos).performClick();
+                        break;
+                    case KeyEvent.KEYCODE_BACK:
+                        shareDlg_.dismiss();
+                        handled = true;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        if (adapter.selectedPos < (adapter.getCount()-1)) {
+                            adapter.selectedPos++;
+                            adapter.notifyDataSetChanged();
+                        }
+                        handled = true;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (adapter.selectedPos > 0) {
+                            adapter.selectedPos--;
+                            adapter.notifyDataSetChanged();
+                        }
+                        handled = true;
+                        break;
+                }
+                return handled;
             }
         });
     }
@@ -361,7 +393,7 @@ class ShareLinkManager {
      * Adapter class for creating list of available share options
      */
     private class ChooserArrayAdapter extends BaseAdapter {
-        public int selectedPos = -1;
+        public int selectedPos = 0;
         
         @Override
         public int getCount() {
@@ -388,15 +420,12 @@ class ShareLinkManager {
             }
             ResolveInfo resolveInfo = appList_.get(position);
             boolean setSelected = position == selectedPos;
-            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(), resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
+            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(),
+                    resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
             itemView.setTag(resolveInfo);
-            itemView.setClickable(false);
+            itemView.setFocusable(true);
+            itemView.setClickable(true);
             return itemView;
-        }
-        
-        @Override
-        public boolean isEnabled(int position) {
-            return selectedPos < 0;
         }
     }
     
