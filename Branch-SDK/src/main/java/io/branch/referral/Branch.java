@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -15,7 +14,6 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.indexing.ContentDiscoverer;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
@@ -336,12 +333,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     
     /* Enumeration for defining session initialisation state. */
-    private enum SESSION_STATE {
+    enum SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
     }
     
     
-    private enum INTENT_STATE {
+    enum INTENT_STATE {
         PENDING,
         READY
     }
@@ -349,12 +346,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     // INTENG-4676 Save the last callback
     private WeakReference<BranchReferralInitListener> deferredInitListener_;
 
+    /* Holds the current intent state. Default is set to PENDING. */
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
-    private boolean handleDelayedNewIntents_ = false;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
-    
+
     /* Instance  of share link manager to share links automatically with third party applications. */
     private ShareLinkManager shareLinkManager_;
     
@@ -394,7 +391,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /* Name of the key for getting Fabric Branch API key from string resource */
     private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
-    
+
+    /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
@@ -412,10 +410,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /* Flag for checking of Strong matching is waiting on GAID fetch */
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
-    
-    boolean isInstantDeepLinkPossible = false;
-    /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
-    private boolean isActivityCreatedAndLaunched = false;
+    private boolean isInstantDeepLinkPossible = false;
+    private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean disableInstantDeepLinking = true;
     private final TrackingController trackingController;
@@ -441,15 +437,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         instrumentationExtraData_ = new ConcurrentHashMap<>();
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
-        }
-        // newIntent() delayed issue is only with Android M+ devices. So need to handle android M and above
-        // PRS: Since this seem more reliable and not causing any integration issues adding this to all supported SDK versions
-        if (android.os.Build.VERSION.SDK_INT >= 15) {
-            handleDelayedNewIntents_ = true;
-            intentState_ = INTENT_STATE.PENDING;
-        } else {
-            handleDelayedNewIntents_ = false;
-            intentState_ = INTENT_STATE.READY;
         }
     }
 
@@ -578,7 +565,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * @return An initialised singleton {@link Branch} object
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getInstance() {
         /* Check if BranchApp is instantiated. */
         if (branchReferral_ == null) {
@@ -704,7 +690,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -727,7 +712,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
@@ -748,7 +732,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * instance within the singleton class, or a newly instantiated object where
      * one was not already requested during the current app lifecycle.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -776,8 +759,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param context A {@link Context} from which this call was made.
      * @return An initialised {@link Branch} object.
      */
-    
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
@@ -796,8 +777,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
      * @return An initialised {@link Branch} object.
      */
-    
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
         customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
@@ -1586,17 +1565,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    private boolean readAndStripParam(Uri data, Activity activity) {
+    boolean readAndStripParam(Uri data, Activity activity) {
         // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
         // If activity is created and launched then the intent can be readily consumed.
         // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
         if (!disableInstantDeepLinking) {
-            if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched) {
+            if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched()) {
                 // Check for instant deep linking possibility first
                 if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
                     Intent intent = activity.getIntent();
                     // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                    if (intent.getData() == null || (!isActivityCreatedAndLaunched && isIntentParamsAlreadyConsumed(activity))) {
+                    if (intent.getData() == null || (!isActivityCreatedAndLaunched() && isIntentParamsAlreadyConsumed(activity))) {
                         // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
                         // So skipping instant deep link feature until first Branch open happens
                         if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
@@ -1754,6 +1733,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
+    }
+
+    private boolean isActivityCreatedAndLaunched() {
+        if (activityLifeCycleObserver == null) return false;
+        return activityLifeCycleObserver.isActivityCreatedAndLaunched();
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -2509,9 +2493,53 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             e.printStackTrace();
         }
     }
+
+    public TrackingController getTrackingController() {
+        return trackingController;
+    }
+
+    public DeviceInfo getDeviceInfo() {
+        return deviceInfo_;
+    }
+
+    PrefHelper getPrefHelper() {
+        return prefHelper_;
+    }
+
+    boolean isGAParamsFetchInProgress() {
+        return isGAParamsFetchInProgress_;
+    }
+
+    void setGAParamsFetchInProgress(boolean GAParamsFetchInProgress) {
+        isGAParamsFetchInProgress_ = GAParamsFetchInProgress;
+    }
+
+    ShareLinkManager getShareLinkManager() {
+        return shareLinkManager_;
+    }
+
+    void setIntentState(INTENT_STATE intentState) {
+        this.intentState_ = intentState;
+    }
+
+    void setInitState(SESSION_STATE initState) {
+        this.initState_ = initState;
+    }
+
+    SESSION_STATE getInitState() {
+        return initState_;
+    }
     
     private boolean hasSession() {
         return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
+    }
+
+    public void setInstantDeepLinkPossible(boolean instantDeepLinkPossible) {
+        isInstantDeepLinkPossible = instantDeepLinkPossible;
+    }
+
+    public boolean isInstantDeepLinkPossible() {
+        return isInstantDeepLinkPossible;
     }
     
     private boolean hasDeviceFingerPrint() {
@@ -2644,7 +2672,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return request;
     }
     
-    private void onIntentReady(Activity activity, boolean grabIntentParams) {
+    void onIntentReady(Activity activity, boolean grabIntentParams) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
         //if (activity.getIntent() != null) {
         if (grabIntentParams) {
@@ -2739,10 +2767,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         handleNewRequest(req);
     }
 
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setActivityLifeCycleObserver(Application application) {
         try {
-            BranchActivityLifeCycleObserver activityLifeCycleObserver = new BranchActivityLifeCycleObserver();
+            activityLifeCycleObserver = new BranchActivityLifecycleObserver();
             /* Set an observer for activity life cycle events. */
             application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
             application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
@@ -2756,116 +2783,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    /**
-     * <p>Class that observes activity life cycle events and determines when to start and stop
-     * session.</p>
-     */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    private class BranchActivityLifeCycleObserver implements Application.ActivityLifecycleCallbacks {
-        private int activityCnt_ = 0; //Keep the count of live  activities.
-        
-        
-        @Override
-        public void onActivityCreated(Activity activity, Bundle bundle) {
-            intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
-            isActivityCreatedAndLaunched = true;
-            if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
-                BranchViewHandler.getInstance().showPendingBranchView(activity);
-            }
-        }
-        
-        @Override
-        public void onActivityStarted(Activity activity) {
-            intentState_ = handleDelayedNewIntents_ ? INTENT_STATE.PENDING : INTENT_STATE.READY;
-            // If configured on dashboard, trigger content discovery runnable
-            if (initState_ == SESSION_STATE.INITIALISED) {
-                try {
-                    ContentDiscoverer.getInstance().discoverContent(activity, getSessionReferredLink());
-                } catch (Exception ignore) {
-                }
-            }
-            if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
-                if (initState_ == SESSION_STATE.INITIALISED) {
-                    // Handling case :  init session completed previously when app was in background.
-                    initState_ = SESSION_STATE.UNINITIALISED;
-                }
-                startSession(activity);
-            } else if (checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
-                initState_ = SESSION_STATE.UNINITIALISED;
-                // no need call close here since it is session forced restart. Don't want to wait till close finish
-                startSession(activity);
-            }
-            activityCnt_++;
-            isActivityCreatedAndLaunched = false;
-
-            maybeRefreshAdvertisingID(activity);
-        }
-        
-        @Override
-        public void onActivityResumed(Activity activity) {
-            // Need to check here again for session restart request in case the intent is created while the activity is already running
-            if (checkIntentForSessionRestart(activity.getIntent())) {
-                initState_ = SESSION_STATE.UNINITIALISED;
-                startSession(activity);
-            }
-            currentActivityReference_ = new WeakReference<>(activity);
-
-            // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
-            // activity also to make sure we do not override the intent data
-            if (handleDelayedNewIntents_ && !bypassCurrentActivityIntentState_) {
-                intentState_ = INTENT_STATE.READY;
-                // Grab the intent only for first activity unless this activity is intent to  force new session
-                boolean grabIntentParams = activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED;
-                onIntentReady(activity, grabIntentParams);
-            }
-        }
-        
-        @Override
-        public void onActivityPaused(Activity activity) {
-            /* Close any opened sharing dialog.*/
-            if (shareLinkManager_ != null) {
-                shareLinkManager_.cancelShareLinkDialog(true);
-            }
-        }
-        
-        @Override
-        public void onActivityStopped(Activity activity) {
-            ContentDiscoverer.getInstance().onActivityStopped(activity);
-            activityCnt_--; // Check if this is the last activity. If so, stop the session.
-            if (activityCnt_ < 1) {
-                isInstantDeepLinkPossible = false;
-                closeSessionInternal();
-            }
-        }
-        
-        @Override
-        public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
-        }
-        
-        @Override
-        public void onActivityDestroyed(Activity activity) {
-            if (currentActivityReference_ != null && currentActivityReference_.get() == activity) {
-                currentActivityReference_.clear();
-            }
-            BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
-        }
-
-        private void maybeRefreshAdvertisingID(Context context) {
-            boolean fullyInitialized = trackingController != null &&
-                    deviceInfo_ != null && deviceInfo_.getSystemObserver() != null &&
-                    prefHelper_ != null && prefHelper_.getSessionID() != null;
-            if (!fullyInitialized) return;
-
-            final String AIDInitializationSessionID = deviceInfo_.getSystemObserver().getAIDInitializationSessionID();
-            boolean AIDInitializedInThisSession = prefHelper_.getSessionID().equals(AIDInitializationSessionID);
-
-            if (!AIDInitializedInThisSession && !isGAParamsFetchInProgress_ && !trackingController.isTrackingDisabled()) {
-                isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,Branch.this);
-            }
-        }
-    }
-    
-    private void startSession(Activity activity) {
+    void startSession(Activity activity) {
         Uri intentData = null;
         if (activity.getIntent() != null) {
             intentData = activity.getIntent().getData();
@@ -2888,7 +2806,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * The commit which resolved the issue in Chrome lives here: https://chromium.googlesource.com/chromium/src/+/4bca3b37801c502a164536b804879c00aba7d304
      * We decided for now to protect this one line with a try/catch.
      */
-    private boolean checkIntentForSessionRestart(Intent intent) {
+    boolean checkIntentForSessionRestart(Intent intent) {
         boolean isRestartSessionRequested = false;
         if (intent != null) {
             try {
@@ -3443,6 +3361,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public static void enableBypassCurrentActivityIntentState() {
         bypassCurrentActivityIntentState_ = true;
+    }
+
+    public static boolean bypassCurrentActivityIntentState() {
+        return bypassCurrentActivityIntentState_;
     }
 
     //-------------------------- Branch Builders--------------------------------------//
