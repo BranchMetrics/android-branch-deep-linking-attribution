@@ -410,7 +410,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /* Flag for checking of Strong matching is waiting on GAID fetch */
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
-    boolean isInstantDeepLinkPossible = false;
+    private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean disableInstantDeepLinking = true;
@@ -2536,6 +2536,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public void setInstantDeepLinkPossible(boolean instantDeepLinkPossible) {
         isInstantDeepLinkPossible = instantDeepLinkPossible;
+    }
+
+    public boolean isInstantDeepLinkPossible() {
+        return isInstantDeepLinkPossible;
     }
     
     private boolean hasDeviceFingerPrint() {
