@@ -430,8 +430,6 @@ class ShareLinkManager {
             itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(),
                     resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
             itemView.setTag(resolveInfo);
-            itemView.setFocusable(true);
-            itemView.setClickable(true);
             return itemView;
         }
 
