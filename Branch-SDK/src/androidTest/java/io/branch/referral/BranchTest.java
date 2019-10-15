@@ -22,7 +22,7 @@ public class BranchTest {
 
     @Before
     public void setUp() {
-        mContext = InstrumentationRegistry.getTargetContext();
+        mContext = InstrumentationRegistry.getContext();
     }
 
     @After
