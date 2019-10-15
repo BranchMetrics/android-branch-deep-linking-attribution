@@ -20,7 +20,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "io/assets/pre_install_apps.branch");
+                .readJsonFile(getTestContext(), "pre_install_apps.branch");
         Assert.assertTrue(branchFileData.length() > 0);
 
         JSONObject branchFileJson = new JSONObject(branchFileData);
@@ -39,7 +39,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
     @Test
     public void testResultNullFile() throws Throwable {
         String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "io/assets/pre_install_apps_null.branch");
+                .readJsonFile(getTestContext(), "pre_install_apps_null.branch");
         Assert.assertFalse(branchFileData.length() > 0);
     }
 
@@ -52,7 +52,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "io/assets/pre_install_apps_no_package.branch");
+                .readJsonFile(getTestContext(), "pre_install_apps_no_package.branch");
         Assert.assertTrue(branchFileData.length() > 0);
 
         JSONObject branchFileJson = new JSONObject(branchFileData);
@@ -71,7 +71,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
     @Test
     public void testResultFileNotPresent() throws Throwable {
         String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "io/assets/pre_install_apps_not_present.branch");
+                .readJsonFile(getTestContext(), "pre_install_apps_not_present.branch");
         Assert.assertFalse(branchFileData.length() > 0);
     }
 
@@ -87,7 +87,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "io/assets/pre_install_apps.branch");
+                .readJsonFile(getTestContext(), "pre_install_apps.branch");
         Assert.assertTrue(branchFileData.length() > 0);
 
         JSONObject branchFileJson = new JSONObject(branchFileData);
