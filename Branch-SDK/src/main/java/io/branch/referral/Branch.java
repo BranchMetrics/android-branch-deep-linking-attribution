@@ -510,6 +510,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * <p>Sets a custom CDN base URL.</p>
+     * @param url The {@link String} base URL for CDN endpoints.
+     */
+    public static void setCDNBaseUrl(String url) {
+        PrefHelper.setCDNBaseUrl(url);
+    }
+
+    /**
      * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      */
     public void disableTracking(boolean disableTracking) {
