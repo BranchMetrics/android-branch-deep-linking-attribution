@@ -45,10 +45,10 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     public void onPreExecute() {
         super.onPreExecute();
         // Instant Deep Link if possible
-        if (Branch.getInstance().isInstantDeepLinkPossible) {
+        if (Branch.getInstance().isInstantDeepLinkPossible()) {
             callback_.onInitFinished(Branch.getInstance().getLatestReferringParams(), null);
             Branch.getInstance().addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-            Branch.getInstance().isInstantDeepLinkPossible = false;
+            Branch.getInstance().setInstantDeepLinkPossible(false);
             Branch.getInstance().isInitReportedThroughCallBack = true;
         }
     }
