@@ -102,7 +102,7 @@ public class BUOTestRoutines {
         boolean isLinkTestPassed = false;
         String url = buo.getShortUrl(context, new LinkProperties());
         try {
-            JSONObject linkdata = new URLContentViewer().execute(url, PrefHelper.getInstance(context).readBranchKey(!BranchUtil.isTestModeEnabled(context))).get();
+            JSONObject linkdata = new URLContentViewer().execute(url, BranchUtil.readBranchKey(context)).get();
             isLinkTestPassed = checkIfIdenticalJson(buo.convertToJson(), linkdata.optJSONObject("data"), true);
             if (isLinkTestPassed) {
                 isLinkTestPassed = checkIfIdenticalJson(BranchUniversalObject.createInstance(linkdata).convertToJson(), linkdata.optJSONObject("data"), true);
