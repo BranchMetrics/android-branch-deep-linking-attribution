@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -215,23 +216,24 @@ class ShareLinkManager {
         }
         
         shareOptionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+            @Override public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+                if (view == null) return;
                 if (view.getTag() instanceof MoreShareItem) {
                     appList_ = cleanedMatchingAppsFinal;
                     adapter.notifyDataSetChanged();
-                } else {
+                } else if (view.getTag() instanceof ResolveInfo) {
+                    ResolveInfo resolveInfo = (ResolveInfo) view.getTag();
                     if (callback_ != null) {
                         String selectedChannelName = "";
-                        if (view.getTag() != null && context_ != null && ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()) != null) {
-                            selectedChannelName = ((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString();
+                        if (context_ != null && resolveInfo.loadLabel(context_.getPackageManager()) != null) {
+                            selectedChannelName = resolveInfo.loadLabel(context_.getPackageManager()).toString();
                         }
-                        builder_.getShortLinkBuilder().setChannel(((ResolveInfo) view.getTag()).loadLabel(context_.getPackageManager()).toString());
+                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(context_.getPackageManager()).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
                     adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
-                    invokeSharingClient((ResolveInfo) view.getTag());
+                    invokeSharingClient(resolveInfo);
                     if (shareDlg_ != null) {
                         shareDlg_.cancel();
                     }
@@ -261,6 +263,43 @@ class ShareLinkManager {
                     builder_ = null;
                 }
                 shareDlg_ = null;
+            }
+        });
+        shareDlg_.setOnKeyListener(new DialogInterface.OnKeyListener() {
+            @Override public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                if (event.getAction() != KeyEvent.ACTION_UP) return false;
+                boolean handled = false;
+
+                switch (keyCode){
+                    case KeyEvent.KEYCODE_ENTER:
+                    case KeyEvent.KEYCODE_DPAD_CENTER:
+                        if (adapter.selectedPos >= 0 && adapter.selectedPos < adapter.getCount()) {
+                            shareOptionListView.performItemClick(
+                                    adapter.getView(adapter.selectedPos, null, null),
+                                    adapter.selectedPos,
+                                    shareOptionListView.getItemIdAtPosition(adapter.selectedPos));
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_BACK:
+                        shareDlg_.dismiss();
+                        handled = true;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        if (adapter.selectedPos < (adapter.getCount()-1)) {
+                            adapter.selectedPos++;
+                            adapter.notifyDataSetChanged();
+                        }
+                        handled = true;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (adapter.selectedPos > 0) {
+                            adapter.selectedPos--;
+                            adapter.notifyDataSetChanged();
+                        }
+                        handled = true;
+                        break;
+                }
+                return handled;
             }
         });
     }
@@ -388,12 +427,12 @@ class ShareLinkManager {
             }
             ResolveInfo resolveInfo = appList_.get(position);
             boolean setSelected = position == selectedPos;
-            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(), resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
+            itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(),
+                    resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
             itemView.setTag(resolveInfo);
-            itemView.setClickable(false);
             return itemView;
         }
-        
+
         @Override
         public boolean isEnabled(int position) {
             return selectedPos < 0;
