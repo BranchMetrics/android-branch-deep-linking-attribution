@@ -22,7 +22,7 @@ import io.branch.referral.util.CommerceEvent;
  [X] ServerRequestInitSession.java              testInitSession()
  [-] ServerRequestLogout.java                   testLogout()
  [-] ServerRequestPing.java                     testPing()
- [X] ServerRequestRActionCompleted.java         testCommerceEvent()
+ [X] ServerRequestActionCompleted.java          testCommerceEvent()
  [X] ServerRequestRedeemRewards.java            testRedeemRewards()
  [-] ServerRequestRegisterClose.java            testClose()
  [ ] ServerRequestRegisterInstall.java

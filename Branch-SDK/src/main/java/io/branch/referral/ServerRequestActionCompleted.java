@@ -7,6 +7,8 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.referral.util.CommerceEvent;
+
 /**
  * <p>
  * The server request for Action completed event. Handles request creation and execution.
@@ -23,10 +25,12 @@ class ServerRequestActionCompleted extends ServerRequest {
      * @param context  Current {@link Application} context
      * @param action   A {@link String} value to be passed as an action that the user has carried
      *                 out. For example "registered" or "logged in".
+     * @param commerceEvent   A {@link CommerceEvent} whose data will be passed in the POST as a
+     *                 JSONObject, "commerce_data".
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public ServerRequestActionCompleted(Context context, String action, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
+    public ServerRequestActionCompleted(Context context, String action, CommerceEvent commerceEvent, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
         callback_ = callback;
         JSONObject post = new JSONObject();
@@ -39,9 +43,12 @@ class ServerRequestActionCompleted extends ServerRequest {
                 post.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
             post.put(Defines.Jsonkey.Event.getKey(), action);
-            if (metadata != null)
+            if (metadata != null) {
                 post.put(Defines.Jsonkey.Metadata.getKey(), metadata);
-
+            }
+            if (commerceEvent != null) {
+                post.put(Defines.Jsonkey.CommerceData.getKey(), commerceEvent.getCommerceJSONObject());
+            }
             updateEnvironment(context, post);
             setPost(post);
         } catch (JSONException ex) {
@@ -49,7 +56,7 @@ class ServerRequestActionCompleted extends ServerRequest {
             constructError_ = true;
         }
 
-        if (action != null && action.equalsIgnoreCase("purchase")) {
+        if (action != null && action.equalsIgnoreCase("purchase") && commerceEvent == null) {
             PrefHelper.Debug("Warning: You are sending a purchase event with our non-dedicated purchase function. Please see function sendCommerceEvent");
         }
     }

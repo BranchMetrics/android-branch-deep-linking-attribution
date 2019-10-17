@@ -2153,7 +2153,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void userCompletedAction(@NonNull final String action, JSONObject
             metadata, BranchViewHandler.IBranchViewEvents callback) {
-        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata, callback);
+        ServerRequest req = new ServerRequestActionCompleted(context_, action, null, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
@@ -2161,7 +2161,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject
             metadata, BranchViewHandler.IBranchViewEvents callback) {
-        ServerRequest req = new ServerRequestRActionCompleted(context_, commerceEvent, metadata, callback);
+        ServerRequest req = new ServerRequestActionCompleted(context_, "purchase", commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }

@@ -58,7 +58,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV1Params(JSONObject requestObj) {
+    void updateRequestWithV1Params(ServerRequest serverRequest, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
@@ -91,12 +91,20 @@ class DeviceInfo {
 
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
 
-            // fields for compatibility with Tune
-            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
-            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
-            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
-            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
-            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+            String[] applicableRoutes = new String[]{"install", "open", "event"};
+            if (BranchUtil.stringContainsItemFromList(serverRequest.getRequestPath(), applicableRoutes)) {
+                // fields for compatibility with Tune
+                requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+                requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+                requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+                requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+            }
+
+            if (BranchUtil.getPluginType() != null) {
+                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            }
 
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {
@@ -129,7 +137,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV2Params(Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
@@ -160,12 +168,20 @@ class DeviceInfo {
 
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
 
-            // fields for compatibility with Tune
-            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
-            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
-            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
-            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
-            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+            String[] applicableRoutes = new String[]{"install", "open", "event"};
+            if (BranchUtil.stringContainsItemFromList(serverRequest.getRequestPath(), applicableRoutes)) {
+                // fields for compatibility with Tune
+                requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+                requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+                requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+                requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+            }
+
+            if (BranchUtil.getPluginType() != null) {
+                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            }
 
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {

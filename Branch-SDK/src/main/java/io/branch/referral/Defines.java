@@ -167,6 +167,8 @@ public class Defines {
         Locale("locale"),
         ConnectionType("connection_type"),
         DeviceCarrier("device_carrier"),
+        PluginType("plugin_type"),
+        PluginVersion("plugin_version"),
         
         Name("name"),
         CustomData("custom_data"),
