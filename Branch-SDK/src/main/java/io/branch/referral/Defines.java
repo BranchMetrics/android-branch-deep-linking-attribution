@@ -160,6 +160,13 @@ public class Defines {
         Description("description"),
         SearchQuery("search_query"),
         AdType("ad_type"),
+
+        // to accommodate Tune -> Branch migration
+        CPUType("cpu_type"),
+        DeviceBuildId("build"),
+        Locale("locale"),
+        ConnectionType("connection_type"),
+        DeviceCarrier("device_carrier"),
         
         Name("name"),
         CustomData("custom_data"),

@@ -174,31 +174,18 @@ public abstract class ServerRequest {
      */
     protected void setPost(JSONObject post) throws JSONException {
         params_ = post;
-        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
-            try {
-                JSONObject userDataObj = new JSONObject();
-                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
-            } catch (JSONException ignore) {
-            }
-        } else if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_CPID) {
-            try {
-                JSONObject userDataObj = new JSONObject();
-                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
-            } catch (JSONException ignore) {
-            }
-        } else if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_LATD) {
-            try {
-                JSONObject userDataObj = new JSONObject();
-                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
-                DeviceInfo.getInstance().updateRequestWithAttributionWindow(prefHelper_, userDataObj);
-            } catch (Exception ignore) {
-            }
-        }
-        else {
+        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(params_);
+        } else {
+            try {
+                JSONObject userDataObj = new JSONObject();
+                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
+                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
+
+                if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_LATD) {
+                    DeviceInfo.getInstance().updateRequestWithAttributionWindow(prefHelper_, userDataObj);
+                }
+            } catch (JSONException ignored) {}
         }
     }
     

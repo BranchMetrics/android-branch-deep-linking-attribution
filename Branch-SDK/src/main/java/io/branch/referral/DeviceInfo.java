@@ -91,6 +91,13 @@ class DeviceInfo {
 
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
 
+            // fields for compatibility with Tune
+            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {
                 requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode);
@@ -152,6 +159,13 @@ class DeviceInfo {
             }
 
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+
+            // fields for compatibility with Tune
+            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
 
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {

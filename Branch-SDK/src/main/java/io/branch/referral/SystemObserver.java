@@ -10,8 +10,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -263,6 +265,68 @@ abstract class SystemObserver {
      */
     static int getOSVersion() {
         return android.os.Build.VERSION.SDK_INT;
+    }
+
+    /**
+     * Returns the CPU type of the device.
+     *
+     * @return A {@link String} value representing the CPU type.</a>
+     */
+    static String getCPUType() {
+        return System.getProperty("os.arch");
+    }
+
+    /**
+     * Returns the device build ID.
+     *
+     * @return A {@link String} value representing the device build ID.</a>
+     */
+    static String getDeviceBuildId() {
+        return Build.DISPLAY;
+    }
+
+    /**
+     * Returns the device locale in the format "en_US".
+     *
+     * @return A {@link String} value representing the device locale.</a>
+     */
+    static String getLocale() {
+        return Locale.getDefault().getLanguage() + "_" + Locale.getDefault().getCountry();
+    }
+
+    /**
+     * Returns the device connection type, wifi or mobile.
+     *
+     * @return A {@link String} value representing the device connection type.</a>
+     */
+    @SuppressWarnings("MissingPermission")
+    static String getConnectionType(Context context) {
+        if (context != null && PackageManager.PERMISSION_GRANTED ==
+                context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
+            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connManager != null) {
+                NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+                if (networkInfo != null && networkInfo.isConnected()) {
+                    if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                        return "wifi";
+                    } else {
+                        return "mobile";
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the device carrier.
+     *
+     * @return A {@link String} value representing the device carrier.</a>
+     */
+    static String getCarrier(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        if (tm == null) return null;
+        return tm.getNetworkOperatorName();
     }
 
     /**
