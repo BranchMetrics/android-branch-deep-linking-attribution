@@ -105,27 +105,16 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         // Check for any Third party SDK for data handling
-        try {
-            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setGooglePlayReferrer(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setIsAppLinkTriggeredInit(false);
-            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
-            prefHelper_.setIsFullAppConversion(false);
-            // Provide data to Fabric answers
-            if (response.getObject() != null && response.getObject().has(Defines.Jsonkey.Data.getKey())) {
-                JSONObject linkDataJsonObj = new JSONObject(response.getObject().getString(Defines.Jsonkey.Data.getKey()));
-                if (linkDataJsonObj.optBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
-                    String eventName = (this instanceof ServerRequestRegisterInstall) ? ExtendedAnswerProvider.KIT_EVENT_INSTALL : ExtendedAnswerProvider.KIT_EVENT_OPEN;
-                    new ExtendedAnswerProvider().provideData(eventName, linkDataJsonObj, prefHelper_.getIdentityID());
-                }
-            }
-        } catch (JSONException ignore) {
-        }
+        prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setGooglePlayReferrer(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setIsAppLinkTriggeredInit(false);
+        prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setIsFullAppConversion(false);
 
         if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
             prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));

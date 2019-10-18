@@ -388,9 +388,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean isInitReportedThroughCallBack = false;
     
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
-    
-    /* Name of the key for getting Fabric Branch API key from string resource */
-    private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
@@ -631,19 +628,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             boolean isNewBranchKeySet;
             if (TextUtils.isEmpty(branchKey)) {
-                // If Branch key is not available check for Fabric provided Branch key
-                String fabricBranchApiKey = null;
-                try {
-                    Resources resources = context.getResources();
-                    fabricBranchApiKey = resources.getString(resources.getIdentifier(FABRIC_BRANCH_API_KEY, "string", context.getPackageName()));
-                } catch (Exception ignore) {
-                }
-                if (!TextUtils.isEmpty(fabricBranchApiKey)) {
-                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(fabricBranchApiKey);
-                } else {
-                    PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
-                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
-                }
+                PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
+                isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
             } else {
                 isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             }
