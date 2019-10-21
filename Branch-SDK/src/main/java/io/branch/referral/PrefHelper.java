@@ -1330,7 +1330,10 @@ public class PrefHelper {
     }
 
     boolean hasValidBranchKey() {
-        @NonNull String branchKeyOnRecord = getBranchKey();
-        return branchKeyOnRecord.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
+        return isValidBranchKey(getBranchKey());
+    }
+
+    boolean isValidBranchKey(String branchKey) {
+        return branchKey != null && branchKey.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
     }
 }

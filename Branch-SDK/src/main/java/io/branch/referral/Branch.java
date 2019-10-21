@@ -602,7 +602,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             branchReferral_ = Branch.initInstance(context);
         }
         branchReferral_.context_ = context.getApplicationContext();
-        if (branchReferral_.prefHelper_.hasValidBranchKey()) {
+        if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
             if (isNewBranchKeySet) {
@@ -733,7 +733,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, branchKey);
         
-        if (branchReferral_.prefHelper_.hasValidBranchKey()) {
+        if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
             if (isNewBranchKeySet) {
