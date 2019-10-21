@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
+import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
 import android.app.Activity;
 import android.app.Application;
@@ -601,7 +602,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             branchReferral_ = Branch.initInstance(context);
         }
         branchReferral_.context_ = context.getApplicationContext();
-        if (branchKey.startsWith("key_")) {
+        if (branchReferral_.prefHelper_.hasValidBranchKey()) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
             if (isNewBranchKeySet) {
@@ -732,7 +733,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, branchKey);
         
-        if (branchKey.startsWith("key_")) {
+        if (branchReferral_.prefHelper_.hasValidBranchKey()) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
             if (isNewBranchKeySet) {
@@ -2572,7 +2573,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private void initializeSession(final BranchReferralInitListener callback) {
-        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
+        if (!prefHelper_.hasValidBranchKey()) {
             initState_ = SESSION_STATE.UNINITIALISED;
             //Report Key error on callback
             if (callback != null) {
@@ -2580,7 +2581,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             PrefHelper.Debug("Warning: Please enter your branch_key in your project's res/values/strings.xml!");
             return;
-        } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
+        } else if (isTestModeEnabled()) {
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
         
@@ -2673,7 +2674,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             // Check for cookie based matching only if Tracking is enabled
-            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null && prefHelper_.hasValidBranchKey()) {
                 if (isGAParamsFetchInProgress_) {
                     // Wait for GAID to Available
                     performCookieBasedStrongMatchingOnGAIDAvailable = true;

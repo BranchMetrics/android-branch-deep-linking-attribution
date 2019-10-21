@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 
+import static io.branch.referral.BranchUtil.isTestModeEnabled;
+
 /**
  * <p>A class that uses the helper pattern to provide regularly referenced static values and
  * logging capabilities used in various other parts of the SDK, and that are related to globally set
@@ -347,14 +349,13 @@ public class PrefHelper {
     public boolean setBranchKey(String key) {
         Branch_Key = key;
         String currentBranchKey = getString(KEY_BRANCH_KEY);
-        if (key == null || currentBranchKey == null || !currentBranchKey.equals(key)) {
+        if (!currentBranchKey.equals(key)) {
             clearPrefOnBranchKeyChange();
             setString(KEY_BRANCH_KEY, key);
             return true;
         }
         return false;
     }
-    
     
     public String getBranchKey() {
         if (Branch_Key == null) {
@@ -1326,5 +1327,10 @@ public class PrefHelper {
 
     static void enableLogging(boolean fEnable) {
         enableLogging_ = fEnable;
+    }
+
+    boolean hasValidBranchKey() {
+        @NonNull String branchKeyOnRecord = getBranchKey();
+        return branchKeyOnRecord.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
     }
 }
