@@ -57,7 +57,7 @@ public class Defines {
         HardwareIDTypeRandom("random"),
         IsHardwareIDReal("is_hardware_id_real"),
         AppVersion("app_version"),
-        OSVersion("os_version"),
+        APILevel("os_version"),
         Country("country"),
         Language("language"),
         IsReferrable("is_referrable"),
@@ -169,6 +169,7 @@ public class Defines {
         DeviceCarrier("device_carrier"),
         PluginType("plugin_type"),
         PluginVersion("plugin_version"),
+        OSVersionAndroid("os_version_android"),
         
         Name("name"),
         CustomData("custom_data"),

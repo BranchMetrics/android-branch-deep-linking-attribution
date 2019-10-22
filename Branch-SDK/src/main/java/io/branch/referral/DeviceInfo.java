@@ -89,16 +89,9 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
 
-            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+            requestObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
 
-            if (serverRequest.isInitializationOrEventRequest()) {
-                // add certain fields for compatibility with TUNE SDK
-                requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
-                requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
-                requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
-                requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
-                requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
-            }
+            maybeAddTuneFields(serverRequest, requestObj);
 
             if (BranchUtil.getPluginType() != null) {
                 requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
@@ -165,16 +158,9 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
 
-            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+            requestObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
 
-            if (serverRequest.isInitializationOrEventRequest()) {
-                // fields for compatibility with Tune
-                requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
-                requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
-                requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
-                requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
-                requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
-            }
+            maybeAddTuneFields(serverRequest, requestObj);
 
             if (BranchUtil.getPluginType() != null) {
                 requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
@@ -218,6 +204,18 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
             requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
         } catch (JSONException ignore) {
+        }
+    }
+
+    private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {
+        if (serverRequest.isInitializationOrEventRequest()) {
+            // fields for parity with Tune traffic
+            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+            requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
         }
     }
 

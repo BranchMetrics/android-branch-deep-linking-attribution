@@ -263,8 +263,12 @@ abstract class SystemObserver {
      * @see <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels">
      * Android Developers - API Level and Platform Version</a>
      */
-    static int getOSVersion() {
+    static int getAPILevel() {
         return android.os.Build.VERSION.SDK_INT;
+    }
+
+    static String getOSVersion() {
+        return Build.VERSION.RELEASE;
     }
 
     /**
