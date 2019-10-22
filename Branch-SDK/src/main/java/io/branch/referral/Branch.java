@@ -2151,17 +2151,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 user action that has just been completed.
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(@NonNull final String action, JSONObject
-            metadata, BranchViewHandler.IBranchViewEvents callback) {
-        ServerRequest req = new ServerRequestActionCompleted(context_, action, null, metadata, callback);
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata,
+                                    BranchViewHandler.IBranchViewEvents callback) {
+        ServerRequest req = new ServerRequestActionCompleted(context_,
+                action, null, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
     }
     
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject
-            metadata, BranchViewHandler.IBranchViewEvents callback) {
-        ServerRequest req = new ServerRequestActionCompleted(context_, "purchase", commerceEvent, metadata, callback);
+    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
+                                  BranchViewHandler.IBranchViewEvents callback) {
+        ServerRequest req = new ServerRequestActionCompleted(context_,
+                BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
@@ -3949,8 +3951,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     //------------------------ Content Indexing methods----------------------//
     
-    public void registerView(BranchUniversalObject
-                                     branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
+    public void registerView(BranchUniversalObject branchUniversalObject,
+                             BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
             new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
                     .addContentItems(branchUniversalObject)

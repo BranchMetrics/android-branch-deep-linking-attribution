@@ -7,6 +7,7 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.CommerceEvent;
 
 /**
@@ -30,7 +31,8 @@ class ServerRequestActionCompleted extends ServerRequest {
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      */
-    public ServerRequestActionCompleted(Context context, String action, CommerceEvent commerceEvent, JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
+    public ServerRequestActionCompleted(Context context, String action, CommerceEvent commerceEvent,
+                                JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
         super(context, Defines.RequestPath.CompletedAction.getPath());
         callback_ = callback;
         JSONObject post = new JSONObject();
@@ -56,8 +58,10 @@ class ServerRequestActionCompleted extends ServerRequest {
             constructError_ = true;
         }
 
-        if (action != null && action.equalsIgnoreCase("purchase") && commerceEvent == null) {
-            PrefHelper.Debug("Warning: You are sending a purchase event with our non-dedicated purchase function. Please see function sendCommerceEvent");
+        if (action != null && action.equalsIgnoreCase(BRANCH_STANDARD_EVENT.PURCHASE.getName())
+                && commerceEvent == null) {
+            PrefHelper.Debug("Warning: You are sending a purchase event with our non-dedicated " +
+                    "purchase function. Please see function sendCommerceEvent");
         }
     }
 

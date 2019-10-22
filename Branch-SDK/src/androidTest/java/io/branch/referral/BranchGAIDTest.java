@@ -27,7 +27,6 @@ import io.branch.referral.util.CommerceEvent;
  [-] ServerRequestRegisterClose.java            testClose()
  [ ] ServerRequestRegisterInstall.java
  [ ] ServerRequestRegisterOpen.java
- [ ] ServerRequestRegisterView.java
  */
 
 @RunWith(AndroidJUnit4.class)

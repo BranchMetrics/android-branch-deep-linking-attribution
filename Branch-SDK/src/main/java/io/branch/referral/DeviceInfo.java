@@ -91,9 +91,8 @@ class DeviceInfo {
 
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
 
-            String[] applicableRoutes = new String[]{"install", "open", "event"};
-            if (BranchUtil.stringContainsItemFromList(serverRequest.getRequestPath(), applicableRoutes)) {
-                // fields for compatibility with Tune
+            if (serverRequest.isInitializationOrEventRequest()) {
+                // add certain fields for compatibility with TUNE SDK
                 requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
                 requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
                 requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
@@ -168,8 +167,7 @@ class DeviceInfo {
 
             requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
 
-            String[] applicableRoutes = new String[]{"install", "open", "event"};
-            if (BranchUtil.stringContainsItemFromList(serverRequest.getRequestPath(), applicableRoutes)) {
+            if (serverRequest.isInitializationOrEventRequest()) {
                 // fields for compatibility with Tune
                 requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
                 requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());

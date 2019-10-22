@@ -333,13 +333,6 @@ public class BranchUtil {
         return obj;
     }
 
-    public static boolean stringContainsItemFromList(String inputStr, String[] items) {
-        for (String item : items) {
-            if (inputStr.contains(item)) return true;
-        }
-        return false;
-    }
-
     public static String getPluginVersion() {
         return pluginVersion;
     }
