@@ -31,7 +31,7 @@ public class BranchApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (BranchUtil.checkTestMode(this) == false) {
+        if (!BranchUtil.checkTestMode(this)) {
             Branch.getInstance(this);
         } else {
             Branch.getTestInstance(this);

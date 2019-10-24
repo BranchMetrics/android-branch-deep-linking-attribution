@@ -336,7 +336,7 @@ public abstract class ServerRequest {
             // it's OK for post to be null
         }
         
-        if (requestPath != null && requestPath.length() > 0) {
+        if (!TextUtils.isEmpty(requestPath)) {
             return getExtendedServerRequest(requestPath, post, context);
         }
         return null;

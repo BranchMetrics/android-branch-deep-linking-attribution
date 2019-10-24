@@ -2566,7 +2566,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    private void registerInstallOrOpen(ServerRequest req, BranchReferralInitListener callback) {
+    private void registerInstallOrOpen(ServerRequest req) {
         // If there isn't already an Open / Install request, add one to the queue
         if (!requestQueue_.containsInstallOrOpen()) {
             insertRequestAtFront(req);
@@ -2575,10 +2575,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // Make sure a callback is associated with this request. This callback can
         // be cleared if the app is terminated while an Open/Install is pending.
         else {
-            // Update the callback to the latest one in init session call
-            if (callback != null) {
-                requestQueue_.setInstallOrOpenCallback(callback);
-            }
             requestQueue_.moveInstallOrOpenToFront(req, networkCount_);
         }
         
@@ -2646,7 +2642,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
         }
         
-        registerInstallOrOpen(request, callback);
+        registerInstallOrOpen(request);
     }
 
     /*
@@ -2665,7 +2661,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if(isGAParamsFetchInProgress_) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
-        registerInstallOrOpen(initRequest, null);
+        registerInstallOrOpen(initRequest);
     }
     
     private ServerRequest getInstallOrOpenRequest(BranchReferralInitListener callback) {
