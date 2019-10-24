@@ -324,16 +324,15 @@ class ServerRequestQueue {
      * @param request      A {@link ServerRequest} of type open or install which need to be moved to the front of the queue.
      * @param networkCount An {@link Integer} value that indicates whether or not to insert the
      *                     request at the front of the queue or not.
-     * @param callback     A {Branch.BranchReferralInitListener} instance for open or install callback.
      */
     @SuppressWarnings("unused")
-    void moveInstallOrOpenToFront(ServerRequest request, int networkCount, Branch.BranchReferralInitListener callback) {
+    void moveInstallOrOpenToFront(ServerRequest request, int networkCount) {
         
         synchronized (reqQueueLockObject) {
             Iterator<ServerRequest> iter = queue.iterator();
             while (iter.hasNext()) {
                 ServerRequest req = iter.next();
-                if (req != null && (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen)) {
+                if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
                     //Remove all install or open in queue. Since this method is called each time on Install/open there will be only one
                     //instance of open/Install in queue. So we can break as we see the first open/install
                     iter.remove();

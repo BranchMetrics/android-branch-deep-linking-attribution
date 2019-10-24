@@ -62,7 +62,6 @@ class TrackingController {
     
     private void onTrackingEnabled() {
         if (Branch.getInstance() != null) {
-            Activity activity = null;
             Branch.getInstance().registerAppReInit();
         }
     }

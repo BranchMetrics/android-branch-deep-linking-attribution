@@ -2579,7 +2579,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (callback != null) {
                 requestQueue_.setInstallOrOpenCallback(callback);
             }
-            requestQueue_.moveInstallOrOpenToFront(req, networkCount_, callback);
+            requestQueue_.moveInstallOrOpenToFront(req, networkCount_);
         }
         
         processNextQueueItem();
