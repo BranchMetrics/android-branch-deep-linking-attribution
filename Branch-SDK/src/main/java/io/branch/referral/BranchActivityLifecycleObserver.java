@@ -19,7 +19,7 @@ import io.branch.indexing.ContentDiscoverer;
 class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCallbacks {
     private int activityCnt_ = 0; //Keep the count of live  activities.
 
-    /* Flag to find if the activity is launched from stack (incase of  single top) or created fresh and launched */
+    /* Flag to find if the activity is launched from stack (incase of single top) or created fresh and launched */
     private boolean isActivityCreatedAndLaunched_ = false;
 
     @Override
@@ -47,17 +47,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             } catch (Exception ignore) {
             }
         }
-        if (activityCnt_ < 1) { // Check if this is the first Activity.If so start a session.
-            if (branch.getInitState() == Branch.SESSION_STATE.INITIALISED) {
-                // Handling case :  init session completed previously when app was in background.
-                branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
-            }
-            branch.startSession(activity);
-        } else if (branch.checkIntentForSessionRestart(activity.getIntent())) { // Case of opening the app by clicking a push notification while app is in foreground
-            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
-            // no need call close here since it is session forced restart. Don't want to wait till close finish
-            branch.startSession(activity);
-        }
         activityCnt_++;
         isActivityCreatedAndLaunched_ = false;
 
@@ -69,11 +58,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
-        // Need to check here again for session restart request in case the intent is created while the activity is already running
-        if (branch.checkIntentForSessionRestart(activity.getIntent())) {
-            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
-            branch.startSession(activity);
-        }
         branch.currentActivityReference_ = new WeakReference<>(activity);
 
         // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current

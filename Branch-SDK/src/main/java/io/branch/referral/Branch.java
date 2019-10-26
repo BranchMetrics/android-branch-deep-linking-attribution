@@ -343,9 +343,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         READY
     }
 
-    // INTENG-4676 Save the last callback
-    private WeakReference<BranchReferralInitListener> deferredInitListener_;
-
     /* Holds the current intent state. Default is set to PENDING. */
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
@@ -357,14 +354,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
-
-    /* Specifies the choice of user for isReferrable setting. used to determine the link click is referrable or not. See getAutoSession for usage */
-    private enum CUSTOM_REFERRABLE_SETTINGS {
-        USE_DEFAULT, REFERRABLE, NON_REFERRABLE
-    }
-    
-    /* By default assume user want to use the default settings. Update this option when user specify custom referrable settings */
-    private static CUSTOM_REFERRABLE_SETTINGS customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
     
     /* Key to indicate whether the Activity was launched by Branch or not. */
     private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
@@ -700,7 +689,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
-        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, null);
         getPreinstallSystemData(branchReferral_, context);
@@ -722,10 +710,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
-        customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, null);
         getPreinstallSystemData(branchReferral_, context);
+        branchReferral_.setIsReferrable(isReferrable);
         return branchReferral_;
     }
     
@@ -742,7 +730,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         isAutoSessionMode_ = true;
-        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, branchKey);
         
@@ -769,7 +756,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoTestInstance(@NonNull Context context) {
         isAutoSessionMode_ = true;
-        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         getBranchInstance(context, false, null);
         getPreinstallSystemData(branchReferral_, context);
         return branchReferral_;
@@ -787,9 +773,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         isAutoSessionMode_ = true;
-        customReferrableSettings_ = isReferrable ? CUSTOM_REFERRABLE_SETTINGS.REFERRABLE : CUSTOM_REFERRABLE_SETTINGS.NON_REFERRABLE;
         getBranchInstance(context, false, null);
         getPreinstallSystemData(branchReferral_, context);
+        branchReferral_.setIsReferrable(isReferrable);
         return branchReferral_;
     }
     
@@ -828,7 +814,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         // Reset all of the statics.
         branchReferral_ = null;
-        customReferrableSettings_ = CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT;
         bypassCurrentActivityIntentState_ = false;
         disableInstantDeepLinking = false;
         isActivityLifeCycleCallbackRegistered_ = false;
@@ -846,7 +831,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * been initialised, to false - forcing re-initialisation.</p>
      */
     public void resetUserSession() {
-        initState_ = SESSION_STATE.UNINITIALISED;
+        setInitState(SESSION_STATE.UNINITIALISED);
     }
     
     /**
@@ -1013,7 +998,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback) {
-        return initSession(callback, (Activity) null);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1026,7 +1012,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback) {
-        return initSession(callback, (Activity) null);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1041,12 +1028,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) {
-        if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-            initUserSessionInternal(callback, activity, true);
-        } else {
-            boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-            initUserSessionInternal(callback, activity, isReferrable);
-        }
+        initUserSessionInternal(callback, activity);
         return true;
     }
     
@@ -1062,12 +1044,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-        if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-            initUserSessionInternal(callback, activity, true);
-        } else {
-            boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-            initUserSessionInternal(callback, activity, isReferrable);
-        }
+        initUserSessionInternal(callback, activity);
         return true;
     }
     
@@ -1084,7 +1061,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * valid URI format.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
-        return initSession(callback, data, null);
+        readAndStripParam(data, null);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1100,7 +1079,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * valid URI format.
      */
     public boolean initSession(BranchReferralInitListener callback, Uri data) {
-        return initSession(callback, data, null);
+        readAndStripParam(data, null);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1118,7 +1099,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
         readAndStripParam(data, activity);
-        initSession(callback, activity);
+        initUserSessionInternal(callback, activity);
         return true;
     }
     
@@ -1137,7 +1118,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
         readAndStripParam(data, activity);
-        return initSession(callback, activity);
+        initUserSessionInternal(callback, activity);
+        return true;
     }
     
     /**
@@ -1146,7 +1128,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession() {
-        return initSession((Activity) null);
+        initUserSessionInternal((BranchReferralInitListener) null, null);
+        return true;
     }
     
     /**
@@ -1156,7 +1139,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(Activity activity) {
-        return initSession((BranchReferralInitListener) null, activity);
+        initUserSessionInternal((BranchReferralInitListener) null, activity);
+        return true;
     }
 
     /**
@@ -1170,11 +1154,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSessionForced(BranchReferralInitListener callback) {
         enableForcedSession();
-        if (initSession(callback, (Activity) null)) {
-            processNextQueueItem();
-            return true;
-        }
-        return false;
+        initUserSessionInternal(callback, null);
+        return true;
     }
 
     /**
@@ -1201,7 +1182,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public boolean initSessionWithData(Uri data, Activity activity) {
         readAndStripParam(data, activity);
-        return initSession((BranchReferralInitListener) null, activity);
+        initUserSessionInternal((BranchReferralInitListener) null, activity);
+        return true;
     }
     
     /**
@@ -1215,7 +1197,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(boolean isReferrable) {
-        return initSession((BranchReferralInitListener) null, isReferrable, (Activity) null);
+        setIsReferrable(isReferrable);
+        initUserSessionInternal((BranchReferralInitListener) null, (Activity) null);
+        return true;
     }
     
     /**
@@ -1230,7 +1214,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
-        return initSession((BranchReferralInitListener) null, isReferrable, activity);
+        setIsReferrable(isReferrable);
+        initUserSessionInternal((BranchReferralInitListener) null, activity);
+        return true;
     }
     
     /**
@@ -1248,7 +1234,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {
-        return initSession(callback, isReferrable, data, null);
+        setIsReferrable(isReferrable);
+        readAndStripParam(data, null);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1266,7 +1255,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
-        return initSession(callback, isReferrable, data, null);
+        setIsReferrable(isReferrable);
+        readAndStripParam(data, null);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1285,8 +1277,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+        setIsReferrable(isReferrable);
         readAndStripParam(data, activity);
-        return initSession(callback, isReferrable, activity);
+        initUserSessionInternal(callback, activity);
+        return true;
     }
     
     /**
@@ -1305,8 +1299,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
+        setIsReferrable(isReferrable);
         readAndStripParam(data, activity);
-        return initSession(callback, isReferrable, activity);
+        initUserSessionInternal(callback, activity);
+        return true;
     }
     
     /**
@@ -1322,7 +1318,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
-        return initSession(callback, isReferrable, (Activity) null);
+        setIsReferrable(isReferrable);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1338,7 +1336,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
-        return initSession(callback, isReferrable, (Activity) null);
+        setIsReferrable(isReferrable);
+        initUserSessionInternal(callback, null);
+        return true;
     }
     
     /**
@@ -1355,7 +1355,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
-        initUserSessionInternal(callback, activity, isReferrable);
+        setIsReferrable(isReferrable);
+        initUserSessionInternal(callback, activity);
         return true;
     }
     
@@ -1373,7 +1374,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-        initUserSessionInternal(callback, activity, isReferrable);
+        setIsReferrable(isReferrable);
+        initUserSessionInternal(callback, activity);
         return true;
     }
 
@@ -1390,101 +1392,73 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        if (activity == null) {
+        if (activity != null && activity.getIntent() != null && activity.getIntent().getData() != null) {
+            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
+            Uri uri = activity.getIntent().getData();
+
+            // Let's indicate that the app was initialized with this uri.
+            setSessionReferredLink(uri.toString());
+
+            // We need to set the AndroidAppLinkURL as well
+            prefHelper_.setAppLink(uri.toString());
+
+            // In order to report to the callback a second time, we need to reset this flag.
+            isInitReportedThroughCallBack = false;
+
+            // Now, actually initialize the new session.
+            currentActivityReference_ = new WeakReference<>(activity);
+            readAndStripParam(uri, activity);
+            initializeSession(callback, false);
+
+            return true;
+        } else {
             return false;
         }
 
-        Intent intent = activity.getIntent();
-        if (intent != null) {
-            // Check to see if the intent has Uri data.
-            Uri uri = intent.getData();
-            if (uri != null) {
-                // Here is where it gets interesting.  Re-Initializing with a Uri indicates that
-                // we want to fetch the data before we return.
-                initState_ = SESSION_STATE.INITIALISING;
-
-                // Let's indicate that the app was initialized with this uri.
-                setSessionReferredLink(uri.toString());
-
-                // We need to set the AndroidAppLinkURL as well
-                prefHelper_.setAppLink(uri.toString());
-
-                // In order to report to the callback a second time, we need to reset this flag.
-                isInitReportedThroughCallBack = false;
-
-                // This will put an open event on the queue
-                initializeSession(callback);
-
-                // Now, actually initialize the new session.
-                initSession(callback, uri, activity);
-            }
-        }
-
-        return true;
     }
     
-    private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity, boolean isReferrable) {
+    private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity) {
         BranchUniversalReferralInitWrapper branchUniversalReferralInitWrapper = new BranchUniversalReferralInitWrapper(callback);
-        initUserSessionInternal(branchUniversalReferralInitWrapper, activity, isReferrable);
+        initUserSessionInternal(branchUniversalReferralInitWrapper, activity);
     }
     
-    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity, boolean isReferrable) {
+    private void initUserSessionInternal(BranchReferralInitListener callback, Activity activity) {
         if (activity != null) {
             currentActivityReference_ = new WeakReference<>(activity);
         }
-        if (callback != null) {
-            deferredInitListener_ = new WeakReference<BranchReferralInitListener>(callback);
+        // If an instant deeplink is possible then call init session immediately. This should proceed to a normal open call
+        if (isInstantDeepLinkPossible) {
+            if (reportInitSession(callback)) {
+                addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+                isInstantDeepLinkPossible = false;
+                checkForAutoDeepLinkConfiguration();
+            }
         }
-        //If already initialised
-        if ((hasUser() && hasSession() && initState_ == SESSION_STATE.INITIALISED)) {
-            reportInitSession(callback);
-            isInstantDeepLinkPossible = false;
-        }
-        //If uninitialised or initialising
-        else {
-            // If an instant deeplink is possible then call init session immediately. This should proceed to a normal open call
-            if (isInstantDeepLinkPossible) {
-                if (reportInitSession(callback)) {
-                    addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-                    isInstantDeepLinkPossible = false;
-                    checkForAutoDeepLinkConfiguration();
-                }
-            }
-            // In case of Auto session init will be called from Branch before user. So initialising
-            // State also need to look for isReferrable value
-            if (isReferrable) {
-                this.prefHelper_.setIsReferrable();
-            } else {
-                this.prefHelper_.clearIsReferrable();
-            }
-            
-            //If initialising ,then set new callbacks.
-            if (initState_ == SESSION_STATE.INITIALISING) {
-                if (callback != null) {
-                    requestQueue_.setInstallOrOpenCallback(callback);
-                }
-            }
-            //if Uninitialised move request to the front if there is an existing request or create a new request.
-            else {
-                initState_ = SESSION_STATE.INITIALISING;
-                initializeSession(callback);
-            }
+
+        if (getInitState() == SESSION_STATE.UNINITIALISED) {
+            initializeSession(callback, true);
+        } else {
+            PrefHelper.Debug("Warning: consecutive session initialization detected! Use reInitSession() instead.");
         }
     }
     
     private boolean reportInitSession(BranchReferralInitListener callback) {
         if (callback != null) {
             if (isAutoSessionMode_) {
-                // Since Auto session mode initialise the session by itself on starting the first activity, we need to provide user
-                // the referring params if they call init session after init is completed. Note that user wont do InitSession per activity in auto session mode.
-                if (!isInitReportedThroughCallBack) { //Check if session params are reported already in case user call initsession form a different activity(not a normal case)
+                // Since Auto session mode initialise the session by itself on starting the first
+                // activity, we need to provide user the referring params if they call init session
+                // after init is completed. Note that user wont do InitSession per activity in auto
+                // session mode. (WHERE IS THIS IN THE DOCUMENTATION?)
+                if (!isInitReportedThroughCallBack) { //Check if session params are reported already
+                    // in case user call initsession form a different activity(not a normal case)
                     callback.onInitFinished(getLatestReferringParams(), null);
                     isInitReportedThroughCallBack = true;
                 } else {
                     callback.onInitFinished(new JSONObject(), null);
                 }
             } else {
-                // Since user will do init session per activity in non auto session mode , we don't want to repeat the referring params with each initSession()call.
+                // Since user will do init session per activity in non auto session mode , we don't
+                // want to repeat the referring params with each initSession()call.
                 callback.onInitFinished(new JSONObject(), null);
             }
         }
@@ -1569,7 +1543,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     handleNewRequest(req);
                 }
             }
-            initState_ = SESSION_STATE.UNINITIALISED;
+            setInitState(SESSION_STATE.UNINITIALISED);
         }
     }
     
@@ -1749,11 +1723,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
-        return activity != null && activity.getIntent() != null && activity.getIntent().getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false);
+        return activity != null && activity.getIntent() != null &&
+                activity.getIntent().getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false);
     }
     
     private boolean isActivityLaunchedFromHistory(Activity activity) {
-        return activity != null && activity.getIntent() != null && (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
+        return activity != null && activity.getIntent() != null &&
+                (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
     }
 
     /**
@@ -1868,12 +1844,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
             callback) {
-        ServerRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
+        ServerRequestIdentifyUserRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         } else {
-            if (((ServerRequestIdentifyUserRequest) req).isExistingID()) {
-                ((ServerRequestIdentifyUserRequest) req).handleUserExist(branchReferral_);
+            if (req.isExistingID()) {
+                req.handleUserExist(branchReferral_);
             }
         }
     }
@@ -2566,24 +2542,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    private void registerInstallOrOpen(ServerRequest req) {
-        // If there isn't already an Open / Install request, add one to the queue
-        if (!requestQueue_.containsInstallOrOpen()) {
-            insertRequestAtFront(req);
-        }
-        // If there is already one in the queue, make sure it's in the front.
-        // Make sure a callback is associated with this request. This callback can
-        // be cleared if the app is terminated while an Open/Install is pending.
-        else {
-            requestQueue_.moveInstallOrOpenToFront(req, networkCount_);
-        }
-        
-        processNextQueueItem();
-    }
-    
-    private void initializeSession(final BranchReferralInitListener callback) {
+    private void initializeSession(final BranchReferralInitListener callback, boolean isFirstInitialization) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
-            initState_ = SESSION_STATE.UNINITIALISED;
+            setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
             if (callback != null) {
                 callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
@@ -2593,13 +2554,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
-        
-        if (getSessionReferredLink() != null || !enableFacebookAppLinkCheck_) {
-            registerAppInit(callback, null);
-        } else {
+
+        ServerRequestInitSession initRequest = getInstallOrOpenRequest(callback);
+        if (isFirstInitialization && (getSessionReferredLink() == null || enableFacebookAppLinkCheck_)) {
             // Check if opened by facebook with deferred install data
-            boolean appLinkRqSucceeded;
-            appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
+            boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
+                    context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
                 @Override
                 public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
                     prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
@@ -2615,57 +2575,52 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             });
             if (appLinkRqSucceeded) {
-                registerAppInit(callback, ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
-            } else {
-                registerAppInit(callback, null);
+                initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
             }
+        }
+
+        if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization) {
+            registerAppInit(initRequest, false);
         }
     }
     
     /**
      * Registers app init with params filtered from the intent. This will wait on the wait locks to complete any pending operations
      */
-    private void registerAppInit(BranchReferralInitListener
-                                         callback, ServerRequest.PROCESS_WAIT_LOCK lock) {
-        ServerRequest request = getInstallOrOpenRequest(callback);
-        request.addProcessWaitLock(lock);
+    private void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreIntent) {
+        setInitState(SESSION_STATE.INITIALISING);
+
+        if (!ignoreIntent) {
+            // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
+            // In this case need to wait till onResume to get the latest intent. Bypass this if isForceSession_ is true.
+            if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
+                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+            }
+            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
+                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
+            }
+        }
+
         if (isGAParamsFetchInProgress_) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
-        // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
-        // In this case need to wait till onResume to get the latest intent. Bypass this if isForceSession_ is true.
-        if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        }
-        if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
-        }
-        
-        registerInstallOrOpen(request);
+
+        insertRequestAtFront(request);
+        processNextQueueItem();
     }
 
     /*
-     * Register app init without any wait on intents or other referring params. This will not be getting any params from the intent
+     * Register app init without any wait on intents or other referring params.
+     * This will not be getting any params from the intent
      */
-    void registerAppReInit() {
-        // on re-init make sure GAID is available
-        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context_, this);
-        }
-        if (networkCount_ != 0) {
-            networkCount_ = 0;
-            requestQueue_.clear();
-        }
-        ServerRequest initRequest = getInstallOrOpenRequest(null);
-        if(isGAParamsFetchInProgress_) {
-            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        }
-        registerInstallOrOpen(initRequest);
+    void registerAppInitWithoutIntent() {
+        ServerRequestInitSession request = getInstallOrOpenRequest(null);
+        registerAppInit(request, true);
     }
     
-    private ServerRequest getInstallOrOpenRequest(BranchReferralInitListener callback) {
-        ServerRequest request;
+    private ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback) {
+        ServerRequestInitSession request;
         if (hasUser()) {
             // If there is user this is open
             request = new ServerRequestRegisterOpen(context_, callback);
@@ -2683,7 +2638,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
             // Check for cookie based matching only if Tracking is enabled
-            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null && prefHelper_.getBranchKey() != null && !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
+            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null &&
+                    prefHelper_.getBranchKey() != null &&
+                    !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
                 if (isGAParamsFetchInProgress_) {
                     // Wait for GAID to Available
                     performCookieBasedStrongMatchingOnGAIDAvailable = true;
@@ -2707,7 +2664,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Context context = (currentActivity != null) ? currentActivity.getApplicationContext() : null;
             if (context != null) {
                 requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_, deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_,
+                        deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
                     @Override
                     public void onStrongMatchCheckFinished() {
                         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
@@ -2747,12 +2705,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (currentActivityReference_ != null) {
                     currentActivity = currentActivityReference_.get();
                 }
-                if (customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.USE_DEFAULT) {
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity, true);
-                } else {
-                    boolean isReferrable = customReferrableSettings_ == CUSTOM_REFERRABLE_SETTINGS.REFERRABLE;
-                    initUserSessionInternal((BranchReferralInitListener) null, currentActivity, isReferrable);
-                }
+
+                initUserSessionInternal((BranchReferralInitListener) null, currentActivity);
             }
         }
 
@@ -2787,19 +2741,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    void startSession(Activity activity) {
-        Uri intentData = null;
-        if (activity.getIntent() != null) {
-            intentData = activity.getIntent().getData();
-        }
-        BranchReferralInitListener deferredCallback = null;
-        if (deferredInitListener_ != null) {
-            deferredCallback = deferredInitListener_.get();
-        }
-        isInitReportedThroughCallBack = false;
-        initSession(deferredCallback, intentData, activity); // indicate  starting of session.
-    }
-    
     /*
      * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
      * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
@@ -2814,14 +2755,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isRestartSessionRequested = false;
         if (intent != null) {
             try {
-                // Force new session parameters
                 if (intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false)) {
+                    // Force new session parameters
                     isRestartSessionRequested = true;
                     intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-                    // Also check if there is a new, unconsumed push notification intent which would indicate it's coming
-                    // from foreground
                 } else if (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
                     !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
+                    // Also check if there is a new, unconsumed push notification intent which would indicate it's coming
+                    // from foreground
                     isRestartSessionRequested = true;
                 }
             } catch (Throwable ignore) { }
@@ -3056,7 +2997,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (status != 200) {
                             //If failed request is an initialisation request then mark session not initialised
                             if (thisReq_ instanceof ServerRequestInitSession) {
-                                initState_ = SESSION_STATE.UNINITIALISED;
+                                setInitState(SESSION_STATE.UNINITIALISED);
                             }
                             // On a bad request or in canse of a conflict notify with call back and remove the request.
                             if (status == 400 || status == 409) {
@@ -3147,7 +3088,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     }
                                     
                                     if (thisReq_ instanceof ServerRequestInitSession) {
-                                        initState_ = SESSION_STATE.INITIALISED;
+                                        setInitState(SESSION_STATE.INITIALISED);
                                         thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
                                         if (!isInitReportedThroughCallBack) {
                                             if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
@@ -3369,6 +3310,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public static boolean bypassCurrentActivityIntentState() {
         return bypassCurrentActivityIntentState_;
+    }
+
+    void setIsReferrable(boolean isReferrable) {
+        if (isReferrable) {
+            prefHelper_.setIsReferrable();
+        } else {
+            prefHelper_.clearIsReferrable();
+        }
+    }
+
+    boolean isReferrable() {
+        return prefHelper_.getIsReferrable() == 1;
     }
 
     //-------------------------- Branch Builders--------------------------------------//
