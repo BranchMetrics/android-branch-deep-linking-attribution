@@ -41,8 +41,7 @@ public class BranchUtil {
     private static String pluginVersion = null;
     private static PluginType pluginType = null;
     public enum PluginType {
-        Cordova,
-        Ionic,
+        CordovaIonic,
         PhoneGap,
         Unity,
         Corona,
@@ -52,8 +51,7 @@ public class BranchUtil {
         mParticle,
         AdobeLaunch,
         AdobeLaunchMobileUI,
-        Segment,
-        Electron
+        Segment
     }
 
     // Package Private
