@@ -30,8 +30,8 @@ public abstract class ServerRequest {
     
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, STRONG_MATCH_PENDING_WAIT_LOCK,
-        INSTALL_REFERRER_FETCH_WAIT_LOCK
+        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK,
+        STRONG_MATCH_PENDING_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
     }
     
     // Set for holding any active wait locks

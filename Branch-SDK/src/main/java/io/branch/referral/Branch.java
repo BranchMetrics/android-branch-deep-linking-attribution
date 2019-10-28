@@ -1717,6 +1717,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return false;
     }
 
+    void unlockSDKInitWaitLock() {
+        if (requestQueue_ == null) return;
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
+        processNextQueueItem();
+    }
+
     private boolean isActivityCreatedAndLaunched() {
         if (activityLifeCycleObserver == null) return false;
         return activityLifeCycleObserver.isActivityCreatedAndLaunched();
@@ -2691,7 +2697,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            
             if ((req instanceof ServerRequestLogout)) {
                 req.handleFailure(BranchError.ERR_NO_SESSION, "");
                 PrefHelper.Debug("Branch is not initialized, cannot logout");
@@ -2700,20 +2705,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if ((req instanceof ServerRequestRegisterClose)) {
                 PrefHelper.Debug("Branch is not initialized, cannot close session");
                 return;
-            } else {
-                Activity currentActivity = null;
-                if (currentActivityReference_ != null) {
-                    currentActivity = currentActivityReference_.get();
-                }
-
-                initUserSessionInternal((BranchReferralInitListener) null, currentActivity);
             }
+            req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
         }
 
         if (!(req instanceof ServerRequestPing)) {
             requestQueue_.enqueue(req);
             req.onRequestQueued();
         }
+
         processNextQueueItem();
     }
 
