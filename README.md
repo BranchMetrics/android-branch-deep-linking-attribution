@@ -67,12 +67,6 @@ Just add `implementation 'io.branch.sdk.android:library:2.+'` to the dependencie
 
 #### Some notes:
 
-- If you don't plan to use the `Fabric Answers` integration, and don't want to import the `answers-shim`, just import your project as follows:
-```
-implementation ('io.branch.sdk.android:library:3.+') {
-  exclude module: 'answers-shim'
-}
-```
 - This supports minimum sdk level 16. If you want to support minimum sdk level 9 please consider using version 1.14.5. If you want to to support a minimum SDK of 15, use the 2.x versions.
 - Android SDK versions 3.x and above communicate over TLS1.2.
 - If you want to import the AAR directly, you can find the build in Nexus here: https://search.maven.org/artifact/io.branch.sdk.android/library. 
@@ -857,10 +851,6 @@ protected void attachBaseContext(Context base) {
 ### InvalidClassException, ClassLoadingError or VerificationError
 
 This is often caused by a Proguard bug with optimization. Please try to use the latest Proguard version or disable Proguard optimisation by setting `-dontoptimize` option
-
-### Proguard warning or errors with `answers-shim` module
-This is often caused when you exclude the `answers-shim` module from Branch SDK depending on your proguard settings. Please add the following to your proguard file to solve this issue
-`-dontwarn com.crashlytics.android.answers.shim.**`
 
 ### Proguard warning or errors with `appindexing` module
 Branch SDK has optional dependencies on Firebase app indexing and Android install referrer classes to provide new Firebase content listing features and support new Android install referrer library. This may cause a proguard warning depending on your proguard settings.
