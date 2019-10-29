@@ -176,7 +176,7 @@ class BranchStrongMatchHelper {
                 uriString += "&" + Defines.Jsonkey.AppVersion.getKey() + "=" + deviceInfo.getAppVersion();
             }
             //Add Branch key
-            if (!prefHelper.getBranchKey().equals(PrefHelper.NO_STRING_VALUE)) {
+            if (prefHelper.hasValidBranchKey()) {
                 uriString += "&" + Defines.Jsonkey.BranchKey.getKey() + "=" + prefHelper.getBranchKey();
             }
             //Add SDK version
