@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import io.branch.referral.Defines.ModuleNameKeys;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.CommerceEvent;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -62,7 +63,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
         commerceEvent.setCoupon("MyCoupon");
 
         Branch.getInstance().sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", "purchase");
+        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);

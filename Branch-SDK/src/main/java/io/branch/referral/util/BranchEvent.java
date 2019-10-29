@@ -9,7 +9,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -27,6 +29,7 @@ import io.branch.referral.ServerResponse;
 public class BranchEvent {
     private final String eventName;
     private final boolean isStandardEvent;
+    private final HashMap<String, Object> topLevelProperties;
     private final JSONObject standardProperties;
     private final JSONObject customProperties;
     private final List<BranchUniversalObject> buoList;
@@ -46,6 +49,7 @@ public class BranchEvent {
      * @param eventName Event Name.
      */
     public BranchEvent(String eventName) {
+        topLevelProperties = new HashMap<>();
         standardProperties = new JSONObject();
         customProperties = new JSONObject();
         this.eventName = eventName;
@@ -68,7 +72,7 @@ public class BranchEvent {
      * @param customerEventAlias {@link String customerEventAlias}
      */
     public BranchEvent setCustomerEventAlias(String customerEventAlias) {
-        return addStandardProperty(Defines.Jsonkey.CustomerEventAlias.getKey(), customerEventAlias);
+        return addTopLevelProperty(Defines.Jsonkey.CustomerEventAlias.getKey(), customerEventAlias);
     }
 
     /**
@@ -182,6 +186,15 @@ public class BranchEvent {
         return this;
     }
 
+    private BranchEvent addTopLevelProperty(String propertyName, Object propertyValue) {
+        if (!this.topLevelProperties.containsKey(propertyName)) {
+            this.topLevelProperties.put(propertyName, propertyValue);
+        } else {
+            this.topLevelProperties.remove(propertyName);
+        }
+        return this;
+    }
+
     /**
      * Adds a custom data property associated with this Branch Event
      *
@@ -256,6 +269,13 @@ public class BranchEvent {
                 if (standardProperties.length() > 0) {
                     reqBody.put(Defines.Jsonkey.EventData.getKey(), standardProperties);
                 }
+
+                if (topLevelProperties.size() > 0) {
+                    for (Map.Entry<String, Object> entry : topLevelProperties.entrySet()) {
+                        reqBody.put(entry.getKey(), entry.getValue());
+                    }
+                }
+
                 if (buoList.size() > 0) {
                     JSONArray contentItemsArray = new JSONArray();
                     reqBody.put(Defines.Jsonkey.ContentItems.getKey(), contentItemsArray);

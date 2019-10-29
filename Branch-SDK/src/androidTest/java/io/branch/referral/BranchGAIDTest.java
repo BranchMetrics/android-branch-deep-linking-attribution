@@ -88,7 +88,7 @@ public class BranchGAIDTest extends BranchEventTest {
         commerceEvent.setCoupon("MyCoupon");
 
         Branch.getInstance().sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", "purchase");
+        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
