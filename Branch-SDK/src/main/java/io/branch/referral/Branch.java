@@ -2314,7 +2314,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             ServerResponse response = null;
             try {
                 int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-                response = new getShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
+                response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
             String url = null;
@@ -2908,11 +2908,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Async Task to create  a shorlink for synchronous methods
      */
-    private class getShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override
-        protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            String urlExtend = "v1/url";
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(), prefHelper_.getAPIBaseUrl() + urlExtend, Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
+    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
+        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
+            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
+                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
+                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
     }
 
