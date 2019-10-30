@@ -36,6 +36,24 @@ public class BranchUtil {
     // Only need to check once for Manifest Flags
     private static Boolean isManifestTestModeEnabled = null;
 
+    /** Variables for reporting plugin type and version (some TUNE customers do that), plus helps
+     * us make data driven decisions. */
+    private static String pluginVersion = null;
+    private static PluginType pluginType = null;
+    public enum PluginType {
+        CordovaIonic,
+        PhoneGap,
+        Unity,
+        Corona,
+        Xamarin,
+        ReactNative,
+        Titanium,
+        mParticle,
+        AdobeLaunch,
+        AdobeLaunchMobileUI,
+        Segment
+    }
+
     // Package Private
     static void shutDown() {
         isCustomDebugEnabled_ = false;
@@ -313,4 +331,19 @@ public class BranchUtil {
         return obj;
     }
 
+    public static String getPluginVersion() {
+        return pluginVersion;
+    }
+
+    public static void setPluginVersion(String pluginVersion) {
+        BranchUtil.pluginVersion = pluginVersion;
+    }
+
+    public static PluginType getPluginType() {
+        return pluginType;
+    }
+
+    public static void setPluginType(PluginType pluginType) {
+        BranchUtil.pluginType = pluginType;
+    }
 }
