@@ -373,9 +373,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
-    /* Sets to true when the init session params are reported to the app though call back.*/
-    boolean isInitReportedThroughCallBack = false;
-    
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
     
     /* Name of the key for getting Fabric Branch API key from string resource */
@@ -1402,9 +1399,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // We need to set the AndroidAppLinkURL as well
             prefHelper_.setAppLink(uri.toString());
 
-            // In order to report to the callback a second time, we need to reset this flag.
-            isInitReportedThroughCallBack = false;
-
             // Now, actually initialize the new session.
             currentActivityReference_ = new WeakReference<>(activity);
             readAndStripParam(uri, activity);
@@ -1428,11 +1422,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         // If an instant deeplink is possible then call init session immediately. This should proceed to a normal open call
         if (isInstantDeepLinkPossible) {
-            if (reportInitSession(callback)) {
-                addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-                isInstantDeepLinkPossible = false;
-                checkForAutoDeepLinkConfiguration();
-            }
+            callback.onInitFinished(getLatestReferringParams(), null);
+            addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+            isInstantDeepLinkPossible = false;
+            checkForAutoDeepLinkConfiguration();
+            return;
         }
 
         if (getInitState() == SESSION_STATE.UNINITIALISED) {
@@ -1440,29 +1434,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         } else {
             PrefHelper.Debug("Warning: consecutive session initialization detected! Use reInitSession() instead.");
         }
-    }
-    
-    private boolean reportInitSession(BranchReferralInitListener callback) {
-        if (callback != null) {
-            if (isAutoSessionMode_) {
-                // Since Auto session mode initialise the session by itself on starting the first
-                // activity, we need to provide user the referring params if they call init session
-                // after init is completed. Note that user wont do InitSession per activity in auto
-                // session mode. (WHERE IS THIS IN THE DOCUMENTATION?)
-                if (!isInitReportedThroughCallBack) { //Check if session params are reported already
-                    // in case user call initsession form a different activity(not a normal case)
-                    callback.onInitFinished(getLatestReferringParams(), null);
-                    isInitReportedThroughCallBack = true;
-                } else {
-                    callback.onInitFinished(new JSONObject(), null);
-                }
-            } else {
-                // Since user will do init session per activity in non auto session mode , we don't
-                // want to repeat the referring params with each initSession()call.
-                callback.onInitFinished(new JSONObject(), null);
-            }
-        }
-        return isInitReportedThroughCallBack;
     }
     
     /**
@@ -3090,14 +3061,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                     if (thisReq_ instanceof ServerRequestInitSession) {
                                         setInitState(SESSION_STATE.INITIALISED);
                                         thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-                                        if (!isInitReportedThroughCallBack) {
-                                            if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                                                checkForAutoDeepLinkConfiguration();
-                                            }
-                                        }
-                                        // Publish success to listeners
-                                        if (((ServerRequestInitSession) thisReq_).hasCallBack()) {
-                                            isInitReportedThroughCallBack = true;
+                                        if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
+                                            checkForAutoDeepLinkConfiguration();
                                         }
                                         // Count down the latch holding getLatestReferringParamsSync
                                         if (getLatestReferringParamsLatch != null) {
