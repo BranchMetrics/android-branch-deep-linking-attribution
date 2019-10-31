@@ -1389,26 +1389,35 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        if (activity != null && activity.getIntent() != null && activity.getIntent().getData() != null) {
-            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
-            Uri uri = activity.getIntent().getData();
+        if (activity == null) return false;
+        Intent intent = activity.getIntent();
 
-            // Let's indicate that the app was initialized with this uri.
-            setSessionReferredLink(uri.toString());
-
-            // We need to set the AndroidAppLinkURL as well
-            prefHelper_.setAppLink(uri.toString());
-
-            // Now, actually initialize the new session.
+        if (intent != null && Branch.getInstance().checkIntentForSessionRestart(intent)) {
             currentActivityReference_ = new WeakReference<>(activity);
-            readAndStripParam(uri, activity);
-            initializeSession(callback, false);
+            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
+            Uri uri = intent.getData();
 
+            String pushNotifUrl = intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+            if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
+                uri = Uri.parse(pushNotifUrl);
+            }
+
+            if (uri != null) {
+                // Let's indicate that the app was initialized with this uri.
+                setSessionReferredLink(uri.toString());
+
+                // We need to set the AndroidAppLinkURL as well
+                prefHelper_.setAppLink(uri.toString());
+
+                // Now, actually initialize the new session.
+                readAndStripParam(uri, activity);
+            }
+
+            initializeSession(callback, false);
             return true;
         } else {
             return false;
         }
-
     }
     
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity) {
@@ -2558,6 +2567,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization) {
             registerAppInit(initRequest, false);
+        } else {
+            PrefHelper.Debug("Skipping init");
         }
     }
     
