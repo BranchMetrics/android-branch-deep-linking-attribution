@@ -2562,7 +2562,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Registers app init with params filtered from the intent. This will wait on the wait locks to complete any pending operations
+     * Registers app init with params filtered from the intent. Unless ignoreIntent = true, this
+     * will wait on the wait locks to complete any pending operations
      */
     private void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreIntent) {
         setInitState(SESSION_STATE.INITIALISING);
@@ -2583,8 +2584,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
 
-        insertRequestAtFront(request);
-        processNextQueueItem();
+        if (!requestQueue_.containsInitRequest()) {
+            insertRequestAtFront(request);
+            processNextQueueItem();
+        }
     }
 
     /*
