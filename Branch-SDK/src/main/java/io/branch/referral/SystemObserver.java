@@ -330,7 +330,8 @@ abstract class SystemObserver {
     static String getCarrier(Context context) {
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         if (tm == null) return null;
-        return tm.getNetworkOperatorName();
+        String carrier = tm.getNetworkOperatorName();
+        return TextUtils.isEmpty(carrier) ? null : carrier;
     }
 
     /**
