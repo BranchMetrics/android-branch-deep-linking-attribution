@@ -1380,7 +1380,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Re-Initialize a session.
      * This solves a very specific use case, whereas the app is already in the foreground and a new
      * intent with a Uri is delivered to the activity.  In this case we want to re-initialize the
-     * session and call back with the decoded parameters.
+     * session and call back with the decoded parameters. Note that Uri can also be stored as an extra
+     * under the field "branch"
      *
      * @param activity  The calling {@link Activity} for context.
      * @param callback  A {@link BranchReferralInitListener} instance that will be called
@@ -2568,7 +2569,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization) {
             registerAppInit(initRequest, false);
         } else {
-            PrefHelper.Debug("Skipping init");
+            PrefHelper.Debug("Warning: consecutive session initialization detected! Use reInitSession() instead.");
         }
     }
     
