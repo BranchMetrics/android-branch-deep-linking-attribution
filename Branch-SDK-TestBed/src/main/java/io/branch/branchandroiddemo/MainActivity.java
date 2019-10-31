@@ -1,9 +1,14 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -11,6 +16,9 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,6 +32,7 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -42,6 +51,8 @@ public class MainActivity extends Activity {
 
     private BranchUniversalObject branchUniversalObject;
 
+    private final static String branchChannelID = "BranchChannelID";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +62,8 @@ public class MainActivity extends Activity {
         txtInstallCount = findViewById(R.id.txtInstallCount);
         txtRewardBalance = findViewById(R.id.txtRewardBalance);
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
+
+        createNotificationChannel();
 
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
@@ -335,14 +348,31 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Add optional deep link debug params
-        //        try {
-        //            JSONObject debugObj = new JSONObject();
-        //            debugObj.put("DeeplinkTestKey1", "DeeplinkTestValue1");
-        //            debugObj.put("DeeplinkTestKey2", "DeeplinkTestValue2");
-        //            Branch.getInstance().setDeepLinkDebugMode(debugObj);
-        //        }catch (JSONException ignore){
-        //        }
+        findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
+                if (shortURL == null) {
+                    Log.i("BranchTestBed", "branchUniversalObject.getShortUrl = null");
+                    return;
+                }
+//                intent.setData(Uri.parse(shortURL));
+                intent.putExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey(),shortURL);
+                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), true);
+                PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("BranchTest")
+                        .setContentText(shortURL)
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true);
+                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                notificationManager.notify(1, builder.build());
+            }
+        });
 
         // Tracking events
         findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
@@ -382,6 +412,20 @@ public class MainActivity extends Activity {
             }
         });
 
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(branchChannelID, "BranchChannel", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription("Very interesting description");
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager == null) return;
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
 
@@ -427,6 +471,16 @@ public class MainActivity extends Activity {
     @Override
     public void onNewIntent(Intent intent) {
         this.setIntent(intent);
+        Branch.getInstance().reInitSession(this, new BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                if (error != null) {
+                    Log.i("BranchTestBed", error.getMessage());
+                } else if (referringParams != null) {
+                    Log.i("BranchTestBed", referringParams.toString());
+                }
+            }
+        });
     }
 
     @Override

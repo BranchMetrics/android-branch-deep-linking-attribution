@@ -141,6 +141,14 @@
                 android:text="Share Link"
                 android:layout_marginTop="20dp"/>
 
+            <Button
+                android:id="@+id/notif_btn"
+                style="@style/testbed_button_style"
+                android:layout_below="@+id/share_btn"
+                android:layout_centerHorizontal="true"
+                android:text="Fire notif"
+                android:layout_marginTop="20dp"/>
+
         </RelativeLayout>
 
     </ScrollView>
