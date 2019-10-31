@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
+import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
 import android.app.Activity;
 import android.app.Application;
@@ -374,9 +375,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
     private final ConcurrentHashMap<String, String> instrumentationExtraData_;
-    
-    /* Name of the key for getting Fabric Branch API key from string resource */
-    private static final String FABRIC_BRANCH_API_KEY = "io.branch.apiKey";
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
@@ -590,7 +588,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             branchReferral_ = Branch.initInstance(context);
         }
         branchReferral_.context_ = context.getApplicationContext();
-        if (branchKey.startsWith("key_")) {
+        if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
             if (isNewBranchKeySet) {
@@ -617,19 +615,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             boolean isNewBranchKeySet;
             if (TextUtils.isEmpty(branchKey)) {
-                // If Branch key is not available check for Fabric provided Branch key
-                String fabricBranchApiKey = null;
-                try {
-                    Resources resources = context.getResources();
-                    fabricBranchApiKey = resources.getString(resources.getIdentifier(FABRIC_BRANCH_API_KEY, "string", context.getPackageName()));
-                } catch (Exception ignore) {
-                }
-                if (!TextUtils.isEmpty(fabricBranchApiKey)) {
-                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(fabricBranchApiKey);
-                } else {
-                    PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
-                    isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
-                }
+                PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
+                isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
             } else {
                 isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             }
@@ -730,7 +717,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isTest = BranchUtil.checkTestMode(context);
         getBranchInstance(context, !isTest, branchKey);
         
-        if (branchKey.startsWith("key_")) {
+        if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
             if (isNewBranchKeySet) {
@@ -2114,17 +2101,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 user action that has just been completed.
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      */
-    public void userCompletedAction(@NonNull final String action, JSONObject
-            metadata, BranchViewHandler.IBranchViewEvents callback) {
-        ServerRequest req = new ServerRequestActionCompleted(context_, action, metadata, callback);
+    public void userCompletedAction(@NonNull final String action, JSONObject metadata,
+                                    BranchViewHandler.IBranchViewEvents callback) {
+        ServerRequest req = new ServerRequestActionCompleted(context_,
+                action, null, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
     }
     
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject
-            metadata, BranchViewHandler.IBranchViewEvents callback) {
-        ServerRequest req = new ServerRequestRActionCompleted(context_, commerceEvent, metadata, callback);
+    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
+                                  BranchViewHandler.IBranchViewEvents callback) {
+        ServerRequest req = new ServerRequestActionCompleted(context_,
+                BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
@@ -2528,7 +2517,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             requestQueue_.insert(req, 1);
         }
     }
-    
+
     private void initializeSession(final BranchReferralInitListener callback, boolean isFirstInitialization) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
@@ -2538,7 +2527,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             PrefHelper.Debug("Warning: Please enter your branch_key in your project's res/values/strings.xml!");
             return;
-        } else if (prefHelper_.getBranchKey() != null && prefHelper_.getBranchKey().startsWith("key_test_")) {
+        } else if (isTestModeEnabled()) {
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
@@ -3878,8 +3867,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     //------------------------ Content Indexing methods----------------------//
     
-    public void registerView(BranchUniversalObject
-                                     branchUniversalObject, BranchUniversalObject.RegisterViewStatusListener callback) {
+    public void registerView(BranchUniversalObject branchUniversalObject,
+                             BranchUniversalObject.RegisterViewStatusListener callback) {
         if (context_ != null) {
             new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
                     .addContentItems(branchUniversalObject)

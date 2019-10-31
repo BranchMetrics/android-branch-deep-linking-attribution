@@ -22,12 +22,11 @@ import io.branch.referral.util.CommerceEvent;
  [X] ServerRequestInitSession.java              testInitSession()
  [-] ServerRequestLogout.java                   testLogout()
  [-] ServerRequestPing.java                     testPing()
- [X] ServerRequestRActionCompleted.java         testCommerceEvent()
+ [X] ServerRequestActionCompleted.java          testCommerceEvent()
  [X] ServerRequestRedeemRewards.java            testRedeemRewards()
  [-] ServerRequestRegisterClose.java            testClose()
  [ ] ServerRequestRegisterInstall.java
  [ ] ServerRequestRegisterOpen.java
- [ ] ServerRequestRegisterView.java
  */
 
 @RunWith(AndroidJUnit4.class)
@@ -89,7 +88,7 @@ public class BranchGAIDTest extends BranchEventTest {
         commerceEvent.setCoupon("MyCoupon");
 
         Branch.getInstance().sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", "purchase");
+        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);

@@ -124,7 +124,6 @@ class ServerRequestCreateUrl extends ServerRequest {
             if (callback_ != null) {
                 callback_.onLinkCreate(url, null);
             }
-            updateShareEventToFabric(url);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -140,7 +139,6 @@ class ServerRequestCreateUrl extends ServerRequest {
         if (callback_ != null) {
             callback_.onLinkCreate(url, null);
         }
-        updateShareEventToFabric(url);
     }
 
     @Override
@@ -258,14 +256,6 @@ class ServerRequestCreateUrl extends ServerRequest {
 
     boolean isReqStartedFromBranchShareSheet() {
         return isReqStartedFromBranchShareSheet_;
-    }
-
-
-    private void updateShareEventToFabric(String url) {
-        JSONObject linkDataJsonObj = linkPost_.getLinkDataJsonObject();
-        if (isReqStartedFromBranchShareSheet() && linkDataJsonObj != null) {
-            new ExtendedAnswerProvider().provideData(ExtendedAnswerProvider.KIT_EVENT_SHARE, linkDataJsonObj, prefHelper_.getIdentityID());
-        }
     }
 
     @Override

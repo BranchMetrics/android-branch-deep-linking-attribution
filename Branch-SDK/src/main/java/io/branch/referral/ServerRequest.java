@@ -18,6 +18,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Abstract class defining the structure of a Branch Server request.
  */
 public abstract class ServerRequest {
+
+    private static final String[] initializationAndEventRoutes = new String[]{
+            Defines.RequestPath.RegisterInstall.getPath(),
+            Defines.RequestPath.RegisterOpen.getPath(),
+            Defines.RequestPath.CompletedAction.getPath(),
+            Defines.RequestPath.ContentEvent.getPath(),
+            Defines.RequestPath.TrackStandardEvent.getPath(),
+            Defines.RequestPath.TrackCustomEvent.getPath()};
     
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
@@ -174,31 +182,18 @@ public abstract class ServerRequest {
      */
     protected void setPost(JSONObject post) throws JSONException {
         params_ = post;
-        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
+        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
+            DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
+        } else {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
-            } catch (JSONException ignore) {
-            }
-        } else if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_CPID) {
-            try {
-                JSONObject userDataObj = new JSONObject();
-                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
-            } catch (JSONException ignore) {
-            }
-        } else if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_LATD) {
-            try {
-                JSONObject userDataObj = new JSONObject();
-                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(context_, prefHelper_, userDataObj);
-                DeviceInfo.getInstance().updateRequestWithAttributionWindow(prefHelper_, userDataObj);
-            } catch (Exception ignore) {
-            }
-        }
-        else {
-            DeviceInfo.getInstance().updateRequestWithV1Params(params_);
+                DeviceInfo.getInstance().updateRequestWithV2Params(this, context_, prefHelper_, userDataObj);
+
+                if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1_LATD) {
+                    DeviceInfo.getInstance().updateRequestWithAttributionWindow(prefHelper_, userDataObj);
+                }
+            } catch (JSONException ignored) {}
         }
     }
     
@@ -645,6 +640,12 @@ public abstract class ServerRequest {
         // Default return false. Return true for request need to be executed when tracking is disabled
         return false;
     }
-    
-    
+
+    // needed for TUNE/Branch field parity for certain request (i.e. initialization and events)
+    boolean isInitializationOrEventRequest() {
+        for (String item : initializationAndEventRoutes) {
+            if (item.equals(requestPath_)) return true;
+        }
+        return false;
+    }
 }

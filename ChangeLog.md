@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v4.1.2
+  * _*Master Release*_ - October 30, 2019
+  * Enabled setting custom CDN URL
+  * Fixed button clickability on devices without touchscreen
+  * Added extra fields to open/install and event endpoints
+
 - v4.1.1
   * _*Master Release*_ - October 7, 2019
   * Support for Fire OS

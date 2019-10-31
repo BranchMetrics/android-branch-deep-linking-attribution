@@ -58,7 +58,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV1Params(JSONObject requestObj) {
+    void updateRequestWithV1Params(ServerRequest serverRequest, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
@@ -89,7 +89,14 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
 
-            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+            requestObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
+
+            maybeAddTuneFields(serverRequest, requestObj);
+
+            if (BranchUtil.getPluginType() != null) {
+                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            }
 
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {
@@ -122,7 +129,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV2Params(Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
@@ -151,7 +158,14 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
 
-            requestObj.put(Defines.Jsonkey.OSVersion.getKey(), SystemObserver.getOSVersion());
+            requestObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
+
+            maybeAddTuneFields(serverRequest, requestObj);
+
+            if (BranchUtil.getPluginType() != null) {
+                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            }
 
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {
@@ -190,6 +204,18 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
             requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
         } catch (JSONException ignore) {
+        }
+    }
+
+    private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {
+        if (serverRequest.isInitializationOrEventRequest()) {
+            // fields for parity with Tune traffic
+            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+            requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
         }
     }
 
