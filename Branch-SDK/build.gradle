@@ -6,7 +6,6 @@ def jarFileName
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
     implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'com.crashlytics.sdk.android:answers-shim:0.0.6'
 
     // --- optional dependencies -----
     //Please note that the Branch SDK does not require any of the below optional dependencies to operate. This dependency is listed here so there will not be build errors,
@@ -38,32 +37,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            resources.srcDirs = ['resources']
-            aidl.srcDirs = ['src']
-            renderscript.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
-
-            androidTest {
-                java.srcDirs = ['androidTest']
-                assets.srcDirs = ['androidTest']
-                manifest.srcFile 'androidTest/AndroidManifest.xml'
-            }
-        }
-
-        // Move the build types to build-types/<type>
-        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        // This moves them out of them default location under src/<type>/... which would
-        // conflict with src/ being used by the main source set.
-        // Adding new build types or product flavors should be accompanied
-        // by a similar customization.
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
-    }
     lintOptions {
         abortOnError false
     }
