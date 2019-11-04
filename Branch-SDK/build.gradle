@@ -21,7 +21,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     // Unit tests with Google Ads
-    androidTestImplementation 'com.google.android.gms:play-services-ads:18.2.0'
+    androidTestImplementation 'com.google.android.gms:play-services-ads:16.0.0'
 }
 
 android {
