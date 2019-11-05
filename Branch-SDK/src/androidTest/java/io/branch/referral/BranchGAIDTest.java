@@ -38,6 +38,7 @@ public class BranchGAIDTest extends BranchEventTest {
     public void testInitSession_hasGAIDv1() throws Throwable {
         Branch.getInstance(getTestContext());
         initQueue(getTestContext());
+        Branch.getInstance().initSession();
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(1, queue.getSize());
@@ -116,7 +117,7 @@ public class BranchGAIDTest extends BranchEventTest {
         prefHelper.setCreditCount(100);
 
         Branch.getInstance().redeemRewards(100);
-        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 2);
+        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
@@ -133,7 +134,7 @@ public class BranchGAIDTest extends BranchEventTest {
         initQueue(getTestContext());
 
         Branch.getInstance().getCreditHistory(null);
-        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 2);
+        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
@@ -150,7 +151,7 @@ public class BranchGAIDTest extends BranchEventTest {
         initQueue(getTestContext());
 
         Branch.getInstance().setIdentity("Alex");
-        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 2);
+        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
