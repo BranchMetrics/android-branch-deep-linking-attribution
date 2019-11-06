@@ -102,8 +102,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     @Override
-
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
+        Branch.getInstance().unlockSDKInitWaitLock();
         // Check for any Third party SDK for data handling
         prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);

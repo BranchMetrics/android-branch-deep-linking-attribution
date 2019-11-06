@@ -21,6 +21,8 @@ public class BranchModuleInjectionTest extends BranchEventTest {
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(0, queue.getSize());
+        branch.initSession();
         Assert.assertEquals(1, queue.getSize());
 
         ServerRequest initRequest = queue.peekAt(0);
@@ -39,6 +41,8 @@ public class BranchModuleInjectionTest extends BranchEventTest {
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(0, queue.getSize());
+        branch.initSession();
         Assert.assertEquals(1, queue.getSize());
 
         ServerRequest initRequest = queue.peekAt(0);

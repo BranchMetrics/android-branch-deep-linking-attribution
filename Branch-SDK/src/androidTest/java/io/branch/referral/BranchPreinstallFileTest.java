@@ -17,6 +17,8 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(0, queue.getSize());
+        branch.initSession();
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
@@ -49,6 +51,8 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(0, queue.getSize());
+        branch.initSession();
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
@@ -84,6 +88,8 @@ public class BranchPreinstallFileTest extends BranchEventTest {
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(0, queue.getSize());
+        branch.initSession();
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils

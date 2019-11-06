@@ -90,7 +90,7 @@ class ServerRequestQueue {
                     editor.putString(PREF_KEY, jsonArr.toString()).commit();
                 } catch (Exception ex) {
                     String msg = ex.getMessage();
-                    PrefHelper.Debug("Failed to persit queue" + (msg == null ? "" : msg));
+                    PrefHelper.Debug("Failed to persist queue" + (msg == null ? "" : msg));
                 }
             }
         }).start();
@@ -305,63 +305,15 @@ class ServerRequestQueue {
      * install/register request. <i>True</i> if the queue contains a close request,
      * <i>False</i> if not.
      */
-    boolean containsInstallOrOpen() {
+    boolean containsInitRequest() {
         synchronized (reqQueueLockObject) {
             for (ServerRequest req : queue) {
-                if (req != null &&
-                        ((req instanceof ServerRequestRegisterInstall) || req instanceof ServerRequestRegisterOpen)) {
+                if (req instanceof ServerRequestInitSession) {
                     return true;
                 }
             }
         }
         return false;
-    }
-    
-    /**
-     * <p>Moves any {@link ServerRequest} of type {@link ServerRequestRegisterInstall}
-     * or {@link ServerRequestRegisterOpen} to the front of the queue.</p>
-     *
-     * @param request      A {@link ServerRequest} of type open or install which need to be moved to the front of the queue.
-     * @param networkCount An {@link Integer} value that indicates whether or not to insert the
-     *                     request at the front of the queue or not.
-     * @param callback     A {Branch.BranchReferralInitListener} instance for open or install callback.
-     */
-    @SuppressWarnings("unused")
-    void moveInstallOrOpenToFront(ServerRequest request, int networkCount, Branch.BranchReferralInitListener callback) {
-        
-        synchronized (reqQueueLockObject) {
-            Iterator<ServerRequest> iter = queue.iterator();
-            while (iter.hasNext()) {
-                ServerRequest req = iter.next();
-                if (req != null && (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen)) {
-                    //Remove all install or open in queue. Since this method is called each time on Install/open there will be only one
-                    //instance of open/Install in queue. So we can break as we see the first open/install
-                    iter.remove();
-                    break;
-                }
-            }
-        }
-        
-        insert(request, networkCount == 0 ? 0 : 1);
-    }
-    
-    /**
-     * Sets the given callback to the existing open or install request in the queue
-     *
-     * @param callback A{@link Branch.BranchReferralInitListener} callback instance.
-     */
-    void setInstallOrOpenCallback(Branch.BranchReferralInitListener callback) {
-        synchronized (reqQueueLockObject) {
-            for (ServerRequest req : queue) {
-                if (req != null) {
-                    if (req instanceof ServerRequestRegisterInstall) {
-                        ((ServerRequestRegisterInstall) req).setInitFinishedCallback(callback);
-                    } else if (req instanceof ServerRequestRegisterOpen) {
-                        ((ServerRequestRegisterOpen) req).setInitFinishedCallback(callback);
-                    }
-                }
-            }
-        }
     }
     
     /**

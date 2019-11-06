@@ -82,21 +82,19 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testLogEvent() throws Throwable {
+    public void testLogEvent() {
         Branch.getInstance(getTestContext(), TEST_KEY);
 
-        BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
-        BranchEvent branchEvent = new BranchEvent(eventType);
-
-        branchEvent.logEvent(getTestContext());
-
-        // There is some async stuff going on.  Let's wait until that is complete.
-        Thread.sleep(2000);
-
-        // Verify that the server queue has two events
-        // 1. Install Event
-        // 2. This Event
+        new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).logEvent(getTestContext());
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(1, queue.getSize());
+
+        ServerRequest eventRequest = queue.peekAt(0);
+        Assert.assertEquals(Defines.RequestPath.TrackStandardEvent.getPath(), eventRequest.getRequestPath());
+        Assert.assertTrue(eventRequest.isWaitingOnProcessToFinish());
+
+        Branch.getInstance().initSession();
+
         Assert.assertEquals(2, queue.getSize());
     }
 
@@ -105,13 +103,10 @@ public class BranchEventTest extends BranchTest {
         Branch.getInstance(getTestContext(), TEST_KEY);
         initQueue(getTestContext());
 
-        BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
-        BranchEvent branchEvent = new BranchEvent(eventType);
-
-        ServerRequest serverRequest = logEvent(getTestContext(), branchEvent);
+        ServerRequest serverRequest = logEvent(getTestContext(), new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE));
         JSONObject jsonObject = serverRequest.getGetParams();
 
-        Assert.assertEquals(BRANCH_STANDARD_EVENT.PURCHASE.getName(), jsonObject.optString("name"));
+        Assert.assertEquals(BRANCH_STANDARD_EVENT.PURCHASE.getName(), jsonObject.optString(Defines.Jsonkey.Name.getKey()));
     }
 
     @Test
@@ -154,6 +149,7 @@ public class BranchEventTest extends BranchTest {
         // Create a test event and add it to the queue
         BranchEvent testEvent = new BranchEvent(EVENT_NAME);
         Assert.assertNotNull(addEventToQueueAndWait(context, testEvent));
+        Assert.assertEquals(1, queue.getSize());
 
         // Remove the event from the queue.  It should be the last one.
         if (queue.getSize() > 0) {
@@ -161,14 +157,7 @@ public class BranchEventTest extends BranchTest {
             queue.removeAt(index);
         }
 
-        // We expect that the install event is the only event still on the queue
-        if (queue.getSize() > 1) {
-            for (int i = 0; i < queue.getSize(); i++) {
-                ServerRequest request = queue.peekAt(i);
-                Log.d(TAG, "Request " + i + ": " + request.getGetParams().toString());
-            }
-        }
-        Assert.assertEquals(1, queue.getSize());
+        Assert.assertEquals(0, queue.getSize());
     }
 
     ServerRequest addEventToQueueAndWait(Context context, BranchEvent event) throws Throwable {
