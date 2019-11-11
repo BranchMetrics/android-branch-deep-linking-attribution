@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import static io.branch.referral.BranchError.ERR_BRANCH_ALREADY_INITIALIZED;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
@@ -1363,6 +1364,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return true;
     }
 
+    public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {
+        return reInitSession(activity, new BranchUniversalReferralInitWrapper(callback));
+    }
     /**
      * Re-Initialize a session.
      * This solves a very specific use case, whereas the app is already in the foreground and a new
@@ -1426,11 +1430,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return;
         }
 
-        if (getInitState() == SESSION_STATE.UNINITIALISED) {
-            initializeSession(callback, true);
-        } else {
-            PrefHelper.Debug("Warning: consecutive session initialization detected! Use reInitSession() instead.");
-        }
+        initializeSession(callback, true);
     }
     
     /**
@@ -2558,7 +2558,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization) {
             registerAppInit(initRequest, false);
         } else {
-            PrefHelper.Debug("Warning: consecutive session initialization detected! Use reInitSession() instead.");
+            PrefHelper.Debug("Warning: consecutive session initialization blocked!");
+            if (callback != null) {
+                callback.onInitFinished(null,
+                        new BranchError("Session initialization blocked.", ERR_BRANCH_ALREADY_INITIALIZED));
+            }
         }
     }
     
@@ -2614,7 +2618,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     void onIntentReady(Activity activity, boolean grabIntentParams) {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        //if (activity.getIntent() != null) {
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
