@@ -470,6 +470,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         this.setIntent(intent);
         Branch.getInstance().reInitSession(this, new BranchReferralInitListener() {
             @Override
