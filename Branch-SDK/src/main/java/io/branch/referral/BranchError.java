@@ -42,7 +42,7 @@ public class BranchError {
     public static final int ERR_BRANCH_INVALID_REQUEST = -116;
     /* Tracking is disabled. Requested operations will not work when tracking is disabled */
     public static final int ERR_BRANCH_TRACKING_DISABLED = -117;
-    /* Tracking is disabled. Requested operations will not work when tracking is disabled */
+    /* Branch session is already initialized */
     public static final int ERR_BRANCH_ALREADY_INITIALIZED = -118;
     
     /**

@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_ALREADY_INITIALIZED;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
@@ -1384,7 +1383,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (activity == null) return false;
         Intent intent = activity.getIntent();
 
-        if (intent != null && Branch.getInstance().checkIntentForSessionRestart(intent)) {
+        if (intent != null) {
             currentActivityReference_ = new WeakReference<>(activity);
             // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
             Uri uri = intent.getData();
@@ -2555,14 +2554,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
-        if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization) {
+        // Check if new session is being forced. There are two use cases for setting the ForceNewBranchSession to true:
+        // 1. Launch an activity via a push notification while app is in foreground but does not have
+        // the particular activity in the backstack, in such cases, users can't utilize reInitSession() because
+        // it's called from onNewIntent() which is never invoked
+        // todo: this is tricky for users, get rid of ForceNewBranchSession if possible. (if flag is not set, the content from Branch link is lost)
+        // 2. Some users navigate their apps via Branch links so they would have to set ForceNewBranchSession to true
+        // which will blow up the session count in analytics but does the job.
+        Intent intent = currentActivityReference_ != null && currentActivityReference_.get() != null ?
+                currentActivityReference_.get().getIntent() : null;
+        boolean forceBranchSession = checkIntentForSessionRestart(intent);
+
+        boolean reInitSession = !isFirstInitialization;// use case: launch current (or former but currently partially visible) activity via a push notification
+
+        if (getInitState() == SESSION_STATE.UNINITIALISED || reInitSession | forceBranchSession) {
             registerAppInit(initRequest, false);
-        } else {
-            PrefHelper.Debug("Warning: consecutive session initialization blocked!");
-            if (callback != null) {
-                callback.onInitFinished(null,
-                        new BranchError("Session initialization blocked.", ERR_BRANCH_ALREADY_INITIALIZED));
-            }
+        } else if (callback != null) {
+            // Else, let the user know session initialization failed because it's already initialized.
+            callback.onInitFinished(null,
+                    new BranchError("Session initialization failed.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
         }
     }
     
@@ -2684,7 +2694,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 PrefHelper.Debug("Branch is not initialized, cannot close session");
                 return;
             }
-            req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
+            if (requestNeedsSession(req)) {
+                req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
+            }
         }
 
         if (!(req instanceof ServerRequestPing)) {
@@ -2732,18 +2744,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean checkIntentForSessionRestart(Intent intent) {
         boolean isRestartSessionRequested = false;
         if (intent != null) {
-            try {
-                if (intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false)) {
-                    // Force new session parameters
-                    isRestartSessionRequested = true;
-                    intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
-                } else if (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
-                    !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false)) {
-                    // Also check if there is a new, unconsumed push notification intent which would indicate it's coming
-                    // from foreground
-                    isRestartSessionRequested = true;
-                }
-            } catch (Throwable ignore) { }
+            isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
+                    (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
+                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false));
         }
         return isRestartSessionRequested;
     }

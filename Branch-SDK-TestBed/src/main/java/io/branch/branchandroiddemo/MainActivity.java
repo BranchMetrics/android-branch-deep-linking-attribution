@@ -470,12 +470,8 @@ public class MainActivity extends Activity {
 
     @Override
     public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         this.setIntent(intent);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
         Branch.getInstance().reInitSession(this, new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
