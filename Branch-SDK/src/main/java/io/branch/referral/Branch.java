@@ -2554,6 +2554,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
+        // Re 'forceBranchSession':
         // Check if new session is being forced. There are two use cases for setting the ForceNewBranchSession to true:
         // 1. Launch an activity via a push notification while app is in foreground but does not have
         // the particular activity in the backstack, in such cases, users can't utilize reInitSession() because
@@ -2565,9 +2566,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 currentActivityReference_.get().getIntent() : null;
         boolean forceBranchSession = checkIntentForSessionRestart(intent);
 
-        boolean reInitSession = !isFirstInitialization;// use case: launch current (or former but currently partially visible) activity via a push notification
+        // !isFirstInitialization condition equals true only when user calls reInitSession()
 
-        if (getInitState() == SESSION_STATE.UNINITIALISED || reInitSession | forceBranchSession) {
+        if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization || forceBranchSession) {
             registerAppInit(initRequest, false);
         } else if (callback != null) {
             // Else, let the user know session initialization failed because it's already initialized.
