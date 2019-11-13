@@ -2244,27 +2244,29 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     //-----------------Generate Short URL      -------------------------------------------//
     
     /**
-     * <p> Generates a shorl url for the given {@link ServerRequestCreateUrl} object </p>
+     * <p> Generates a short url for the given {@link ServerRequestCreateUrl} object </p>
      *
      * @param req An instance  of {@link ServerRequestCreateUrl} with parameters create the short link.
      * @return A url created with the given request if the request is synchronous else null.
      * Note : This method can be used only internally. Use {@link BranchUrlBuilder} for creating short urls.
      */
     String generateShortLinkInternal(ServerRequestCreateUrl req) {
+        String url = null;
         if (!req.constructError_ && !req.handleErrors(context_)) {
             if (linkCache_.containsKey(req.getLinkPost())) {
-                String url = linkCache_.get(req.getLinkPost());
+                url = linkCache_.get(req.getLinkPost());
                 req.onUrlAvailable(url);
-                return url;
+            } else if (isTrackingDisabled()) {
+                url = req.getLongUrl();
             } else {
                 if (req.isAsync()) {
                     generateShortLinkAsync(req);
                 } else {
-                    return generateShortLinkSync(req);
+                    url = generateShortLinkSync(req);
                 }
             }
         }
-        return null;
+        return url;
     }
 
 
@@ -2305,9 +2307,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
-        if (trackingController.isTrackingDisabled()) {
-            return req.getLongUrl();
-        }
         if (initState_ == SESSION_STATE.INITIALISED) {
             ServerResponse response = null;
             try {
