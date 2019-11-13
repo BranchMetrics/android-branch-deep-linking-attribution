@@ -1827,10 +1827,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    /**
+     * Gets all available cross platform ids.
+     *
+     * @param callback An instance of {@link io.branch.referral.util.BranchLastAttributedTouchData} to callback with cross platform ids
+     *
+     */
     public void getCrossPlatformIds(BranchCrossPlatformIdListener callback) {
         new BranchCrossPlatformId(callback, context_);
     }
 
+    /**
+     * Gets the available last attributed touch data.
+     *
+     * @param callback An instance of {@link io.branch.referral.util.BranchLastAttributedTouchData} to callback with last attributed touch data
+     *
+     */
+    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback) {
+        new BranchLastAttributedTouchData(callback, context_);
+    }
+
+    /**
+     * Gets the available last attributed touch data with a custom set attribution window.
+     *
+     * @param callback An instance of {@link io.branch.referral.util.BranchLastAttributedTouchData} to callback with last attributed touch data
+     * @param attributionWindow A {@link int}
+     *
+     */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
         prefHelper_.setLATDAttributonWindow(attributionWindow);
         new BranchLastAttributedTouchData(callback, context_);
