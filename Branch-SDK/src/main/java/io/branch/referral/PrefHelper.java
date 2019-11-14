@@ -963,7 +963,7 @@ public class PrefHelper {
      * @return attributionWindow An {@link Integer} value containing the current attribution window or null
      */
     public Integer getLATDAttributionWindow(){
-        return (hasPrefValue(KEY_LATD_ATTRIBUTION_WINDOW) ? null : getInteger(KEY_LATD_ATTRIBUTION_WINDOW));
+        return (hasPrefValue(KEY_LATD_ATTRIBUTION_WINDOW) ? getInteger(KEY_LATD_ATTRIBUTION_WINDOW) : null);
     }
     
     // ALL GENERIC CALLS
