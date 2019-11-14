@@ -3,7 +3,6 @@ package io.branch.referral;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import io.branch.referral.Defines.RequestPath;
 import io.branch.referral.util.BranchCrossPlatformId;
-import io.branch.referral.util.BranchLastAttributedTouchData;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,8 +31,9 @@ public class BranchCPIDTest extends BranchEventTest {
     @Test
     public void testGetLATD() throws Throwable{
         Branch branch = Branch.getInstance(getTestContext());
-
-        new BranchLastAttributedTouchData(null, getTestContext());
+        if (branch != null) {
+            branch.getLastAttributedTouchData(null);
+        }
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(1, queue.getSize());
