@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import android.app.Activity;
 import android.content.Context;
 
 /**
@@ -62,8 +61,7 @@ class TrackingController {
     
     private void onTrackingEnabled() {
         if (Branch.getInstance() != null) {
-            Activity activity = null;
-            Branch.getInstance().registerAppReInit();
+            Branch.getInstance().registerAppInitWithoutIntent();
         }
     }
 }

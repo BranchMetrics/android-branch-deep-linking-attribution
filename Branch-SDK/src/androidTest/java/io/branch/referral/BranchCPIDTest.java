@@ -22,11 +22,9 @@ public class BranchCPIDTest extends BranchEventTest {
         new BranchCrossPlatformId(null, getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
-        Assert.assertEquals(2, queue.getSize());
+        Assert.assertEquals(1, queue.getSize());
 
-        ServerRequest cpidRequest = queue.peekAt(1);
-        doFinalUpdate(cpidRequest);
-        doFinalUpdateOnMainThread(cpidRequest);
+        ServerRequest cpidRequest = queue.peekAt(0);
 
         Assert.assertEquals(cpidRequest.getRequestPath(), RequestPath.GetCPID.getPath());
     }
@@ -38,11 +36,9 @@ public class BranchCPIDTest extends BranchEventTest {
         new BranchLastAttributedTouchData(null, getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
-        Assert.assertEquals(2, queue.getSize());
+        Assert.assertEquals(1, queue.getSize());
 
-        ServerRequest cpidRequest = queue.peekAt(1);
-        doFinalUpdate(cpidRequest);
-        doFinalUpdateOnMainThread(cpidRequest);
+        ServerRequest cpidRequest = queue.peekAt(0);
 
         Assert.assertEquals(cpidRequest.getRequestPath(), RequestPath.GetLATD.getPath());
     }

@@ -101,7 +101,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             } else {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
             }
-            if (callback_ != null && !branch.isInitReportedThroughCallBack) {
+            if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             

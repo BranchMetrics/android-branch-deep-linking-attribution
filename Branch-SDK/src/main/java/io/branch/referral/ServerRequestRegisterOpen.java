@@ -49,7 +49,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             callback_.onInitFinished(Branch.getInstance().getLatestReferringParams(), null);
             Branch.getInstance().addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
             Branch.getInstance().setInstantDeepLinkPossible(false);
-            Branch.getInstance().isInitReportedThroughCallBack = true;
         }
     }
     
@@ -88,7 +87,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
             }
             
-            if (callback_ != null && !branch.isInitReportedThroughCallBack) {
+            if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             

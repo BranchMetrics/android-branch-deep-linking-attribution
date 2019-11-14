@@ -42,6 +42,8 @@ public class BranchError {
     public static final int ERR_BRANCH_INVALID_REQUEST = -116;
     /* Tracking is disabled. Requested operations will not work when tracking is disabled */
     public static final int ERR_BRANCH_TRACKING_DISABLED = -117;
+    /* Branch session is already initialized */
+    public static final int ERR_BRANCH_ALREADY_INITIALIZED = -118;
     
     /**
      * <p>Returns the message explaining the error.</p>
@@ -128,6 +130,10 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_TRACKING_DISABLED) {
             errorCode_ = ERR_BRANCH_TRACKING_DISABLED;
             errMsg = " Tracking is disabled. Requested operation cannot be completed when tracking is disabled";
+        } else if (statusCode == ERR_BRANCH_ALREADY_INITIALIZED) {
+            errorCode_ = ERR_BRANCH_ALREADY_INITIALIZED;
+            errMsg = " Session initialization already happened. To force a new session, " +
+                    "set intent extra, branch_force_new_session=true, and call reInitSession()";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
             errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
