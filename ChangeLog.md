@@ -1,4 +1,11 @@
 # Branch Android SDK change log
+- v4.2.0
+  * _*Master Release*_ - November 13, 2019
+  * Remove initialization race conditions.
+  * Do not auto-initialize sessions, make calling initSession a mandatory step required of Branch SDK users (officially this was already implied).
+  * Overload reInitSession with different callbacks and start advertising it to users as the official way to handle session reinitialization in cases where activity is in foreground and is being reopened.
+  * Make sure carrier field does not contain an empty string, omit the field instead.
+  
 - v4.1.2
   * _*Master Release*_ - October 30, 2019
   * Enabled setting custom CDN URL
