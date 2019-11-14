@@ -2308,6 +2308,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
+        if (trackingController.isTrackingDisabled()) {
+            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "Tracking is disabled.");
+            return req.isDefaultToLongUrl() ? req.getLongUrl() : null;
+        }
         if (initState_ == SESSION_STATE.INITIALISED) {
             ServerResponse response = null;
             try {
