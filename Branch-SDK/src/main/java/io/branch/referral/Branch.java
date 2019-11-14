@@ -2257,7 +2257,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 url = linkCache_.get(req.getLinkPost());
                 req.onUrlAvailable(url);
             } else if (isTrackingDisabled()) {
-                url = req.getLongUrl();
+                url = req.isDefaultToLongUrl() ? req.getLongUrl() : null;
+                req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "Tracking is disabled.");
             } else {
                 if (req.isAsync()) {
                     generateShortLinkAsync(req);

@@ -15,6 +15,7 @@ import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.core.app.NotificationCompat;
@@ -155,10 +156,13 @@ public class MainActivity extends Activity {
                 branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        if (error != null) {
-                            txtShortUrl.setText(error.getMessage());
-                        } else {
+                        if (url != null) {
                             txtShortUrl.setText(url);
+                            if (error != null) {
+                                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        } else if (error != null) {
+                            txtShortUrl.setText(error.getMessage());
                         }
                     }
                 });
