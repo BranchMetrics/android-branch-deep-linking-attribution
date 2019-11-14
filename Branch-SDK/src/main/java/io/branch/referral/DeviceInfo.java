@@ -227,7 +227,7 @@ class DeviceInfo {
     void updateRequestWithAttributionWindow(PrefHelper prefHelper, JSONObject requestObj) {
         try {
             if (prefHelper != null) {
-                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(), prefHelper.getLATDAttributonWindow());
+                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(), prefHelper.getLATDAttributionWindow());
             }
             } catch (JSONException ignore) {
 

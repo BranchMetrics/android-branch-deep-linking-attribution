@@ -943,21 +943,27 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the latd attribution window</p>
+     * <p>Sets the latd attribution window, if attributionWindow is null, the saved latd attribution
+     * window value will be deleted.</p>
      *
-     * @param attributonWindow A {@link Integer} value containing the current attribution window passed
+     * @param attributionWindow An {@link Integer} value containing the current attribution window passed
      */
-    public void setLATDAttributonWindow(int attributonWindow){
-        setInteger(KEY_LATD_ATTRIBUTION_WINDOW, attributonWindow);
+    public void setLATDAttributionWindow(Integer attributionWindow){
+        if (attributionWindow == null) {
+            removePrefValue(KEY_LATD_ATTRIBUTION_WINDOW);
+        } else {
+            setInteger(KEY_LATD_ATTRIBUTION_WINDOW, attributionWindow);
+        }
+
     }
 
     /**
      * <p>Gets the latd attribution window</p>
      *
-     * @return attributonWindow A {@link Integer} value containing the current attribution window set
+     * @return attributionWindow An {@link Integer} value containing the current attribution window or null
      */
-    public int getLATDAttributonWindow(){
-        return getInteger(KEY_LATD_ATTRIBUTION_WINDOW);
+    public Integer getLATDAttributionWindow(){
+        return (hasPrefValue(KEY_LATD_ATTRIBUTION_WINDOW) ? null : getInteger(KEY_LATD_ATTRIBUTION_WINDOW));
     }
     
     // ALL GENERIC CALLS
@@ -976,6 +982,25 @@ public class PrefHelper {
         String[] stringArr = list.split(",");
         Collections.addAll(strings, stringArr);
         return strings;
+    }
+
+    /**
+     * <p>A basic method that returns a {@link Boolean} indicating whether some preference exists.</p>
+     *
+     * @param key A {@link String} value containing the key to reference.
+     * @return A {@link Boolean} indicating whether some preference exists.
+     */
+    public boolean hasPrefValue(String key) {
+        return prefHelper_.appSharedPrefs_.contains(key);
+    }
+
+    /**
+     * <p>A basic method to remove some preference value.</p>
+     *
+     * @param key A {@link String} value containing the key to the value that's to be deleted.
+     */
+    public void removePrefValue(String key) {
+        prefHelper_.prefsEditor_.remove(key).apply();
     }
     
     /**

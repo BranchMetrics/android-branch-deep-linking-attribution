@@ -11,7 +11,6 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -1844,6 +1843,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback) {
+        prefHelper_.setLATDAttributionWindow(null);
         new BranchLastAttributedTouchData(callback, context_);
     }
 
@@ -1855,7 +1855,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
-        prefHelper_.setLATDAttributonWindow(attributionWindow);
+        prefHelper_.setLATDAttributionWindow(attributionWindow);
         new BranchLastAttributedTouchData(callback, context_);
     }
 
