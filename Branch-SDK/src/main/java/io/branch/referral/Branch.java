@@ -1837,7 +1837,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Gets the available last attributed touch data.
+     * Gets the available last attributed touch data. Defaults to a 30 day attribution window.
      *
      * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
      *                 to callback with last attributed touch data
