@@ -10,7 +10,10 @@ be updated. Unless noted, initialization is expected to work in all scenarios.
 * Application can have multiple activities (all non-routing activities 
 are called `RoutedActivity`)
 * Latest Branch SDK version is being used
-* `initSession` is only called in the `RoutingActivity.onStart`.
+
+
+## Scenario #1:
+* `initSession` is only called in `RoutingActivity.onStart`.
 
 
 ##### 1. Application in background
@@ -36,9 +39,10 @@ will also clear cache and stored data). Open app.
 ##### Hot start:
 * Repro: Close app via the home button. Open app.
 * Initialization entry point is either `RoutingActivity.onStart` or 
-`BranchActivityLifecycleObserver.onResume` depending which activity the 
-user was last on. However, if app is opened via a push notification, the 
-Initialization entry point is guaranteed to be `RoutingActivity.onStart`.
+`BranchActivityLifecycleObserver.onResume` depending on whether `RoutingActivity` 
+or `RoutedActivity` was in foreground last. However, if app is opened via 
+a push notification, the Initialization entry point is guaranteed to be 
+`RoutingActivity.onStart`.
 
 
 ##### 2. Application in foreground
@@ -67,10 +71,7 @@ expect an initialization failure:
     semi-transparent or is not using the full screen)
 
 
-## Assumptions set #2:
-* User followed [Android documentation](https://docs.branch.io/apps/android/)
-* Application can have multiple activities
-* Latest Branch SDK version is being used
+## Scenario #2:
 * `initSession` is called in both `RoutingActivity` and `RoutedActivity`
 
 ##### 1. Application in foreground
