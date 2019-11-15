@@ -5,7 +5,7 @@ find bugs arising from unforeseen initialization scenarios, this list should
 be updated. Unless noted, initialization is expected to work in all scenarios.
 
 
-## Assumptions set #1:
+## Assumptions:
 * User followed [Android documentation](https://docs.branch.io/apps/android/)
 * Application can have multiple activities (all non-routing activities 
 are called `RoutedActivity`)
