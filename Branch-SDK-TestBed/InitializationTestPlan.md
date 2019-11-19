@@ -23,7 +23,7 @@ Test by opening the app via:
 * recent apps tray (not available in cold start)
 * push notification
 ```
-### Cold start:
+#### Cold start:
 * Repro: Close app and remove it from the recent apps list
 (not 100% guarantee that this will work because manufacturers determine
 if application is killed when removed from recents list). Alternatively,
@@ -32,11 +32,11 @@ will also clear cache and stored data). Open app.
 * Initialization entry point = `SplashActivity.onCreate`
 
 
-### Warm start:
+#### Warm start:
 * Repro: Close app via the back button. Open app.
 * Initialization entry point = `SplashActivity.onCreate`
 
-### Hot start:
+#### Hot start:
 * Repro: Close app via the home button. Open app.
 * Initialization entry point is either `SplashActivity.onStart` or 
 `BranchActivityLifecycleObserver.onResume` depending on whether `SplashActivity` 
@@ -50,7 +50,7 @@ a push notification, the Initialization entry point is guaranteed to be
 Test by opening the app via:
 * push notification
 ```
-### Burning hot start:
+#### Burning hot start:
 * Repro: have the app open
 * Initialization entry point = either `SplashActivity.onNewIntent` 
 or `SplashActivity.onStart` depending if user is currently on `SplashActivity`
@@ -84,7 +84,7 @@ but user is currently on another `NextActivity`)
 `NextActivity` has NOT been launched before)
 ```
 
-### Burning hot start:
+#### Burning hot start:
 * Repro: have the app open
 
 Again, there are expected failures when `reInitSession` is NOT used in `NextActivity`
