@@ -69,6 +69,12 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
                     branch.getInitState() != Branch.SESSION_STATE.INITIALISED;
             branch.onIntentReady(activity, grabIntentParams);
         }
+
+        if (branch.getInitState() == Branch.SESSION_STATE.UNINITIALISED) {
+            // this is the only place where we self-initialize in case user opens the app from 'recent apps tray'
+            // and the entry Activity is not the launcher Activity where user placed initSession themselves.
+            branch.initSession(activity);
+        }
     }
 
     @Override
