@@ -16,14 +16,14 @@ be updated. Unless noted, initialization is expected to work in all scenarios.
 * `initSession` is only called in `SplashActivity.onStart`.
 
 
-##### 1. Application in background
+### 1. Application in background
 ```
 Test by opening the app via:
 * launcher icon
 * recent apps tray (not available in cold start)
 * push notification
 ```
-##### Cold start:
+### Cold start:
 * Repro: Close app and remove it from the recent apps list
 (not 100% guarantee that this will work because manufacturers determine
 if application is killed when removed from recents list). Alternatively,
@@ -32,11 +32,11 @@ will also clear cache and stored data). Open app.
 * Initialization entry point = `SplashActivity.onCreate`
 
 
-##### Warm start:
+### Warm start:
 * Repro: Close app via the back button. Open app.
 * Initialization entry point = `SplashActivity.onCreate`
 
-##### Hot start:
+### Hot start:
 * Repro: Close app via the home button. Open app.
 * Initialization entry point is either `SplashActivity.onStart` or 
 `BranchActivityLifecycleObserver.onResume` depending on whether `SplashActivity` 
@@ -45,12 +45,12 @@ a push notification, the Initialization entry point is guaranteed to be
 `SplashActivity.onStart`.
 
 
-##### 2. Application in foreground
+### 2. Application in foreground
 ```
 Test by opening the app via:
 * push notification
 ```
-##### Burning hot start:
+### Burning hot start:
 * Repro: have the app open
 * Initialization entry point = either `SplashActivity.onNewIntent` 
 or `SplashActivity.onStart` depending if user is currently on `SplashActivity`
@@ -74,7 +74,7 @@ expect an initialization failure:
 ## Scenario #2:
 * `initSession` is called in both `SplashActivity` and `NextActivity`
 
-##### 1. Application in foreground
+### 1. Application in foreground
 ```
 Test by opening the app via push notification launching `NextActivity`:
 * when `NextActivity` is currently in foreground
@@ -84,7 +84,7 @@ but user is currently on another `NextActivity`)
 `NextActivity` has NOT been launched before)
 ```
 
-##### Burning hot start:
+### Burning hot start:
 * Repro: have the app open
 
 Again, there are expected failures when `reInitSession` is NOT used in `NextActivity`
