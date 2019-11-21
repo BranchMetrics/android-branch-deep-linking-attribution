@@ -109,39 +109,34 @@ class ShareLinkManager {
             }
         }
     }
-    
-    /**
-     * Create a custom chooser dialog with available share options.
-     *
-     * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
-     */
-    private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
+
+    private List<ResolveInfo> resolveAppList(List<SharingHelper.SHARE_WITH> preferredOptions) {
         final PackageManager packageManager = context_.getPackageManager();
         final List<ResolveInfo> preferredApps = new ArrayList<>();
         final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
         List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
         final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
-        ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
 
         /* Get all apps available for sharing and the available preferred apps. */
         for (ResolveInfo resolveInfo : matchingApps) {
+            if (resolveInfo == null || resolveInfo.activityInfo == null) continue;
+
             SharingHelper.SHARE_WITH foundMatching = null;
             String packageName = resolveInfo.activityInfo.packageName;
-            for (SharingHelper.SHARE_WITH PackageFilter : packagesFilterList) {
-                if (resolveInfo.activityInfo != null && packageName.toLowerCase().contains(PackageFilter.toString().toLowerCase())) {
-                    foundMatching = PackageFilter;
+            for (SharingHelper.SHARE_WITH packageFilter : preferredOptions) {
+                if (packageName.toLowerCase().contains(packageFilter.toString().toLowerCase())) {
+                    foundMatching = packageFilter;
                     break;
                 }
             }
             if (foundMatching != null) {
                 preferredApps.add(resolveInfo);
-                preferredOptions.remove(foundMatching);
             }
         }
         /* Create all app list with copy link item. */
         matchingApps.removeAll(preferredApps);
         matchingApps.addAll(0, preferredApps);
-        
+
         //if apps are explicitly being included, add only those, otherwise at the else statement add them all
         if (includeInShareSheet.size() > 0) {
             for (ResolveInfo r : matchingApps) {
@@ -152,35 +147,44 @@ class ShareLinkManager {
         } else {
             cleanedMatchingApps = matchingApps;
         }
-        
+
         //does our list contain explicitly excluded items? do not carry them into the next list
         for (ResolveInfo r : cleanedMatchingApps) {
             if (!excludeFromShareSheet.contains(r.activityInfo.packageName)) {
                 cleanedMatchingAppsFinal.add(r);
             }
         }
-        
+
         //make sure our "show more" option includes preferred apps
         for (ResolveInfo r : matchingApps) {
-            for (SharingHelper.SHARE_WITH shareWith : packagesFilterList)
+            for (SharingHelper.SHARE_WITH shareWith : preferredOptions)
                 if (shareWith.toString().equalsIgnoreCase(r.activityInfo.packageName)) {
                     cleanedMatchingAppsFinal.add(r);
                 }
         }
-        
+
         cleanedMatchingAppsFinal.add(new CopyLinkItem());
         matchingApps.add(new CopyLinkItem());
         preferredApps.add(new CopyLinkItem());
-        
+
         if (preferredApps.size() > 1) {
             /* Add more and copy link option to preferred app.*/
             if (matchingApps.size() > preferredApps.size()) {
                 preferredApps.add(new MoreShareItem());
             }
-            appList_ = preferredApps;
+            return preferredApps;
         } else {
-            appList_ = cleanedMatchingAppsFinal;
+            return cleanedMatchingAppsFinal;
         }
+    }
+    
+    /**
+     * Create a custom chooser dialog with available share options.
+     *
+     * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
+     */
+    private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
+        appList_ = resolveAppList(preferredOptions);
 
         /* Copy link option will be always there for sharing. */
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
