@@ -22,6 +22,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.util.Pair;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,13 +112,8 @@ class ShareLinkManager {
         }
     }
 
-    private List<ResolveInfo> resolveAppList(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final PackageManager packageManager = context_.getPackageManager();
-        final List<ResolveInfo> preferredApps = new ArrayList<>();
-        final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
-        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
-        final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
-
+    private List<ResolveInfo> filterPreferredApps(List<ResolveInfo> matchingApps, List<SharingHelper.SHARE_WITH> preferredOptions) {
+        final List<ResolveInfo> availablePreferredApps = new ArrayList<>();
         /* Get all apps available for sharing and the available preferred apps. */
         for (ResolveInfo resolveInfo : matchingApps) {
             if (resolveInfo == null || resolveInfo.activityInfo == null) continue;
@@ -130,12 +127,27 @@ class ShareLinkManager {
                 }
             }
             if (foundMatching != null) {
-                preferredApps.add(resolveInfo);
+                availablePreferredApps.add(resolveInfo);
             }
         }
-        /* Create all app list with copy link item. */
-        matchingApps.removeAll(preferredApps);
-        matchingApps.addAll(0, preferredApps);
+        // Move preferred options to front of matchingApps
+        // (does not change the size of matchingApps)
+        // matchingApps >= availablePreferredApps
+
+        matchingApps.removeAll(availablePreferredApps);
+        matchingApps.addAll(0, availablePreferredApps);
+
+        return availablePreferredApps;
+    }
+
+    private Pair<List<ResolveInfo>, List<ResolveInfo>> resolveAppList(List<SharingHelper.SHARE_WITH> preferredOptions) {
+        final List<ResolveInfo> matchingApps = context_.getPackageManager().queryIntentActivities(
+                shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
+
+        final List<ResolveInfo> filteredPreferredApps = filterPreferredApps(matchingApps, preferredOptions);
+
+        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
+        final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
 
         //if apps are explicitly being included, add only those, otherwise at the else statement add them all
         if (includeInShareSheet.size() > 0) {
@@ -156,25 +168,20 @@ class ShareLinkManager {
         }
 
         //make sure our "show more" option includes preferred apps
-        for (ResolveInfo r : matchingApps) {
-            for (SharingHelper.SHARE_WITH shareWith : preferredOptions)
-                if (shareWith.toString().equalsIgnoreCase(r.activityInfo.packageName)) {
-                    cleanedMatchingAppsFinal.add(r);
-                }
-        }
+        cleanedMatchingAppsFinal.addAll(filteredPreferredApps);
 
         cleanedMatchingAppsFinal.add(new CopyLinkItem());
         matchingApps.add(new CopyLinkItem());
-        preferredApps.add(new CopyLinkItem());
+        filteredPreferredApps.add(new CopyLinkItem());
 
-        if (preferredApps.size() > 1) {
-            /* Add more and copy link option to preferred app.*/
-            if (matchingApps.size() > preferredApps.size()) {
-                preferredApps.add(new MoreShareItem());
+        if (filteredPreferredApps.size() > 1) {
+            /* Add more option */
+            if (matchingApps.size() > filteredPreferredApps.size()) {
+                filteredPreferredApps.add(new MoreShareItem());
             }
-            return preferredApps;
+            return new Pair<>(filteredPreferredApps, cleanedMatchingAppsFinal);
         } else {
-            return cleanedMatchingAppsFinal;
+            return new Pair<>(cleanedMatchingAppsFinal, cleanedMatchingAppsFinal);
         }
     }
     
@@ -184,7 +191,8 @@ class ShareLinkManager {
      * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
      */
     private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        appList_ = resolveAppList(preferredOptions);
+        final Pair<List<ResolveInfo>, List<ResolveInfo>> defaultAndMoreApps = resolveAppList(preferredOptions);
+        appList_ = defaultAndMoreApps.first;
 
         /* Copy link option will be always there for sharing. */
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
@@ -223,16 +231,17 @@ class ShareLinkManager {
             @Override public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 if (view == null) return;
                 if (view.getTag() instanceof MoreShareItem) {
-                    appList_ = cleanedMatchingAppsFinal;
+                    appList_ = defaultAndMoreApps.second;
                     adapter.notifyDataSetChanged();
                 } else if (view.getTag() instanceof ResolveInfo) {
                     ResolveInfo resolveInfo = (ResolveInfo) view.getTag();
                     if (callback_ != null) {
                         String selectedChannelName = "";
-                        if (context_ != null && resolveInfo.loadLabel(context_.getPackageManager()) != null) {
-                            selectedChannelName = resolveInfo.loadLabel(context_.getPackageManager()).toString();
+                        final PackageManager packageManager = context_.getPackageManager();
+                        if (context_ != null && resolveInfo.loadLabel(packageManager) != null) {
+                            selectedChannelName = resolveInfo.loadLabel(packageManager).toString();
                         }
-                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(context_.getPackageManager()).toString());
+                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(packageManager).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
                     adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
