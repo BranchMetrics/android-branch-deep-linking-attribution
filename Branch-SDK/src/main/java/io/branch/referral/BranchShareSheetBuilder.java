@@ -22,7 +22,6 @@ import java.util.List;
 public class BranchShareSheetBuilder {
 
     private final Activity activity_;
-    private final Branch branch_;
 
     private String shareMsg_;
     private String shareSub_;
@@ -59,7 +58,6 @@ public class BranchShareSheetBuilder {
      */
     public BranchShareSheetBuilder(Activity activity, JSONObject parameters) {
         this.activity_ = activity;
-        this.branch_ = Branch.getInstance();
         shortLinkBuilder_ = new BranchShortLinkBuilder(activity);
         try {
             Iterator<String> keys = parameters.keys();
@@ -81,6 +79,12 @@ public class BranchShareSheetBuilder {
         copyUrlIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_save);
         copyURlText_ = "Copy link";
         urlCopiedMessage_ = "Copied link to clipboard!";
+
+        if (Branch.getInstance().getDeviceInfo().isTV()) {
+            // Google TV includes a default, stub email app, so the system will appear to have an
+            // email app installed, even when there is none. (https://stackoverflow.com/a/10341104)
+            excludeFromShareSheet("com.google.android.tv.frameworkpackagestubs");
+        }
     }
 
     /**
@@ -508,8 +512,8 @@ public class BranchShareSheetBuilder {
         return includeInShareSheet;
     }
 
-    public Branch getBranch() {
-        return branch_;
+    @Deprecated public Branch getBranch() {
+        return Branch.getInstance();
     }
 
     public String getShareMsg() {

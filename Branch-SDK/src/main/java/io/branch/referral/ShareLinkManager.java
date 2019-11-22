@@ -22,9 +22,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.util.Pair;
-
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -38,7 +37,7 @@ class ShareLinkManager {
     Branch.IChannelProperties channelPropertiesCallback_;
     
     /* List of apps available for sharing. */
-    private List<ResolveInfo> appList_;
+    private List<ResolveInfo> displayedAppList_;
     /* Intent for sharing with selected application.*/
     private Intent shareLinkIntent_;
     /* Background color for the list view in enabled state. */
@@ -112,72 +111,40 @@ class ShareLinkManager {
         }
     }
 
-    private List<ResolveInfo> filterPreferredAppsBasedOnAvailability(List<ResolveInfo> matchingApps, List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final List<ResolveInfo> availablePreferredApps = new ArrayList<>();
-        /* Get all apps available for sharing and the available preferred apps. */
-        for (ResolveInfo resolveInfo : matchingApps) {
-            if (resolveInfo == null || resolveInfo.activityInfo == null) continue;
-
-            SharingHelper.SHARE_WITH foundMatching = null;
-            String packageName = resolveInfo.activityInfo.packageName;
-            for (SharingHelper.SHARE_WITH packageFilter : preferredOptions) {
-                if (packageName.toLowerCase().contains(packageFilter.toString().toLowerCase())) {
-                    foundMatching = packageFilter;
-                    break;
-                }
-            }
-            if (foundMatching != null) {
-                availablePreferredApps.add(resolveInfo);
-            }
-        }
-        // Move preferred options to front of matchingApps
-        // (does not change the size of matchingApps)
-        // matchingApps >= availablePreferredApps
-
-        matchingApps.removeAll(availablePreferredApps);
-        matchingApps.addAll(0, availablePreferredApps);
-
-        return availablePreferredApps;
-    }
-
-    private List<ResolveInfo> filterAvailableAppsBasedOnCustomization(List<ResolveInfo> matchingApps) {
-        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
-        final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
-
-        //if apps are explicitly being included, add only those, otherwise at the else statement add them all
-        if (includeInShareSheet.size() > 0) {
-            for (ResolveInfo r : matchingApps) {
-                if (includeInShareSheet.contains(r.activityInfo.packageName)) {
-                    cleanedMatchingApps.add(r);
-                }
-            }
-        } else {
-            cleanedMatchingApps = matchingApps;
-        }
-
-        //does our list contain explicitly excluded items? do not carry them into the next list
-        for (ResolveInfo r : cleanedMatchingApps) {
-            if (!excludeFromShareSheet.contains(r.activityInfo.packageName)) {
-                cleanedMatchingAppsFinal.add(r);
-            }
-        }
-
-        return cleanedMatchingAppsFinal;
-    }
-
-    private List<ResolveInfo> getDemandedAndPreferredApps(List<ResolveInfo> availableDemandedApps, List<ResolveInfo> availablePreferredApps) {
-        availableDemandedApps.addAll(availablePreferredApps);
-        return availableDemandedApps;
-    }
-
     /**
      * Create a custom chooser dialog with available share options.
      *
      * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
      */
     private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final Pair<List<ResolveInfo>, List<ResolveInfo>> defaultAndMoreApps = resolveAppList(preferredOptions);
-        appList_ = defaultAndMoreApps.first;
+        final List<ResolveInfo> matchingApps = context_.getPackageManager().queryIntentActivities(
+                shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
+
+        // if includeInShareSheet is not empty, add those apps, else add all matchingApps, then exclude whatever is in excludeFromShareSheet
+        final List<ResolveInfo> completeAppList = new ArrayList<>(getExplicitlyIncludedMatchingApps(matchingApps));
+
+        // return overlap between matching apps and preferredOptions
+        final List<ResolveInfo> availablePreferredApps = getPreferredMatchingApps(matchingApps, preferredOptions);
+        // move availablePreferredApps to front of completeAppList
+        completeAppList.removeAll(availablePreferredApps);
+        completeAppList.addAll(0, availablePreferredApps);
+
+        // add copy link item to the bottom of the list
+        completeAppList.add(new CopyLinkItem());
+        availablePreferredApps.add(new CopyLinkItem());
+
+        filterOutExplicitlyExcludedApps(completeAppList);
+
+        // if availablePreferredApps is not empty (ignoring CopyLinkItem), display availablePreferredApps
+        // else display completeAppList.
+        if (availablePreferredApps.size() > 1) {
+            if (completeAppList.size() > availablePreferredApps.size()) {
+                availablePreferredApps.add(new MoreShareItem());
+            }
+            displayedAppList_ = availablePreferredApps;
+        } else {
+            displayedAppList_ = completeAppList;
+        }
 
         /* Copy link option will be always there for sharing. */
         final ChooserArrayAdapter adapter = new ChooserArrayAdapter();
@@ -216,7 +183,7 @@ class ShareLinkManager {
             @Override public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 if (view == null) return;
                 if (view.getTag() instanceof MoreShareItem) {
-                    appList_ = defaultAndMoreApps.second;
+                    displayedAppList_ = completeAppList;
                     adapter.notifyDataSetChanged();
                 } else if (view.getTag() instanceof ResolveInfo) {
                     ResolveInfo resolveInfo = (ResolveInfo) view.getTag();
@@ -302,29 +269,55 @@ class ShareLinkManager {
         });
     }
 
-    private Pair<List<ResolveInfo>, List<ResolveInfo>> resolveAppList(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final List<ResolveInfo> availableApps = context_.getPackageManager().queryIntentActivities(
-                shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
+    private List<ResolveInfo> getPreferredMatchingApps(List<ResolveInfo> matchingApps, List<SharingHelper.SHARE_WITH> preferredOptions) {
+        final List<ResolveInfo> availablePreferredApps = new ArrayList<>();
+        /* Get all apps available for sharing and the available preferred apps. */
+        for (ResolveInfo resolveInfo : matchingApps) {
+            if (resolveInfo == null || resolveInfo.activityInfo == null) continue;
 
-        final List<ResolveInfo> availablePreferredApps = filterPreferredAppsBasedOnAvailability(availableApps, preferredOptions);
-        final List<ResolveInfo> availableDemandedApps = filterAvailableAppsBasedOnCustomization(availableApps);
-        final List<ResolveInfo> availablePreferredAndDemandedApps = getDemandedAndPreferredApps(availableDemandedApps, availablePreferredApps);
-
-        availablePreferredAndDemandedApps.add(new CopyLinkItem());
-        availableApps.add(new CopyLinkItem());
-        availablePreferredApps.add(new CopyLinkItem());
-
-        if (availablePreferredApps.size() > 1) {
-            /* Add more option */
-            if (availableApps.size() > availablePreferredApps.size()) {
-                availablePreferredApps.add(new MoreShareItem());
+            SharingHelper.SHARE_WITH foundMatching = null;
+            String packageName = resolveInfo.activityInfo.packageName;
+            for (SharingHelper.SHARE_WITH packageFilter : preferredOptions) {
+                if (packageName.toLowerCase().contains(packageFilter.toString().toLowerCase())) {
+                    foundMatching = packageFilter;
+                    break;
+                }
             }
-            return new Pair<>(availablePreferredApps, availablePreferredAndDemandedApps);
+            if (foundMatching != null) {
+                availablePreferredApps.add(resolveInfo);
+            }
+        }
+
+        return availablePreferredApps;
+    }
+
+    private List<ResolveInfo> getExplicitlyIncludedMatchingApps(List<ResolveInfo> matchingApps) {
+        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
+
+        //if apps are explicitly being included, add only those, otherwise at the else statement add them all
+        if (includeInShareSheet.size() > 0) {
+            for (ResolveInfo r : matchingApps) {
+                if (includeInShareSheet.contains(r.activityInfo.packageName)) {
+                    cleanedMatchingApps.add(r);
+                }
+            }
         } else {
-            return new Pair<>(availablePreferredAndDemandedApps, availablePreferredAndDemandedApps);
+            cleanedMatchingApps = matchingApps;
+        }
+
+        return cleanedMatchingApps;
+    }
+
+    private void filterOutExplicitlyExcludedApps(List<ResolveInfo> completeAppList) {
+        // does our list contain explicitly excluded items? do not carry them into the next list
+        Iterator<ResolveInfo> iter = completeAppList.iterator();
+        while (iter.hasNext()) {
+            ResolveInfo r = iter.next();
+            if (r != null && r.activityInfo != null && excludeFromShareSheet.contains(r.activityInfo.packageName)) {
+                iter.remove();
+            }
         }
     }
-    
     
     /**
      * Invokes a sharing client with a link created by the given json objects.
@@ -425,12 +418,12 @@ class ShareLinkManager {
         
         @Override
         public int getCount() {
-            return appList_.size();
+            return displayedAppList_.size();
         }
         
         @Override
         public Object getItem(int position) {
-            return appList_.get(position);
+            return displayedAppList_.get(position);
         }
         
         @Override
@@ -446,7 +439,7 @@ class ShareLinkManager {
             } else {
                 itemView = (ShareItemView) convertView;
             }
-            ResolveInfo resolveInfo = appList_.get(position);
+            ResolveInfo resolveInfo = displayedAppList_.get(position);
             boolean setSelected = position == selectedPos;
             itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(),
                     resolveInfo.loadIcon(context_.getPackageManager()), setSelected);
