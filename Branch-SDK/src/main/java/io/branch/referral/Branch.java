@@ -3463,35 +3463,35 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     @Deprecated public static class ShareLinkBuilder extends BranchShareSheetBuilder {
         @Deprecated public ShareLinkBuilder(Activity activity, JSONObject parameters) { super(activity, parameters); }
         @Deprecated public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) { super(activity, shortLinkBuilder); }
-        @Deprecated public ShareLinkBuilder setMessage(String message) { super.setMessage(message); return this; }
-        @Deprecated public ShareLinkBuilder setSubject(String subject) { super.setSubject(subject); return this; }
-        @Deprecated public ShareLinkBuilder addTag(String tag) { super.addTag(tag); return this; }
-        @Deprecated public ShareLinkBuilder addTags(ArrayList<String> tags) { super.addTags(tags); return this; }
-        @Deprecated public ShareLinkBuilder setFeature(String feature) { super.setFeature(feature); return this; }
-        @Deprecated public ShareLinkBuilder setStage(String stage) { super.setStage(stage); return this; }
-        @Deprecated public ShareLinkBuilder setCallback(BranchLinkShareListener callback) { super.setCallback(callback); return this; }
-        @Deprecated public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) { super.setChannelProperties(channelPropertiesCallback); return this; }
-        @Deprecated public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) { super.addPreferredSharingOption(preferredOption); return this; }
-        @Deprecated public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) { super.addPreferredSharingOptions(preferredOptions); return this; }
-        @Deprecated public ShareLinkBuilder addParam(String key, String value) { super.addParam(key, value); return this; }
-        @Deprecated public ShareLinkBuilder setDefaultURL(String url) { super.setDefaultURL(url); return this; }
-        @Deprecated public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) { super.setMoreOptionStyle(icon, label); return this; }
-        @Deprecated public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) { super.setMoreOptionStyle(drawableIconID, stringLabelID); return this; }
-        @Deprecated public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) { super.setCopyUrlStyle(icon, label, message); return this; }
-        @Deprecated public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) { super.setCopyUrlStyle(drawableIconID, stringLabelID, stringMessageID); return this; }
-        @Deprecated public ShareLinkBuilder setAlias(String alias) { super.setAlias(alias); return this; }
-        @Deprecated public ShareLinkBuilder setMatchDuration(int matchDuration) { super.setMatchDuration(matchDuration); return this; }
-        @Deprecated public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) { super.setAsFullWidthStyle(setFullWidthStyle); return this; }
-        @Deprecated public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) { super.setDialogThemeResourceID(styleResourceID); return this; }
-        @Deprecated public ShareLinkBuilder setDividerHeight(int height) { super.setDividerHeight(height); return this; }
-        @Deprecated public ShareLinkBuilder setSharingTitle(String title) { super.setSharingTitle(title); return this; }
-        @Deprecated public ShareLinkBuilder setSharingTitle(View titleView) { super.setSharingTitle(titleView); return this; }
-        @Deprecated public ShareLinkBuilder setIconSize(int iconSize) { super.setIconSize(iconSize); return this; }
-        @Deprecated public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) { super.excludeFromShareSheet(packageName); return this; }
-        @Deprecated public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) { super.excludeFromShareSheet(packageName); return this; }
-        @Deprecated public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) { super.excludeFromShareSheet(packageNames); return this; }
-        @Deprecated public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) { super.includeInShareSheet(packageName); return this; }
-        @Deprecated public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) { super.includeInShareSheet(packageName); return this; }
-        @Deprecated public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) { super.includeInShareSheet(packageNames); return this; }
+        public ShareLinkBuilder setMessage(String message) { super.setMessage(message); return this; }
+        public ShareLinkBuilder setSubject(String subject) { super.setSubject(subject); return this; }
+        public ShareLinkBuilder addTag(String tag) { super.addTag(tag); return this; }
+        public ShareLinkBuilder addTags(ArrayList<String> tags) { super.addTags(tags); return this; }
+        public ShareLinkBuilder setFeature(String feature) { super.setFeature(feature); return this; }
+        public ShareLinkBuilder setStage(String stage) { super.setStage(stage); return this; }
+        public ShareLinkBuilder setCallback(BranchLinkShareListener callback) { super.setCallback(callback); return this; }
+        public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) { super.setChannelProperties(channelPropertiesCallback); return this; }
+        public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) { super.addPreferredSharingOption(preferredOption); return this; }
+        public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) { super.addPreferredSharingOptions(preferredOptions); return this; }
+        public ShareLinkBuilder addParam(String key, String value) { super.addParam(key, value); return this; }
+        public ShareLinkBuilder setDefaultURL(String url) { super.setDefaultURL(url); return this; }
+        public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) { super.setMoreOptionStyle(icon, label); return this; }
+        public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) { super.setMoreOptionStyle(drawableIconID, stringLabelID); return this; }
+        public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) { super.setCopyUrlStyle(icon, label, message); return this; }
+        public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) { super.setCopyUrlStyle(drawableIconID, stringLabelID, stringMessageID); return this; }
+        public ShareLinkBuilder setAlias(String alias) { super.setAlias(alias); return this; }
+        public ShareLinkBuilder setMatchDuration(int matchDuration) { super.setMatchDuration(matchDuration); return this; }
+        public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) { super.setAsFullWidthStyle(setFullWidthStyle); return this; }
+        public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) { super.setDialogThemeResourceID(styleResourceID); return this; }
+        public ShareLinkBuilder setDividerHeight(int height) { super.setDividerHeight(height); return this; }
+        public ShareLinkBuilder setSharingTitle(String title) { super.setSharingTitle(title); return this; }
+        public ShareLinkBuilder setSharingTitle(View titleView) { super.setSharingTitle(titleView); return this; }
+        public ShareLinkBuilder setIconSize(int iconSize) { super.setIconSize(iconSize); return this; }
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) { super.excludeFromShareSheet(packageName); return this; }
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) { super.excludeFromShareSheet(packageName); return this; }
+        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) { super.excludeFromShareSheet(packageNames); return this; }
+        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) { super.includeInShareSheet(packageName); return this; }
+        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) { super.includeInShareSheet(packageName); return this; }
+        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) { super.includeInShareSheet(packageNames); return this; }
     }
 }
