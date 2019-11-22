@@ -19,6 +19,7 @@ import java.util.Iterator;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
@@ -650,7 +651,7 @@ public class BranchUniversalObject implements Parcelable {
                 PrefHelper.Debug("Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
         } else {
-            Branch.ShareLinkBuilder shareLinkBuilder = new Branch.ShareLinkBuilder(activity, getLinkBuilder(activity, linkProperties));
+            BranchShareSheetBuilder shareLinkBuilder = new BranchShareSheetBuilder(activity, getLinkBuilder(activity, linkProperties));
             shareLinkBuilder.setCallback(new LinkShareListenerWrapper(callback, shareLinkBuilder, linkProperties))
                     .setChannelProperties(channelProperties)
                     .setSubject(style.getMessageTitle())
@@ -943,10 +944,10 @@ public class BranchUniversalObject implements Parcelable {
      */
     private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
         private final Branch.BranchLinkShareListener originalCallback_;
-        private final Branch.ShareLinkBuilder shareLinkBuilder_;
+        private final BranchShareSheetBuilder shareLinkBuilder_;
         private final LinkProperties linkProperties_;
         
-        LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback, Branch.ShareLinkBuilder shareLinkBuilder, LinkProperties linkProperties) {
+        LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback, BranchShareSheetBuilder shareLinkBuilder, LinkProperties linkProperties) {
             originalCallback_ = originalCallback;
             shareLinkBuilder_ = shareLinkBuilder;
             linkProperties_ = linkProperties;
