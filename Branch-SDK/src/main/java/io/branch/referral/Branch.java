@@ -11,7 +11,6 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -36,8 +35,6 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -2273,9 +2270,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
      * user selected clients.</p>
      *
-     * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     * @param builder A {@link BranchShareSheetBuilder} instance to build share link.
      */
-    private void shareLink(ShareLinkBuilder builder) {
+    void shareLink(BranchShareSheetBuilder builder) {
         //Cancel any existing sharing in progress.
         if (shareLinkManager_ != null) {
             shareLinkManager_.cancelShareLinkDialog(true);
@@ -3299,578 +3296,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     boolean isReferrable() {
         return prefHelper_.getIsReferrable() == 1;
     }
-
-    //-------------------------- Branch Builders--------------------------------------//
-    
-    /**
-     * <p> Class for building a share link dialog.This creates a chooser for selecting application for
-     * sharing a link created with given parameters. </p>
-     */
-    public static class ShareLinkBuilder {
-        
-        private final Activity activity_;
-        private final Branch branch_;
-        
-        private String shareMsg_;
-        private String shareSub_;
-        private Branch.BranchLinkShareListener callback_ = null;
-        private Branch.IChannelProperties channelPropertiesCallback_ = null;
-        
-        private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
-        private String defaultURL_;
-        
-        //Customise more and copy url option
-        private Drawable moreOptionIcon_;
-        private String moreOptionText_;
-        private Drawable copyUrlIcon_;
-        private String copyURlText_;
-        private String urlCopiedMessage_;
-        private int styleResourceID_;
-        private boolean setFullWidthStyle_;
-        private int dialogThemeResourceID_;
-        private int dividerHeight = -1;
-        private String sharingTitle = null;
-        private View sharingTitleView = null;
-        private int iconSize_ = 50;
-        
-        BranchShortLinkBuilder shortLinkBuilder_;
-        private List<String> includeInShareSheet = new ArrayList<>();
-        private List<String> excludeFromShareSheet = new ArrayList<>();
-        
-        /**
-         * <p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
-         * user selected clients</p>
-         *
-         * @param activity   The {@link Activity} to show the dialog for choosing sharing application.
-         * @param parameters A {@link JSONObject} value containing the deep link params.
-         */
-        public ShareLinkBuilder(Activity activity, JSONObject parameters) {
-            this.activity_ = activity;
-            this.branch_ = branchReferral_;
-            shortLinkBuilder_ = new BranchShortLinkBuilder(activity);
-            try {
-                Iterator<String> keys = parameters.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    shortLinkBuilder_.addParameters(key, (String) parameters.get(key));
-                }
-            } catch (Exception ignore) {
-            }
-            shareMsg_ = "";
-            callback_ = null;
-            channelPropertiesCallback_ = null;
-            preferredOptions_ = new ArrayList<>();
-            defaultURL_ = null;
-            
-            moreOptionIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_more);
-            moreOptionText_ = "More...";
-            
-            copyUrlIcon_ = BranchUtil.getDrawable(activity.getApplicationContext(), android.R.drawable.ic_menu_save);
-            copyURlText_ = "Copy link";
-            urlCopiedMessage_ = "Copied link to clipboard!";
-        }
-        
-        /**
-         * *<p>Creates options for sharing a link with other Applications. Creates a builder for sharing the link with
-         * user selected clients</p>
-         *
-         * @param activity         The {@link Activity} to show the dialog for choosing sharing application.
-         * @param shortLinkBuilder An instance of {@link BranchShortLinkBuilder} to create link to be shared
-         */
-        public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) {
-            this(activity, new JSONObject());
-            shortLinkBuilder_ = shortLinkBuilder;
-        }
-        
-        /**
-         * <p>Sets the message to be shared with the link.</p>
-         *
-         * @param message A {@link String} to be shared with the link
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setMessage(String message) {
-            this.shareMsg_ = message;
-            return this;
-        }
-        
-        /**
-         * <p>Sets the subject of this message. This will be added to Email and SMS Application capable of handling subject in the message.</p>
-         *
-         * @param subject A {@link String} subject of this message.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setSubject(String subject) {
-            this.shareSub_ = subject;
-            return this;
-        }
-        
-        /**
-         * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
-         * link.</p>
-         *
-         * @param tag A {@link String} to be added to the iterable {@link Collection} of {@link String} tags associated with a deep
-         *            link.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder addTag(String tag) {
-            this.shortLinkBuilder_.addTag(tag);
-            return this;
-        }
-        
-        /**
-         * <p>Adds the given tag an iterable {@link Collection} of {@link String} tags associated with a deep
-         * link.</p>
-         *
-         * @param tags A {@link java.util.List} of tags to be added to the iterable {@link Collection} of {@link String} tags associated with a deep
-         *             link.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder addTags(ArrayList<String> tags) {
-            this.shortLinkBuilder_.addTags(tags);
-            return this;
-        }
-        
-        /**
-         * <p>Adds a feature that make use of the link.</p>
-         *
-         * @param feature A {@link String} value identifying the feature that the link makes use of.
-         *                Should not exceed 128 characters.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setFeature(String feature) {
-            this.shortLinkBuilder_.setFeature(feature);
-            return this;
-        }
-        
-        /**
-         * <p>Adds a stage application or user flow associated with this link.</p>
-         *
-         * @param stage A {@link String} value identifying the stage in an application or user flow
-         *              process. Should not exceed 128 characters.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setStage(String stage) {
-            this.shortLinkBuilder_.setStage(stage);
-            return this;
-        }
-        
-        /**
-         * <p>Adds a callback to get the sharing status.</p>
-         *
-         * @param callback A {@link BranchLinkShareListener} instance for getting sharing status.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setCallback(BranchLinkShareListener callback) {
-            this.callback_ = callback;
-            return this;
-        }
-        
-        /**
-         * @param channelPropertiesCallback A {@link io.branch.referral.Branch.IChannelProperties} instance for customizing sharing properties for channels.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) {
-            this.channelPropertiesCallback_ = channelPropertiesCallback;
-            return this;
-        }
-        
-        /**
-         * <p>Adds application to the preferred list of applications which are shown on share dialog.
-         * Only these options will be visible when the application selector dialog launches. Other options can be
-         * accessed by clicking "More"</p>
-         *
-         * @param preferredOption A list of applications to be added as preferred options on the app chooser.
-         *                        Preferred applications are defined in {@link io.branch.referral.SharingHelper.SHARE_WITH}.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) {
-            this.preferredOptions_.add(preferredOption);
-            return this;
-        }
-        
-        /**
-         * <p>Adds application to the preferred list of applications which are shown on share dialog.
-         * Only these options will be visible when the application selector dialog launches. Other options can be
-         * accessed by clicking "More"</p>
-         *
-         * @param preferredOptions A list of applications to be added as preferred options on the app chooser.
-         *                         Preferred applications are defined in {@link io.branch.referral.SharingHelper.SHARE_WITH}.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) {
-            this.preferredOptions_.addAll(preferredOptions);
-            return this;
-        }
-        
-        /**
-         * Add the given key value to the deep link parameters
-         *
-         * @param key   A {@link String} with value for the key for the deep link params
-         * @param value A {@link String} with deep link parameters value
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder addParam(String key, String value) {
-            try {
-                this.shortLinkBuilder_.addParameters(key, value);
-            } catch (Exception ignore) {
-            }
-            return this;
-        }
-        
-        /**
-         * <p> Set a default url to share in case there is any error creating the deep link </p>
-         *
-         * @param url A {@link String} with value of default url to be shared with the selected application in case deep link creation fails.
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setDefaultURL(String url) {
-            defaultURL_ = url;
-            return this;
-        }
-        
-        /**
-         * <p> Set the icon and label for the option to expand the application list to see more options.
-         * Default label is set to "More" </p>
-         *
-         * @param icon  Drawable to set as the icon for more option. Default icon is system menu_more icon.
-         * @param label A {@link String} with value for the more option label. Default label is "More"
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) {
-            moreOptionIcon_ = icon;
-            moreOptionText_ = label;
-            return this;
-        }
-        
-        /**
-         * <p> Set the icon and label for the option to expand the application list to see more options.
-         * Default label is set to "More" </p>
-         *
-         * @param drawableIconID Resource ID for the drawable to set as the icon for more option. Default icon is system menu_more icon.
-         * @param stringLabelID  Resource ID for String label for the more option. Default label is "More"
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) {
-            moreOptionIcon_ = BranchUtil.getDrawable(activity_.getApplicationContext(), drawableIconID);
-            moreOptionText_ = activity_.getResources().getString(stringLabelID);
-            return this;
-        }
-        
-        /**
-         * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
-         *
-         * @param icon    Drawable to set as the icon for copy url  option. Default icon is system menu_save icon
-         * @param label   A {@link String} with value for the copy url option label. Default label is "Copy link"
-         * @param message A {@link String} with value for a toast message displayed on copying a url.
-         *                Default message is "Copied link to clipboard!"
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) {
-            copyUrlIcon_ = icon;
-            copyURlText_ = label;
-            urlCopiedMessage_ = message;
-            return this;
-        }
-        
-        /**
-         * <p> Set the icon, label and success message for copy url option. Default label is "Copy link".</p>
-         *
-         * @param drawableIconID  Resource ID for the drawable to set as the icon for copy url  option. Default icon is system menu_save icon
-         * @param stringLabelID   Resource ID for the string label the copy url option. Default label is "Copy link"
-         * @param stringMessageID Resource ID for the string message to show toast message displayed on copying a url
-         * @return A {@link io.branch.referral.Branch.ShareLinkBuilder} instance.
-         */
-        public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) {
-            copyUrlIcon_ = BranchUtil.getDrawable(activity_.getApplicationContext(), drawableIconID);
-            copyURlText_ = activity_.getResources().getString(stringLabelID);
-            urlCopiedMessage_ = activity_.getResources().getString(stringMessageID);
-            return this;
-            
-        }
-        
-        /**
-         * <p> Sets the alias for this link. </p>
-         *
-         * @param alias Link 'alias' can be used to label the endpoint on the link.
-         *              <p>
-         *              For example:
-         *              http://bnc.lt/AUSTIN28.
-         *              Should not exceed 128 characters
-         *              </p>
-         * @return This Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setAlias(String alias) {
-            this.shortLinkBuilder_.setAlias(alias);
-            return this;
-        }
-        
-        /**
-         * <p> Sets the amount of time that Branch allows a click to remain outstanding.</p>
-         *
-         * @param matchDuration A {@link Integer} value specifying the time that Branch allows a click to
-         *                      remain outstanding and be eligible to be matched with a new app session.
-         * @return This Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setMatchDuration(int matchDuration) {
-            this.shortLinkBuilder_.setDuration(matchDuration);
-            return this;
-        }
-        
-        /**
-         * <p>
-         * Sets the share dialog to full width mode. Full width mode will show a non modal sheet with entire screen width.
-         * </p>
-         *
-         * @param setFullWidthStyle {@link Boolean} With value true if a full width style share sheet is desired.
-         * @return This Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) {
-            this.setFullWidthStyle_ = setFullWidthStyle;
-            return this;
-        }
-        
-        /**
-         * <p>
-         * Sets the given resource id as the theme id for share sheet dialog view.
-         * </p>
-         *
-         * @param styleResourceID the id of the theme to be applied to the share sheet dialog.
-         * @return This Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) {
-            this.dialogThemeResourceID_ = styleResourceID;
-            return this;
-        }
-        
-        /**
-         * Set the height for the divider for the sharing channels in the list. Set this to zero to remove the dividers
-         *
-         * @param height The new height of the divider in pixels.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setDividerHeight(int height) {
-            this.dividerHeight = height;
-            return this;
-        }
-        
-        /**
-         * Set the title for the sharing dialog
-         *
-         * @param title {@link String} containing the value for the title text.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setSharingTitle(String title) {
-            this.sharingTitle = title;
-            return this;
-        }
-        
-        /**
-         * Set the title for the sharing dialog
-         *
-         * @param titleView {@link View} for setting the title.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setSharingTitle(View titleView) {
-            this.sharingTitleView = titleView;
-            return this;
-        }
-        
-        /**
-         * Set icon size for the sharing dialog
-         *
-         * @param iconSize {@link int} for setting the share sheet icon size.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder setIconSize(int iconSize) {
-            this.iconSize_ = iconSize;
-            return this;
-        }
-        
-        /**
-         * Exclude items from the ShareSheet by package name String.
-         *
-         * @param packageName {@link String} package name to be excluded.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) {
-            this.excludeFromShareSheet.add(packageName);
-            return this;
-        }
-        
-        /**
-         * Exclude items from the ShareSheet by package name array.
-         *
-         * @param packageName {@link String[]} package name to be excluded.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) {
-            this.excludeFromShareSheet.addAll(Arrays.asList(packageName));
-            return this;
-        }
-        
-        /**
-         * Exclude items from the ShareSheet by package name List.
-         *
-         * @param packageNames {@link List} package name to be excluded.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) {
-            this.excludeFromShareSheet.addAll(packageNames);
-            return this;
-        }
-        
-        /**
-         * Include items from the ShareSheet by package name String. If only "com.Slack"
-         * is included, then only preferred sharing options + Slack
-         * will be displayed, for example.
-         *
-         * @param packageName {@link String} package name to be included.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) {
-            this.includeInShareSheet.add(packageName);
-            return this;
-        }
-        
-        /**
-         * Include items from the ShareSheet by package name Array. If only "com.Slack"
-         * is included, then only preferred sharing options + Slack
-         * will be displayed, for example.
-         *
-         * @param packageName {@link String[]} package name to be included.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) {
-            this.includeInShareSheet.addAll(Arrays.asList(packageName));
-            return this;
-        }
-        
-        /**
-         * Include items from the ShareSheet by package name List. If only "com.Slack"
-         * is included, then only preferred sharing options + Slack
-         * will be displayed, for example.
-         *
-         * @param packageNames {@link List} package name to be included.
-         * @return this Builder object to allow for chaining of calls to set methods.
-         */
-        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) {
-            this.includeInShareSheet.addAll(packageNames);
-            return this;
-        }
-        
-        /**
-         * <p> Set the given style to the List View showing the share sheet</p>
-         *
-         * @param resourceID A Styleable resource to be applied to the share sheet list view
-         */
-        public void setStyleResourceID(@StyleRes int resourceID) {
-            styleResourceID_ = resourceID;
-        }
-        
-        public void setShortLinkBuilderInternal(BranchShortLinkBuilder shortLinkBuilder) {
-            this.shortLinkBuilder_ = shortLinkBuilder;
-        }
-        
-        /**
-         * <p>Creates an application selector dialog and share a link with user selected sharing option.
-         * The link is created with the parameters provided to the builder. </p>
-         */
-        public void shareLink() {
-            branchReferral_.shareLink(this);
-        }
-        
-        public Activity getActivity() {
-            return activity_;
-        }
-        
-        public ArrayList<SharingHelper.SHARE_WITH> getPreferredOptions() {
-            return preferredOptions_;
-        }
-        
-        List<String> getExcludedFromShareSheet() {
-            return excludeFromShareSheet;
-        }
-        
-        List<String> getIncludedInShareSheet() {
-            return includeInShareSheet;
-        }
-        
-        public Branch getBranch() {
-            return branch_;
-        }
-        
-        public String getShareMsg() {
-            return shareMsg_;
-        }
-        
-        public String getShareSub() {
-            return shareSub_;
-        }
-        
-        public BranchLinkShareListener getCallback() {
-            return callback_;
-        }
-        
-        public IChannelProperties getChannelPropertiesCallback() {
-            return channelPropertiesCallback_;
-        }
-        
-        public String getDefaultURL() {
-            return defaultURL_;
-        }
-        
-        public Drawable getMoreOptionIcon() {
-            return moreOptionIcon_;
-        }
-        
-        public String getMoreOptionText() {
-            return moreOptionText_;
-        }
-        
-        public Drawable getCopyUrlIcon() {
-            return copyUrlIcon_;
-        }
-        
-        public String getCopyURlText() {
-            return copyURlText_;
-        }
-        
-        public String getUrlCopiedMessage() {
-            return urlCopiedMessage_;
-        }
-        
-        public BranchShortLinkBuilder getShortLinkBuilder() {
-            return shortLinkBuilder_;
-        }
-        
-        public boolean getIsFullWidthStyle() {
-            return setFullWidthStyle_;
-        }
-        
-        public int getDialogThemeResourceID() {
-            return dialogThemeResourceID_;
-        }
-        
-        public int getDividerHeight() {
-            return dividerHeight;
-        }
-        
-        public String getSharingTitle() {
-            return sharingTitle;
-        }
-        
-        public View getSharingTitleView() {
-            return sharingTitleView;
-        }
-        
-        public int getStyleResourceID() {
-            return styleResourceID_;
-        }
-        
-        public int getIconSize() {
-            return iconSize_;
-        }
-    }
     
     //------------------------ Content Indexing methods----------------------//
     
@@ -4028,5 +3453,45 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
+    }
+
+    //-------------------------- Branch Builders--------------------------------------//
+
+    /**
+     * <p> Legacy class for building a share link dialog. Use {@link BranchShareSheetBuilder} instead. </p>
+     */
+    @Deprecated public static class ShareLinkBuilder extends BranchShareSheetBuilder {
+        @Deprecated public ShareLinkBuilder(Activity activity, JSONObject parameters) { super(activity, parameters); }
+        @Deprecated public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) { super(activity, shortLinkBuilder); }
+        @Deprecated public ShareLinkBuilder setMessage(String message) { super.setMessage(message); return this; }
+        @Deprecated public ShareLinkBuilder setSubject(String subject) { super.setSubject(subject); return this; }
+        @Deprecated public ShareLinkBuilder addTag(String tag) { super.addTag(tag); return this; }
+        @Deprecated public ShareLinkBuilder addTags(ArrayList<String> tags) { super.addTags(tags); return this; }
+        @Deprecated public ShareLinkBuilder setFeature(String feature) { super.setFeature(feature); return this; }
+        @Deprecated public ShareLinkBuilder setStage(String stage) { super.setStage(stage); return this; }
+        @Deprecated public ShareLinkBuilder setCallback(BranchLinkShareListener callback) { super.setCallback(callback); return this; }
+        @Deprecated public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) { super.setChannelProperties(channelPropertiesCallback); return this; }
+        @Deprecated public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) { super.addPreferredSharingOption(preferredOption); return this; }
+        @Deprecated public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) { super.addPreferredSharingOptions(preferredOptions); return this; }
+        @Deprecated public ShareLinkBuilder addParam(String key, String value) { super.addParam(key, value); return this; }
+        @Deprecated public ShareLinkBuilder setDefaultURL(String url) { super.setDefaultURL(url); return this; }
+        @Deprecated public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) { super.setMoreOptionStyle(icon, label); return this; }
+        @Deprecated public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) { super.setMoreOptionStyle(drawableIconID, stringLabelID); return this; }
+        @Deprecated public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) { super.setCopyUrlStyle(icon, label, message); return this; }
+        @Deprecated public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) { super.setCopyUrlStyle(drawableIconID, stringLabelID, stringMessageID); return this; }
+        @Deprecated public ShareLinkBuilder setAlias(String alias) { super.setAlias(alias); return this; }
+        @Deprecated public ShareLinkBuilder setMatchDuration(int matchDuration) { super.setMatchDuration(matchDuration); return this; }
+        @Deprecated public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) { super.setAsFullWidthStyle(setFullWidthStyle); return this; }
+        @Deprecated public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) { super.setDialogThemeResourceID(styleResourceID); return this; }
+        @Deprecated public ShareLinkBuilder setDividerHeight(int height) { super.setDividerHeight(height); return this; }
+        @Deprecated public ShareLinkBuilder setSharingTitle(String title) { super.setSharingTitle(title); return this; }
+        @Deprecated public ShareLinkBuilder setSharingTitle(View titleView) { super.setSharingTitle(titleView); return this; }
+        @Deprecated public ShareLinkBuilder setIconSize(int iconSize) { super.setIconSize(iconSize); return this; }
+        @Deprecated public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) { super.excludeFromShareSheet(packageName); return this; }
+        @Deprecated public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) { super.excludeFromShareSheet(packageName); return this; }
+        @Deprecated public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) { super.excludeFromShareSheet(packageNames); return this; }
+        @Deprecated public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) { super.includeInShareSheet(packageName); return this; }
+        @Deprecated public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) { super.includeInShareSheet(packageName); return this; }
+        @Deprecated public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) { super.includeInShareSheet(packageNames); return this; }
     }
 }

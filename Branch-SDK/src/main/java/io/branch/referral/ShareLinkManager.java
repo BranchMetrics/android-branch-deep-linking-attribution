@@ -57,7 +57,7 @@ class ShareLinkManager {
     private int shareDialogThemeID_ = -1;
     /* Size of app icons in share sheet */
     private int iconSize_ = 50;
-    private Branch.ShareLinkBuilder builder_;
+    private BranchShareSheetBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
     private List<String> includeInShareSheet = new ArrayList<>();
@@ -66,10 +66,10 @@ class ShareLinkManager {
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
-     * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     * @param builder A {@link BranchShareSheetBuilder} instance to build share link.
      * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
-    public Dialog shareLink(Branch.ShareLinkBuilder builder) {
+    Dialog shareLink(BranchShareSheetBuilder builder) {
         builder_ = builder;
         context_ = builder.getActivity();
         callback_ = builder.getCallback();
@@ -100,7 +100,7 @@ class ShareLinkManager {
      *                     A value of true will close the dialog with an animation. Setting this value
      *                     to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog(boolean animateClose) {
+    void cancelShareLinkDialog(boolean animateClose) {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
             if (animateClose) {
                 // Cancel the dialog with animation
@@ -112,7 +112,7 @@ class ShareLinkManager {
         }
     }
 
-    private List<ResolveInfo> filterPreferredApps(List<ResolveInfo> matchingApps, List<SharingHelper.SHARE_WITH> preferredOptions) {
+    private List<ResolveInfo> filterPreferredAppsBasedOnAvailability(List<ResolveInfo> matchingApps, List<SharingHelper.SHARE_WITH> preferredOptions) {
         final List<ResolveInfo> availablePreferredApps = new ArrayList<>();
         /* Get all apps available for sharing and the available preferred apps. */
         for (ResolveInfo resolveInfo : matchingApps) {
@@ -140,12 +140,7 @@ class ShareLinkManager {
         return availablePreferredApps;
     }
 
-    private Pair<List<ResolveInfo>, List<ResolveInfo>> resolveAppList(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final List<ResolveInfo> matchingApps = context_.getPackageManager().queryIntentActivities(
-                shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
-
-        final List<ResolveInfo> filteredPreferredApps = filterPreferredApps(matchingApps, preferredOptions);
-
+    private List<ResolveInfo> filterAvailableAppsBasedOnCustomization(List<ResolveInfo> matchingApps) {
         List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
         final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
 
@@ -167,24 +162,14 @@ class ShareLinkManager {
             }
         }
 
-        //make sure our "show more" option includes preferred apps
-        cleanedMatchingAppsFinal.addAll(filteredPreferredApps);
-
-        cleanedMatchingAppsFinal.add(new CopyLinkItem());
-        matchingApps.add(new CopyLinkItem());
-        filteredPreferredApps.add(new CopyLinkItem());
-
-        if (filteredPreferredApps.size() > 1) {
-            /* Add more option */
-            if (matchingApps.size() > filteredPreferredApps.size()) {
-                filteredPreferredApps.add(new MoreShareItem());
-            }
-            return new Pair<>(filteredPreferredApps, cleanedMatchingAppsFinal);
-        } else {
-            return new Pair<>(cleanedMatchingAppsFinal, cleanedMatchingAppsFinal);
-        }
+        return cleanedMatchingAppsFinal;
     }
-    
+
+    private List<ResolveInfo> getDemandedAndPreferredApps(List<ResolveInfo> availableDemandedApps, List<ResolveInfo> availablePreferredApps) {
+        availableDemandedApps.addAll(availablePreferredApps);
+        return availableDemandedApps;
+    }
+
     /**
      * Create a custom chooser dialog with available share options.
      *
@@ -315,6 +300,29 @@ class ShareLinkManager {
                 return handled;
             }
         });
+    }
+
+    private Pair<List<ResolveInfo>, List<ResolveInfo>> resolveAppList(List<SharingHelper.SHARE_WITH> preferredOptions) {
+        final List<ResolveInfo> availableApps = context_.getPackageManager().queryIntentActivities(
+                shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
+
+        final List<ResolveInfo> availablePreferredApps = filterPreferredAppsBasedOnAvailability(availableApps, preferredOptions);
+        final List<ResolveInfo> availableDemandedApps = filterAvailableAppsBasedOnCustomization(availableApps);
+        final List<ResolveInfo> availablePreferredAndDemandedApps = getDemandedAndPreferredApps(availableDemandedApps, availablePreferredApps);
+
+        availablePreferredAndDemandedApps.add(new CopyLinkItem());
+        availableApps.add(new CopyLinkItem());
+        availablePreferredApps.add(new CopyLinkItem());
+
+        if (availablePreferredApps.size() > 1) {
+            /* Add more option */
+            if (availableApps.size() > availablePreferredApps.size()) {
+                availablePreferredApps.add(new MoreShareItem());
+            }
+            return new Pair<>(availablePreferredApps, availablePreferredAndDemandedApps);
+        } else {
+            return new Pair<>(availablePreferredAndDemandedApps, availablePreferredAndDemandedApps);
+        }
     }
     
     
