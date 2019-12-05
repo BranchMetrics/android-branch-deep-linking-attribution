@@ -58,7 +58,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithParamsLegacyFormat(ServerRequest serverRequest, JSONObject requestObj) {
+    void updateRequestWithV1Params(ServerRequest serverRequest, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
@@ -129,7 +129,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithParams(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
