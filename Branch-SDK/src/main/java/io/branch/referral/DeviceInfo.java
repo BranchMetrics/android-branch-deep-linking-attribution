@@ -58,7 +58,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV1Params(ServerRequest serverRequest, JSONObject requestObj) {
+    void updateRequestWithParamsLegacyFormat(ServerRequest serverRequest, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
@@ -129,7 +129,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV2Params(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithParams(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
@@ -203,6 +203,11 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.SDK.getKey(), "android");
             requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
             requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
+
+            if (serverRequest instanceof ServerRequestGetLATD) {
+                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
+                        ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
+            }
         } catch (JSONException ignore) {
         }
     }
@@ -216,21 +221,6 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
             requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
             requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
-        }
-    }
-
-    /**
-     * Update the given server request JSON with the set attribution window in the user data
-     *
-     * @param requestObj JSON object for Branch server request
-     */
-    void updateRequestWithAttributionWindow(PrefHelper prefHelper, JSONObject requestObj) {
-        try {
-            if (prefHelper != null) {
-                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(), prefHelper.getLATDAttributionWindow());
-            }
-            } catch (JSONException ignore) {
-
         }
     }
 

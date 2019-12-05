@@ -948,13 +948,8 @@ public class PrefHelper {
      *
      * @param attributionWindow An {@link Integer} value containing the current attribution window passed
      */
-    public void setLATDAttributionWindow(Integer attributionWindow){
-        if (attributionWindow == null) {
-            removePrefValue(KEY_LATD_ATTRIBUTION_WINDOW);
-        } else {
-            setInteger(KEY_LATD_ATTRIBUTION_WINDOW, attributionWindow);
-        }
-
+    public void setLATDAttributionWindow(int attributionWindow){
+        setInteger(KEY_LATD_ATTRIBUTION_WINDOW, attributionWindow);
     }
 
     /**
@@ -962,8 +957,10 @@ public class PrefHelper {
      *
      * @return attributionWindow An {@link Integer} value containing the current attribution window or null
      */
-    public Integer getLATDAttributionWindow(){
-        return (hasPrefValue(KEY_LATD_ATTRIBUTION_WINDOW) ? getInteger(KEY_LATD_ATTRIBUTION_WINDOW) : null);
+    @SuppressWarnings("WeakerAccess")
+    public int getLATDAttributionWindow(){
+        return getInteger(KEY_LATD_ATTRIBUTION_WINDOW,
+                ServerRequestGetLATD.defaultAttributionWindow);
     }
     
     // ALL GENERIC CALLS

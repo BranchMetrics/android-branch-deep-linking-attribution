@@ -8,10 +8,19 @@ import org.json.JSONObject;
 public class ServerRequestGetLATD extends ServerRequest {
 
     private BranchLastAttributedTouchDataListener callback;
+    // defaultAttributionWindow is the "default" for the SDK's side, server interprets it as 30 days
+    protected static final int defaultAttributionWindow = -1;
+    private int attributionWindow;
 
     ServerRequestGetLATD(Context context, String requestPath, BranchLastAttributedTouchDataListener callback) {
+        this(context, requestPath, callback, PrefHelper.getInstance(context).getLATDAttributionWindow());
+    }
+
+    ServerRequestGetLATD(Context context, String requestPath,
+                         BranchLastAttributedTouchDataListener callback, int attributionWindow) {
         super(context, requestPath);
         this.callback = callback;
+        this.attributionWindow = attributionWindow;
         JSONObject reqBody = new JSONObject();
         try {
             setPost(reqBody);
@@ -19,6 +28,10 @@ public class ServerRequestGetLATD extends ServerRequest {
             e.printStackTrace();
         }
         updateEnvironment(context, reqBody);
+    }
+
+    protected int getAttributionWindow() {
+        return attributionWindow;
     }
 
     @Override
@@ -34,7 +47,7 @@ public class ServerRequestGetLATD extends ServerRequest {
             }
         } else {
             callback.onDataFetched(null,
-                    new BranchError("Failed to get the Cross Platform IDs",
+                    new BranchError("Failed to get last attributed touch data",
                             BranchError.ERR_BRANCH_INVALID_REQUEST));
         }
     }
@@ -42,7 +55,7 @@ public class ServerRequestGetLATD extends ServerRequest {
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         callback.onDataFetched(null,
-                new BranchError("Failed to get the Cross Platform IDs",
+                new BranchError("Failed to get last attributed touch data",
                         BranchError.ERR_BRANCH_INVALID_REQUEST));
     }
 

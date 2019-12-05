@@ -1833,18 +1833,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      */
     public void getCrossPlatformIds(BranchCrossPlatformIdListener callback) {
+        // todo constructor that makes a web request
         new BranchCrossPlatformId(callback, context_);
     }
 
     /**
-     * Gets the available last attributed touch data. Defaults to a 30 day attribution window, and sends -1 to request the default from the server.
+     * Gets the available last attributed touch data. The attribution window is set to the value last
+     * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
+     * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
      *
      * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
      *                 to callback with last attributed touch data
      *
      */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback) {
-        prefHelper_.setLATDAttributionWindow(-1);
         if (context_ != null) {
             handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback));
         }
@@ -1861,9 +1863,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
-        prefHelper_.setLATDAttributionWindow(attributionWindow);
         if (context_ != null) {
-            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback));
+            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback, attributionWindow));
         }
     }
 
