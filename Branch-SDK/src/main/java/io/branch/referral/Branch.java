@@ -22,8 +22,6 @@ import android.text.TextUtils;
 import android.view.View;
 
 import io.branch.referral.Defines.PreinstallKey;
-import io.branch.referral.util.BranchCrossPlatformId;
-import io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -1828,13 +1826,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Gets all available cross platform ids.
      *
-     * @param callback An instance of {@link io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener}
+     * @param callback An instance of {@link io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener}
      *                to callback with cross platform ids
      *
      */
-    public void getCrossPlatformIds(BranchCrossPlatformIdListener callback) {
-        // todo constructor that makes a web request
-        new BranchCrossPlatformId(callback, context_);
+    public void getCrossPlatformIds(ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
+        if (context_ != null) {
+            handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID.getPath(), callback));
+        }
     }
 
     /**

@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import io.branch.referral.Defines.RequestPath;
-import io.branch.referral.util.BranchCrossPlatformId;
 
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -18,9 +17,7 @@ public class BranchCPIDTest extends BranchEventTest {
 
     @Test
     public void testGetCPID() throws Throwable{
-        Branch branch = Branch.getInstance(getTestContext());
-
-        new BranchCrossPlatformId(null, getTestContext());
+        Branch.getInstance(getTestContext()).getCrossPlatformIds(null);
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(1, queue.getSize());
