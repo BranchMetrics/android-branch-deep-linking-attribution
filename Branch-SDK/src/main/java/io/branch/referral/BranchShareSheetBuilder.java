@@ -19,14 +19,15 @@ import java.util.List;
  * <p> Class for building a share link dialog.This creates a chooser for selecting application for
  * sharing a link created with given parameters. </p>
  */
+@SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
 public class BranchShareSheetBuilder {
 
     private final Activity activity_;
 
     private String shareMsg_;
     private String shareSub_;
-    private Branch.BranchLinkShareListener callback_ = null;
-    private Branch.IChannelProperties channelPropertiesCallback_ = null;
+    private Branch.BranchLinkShareListener callback_;
+    private Branch.IChannelProperties channelPropertiesCallback_;
 
     private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
     private String defaultURL_;
@@ -40,12 +41,12 @@ public class BranchShareSheetBuilder {
     private int styleResourceID_;
     private boolean setFullWidthStyle_;
     private int dialogThemeResourceID_;
-    private int dividerHeight = -1;
-    private String sharingTitle = null;
-    private View sharingTitleView = null;
+    private int dividerHeight_ = -1;
+    private String sharingTitle_ = null;
+    private View sharingTitleView_ = null;
     private int iconSize_ = 50;
 
-    BranchShortLinkBuilder shortLinkBuilder_;
+    private BranchShortLinkBuilder shortLinkBuilder_;
     private List<String> includeInShareSheet = new ArrayList<>();
     private List<String> excludeFromShareSheet = new ArrayList<>();
 
@@ -63,7 +64,7 @@ public class BranchShareSheetBuilder {
             Iterator<String> keys = parameters.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                shortLinkBuilder_.addParameters(key, (String) parameters.get(key));
+                shortLinkBuilder_.addParameters(key, parameters.get(key));
             }
         } catch (Exception ignore) {
         }
@@ -366,7 +367,7 @@ public class BranchShareSheetBuilder {
      * @return this Builder object to allow for chaining of calls to set methods.
      */
     public BranchShareSheetBuilder setDividerHeight(int height) {
-        this.dividerHeight = height;
+        this.dividerHeight_ = height;
         return this;
     }
 
@@ -377,7 +378,7 @@ public class BranchShareSheetBuilder {
      * @return this Builder object to allow for chaining of calls to set methods.
      */
     public BranchShareSheetBuilder setSharingTitle(String title) {
-        this.sharingTitle = title;
+        this.sharingTitle_ = title;
         return this;
     }
 
@@ -388,7 +389,7 @@ public class BranchShareSheetBuilder {
      * @return this Builder object to allow for chaining of calls to set methods.
      */
     public BranchShareSheetBuilder setSharingTitle(View titleView) {
-        this.sharingTitleView = titleView;
+        this.sharingTitleView_ = titleView;
         return this;
     }
 
@@ -569,15 +570,15 @@ public class BranchShareSheetBuilder {
     }
 
     public int getDividerHeight() {
-        return dividerHeight;
+        return dividerHeight_;
     }
 
     public String getSharingTitle() {
-        return sharingTitle;
+        return sharingTitle_;
     }
 
     public View getSharingTitleView() {
-        return sharingTitleView;
+        return sharingTitleView_;
     }
 
     public int getStyleResourceID() {

@@ -944,12 +944,12 @@ public class BranchUniversalObject implements Parcelable {
      */
     private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
         private final Branch.BranchLinkShareListener originalCallback_;
-        private final BranchShareSheetBuilder shareLinkBuilder_;
+        private final BranchShareSheetBuilder shareSheetBuilder_;
         private final LinkProperties linkProperties_;
         
         LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback, BranchShareSheetBuilder shareLinkBuilder, LinkProperties linkProperties) {
             originalCallback_ = originalCallback;
-            shareLinkBuilder_ = shareLinkBuilder;
+            shareSheetBuilder_ = shareLinkBuilder;
             linkProperties_ = linkProperties;
         }
         
@@ -989,7 +989,7 @@ public class BranchUniversalObject implements Parcelable {
             }
             if (originalCallback_ instanceof Branch.ExtendedBranchLinkShareListener) {
                 if (((Branch.ExtendedBranchLinkShareListener) originalCallback_).onChannelSelected(channelName, BranchUniversalObject.this, linkProperties_)) {
-                    shareLinkBuilder_.setShortLinkBuilderInternal(getLinkBuilder(shareLinkBuilder_.getShortLinkBuilder(), linkProperties_));
+                    shareSheetBuilder_.setShortLinkBuilderInternal(getLinkBuilder(shareSheetBuilder_.getShortLinkBuilder(), linkProperties_));
                 }
             }
         }
