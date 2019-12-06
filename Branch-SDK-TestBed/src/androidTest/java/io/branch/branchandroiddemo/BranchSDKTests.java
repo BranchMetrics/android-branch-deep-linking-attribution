@@ -22,6 +22,8 @@ import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.PrefHelper;
+import io.branch.referral.ServerRequestGetCPID;
+import io.branch.referral.util.BranchCPID;
 
 @RunWith(AndroidJUnit4.class)
 public class BranchSDKTests {
@@ -29,6 +31,25 @@ public class BranchSDKTests {
     private Context mContext;
     private Branch branch;
     private PrefHelper prefHelper;
+
+    CountDownLatch lock = new CountDownLatch(1);
+
+    @Test
+    public void testGetCPID() throws Throwable {
+        branch.initSession();
+        branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
+            @Override public void onDataFetched(BranchCPID cpidResponse, BranchError error) {
+                if (error == null) {
+                    Assert.assertNotNull(cpidResponse);
+                } else {
+                    Assert.fail("getCrossPlatformIds returned error, " + error.getMessage());
+                }
+                lock.countDown();
+            }
+        });
+
+        Assert.assertTrue(lock.await(5000, TimeUnit.MILLISECONDS));
+    }
 
     @Before
     public void setUp() {

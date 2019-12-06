@@ -11,7 +11,6 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -23,10 +22,7 @@ import android.text.TextUtils;
 import android.view.View;
 
 import io.branch.referral.Defines.PreinstallKey;
-import io.branch.referral.util.BranchCrossPlatformId;
-import io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener;
-import io.branch.referral.util.BranchLastAttributedTouchData;
-import io.branch.referral.util.BranchLastAttributedTouchData.BranchLastAttributedTouchDataListener;
+import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1827,13 +1823,48 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    public void getCrossPlatformIds(BranchCrossPlatformIdListener callback) {
-        new BranchCrossPlatformId(callback, context_);
+    /**
+     * Gets all available cross platform ids.
+     *
+     * @param callback An instance of {@link io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener}
+     *                to callback with cross platform ids
+     *
+     */
+    public void getCrossPlatformIds(ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
+        if (context_ != null) {
+            handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID.getPath(), callback));
+        }
     }
 
+    /**
+     * Gets the available last attributed touch data. The attribution window is set to the value last
+     * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
+     * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
+     *
+     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     *                 to callback with last attributed touch data
+     *
+     */
+    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback) {
+        if (context_ != null) {
+            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback));
+        }
+    }
+
+    /**
+     * Gets the available last attributed touch data with a custom set attribution window.
+     *
+     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     *                to callback with last attributed touch data
+     * @param attributionWindow An {@link int} to bound the the window of time in days during which
+     *                          the attribution data is considered valid. Note that, server side, the
+     *                          maximum value is 90.
+     *
+     */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
-        prefHelper_.setLATDAttributonWindow(attributionWindow);
-        new BranchLastAttributedTouchData(callback, context_);
+        if (context_ != null) {
+            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback, attributionWindow));
+        }
     }
 
     /**
