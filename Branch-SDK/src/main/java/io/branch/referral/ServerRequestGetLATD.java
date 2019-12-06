@@ -46,17 +46,17 @@ public class ServerRequestGetLATD extends ServerRequest {
                 callback.onDataFetched(response.getObject(), null);
             }
         } else {
-            callback.onDataFetched(null,
-                    new BranchError("Failed to get last attributed touch data",
-                            BranchError.ERR_BRANCH_INVALID_REQUEST));
+            handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Failed to get last attributed touch data");
         }
     }
 
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        callback.onDataFetched(null,
-                new BranchError("Failed to get last attributed touch data",
-                        BranchError.ERR_BRANCH_INVALID_REQUEST));
+        if (callback != null) {
+            callback.onDataFetched(null,
+                    new BranchError("Failed to get last attributed touch data",
+                            BranchError.ERR_BRANCH_INVALID_REQUEST));
+        }
     }
 
     @Override
