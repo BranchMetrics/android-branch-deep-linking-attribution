@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ class ShareLinkManager {
     Branch.IChannelProperties channelPropertiesCallback_;
     
     /* List of apps available for sharing. */
-    private List<ResolveInfo> appList_;
+    private List<ResolveInfo> displayedAppList_;
     /* Intent for sharing with selected application.*/
     private Intent shareLinkIntent_;
     /* Background color for the list view in enabled state. */
@@ -55,7 +56,7 @@ class ShareLinkManager {
     private int shareDialogThemeID_ = -1;
     /* Size of app icons in share sheet */
     private int iconSize_ = 50;
-    private Branch.ShareLinkBuilder builder_;
+    private BranchShareSheetBuilder builder_;
     final int padding = 5;
     final int leftMargin = 100;
     private List<String> includeInShareSheet = new ArrayList<>();
@@ -64,10 +65,10 @@ class ShareLinkManager {
     /**
      * Creates an application selector and shares a link on user selecting the application.
      *
-     * @param builder A {@link io.branch.referral.Branch.ShareLinkBuilder} instance to build share link.
+     * @param builder A {@link BranchShareSheetBuilder} instance to build share link.
      * @return Instance of the {@link Dialog} holding the share view. Null if sharing dialog is not created due to any error.
      */
-    public Dialog shareLink(Branch.ShareLinkBuilder builder) {
+    Dialog shareLink(BranchShareSheetBuilder builder) {
         builder_ = builder;
         context_ = builder.getActivity();
         callback_ = builder.getCallback();
@@ -98,7 +99,7 @@ class ShareLinkManager {
      *                     A value of true will close the dialog with an animation. Setting this value
      *                     to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog(boolean animateClose) {
+    void cancelShareLinkDialog(boolean animateClose) {
         if (shareDlg_ != null && shareDlg_.isShowing()) {
             if (animateClose) {
                 // Cancel the dialog with animation
@@ -109,77 +110,40 @@ class ShareLinkManager {
             }
         }
     }
-    
+
     /**
      * Create a custom chooser dialog with available share options.
      *
      * @param preferredOptions List of {@link io.branch.referral.SharingHelper.SHARE_WITH} options.
      */
     private void createShareDialog(List<SharingHelper.SHARE_WITH> preferredOptions) {
-        final PackageManager packageManager = context_.getPackageManager();
-        final List<ResolveInfo> preferredApps = new ArrayList<>();
-        final List<ResolveInfo> matchingApps = packageManager.queryIntentActivities(shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
-        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
-        final List<ResolveInfo> cleanedMatchingAppsFinal = new ArrayList<>();
-        ArrayList<SharingHelper.SHARE_WITH> packagesFilterList = new ArrayList<>(preferredOptions);
+        final List<ResolveInfo> matchingApps = context_.getPackageManager().queryIntentActivities(
+                shareLinkIntent_, PackageManager.MATCH_DEFAULT_ONLY);
 
-        /* Get all apps available for sharing and the available preferred apps. */
-        for (ResolveInfo resolveInfo : matchingApps) {
-            SharingHelper.SHARE_WITH foundMatching = null;
-            String packageName = resolveInfo.activityInfo.packageName;
-            for (SharingHelper.SHARE_WITH PackageFilter : packagesFilterList) {
-                if (resolveInfo.activityInfo != null && packageName.toLowerCase().contains(PackageFilter.toString().toLowerCase())) {
-                    foundMatching = PackageFilter;
-                    break;
-                }
+        // if includeInShareSheet is not empty, add those apps, else add all matchingApps, then exclude whatever is in excludeFromShareSheet
+        final List<ResolveInfo> completeAppList = new ArrayList<>(getExplicitlyIncludedMatchingApps(matchingApps));
+
+        // return overlap between matching apps and preferredOptions
+        final List<ResolveInfo> availablePreferredApps = getPreferredMatchingApps(matchingApps, preferredOptions);
+        // move availablePreferredApps to front of completeAppList
+        completeAppList.removeAll(availablePreferredApps);
+        completeAppList.addAll(0, availablePreferredApps);
+
+        // add copy link item to the bottom of the list
+        completeAppList.add(new CopyLinkItem());
+        availablePreferredApps.add(new CopyLinkItem());
+
+        filterOutExplicitlyExcludedApps(completeAppList);
+
+        // if availablePreferredApps is not empty (ignoring CopyLinkItem), display availablePreferredApps
+        // else display completeAppList.
+        if (availablePreferredApps.size() > 1) {
+            if (completeAppList.size() > availablePreferredApps.size()) {
+                availablePreferredApps.add(new MoreShareItem());
             }
-            if (foundMatching != null) {
-                preferredApps.add(resolveInfo);
-                preferredOptions.remove(foundMatching);
-            }
-        }
-        /* Create all app list with copy link item. */
-        matchingApps.removeAll(preferredApps);
-        matchingApps.addAll(0, preferredApps);
-        
-        //if apps are explicitly being included, add only those, otherwise at the else statement add them all
-        if (includeInShareSheet.size() > 0) {
-            for (ResolveInfo r : matchingApps) {
-                if (includeInShareSheet.contains(r.activityInfo.packageName)) {
-                    cleanedMatchingApps.add(r);
-                }
-            }
+            displayedAppList_ = availablePreferredApps;
         } else {
-            cleanedMatchingApps = matchingApps;
-        }
-        
-        //does our list contain explicitly excluded items? do not carry them into the next list
-        for (ResolveInfo r : cleanedMatchingApps) {
-            if (!excludeFromShareSheet.contains(r.activityInfo.packageName)) {
-                cleanedMatchingAppsFinal.add(r);
-            }
-        }
-        
-        //make sure our "show more" option includes preferred apps
-        for (ResolveInfo r : matchingApps) {
-            for (SharingHelper.SHARE_WITH shareWith : packagesFilterList)
-                if (shareWith.toString().equalsIgnoreCase(r.activityInfo.packageName)) {
-                    cleanedMatchingAppsFinal.add(r);
-                }
-        }
-        
-        cleanedMatchingAppsFinal.add(new CopyLinkItem());
-        matchingApps.add(new CopyLinkItem());
-        preferredApps.add(new CopyLinkItem());
-        
-        if (preferredApps.size() > 1) {
-            /* Add more and copy link option to preferred app.*/
-            if (matchingApps.size() > preferredApps.size()) {
-                preferredApps.add(new MoreShareItem());
-            }
-            appList_ = preferredApps;
-        } else {
-            appList_ = cleanedMatchingAppsFinal;
+            displayedAppList_ = completeAppList;
         }
 
         /* Copy link option will be always there for sharing. */
@@ -219,16 +183,17 @@ class ShareLinkManager {
             @Override public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 if (view == null) return;
                 if (view.getTag() instanceof MoreShareItem) {
-                    appList_ = cleanedMatchingAppsFinal;
+                    displayedAppList_ = completeAppList;
                     adapter.notifyDataSetChanged();
                 } else if (view.getTag() instanceof ResolveInfo) {
                     ResolveInfo resolveInfo = (ResolveInfo) view.getTag();
                     if (callback_ != null) {
                         String selectedChannelName = "";
-                        if (context_ != null && resolveInfo.loadLabel(context_.getPackageManager()) != null) {
-                            selectedChannelName = resolveInfo.loadLabel(context_.getPackageManager()).toString();
+                        final PackageManager packageManager = context_.getPackageManager();
+                        if (context_ != null && resolveInfo.loadLabel(packageManager) != null) {
+                            selectedChannelName = resolveInfo.loadLabel(packageManager).toString();
                         }
-                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(context_.getPackageManager()).toString());
+                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(packageManager).toString());
                         callback_.onChannelSelected(selectedChannelName);
                     }
                     adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
@@ -303,7 +268,56 @@ class ShareLinkManager {
             }
         });
     }
-    
+
+    private List<ResolveInfo> getPreferredMatchingApps(List<ResolveInfo> matchingApps, List<SharingHelper.SHARE_WITH> preferredOptions) {
+        final List<ResolveInfo> availablePreferredApps = new ArrayList<>();
+        /* Get all apps available for sharing and the available preferred apps. */
+        for (ResolveInfo resolveInfo : matchingApps) {
+            if (resolveInfo == null || resolveInfo.activityInfo == null) continue;
+
+            SharingHelper.SHARE_WITH foundMatching = null;
+            String packageName = resolveInfo.activityInfo.packageName;
+            for (SharingHelper.SHARE_WITH packageFilter : preferredOptions) {
+                if (packageName.toLowerCase().contains(packageFilter.toString().toLowerCase())) {
+                    foundMatching = packageFilter;
+                    break;
+                }
+            }
+            if (foundMatching != null) {
+                availablePreferredApps.add(resolveInfo);
+            }
+        }
+
+        return availablePreferredApps;
+    }
+
+    private List<ResolveInfo> getExplicitlyIncludedMatchingApps(List<ResolveInfo> matchingApps) {
+        List<ResolveInfo> cleanedMatchingApps = new ArrayList<>();
+
+        //if apps are explicitly being included, add only those, otherwise at the else statement add them all
+        if (includeInShareSheet.size() > 0) {
+            for (ResolveInfo r : matchingApps) {
+                if (includeInShareSheet.contains(r.activityInfo.packageName)) {
+                    cleanedMatchingApps.add(r);
+                }
+            }
+        } else {
+            cleanedMatchingApps = matchingApps;
+        }
+
+        return cleanedMatchingApps;
+    }
+
+    private void filterOutExplicitlyExcludedApps(List<ResolveInfo> completeAppList) {
+        // does our list contain explicitly excluded items? do not carry them into the next list
+        Iterator<ResolveInfo> iter = completeAppList.iterator();
+        while (iter.hasNext()) {
+            ResolveInfo r = iter.next();
+            if (r != null && r.activityInfo != null && excludeFromShareSheet.contains(r.activityInfo.packageName)) {
+                iter.remove();
+            }
+        }
+    }
     
     /**
      * Invokes a sharing client with a link created by the given json objects.
@@ -404,12 +418,12 @@ class ShareLinkManager {
         
         @Override
         public int getCount() {
-            return appList_.size();
+            return displayedAppList_.size();
         }
         
         @Override
         public Object getItem(int position) {
-            return appList_.get(position);
+            return displayedAppList_.get(position);
         }
         
         @Override
@@ -425,7 +439,7 @@ class ShareLinkManager {
             } else {
                 itemView = (ShareItemView) convertView;
             }
-            ResolveInfo resolveInfo = appList_.get(position);
+            ResolveInfo resolveInfo = displayedAppList_.get(position);
             boolean setSelected = position == selectedPos;
             itemView.setLabel(resolveInfo.loadLabel(context_.getPackageManager()).toString(),
                     resolveInfo.loadIcon(context_.getPackageManager()), setSelected);

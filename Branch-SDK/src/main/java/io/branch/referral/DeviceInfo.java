@@ -1,6 +1,8 @@
 package io.branch.referral;
 
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -9,6 +11,8 @@ import android.webkit.WebSettings;
 import io.branch.referral.Defines.ModuleNameKeys;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static android.content.Context.UI_MODE_SERVICE;
 
 /**
  * <p>
@@ -122,6 +126,20 @@ class DeviceInfo {
         } catch (JSONException ignore) {
 
         }
+    }
+
+    /**
+     * Detects TV devices.
+     *
+     * @return a {@link Boolean} indicating whether the device is a television set.
+     */
+    boolean isTV() {
+        UiModeManager uiModeManager = (UiModeManager) context_.getSystemService(UI_MODE_SERVICE);
+        if (uiModeManager == null) {
+            PrefHelper.Debug("uiModeManager is null, mark this as a non-TV device by default.");
+            return false;
+        }
+        return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
     /**
