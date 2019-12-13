@@ -86,10 +86,12 @@ public class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
         Object adInfoObj = null;
         if (context != null) {
             try {
-                Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-                Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+                Class<?> advertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                Method getAdvertisingIdInfoMethod = advertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
                 adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context);
             } catch (Throwable ignore) {
+                PrefHelper.Debug("Either class com.google.android.gms.ads.identifier.AdvertisingIdClient " +
+                        "or its method, getAdvertisingIdInfo, was not found");
             }
         }
         return adInfoObj;
@@ -106,8 +108,12 @@ public class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
     private void setGoogleLATWithAdvertisingIdClient(@NonNull SystemObserver so, Object adInfoObj) {
         try {
             Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
-            so.setLAT((Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0);
+            Object latEnabled = getLatMethod.invoke(adInfoObj);
+            if (latEnabled instanceof Boolean) {
+                so.setLAT((Boolean) latEnabled ? 1 : 0);
+            }
         } catch (Exception ignore) {
+            PrefHelper.Debug("isLimitAdTrackingEnabled method not found");
         }
     }
 

@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.UiModeManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -136,7 +137,7 @@ abstract class SystemObserver {
                 }
                 List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 
-                isInstalled = (list != null && list.size() > 0);
+                isInstalled = (!list.isEmpty());
             } catch (Exception e) {
                 PrefHelper.LogException("Error obtaining PackageInfo", e);
             }
@@ -194,11 +195,7 @@ abstract class SystemObserver {
      * @return A string representing the ISO2 Country code (eg US, IN)
      */
     static String getISO2CountryCode() {
-        if (Locale.getDefault() != null) {
-            return Locale.getDefault().getCountry();
-        } else {
-            return "";
-        }
+        return Locale.getDefault().getCountry();
     }
 
     /**
@@ -207,11 +204,7 @@ abstract class SystemObserver {
      * @return A string representing the ISO2 language code (eg en, ml)
      */
     static String getISO2LanguageCode() {
-        if (Locale.getDefault() != null) {
-            return Locale.getDefault().getLanguage();
-        } else {
-            return "";
-        }
+        return Locale.getDefault().getLanguage();
     }
 
     /**
@@ -393,7 +386,8 @@ abstract class SystemObserver {
         AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         boolean isPrefetchStarted = false;
         if (isFireOSDevice()) {
-            if (context == null) return isPrefetchStarted;
+            if (context == null) //noinspection ConstantConditions
+                return isPrefetchStarted;
             try {
                 ContentResolver cr = context.getContentResolver();
                 setLAT(Secure.getInt(cr, "limit_ad_tracking"));
@@ -502,6 +496,7 @@ abstract class SystemObserver {
         private String uniqueId;
         private boolean isRealId;
 
+        @SuppressLint("HardwareIds")
         UniqueId(Context context, boolean isDebug) {
             this.isRealId = !isDebug;
             this.uniqueId = BLANK;
