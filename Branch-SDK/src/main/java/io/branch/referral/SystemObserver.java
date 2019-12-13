@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.UiModeManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -20,16 +21,12 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import io.branch.referral.Defines.ModuleNameKeys;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
@@ -46,7 +43,6 @@ abstract class SystemObserver {
      */
     static final String BLANK = "bnc_no_value";
 
-    private static final int GAID_FETCH_TIME_OUT = 1500;
     private static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
     private String GAIDString_ = null;
     private int LATVal_ = 0;
@@ -141,7 +137,7 @@ abstract class SystemObserver {
                 }
                 List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 
-                isInstalled = (list != null && list.size() > 0);
+                isInstalled = (!list.isEmpty());
             } catch (Exception e) {
                 PrefHelper.LogException("Error obtaining PackageInfo", e);
             }
@@ -199,11 +195,7 @@ abstract class SystemObserver {
      * @return A string representing the ISO2 Country code (eg US, IN)
      */
     static String getISO2CountryCode() {
-        if (Locale.getDefault() != null) {
-            return Locale.getDefault().getCountry();
-        } else {
-            return "";
-        }
+        return Locale.getDefault().getCountry();
     }
 
     /**
@@ -212,11 +204,7 @@ abstract class SystemObserver {
      * @return A string representing the ISO2 language code (eg en, ml)
      */
     static String getISO2LanguageCode() {
-        if (Locale.getDefault() != null) {
-            return Locale.getDefault().getLanguage();
-        } else {
-            return "";
-        }
+        return Locale.getDefault().getLanguage();
     }
 
     /**
@@ -398,14 +386,15 @@ abstract class SystemObserver {
         AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         boolean isPrefetchStarted = false;
         if (isFireOSDevice()) {
-            if (context == null) return isPrefetchStarted;
+            if (context == null) //noinspection ConstantConditions
+                return isPrefetchStarted;
             try {
                 ContentResolver cr = context.getContentResolver();
-                LATVal_ = Secure.getInt(cr, "limit_ad_tracking");
-                GAIDString_ = Secure.getString(cr, "advertising_id");
+                setLAT(Secure.getInt(cr, "limit_ad_tracking"));
+                setGAID(Secure.getString(cr, "advertising_id"));
                 // Don't save advertising id if it's empty/all zeroes/lat=true
                 if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
-                    GAIDString_ = null;
+                    setGAID(null);
                 }
                 if (callback != null) {
                     callback.onAdsParamsFetchFinished();
@@ -416,116 +405,6 @@ abstract class SystemObserver {
             new GAdsPrefetchTask(context, callback).executeTask();
         }
         return isPrefetchStarted;
-    }
-
-    /**
-     * <p>
-     * Async task to fetch GAID and LAT value.
-     * This task fetch the GAID and LAT in background. The Background task times out
-     * After GAID_FETCH_TIME_OUT
-     * </p>
-     */
-    private class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
-        private WeakReference<Context> contextRef_;
-        private final AdsParamsFetchEvents callback_;
-
-        public GAdsPrefetchTask(Context context, AdsParamsFetchEvents callback) {
-            contextRef_ = new WeakReference<>(context);
-            callback_ = callback;
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            final CountDownLatch latch = new CountDownLatch(1);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Context context = contextRef_.get();
-                    if (context != null) {
-                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-                        Object adInfoObj = getAdInfoObject(context);
-                        setGoogleLATValue(adInfoObj);
-                        if (LATVal_ == 1) {
-                            GAIDString_ = null;
-                        } else {
-                            setGAID(adInfoObj);
-                        }
-                    }
-                    latch.countDown();
-                }
-            }).start();
-
-            try {
-                //Wait GAID_FETCH_TIME_OUT milli sec max to receive the GAID and LAT
-                latch.await(GAID_FETCH_TIME_OUT, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (callback_ != null) {
-                callback_.onAdsParamsFetchFinished();
-            }
-        }
-
-        /**
-         * Returns an instance of com.google.android.gms.ads.identifier.AdvertisingIdClient class  to be used
-         * for getting GAId and LAT value
-         *
-         * @param context Context.
-         * @return {@link Object} instance of AdvertisingIdClient class
-         */
-        private Object getAdInfoObject(Context context) {
-            Object adInfoObj = null;
-            if (context != null) {
-                try {
-                    Class<?> AdvertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-                    Method getAdvertisingIdInfoMethod = AdvertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-                    adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context);
-                } catch (Throwable ignore) {
-                }
-            }
-            return adInfoObj;
-        }
-
-        /**
-         * <p>Google now requires that all apps use a standardised Advertising ID for all ad-based
-         * actions within Android apps.</p>
-         * <p>The Google Play services APIs expose the advertising tracking ID as UUID such as this:</p>
-         * <pre>38400000-8cf0-11bd-b23e-10b96e40000d</pre>
-         *
-         * @param adInfoObj AdvertisingIdClient.
-         * @see <a href="https://developer.android.com/google/play-services/id.html"> Android Developers - Advertising ID</a>
-         */
-        private void setGAID(Object adInfoObj) {
-            try {
-                Method getIdMethod = adInfoObj.getClass().getMethod("getId");
-                GAIDString_ = (String) getIdMethod.invoke(adInfoObj);
-            } catch (Exception ignore) {
-            }
-        }
-
-        /**
-         * <p>Set the limit-ad-tracking status of the advertising identifier.</p>
-         * <p>Check the Google Play services to for LAT enabled or disabled and return the LAT value as an integer.</p>
-         *
-         * @param adInfoObj AdvertisingIdClient.
-         * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info.html#isLimitAdTrackingEnabled()">
-         * Android Developers - Limit Ad Tracking</a>
-         */
-        private void setGoogleLATValue(Object adInfoObj) {
-            try {
-                Method getLatMethod = adInfoObj.getClass().getMethod("isLimitAdTrackingEnabled");
-                LATVal_ = (Boolean) getLatMethod.invoke(adInfoObj) ? 1 : 0;
-            } catch (Exception ignore) {
-            }
-        }
     }
 
     interface AdsParamsFetchEvents {
@@ -617,6 +496,7 @@ abstract class SystemObserver {
         private String uniqueId;
         private boolean isRealId;
 
+        @SuppressLint("HardwareIds")
         UniqueId(Context context, boolean isDebug) {
             this.isRealId = !isDebug;
             this.uniqueId = BLANK;
@@ -679,6 +559,14 @@ abstract class SystemObserver {
 
     int getLATVal() {
         return LATVal_;
+    }
+
+    void setGAID(String gaid) {
+        GAIDString_ = gaid;
+    }
+
+    void setLAT(int lat) {
+        LATVal_ = lat;
     }
 
     /**
