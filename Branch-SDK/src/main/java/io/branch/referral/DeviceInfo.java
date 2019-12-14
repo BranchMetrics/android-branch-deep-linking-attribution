@@ -170,6 +170,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), displayMetrics.densityDpi);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
+            requestObj.put(Defines.Jsonkey.UIMode.getKey(), SystemObserver.getUIMode(context_));
 
             String osName = SystemObserver.getOS(context_);
             if (!isNullOrEmptyOrBlank(osName)) {
