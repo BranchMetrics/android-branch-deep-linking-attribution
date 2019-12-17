@@ -3483,15 +3483,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         private InitSessionBuilder() {}
 
+        /**
+         * <p> Add callback to Branch initialization to retrieve referring params attached to the
+         * Branch link via the dashboard. User eventually decides how to use the referring params but
+         * they are primarily meant to be used for navigating to specific content within the app.</p>
+         *
+         * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
+         *                     following successful (or unsuccessful) initialisation of the session
+         *                     with the Branch API.
+         */
         public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
             this.callback = new BranchUniversalReferralInitWrapper(callback);
             return this;
         }
 
         /**
-         * <p>Add callback to Branch initialization to retrieve referring as setup on Branch dashboard.
-         * User eventually decides how to use referring params but they are primarily meant to meant
-         * be used as params for navigating to specific content within the app.</p>
+         * <p> Add callback to Branch initialization to retrieve referring params attached to the
+         * Branch link via the dashboard. User eventually decides how to use the referring params but
+         * they are primarily meant to be used for navigating to specific content within the app.</p>
          *
          * @param callback     A {@link BranchReferralInitListener} instance that will be called
          *                     following successful (or unsuccessful) initialisation of the session
@@ -3503,7 +3512,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         /**
-         * <p>Add Activity for for context. Context can be used in the following ways: todo finish writing this</p>
+         * <p> Add Activity for for context. Context can be used in the following ways: todo finish writing this</p>
          *
          * @param activity     The calling {@link Activity} for context.
          * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
@@ -3513,19 +3522,37 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return this;
         }
 
+
+        /**
+         * <p> Specify a {@link Uri} variable containing the details of the source link that led to this initialisation action.</p>
+         *
+         * @param uri A {@link  Uri} variable from the intent.
+         */
         public InitSessionBuilder withData(Uri uri) {
             this.uri = uri;
             return this;
         }
 
+        /**
+         * <p> Specify whether the initialisation can count as a referrable action. </p>
+         *
+         * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
+         *                     should be considered as potentially referrable or not. By default, a session is only referrable
+         *                     if it is a fresh install resulting from clicking on a Branch link. Overriding this gives you
+         *                     control of who is referrable.
+         */
         public InitSessionBuilder isReferrable(boolean isReferrable) {
             this.isReferrable = isReferrable;
             return this;
         }
 
-        //Will not wait for new intent onResume.
         /**
-         * <p>Tells Branch to not wait for onResume to retrieve the new intent.</p>
+         * <p> Session initialization is expected to begin in onStart rather than onResume to prevent
+         * multiple initializations during the a single app session. However, by default, Branch actually
+         * waits until onResume to start session initialization, so as to ensure that the latest intent
+         * data is available. Set this flag to start session without delay.</p>
+         *
+         * @param ignoreIntent a {@link Boolean} indicating if intent is needed before session initialization .
          */
         public InitSessionBuilder ignoreIntent(boolean ignoreIntent) {
             this.ignoreIntent = ignoreIntent;
@@ -3552,37 +3579,48 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         /**
-         * Re-Initialize a session. Call from Activity.onNewIntent().
+         * <p> Re-Initialize a session. Call from Activity.onNewIntent().
          * This solves a very specific use case, whereas the app is already in the foreground and a new
-         * intent with a Uri is delivered to the foregrounded activity. Note that the Uri can also be
-         * stored as an extra in the field under the key `IntentKeys.BranchURI.getKey()`.
+         * intent with a Uri is delivered to the foregrounded activity.
          *
-         * @param intent  The {@link Intent} with a branch link as the uri.
+         * Note that the Uri can also be stored as an extra in the field under the key `IntentKeys.BranchURI.getKey()` (i.e. "branch").
+         *
+         * Note also, that the since the method is expected to be called from Activity.onNewIntent(),
+         * the implementation assumes the intent will be non-null and will contain a Branch link in
+         * either the URI or in the the extra.</p>
+         *
+         * @param activity The calling {@link Activity} for context and intent data.
          */
-        public void reInit(@NonNull Intent intent) {
-            Branch b = Branch.getInstance();
+        public void reInit(Activity activity) {
+            if (activity == null) return;
+            Intent intent = activity.getIntent();
 
-            b.currentActivityReference_ = new WeakReference<>(activity);
-            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
-            Uri uri = intent.getData();
+            if (intent != null) {
+                Branch b = Branch.getInstance();
 
-            String pushNotifUrl = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey());
-            if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
-                uri = Uri.parse(pushNotifUrl);
+                b.currentActivityReference_ = new WeakReference<>(activity);
+                // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
+                Uri uri = intent.getData();
+
+                String pushNotifUrl = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey());
+                if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
+                    uri = Uri.parse(pushNotifUrl);
+                }
+
+                if (uri != null) {
+                    // Let's indicate that the app was initialized with this uri.
+                    b.setSessionReferredLink(uri.toString());
+
+                    // We need to set the AndroidAppLinkURL as well
+                    b.prefHelper_.setAppLink(uri.toString());
+
+                    // Now, actually initialize the new session.
+                    b.readAndStripParam(uri, activity);
+                }
+
+                b.initializeSession(callback, false);
             }
 
-            if (uri != null) {
-                // Let's indicate that the app was initialized with this uri.
-                b.setSessionReferredLink(uri.toString());
-
-                // We need to set the AndroidAppLinkURL as well
-                b.prefHelper_.setAppLink(uri.toString());
-
-                // Now, actually initialize the new session.
-                b.readAndStripParam(uri, activity);
-            }
-
-            b.initializeSession(callback, false);
         }
     }
 
