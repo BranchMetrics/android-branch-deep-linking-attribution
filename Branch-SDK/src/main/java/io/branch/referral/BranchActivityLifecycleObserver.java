@@ -63,11 +63,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
         // activity also to make sure we do not override the intent data
         if (!Branch.bypassCurrentActivityIntentState()) {
-            branch.setIntentState(Branch.INTENT_STATE.READY);
-            // Grab the intent only for first activity unless this activity is intent to  force new session
-            boolean grabIntentParams = activity.getIntent() != null &&
-                    branch.getInitState() != Branch.SESSION_STATE.INITIALISED;
-            branch.onIntentReady(activity, grabIntentParams);
+            branch.onIntentReady(activity);
         }
 
         if (branch.getInitState() == Branch.SESSION_STATE.UNINITIALISED) {

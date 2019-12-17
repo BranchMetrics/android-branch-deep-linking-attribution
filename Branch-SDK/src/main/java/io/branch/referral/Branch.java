@@ -288,7 +288,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private static boolean isSimulatingInstalls_;
     
-    static boolean isForcedSession_ = false;
+    static boolean ignoreIntent_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
 
@@ -797,7 +797,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isActivityLifeCycleCallbackRegistered_ = false;
         isAutoSessionMode_ = false;
 
-        isForcedSession_ = false;
+        ignoreIntent_ = false;
         isSimulatingInstalls_ = false;
 
         checkInstallReferrer_ = true;
@@ -1382,7 +1382,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
             Uri uri = intent.getData();
 
-            String pushNotifUrl = intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+            String pushNotifUrl = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey());
             if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
                 uri = Uri.parse(pushNotifUrl);
             }
@@ -1424,24 +1424,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         initializeSession(callback, true);
-    }
-    
-    /**
-     * <p>Closes the current session, dependent on the state of the
-     * PrefHelper#getSmartSession() {@link Boolean} value. If <i>true</i>, take no action.
-     * If false, close the session via the {@link #executeClose()} )} method.</p>
-     * <p>Note that if smartSession is enabled, closeSession cannot be called within
-     * a 2 second time span of another Branch action. This has to do with the method that
-     * Branch uses to keep a session alive during Activity transitions</p>
-     *
-     * @deprecated This method is deprecated from SDK v1.14.6. Session Start and close are  automatically handled by Branch.
-     * In case you need to handle sessions manually inorder to support minimum sdk version less than 14 please consider using
-     * SDK version 1.14.5
-     */
-    public void closeSession() {
-        PrefHelper.Debug("closeSession() method is deprecated from SDK v1.14.6.Session is  automatically handled by Branch." +
-                "In case you need to handle sessions manually inorder to support minimum sdk version less than 14 please consider using " +
-                " SDK version 1.14.5");
     }
     
     /*
@@ -1495,7 +1477,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (!hasNetwork_) {
                 // if there's no network connectivity, purge the old install/open
                 ServerRequest req = requestQueue_.peek();
-                if (req != null && (req instanceof ServerRequestRegisterInstall) || (req instanceof ServerRequestRegisterOpen)) {
+                if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
                     requestQueue_.dequeue();
                 }
             } else {
@@ -1605,7 +1587,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     if (!isIntentParamsAlreadyConsumed(activity)) {
-                        Object object = activity.getIntent().getExtras().get(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+                        Object object = activity.getIntent().getExtras().get(Defines.IntentKeys.BranchURI.getKey());
                         String pushIdentifier = null;
 
                         if (object instanceof String) {
@@ -2619,7 +2601,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
-            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
+            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unreportedReferrerAvailable) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
             }
@@ -2656,8 +2638,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return request;
     }
     
-    void onIntentReady(Activity activity, boolean grabIntentParams) {
+    void onIntentReady(Activity activity) {
+        setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+
+        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
+
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
@@ -2775,7 +2761,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         boolean isRestartSessionRequested = false;
         if (intent != null) {
             isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
-                    (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
+                    (intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null &&
                             !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false));
         }
         return isRestartSessionRequested;
@@ -3293,11 +3279,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public static void enableForcedSession() {
-        isForcedSession_ = true;
+        ignoreIntent_ = true;
     }
 
     public static void disableForcedSession() {
-        isForcedSession_ = false;
+        ignoreIntent_ = false;
     }
 
     /**
@@ -3306,7 +3292,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return {@link Boolean} with value true to enable forced session
      */
     public static boolean isForceSessionEnabled() {
-        return isForcedSession_;
+        return ignoreIntent_;
     }
     
     public static void enableBypassCurrentActivityIntentState() {
@@ -3485,6 +3471,123 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
+    }
+
+    public static class InitSessionBuilder {
+        private BranchReferralInitListener callback;
+        private Activity activity;
+        private Uri uri;
+        private boolean isReferrable;
+        private boolean ignoreIntent;
+
+
+        private InitSessionBuilder() {}
+
+        public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
+            this.callback = new BranchUniversalReferralInitWrapper(callback);
+            return this;
+        }
+
+        /**
+         * <p>Add callback to Branch initialization to retrieve referring as setup on Branch dashboard.
+         * User eventually decides how to use referring params but they are primarily meant to meant
+         * be used as params for navigating to specific content within the app.</p>
+         *
+         * @param callback     A {@link BranchReferralInitListener} instance that will be called
+         *                     following successful (or unsuccessful) initialisation of the session
+         *                     with the Branch API.
+         */
+        public InitSessionBuilder withCallback(BranchReferralInitListener callback) {
+            this.callback = callback;
+            return this;
+        }
+
+        /**
+         * <p>Add Activity for for context. Context can be used in the following ways: todo finish writing this</p>
+         *
+         * @param activity     The calling {@link Activity} for context.
+         * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+         */
+        public InitSessionBuilder withActivity(Activity activity) {
+            this.activity = activity;
+            return this;
+        }
+
+        public InitSessionBuilder withData(Uri uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public InitSessionBuilder isReferrable(boolean isReferrable) {
+            this.isReferrable = isReferrable;
+            return this;
+        }
+
+        //Will not wait for new intent onResume.
+        /**
+         * <p>Tells Branch to not wait for onResume to retrieve the new intent.</p>
+         */
+        public InitSessionBuilder ignoreIntent(boolean ignoreIntent) {
+            this.ignoreIntent = ignoreIntent;
+            return this;
+        }
+
+        /**
+         * <p>Initialises a session with the Branch API, registers the passed in Activity, callback
+         * and configuration variables, then initializes session.</p>
+         */
+        public void init() {
+            Branch b = Branch.getInstance();
+            if (b == null) {
+                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                        " in your application class or declare BranchApp in your manifest.");
+                return;
+            }
+            ignoreIntent_ = ignoreIntent;
+            b.setIsReferrable(isReferrable);
+            if (uri != null) {
+                b.readAndStripParam(uri, activity);
+            }
+            b.initUserSessionInternal(callback, activity);
+        }
+
+        /**
+         * Re-Initialize a session. Call from Activity.onNewIntent().
+         * This solves a very specific use case, whereas the app is already in the foreground and a new
+         * intent with a Uri is delivered to the foregrounded activity. Note that the Uri can also be
+         * stored as an extra in the field under the key `IntentKeys.BranchURI.getKey()`.
+         *
+         * @param intent  The {@link Intent} with a branch link as the uri.
+         */
+        public void reInit(@NonNull Intent intent) {
+            Branch b = Branch.getInstance();
+
+            b.currentActivityReference_ = new WeakReference<>(activity);
+            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
+            Uri uri = intent.getData();
+
+            String pushNotifUrl = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey());
+            if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
+                uri = Uri.parse(pushNotifUrl);
+            }
+
+            if (uri != null) {
+                // Let's indicate that the app was initialized with this uri.
+                b.setSessionReferredLink(uri.toString());
+
+                // We need to set the AndroidAppLinkURL as well
+                b.prefHelper_.setAppLink(uri.toString());
+
+                // Now, actually initialize the new session.
+                b.readAndStripParam(uri, activity);
+            }
+
+            b.initializeSession(callback, false);
+        }
+    }
+
+    public static InitSessionBuilder sessionBuilder() {
+        return new InitSessionBuilder();
     }
 
     //-------------------------- Branch Builders--------------------------------------//

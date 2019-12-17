@@ -340,4 +340,29 @@ public class Defines {
         }
 
     }
+
+    /**
+     * <p>
+     * Defines module name keys
+     * </p>
+     */
+    public enum IntentKeys {
+        BranchURI("branch");
+
+        private String key = "";
+
+        IntentKeys(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
 }

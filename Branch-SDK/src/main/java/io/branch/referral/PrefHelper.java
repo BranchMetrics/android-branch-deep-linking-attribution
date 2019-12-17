@@ -168,8 +168,7 @@ public class PrefHelper {
      *                within. This is normally the base context of the application.
      */
     private PrefHelper(Context context) {
-        this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE,
-                Context.MODE_PRIVATE);
+        this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
         this.requestMetadata = new JSONObject();
         this.installMetadata = new JSONObject();
