@@ -1490,17 +1490,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    boolean readAndStripParam(Uri data, Activity activity) {
-        // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
-        // If activity is created and launched then the intent can be readily consumed.
-        // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
+    void readAndStripParam(Uri data, Activity activity) {
+        if (activity == null) return;
+        // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack
+        // and there may be a new intent provided with onNewIntent() call. In this case need to wait
+        // till onResume to get the latest intent. If activity is created and launched then the intent
+        // can be readily consumed. WHAT DOES IT MEAN TO CONSUME INTENT??
+
+        // NOTE : Instant Deep Linking will not be working if the activity is launched from stack if
+        // `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
         if (!disableInstantDeepLinking) {
-            if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched()) {
+            if (intentState_ == INTENT_STATE.READY) {
                 // Check for instant deep linking possibility first
-                if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+                if (activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
                     Intent intent = activity.getIntent();
                     // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                    if (intent.getData() == null || (!isActivityCreatedAndLaunched() && isIntentParamsAlreadyConsumed(activity))) {
+                    if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
                         // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
                         // So skipping instant deep link feature until first Branch open happens
                         if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
@@ -1562,7 +1567,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     setSessionReferredLink(strippedUrl);
 
                     if (strippedUrl != null && strippedUrl.equals(data.toString())) {
-                        if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                        if (activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                             Bundle bundle = activity.getIntent().getExtras();
                             Set<String> extraKeys = bundle.keySet();
                             
@@ -1585,7 +1590,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             
             //Check for any push identifier in case app is launched by a push notification
             try {
-                if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                if (activity.getIntent() != null && activity.getIntent().getExtras() != null) {
                     if (!isIntentParamsAlreadyConsumed(activity)) {
                         Object object = activity.getIntent().getExtras().get(Defines.IntentKeys.BranchURI.getKey());
                         String pushIdentifier = null;
@@ -1600,9 +1605,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (!TextUtils.isEmpty(pushIdentifier)) {
                             prefHelper_.setPushIdentifier(pushIdentifier);
                             Intent thisIntent = activity.getIntent();
-                            thisIntent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                            thisIntent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
                             activity.setIntent(thisIntent);
-                            return false;
                         }
                     }
                 }
@@ -1612,7 +1616,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             //Check for link click id or app link
             // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-            if (data != null && data.isHierarchical() && activity != null && !isActivityLaunchedFromHistory(activity)) {
+            if (data != null && data.isHierarchical() && !isActivityLaunchedFromHistory(activity)) {
                 try {
                     if (data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()) != null) {
                         prefHelper_.setLinkClickIdentifier(data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey()));
@@ -1631,11 +1635,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (uriString != null) {
                             Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
                             activity.getIntent().setData(newData);
-                            activity.getIntent().putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                            activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
                         } else {
                             PrefHelper.Debug("Warning: URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
                         }
-                        return true;
                     } else {
                         // Check if the clicked url is an app link pointing to this app
                         String scheme = data.getScheme();
@@ -1647,9 +1650,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 if (data.toString().equalsIgnoreCase(strippedUrl)) { // Send app links only if URL is not skipped.
                                     prefHelper_.setAppLink(data.toString());
                                 }
-                                intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                                intent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
                                 activity.setIntent(intent);
-                                return false;
                             }
                         }
                     }
@@ -1657,7 +1659,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        return false;
     }
 
     void unlockSDKInitWaitLock() {
@@ -1673,7 +1674,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
         return activity != null && activity.getIntent() != null &&
-                activity.getIntent().getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false);
+                activity.getIntent().getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
     }
     
     private boolean isActivityLaunchedFromHistory(Activity activity) {
@@ -2758,7 +2759,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intent != null) {
             isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
                     (intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null &&
-                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false));
+                            !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false));
         }
         return isRestartSessionRequested;
     }

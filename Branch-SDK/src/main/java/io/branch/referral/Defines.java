@@ -19,7 +19,6 @@ public class Defines {
         ClickedReferrerTimeStamp("clicked_referrer_ts"),
         InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
-        BranchLinkUsed("branch_used"),
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
@@ -347,7 +346,8 @@ public class Defines {
      * </p>
      */
     public enum IntentKeys {
-        BranchURI("branch");
+        BranchURI("branch"),
+        BranchLinkUsed("branch_used");
 
         private String key = "";
 
