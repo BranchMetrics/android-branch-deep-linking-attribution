@@ -1495,12 +1495,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // If activity is created and launched then the intent can be readily consumed.
         // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
         if (!disableInstantDeepLinking) {
-            if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched()) {
+            if (intentState_ == INTENT_STATE.READY) {
                 // Check for instant deep linking possibility first
                 if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
                     Intent intent = activity.getIntent();
                     // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                    if (intent.getData() == null || (!isActivityCreatedAndLaunched() && isIntentParamsAlreadyConsumed(activity))) {
+                    if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
                         // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
                         // So skipping instant deep link feature until first Branch open happens
                         if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
@@ -1594,7 +1594,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             pushIdentifier = (String) object;
                         } else if (object instanceof Uri) {
                             Uri uri = (Uri) object;
-                            pushIdentifier = (String) uri.toString();
+                            pushIdentifier = uri.toString();
                         }
 
                         if (!TextUtils.isEmpty(pushIdentifier)) {
@@ -1661,11 +1661,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (requestQueue_ == null) return;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
         processNextQueueItem();
-    }
-
-    private boolean isActivityCreatedAndLaunched() {
-        if (activityLifeCycleObserver == null) return false;
-        return activityLifeCycleObserver.isActivityCreatedAndLaunched();
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {

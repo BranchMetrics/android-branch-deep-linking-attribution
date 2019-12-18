@@ -19,16 +19,12 @@ import io.branch.indexing.ContentDiscoverer;
 class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCallbacks {
     private int activityCnt_ = 0; //Keep the count of live  activities.
 
-    /* Flag to find if the activity is launched from stack (incase of single top) or created fresh and launched */
-    private boolean isActivityCreatedAndLaunched_ = false;
-
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
-        isActivityCreatedAndLaunched_ = true;
         if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
             BranchViewHandler.getInstance().showPendingBranchView(activity);
         }
@@ -48,7 +44,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             }
         }
         activityCnt_++;
-        isActivityCreatedAndLaunched_ = false;
 
         maybeRefreshAdvertisingID(activity);
     }
@@ -127,9 +122,5 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (!AIDInitializedInThisSession && !branch.isGAParamsFetchInProgress() && !branch.getTrackingController().isTrackingDisabled()) {
             branch.setGAParamsFetchInProgress(branch.getDeviceInfo().getSystemObserver().prefetchAdsParams(context, branch));
         }
-    }
-
-    boolean isActivityCreatedAndLaunched() {
-        return isActivityCreatedAndLaunched_;
     }
 }
