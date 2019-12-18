@@ -81,8 +81,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
                 String actionName = getRequestActionName();
-                if ((Branch.getInstance().currentActivityReference_ != null && Branch.getInstance().currentActivityReference_.get() != null)) {
-                    Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
+                if ((Branch.getInstance().getCurrentActivity() != null)) {
+                    Activity currentActivity = Branch.getInstance().getCurrentActivity();
                     boolean isActivityEnabledForBranchView = true;
                     if (currentActivity instanceof Branch.IBranchViewControl) {
                         isActivityEnabledForBranchView = !((Branch.IBranchViewControl) currentActivity).skipBranchViewsOnThisActivity();
@@ -124,9 +124,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
-            if (branch.currentActivityReference_ != null) {
+            if (branch.getCurrentActivity() != null) {
                 try {
-                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.getSessionReferredLink());
+                    ContentDiscoverer.getInstance().onSessionStarted(branch.getCurrentActivity(), branch.getSessionReferredLink());
                 } catch (Exception ignore) {
                 }
             }

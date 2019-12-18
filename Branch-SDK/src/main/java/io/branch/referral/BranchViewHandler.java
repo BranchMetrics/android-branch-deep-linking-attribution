@@ -167,53 +167,53 @@ public class BranchViewHandler {
     }
 
     private void openBranchViewDialog(final BranchView branchView, final IBranchViewEvents callback, WebView webView) {
-        if (!webViewLoadError_ && Branch.getInstance() != null && Branch.getInstance().currentActivityReference_ != null) {
-            Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
-            if (currentActivity != null) {
-                branchView.updateUsageCount(currentActivity.getApplicationContext(), branchView.branchViewID_);
-                parentActivityClassName_ = currentActivity.getClass().getName();
+        Branch b = Branch.getInstance();
+        if (!webViewLoadError_ && b != null && b.getCurrentActivity() != null) {
+            Activity currentActivity = b.getCurrentActivity();
 
-                RelativeLayout layout = new RelativeLayout(currentActivity);
-                layout.setVisibility(View.GONE);
-                RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-                layout.addView(webView, layoutParams);
-                layout.setBackgroundColor(Color.TRANSPARENT);
+            branchView.updateUsageCount(currentActivity.getApplicationContext(), branchView.branchViewID_);
+            parentActivityClassName_ = currentActivity.getClass().getName();
 
-                if(branchViewDialog_ != null && branchViewDialog_.isShowing()){
-                    if (callback != null) {
-                        callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", branchView.branchViewAction_);
-                    }
-                    return;
-                }
-                branchViewDialog_ = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-                branchViewDialog_.setContentView(layout);
+            RelativeLayout layout = new RelativeLayout(currentActivity);
+            layout.setVisibility(View.GONE);
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            layout.addView(webView, layoutParams);
+            layout.setBackgroundColor(Color.TRANSPARENT);
 
-                layout.setVisibility(View.VISIBLE);
-                webView.setVisibility(View.VISIBLE);
-                branchViewDialog_.show();
-                showViewWithAlphaAnimation(layout);
-                showViewWithAlphaAnimation(webView);
-                isBranchViewDialogShowing_ = true;
+            if(branchViewDialog_ != null && branchViewDialog_.isShowing()){
                 if (callback != null) {
-                    callback.onBranchViewVisible(branchView.branchViewAction_, branchView.branchViewID_);
+                    callback.onBranchViewError(BRANCH_VIEW_ERR_ALREADY_SHOWING, "Unable to create a Branch view. A Branch view is already showing", branchView.branchViewAction_);
                 }
+                return;
+            }
+            branchViewDialog_ = new Dialog(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            branchViewDialog_.setContentView(layout);
 
-                branchViewDialog_.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        isBranchViewDialogShowing_ = false;
-                        branchViewDialog_ = null;
+            layout.setVisibility(View.VISIBLE);
+            webView.setVisibility(View.VISIBLE);
+            branchViewDialog_.show();
+            showViewWithAlphaAnimation(layout);
+            showViewWithAlphaAnimation(webView);
+            isBranchViewDialogShowing_ = true;
+            if (callback != null) {
+                callback.onBranchViewVisible(branchView.branchViewAction_, branchView.branchViewID_);
+            }
 
-                        if (callback != null) {
-                            if (isBranchViewAccepted_) {
-                                callback.onBranchViewAccepted(branchView.branchViewAction_, branchView.branchViewID_);
-                            } else {
-                                callback.onBranchViewCancelled(branchView.branchViewAction_, branchView.branchViewID_);
-                            }
+            branchViewDialog_.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    isBranchViewDialogShowing_ = false;
+                    branchViewDialog_ = null;
+
+                    if (callback != null) {
+                        if (isBranchViewAccepted_) {
+                            callback.onBranchViewAccepted(branchView.branchViewAction_, branchView.branchViewID_);
+                        } else {
+                            callback.onBranchViewCancelled(branchView.branchViewAction_, branchView.branchViewID_);
                         }
                     }
-                });
-            }
+                }
+            });
         } else {
             isBranchViewDialogShowing_ = false;
             if (callback != null) {
@@ -266,12 +266,10 @@ public class BranchViewHandler {
     public boolean markInstallOrOpenBranchViewPending(JSONObject branchViewObj, String action) {
         boolean isMarked = false;
         BranchView branchView = new BranchView(branchViewObj, action);
-        if (branchView != null && Branch.getInstance().currentActivityReference_ != null) {
-            Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
-            if (currentActivity != null && branchView.isAvailable(currentActivity)) {
-                openOrInstallPendingBranchView_ = new BranchView(branchViewObj, action);
-                isMarked = true;
-            }
+        if (Branch.getInstance().getCurrentActivity() != null) {
+            Activity currentActivity = Branch.getInstance().getCurrentActivity();
+            openOrInstallPendingBranchView_ = new BranchView(branchViewObj, action);
+            isMarked = true;
         }
         return isMarked;
     }

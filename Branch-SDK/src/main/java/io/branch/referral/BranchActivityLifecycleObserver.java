@@ -106,7 +106,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
-        if (branch.currentActivityReference_ != null && branch.currentActivityReference_.get() == activity) {
+        if (branch.getCurrentActivity() == activity) {
             branch.currentActivityReference_.clear();
         }
         BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);

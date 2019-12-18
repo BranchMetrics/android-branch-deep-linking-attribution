@@ -2573,8 +2573,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // todo: this is tricky for users, get rid of ForceNewBranchSession if possible. (if flag is not set, the content from Branch link is lost)
         // 2. Some users navigate their apps via Branch links so they would have to set ForceNewBranchSession to true
         // which will blow up the session count in analytics but does the job.
-        Intent intent = currentActivityReference_ != null && currentActivityReference_.get() != null ?
-                currentActivityReference_.get().getIntent() : null;
+        Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = checkIntentForSessionRestart(intent);
 
         // !isFirstInitialization condition equals true only when user calls reInitSession()
@@ -2668,10 +2667,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private void performCookieBasedStrongMatch() {
         if (!trackingController.isTrackingDisabled()) {
             Activity currentActivity = null;
-            if (currentActivityReference_ != null) {
-                currentActivity = currentActivityReference_.get();
-            }
-            Context context = (currentActivity != null) ? currentActivity.getApplicationContext() : null;
+            Context context = getApplicationContext();
             if (context != null) {
                 requestQueue_.setStrongMatchWaitLock();
                 BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_,
@@ -3170,26 +3166,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         }
                     }
                 }
-                if (deepLinkActivity != null && currentActivityReference_ != null) {
-                    Activity currentActivity = currentActivityReference_.get();
-                    if (currentActivity != null) {
-                        Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
-                        intent.putExtra(AUTO_DEEP_LINKED, "true");
-                        
-                        // Put the raw JSON params as extra in case need to get the deep link params as JSON String
-                        intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
-                        
-                        // Add individual parameters in the data
-                        Iterator<?> keys = latestParams.keys();
-                        while (keys.hasNext()) {
-                            String key = (String) keys.next();
-                            intent.putExtra(key, latestParams.getString(key));
-                        }
-                        currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
-                    } else {
-                        // This case should not happen. Adding a safe handling for any corner case
-                        PrefHelper.Debug("No activity reference to launch deep linked activity");
+                if (deepLinkActivity != null && getCurrentActivity() != null) {
+                    Activity currentActivity = getCurrentActivity();
+
+                    Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
+                    intent.putExtra(AUTO_DEEP_LINKED, "true");
+
+                    // Put the raw JSON params as extra in case need to get the deep link params as JSON String
+                    intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
+
+                    // Add individual parameters in the data
+                    Iterator<?> keys = latestParams.keys();
+                    while (keys.hasNext()) {
+                        String key = (String) keys.next();
+                        intent.putExtra(key, latestParams.getString(key));
                     }
+                    currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
+                } else {
+                    // This case should not happen. Adding a safe handling for any corner case
+                    PrefHelper.Debug("No activity reference to launch deep linked activity");
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
@@ -3473,15 +3468,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return false;
     }
 
+    Activity getCurrentActivity() {
+        if (currentActivityReference_ == null) return null;
+        return currentActivityReference_.get();
+    }
+
     public static class InitSessionBuilder {
         private BranchReferralInitListener callback;
-        private Activity activity;
         private Uri uri;
         private boolean isReferrable;
         private boolean ignoreIntent;
 
 
-        private InitSessionBuilder() {}
+        private InitSessionBuilder(Activity activity) {
+            Branch.getInstance().currentActivityReference_ = new WeakReference<>(activity);
+        }
 
         /**
          * <p> Add callback to Branch initialization to retrieve referring params attached to the
@@ -3512,19 +3513,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         /**
-         * <p> Add Activity for for context. Context can be used in the following ways: todo finish writing this</p>
-         *
-         * @param activity     The calling {@link Activity} for context.
-         * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-         */
-        public InitSessionBuilder withActivity(Activity activity) {
-            this.activity = activity;
-            return this;
-        }
-
-
-        /**
-         * <p> Specify a {@link Uri} variable containing the details of the source link that led to this initialisation action.</p>
+         * <p> Specify a {@link Uri} variable containing the details of the source link that led to
+         * this initialisation action.</p>
          *
          * @param uri A {@link  Uri} variable from the intent.
          */
@@ -3573,9 +3563,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             ignoreIntent_ = ignoreIntent;
             b.setIsReferrable(isReferrable);
             if (uri != null) {
-                b.readAndStripParam(uri, activity);
+                b.readAndStripParam(uri, b.getCurrentActivity());
             }
-            b.initUserSessionInternal(callback, activity);
+            b.initUserSessionInternal(callback, b.getCurrentActivity());
         }
 
         /**
@@ -3589,16 +3579,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * the implementation assumes the intent will be non-null and will contain a Branch link in
          * either the URI or in the the extra.</p>
          *
-         * @param activity The calling {@link Activity} for context and intent data.
          */
-        public void reInit(Activity activity) {
+        public void reInit() {
+            Branch b = Branch.getInstance();
+            Activity activity = b.getCurrentActivity();
             if (activity == null) return;
+
             Intent intent = activity.getIntent();
-
             if (intent != null) {
-                Branch b = Branch.getInstance();
 
-                b.currentActivityReference_ = new WeakReference<>(activity);
                 // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
                 Uri uri = intent.getData();
 
@@ -3616,16 +3605,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
                     // Now, actually initialize the new session.
                     b.readAndStripParam(uri, activity);
+                } else {
+                    PrefHelper.Debug("Warning! Session reinitialization cannot be performed. Intent must" +
+                            "contain either a valid URI or an extra where key = \"branch\" and value = \"Branch link\" ");
                 }
 
                 b.initializeSession(callback, false);
+            } else {
+                PrefHelper.Debug("Warning! Session reinitialization cannot be performed when intent is null.");
             }
 
         }
     }
 
-    public static InitSessionBuilder sessionBuilder() {
-        return new InitSessionBuilder();
+    //          * @param activity     The calling {@link Activity} for context.
+    public static InitSessionBuilder sessionBuilder(Activity activity) {
+        return new InitSessionBuilder(activity);
     }
 
     //-------------------------- Branch Builders--------------------------------------//

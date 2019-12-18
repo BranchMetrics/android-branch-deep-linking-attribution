@@ -74,18 +74,16 @@ class ServerRequestActionCompleted extends ServerRequest {
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         // Check for any Branch view associated with this request.
         if (resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
-            if ((Branch.getInstance().currentActivityReference_ != null && Branch.getInstance().currentActivityReference_.get() != null)) {
+            if ((Branch.getInstance().getCurrentActivity() != null)) {
                 String actionName = "";
                 try {
                     JSONObject post = getPost();
                     if (post != null && post.has(Defines.Jsonkey.Event.getKey())) {
                         actionName = post.getString(Defines.Jsonkey.Event.getKey());
                     }
-                    if (Branch.getInstance().currentActivityReference_ != null) {
-                        Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
-                        JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
-                        BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, callback_);
-                    }
+                    Activity currentActivity = Branch.getInstance().getCurrentActivity();
+                    JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
+                    BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, callback_);
                 } catch (JSONException exception) {
                     if (callback_ != null) {
                         callback_.onBranchViewError(BranchViewHandler.BRANCH_VIEW_ERR_INVALID_VIEW, "Unable to show branch view. Branch view received is invalid ", actionName);
