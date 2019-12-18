@@ -1490,7 +1490,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    boolean readAndStripParam(Uri data, Activity activity) {
+    void readAndStripParam(Uri data, Activity activity) {
         // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
         // If activity is created and launched then the intent can be readily consumed.
         // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
@@ -1600,9 +1600,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (!TextUtils.isEmpty(pushIdentifier)) {
                             prefHelper_.setPushIdentifier(pushIdentifier);
                             Intent thisIntent = activity.getIntent();
-                            thisIntent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                            thisIntent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
                             activity.setIntent(thisIntent);
-                            return false;
+                            return;
                         }
                     }
                 }
@@ -1631,11 +1631,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (uriString != null) {
                             Uri newData = Uri.parse(uriString.replaceFirst(paramString, ""));
                             activity.getIntent().setData(newData);
-                            activity.getIntent().putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                            activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
                         } else {
                             PrefHelper.Debug("Warning: URI for the launcher activity is null. Please make sure that intent data is not set to null before calling Branch#InitSession ");
                         }
-                        return true;
                     } else {
                         // Check if the clicked url is an app link pointing to this app
                         String scheme = data.getScheme();
@@ -1647,9 +1646,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 if (data.toString().equalsIgnoreCase(strippedUrl)) { // Send app links only if URL is not skipped.
                                     prefHelper_.setAppLink(data.toString());
                                 }
-                                intent.putExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true);
+                                intent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
                                 activity.setIntent(intent);
-                                return false;
                             }
                         }
                     }
@@ -1657,7 +1655,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-        return false;
     }
 
     void unlockSDKInitWaitLock() {
@@ -1673,7 +1670,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
         return activity != null && activity.getIntent() != null &&
-                activity.getIntent().getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false);
+                activity.getIntent().getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
     }
     
     private boolean isActivityLaunchedFromHistory(Activity activity) {
@@ -2758,7 +2755,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intent != null) {
             isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
                     (intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null &&
-                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false));
+                            !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false));
         }
         return isRestartSessionRequested;
     }
