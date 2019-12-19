@@ -22,7 +22,6 @@ public class Defines {
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
-        BranchData("branch_data"),
         
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -99,9 +98,7 @@ public class Defines {
         DeepLinkPath(Branch.DEEPLINK_PATH),
         
         AndroidAppLinkURL("android_app_link_url"),
-        AndroidPushNotificationKey("branch"),
         AndroidPushIdentifier("push_identifier"),
-        ForceNewBranchSession("branch_force_new_session"),
         
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle(Branch.OG_TITLE),
@@ -346,6 +343,9 @@ public class Defines {
      * </p>
      */
     public enum IntentKeys {
+        BranchData("branch_data"),
+        AndroidPushNotificationKey("branch"),
+        ForceNewBranchSession("branch_force_new_session"),
         BranchLinkUsed("branch_used"),
         BranchURI("branch");
 

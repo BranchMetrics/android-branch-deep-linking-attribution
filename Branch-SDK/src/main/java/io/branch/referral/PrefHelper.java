@@ -1196,7 +1196,7 @@ public class PrefHelper {
     
     /**
      * <p>Clears all the Branch referral shared preferences related to the current key.
-     * Should be called before setting an new Branch-Key. </p>
+     * Should be called before setting a new Branch-Key. </p>
      */
     private void clearPrefOnBranchKeyChange() {
         // If stored key isn't the same as the current key, we need to clean up

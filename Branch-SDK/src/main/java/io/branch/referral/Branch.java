@@ -1492,14 +1492,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    // we could take data from activity but some initSession methods allow for null Activity
     private void readAndStripParam(Uri data, Activity activity) {
 
         // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
         // If activity is created and launched then the intent can be readily consumed.
         // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
-        if (!disableInstantDeepLinking) {
-            setSessionParamsForIDL(data, activity);
+
+        // passes after onIntentReady which is after onResume or if bypassCurrentActivityIntentState_ = true and this is being called for the 2nd time
+        if (!disableInstantDeepLinking &&
+                intentState_ == INTENT_STATE.READY &&
+                initState_ != SESSION_STATE.INITIALISED &&
+                !checkIntentForSessionRestart(activity.getIntent())) {
+            extractSessionParamsForIDL(data, activity);
         }
 
         if (bypassCurrentActivityIntentState_) {
@@ -1507,177 +1511,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         if (intentState_ == INTENT_STATE.READY) {
-            saveExternalIntentUriAndExtras(data, activity);
 
-            // todo why is below potentially terminating method execution?
-            if (savePushIdentifier(activity)) return;
+            // Capture the intent URI and extra for analytics in case started by external intents such as google app search
+            extractExternalUriAndIntentExtras(data, activity);
 
-            // prevents launching the same
+            // if branch link is detected we don't need to look for click ID or app link anymore and can terminate early
+            if (extractBranchLinkFromIntentExtra(activity)) return;
 
             // Check for link click id or app link
             // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
             // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
-            if (data != null && data.isHierarchical() && activity != null && !isActivityLaunchedFromHistory(activity)) {
-                try {
-                    String linkClickID = data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                    if (linkClickID != null) {
-                        stripIntentUriOffClickID(data, activity, linkClickID);
-                    } else {
-                        setAppLink(data, activity);
-                    }
-                } catch (Exception ignore) {
-                }
+            if (!isActivityLaunchedFromHistory(activity)) {
+                // if click ID is detected we don't need to look for app link anymore and can terminate early
+                if (extractClickID(data, activity)) return;
+
+                // Check if the clicked url is an app link pointing to this app
+                extractAppLink(data, activity);
             }
-        }
-    }
-
-    private void setSessionParamsForIDL(Uri data, Activity activity) {
-        // passes after onIntentReady which is after onResume or if bypassCurrentActivityIntentState_ = true and this is being called for the 2nd time
-        if (intentState_ == INTENT_STATE.READY) {
-            // Check for instant deep linking possibility first
-            if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
-                Intent intent = activity.getIntent();
-                // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
-                if (intent.getData() == null || isIntentParamsAlreadyConsumed(activity)) {
-                    // Considering the case of a deferred install. In this case the app behaves like a cold start but still Branch can do probabilistic match.
-                    // So skipping instant deep link feature until first Branch open happens
-                    if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                        JSONObject nonLinkClickJson = new JSONObject();
-                        try {
-                            nonLinkClickJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), false);
-                            nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                            prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                            isInstantDeepLinkPossible = true;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                // If not check the intent data to see if there is deep link params
-                else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.Jsonkey.BranchData.getKey()))) {
-                    try {
-                        String rawBranchData = intent.getStringExtra(Defines.Jsonkey.BranchData.getKey());
-                        // Make sure the data received is complete and in correct format
-                        JSONObject branchDataJson = new JSONObject(rawBranchData);
-                        branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                        prefHelper_.setSessionParams(branchDataJson.toString());
-                        isInstantDeepLinkPossible = true;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    // Remove Branch data from the intent once used
-                    intent.removeExtra(Defines.Jsonkey.BranchData.getKey());
-                    activity.setIntent(intent);
-                }
-                // If instant key is true in query params, use them for instant deep linking
-                else if (data.getQueryParameterNames() != null && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
-                    try {
-                        JSONObject branchDataJson = new JSONObject();
-                        for (String key : data.getQueryParameterNames()) {
-                            branchDataJson.put(key, data.getQueryParameter(key));
-                        }
-                        branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                        prefHelper_.setSessionParams(branchDataJson.toString());
-                        isInstantDeepLinkPossible = true;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-    private void setAppLink(Uri data, Activity activity) {
-        // Check if the clicked url is an app link pointing to this app
-        String scheme = data.getScheme();
-        Intent intent = activity.getIntent();
-        if (scheme != null && intent != null) {
-            if ((scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                    && !TextUtils.isEmpty(data.getHost()) && !isIntentParamsAlreadyConsumed(activity)) {
-                String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
-                if (data.toString().equalsIgnoreCase(strippedUrl)) { // Send app links only if URL is not skipped.
-                    prefHelper_.setAppLink(data.toString());
-                }
-                intent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
-                activity.setIntent(intent);
-            }
-        }
-    }
-
-    private void stripIntentUriOffClickID(Uri data, Activity activity, String linkClickID) {
-        prefHelper_.setLinkClickIdentifier(linkClickID);
-        String paramString = "link_click_id=" + linkClickID;
-        String uriString = data.toString();
-
-        if (paramString.equals(data.getQuery())) {
-            paramString = "\\?" + paramString;
-        } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
-            paramString = "&" + paramString;
-        } else {
-            paramString = paramString + "&";
-        }
-
-        Uri uriWithoutClickID = Uri.parse(uriString.replaceFirst(paramString, ""));
-        activity.getIntent().setData(uriWithoutClickID);
-        activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
-    }
-
-    private boolean savePushIdentifier(Activity activity) {
-        //Check for any push identifier in case app is launched by a push notification
-        try {
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                if (!isIntentParamsAlreadyConsumed(activity)) {
-                    Object object = activity.getIntent().getExtras().get(Defines.IntentKeys.BranchURI.getKey());
-                    String pushIdentifier = null;
-
-                    if (object instanceof String) {
-                        pushIdentifier = (String) object;
-                    } else if (object instanceof Uri) {
-                        Uri uri = (Uri) object;
-                        pushIdentifier = uri.toString();
-                    }
-
-                    if (!TextUtils.isEmpty(pushIdentifier)) {
-                        prefHelper_.setPushIdentifier(pushIdentifier);
-                        Intent thisIntent = activity.getIntent();
-                        thisIntent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
-                        activity.setIntent(thisIntent);
-                        return true;
-                    }
-                }
-            }
-        } catch (Exception ignore) {
-        }
-        return false;
-    }
-
-    private void saveExternalIntentUriAndExtras(Uri data, Activity activity) {
-        // Capture the intent URI and extra for analytics in case started by external intents such as google app search
-        try {
-            if (data != null && !isIntentParamsAlreadyConsumed(activity)) {
-                String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
-                prefHelper_.setExternalIntentUri(strippedUrl);
-
-                if (strippedUrl != null && strippedUrl.equals(data.toString())) {
-                    if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
-                        Bundle bundle = activity.getIntent().getExtras();
-                        Set<String> extraKeys = bundle.keySet();
-
-                        if (extraKeys.size() > 0) {
-                            JSONObject extrasJson = new JSONObject();
-                            for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
-                                if (extraKeys.contains(key)) {
-                                    extrasJson.put(key, bundle.get(key));
-                                }
-                            }
-                            if (extrasJson.length() > 0) {
-                                prefHelper_.setExternalIntentExtra(extrasJson.toString());
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignore) {
         }
     }
 
@@ -2761,12 +2611,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * The commit which resolved the issue in Chrome lives here: https://chromium.googlesource.com/chromium/src/+/4bca3b37801c502a164536b804879c00aba7d304
      * We decided for now to protect this one line with a try/catch.
      */
-    boolean checkIntentForSessionRestart(Intent intent) {
+    private boolean checkIntentForSessionRestart(Intent intent) {
         boolean isRestartSessionRequested = false;
         if (intent != null) {
-            isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
-                    (intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null &&
-                            !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false));
+            boolean forceSessionIntentKeyPresent = intent.getBooleanExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), false);
+            boolean hasBranchLink = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null;
+            boolean branchLinkNotConsumedYet = !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
+            isRestartSessionRequested = forceSessionIntentKeyPresent || (hasBranchLink && branchLinkNotConsumedYet);
         }
         return isRestartSessionRequested;
     }
@@ -3474,6 +3325,154 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
         return false;
+    }
+
+    private void extractSessionParamsForIDL(Uri data, Activity activity) {
+        if (activity == null || activity.getIntent() == null) return;
+
+        Intent intent = activity.getIntent();
+        // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
+        // todo investigate this, already consumed, yet enable IDL with no data
+        try {
+            if (data == null || isIntentParamsAlreadyConsumed(activity)) {
+                // Considering the case of a deferred install. In this case the app behaves like a cold
+                // start but still Branch can do probabilistic match. So skipping instant deep link feature
+                // until first Branch open happens.
+                if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                    JSONObject nonLinkClickJson = new JSONObject();
+                    nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
+                    prefHelper_.setSessionParams(nonLinkClickJson.toString());
+                    isInstantDeepLinkPossible = true;
+                }
+            } else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.IntentKeys.BranchData.getKey()))) {
+                // If not cold start, check the intent data to see if there are deep link params
+                String rawBranchData = intent.getStringExtra(Defines.IntentKeys.BranchData.getKey());
+                if (rawBranchData != null) {
+                    // Make sure the data received is complete and in correct format
+                    JSONObject branchDataJson = new JSONObject(rawBranchData);
+                    branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                    prefHelper_.setSessionParams(branchDataJson.toString());
+                    isInstantDeepLinkPossible = true;
+                }
+
+                // Remove Branch data from the intent once used
+                intent.removeExtra(Defines.IntentKeys.BranchData.getKey());
+                activity.setIntent(intent);
+            } else if (data.isHierarchical() && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
+                // If instant key is true in query params, use them for instant deep linking
+                JSONObject branchDataJson = new JSONObject();
+                for (String key : data.getQueryParameterNames()) {
+                    branchDataJson.put(key, data.getQueryParameter(key));
+                }
+                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
+                prefHelper_.setSessionParams(branchDataJson.toString());
+                isInstantDeepLinkPossible = true;
+            }
+        } catch (JSONException ignored) {}
+    }
+
+    private void extractAppLink(Uri data, Activity activity) {
+        if (data == null || activity == null) return;
+
+        String scheme = data.getScheme();
+        Intent intent = activity.getIntent();
+        if (scheme != null && intent != null &&
+                (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https")) &&
+                !TextUtils.isEmpty(data.getHost()) &&
+                !isIntentParamsAlreadyConsumed(activity)) {
+
+            String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+
+            if (data.toString().equalsIgnoreCase(strippedUrl)) {
+                // Send app links only if URL is not skipped.
+                prefHelper_.setAppLink(data.toString());
+            }
+            intent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
+            activity.setIntent(intent);
+        }
+    }
+
+    private boolean extractClickID(Uri data, Activity activity) {
+        try {
+            if (data == null || !data.isHierarchical()) return false;
+
+            String linkClickID = data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+            if (linkClickID == null) return false;
+
+            prefHelper_.setLinkClickIdentifier(linkClickID);
+            String paramString = "link_click_id=" + linkClickID;
+            String uriString = data.toString();
+
+            if (paramString.equals(data.getQuery())) {
+                paramString = "\\?" + paramString;
+            } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
+                paramString = "&" + paramString;
+            } else {
+                paramString = paramString + "&";
+            }
+
+            Uri uriWithoutClickID = Uri.parse(uriString.replaceFirst(paramString, ""));
+            activity.getIntent().setData(uriWithoutClickID);
+            activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
+            return true;
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
+    private boolean extractBranchLinkFromIntentExtra(Activity activity) {
+        //Check for any push identifier in case app is launched by a push notification
+        try {
+            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+                if (!isIntentParamsAlreadyConsumed(activity)) {
+                    Object object = activity.getIntent().getExtras().get(Defines.IntentKeys.BranchURI.getKey());
+                    String branchLink = null;
+
+                    if (object instanceof String) {
+                        branchLink = (String) object;
+                    } else if (object instanceof Uri) {
+                        Uri uri = (Uri) object;
+                        branchLink = uri.toString();
+                    }
+
+                    if (!TextUtils.isEmpty(branchLink)) {
+                        prefHelper_.setPushIdentifier(branchLink);
+                        Intent thisIntent = activity.getIntent();
+                        thisIntent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
+                        activity.setIntent(thisIntent);
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
+    }
+
+    private void extractExternalUriAndIntentExtras(Uri data, Activity activity) {
+        try {
+            if (!isIntentParamsAlreadyConsumed(activity)) {
+                String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+                prefHelper_.setExternalIntentUri(strippedUrl);
+
+                if (strippedUrl.equals(data.toString())) {
+                    Bundle bundle = activity.getIntent().getExtras();
+                    Set<String> extraKeys = bundle.keySet();
+                    if (extraKeys.isEmpty()) return;
+
+                    JSONObject extrasJson = new JSONObject();
+                    for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
+                        if (extraKeys.contains(key)) {
+                            extrasJson.put(key, bundle.get(key));
+                        }
+                    }
+                    if (extrasJson.length() > 0) {
+                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
     }
 
     Activity getCurrentActivity() {
