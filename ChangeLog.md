@@ -1,7 +1,8 @@
 # Branch Android SDK change log
 - v4.2.1
   * _*Master Release*_ - December 19, 2019
-  * Make attribution window optional for LATD requests.
+  * Make attribution window optional for LATD requests
+  * Remove fake email stub from share sheet on Android TVs
   
 - v4.2.0
   * _*Master Release*_ - November 19, 2019
