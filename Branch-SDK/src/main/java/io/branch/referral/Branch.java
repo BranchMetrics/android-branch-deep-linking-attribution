@@ -974,9 +974,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 successful (or unsuccessful) initialisation of the session with the Branch API.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback) {
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null).withCallback(callback).init();
         return true;
     }
     
@@ -988,9 +991,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 successful (or unsuccessful) initialisation of the session with the Branch API.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback) {
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null).withCallback(callback).init();
         return true;
     }
     
@@ -1004,9 +1010,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param activity The calling {@link Activity} for context.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) {
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity).withCallback(callback).init();
         return true;
     }
     
@@ -1020,9 +1029,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param activity The calling {@link Activity} for context.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity).withCallback(callback).init();
         return true;
     }
     
@@ -1037,10 +1049,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that will return <i>false</i> if the supplied
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
-        readAndStripParam(data, null);
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null).withCallback(callback).withData(data).init();
         return true;
     }
     
@@ -1055,10 +1069,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that will return <i>false</i> if the supplied
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, Uri data) {
-        readAndStripParam(data, null);
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null).withCallback(callback).withData(data).init();
         return true;
     }
     
@@ -1074,10 +1090,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that will return <i>false</i> if the supplied
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
-        readAndStripParam(data, activity);
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();
         return true;
     }
     
@@ -1093,10 +1111,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link Boolean} value that will return <i>false</i> if the supplied
      * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
      * valid URI format.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
-        readAndStripParam(data, activity);
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();
         return true;
     }
     
@@ -1104,9 +1124,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
      *
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession() {
-        initUserSessionInternal((BranchReferralInitListener) null, null);
+        Branch.sessionBuilder(null).init();
         return true;
     }
     
@@ -1115,9 +1138,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * @param activity The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(Activity activity) {
-        initUserSessionInternal((BranchReferralInitListener) null, activity);
+        Branch.sessionBuilder(activity).init();
         return true;
     }
 
@@ -1129,10 +1155,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 successful (or unsuccessful) initialisation of the session with the Branch API.
      * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
      * unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSessionForced(BranchReferralInitListener callback) {
-        enableForcedSession();
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null).withCallback(callback).ignoreIntent(true).init();
         return true;
     }
 
@@ -1144,10 +1172,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *             led to this
      *             initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSessionWithData(Uri data) {
-        readAndStripParam(data, null);
-        initUserSessionInternal((BranchReferralInitListener) null, null);
+        Branch.sessionBuilder(null).withData(data).init();
         return true;
     }
     
@@ -1159,10 +1189,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 initialisation action.
      * @param activity The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSessionWithData(Uri data, Activity activity) {
-        readAndStripParam(data, activity);
-        initUserSessionInternal((BranchReferralInitListener) null, activity);
+        Branch.sessionBuilder(activity).withData(data).init();
         return true;
     }
     
@@ -1175,10 +1207,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     By default, a user is only referrable if initSession results in a
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(boolean isReferrable) {
-        setIsReferrable(isReferrable);
-        initUserSessionInternal((BranchReferralInitListener) null, (Activity) null);
+        Branch.sessionBuilder(null)
+                .isReferrable(isReferrable)
+                .init();
         return true;
     }
     
@@ -1192,10 +1228,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
-        setIsReferrable(isReferrable);
-        initUserSessionInternal((BranchReferralInitListener) null, activity);
+        Branch.sessionBuilder(activity)
+                .isReferrable(isReferrable)
+                .init();
         return true;
     }
     
@@ -1212,11 +1252,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param data         A {@link  Uri} variable containing the details of the source link that
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {
-        setIsReferrable(isReferrable);
-        readAndStripParam(data, null);
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .withData(data)
+                .init();
         return true;
     }
     
@@ -1233,11 +1278,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param data         A {@link  Uri} variable containing the details of the source link that
      *                     led to this initialisation action.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
-        setIsReferrable(isReferrable);
-        readAndStripParam(data, null);
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .withData(data)
+                .init();
         return true;
     }
     
@@ -1255,11 +1305,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     led to this initialisation action.
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
-        setIsReferrable(isReferrable);
-        readAndStripParam(data, activity);
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .withData(data)
+                .init();
         return true;
     }
     
@@ -1277,11 +1332,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     led to this initialisation action.
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
-        setIsReferrable(isReferrable);
-        readAndStripParam(data, activity);
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .withData(data)
+                .init();
         return true;
     }
     
@@ -1296,10 +1356,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     By default, a user is only referrable if initSession results in a
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
-        setIsReferrable(isReferrable);
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .init();
         return true;
     }
     
@@ -1314,10 +1379,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     By default, a user is only referrable if initSession results in a
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
-        setIsReferrable(isReferrable);
-        initUserSessionInternal(callback, null);
+        Branch.sessionBuilder(null)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .init();
         return true;
     }
     
@@ -1333,10 +1403,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
-        setIsReferrable(isReferrable);
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .init();
         return true;
     }
     
@@ -1352,15 +1427,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                     fresh install. Overriding this gives you control of who is referrable.
      * @param activity     The calling {@link Activity} for context.
      * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder()
      */
+    @Deprecated
     public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-        setIsReferrable(isReferrable);
-        initUserSessionInternal(callback, activity);
+        Branch.sessionBuilder(activity)
+                .withCallback(callback)
+                .isReferrable(isReferrable)
+                .init();
         return true;
     }
 
+    /**
+     * @deprecated use Branch.sessionBuilder()
+     */
+    @Deprecated
     public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {
-        return reInitSession(activity, new BranchUniversalReferralInitWrapper(callback));
+        Branch.sessionBuilder(activity)
+                .withCallback(callback)
+                .reInit();
+        return activity == null || activity.getIntent() == null;// preserved past behavior, the new Branch.sessionBuilder().reinit() returns void.
     }
     /**
      * Re-Initialize a session.
@@ -1374,37 +1461,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                  following successful (or unsuccessful) initialization of the session
      *                  with the Branch API.
      * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
+     *
+     * @deprecated use Branch.sessionBuilder().reInit()
      */
+    @Deprecated
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        if (activity == null) return false;
-        Intent intent = activity.getIntent();
-
-        if (intent != null) {
-            currentActivityReference_ = new WeakReference<>(activity);
-            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
-            Uri uri = intent.getData();
-
-            String pushNotifUrl = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey());
-            if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
-                uri = Uri.parse(pushNotifUrl);
-            }
-
-            if (uri != null) {
-                // Let's indicate that the app was initialized with this uri.
-                prefHelper_.setExternalIntentUri(uri.toString());
-
-                // We need to set the AndroidAppLinkURL as well
-                prefHelper_.setAppLink(uri.toString());
-
-                // Now, actually initialize the new session.
-                readAndStripParam(uri, activity);
-            }
-
-            initializeSession(callback, false);
-            return true;
-        } else {
-            return false;
-        }
+        Branch.sessionBuilder(activity)
+                .withCallback(callback)
+                .reInit();
+        return activity == null || activity.getIntent() == null;
     }
     
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity) {
@@ -3486,12 +3551,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         /**
          * <p> Add callback to Branch initialization to retrieve referring params attached to the
          * Branch link via the dashboard. User eventually decides how to use the referring params but
-         * they are primarily meant to be used for navigating to specific content within the app.</p>
+         * they are primarily meant to be used for navigating to specific content within the app.
+         * Use only one withCallback() method.</p>
          *
          * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
          *                     following successful (or unsuccessful) initialisation of the session
          *                     with the Branch API.
          */
+        @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
             this.callback = new BranchUniversalReferralInitWrapper(callback);
             return this;
@@ -3500,12 +3567,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         /**
          * <p> Add callback to Branch initialization to retrieve referring params attached to the
          * Branch link via the dashboard. User eventually decides how to use the referring params but
-         * they are primarily meant to be used for navigating to specific content within the app.</p>
+         * they are primarily meant to be used for navigating to specific content within the app.
+         * Use only one withCallback() method.</p>
          *
          * @param callback     A {@link BranchReferralInitListener} instance that will be called
          *                     following successful (or unsuccessful) initialisation of the session
          *                     with the Branch API.
          */
+        @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withCallback(BranchReferralInitListener callback) {
             this.callback = callback;
             return this;
@@ -3517,6 +3586,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *
          * @param uri A {@link  Uri} variable from the intent.
          */
+        @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withData(Uri uri) {
             this.uri = uri;
             return this;
@@ -3530,6 +3600,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *                     if it is a fresh install resulting from clicking on a Branch link. Overriding this gives you
          *                     control of who is referrable.
          */
+        @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder isReferrable(boolean isReferrable) {
             this.isReferrable = isReferrable;
             return this;
@@ -3543,6 +3614,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *
          * @param ignoreIntent a {@link Boolean} indicating if intent is needed before session initialization .
          */
+        @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder ignoreIntent(boolean ignoreIntent) {
             this.ignoreIntent = ignoreIntent;
             return this;
@@ -3584,6 +3656,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * either the URI or in the the extra.</p>
          *
          */
+        @SuppressWarnings("WeakerAccess")
         public void reInit() {
             Branch b = Branch.getInstance();
             Activity activity = b.getCurrentActivity();
@@ -3618,11 +3691,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             } else {
                 PrefHelper.Debug("Warning! Session reinitialization cannot be performed when intent is null.");
             }
-
         }
     }
-
-    //          * @param activity     The calling {@link Activity} for context.
+    /**
+     * <p> Create Branch session builder. Add configuration variables with the available methods
+     * in the returned {@link InitSessionBuilder} class. Must be finished with init() or reInit(),
+     * otherwise takes no effect.</p>
+     *
+     * @param activity     The calling {@link Activity} for context.
+     */
+    @SuppressWarnings("WeakerAccess")
     public static InitSessionBuilder sessionBuilder(Activity activity) {
         return new InitSessionBuilder(activity);
     }
