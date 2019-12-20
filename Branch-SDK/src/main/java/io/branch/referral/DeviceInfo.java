@@ -1,6 +1,8 @@
 package io.branch.referral;
 
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -9,6 +11,8 @@ import android.webkit.WebSettings;
 import io.branch.referral.Defines.ModuleNameKeys;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static android.content.Context.UI_MODE_SERVICE;
 
 /**
  * <p>
@@ -125,6 +129,20 @@ class DeviceInfo {
     }
 
     /**
+     * Detects TV devices.
+     *
+     * @return a {@link Boolean} indicating whether the device is a television set.
+     */
+    boolean isTV() {
+        UiModeManager uiModeManager = (UiModeManager) context_.getSystemService(UI_MODE_SERVICE);
+        if (uiModeManager == null) {
+            PrefHelper.Debug("uiModeManager is null, mark this as a non-TV device by default.");
+            return false;
+        }
+        return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+    }
+
+    /**
      * Update the given server request JSON with user data. Used for V2 events
      *
      * @param requestObj JSON object for Branch server request
@@ -203,6 +221,11 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.SDK.getKey(), "android");
             requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
             requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
+
+            if (serverRequest instanceof ServerRequestGetLATD) {
+                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
+                        ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
+            }
         } catch (JSONException ignore) {
         }
     }
@@ -216,21 +239,6 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
             requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
             requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
-        }
-    }
-
-    /**
-     * Update the given server request JSON with the set attribution window in the user data
-     *
-     * @param requestObj JSON object for Branch server request
-     */
-    void updateRequestWithAttributionWindow(PrefHelper prefHelper, JSONObject requestObj) {
-        try {
-            if (prefHelper != null) {
-                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(), prefHelper.getLATDAttributonWindow());
-            }
-            } catch (JSONException ignore) {
-
         }
     }
 
