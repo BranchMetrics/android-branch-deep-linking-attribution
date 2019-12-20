@@ -1493,12 +1493,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
-
-        // PRS: isActivityCreatedAndLaunched usage: Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call. In this case need to wait till onResume to get the latest intent.
-        // If activity is created and launched then the intent can be readily consumed.
-        // NOTE : IDL will not be working if the activity is launched from stack if `initSession` is called from `onStart()`. TODO Need to check for IDL possibility from any #ServerRequestInitSession
-
-        // passes after onIntentReady which is after onResume or if bypassCurrentActivityIntentState_ = true and this is being called for the 2nd time
         if (!disableInstantDeepLinking &&
                 intentState_ == INTENT_STATE.READY &&
                 initState_ != SESSION_STATE.INITIALISED &&
@@ -1519,8 +1513,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (extractBranchLinkFromIntentExtra(activity)) return;
 
             // Check for link click id or app link
-            // On Launching app from the recent apps, Android Start the app with the original intent data. So up in opening app from recent list
-            // Intent will have App link in data and lead to issue of getting wrong parameters. (In case of link click id since we are  looking for actual link click on back end this case will never happen)
             if (!isActivityLaunchedFromHistory(activity)) {
                 // if click ID is detected we don't need to look for app link anymore and can terminate early
                 if (extractClickID(data, activity)) return;
@@ -3483,8 +3475,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static class InitSessionBuilder {
         private BranchReferralInitListener callback;
         private Uri uri;
-        private boolean isReferrable;
-        private boolean ignoreIntent;
+        private Boolean isReferrable;
+        private Boolean ignoreIntent;
 
 
         private InitSessionBuilder(Activity activity) {
@@ -3567,9 +3559,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
-            ignoreIntent_ = ignoreIntent;
-            b.setIsReferrable(isReferrable);
-            if (uri != null && disableInstantDeepLinking) {// if disableInstantDeepLinking = false, readAndStripParam will not do anything
+            if (ignoreIntent != null) {
+                ignoreIntent_ = ignoreIntent;
+            }
+            if (isReferrable != null) {
+                b.setIsReferrable(isReferrable);
+            }
+
+            if (uri != null) {
                 b.readAndStripParam(uri, b.getCurrentActivity());
             }
             b.initUserSessionInternal(callback, b.getCurrentActivity());
