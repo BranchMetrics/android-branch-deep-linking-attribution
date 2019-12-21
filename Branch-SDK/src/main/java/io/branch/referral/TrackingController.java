@@ -60,8 +60,9 @@ class TrackingController {
     }
     
     private void onTrackingEnabled() {
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().registerAppInitWithoutIntent();
+        Branch b = Branch.getInstance();
+        if (b != null) {
+            b.registerAppInit(b.getInstallOrOpenRequest(null), true);
         }
     }
 }
