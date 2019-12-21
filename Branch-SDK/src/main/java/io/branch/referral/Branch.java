@@ -1441,7 +1441,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * @deprecated use Branch.sessionBuilder()
+     * @deprecated use Branch.sessionBuilder().reInit()
      */
     @Deprecated
     public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {
