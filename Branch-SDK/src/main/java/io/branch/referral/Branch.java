@@ -2791,7 +2791,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @see BranchError
      */
     public interface BranchReferralInitListener {
-        void onInitFinished(JSONObject referringParams, BranchError error);
+        void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error);
     }
     
     /**
@@ -2806,7 +2806,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @see BranchError
      */
     public interface BranchUniversalReferralInitListener {
-        void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error);
+        void onInitFinished(@Nullable BranchUniversalObject branchUniversalObject, @Nullable LinkProperties linkProperties, @Nullable BranchError error);
     }
     
     
@@ -2820,7 +2820,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @see BranchError
      */
     public interface BranchReferralStateChangedListener {
-        void onStateChanged(boolean changed, BranchError error);
+        void onStateChanged(boolean changed, @Nullable BranchError error);
     }
     
     /**
