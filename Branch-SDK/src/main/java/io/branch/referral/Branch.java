@@ -391,7 +391,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
-    private static boolean disableInstantDeepLinking = true;
+    private static boolean enableInstantDeepLinking = false;
     private final TrackingController trackingController;
     
     /**
@@ -541,7 +541,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
      */
     public static void disableInstantDeepLinking(boolean disableIDL) {
-        disableInstantDeepLinking = disableIDL;
+        enableInstantDeepLinking = !disableIDL;
     }
     
     /**
@@ -793,7 +793,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // Reset all of the statics.
         branchReferral_ = null;
         bypassCurrentActivityIntentState_ = false;
-        disableInstantDeepLinking = false;
+        enableInstantDeepLinking = false;
         isActivityLifeCycleCallbackRegistered_ = false;
         isAutoSessionMode_ = false;
 
@@ -1538,7 +1538,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
-        if (!disableInstantDeepLinking &&
+        if (enableInstantDeepLinking &&
                 intentState_ == INTENT_STATE.READY &&
                 initState_ != SESSION_STATE.INITIALISED &&
                 !checkIntentForSessionRestart(activity.getIntent())) {
@@ -3603,34 +3603,34 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
-            Branch b = Branch.getInstance();
-            if (b == null) {
+            Branch branch = Branch.getInstance();
+            if (branch == null) {
                 PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
             if (isReferrable != null) {
-                b.setIsReferrable(isReferrable);
+                branch.setIsReferrable(isReferrable);
             }
 
-            Activity activity = b.getCurrentActivity();
+            Activity activity = branch.getCurrentActivity();
             if (uri != null) {
-                b.readAndStripParam(uri, activity);
+                branch.readAndStripParam(uri, activity);
             } else if (isReInitializing) {
-                b.readAndStripParam(
+                branch.readAndStripParam(
                         activity != null && activity.getIntent() != null ?
                         activity.getIntent().getData() : null, activity);
             }
 
-            if (b.isInstantDeepLinkPossible) {
-                callback.onInitFinished(b.getLatestReferringParams(), null);
-                b.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-                b.isInstantDeepLinkPossible = false;
-                b.checkForAutoDeepLinkConfiguration();
+            if (branch.isInstantDeepLinkPossible) {
+                callback.onInitFinished(branch.getLatestReferringParams(), null);
+                branch.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+                branch.isInstantDeepLinkPossible = false;
+                branch.checkForAutoDeepLinkConfiguration();
                 return;
             }
 
-            b.initializeSession(callback, isReInitializing);
+            branch.initializeSession(callback, isReInitializing);
         }
 
         /**
