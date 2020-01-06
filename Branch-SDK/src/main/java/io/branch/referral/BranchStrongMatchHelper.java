@@ -42,9 +42,9 @@ class BranchStrongMatchHelper {
 
     {
         try {
-            CustomTabsClientClass = Class.forName("android.support.customtabs.CustomTabsClient");
-            CustomTabsCallbackClass = Class.forName("android.support.customtabs.CustomTabsCallback");
-            CustomTabsSessionClass = Class.forName("android.support.customtabs.CustomTabsSession");
+            CustomTabsClientClass = Class.forName("androidx.browser.customtabs.CustomTabsClient");
+            CustomTabsCallbackClass = Class.forName("androidx.browser.customtabs.CustomTabsCallback");
+            CustomTabsSessionClass = Class.forName("androidx.browser.customtabs.CustomTabsSession");
             ICustomTabsServiceClass = Class.forName("android.support.customtabs.ICustomTabsService");
         } catch (Throwable t) {
             isCustomTabsAvailable_ = false;
