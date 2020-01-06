@@ -2,6 +2,8 @@ package io.branch.referral;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,10 +32,10 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
+        if (callback == null) return;
+
         if (response != null) {
-            if (callback != null) {
-                callback.onDataFetched(new BranchCPID(response.getObject()), null);
-            }
+            callback.onDataFetched(new BranchCPID(response.getObject()), null);
         } else {
             callback.onDataFetched(null,
                     new BranchError("Failed to get the Cross Platform IDs",
@@ -43,6 +45,8 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
+        if (callback == null) return;
+
         callback.onDataFetched(null,
                 new BranchError("Failed to get the Cross Platform IDs",
                         BranchError.ERR_BRANCH_INVALID_REQUEST));

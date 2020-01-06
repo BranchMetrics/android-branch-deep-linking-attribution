@@ -46,7 +46,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         super.onPreExecute();
         // Instant Deep Link if possible
         if (Branch.getInstance().isInstantDeepLinkPossible()) {
-            if (hasCallBack()) {
+            if (callback_ != null) {
                 callback_.onInitFinished(Branch.getInstance().getLatestReferringParams(), null);
             }
             Branch.getInstance().addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
@@ -89,7 +89,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
             }
             
-            if (hasCallBack()) {
+            if (callback_ != null) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             
@@ -109,7 +109,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        if (hasCallBack()) {
+        if (callback_ != null) {
             JSONObject obj = new JSONObject();
             try {
                 obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
@@ -123,7 +123,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            if (hasCallBack()) {
+            if (callback_ != null) {
                 callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_NO_INTERNET_PERMISSION));
             }
             return true;

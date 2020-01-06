@@ -1705,7 +1705,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                to callback with cross platform ids
      *
      */
-    public void getCrossPlatformIds(ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
+    public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
         if (context_ != null) {
             handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID.getPath(), callback));
         }
@@ -1720,10 +1720,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 to callback with last attributed touch data
      *
      */
-    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback) {
+    public void getLastAttributedTouchData(@NonNull BranchLastAttributedTouchDataListener callback) {
         if (context_ != null) {
             handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback));
         }
+        Defines.IntentKeys.ForceNewBranchSession.getKey();
     }
 
     /**

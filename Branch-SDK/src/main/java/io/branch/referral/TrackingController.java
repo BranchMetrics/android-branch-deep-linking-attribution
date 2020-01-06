@@ -60,9 +60,9 @@ class TrackingController {
     }
     
     private void onTrackingEnabled() {
-        Branch b = Branch.getInstance();
-        if (b != null) {
-            b.registerAppInit(b.getInstallOrOpenRequest(null), true);
+        Branch branch = Branch.getInstance();
+        if (branch != null) {
+            branch.registerAppInit(branch.getInstallOrOpenRequest(null), true);
         }
     }
 }

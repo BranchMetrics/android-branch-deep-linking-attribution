@@ -19,9 +19,11 @@ public class Defines {
         ClickedReferrerTimeStamp("clicked_referrer_ts"),
         InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
+        @Deprecated BranchLinkUsed("branch_used"),          //use Defines.IntentKeys.BranchLinkUsed
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
+        @Deprecated BranchData("branch_data"),              //use Defines.IntentKeys.BranchData
         
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -98,6 +100,7 @@ public class Defines {
         DeepLinkPath(Branch.DEEPLINK_PATH),
         
         AndroidAppLinkURL("android_app_link_url"),
+        @Deprecated AndroidPushNotificationKey("branch"),   //use Defines.IntentKeys.AndroidPushNotificationKey
         AndroidPushIdentifier("push_identifier"),
         
         CanonicalIdentifier("$canonical_identifier"),
