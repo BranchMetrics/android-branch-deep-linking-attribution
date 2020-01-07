@@ -14,6 +14,7 @@ build/
 .metadata/*
 
 *.gen
+*.pyc
 bin/
 gen/
 

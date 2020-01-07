@@ -68,7 +68,7 @@ if __name__ == '__main__':
         # Start running the instrumentation tests
         print formatted_text.in_bold("Running instrumentation tests...")
         os.chdir("./Branch-SDK/")
-        execute_command("gradle connectedCheck --info")
+        execute_command("../gradlew connectedCheck --info")
         print formatted_text.in_bold_green("Finished running the instrumentation tests.\n")
 
     except subprocess.CalledProcessError as e:
