@@ -44,7 +44,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     @Override
     public void onPreExecute() {
         super.onPreExecute();
-        // Instant Deep Link if possible
+        // Instant Deep Link if possible. This can happen when activity initializing the session is
+        // already on stack, in which case we delay parsing out data and invoking the callback until
+        // onResume to ensure that we have the latest intent data.
         if (Branch.getInstance().isInstantDeepLinkPossible()) {
             if (callback_ != null) {
                 callback_.onInitFinished(Branch.getInstance().getLatestReferringParams(), null);
@@ -53,7 +55,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             Branch.getInstance().setInstantDeepLinkPossible(false);
         }
     }
-    
+
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         super.onRequestSucceeded(resp, branch);
@@ -88,8 +90,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             } else {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
             }
-            
-            if (callback_ != null) {
+
+            if (callback_ != null && !this.isIDLSession) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             
@@ -109,7 +111,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        if (callback_ != null) {
+        if (callback_ != null && !Branch.getInstance().isIDLSession()) {
             JSONObject obj = new JSONObject();
             try {
                 obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
@@ -123,7 +125,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     @Override
     public boolean handleErrors(Context context) {
         if (!super.doesAppHasInternetPermission(context)) {
-            if (callback_ != null) {
+            if (callback_ != null && !Branch.getInstance().isIDLSession()) {
                 callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_NO_INTERNET_PERMISSION));
             }
             return true;

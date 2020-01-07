@@ -1538,11 +1538,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
-        if (enableInstantDeepLinking &&
-                intentState_ == INTENT_STATE.READY &&
-                initState_ != SESSION_STATE.INITIALISED &&
-                !checkIntentForSessionRestart(activity.getIntent())) {
-            extractSessionParamsForIDL(data, activity);
+        if (enableInstantDeepLinking) {
+
+            // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
+            // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
+            // In the latter case, IDL works only partially because the callback is delayed until onResume.
+            boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
+                    !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
+
+            // Skip IDL if intent contains an unused Branch link.
+            boolean noUnusedBranchLinkInIntent = !checkIntentForUnusedBranchLink(activity != null ? activity.getIntent() : null);
+
+            if (activityHasValidIntent && noUnusedBranchLinkInIntent) {
+                extractSessionParamsForIDL(data, activity);
+            }
         }
 
         if (bypassCurrentActivityIntentState_) {
@@ -2470,7 +2479,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // 2. Some users navigate their apps via Branch links so they would have to set ForceNewBranchSession to true
         // which will blow up the session count in analytics but does the job.
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
-        boolean forceBranchSession = checkIntentForSessionRestart(intent);
+        boolean forceBranchSession = checkIntentForSessionRestart(intent) || checkIntentForUnusedBranchLink(intent);
 
         // !isFirstInitialization condition equals true only when user calls reInitSession()
 
@@ -2638,14 +2647,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * We decided for now to protect this one line with a try/catch.
      */
     private boolean checkIntentForSessionRestart(Intent intent) {
-        boolean isRestartSessionRequested = false;
+        boolean forceSessionIntentKeyPresent = false;
         if (intent != null) {
-            boolean forceSessionIntentKeyPresent = intent.getBooleanExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), false);
+            forceSessionIntentKeyPresent = intent.getBooleanExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), false);
+        }
+        return forceSessionIntentKeyPresent;
+    }
+
+    private boolean checkIntentForUnusedBranchLink(Intent intent) {
+        boolean hasUnusedBranchLink = false;
+        if (intent != null) {
             boolean hasBranchLink = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null;
             boolean branchLinkNotConsumedYet = !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
-            isRestartSessionRequested = forceSessionIntentKeyPresent || (hasBranchLink && branchLinkNotConsumedYet);
+            hasUnusedBranchLink = hasBranchLink && branchLinkNotConsumedYet;
         }
-        return isRestartSessionRequested;
+        return hasUnusedBranchLink;
     }
     
     /**
@@ -3622,12 +3638,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         activity.getIntent().getData() : null, activity);
             }
 
-            if (branch.isInstantDeepLinkPossible) {
-                callback.onInitFinished(branch.getLatestReferringParams(), null);
-                branch.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+            if (branch.isInstantDeepLinkPossible) { // readAndStripParams may set isInstantDeepLinkPossible to true
+                // reset state in case intra-app linking is being used
                 branch.isInstantDeepLinkPossible = false;
+                // invoke callback
+                callback.onInitFinished(branch.getLatestReferringParams(), null);
+                // mark this session as IDL session
+                branch.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+                // potentially routes the user to the Activity configured to consume this particular link
                 branch.checkForAutoDeepLinkConfiguration();
-                return;
             }
 
             branch.initializeSession(callback, isReInitializing);
@@ -3650,6 +3669,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             isReInitializing = true;
             init();
         }
+    }
+
+    boolean isIDLSession() {
+        return "true".equals(instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
     }
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods

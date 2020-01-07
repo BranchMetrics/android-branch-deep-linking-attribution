@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.HashSet;
+import java.util.Set;
 
 import io.branch.indexing.ContentDiscoverer;
 
@@ -17,7 +19,10 @@ import io.branch.indexing.ContentDiscoverer;
  * session.</p>
  */
 class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCallbacks {
-    private int activityCnt_ = 0; //Keep the count of live  activities.
+    private int activityCnt_ = 0; //Keep the count of visible activities.
+
+    /* Set of activities observed in this session */
+    private Set<String> activitiesOnStack = new HashSet<>();
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
@@ -34,6 +39,10 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     public void onActivityStarted(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
         if (branch == null) return;
+
+        // technically this should be in onResume but it is effectively the same to have it here, plus
+        // it allows us to use currentActivityReference_ in session initialization code
+        branch.currentActivityReference_ = new WeakReference<>(activity);
 
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
         // If configured on dashboard, trigger content discovery runnable
@@ -53,8 +62,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
-        branch.currentActivityReference_ = new WeakReference<>(activity);
-
         // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
         // activity also to make sure we do not override the intent data
         if (!Branch.bypassCurrentActivityIntentState()) {
@@ -66,6 +73,10 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             // and the entry Activity is not the launcher Activity where user placed initSession themselves.
             Branch.sessionBuilder(activity).init();
         }
+
+        // must be called after session initialization, which relies on checking whether activity
+        // that is initializing the session is being launched from stack or anew
+        activitiesOnStack.add(activity.getLocalClassName());
     }
 
     @Override
@@ -122,5 +133,12 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (!AIDInitializedInThisSession && !branch.isGAParamsFetchInProgress() && !branch.getTrackingController().isTrackingDisabled()) {
             branch.setGAParamsFetchInProgress(branch.getDeviceInfo().getSystemObserver().prefetchAdsParams(context, branch));
         }
+    }
+
+    // default is true
+    boolean isCurrentActivityLaunchedFromStack() {
+        Branch branch = Branch.getInstance();
+        if (branch == null || branch.getCurrentActivity() == null) return true;
+        return activitiesOnStack.contains(branch.getCurrentActivity().getLocalClassName());
     }
 }

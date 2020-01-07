@@ -55,9 +55,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (installBeginTS > 0) {
                 getPost().put(Defines.Jsonkey.InstallBeginTimeStamp.getKey(), installBeginTS);
             }
-        } catch (JSONException ignore) {
-        
-        }
+        } catch (JSONException ignore) { }
     }
     
     @Override
