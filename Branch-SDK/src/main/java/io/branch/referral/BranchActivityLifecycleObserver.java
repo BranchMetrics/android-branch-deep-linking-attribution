@@ -22,7 +22,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     private int activityCnt_ = 0; //Keep the count of visible activities.
 
     /* Set of activities observed in this session */
-    private Set<String> activitiesOnStack = new HashSet<>();
+    private Set<String> activitiesOnStack_ = new HashSet<>();
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
@@ -33,12 +33,16 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
             BranchViewHandler.getInstance().showPendingBranchView(activity);
         }
+
+        activitiesOnStack_.remove(activity.getLocalClassName());
     }
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
-        if (branch == null) return;
+        if (branch == null) {
+            return;
+        }
 
         // technically this should be in onResume but it is effectively the same to have it here, plus
         // it allows us to use currentActivityReference_ in session initialization code
@@ -76,7 +80,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
         // must be called after session initialization, which relies on checking whether activity
         // that is initializing the session is being launched from stack or anew
-        activitiesOnStack.add(activity.getLocalClassName());
+        activitiesOnStack_.add(activity.getLocalClassName());
     }
 
     @Override
@@ -138,7 +142,9 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     // default is true
     boolean isCurrentActivityLaunchedFromStack() {
         Branch branch = Branch.getInstance();
-        if (branch == null || branch.getCurrentActivity() == null) return true;
-        return activitiesOnStack.contains(branch.getCurrentActivity().getLocalClassName());
+        if (branch == null || branch.getCurrentActivity() == null) {
+            return false;
+        }
+        return activitiesOnStack_.contains(branch.getCurrentActivity().getLocalClassName());
     }
 }

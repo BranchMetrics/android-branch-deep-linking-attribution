@@ -1733,7 +1733,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (context_ != null) {
             handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback));
         }
-        Defines.IntentKeys.ForceNewBranchSession.getKey();
     }
 
     /**
@@ -2433,7 +2432,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void initializeSession(final BranchReferralInitListener callback, boolean isFirstInitialization) {
+    private void initializeSession(final BranchReferralInitListener callback, boolean isReInitializing) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
@@ -2447,7 +2446,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         ServerRequestInitSession initRequest = getInstallOrOpenRequest(callback);
-        if (isFirstInitialization && (getSessionReferredLink() == null || enableFacebookAppLinkCheck_)) {
+        if (!isReInitializing && (getSessionReferredLink() == null || enableFacebookAppLinkCheck_)) {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
                     context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
@@ -2483,7 +2482,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         // !isFirstInitialization condition equals true only when user calls reInitSession()
 
-        if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization || forceBranchSession) {
+        if (getInitState() == SESSION_STATE.UNINITIALISED || isReInitializing || forceBranchSession) {
             registerAppInit(initRequest, false);
         } else if (callback != null) {
             // Else, let the user know session initialization failed because it's already initialized.
@@ -3553,7 +3552,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private boolean isReInitializing;
 
         private InitSessionBuilder(Activity activity) {
-            Branch.getInstance().currentActivityReference_ = new WeakReference<>(activity);
+            Branch branch = Branch.getInstance();
+            if (activity != null && (branch.getCurrentActivity() == null ||
+                    !branch.getCurrentActivity().getLocalClassName().equals(activity.getLocalClassName()))) {
+                // currentActivityReference_ is set in onActivityCreated (before initSession), which should happen if
+                // users follow Android guidelines and call super.onStart as the first thing in Activity.onStart,
+                // however, if they don't, we try to set currentActivityReference_ here too.
+                branch.currentActivityReference_ = new WeakReference<>(activity);
+            }
         }
 
         /**
@@ -3672,7 +3678,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     boolean isIDLSession() {
-        return "true".equals(instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
+        return Boolean.parseBoolean(instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
     }
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods

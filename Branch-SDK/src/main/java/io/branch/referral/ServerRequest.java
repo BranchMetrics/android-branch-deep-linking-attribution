@@ -246,7 +246,8 @@ public abstract class ServerRequest {
                 try {
                     for (String key : keys) {
                         String value = instrumentationData.get(key);
-                        if (Defines.Jsonkey.InstantDeepLinkSession.getKey().equals(key) && "true".equals(value)) {
+                        if (Defines.Jsonkey.InstantDeepLinkSession.getKey().equals(key) &&
+                                Boolean.parseBoolean(value)) {
                             isIDLSession = true;
                         }
                         instrObj.put(key, instrumentationData.get(key));

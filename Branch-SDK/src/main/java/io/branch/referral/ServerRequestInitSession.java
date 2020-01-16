@@ -53,13 +53,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         updateEnvironment(context_, post);
     }
 
-    /**
-     * Check if there is a valid callback to return init session result
-     *
-     * @return True if a valid call back is present.
-     */
-    public abstract boolean hasCallBack();
-
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;

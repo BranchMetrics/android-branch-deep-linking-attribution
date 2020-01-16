@@ -41,7 +41,9 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        if (callback == null) return;
+        if (callback == null) {
+            return;
+        }
 
         if (response != null) {
             callback.onDataFetched(response.getObject(), null);

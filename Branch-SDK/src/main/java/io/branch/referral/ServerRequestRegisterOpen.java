@@ -144,11 +144,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     }
     
     @Override
-    public boolean hasCallBack() {
-        return callback_ != null;
-    }
-    
-    @Override
     public String getRequestActionName() {
         return ACTION_OPEN;
     }

@@ -32,7 +32,9 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        if (callback == null) return;
+        if (callback == null) {
+            return;
+        }
 
         if (response != null) {
             callback.onDataFetched(new BranchCPID(response.getObject()), null);
@@ -45,7 +47,9 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        if (callback == null) return;
+        if (callback == null) {
+            return;
+        }
 
         callback.onDataFetched(null,
                 new BranchError("Failed to get the Cross Platform IDs",
