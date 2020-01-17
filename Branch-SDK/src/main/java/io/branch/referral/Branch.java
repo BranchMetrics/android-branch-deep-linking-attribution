@@ -67,7 +67,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, InstallListener.IInstallReferrerEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, GooglePlayStoreAttribution.IInstallReferrerEvents {
     
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + BuildConfig.VERSION_NAME;
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -293,7 +293,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static boolean bypassCurrentActivityIntentState_ = false;
 
     static boolean checkInstallReferrer_ = true;
-    private static long playStoreReferrerFetchTime = 1500;
+    private static long playStoreReferrerWaitTime = 1500;
     public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
     
     /**
@@ -512,7 +512,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * @deprecated This method is deprecated since play store referrer is enabled by default from v2.9.1.
+     * @deprecated This method is deprecated since INSTALL_REFERRER broadcasts were discontinued on 3/2020.
+     * And Branch SDK bundles Play Store Referrer library since v4.2.2
      * Please use {@link #setPlayStoreReferrerCheckTimeout(long)} instead.
      */
     public static void enablePlayStoreReferrer(long delay) {
@@ -520,17 +521,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Since play store referrer broadcast from google play is few millisecond delayed Branch will delay the collecting deep link data on app install by {@link #playStoreReferrerFetchTime} millisecond
-     * This will allow branch to provide for more accurate tracking and attribution. This will delay branch init only the first time user open the app.
-     * This method allows to override the maximum wait time for play store referrer to arrive. Set it to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
+     * Set timeout for Play Store Referrer library. Play Store Referrer library allows Branch to provide
+     * more accurate tracking and attribution. This delays Branch initialization only the first time user opens the app.
+     * This method allows to override the maximum wait time for play store referrer to arrive.
      * <p>
-     * Note:  as of our testing 4/2017  a 1500 milli sec wait time is enough to capture more than 90% of the install referrer case
      *
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds. Set to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
      */
     public static void setPlayStoreReferrerCheckTimeout(long delay) {
         checkInstallReferrer_ = delay > 0;
-        playStoreReferrerFetchTime = delay;
+        playStoreReferrerWaitTime = delay;
     }
     
     /**
@@ -778,7 +778,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
         // DeepLinkRoutingValidator.shutDown();
-        // InstallListener.shutDown();
+        // GooglePlayStoreAttribution.shutDown();
         // InstantAppUtil.shutDown();
         // IntegrationValidator.shutDown();
         // ShareLinkManager.shutDown();
@@ -2619,9 +2619,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
-            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !InstallListener.unReportedReferrerAvailable) {
+            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !GooglePlayStoreAttribution.hasBeenUsed) {
+                // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
+                // just in case user accidentally queues up a couple install requests at the same time. During later sessions
+                // request instanceof ServerRequestRegisterInstall = false
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                new InstallListener().captureInstallReferrer(context_, playStoreReferrerFetchTime, this);
+                GooglePlayStoreAttribution.captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
             }
         }
 
@@ -2651,7 +2654,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request = new ServerRequestRegisterOpen(context_, callback);
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, InstallListener.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback, GooglePlayStoreAttribution.getInstallationID());
         }
         return request;
     }
