@@ -2624,7 +2624,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 // just in case user accidentally queues up a couple install requests at the same time. During later sessions
                 // request instanceof ServerRequestRegisterInstall = false
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                GooglePlayStoreAttribution.captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
+                new GooglePlayStoreAttribution().captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
             }
         }
 

@@ -15,7 +15,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Class for getting the referrer info using the install referrer client.
+ * Class to access Google Play Referrer Library to get ReferrerDetails object using the InstallReferrerClient.
  */
 class GooglePlayStoreAttribution {
     
@@ -25,7 +25,7 @@ class GooglePlayStoreAttribution {
 
     static boolean hasBeenUsed;
     
-    static void captureInstallReferrer(final Context context, final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
+    void captureInstallReferrer(final Context context, final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
         hasBeenUsed = true;
         callback_ = installReferrerFetch;
 
@@ -34,6 +34,7 @@ class GooglePlayStoreAttribution {
             referrerClient.startConnection(new InstallReferrerStateListener() {
                 @Override
                 public void onInstallReferrerSetupFinished(int responseCode) {
+                    PrefHelper.Debug("onInstallReferrerSetupFinished, responseCode = " + responseCode);
                     switch (responseCode) {
                         case InstallReferrerClient.InstallReferrerResponse.OK:
                             try {
@@ -56,6 +57,7 @@ class GooglePlayStoreAttribution {
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:// Connection could not be established
                         case InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:// General errors caused by incorrect usage
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:// Play Store service is not connected now - potentially transient state.
+                            // Play Store service is not connected now - potentially transient state.
                             onReferrerClientError();
                             break;
                     }
@@ -63,8 +65,11 @@ class GooglePlayStoreAttribution {
 
                 @Override
                 public void onInstallReferrerServiceDisconnected() {
+                    // "This does not remove install referrer service connection itself - this binding
+                    // to the service will remain active, and you will receive a call to onInstallReferrerSetupFinished(int)
+                    // when install referrer service is next running and setup is complete."
+                    // https://developer.android.com/reference/com/android/installreferrer/api/InstallReferrerStateListener.html#oninstallreferrerservicedisconnected
                     PrefHelper.Debug("onInstallReferrerServiceDisconnected()");
-                    onReferrerClientError();
                 }
             });
         } catch (Throwable ex) {
