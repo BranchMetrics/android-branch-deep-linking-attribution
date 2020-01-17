@@ -2663,7 +2663,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request = new ServerRequestRegisterOpen(context_, callback);
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, GooglePlayStoreAttribution.getInstallationID());
+            request = new ServerRequestRegisterInstall(context_, callback);
         }
         return request;
     }
