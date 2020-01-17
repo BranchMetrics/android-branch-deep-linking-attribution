@@ -2619,12 +2619,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (intentState_ != INTENT_STATE.READY  && !isForceSessionEnabled()) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
+
+            // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
+            // just in case user accidentally queues up a couple install requests at the same time. During later sessions
+            // request instanceof ServerRequestRegisterInstall = false
             if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !GooglePlayStoreAttribution.hasBeenUsed) {
-                // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
-                // just in case user accidentally queues up a couple install requests at the same time. During later sessions
-                // request instanceof ServerRequestRegisterInstall = false
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 new GooglePlayStoreAttribution().captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
+
+                // GooglePlayStoreAttribution error are thrown synchronously, so we remove
+                // INSTALL_REFERRER_FETCH_WAIT_LOCK manually (see GooglePlayStoreAttribution.erroredOut)
+                if (GooglePlayStoreAttribution.erroredOut) {
+                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                }
             }
         }
 
@@ -2635,6 +2642,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!requestQueue_.containsInitRequest()) {
             insertRequestAtFront(request);
             processNextQueueItem();
+        } else {
+            PrefHelper.Debug("Warning! Attempted to queue multiple init session requests");
         }
     }
 

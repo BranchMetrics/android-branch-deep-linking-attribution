@@ -24,6 +24,10 @@ class GooglePlayStoreAttribution {
     private static IInstallReferrerEvents callback_ = null;
 
     static boolean hasBeenUsed;
+    // startConnection appears to throw errors synchronously, so IInstallReferrerEvents gets invoked, removes
+    // INSTALL_REFERRER_FETCH_WAIT_LOCK form all requests on the queue but the install request has not
+    // even been added to the queue yet. To mitigate this, we use the flag `erroredOut`
+    static boolean erroredOut;
     
     void captureInstallReferrer(final Context context, final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
         hasBeenUsed = true;
@@ -93,6 +97,7 @@ class GooglePlayStoreAttribution {
 
     private static void onReferrerClientError() {
         PrefHelper.Debug("onReferrerClientError()");
+        erroredOut = true;
         reportInstallReferrer();
     }
 
