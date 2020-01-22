@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v4.3.0
+  * _*Master Release*_ - January 22, 2020
+  * Drop broadcast receiver and bundle Play Install Referrer Library.
+  * Fix CPID and LATD listener paths.
+  * Annotate @Nullable initSession callback parameters, so callback is not dropped in kotlin.
+  
 - v4.2.1
   * _*Master Release*_ - December 19, 2019
   * Make attribution window optional for LATD requests
