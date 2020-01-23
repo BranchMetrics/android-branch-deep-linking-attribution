@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v4.3.1
+  * _*Master Release*_ - January 23, 2020
+  * Hotfix revert CPID and LATD listener paths to the newer version.
+  * Replace "SDK already initialized" error with logs and return latest referring parameters.
+
 - v4.3.0
   * _*Master Release*_ - January 22, 2020
   * Drop broadcast receiver and bundle Play Install Referrer Library.
