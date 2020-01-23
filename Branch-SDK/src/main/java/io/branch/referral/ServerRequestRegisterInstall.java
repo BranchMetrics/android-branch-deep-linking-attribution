@@ -21,18 +21,12 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param context     Current {@link Application} context
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
-     * @param installID   installation ID.                                   .
      */
-    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback,
-                                 String installID) {
+    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback) {
         super(context, Defines.RequestPath.RegisterInstall.getPath());
         callback_ = callback;
-        JSONObject installPost = new JSONObject();
         try {
-            if (!installID.equals(PrefHelper.NO_STRING_VALUE)) {
-                installPost.put(Defines.Jsonkey.LinkClickID.getKey(), installID);
-            }
-            setPost(installPost);
+            setPost(new JSONObject());
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
@@ -54,6 +48,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             }
             if (installBeginTS > 0) {
                 getPost().put(Defines.Jsonkey.InstallBeginTimeStamp.getKey(), installBeginTS);
+            }
+            if (!GooglePlayStoreAttribution.getInstallationID().equals(PrefHelper.NO_STRING_VALUE)) {
+                getPost().put(Defines.Jsonkey.LinkClickID.getKey(), GooglePlayStoreAttribution.getInstallationID());
             }
         } catch (JSONException ignore) {
         
