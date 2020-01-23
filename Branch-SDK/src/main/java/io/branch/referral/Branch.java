@@ -2600,9 +2600,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization || forceBranchSession) {
             registerAppInit(initRequest, false);
         } else if (callback != null) {
-            // Else, let the user know session initialization failed because it's already initialized.
-            callback.onInitFinished(null,
-                    new BranchError("Session initialization failed.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
+            // Else, log that session initialization failed and return latest referring params
+            PrefHelper.Debug("Warning, session already initialized,callback will contain latest referring parameters.");
+            callback.onInitFinished(getLatestReferringParams(), null);
         }
     }
     

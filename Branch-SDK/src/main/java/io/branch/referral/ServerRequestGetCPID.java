@@ -9,47 +9,11 @@ import io.branch.referral.util.BranchCPID;
 
 public class ServerRequestGetCPID extends ServerRequest {
 
-    private BranchCrossPlatformIdListenerWrapper callback;
-
-    // needed to hotfix a bug
-    private class BranchCrossPlatformIdListenerWrapper {
-        io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener oldCallbackRef;
-        io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener newCallbackRef;
-
-        BranchCrossPlatformIdListenerWrapper(io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener callback){
-            oldCallbackRef = callback;
-        }
-        BranchCrossPlatformIdListenerWrapper(io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener callback){
-            newCallbackRef = callback;
-        }
-
-        void onDataFetched(BranchCPID branchCPID, BranchError error) {
-            if (newCallbackRef != null) {
-                newCallbackRef.onDataFetched(branchCPID, error);
-            } else if (oldCallbackRef != null) {
-                oldCallbackRef.onDataFetched(branchCPID, error);
-            } else {
-                PrefHelper.Debug("Warning! Unexpected state in BranchCrossPlatformIdListenerWrapper.onDataFetched");
-            }
-        }
-    }
-
-    ServerRequestGetCPID(Context context, String requestPath,
-                         io.branch.referral.util.BranchCrossPlatformId.BranchCrossPlatformIdListener callback) {
-        super(context, requestPath);
-        this.callback = new BranchCrossPlatformIdListenerWrapper(callback);
-        JSONObject reqBody = new JSONObject();
-        try {
-            setPost(reqBody);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        updateEnvironment(context, reqBody);
-    }
+    private BranchCrossPlatformIdListener callback;
 
     ServerRequestGetCPID(Context context, String requestPath, BranchCrossPlatformIdListener callback) {
         super(context, requestPath);
-        this.callback = new BranchCrossPlatformIdListenerWrapper(callback);
+        this.callback = callback;
         JSONObject reqBody = new JSONObject();
         try {
             setPost(reqBody);
