@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v4.3.2
+  * _*Master Release*_ - January 29, 2020
+  * Accommodate single activity architecture/navigation component (reintroduced "SDK already initialized" error and ensured reInitSession() only fires when intent contains branch data).
+  * Do not self-initialize if SDK is bundled with a plugin.
+  
 - v4.3.1
   * _*Master Release*_ - January 23, 2020
   * Hotfix revert CPID and LATD listener paths to the newer version.
