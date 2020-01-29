@@ -7,7 +7,7 @@ def jarFileName
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
     implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'com.android.installreferrer:installreferrer:1.1'
+    implementation 'com.android.installreferrer:installreferrer:1.0'
 
     // --- optional dependencies -----
     //Please note that the Branch SDK does not require any of the below optional dependencies to operate. This dependency is listed here so there will not be build errors,
