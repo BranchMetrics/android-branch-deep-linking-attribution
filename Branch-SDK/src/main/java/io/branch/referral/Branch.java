@@ -1374,35 +1374,37 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        if (activity == null) return false;
+        if (activity == null || activity.getIntent() == null ||
+            !branchReferral_.isRestartSessionRequested(activity.getIntent())) {
+            return false;
+        }
+
         Intent intent = activity.getIntent();
 
-        if (intent != null) {
-            currentActivityReference_ = new WeakReference<>(activity);
-            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
-            Uri uri = intent.getData();
+        currentActivityReference_ = new WeakReference<>(activity);
 
-            String pushNotifUrl = intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
-            if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
-                uri = Uri.parse(pushNotifUrl);
-            }
+        // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
+        Uri uri = intent.getData();
 
-            if (uri != null) {
-                // Let's indicate that the app was initialized with this uri.
-                setSessionReferredLink(uri.toString());
+        String pushNotifUrl = intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+        if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
+            uri = Uri.parse(pushNotifUrl);
+        }
 
-                // We need to set the AndroidAppLinkURL as well
-                prefHelper_.setAppLink(uri.toString());
+        if (uri != null) {
+            // Let's indicate that the app was initialized with this uri.
+            setSessionReferredLink(uri.toString());
 
-                // Now, actually initialize the new session.
-                readAndStripParam(uri, activity);
-            }
+            // We need to set the AndroidAppLinkURL as well
+            prefHelper_.setAppLink(uri.toString());
+
+            // Now, actually initialize the new session.
+            readAndStripParam(uri, activity);
 
             initializeSession(callback, false);
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
     
     private void initUserSessionInternal(BranchUniversalReferralInitListener callback, Activity activity) {
@@ -1515,7 +1517,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!disableInstantDeepLinking) {
             if (intentState_ == INTENT_STATE.READY || isActivityCreatedAndLaunched()) {
                 // Check for instant deep linking possibility first
-                if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !checkIntentForSessionRestart(activity.getIntent())) {
+                if (activity != null && activity.getIntent() != null && initState_ != SESSION_STATE.INITIALISED && !isRestartSessionRequested(activity.getIntent())) {
                     Intent intent = activity.getIntent();
                     // In case of a cold start by clicking app icon or bringing app to foreground Branch link click is always false.
                     if (intent.getData() == null || (!isActivityCreatedAndLaunched() && isIntentParamsAlreadyConsumed(activity))) {
@@ -2593,16 +2595,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // which will blow up the session count in analytics but does the job.
         Intent intent = currentActivityReference_ != null && currentActivityReference_.get() != null ?
                 currentActivityReference_.get().getIntent() : null;
-        boolean forceBranchSession = checkIntentForSessionRestart(intent);
+        boolean forceBranchSession = isRestartSessionRequested(intent);
 
         // !isFirstInitialization condition equals true only when user calls reInitSession()
 
         if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization || forceBranchSession) {
             registerAppInit(initRequest, false);
         } else if (callback != null) {
-            // Else, log that session initialization failed and return latest referring params
-            PrefHelper.Debug("Warning, session already initialized,callback will contain latest referring parameters.");
-            callback.onInitFinished(getLatestReferringParams(), null);
+            // Else, let the user know session initialization failed because it's already initialized.
+            callback.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
         }
     }
     
@@ -2783,12 +2784,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * The commit which resolved the issue in Chrome lives here: https://chromium.googlesource.com/chromium/src/+/4bca3b37801c502a164536b804879c00aba7d304
      * We decided for now to protect this one line with a try/catch.
      */
-    boolean checkIntentForSessionRestart(Intent intent) {
+    boolean isRestartSessionRequested(Intent intent) {
         boolean isRestartSessionRequested = false;
         if (intent != null) {
             isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
                     (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
-                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false));
+                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true));
         }
         return isRestartSessionRequested;
     }
