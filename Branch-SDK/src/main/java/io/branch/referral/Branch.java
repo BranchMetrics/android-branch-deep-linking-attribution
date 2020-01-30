@@ -1374,35 +1374,37 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
      */
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        if (activity == null || activity.getIntent() == null ||
-            !branchReferral_.isRestartSessionRequested(activity.getIntent())) {
-            return false;
+        if (activity != null && activity.getIntent() != null &&
+            branchReferral_.isRestartSessionRequested(activity.getIntent())) {
+
+            Intent intent = activity.getIntent();
+
+            currentActivityReference_ = new WeakReference<>(activity);
+
+            // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
+            Uri uri = intent.getData();
+
+            String pushNotifUrl = intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
+            if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
+                uri = Uri.parse(pushNotifUrl);
+            }
+
+            if (uri != null) {
+                // Let's indicate that the app was initialized with this uri.
+                setSessionReferredLink(uri.toString());
+
+                // We need to set the AndroidAppLinkURL as well
+                prefHelper_.setAppLink(uri.toString());
+
+                // Now, actually initialize the new session.
+                readAndStripParam(uri, activity);
+
+                initializeSession(callback);
+                return true;
+            }
         }
-
-        Intent intent = activity.getIntent();
-
-        currentActivityReference_ = new WeakReference<>(activity);
-
-        // Re-Initializing with a Uri indicates that we want to fetch the data before we return.
-        Uri uri = intent.getData();
-
-        String pushNotifUrl = intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey());
-        if (uri == null && !TextUtils.isEmpty(pushNotifUrl)) {
-            uri = Uri.parse(pushNotifUrl);
-        }
-
-        if (uri != null) {
-            // Let's indicate that the app was initialized with this uri.
-            setSessionReferredLink(uri.toString());
-
-            // We need to set the AndroidAppLinkURL as well
-            prefHelper_.setAppLink(uri.toString());
-
-            // Now, actually initialize the new session.
-            readAndStripParam(uri, activity);
-
-            initializeSession(callback, false);
-            return true;
+        if (callback != null) {
+            callback.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
         }
         return false;
     }
@@ -1425,7 +1427,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return;
         }
 
-        initializeSession(callback, true);
+        initializeSession(callback);
     }
     
     /**
@@ -2548,7 +2550,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void initializeSession(final BranchReferralInitListener callback, boolean isFirstInitialization) {
+    private void initializeSession(final BranchReferralInitListener callback) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
@@ -2562,7 +2564,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         ServerRequestInitSession initRequest = getInstallOrOpenRequest(callback);
-        if (isFirstInitialization && (getSessionReferredLink() == null || enableFacebookAppLinkCheck_)) {
+        if (initState_ == SESSION_STATE.UNINITIALISED && (getSessionReferredLink() == null || enableFacebookAppLinkCheck_)) {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
                     context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
@@ -2599,7 +2601,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         // !isFirstInitialization condition equals true only when user calls reInitSession()
 
-        if (getInitState() == SESSION_STATE.UNINITIALISED || !isFirstInitialization || forceBranchSession) {
+        if (getInitState() == SESSION_STATE.UNINITIALISED || forceBranchSession) {
             registerAppInit(initRequest, false);
         } else if (callback != null) {
             // Else, let the user know session initialization failed because it's already initialized.
@@ -2789,7 +2791,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (intent != null) {
             isRestartSessionRequested = intent.getBooleanExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false) ||
                     (intent.getStringExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey()) != null &&
-                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), true));
+                            !intent.getBooleanExtra(Defines.Jsonkey.BranchLinkUsed.getKey(), false));
         }
         return isRestartSessionRequested;
     }
