@@ -239,7 +239,7 @@ public void onCreate() {
 }
 ```
 
-**2. Add your Branch keys and register for Install Referrer**
+**2. Add your Branch keys**
 
 Instant Apps can be rather confusing as there are many different manifests, but you want to find the Manifest that contains your `application` tags. Make sure your Application class name is defined here, and then specify the Branch keys _inside_ the `application` element.
 
@@ -255,11 +255,6 @@ Instant Apps can be rather confusing as there are many different manifests, but 
   <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_my_live_key" />
   <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_my_test_key" />
 
-  <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
-    <intent-filter>
-       <action android:name="com.android.vending.INSTALL_REFERRER" />
-    </intent-filter>
-  </receiver>
 </application>
 ```
 
@@ -853,7 +848,6 @@ protected void attachBaseContext(Context base) {
 This is often caused by a Proguard bug with optimization. Please try to use the latest Proguard version or disable Proguard optimisation by setting `-dontoptimize` option
 
 ### Proguard warning or errors with `appindexing` module
-Branch SDK has optional dependencies on Firebase app indexing and Android install referrer classes to provide new Firebase content listing features and support new Android install referrer library. This may cause a proguard warning depending on your proguard settings.
+Branch SDK has optional dependency on Firebase app indexing to provide new Firebase content listing features. This may cause a proguard warning depending on your proguard settings.
 Please add the following to your proguard file to solve this issue
 `-dontwarn com.google.firebase.appindexing.**`
-`-dontwarn com.android.installreferrer.api.**`
