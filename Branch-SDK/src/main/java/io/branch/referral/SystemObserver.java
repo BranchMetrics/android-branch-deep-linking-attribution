@@ -20,7 +20,12 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import com.google.android.gms.common.GoogleApiAvailability;
+
 import io.branch.referral.Defines.ModuleNameKeys;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -215,6 +220,72 @@ abstract class SystemObserver {
     }
 
     /**
+     * Helper function to determine of the device is running on a Huawei device with HMS (Huawei Mobile Services)
+     */
+    private static boolean isHuaweiMobileServicesAvailable(Context context) {
+        // Devices usch as Huawei Mate 30 Pro only have Huawei Mobile Services (HMS) and no gms.
+        return getHuaweiAdvertisingIdClientInfo(context) != null && !isGooglePlayServicesAvailable(context);
+    }
+
+    private static boolean isGooglePlayServicesAvailable(Context context) {
+        // 0 = com.google.android.gms.common.ConnectionResult.SUCCESS
+        return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == 0;
+    }
+
+    private static Object getHuaweiAdvertisingIdClientInfo(Context context) {
+        try {
+            // get Huawei AdvertisingIdClient
+            Class HW_AdvertisingIdClient = Class.forName("com.huawei.hms.ads.identifier.AdvertisingIdClient");
+            // get Huawei AdvertisingIdClient.Info
+            Method HW_getAdvertisingIdInfo = HW_AdvertisingIdClient.getDeclaredMethod("getAdvertisingIdInfo", Context.class);
+            return HW_getAdvertisingIdInfo.invoke(null, context);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Helper function to determine of the device is running on a Huawei device with HMS (Huawei Mobile Services)
+     */
+    private void getOAID(Context context, AdsParamsFetchEvents callback) {
+        String errorMessage = "";
+        try {
+            Object HW_AdvertisingIdClient_Info = getHuaweiAdvertisingIdClientInfo(context);
+
+            if (HW_AdvertisingIdClient_Info != null) {
+                // get Huawei's ad id
+                Method HW_getId = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("getId");
+                Object HW_id = HW_getId.invoke(HW_AdvertisingIdClient_Info);
+
+                // get Huawei's lat
+                Method HW_isLimitAdTrackingEnabled = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("isLimitAdTrackingEnabled");
+                Object HW_lat = HW_isLimitAdTrackingEnabled.invoke(HW_AdvertisingIdClient_Info);
+
+                if (HW_id instanceof String) {
+                    PrefHelper.Debug("HW_id = " + HW_id);
+                    setGAID(HW_id.toString());
+                } else {
+                    errorMessage += "Huawei OAID type != String.";
+                }
+
+                if (HW_lat instanceof Boolean) {
+                    PrefHelper.Debug("HW_lat = " + HW_lat);
+                    setLAT((Boolean) HW_lat ? 1 : 0);
+                } else {
+                    errorMessage += "Huawei LAT type != Boolean.";
+                }
+            }
+        } catch (Exception  e) {
+            e.printStackTrace();
+            errorMessage += e.getLocalizedMessage();
+            PrefHelper.Debug("e.getLocalizedMessage() = " + errorMessage);
+            PrefHelper.Debug("e = " + e);
+        }
+        PrefHelper.Debug(errorMessage);
+        callback.onAdsParamsFetchFinished();
+    }
+
+    /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android
      * SDK versions.</p>
      * <p>Not of practical use in your application.</p>
@@ -400,7 +471,11 @@ abstract class SystemObserver {
                     callback.onAdsParamsFetchFinished();
                 }
             } catch (Settings.SettingNotFoundException ignored) {}
+        } else if (isHuaweiMobileServicesAvailable()) {
+            PrefHelper.Debug("Huawei device");
+            getOAID(context, callback);
         } else {
+            PrefHelper.Debug("Google device");
             isPrefetchStarted = true;
             new GAdsPrefetchTask(context, callback).executeTask();
         }

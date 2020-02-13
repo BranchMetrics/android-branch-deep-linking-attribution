@@ -12,8 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * <p>
  * Async task to fetch GAID and LAT value.
- * This task fetch the GAID and LAT in background. The Background task times out
- * After GAID_FETCH_TIME_OUT
+ * This task fetch the GAID and LAT in background. The Background task times out after GAID_FETCH_TIME_OUT.
  * </p>
  */
 public class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
