@@ -413,6 +413,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
+        checkInstallReferrer_ = SystemObserver.supportsGMS(context);
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
@@ -529,7 +530,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds. Set to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
      */
     public static void setPlayStoreReferrerCheckTimeout(long delay) {
-        checkInstallReferrer_ = delay > 0;
+        if (branchReferral_ != null && branchReferral_.context_!= null) {
+            checkInstallReferrer_ = delay > 0 &&
+                    SystemObserver.supportsGMS(branchReferral_.context_);
+        } else {
+            checkInstallReferrer_ = delay > 0;
+        }
         playStoreReferrerWaitTime = delay;
     }
     
