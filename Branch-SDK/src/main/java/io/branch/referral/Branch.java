@@ -413,7 +413,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         hasNetwork_ = true;
         linkCache_ = new HashMap<>();
         instrumentationExtraData_ = new ConcurrentHashMap<>();
-        checkInstallReferrer_ = SystemObserver.supportsGMS(context);
+        checkInstallReferrer_ = SystemObserver.playStoreExists(context);
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
@@ -532,7 +532,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void setPlayStoreReferrerCheckTimeout(long delay) {
         if (branchReferral_ != null && branchReferral_.context_!= null) {
             checkInstallReferrer_ = delay > 0 &&
-                    SystemObserver.supportsGMS(branchReferral_.context_);
+                    SystemObserver.playStoreExists(branchReferral_.context_);
         } else {
             checkInstallReferrer_ = delay > 0;
         }

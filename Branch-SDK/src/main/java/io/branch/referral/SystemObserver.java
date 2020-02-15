@@ -238,12 +238,15 @@ abstract class SystemObserver {
         }
     }
 
-    static boolean supportsGMS(@NonNull Context context) {
+    /**
+     * Helper function to determine if Play Store exists, so we know if we can use Play Install Referrer Library
+     */
+    static boolean playStoreExists(@NonNull Context context) {
         return !isFireOSDevice() && !isHuaweiMobileServicesAvailable(context);
     }
 
     /**
-     * Helper function to determine of the device is running on a Huawei device with HMS (Huawei Mobile Services)
+     * Set advertising ID derived from Huawei Mobile Services (aka Open Advertising ID)
      */
     private void setOAID(Context context, AdsParamsFetchEvents callback) {
         if (context != null) {
