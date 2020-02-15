@@ -245,40 +245,38 @@ abstract class SystemObserver {
     /**
      * Helper function to determine of the device is running on a Huawei device with HMS (Huawei Mobile Services)
      */
-    private void getOAID(Context context, AdsParamsFetchEvents callback) {
-        String errorMessage = "";
-        try {
-            // get Huawei AdvertisingIdClient
-            Class HW_AdvertisingIdClient = Class.forName("com.huawei.hms.ads.identifier.AdvertisingIdClient");
-            // get Huawei AdvertisingIdClient.Info
-            Method HW_getAdvertisingIdInfo = HW_AdvertisingIdClient.getDeclaredMethod("getAdvertisingIdInfo", Context.class);
-            Object HW_AdvertisingIdClient_Info = HW_getAdvertisingIdInfo.invoke(null, context);
+    private void setOAID(Context context, AdsParamsFetchEvents callback) {
+        if (context != null) {
+            try {
+                // get Huawei AdvertisingIdClient
+                Class HW_AdvertisingIdClient = Class.forName("com.huawei.hms.ads.identifier.AdvertisingIdClient");
+                // get Huawei AdvertisingIdClient.Info
+                Method HW_getAdvertisingIdInfo = HW_AdvertisingIdClient.getDeclaredMethod("getAdvertisingIdInfo", Context.class);
+                Object HW_AdvertisingIdClient_Info = HW_getAdvertisingIdInfo.invoke(null, context);
 
-            if (HW_AdvertisingIdClient_Info != null) {
-                // get Huawei's ad id
-                Method HW_getId = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("getId");
-                Object HW_id = HW_getId.invoke(HW_AdvertisingIdClient_Info);
+                if (HW_AdvertisingIdClient_Info != null) {
+                    // get Huawei's ad id
+                    Method HW_getId = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("getId");
+                    Object HW_id = HW_getId.invoke(HW_AdvertisingIdClient_Info);
 
-                // get Huawei's lat
-                Method HW_isLimitAdTrackingEnabled = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("isLimitAdTrackingEnabled");
-                Object HW_lat = HW_isLimitAdTrackingEnabled.invoke(HW_AdvertisingIdClient_Info);
+                    // get Huawei's lat
+                    Method HW_isLimitAdTrackingEnabled = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("isLimitAdTrackingEnabled");
+                    Object HW_lat = HW_isLimitAdTrackingEnabled.invoke(HW_AdvertisingIdClient_Info);
 
-                if (HW_id instanceof String) {
-                    setGAID(HW_id.toString());
-                } else {
-                    errorMessage += "Huawei OAID type != String.";
+                    if (HW_id instanceof String) {
+                        setGAID(HW_id.toString());
+                    }
+
+                    if (HW_lat instanceof Boolean) {
+                        setLAT((Boolean) HW_lat ? 1 : 0);
+                        if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
+                            setGAID(null);
+                        }
+                    }
                 }
-
-                if (HW_lat instanceof Boolean) {
-                    setLAT((Boolean) HW_lat ? 1 : 0);
-                } else {
-                    errorMessage += "Huawei LAT type != Boolean.";
-                }
-            }
-        } catch (Exception e) {
-            errorMessage += e.getLocalizedMessage();
+            } catch (Exception ignored) {}
         }
-        PrefHelper.Debug(errorMessage);
+
         if (callback != null) {
             callback.onAdsParamsFetchFinished();
         }
@@ -456,8 +454,18 @@ abstract class SystemObserver {
         AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         boolean isPrefetchStarted = false;
         if (isFireOSDevice()) {
-            if (context == null) //noinspection ConstantConditions
-                return isPrefetchStarted;
+            setFireAdId(context, callback);
+        } else if (isHuaweiMobileServicesAvailable(context)) {
+            setOAID(context, callback);
+        } else {
+            isPrefetchStarted = true;
+            new GAdsPrefetchTask(context, callback).executeTask();
+        }
+        return isPrefetchStarted;
+    }
+
+    private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
+        if (context != null) {
             try {
                 ContentResolver cr = context.getContentResolver();
                 setLAT(Secure.getInt(cr, "limit_ad_tracking"));
@@ -466,17 +474,12 @@ abstract class SystemObserver {
                 if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
                     setGAID(null);
                 }
-                if (callback != null) {
-                    callback.onAdsParamsFetchFinished();
-                }
             } catch (Settings.SettingNotFoundException ignored) {}
-        } else if (isHuaweiMobileServicesAvailable(context)) {
-            getOAID(context, callback);
-        } else {
-            isPrefetchStarted = true;
-            new GAdsPrefetchTask(context, callback).executeTask();
         }
-        return isPrefetchStarted;
+
+        if (callback != null) {
+            callback.onAdsParamsFetchFinished();
+        }
     }
 
     interface AdsParamsFetchEvents {
