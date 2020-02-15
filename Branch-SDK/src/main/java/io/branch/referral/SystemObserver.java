@@ -471,10 +471,8 @@ abstract class SystemObserver {
                 }
             } catch (Settings.SettingNotFoundException ignored) {}
         } else if (isHuaweiMobileServicesAvailable(context)) {
-            PrefHelper.Debug("Huawei device");
             getOAID(context, callback);
         } else {
-            PrefHelper.Debug("Google device");
             isPrefetchStarted = true;
             new GAdsPrefetchTask(context, callback).executeTask();
         }
