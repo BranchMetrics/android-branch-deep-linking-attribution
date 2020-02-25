@@ -133,7 +133,7 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_ALREADY_INITIALIZED) {
             errorCode_ = ERR_BRANCH_ALREADY_INITIALIZED;
             errMsg = " Session initialization already happened. To force a new session, " +
-                    "set intent extra, branch_force_new_session=true, and call reInitSession()";
+                    "set intent extra, \"branch_force_new_session\", to true.";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
             errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";

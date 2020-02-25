@@ -1,4 +1,20 @@
 # Branch Android SDK change log
+- v4.3.2
+  * _*Master Release*_ - January 29, 2020
+  * Accommodate single activity architecture/navigation component (reintroduced "SDK already initialized" error and ensured reInitSession() only fires when intent contains branch data).
+  * Do not self-initialize if SDK is bundled with a plugin.
+  
+- v4.3.1
+  * _*Master Release*_ - January 23, 2020
+  * Hotfix revert CPID and LATD listener paths to the newer version.
+  * Replace "SDK already initialized" error with logs and return latest referring parameters.
+
+- v4.3.0
+  * _*Master Release*_ - January 22, 2020
+  * Drop broadcast receiver and bundle Play Install Referrer Library.
+  * Fix CPID and LATD listener paths.
+  * Annotate @Nullable initSession callback parameters, so callback is not dropped in kotlin.
+  
 - v4.2.1
   * _*Master Release*_ - December 19, 2019
   * Make attribution window optional for LATD requests

@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 
 //File name for out put jar created
 def jarFileName
@@ -6,13 +7,13 @@ def jarFileName
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
     implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'com.android.installreferrer:installreferrer:1.0'
 
     // --- optional dependencies -----
     //Please note that the Branch SDK does not require any of the below optional dependencies to operate. This dependency is listed here so there will not be build errors,
     // but the library is *not* added to your app unless you do so yourself. Please check the code in gradle-mvn-push script to see how this works
 
     implementation 'com.google.firebase:firebase-appindexing:19.0.0'
-    implementation 'com.android.installreferrer:installreferrer:1.0'
 
     // testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
@@ -58,3 +59,29 @@ task makeJar(type: Copy) {
 makeJar.dependsOn(clearJar, build)
 
 apply from: 'https://raw.githubusercontent.com/BranchMetrics/GradleToMavenOptionalDependencies/master/gradle-maven-push.gradle'
+
+project.afterEvaluate {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                setGroupId project.GROUP
+                setArtifactId project.POM_ARTIFACT_ID
+                version android.defaultConfig.versionName
+                artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+
+                //if lib contains subdendepndecies
+                pom.withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+                    configurations.implementation.allDependencies.each {
+                        if (it.group != null && (it.name != null || "unspecified" == it.name) && it.version != null) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
