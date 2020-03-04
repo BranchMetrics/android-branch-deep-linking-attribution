@@ -249,13 +249,6 @@ abstract class SystemObserver {
     }
 
     /**
-     * Helper function to determine if Play Store exists, so we know if we can use Play Install Referrer Library
-     */
-    static boolean playStoreExists(@NonNull Context context) {
-        return !isFireOSDevice() && !isHuaweiMobileServicesAvailable(context);
-    }
-
-    /**
      * <p>Hard-coded value, used by the Branch object to differentiate between iOS, Web and Android
      * SDK versions.</p>
      * <p>Not of practical use in your application.</p>
