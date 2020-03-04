@@ -47,7 +47,7 @@ abstract class SystemObserver {
      */
     static final String BLANK = "bnc_no_value";
 
-    private static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
+    static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
     private String GAIDString_ = null;
     private int LATVal_ = 0;
 
@@ -181,6 +181,10 @@ abstract class SystemObserver {
         return android.os.Build.MANUFACTURER;
     }
 
+    static boolean isHuaweiDevice() {
+        return getPhoneBrand().equalsIgnoreCase("huawei");
+    }
+
     /**
      * <p>Returns the hardware model of the current device, as defined by the manufacturer.</p>
      *
@@ -222,16 +226,22 @@ abstract class SystemObserver {
      * Helper function to determine if the device is running on a Huawei device with HMS (Huawei Mobile Services),
      * for example "Mate 30 Pro". Note that non-Huawei devices will return false even if gradle pulls in HMS.
      */
-    static boolean isHuaweiMobileServicesAvailable(Context context) {
+    static boolean isHuaweiMobileServicesAvailable(@NonNull Context context) {
+        // the proper way would be to use com.huawei.hms.api.HuaweiApiAvailability, however this class
+        // is only found if Huawei ID lib is used (e.g. implementation 'com.huawei.hms:hwid:4.0.1.300')
+        return isHuaweiDevice() && !isGooglePlayServicesAvailable(context);
+    }
+
+    static boolean isGooglePlayServicesAvailable(@NonNull Context context) {
         try {
             //get an instance of com.huawei.hms.api.HuaweiApiAvailability
-            Class HWApiAvailability = Class.forName("com.huawei.hms.api.HuaweiApiAvailability");
-            Method HWApiAvailability_getInstance = HWApiAvailability.getDeclaredMethod("getInstance");
-            Object HWApiAvailabilityInstance = HWApiAvailability_getInstance.invoke(null);
+            Class GoogleApiAvailability = Class.forName("com.google.android.gms.common.GoogleApiAvailability");
+            Method GoogleApiAvailability_getInstance = GoogleApiAvailability.getDeclaredMethod("getInstance");
+            Object GoogleApiAvailabilityInstance = GoogleApiAvailability_getInstance.invoke(null);
 
-            // call isHuaweiMobileServicesAvailable on that instance
-            Method HWisMobileServicesAvailable = HWApiAvailability.getDeclaredMethod("isHuaweiMobileServicesAvailable", Context.class);
-            Object result = HWisMobileServicesAvailable.invoke(HWApiAvailabilityInstance, context);
+            // call isGooglePlayServicesAvailable on that instance
+            Method GoogleisPlayServicesAvailable = GoogleApiAvailability.getDeclaredMethod("isGooglePlayServicesAvailable", Context.class);
+            Object result = GoogleisPlayServicesAvailable.invoke(GoogleApiAvailabilityInstance, context);
             return (result instanceof Integer) && (Integer) result == 0;
         } catch (Exception e) {
             return false;
@@ -243,46 +253,6 @@ abstract class SystemObserver {
      */
     static boolean playStoreExists(@NonNull Context context) {
         return !isFireOSDevice() && !isHuaweiMobileServicesAvailable(context);
-    }
-
-    /**
-     * Set advertising ID derived from Huawei Mobile Services (aka Open Advertising ID)
-     */
-    private void setOAID(Context context, AdsParamsFetchEvents callback) {
-        if (context != null) {
-            try {
-                // get Huawei AdvertisingIdClient
-                Class HW_AdvertisingIdClient = Class.forName("com.huawei.hms.ads.identifier.AdvertisingIdClient");
-                // get Huawei AdvertisingIdClient.Info
-                Method HW_getAdvertisingIdInfo = HW_AdvertisingIdClient.getDeclaredMethod("getAdvertisingIdInfo", Context.class);
-                Object HW_AdvertisingIdClient_Info = HW_getAdvertisingIdInfo.invoke(null, context);
-
-                if (HW_AdvertisingIdClient_Info != null) {
-                    // get Huawei's ad id
-                    Method HW_getId = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("getId");
-                    Object HW_id = HW_getId.invoke(HW_AdvertisingIdClient_Info);
-
-                    // get Huawei's lat
-                    Method HW_isLimitAdTrackingEnabled = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("isLimitAdTrackingEnabled");
-                    Object HW_lat = HW_isLimitAdTrackingEnabled.invoke(HW_AdvertisingIdClient_Info);
-
-                    if (HW_id instanceof String) {
-                        setGAID(HW_id.toString());
-                    }
-
-                    if (HW_lat instanceof Boolean) {
-                        setLAT((Boolean) HW_lat ? 1 : 0);
-                        if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
-                            setGAID(null);
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
-        }
-
-        if (callback != null) {
-            callback.onAdsParamsFetchFinished();
-        }
     }
 
     /**
@@ -458,11 +428,13 @@ abstract class SystemObserver {
         boolean isPrefetchStarted = false;
         if (isFireOSDevice()) {
             setFireAdId(context, callback);
-        } else if (isHuaweiMobileServicesAvailable(context)) {
-            setOAID(context, callback);
         } else {
             isPrefetchStarted = true;
-            new GAdsPrefetchTask(context, callback).executeTask();
+            if (isHuaweiMobileServicesAvailable(context)) {
+                new HuaweiAdIdFetchTask(context, callback).executeTask();
+            } else {
+                new GAdsPrefetchTask(context, callback).executeTask();
+            }
         }
         return isPrefetchStarted;
     }
