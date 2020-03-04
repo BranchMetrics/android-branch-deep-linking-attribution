@@ -82,9 +82,7 @@ public class HuaweiAdIdFetchTask extends BranchAsyncTask<Void, Void, Void> {
 
             // get Huawei's lat
             Method HW_isLimitAdTrackingEnabled = HW_AdvertisingIdClient_Info.getClass().getDeclaredMethod("isLimitAdTrackingEnabled");
-            PrefHelper.Debug("1");
             Boolean HW_lat = (Boolean) HW_isLimitAdTrackingEnabled.invoke(HW_AdvertisingIdClient_Info);
-            PrefHelper.Debug("2");
 
             DeviceInfo di = DeviceInfo.getInstance();
             if (di == null) di = DeviceInfo.initialize(context);// some tests complete early and garbage collect DeviceInfo singleton before this point is reached
@@ -93,11 +91,9 @@ public class HuaweiAdIdFetchTask extends BranchAsyncTask<Void, Void, Void> {
             so.setGAID(HW_id);
 
             so.setLAT(HW_lat ? 1 : 0);
-            PrefHelper.Debug("3");
             if (TextUtils.isEmpty(HW_id) || HW_id.equals(UUID_EMPTY) || HW_lat) {
                 so.setGAID(null);
             }
-            PrefHelper.Debug("oaid, HW_id = " + HW_id + ", HW_lat = " + HW_lat);
         } catch (Throwable e) {
             PrefHelper.Debug("failed to retrieve OAID, error = " + e);
         }
