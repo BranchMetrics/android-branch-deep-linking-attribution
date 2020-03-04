@@ -14,17 +14,17 @@ import static io.branch.referral.SystemObserver.UUID_EMPTY;
 
 /**
  * <p>
- * Async task to fetch GAID and LAT value.
- * This task fetch the GAID and LAT in background. The Background task times out after GAID_FETCH_TIME_OUT.
+ * Async task to fetch OAID and LAT value.
+ * This task fetch the OAID and LAT in background. The Background task times out after OAID_FETCH_TIME_OUT.
  * </p>
  */
-public class HuaweiAdIdFetchTask extends BranchAsyncTask<Void, Void, Void> {
-    private static final int GAID_FETCH_TIME_OUT = 1500;
+public class HuaweiOAIDFetchTask extends BranchAsyncTask<Void, Void, Void> {
+    private static final int OAID_FETCH_TIME_OUT = 1500;
 
     private WeakReference<Context> contextRef_;
     private final SystemObserver.AdsParamsFetchEvents callback_;
 
-    HuaweiAdIdFetchTask(Context context, SystemObserver.AdsParamsFetchEvents callback) {
+    HuaweiOAIDFetchTask(Context context, SystemObserver.AdsParamsFetchEvents callback) {
         contextRef_ = new WeakReference<>(context);
         callback_ = callback;
     }
@@ -46,7 +46,7 @@ public class HuaweiAdIdFetchTask extends BranchAsyncTask<Void, Void, Void> {
 
         try {
             //Wait GAID_FETCH_TIME_OUT milli sec max to receive the GAID and LAT
-            latch.await(GAID_FETCH_TIME_OUT, TimeUnit.MILLISECONDS);
+            latch.await(OAID_FETCH_TIME_OUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

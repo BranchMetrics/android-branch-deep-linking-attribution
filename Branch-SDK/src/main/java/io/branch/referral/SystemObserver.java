@@ -431,7 +431,7 @@ abstract class SystemObserver {
         } else {
             isPrefetchStarted = true;
             if (isHuaweiMobileServicesAvailable(context)) {
-                new HuaweiAdIdFetchTask(context, callback).executeTask();
+                new HuaweiOAIDFetchTask(context, callback).executeTask();
             } else {
                 new GAdsPrefetchTask(context, callback).executeTask();
             }
