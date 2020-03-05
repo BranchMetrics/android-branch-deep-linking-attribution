@@ -1547,7 +1547,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
 
             // Skip IDL if intent contains an unused Branch link.
-            boolean noUnusedBranchLinkInIntent = !checkIntentForUnusedBranchLink(activity != null ? activity.getIntent() : null);
+            boolean noUnusedBranchLinkInIntent = !isRestartSessionRequested(activity != null ? activity.getIntent() : null);
 
             if (activityHasValidIntent && noUnusedBranchLinkInIntent) {
                 extractSessionParamsForIDL(data, activity);
@@ -2478,7 +2478,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // 2. Some users navigate their apps via Branch links so they would have to set ForceNewBranchSession to true
         // which will blow up the session count in analytics but does the job.
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
-        boolean forceBranchSession = checkIntentForSessionRestart(intent) || checkIntentForUnusedBranchLink(intent);
+        boolean forceBranchSession = isRestartSessionRequested(intent);
 
         // !isFirstInitialization condition equals true only when user calls reInitSession()
 
@@ -2648,14 +2648,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /*
      * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
-     * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app in foreground.
-     *
-     * We are catching BadParcelableException because of the issue reported here: https://github.com/BranchMetrics/android-branch-deep-linking/issues/464
-     * Which is also reported here, affecting Chrome: https://bugs.chromium.org/p/chromium/issues/detail?id=412527
-     * Explanation: In some cases the parcel inside the intent we're parsing from Chrome can be malformed, so we need some protection!
-     * The commit which resolved the issue in Chrome lives here: https://chromium.googlesource.com/chromium/src/+/4bca3b37801c502a164536b804879c00aba7d304
-     * We decided for now to protect this one line with a try/catch.
+     * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app (namely, LauncherActivity) is in foreground.
      */
+    boolean isRestartSessionRequested(Intent intent) {
+        return checkIntentForSessionRestart(intent) || checkIntentForUnusedBranchLink(intent);
+    }
+
     private boolean checkIntentForSessionRestart(Intent intent) {
         boolean forceSessionIntentKeyPresent = false;
         if (intent != null) {
@@ -3649,7 +3647,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Activity activity = branch.getCurrentActivity();
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
-            } else if (isReInitializing) {
+            } else if (isReInitializing &&
+                    branch.isRestartSessionRequested(activity != null ? activity.getIntent() : null)) {
                 branch.readAndStripParam(
                         activity != null && activity.getIntent() != null ?
                         activity.getIntent().getData() : null, activity);
