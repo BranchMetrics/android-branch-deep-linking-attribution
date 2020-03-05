@@ -393,6 +393,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean enableInstantDeepLinking = false;
     private final TrackingController trackingController;
+
+    /** Variables for reporting plugin type and version (some TUNE customers do that), plus helps
+     * us make data driven decisions. */
+    private static String pluginVersion = null;
+    private static String pluginName = null;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1535,6 +1540,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
+    }
+
+    public static void registerPlugin(String name, String version) {
+        pluginName = name;
+        pluginVersion = version;
+    }
+
+    public static String getPluginVersion() {
+        return pluginVersion;
+    }
+
+    static String getPluginName() {
+        return pluginName;
     }
 
     private void readAndStripParam(Uri data, Activity activity) {

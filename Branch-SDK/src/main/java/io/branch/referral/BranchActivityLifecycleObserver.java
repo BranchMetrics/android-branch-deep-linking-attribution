@@ -21,7 +21,8 @@ import io.branch.indexing.ContentDiscoverer;
 class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCallbacks {
     private int activityCnt_ = 0; //Keep the count of visible activities.
 
-    /* Set of activities observed in this session */
+    //Set of activities observed in this session, not storing it as Activity.toString() ensures
+    // that multiple instances of the same activity are counted individually.
     private Set<String> activitiesOnStack_ = new HashSet<>();
 
     @Override
@@ -74,13 +75,13 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         }
 
         if (branch.getInitState() == Branch.SESSION_STATE.UNINITIALISED) {
-            if (BranchUtil.getPluginType() == null) {
+            if (Branch.getPluginName() == null) {
                 // this is the only place where we self-initialize in case user opens the app from 'recent apps tray'
                 // and the entry Activity is not the launcher Activity where user placed initSession themselves.
                 PrefHelper.Debug("initializing session on user's behalf (onActivityResumed called but SESSION_STATE = UNINITIALISED)");
                 Branch.sessionBuilder(activity).init();
             } else {
-                PrefHelper.Debug("onActivityResumed called and SESSION_STATE = UNINITIALISED, however this is a " + BranchUtil.getPluginType() + " plugin, so we are NOT initializing session on user's behalf");
+                PrefHelper.Debug("onActivityResumed called and SESSION_STATE = UNINITIALISED, however this is a " + Branch.getPluginName() + " plugin, so we are NOT initializing session on user's behalf");
             }
         }
 

@@ -97,9 +97,9 @@ class DeviceInfo {
 
             maybeAddTuneFields(serverRequest, requestObj);
 
-            if (BranchUtil.getPluginType() != null) {
-                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
-                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            if (Branch.getPluginName() != null) {
+                requestObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
             }
 
             String countryCode = SystemObserver.getISO2CountryCode();
@@ -180,9 +180,9 @@ class DeviceInfo {
 
             maybeAddTuneFields(serverRequest, requestObj);
 
-            if (BranchUtil.getPluginType() != null) {
-                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
-                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            if (Branch.getPluginName() != null) {
+                requestObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
             }
 
             String countryCode = SystemObserver.getISO2CountryCode();
