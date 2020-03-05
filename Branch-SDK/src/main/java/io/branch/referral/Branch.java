@@ -264,21 +264,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static final int LINK_TYPE_ONE_TIME_USE = 1;
     
-    /**
-     * <p>An {@link Integer} variable specifying the amount of time in milliseconds to keep a
-     * connection alive before assuming a timeout condition.</p>
-     *
-     * @see <a href="http://developer.android.com/reference/java/util/Timer.html#schedule(java.util.TimerTask, long)">
-     * Timer.schedule (TimerTask task, long delay)</a>
-     */
-    private static final int SESSION_KEEPALIVE = 2000;
-    
-    /**
-     * <p>An {@link Integer} value defining the timeout period in milliseconds to wait during a
-     * looping task before triggering an actual connection close during a session close action.</p>
-     */
-    private static final int PREVENT_CLOSE_TIMEOUT = 500;
-    
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
     
@@ -291,6 +276,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     static boolean bypassWaitingForIntent_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
+
+    static boolean disableAutoSessionInitialization;
 
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerWaitTime = 1500;
@@ -482,6 +469,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static void disableDebugMode() {
         BranchUtil.setDebugMode(false);
+    }
+
+    /**
+     * Temporarily disables auto session initialization until user initializes themselves.
+     *
+     * Context: Branch expects session initialization to be started in LauncherActivity.onStart(),
+     * if session initialization has not been started/completed by the time ANY Activity resumes,
+     * Branch will auto-initialize. This allows Branch to keep an accurate count of all app sessions,
+     * including instances when app is launched from a recent apps list and the first visible Activity
+     * is not LauncherActivity.
+     *
+     * However, in certain scenarios users may need delay session initialization (e.g. to asynchronously
+     * retrieve some data that needs to be passed to Branch prior to session initialization). In those
+     * cases, use expectDelayedSessionInitialization() to temporarily disable auto self initialization.
+     * Once user initializes the session themselves, the flag will be reset and auto session initialization
+     * will be re-enabled.
+     */
+    public static void expectDelayedSessionInitialization() {
+        disableAutoSessionInitialization = true;
     }
 
     /**
@@ -3663,13 +3669,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
 
             Activity activity = branch.getCurrentActivity();
+            Intent intent = activity != null ? activity.getIntent() : null;
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
-            } else if (isReInitializing &&
-                    branch.isRestartSessionRequested(activity != null ? activity.getIntent() : null)) {
-                branch.readAndStripParam(
-                        activity != null && activity.getIntent() != null ?
-                        activity.getIntent().getData() : null, activity);
+            } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
+                branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
             }
 
             if (branch.isInstantDeepLinkPossible) { // readAndStripParams may set isInstantDeepLinkPossible to true
