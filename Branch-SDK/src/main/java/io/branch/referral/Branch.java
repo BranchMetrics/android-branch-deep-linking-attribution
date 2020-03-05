@@ -2499,7 +2499,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
-            // In this case need to wait till onResume to get the latest intent. Bypass this if isForceSession_ is true.
+            // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
             if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
@@ -3549,7 +3549,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    Activity getCurrentActivity() {
+    @Nullable Activity getCurrentActivity() {
         if (currentActivityReference_ == null) return null;
         return currentActivityReference_.get();
     }

@@ -26,6 +26,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
+        PrefHelper.Debug("onActivityCreated, activity = " + activity);
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -33,12 +34,11 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
             BranchViewHandler.getInstance().showPendingBranchView(activity);
         }
-
-        activitiesOnStack_.remove(activity.getLocalClassName());
     }
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
+        PrefHelper.Debug("onActivityStarted, activity = " + activity);
         Branch branch = Branch.getInstance();
         if (branch == null) {
             return;
@@ -63,6 +63,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
+        PrefHelper.Debug("onActivityResumed, activity = " + activity);
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -85,11 +86,12 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
         // must be called after session initialization, which relies on checking whether activity
         // that is initializing the session is being launched from stack or anew
-        activitiesOnStack_.add(activity.getLocalClassName());
+        activitiesOnStack_.add(activity.toString());
     }
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
+        PrefHelper.Debug("onActivityPaused, activity = " + activity);
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -101,6 +103,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
+        PrefHelper.Debug("onActivityStopped, activity = " + activity);
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -118,6 +121,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
+        PrefHelper.Debug("onActivityDestroyed, activity = " + activity);
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
@@ -125,6 +129,8 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             branch.currentActivityReference_.clear();
         }
         BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
+
+        activitiesOnStack_.remove(activity.toString());
     }
 
     private void maybeRefreshAdvertisingID(Context context) {
@@ -144,12 +150,12 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         }
     }
 
-    // default is true
     boolean isCurrentActivityLaunchedFromStack() {
         Branch branch = Branch.getInstance();
         if (branch == null || branch.getCurrentActivity() == null) {
+            // don't think this is possible
             return false;
         }
-        return activitiesOnStack_.contains(branch.getCurrentActivity().getLocalClassName());
+        return activitiesOnStack_.contains(branch.getCurrentActivity().toString());
     }
 }
