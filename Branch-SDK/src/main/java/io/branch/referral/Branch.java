@@ -3601,7 +3601,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return currentActivityReference_.get();
     }
 
-    private static class InitSessionBuilder {
+    public static class InitSessionBuilder {
         private BranchReferralInitListener callback;
         private int delay;
         private Uri uri;
