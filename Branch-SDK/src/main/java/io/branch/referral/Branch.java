@@ -18,6 +18,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StyleRes;
+
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -485,9 +487,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * cases, use expectDelayedSessionInitialization() to temporarily disable auto self initialization.
      * Once user initializes the session themselves, the flag will be reset and auto session initialization
      * will be re-enabled.
+     *
+     * @param expectDelayedInit A {@link Boolean} to set the expectation flag.
      */
-    public static void expectDelayedSessionInitialization() {
-        disableAutoSessionInitialization = true;
+    public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
+        disableAutoSessionInitialization = expectDelayedInit;
     }
 
     /**
@@ -2521,6 +2525,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
         setInitState(SESSION_STATE.INITIALISING);
 
+         // Re-enables auto session initialization, note that we don't care if the request succeeds
+         Branch.expectDelayedSessionInitialization(false);
+
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
@@ -3580,6 +3587,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public static class InitSessionBuilder {
         private BranchReferralInitListener callback;
+        private int delay;
         private Uri uri;
         private Boolean isReferrable;
         private boolean isReInitializing;
@@ -3608,6 +3616,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
             this.callback = new BranchUniversalReferralInitWrapper(callback);
+            return this;
+        }
+
+        /**
+         * <p> Delay session initialization by certain time (used when other async or otherwise time
+         * consuming ops need to be completed prior to session initialization).</p>
+         *
+         * @param delayMillis  An {@link Integer} indicating the length of the delay in milliseconds.
+         */
+        @SuppressWarnings("WeakerAccess")
+        public InitSessionBuilder withDelay(int delayMillis) {
+            this.delay = delayMillis;
             return this;
         }
 
@@ -3658,7 +3678,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
-            Branch branch = Branch.getInstance();
+            final Branch branch = Branch.getInstance();
             if (branch == null) {
                 PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
@@ -3686,9 +3706,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 // potentially routes the user to the Activity configured to consume this particular link
                 branch.checkForAutoDeepLinkConfiguration();
             }
-
-            branch.initializeSession(callback);
-//            branch.initializeSession(callback, isReInitializing);
+            if (delay > 0) {
+                expectDelayedSessionInitialization(true);
+                new Handler().postDelayed(new Runnable() {
+                    @Override public void run() {
+                        branch.initializeSession(callback);
+                    }
+                }, delay);
+            } else {
+                branch.initializeSession(callback);
+            }
         }
 
         /**
