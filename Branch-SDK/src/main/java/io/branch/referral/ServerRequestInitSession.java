@@ -195,9 +195,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 cdObj.put(ContentDiscoveryManifest.PACKAGE_NAME_KEY, context_.getPackageName());
                 post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
             }
-        } catch (JSONException ignore) {
+        } catch (JSONException ignore) { }
 
-        }
+        // Re-enables auto session initialization, note that we don't care if the request succeeds
+        Branch.expectDelayedSessionInitialization(false);
     }
 
     /*

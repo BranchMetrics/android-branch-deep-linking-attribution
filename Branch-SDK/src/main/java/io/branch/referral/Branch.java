@@ -2081,6 +2081,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         firstReferringParams = appendDebugParams(firstReferringParams);
         return firstReferringParams;
     }
+
+    @SuppressWarnings("WeakerAccess")
+    public void removeSessionInitializationDelay() {
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
+        processNextQueueItem();
+    }
     
     /**
      * <p>This function must be called from a non-UI thread! If Branch has no install link data,
@@ -2461,13 +2467,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void initializeSession(final BranchReferralInitListener callback) {
+        initializeSession(callback, 0);
+    }
+
+    private void initializeSession(final BranchReferralInitListener callback, int delay) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
             if (callback != null) {
                 callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's res/values/strings.xml!");
+            PrefHelper.Debug("Warning: Please enter your branch_key in your project's manifest");
             return;
         } else if (isTestModeEnabled()) {
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
@@ -2497,6 +2507,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
+        if (delay > 0) {
+            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
+            new Handler().postDelayed(new Runnable() {
+                @Override public void run() {
+                    removeSessionInitializationDelay();
+                }
+            }, delay);
+        }
+
         // Re 'forceBranchSession':
         // Check if new session is being forced. There are two use cases for setting the ForceNewBranchSession to true:
         // 1. Launch an activity via a push notification while app is in foreground but does not have
@@ -2524,9 +2543,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
         setInitState(SESSION_STATE.INITIALISING);
-
-         // Re-enables auto session initialization, note that we don't care if the request succeeds
-         Branch.expectDelayedSessionInitialization(false);
 
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
@@ -3585,7 +3601,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return currentActivityReference_.get();
     }
 
-    public static class InitSessionBuilder {
+    private static class InitSessionBuilder {
         private BranchReferralInitListener callback;
         private int delay;
         private Uri uri;
@@ -3708,11 +3724,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             if (delay > 0) {
                 expectDelayedSessionInitialization(true);
-                new Handler().postDelayed(new Runnable() {
-                    @Override public void run() {
-                        branch.initializeSession(callback);
-                    }
-                }, delay);
+                branch.initializeSession(callback, delay);
             } else {
                 branch.initializeSession(callback);
             }
