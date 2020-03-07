@@ -1175,8 +1175,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     @Deprecated
     public boolean initSessionForced(BranchReferralInitListener callback) {
-        Branch.bypassWaitingForIntent(true);
-        Branch.sessionBuilder(null).withCallback(callback).init();
+        Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init();
         return true;
     }
 
@@ -3240,20 +3239,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
 
     /**
-     * <p> Use this method cautiously, it is meant to support legacy functionality and its use is
-     * generally discouraged.
+     * <p> Use this method cautiously, it is meant to enable the ability to start a session before
+     * the user opens the app.
      *
      * The use case explained:
-     * Users are expected to initialize session from onStart rather than onResume to prevent
-     * multiple initializations during a single app session. However, by default, Branch actually
-     * waits until onResume to start session initialization, so as to ensure that the latest intent
-     * data is available (e.g. when activity is launched from stack and a new intent is delivered
-     * via onNewIntent()). Setting this flag to true will bypass waiting for intent and start session
-     * initialization right away (pending any other wait locks). Note, however that analytics may be
-     * incomplete or wrong and race conditions may break deeplinking when activity is being launched
-     * from stack.</p>
+     * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
+     * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
+     * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
+     * will bypass waiting for intent, so session could technically be initialized from a background service
+     * or otherwise before the application is even opened.
      *
-     * @param bypassIntent a {@link Boolean} indicating if intent is needed before session initialization .
+     * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
+     * in certain cases.</p>
+     *
+     * @param bypassIntent a {@link Boolean} indicating if SDK should wait for onResume in order to fire the
+     *                     session initialization request.
      */
     @SuppressWarnings("WeakerAccess")
     public static void bypassWaitingForIntent(boolean bypassIntent) { bypassWaitingForIntent_ = bypassIntent; }
@@ -3608,6 +3608,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private BranchReferralInitListener callback;
         private int delay;
         private Uri uri;
+        private Boolean ignoreIntent;
         private Boolean isReferrable;
         private boolean isReInitializing;
 
@@ -3693,6 +3694,29 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         /**
+         * <p> Use this method cautiously, it is meant to enable the ability to start a session before
+         * the user even opens the app.
+         *
+         * The use case explained:
+         * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
+         * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
+         * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
+         * will bypass waiting for intent, so session could technically be initialized from a background service
+         * or otherwise before the application is even opened.
+         *
+         * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
+         * in certain cases. See also Branch.bypassWaitingForIntent(boolean). </p>
+         *
+         * @param ignore       a {@link Boolean} indicating if SDK should wait for onResume to retrieve
+         *                     the most up recent intent data before firing the session initialization request.
+         */
+        @SuppressWarnings("WeakerAccess")
+        public InitSessionBuilder ignoreIntent(boolean ignore) {
+            ignoreIntent = ignore;
+            return this;
+        }
+
+        /**
          * <p>Initialises a session with the Branch API, registers the passed in Activity, callback
          * and configuration variables, then initializes session.</p>
          */
@@ -3705,6 +3729,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             if (isReferrable != null) {
                 branch.setIsReferrable(isReferrable);
+            }
+            if (ignoreIntent) {
+                Branch.bypassWaitingForIntent(ignoreIntent);
             }
 
             Activity activity = branch.getCurrentActivity();
