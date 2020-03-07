@@ -2530,6 +2530,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // !isFirstInitialization condition equals true only when user calls reInitSession()
 
         if (getInitState() == SESSION_STATE.UNINITIALISED || forceBranchSession) {
+            if (forceBranchSession && intent != null) {
+                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey());
+            }
             registerAppInit(initRequest, false);
         } else if (callback != null) {
             // Else, let the user know session initialization failed because it's already initialized.
@@ -3710,24 +3713,33 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branch.readAndStripParam(uri, activity);
             } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
                 branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
+            } else if (isReInitializing) {
+                // User called reInit but isRestartSessionRequested = false, meaning the new intent was
+                // not initiated by Branch and should not be considered a "new session", return early
+                return;
             }
 
-            if (branch.isInstantDeepLinkPossible) { // readAndStripParams may set isInstantDeepLinkPossible to true
-                // reset state in case intra-app linking is being used
+            // readAndStripParams (above) may set isInstantDeepLinkPossible to true
+            if (branch.isInstantDeepLinkPossible) {
+                // reset state
                 branch.isInstantDeepLinkPossible = false;
-                // invoke callback
+                // invoke callback returning LatestReferringParams, which were parsed out inside readAndStripParam
+                // from either intent extra "branch_data", or as parameters attached to the referring app link
                 callback.onInitFinished(branch.getLatestReferringParams(), null);
                 // mark this session as IDL session
                 branch.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
                 // potentially routes the user to the Activity configured to consume this particular link
                 branch.checkForAutoDeepLinkConfiguration();
+                // we already invoked the callback for let's set it to null, make will still make the
+                // init session request but for analytics purposes only
+                callback = null;
             }
+
             if (delay > 0) {
                 expectDelayedSessionInitialization(true);
-                branch.initializeSession(callback, delay);
-            } else {
-                branch.initializeSession(callback);
             }
+
+            branch.initializeSession(callback, delay);
         }
 
         /**
