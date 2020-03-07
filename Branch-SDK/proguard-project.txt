@@ -18,3 +18,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Huawei's OAID (Google's advertising id equivalent)
+-keep class com.huawei.hms.ads.** { *; }
+-keep interface com.huawei.hms.ads.** { *; }

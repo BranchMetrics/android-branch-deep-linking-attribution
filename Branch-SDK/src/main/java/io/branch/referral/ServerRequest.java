@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -386,15 +388,19 @@ public abstract class ServerRequest {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
-        String keyToBeUsedInAdIdsObject = null;
+        if (!TextUtils.isEmpty(gaid)) {
+            updateAdvertisingIdsObject(gaid);
+        }
         try {
             if (version == BRANCH_API_VERSION.V1) {
                 params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
                 if (!TextUtils.isEmpty(gaid)) {
-                    params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                    if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
+                        // Fire OS overloads ad id (representing it as Google ad id at the top level),
+                        // HUAWEI only reports ad id in the advertising_ids object
+                        params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                    }
                     params_.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
-                    // for future use
-                    keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(params_);
                 } else if (!payloadContainsDeviceIdentifiers(params_) &&
                         !params_.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
                     params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
@@ -404,20 +410,34 @@ public abstract class ServerRequest {
                 if (userDataObj != null) {
                     userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
                     if (!TextUtils.isEmpty(gaid)) {
-                        userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
+                        if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
+                            // Fire OS overloads ad id (representing it as Google ad id at the top level),
+                            // HUAWEI only reports ad id in the advertising_ids object
+                            userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
+                        }
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
-                        // for future use
-                        keyToBeUsedInAdIdsObject = getKeyToBeUsedInAdIdsObject(userDataObj);
                     } else if (!payloadContainsDeviceIdentifiers(userDataObj) &&
                             !userDataObj.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
                         userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
                 }
             }
+        } catch (JSONException ignored) {}
+    }
 
-            if (keyToBeUsedInAdIdsObject == null) return;
+    private void updateAdvertisingIdsObject(@NonNull String aid) {
+        try {
+            String key;
+            if (SystemObserver.isFireOSDevice()) {
+                key = Defines.Jsonkey.FireAdId.getKey();
+            } else if (SystemObserver.isHuaweiMobileServicesAvailable(
+                    Branch.getInstance().getApplicationContext())) {
+                key = Defines.Jsonkey.OpenAdvertisingID.getKey();
+            } else {
+                key = Defines.Jsonkey.AAID.getKey();
+            }
 
-            JSONObject advertisingIdsObject = new JSONObject().put(keyToBeUsedInAdIdsObject, gaid);
+            JSONObject advertisingIdsObject = new JSONObject().put(key, aid);
             params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
         } catch (JSONException ignored) {}
     }
@@ -426,14 +446,6 @@ public abstract class ServerRequest {
         return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
                 payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||
                 payload.has(Defines.ModuleNameKeys.imei.getKey());
-    }
-
-    private String getKeyToBeUsedInAdIdsObject(JSONObject payload) {
-        String os = payload.optString(Defines.Jsonkey.OS.getKey());
-        if (TextUtils.isEmpty(os)) return null;
-
-        return os.toLowerCase().contains("amazon") ? Defines.Jsonkey.FireAdId.getKey() :
-                Defines.Jsonkey.AAID.getKey();
     }
     
     private void updateDeviceInfo() {

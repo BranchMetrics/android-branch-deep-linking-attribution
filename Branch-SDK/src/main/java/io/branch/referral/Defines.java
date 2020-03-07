@@ -73,6 +73,7 @@ public class Defines {
         GoogleAdvertisingID("google_advertising_id"),       // V1 Only, "Google Advertising Id"
         AAID("aaid"),                                       // V2 Only, "Android Advertising Id"
         FireAdId("fire_ad_id"),
+        OpenAdvertisingID("oaid"),                          // Huawei Mobile Services
         LATVal("lat_val"),
         LimitedAdTracking("limit_ad_tracking"),
         limitFacebookTracking("limit_facebook_tracking"),
