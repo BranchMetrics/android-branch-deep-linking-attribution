@@ -19,11 +19,11 @@ public class Defines {
         ClickedReferrerTimeStamp("clicked_referrer_ts"),
         InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
-        BranchLinkUsed("branch_used"),
+        @Deprecated BranchLinkUsed("branch_used"),          //use Defines.IntentKeys.BranchLinkUsed
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
-        BranchData("branch_data"),
+        @Deprecated BranchData("branch_data"),              //use Defines.IntentKeys.BranchData
         
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -101,9 +101,8 @@ public class Defines {
         DeepLinkPath(Branch.DEEPLINK_PATH),
         
         AndroidAppLinkURL("android_app_link_url"),
-        AndroidPushNotificationKey("branch"),
+        @Deprecated AndroidPushNotificationKey("branch"),   //use Defines.IntentKeys.AndroidPushNotificationKey
         AndroidPushIdentifier("push_identifier"),
-        ForceNewBranchSession("branch_force_new_session"),
         
         CanonicalIdentifier("$canonical_identifier"),
         ContentTitle(Branch.OG_TITLE),
@@ -168,7 +167,7 @@ public class Defines {
         Locale("locale"),
         ConnectionType("connection_type"),
         DeviceCarrier("device_carrier"),
-        PluginType("plugin_type"),
+        PluginName("plugin_name"),
         PluginVersion("plugin_version"),
         OSVersionAndroid("os_version_android"),
         
@@ -328,6 +327,35 @@ public class Defines {
         private String key = "";
 
         ModuleNameKeys(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
+
+    /**
+     * <p>
+     * Defines module name keys
+     * </p>
+     */
+    public enum IntentKeys {
+        BranchData("branch_data"),
+        AndroidPushNotificationKey("branch"),
+        ForceNewBranchSession("branch_force_new_session"),
+        BranchLinkUsed("branch_used"),
+        BranchURI("branch");
+
+        private String key = "";
+
+        IntentKeys(String key) {
             this.key = key;
         }
 

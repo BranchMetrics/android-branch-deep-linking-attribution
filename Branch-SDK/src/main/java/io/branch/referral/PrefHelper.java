@@ -168,8 +168,7 @@ public class PrefHelper {
      *                within. This is normally the base context of the application.
      */
     private PrefHelper(Context context) {
-        this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE,
-                Context.MODE_PRIVATE);
+        this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
         this.requestMetadata = new JSONObject();
         this.installMetadata = new JSONObject();
@@ -1197,7 +1196,7 @@ public class PrefHelper {
     
     /**
      * <p>Clears all the Branch referral shared preferences related to the current key.
-     * Should be called before setting an new Branch-Key. </p>
+     * Should be called before setting a new Branch-Key. </p>
      */
     private void clearPrefOnBranchKeyChange() {
         // If stored key isn't the same as the current key, we need to clean up
