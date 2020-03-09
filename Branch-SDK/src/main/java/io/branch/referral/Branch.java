@@ -482,10 +482,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * including instances when app is launched from a recent apps list and the first visible Activity
      * is not LauncherActivity.
      *
-     * However, in certain scenarios users may need delay session initialization (e.g. to asynchronously
+     * However, in certain scenarios users may need to delay session initialization (e.g. to asynchronously
      * retrieve some data that needs to be passed to Branch prior to session initialization). In those
      * cases, use expectDelayedSessionInitialization() to temporarily disable auto self initialization.
-     * Once user initializes the session themselves, the flag will be reset and auto session initialization
+     * Once the user initializes the session themselves, the flag will be reset and auto session initialization
      * will be re-enabled.
      *
      * @param expectDelayedInit A {@link Boolean} to set the expectation flag.

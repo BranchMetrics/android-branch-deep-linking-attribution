@@ -358,7 +358,7 @@ public class MainActivity extends Activity {
                     return;
                 }
 //                intent.setData(Uri.parse(shortURL));
-                intent.putExtra(Defines.IntentKeys.BranchURI.getKey(),shortURL);
+                intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
                 intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
                 PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
