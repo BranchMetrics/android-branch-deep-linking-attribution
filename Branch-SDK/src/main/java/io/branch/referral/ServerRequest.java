@@ -37,8 +37,7 @@ public abstract class ServerRequest {
     protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;
-    boolean isIDLSession = false; // Branch.isIDLSession() reads from instrumentationExtraData_, which gets cleared before request execution, so we use this variable instead
-    
+
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
         SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK,
@@ -247,11 +246,6 @@ public abstract class ServerRequest {
                 Set<String> keys = instrumentationData.keySet();
                 try {
                     for (String key : keys) {
-                        String value = instrumentationData.get(key);
-                        if (Defines.Jsonkey.InstantDeepLinkSession.getKey().equals(key) &&
-                                Boolean.parseBoolean(value)) {
-                            isIDLSession = true;
-                        }
                         instrObj.put(key, instrumentationData.get(key));
                         instrumentationData.remove(key);
                     }

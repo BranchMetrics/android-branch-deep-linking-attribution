@@ -21,7 +21,7 @@ import io.branch.indexing.ContentDiscoverer;
 class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCallbacks {
     private int activityCnt_ = 0; //Keep the count of visible activities.
 
-    //Set of activities observed in this session, not storing it as Activity.toString() ensures
+    //Set of activities observed in this session, note storing it as Activity.toString() ensures
     // that multiple instances of the same activity are counted individually.
     private Set<String> activitiesOnStack_ = new HashSet<>();
 

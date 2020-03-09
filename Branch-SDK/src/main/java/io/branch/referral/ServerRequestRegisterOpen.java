@@ -91,7 +91,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
             }
 
-            if (callback_ != null && !this.isIDLSession) {
+            if (callback_ != null && !Branch.getInstance().isIDLSession()) {
                 callback_.onInitFinished(branch.getLatestReferringParams(), null);
             }
             

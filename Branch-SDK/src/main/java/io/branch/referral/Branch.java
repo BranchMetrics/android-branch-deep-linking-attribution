@@ -2618,11 +2618,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void performCookieBasedStrongMatch() {
         if (!trackingController.isTrackingDisabled()) {
-            Activity currentActivity = null;
-            Context context = getApplicationContext();
-            if (context != null) {
+            if (context_ != null) {
                 requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context, cookieBasedMatchDomain_,
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context_, cookieBasedMatchDomain_,
                         deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
                     @Override
                     public void onStrongMatchCheckFinished() {
@@ -3730,7 +3728,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if (isReferrable != null) {
                 branch.setIsReferrable(isReferrable);
             }
-            if (ignoreIntent) {
+            if (ignoreIntent != null) {
                 Branch.bypassWaitingForIntent(ignoreIntent);
             }
 
