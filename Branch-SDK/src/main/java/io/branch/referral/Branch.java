@@ -2564,7 +2564,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         ServerRequestInitSession initRequest = getInstallOrOpenRequest(callback);
-        if (initState_ == SESSION_STATE.UNINITIALISED && (getSessionReferredLink() == null || enableFacebookAppLinkCheck_)) {
+        if (initState_ == SESSION_STATE.UNINITIALISED && getSessionReferredLink() == null && enableFacebookAppLinkCheck_) {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
                     context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
