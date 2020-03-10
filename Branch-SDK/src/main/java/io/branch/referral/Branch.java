@@ -3501,6 +3501,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return false;
     }
+    
+    /**
+     * Method will return the current Branch SDK version number
+     * @return String value representing the current SDK version number (e.g. 4.3.2)
+     */
+    public static String getSdkVersionNumber() {
+        return BuildConfig.VERSION_NAME;
+    }
 
     //-------------------------- Branch Builders--------------------------------------//
 
