@@ -223,20 +223,15 @@ abstract class SystemObserver {
      * @return A {@link String} value that indicates the broad OS type that is in use on the device.
      */
     static String getOS(Context context) {
-        if (isTV(context)) {
-            return isFireOSDevice() ? "AMAZON_FIRE_TV" : "AndroidTV";
-        } else {
-            return isFireOSDevice() ? "AMAZON_FIRE" : "Android";
-        }
-    }
-
-    private static boolean isTV(Context context) {
         if (isFireOSDevice()) {
-            return context != null ? context.getPackageManager().hasSystemFeature(
-                    "amazon.hardware.fire_tv") : getPhoneModel().contains("AFT");
-        } else {
-            return context != null && getUIMode(context).equalsIgnoreCase("UI_MODE_TYPE_TELEVISION");
+            if (context == null) {
+                return getPhoneModel().contains("AFT") ? "AMAZON_FIRE_TV" : "AMAZON_FIRE";
+            } else if (context.getPackageManager().hasSystemFeature("amazon.hardware.fire_tv")) {
+                return "AMAZON_FIRE_TV";
+            }
+            return "AMAZON_FIRE";
         }
+        return "Android";
     }
 
     /**
