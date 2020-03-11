@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -500,26 +501,26 @@ abstract class SystemObserver {
 
             if (modeManager != null) {
                 switch (modeManager.getCurrentModeType()) {
-                    case 1:
+                    case Configuration.UI_MODE_TYPE_NORMAL:
                         mode = "UI_MODE_TYPE_NORMAL";
                         break;
-                    case 2:
+                    case Configuration.UI_MODE_TYPE_DESK:
                         mode = "UI_MODE_TYPE_DESK";
                         break;
-                    case 3:
+                    case Configuration.UI_MODE_TYPE_CAR:
                         mode = "UI_MODE_TYPE_CAR";
                         break;
-                    case 4:
+                    case Configuration.UI_MODE_TYPE_TELEVISION:
                         mode = "UI_MODE_TYPE_TELEVISION";
                         break;
-                    case 5:
+                    case Configuration.UI_MODE_TYPE_APPLIANCE:
                         mode = "UI_MODE_TYPE_APPLIANCE";
                         break;
-                    case 6:
+                    case Configuration.UI_MODE_TYPE_WATCH:
                         mode = "UI_MODE_TYPE_WATCH";
                         break;
 
-                    case 0:
+                    case Configuration.UI_MODE_TYPE_UNDEFINED:
                     default:
                         break;
                 }
