@@ -77,6 +77,11 @@ public class BranchTest {
 
         Assert.assertEquals(branch, Branch.getInstance());
     }
+    
+    @Test
+    public void testSdkVersion() {
+        Assert.assertNotNull(Branch.getSdkVersionNumber());
+    }
 
     Context getTestContext() {
         return mContext;
