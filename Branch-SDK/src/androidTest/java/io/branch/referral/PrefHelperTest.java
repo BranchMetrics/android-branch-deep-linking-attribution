@@ -1,10 +1,13 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.prefs.Preferences;
 
 
 public class PrefHelperTest extends BranchTest {
@@ -52,5 +55,23 @@ public class PrefHelperTest extends BranchTest {
     public void testSetAPIUrl_InvalidEmpty() {
         PrefHelper.setAPIUrl("");
         assertDefaultURL();
+    }
+
+    @Test
+    public void testSetAdNetworkCalloutsDisabled() {
+        Context context = getTestContext();
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+        prefHelper.setAdNetworkCalloutsDisabled(true);
+
+        Assert.assertTrue(prefHelper.getAdNetworkCalloutsDisabled());
+    }
+
+    @Test
+    public void testSetAdNetworkCalloutsEnabled() {
+        Context context = getTestContext();
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+        prefHelper.setAdNetworkCalloutsDisabled(false);
+
+        Assert.assertFalse(prefHelper.getAdNetworkCalloutsDisabled());
     }
 }

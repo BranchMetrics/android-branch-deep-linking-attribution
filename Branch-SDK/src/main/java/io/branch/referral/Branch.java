@@ -469,8 +469,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Disables debug mode for the SDK.
      */
-    public static void disableDebugMode() {
+    public void disableDebugMode() {
         BranchUtil.setDebugMode(false);
+    }
+
+    /**
+     *
+     */
+    public void disableAdNetworkCallouts(boolean disabled) {
+        PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
     }
 
     /**
