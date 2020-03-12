@@ -509,6 +509,20 @@ public abstract class ServerRequest {
             }
         }
     }
+
+    private void updateDisableAdNetworkCallouts() {
+        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        if (updateJson != null) {
+            PrefHelper prefHelper = PrefHelper.getInstance(context_);
+            boolean disableAdNetworkCallouts = prefHelper.getAdNetworkCalloutsDisabled();
+            if (disableAdNetworkCallouts) {
+                try {
+                    updateJson.putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
+                } catch (JSONException ignore) {
+                }
+            }
+        }
+    }
     
     void doFinalUpdateOnMainThread() {
         updateRequestMetadata();
@@ -524,6 +538,7 @@ public abstract class ServerRequest {
         
         // Update the dynamic device info params
         updateDeviceInfo();
+        updateDisableAdNetworkCallouts();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
         if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled()) {
@@ -609,7 +624,7 @@ public abstract class ServerRequest {
     public void onPreExecute() {
     
     }
-    
+
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
             String environment = DeviceInfo.getInstance().isPackageInstalled() ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
