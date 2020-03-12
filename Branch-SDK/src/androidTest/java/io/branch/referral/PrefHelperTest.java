@@ -1,14 +1,10 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.prefs.Preferences;
-
 
 public class PrefHelperTest extends BranchTest {
 
