@@ -474,9 +474,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * Disable (or re-enable) ad network callouts. This setting is persistent.
      *
+     * @param disabled (@link Boolean) whether ad network callouts should be disabled.
      */
-    public void disableAdNetworkCallouts(boolean disabled) {
+    public void disableAdNetworkCallouts(boolean disabled = true) {
         PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
     }
 

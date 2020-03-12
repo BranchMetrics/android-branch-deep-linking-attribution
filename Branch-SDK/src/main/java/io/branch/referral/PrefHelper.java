@@ -495,14 +495,18 @@ public class PrefHelper {
     }
 
     /**
+     * Specify whether ad network callouts should be disabled. By default, they are enabled.
      *
+     * @param disabled (@link Boolean) whether ad network callouts should be disabled
      */
     public void setAdNetworkCalloutsDisabled(boolean disabled) {
         setBool(KEY_AD_NETWORK_CALLOUTS_DISABLED, disabled);
     }
 
     /**
+     * Determine whether ad network callouts have been disabled.
      *
+     * @return A (@link Boolean) indicating whether ad network callouts have been disabled.
      */
     public boolean getAdNetworkCalloutsDisabled() {
         return getBool(KEY_AD_NETWORK_CALLOUTS_DISABLED);
