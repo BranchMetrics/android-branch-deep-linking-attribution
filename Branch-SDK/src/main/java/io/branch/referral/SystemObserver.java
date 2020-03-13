@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -20,7 +21,11 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+
 import io.branch.referral.Defines.ModuleNameKeys;
+
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -43,7 +48,7 @@ abstract class SystemObserver {
      */
     static final String BLANK = "bnc_no_value";
 
-    private static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
+    static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
     private String GAIDString_ = null;
     private int LATVal_ = 0;
 
@@ -177,6 +182,10 @@ abstract class SystemObserver {
         return android.os.Build.MANUFACTURER;
     }
 
+    static boolean isHuaweiDevice() {
+        return getPhoneBrand().equalsIgnoreCase("huawei");
+    }
+
     /**
      * <p>Returns the hardware model of the current device, as defined by the manufacturer.</p>
      *
@@ -208,10 +217,36 @@ abstract class SystemObserver {
     }
 
     /**
-    * Helper function to determine of the device is running Fire OS
+    * Helper function to determine if the device is running Fire OS
     */
-    private static boolean isFireOSDevice() {
+    static boolean isFireOSDevice() {
         return getPhoneBrand().equalsIgnoreCase("amazon");
+    }
+
+    /**
+     * Helper function to determine if the device is running on a Huawei device with HMS (Huawei Mobile Services),
+     * for example "Mate 30 Pro". Note that non-Huawei devices will return false even if gradle pulls in HMS.
+     */
+    static boolean isHuaweiMobileServicesAvailable(@NonNull Context context) {
+        // the proper way would be to use com.huawei.hms.api.HuaweiApiAvailability, however this class
+        // is only found if Huawei ID lib is used (e.g. implementation 'com.huawei.hms:hwid:4.0.1.300')
+        return isHuaweiDevice() && !isGooglePlayServicesAvailable(context);
+    }
+
+    static boolean isGooglePlayServicesAvailable(@NonNull Context context) {
+        try {
+            //get an instance of com.huawei.hms.api.HuaweiApiAvailability
+            Class GoogleApiAvailability = Class.forName("com.google.android.gms.common.GoogleApiAvailability");
+            Method GoogleApiAvailability_getInstance = GoogleApiAvailability.getDeclaredMethod("getInstance");
+            Object GoogleApiAvailabilityInstance = GoogleApiAvailability_getInstance.invoke(null);
+
+            // call isGooglePlayServicesAvailable on that instance
+            Method GoogleisPlayServicesAvailable = GoogleApiAvailability.getDeclaredMethod("isGooglePlayServicesAvailable", Context.class);
+            Object result = GoogleisPlayServicesAvailable.invoke(GoogleApiAvailabilityInstance, context);
+            return (result instanceof Integer) && (Integer) result == 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -386,8 +421,20 @@ abstract class SystemObserver {
         AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
         boolean isPrefetchStarted = false;
         if (isFireOSDevice()) {
-            if (context == null) //noinspection ConstantConditions
-                return isPrefetchStarted;
+            setFireAdId(context, callback);
+        } else {
+            isPrefetchStarted = true;
+            if (isHuaweiMobileServicesAvailable(context)) {
+                new HuaweiOAIDFetchTask(context, callback).executeTask();
+            } else {
+                new GAdsPrefetchTask(context, callback).executeTask();
+            }
+        }
+        return isPrefetchStarted;
+    }
+
+    private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
+        if (context != null) {
             try {
                 ContentResolver cr = context.getContentResolver();
                 setLAT(Secure.getInt(cr, "limit_ad_tracking"));
@@ -396,15 +443,12 @@ abstract class SystemObserver {
                 if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
                     setGAID(null);
                 }
-                if (callback != null) {
-                    callback.onAdsParamsFetchFinished();
-                }
             } catch (Settings.SettingNotFoundException ignored) {}
-        } else {
-            isPrefetchStarted = true;
-            new GAdsPrefetchTask(context, callback).executeTask();
         }
-        return isPrefetchStarted;
+
+        if (callback != null) {
+            callback.onAdsParamsFetchFinished();
+        }
     }
 
     interface AdsParamsFetchEvents {
@@ -457,26 +501,26 @@ abstract class SystemObserver {
 
             if (modeManager != null) {
                 switch (modeManager.getCurrentModeType()) {
-                    case 1:
+                    case Configuration.UI_MODE_TYPE_NORMAL:
                         mode = "UI_MODE_TYPE_NORMAL";
                         break;
-                    case 2:
+                    case Configuration.UI_MODE_TYPE_DESK:
                         mode = "UI_MODE_TYPE_DESK";
                         break;
-                    case 3:
+                    case Configuration.UI_MODE_TYPE_CAR:
                         mode = "UI_MODE_TYPE_CAR";
                         break;
-                    case 4:
+                    case Configuration.UI_MODE_TYPE_TELEVISION:
                         mode = "UI_MODE_TYPE_TELEVISION";
                         break;
-                    case 5:
+                    case Configuration.UI_MODE_TYPE_APPLIANCE:
                         mode = "UI_MODE_TYPE_APPLIANCE";
                         break;
-                    case 6:
+                    case Configuration.UI_MODE_TYPE_WATCH:
                         mode = "UI_MODE_TYPE_WATCH";
                         break;
 
-                    case 0:
+                    case Configuration.UI_MODE_TYPE_UNDEFINED:
                     default:
                         break;
                 }

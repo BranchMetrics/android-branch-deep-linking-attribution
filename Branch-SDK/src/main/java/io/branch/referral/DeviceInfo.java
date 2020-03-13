@@ -97,9 +97,9 @@ class DeviceInfo {
 
             maybeAddTuneFields(serverRequest, requestObj);
 
-            if (BranchUtil.getPluginType() != null) {
-                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
-                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            if (Branch.getPluginName() != null) {
+                requestObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
             }
 
             String countryCode = SystemObserver.getISO2CountryCode();
@@ -170,6 +170,7 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), displayMetrics.densityDpi);
             requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
             requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
+            requestObj.put(Defines.Jsonkey.UIMode.getKey(), SystemObserver.getUIMode(context_));
 
             String osName = SystemObserver.getOS(context_);
             if (!isNullOrEmptyOrBlank(osName)) {
@@ -180,9 +181,9 @@ class DeviceInfo {
 
             maybeAddTuneFields(serverRequest, requestObj);
 
-            if (BranchUtil.getPluginType() != null) {
-                requestObj.put(Defines.Jsonkey.PluginType.getKey(), BranchUtil.getPluginType().toString());
-                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), BranchUtil.getPluginVersion());
+            if (Branch.getPluginName() != null) {
+                requestObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
+                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
             }
 
             String countryCode = SystemObserver.getISO2CountryCode();

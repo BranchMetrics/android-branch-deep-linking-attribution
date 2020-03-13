@@ -53,13 +53,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         updateEnvironment(context_, post);
     }
 
-    /**
-     * Check if there is a valid callback to return init session result
-     *
-     * @return True if a valid call back is present.
-     */
-    public abstract boolean hasCallBack();
-
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
@@ -81,8 +74,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
                 String actionName = getRequestActionName();
-                if ((Branch.getInstance().currentActivityReference_ != null && Branch.getInstance().currentActivityReference_.get() != null)) {
-                    Activity currentActivity = Branch.getInstance().currentActivityReference_.get();
+                if ((Branch.getInstance().getCurrentActivity() != null)) {
+                    Activity currentActivity = Branch.getInstance().getCurrentActivity();
                     boolean isActivityEnabledForBranchView = true;
                     if (currentActivity instanceof Branch.IBranchViewControl) {
                         isActivityEnabledForBranchView = !((Branch.IBranchViewControl) currentActivity).skipBranchViewsOnThisActivity();
@@ -124,9 +117,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
         if (contentDiscoveryManifest_ != null) {
             contentDiscoveryManifest_.onBranchInitialised(response.getObject());
-            if (branch.currentActivityReference_ != null) {
+            if (branch.getCurrentActivity() != null) {
                 try {
-                    ContentDiscoverer.getInstance().onSessionStarted(branch.currentActivityReference_.get(), branch.getSessionReferredLink());
+                    ContentDiscoverer.getInstance().onSessionStarted(branch.getCurrentActivity(), branch.getSessionReferredLink());
                 } catch (Exception ignore) {
                 }
             }
@@ -202,9 +195,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 cdObj.put(ContentDiscoveryManifest.PACKAGE_NAME_KEY, context_.getPackageName());
                 post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
             }
-        } catch (JSONException ignore) {
+        } catch (JSONException ignore) { }
 
-        }
+        // Re-enables auto session initialization, note that we don't care if the request succeeds
+        Branch.expectDelayedSessionInitialization(false);
     }
 
     /*

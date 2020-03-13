@@ -58,11 +58,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     }
     
     @Override
-    public boolean hasCallBack() {
-        return callback_ != null;
-    }
-    
-    @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         super.onRequestSucceeded(resp, branch);
         try {

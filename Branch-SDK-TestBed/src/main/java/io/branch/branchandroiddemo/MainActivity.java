@@ -256,7 +256,7 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
                 // Test for preventing second intent reading
                 i.setData(Uri.parse("https://testintentread.app.link?error_if_assigned_to_android_app_link"));
-                i.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), false);
+                i.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), false);
                 startActivity(i);
             }
         });
@@ -358,8 +358,8 @@ public class MainActivity extends Activity {
                     return;
                 }
 //                intent.setData(Uri.parse(shortURL));
-                intent.putExtra(Defines.Jsonkey.AndroidPushNotificationKey.getKey(),shortURL);
-                intent.putExtra(Defines.Jsonkey.ForceNewBranchSession.getKey(), true);
+                intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
+                intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
                 PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
