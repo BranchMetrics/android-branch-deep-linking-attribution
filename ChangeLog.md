@@ -1,4 +1,15 @@
 # Branch Android SDK change log
+- v4.4.0
+  * _*Master Release*_ - March 12, 2020
+  * Do not check Facebook app links unless feature is explicitly enabled
+  * Introduce Branch.sessionBuilder().<...>.init() to replace all overloaded variations of initSession
+  * Introduce Branch.expectDelayedSessionInitialization(boolean) which disables session self-initialization in RESUMED state, users MUST initialize themselves when using this method
+  * Introduce Branch.sessionBuilder().withDelay(X_MILLIS) to facilitate delaying session initialization until user calls branchInstance.removeSessionInitializationDelay() or X_MILLIS pass.
+  * Prevent duplicated session initialization in certain intra-app linking scenarios
+  * Collect OAID from HMS when available
+  * Prevent potential NPE in the CPID API
+  * Improvements in instant deep-linking
+
 - v4.3.2
   * _*Master Release*_ - January 29, 2020
   * Accommodate single activity architecture/navigation component (reintroduced "SDK already initialized" error and ensured reInitSession() only fires when intent contains branch data).
@@ -23,7 +34,8 @@
 - v4.2.0
   * _*Master Release*_ - November 19, 2019
   * Remove initialization race conditions.
-  * Do not auto-initialize sessions, make calling initSession a mandatory step required of Branch SDK users (officially this was already implied).
+  * Only self-initialize sessions if user has not done so and some Activity is entering the RESUMED state.
+  * Start returning an error on consecutive session initializations. Note, this means users who require deeplinking functionality now must call initSession() from LauncherActivity.onStart() (the requirement was already implied in the documentation, though was not enforced, the SDK was returning latestReferringParams instead, which users in need of a workaround can still do).
   * Overload reInitSession with different callbacks and start advertising it to users as the official way to handle session reinitialization in cases where activity is in foreground and is being reopened.
   * Make sure carrier field does not contain an empty string, omit the field instead.
   
