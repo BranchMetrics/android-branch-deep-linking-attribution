@@ -513,8 +513,7 @@ public abstract class ServerRequest {
     private void updateDisableAdNetworkCallouts() {
         JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
         if (updateJson != null) {
-            PrefHelper prefHelper = PrefHelper.getInstance(context_);
-            boolean disableAdNetworkCallouts = prefHelper.getAdNetworkCalloutsDisabled();
+            boolean disableAdNetworkCallouts = prefHelper_.getAdNetworkCalloutsDisabled();
             if (disableAdNetworkCallouts) {
                 try {
                     updateJson.putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
