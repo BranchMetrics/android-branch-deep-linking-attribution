@@ -12,4 +12,5 @@
     <string name="launch_mode_normal">"Launched by normal application flow"</string>
 
     <string name="disable_ad_network_callouts">Disable ad network callouts</string>
+    <string name="settings">Settings</string>
 </resources>
