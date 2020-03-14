@@ -2,32 +2,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.branch.branchandroiddemo"
     android:versionCode="1"
-    android:versionName="1.0">
+    android:versionName="1.0" >
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".CustomBranchApp"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name">
-        <activity android:name=".SettingsActivity"></activity>
+        android:label="@string/app_name"
+        android:name="io.branch.branchandroiddemo.CustomBranchApp" >
         <activity
-            android:name=".MainActivity"
+            android:name="io.branch.branchandroiddemo.MainActivity"
             android:label="@string/app_name"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
             <!-- Non AppLink example -->
             <intent-filter>
-                <data android:scheme="branchtest" />
-
+                <data android:scheme="branchtest"/>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
@@ -35,74 +31,46 @@
             <!-- AppLink example -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/your_app_id_obtained form Branch dash board " /> -->
-                <data
-                    android:host="bnc.lt"
-                    android:pathPrefix="/xhsd"
-                    android:scheme="https" /> <!-- Live App link -->
-                <data
-                    android:host="bnc.lt"
-                    android:pathPrefix="/Ojqd"
-                    android:scheme="https" /> <!-- Test App link -->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/xhsd" /> <!-- Live App link-->
+                <data android:scheme="https" android:host="bnc.lt" android:pathPrefix="/Ojqd" /> <!-- Test App link-->
             </intent-filter>
 
-            <!-- Custom App link example. You can create your custom app link domain on Branch dash board -->
+            <!-- Custom App link example. You can create your custom app link domain on Branch dash board-->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="bnctestbed.app.link"
-                    android:scheme="https" /> <!-- Custom App link - Live -->
-                <data
-                    android:host="bnctestbed-alternate.app.link"
-                    android:scheme="https" /> <!-- Custom App Alternate link - Live -->
-                <data
-                    android:host="bnctestbed.test-app.link"
-                    android:scheme="https" /> <!-- Custom App link - Test -->
-                <data
-                    android:host="bnctestbed-alternate.test-app.link"
-                    android:scheme="https" /> <!-- Custom App Alternate link - Test -->
+                <data android:scheme="https" android:host="bnctestbed.app.link" /> <!-- Custom App link - Live -->
+                <data android:scheme="https" android:host="bnctestbed-alternate.app.link" /> <!-- Custom App Alternate link - Live -->
+                <data android:scheme="https" android:host="bnctestbed.test-app.link" /> <!-- Custom App link - Test -->
+                <data android:scheme="https" android:host="bnctestbed-alternate.test-app.link" /> <!-- Custom App Alternate link - Test -->
             </intent-filter>
         </activity>
-        <activity android:name=".CreditHistoryActivity" />
-        <activity android:name=".AutoDeepLinkTestActivity">
 
+        <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity"/>
+
+        <activity android:name=".AutoDeepLinkTestActivity">
             <!-- Keys for auto deep linking this activity -->
-            <meta-data
-                android:name="io.branch.sdk.auto_link_keys"
-                android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
+            <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
 
             <!-- Deep link path for auto deep linking -->
-            <meta-data
-                android:name="io.branch.sdk.auto_link_path"
-                android:value="custom/path/*,another/path/" />
+            <meta-data android:name="io.branch.sdk.auto_link_path" android:value="custom/path/*,another/path/" />
 
             <!-- Optional request ID for launching this activity on auto deep link key matches -->
-            <meta-data
-                android:name="io.branch.sdk.auto_link_request_code"
-                android:value="@integer/AutoDeeplinkRequestCode" />
+            <meta-data android:name="io.branch.sdk.auto_link_request_code" android:value="@integer/AutoDeeplinkRequestCode" />
         </activity>
 
-        <meta-data
-            android:name="io.branch.sdk.TestMode"
-            android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
-        <meta-data
-            android:name="io.branch.sdk.BranchKey"
-            android:value="key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv" />
-        <meta-data
-            android:name="io.branch.sdk.BranchKey.test"
-            android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" /> <!-- Optional. Set to true to disable auto deep link feature -->
-        <meta-data
-            android:name="io.branch.sdk.auto_link_disable"
-            android:value="false" />
+        <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv" />
+        <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
+
+        <!-- Optional. Set to true to disable auto deep link feature-->
+        <meta-data android:name="io.branch.sdk.auto_link_disable" android:value="false"/>
 
         <uses-library android:name="android.test.runner" />
-    </application>
 
+    </application>
 </manifest>
