@@ -199,6 +199,7 @@ public class Defines {
         Condition("$condition"),
         CreationTimestamp("$creation_timestamp"),
         TrackingDisabled("tracking_disabled"),
+        DisableAdNetworkCallouts("disable_ad_network_callouts"),
         Instant("instant");
         
         private String key = "";
