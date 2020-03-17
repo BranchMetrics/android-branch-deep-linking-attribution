@@ -374,6 +374,14 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.settings_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
+
         // Tracking events
         findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
             @Override

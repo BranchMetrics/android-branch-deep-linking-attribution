@@ -106,6 +106,7 @@ public class PrefHelper {
     static final String KEY_REFERRER_CLICK_TS = "bnc_referrer_click_ts";
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
+    static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     
     private static String Branch_Key = null;
     /**
@@ -492,7 +493,25 @@ public class PrefHelper {
     public boolean getIsAppLinkTriggeredInit() {
         return getBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK);
     }
-    
+
+    /**
+     * Specify whether ad network callouts should be disabled. By default, they are enabled.
+     *
+     * @param disabled (@link Boolean) whether ad network callouts should be disabled
+     */
+    public void setAdNetworkCalloutsDisabled(boolean disabled) {
+        setBool(KEY_AD_NETWORK_CALLOUTS_DISABLED, disabled);
+    }
+
+    /**
+     * Determine whether ad network callouts have been disabled.
+     *
+     * @return A (@link Boolean) indicating whether ad network callouts have been disabled.
+     */
+    public boolean getAdNetworkCalloutsDisabled() {
+        return getBool(KEY_AD_NETWORK_CALLOUTS_DISABLED);
+    }
+
     /**
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_URI} with value with given intent URI String.</p>
      *

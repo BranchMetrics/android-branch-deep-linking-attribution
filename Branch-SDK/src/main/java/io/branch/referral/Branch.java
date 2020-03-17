@@ -474,6 +474,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * Disable (or re-enable) ad network callouts. This setting is persistent.
+     *
+     * @param disabled (@link Boolean) whether ad network callouts should be disabled.
+     */
+    public void disableAdNetworkCallouts(boolean disabled) {
+        PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
+    }
+
+    /**
      * Temporarily disables auto session initialization until user initializes themselves.
      *
      * Context: Branch expects session initialization to be started in LauncherActivity.onStart(),
@@ -979,512 +988,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
             }
         }
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, assigning a {@link BranchUniversalReferralInitListener}
-     * to perform an action upon successful initialisation.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called following
-     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback) {
-        Branch.sessionBuilder(null).withCallback(callback).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
-     * to perform an action upon successful initialisation.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called following
-     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback) {
-        Branch.sessionBuilder(null).withCallback(callback).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a
-     * {@link BranchUniversalReferralInitListener} to perform an action upon successful initialisation.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) {
-        Branch.sessionBuilder(activity).withCallback(callback).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, passing the {@link Activity} and assigning a
-     * {@link BranchReferralInitListener} to perform an action upon successful initialisation.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, Activity activity) {
-        Branch.sessionBuilder(activity).withCallback(callback).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {
-        Branch.sessionBuilder(null).withCallback(callback).withData(data).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, Uri data) {
-        Branch.sessionBuilder(null).withCallback(callback).withData(data).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) {
-        Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called
-     *                 following successful (or unsuccessful) initialisation of the session
-     *                 with the Branch API.
-     * @param data     A {@link  Uri} variable containing the details of the source link that
-     *                 led to this initialisation action.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that will return <i>false</i> if the supplied
-     * <i>data</i> parameter cannot be handled successfully - i.e. is not of a
-     * valid URI format.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) {
-        Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
-     *
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession() {
-        Branch.sessionBuilder(null).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, without a callback or {@link Activity}.</p>
-     *
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(Activity activity) {
-        Branch.sessionBuilder(activity).init();
-        return true;
-    }
-
-    /**
-     * <p>Force initialises a session with the Branch API, assigning a {@link BranchReferralInitListener}
-     * to perform an action upon successful initialisation. Will not wait for new intent onResume.</p>
-     *
-     * @param callback A {@link BranchReferralInitListener} instance that will be called following
-     *                 successful (or unsuccessful) initialisation of the session with the Branch API.
-     * @return A {@link Boolean} value, indicating <i>false</i> if initialisation is
-     * unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSessionForced(BranchReferralInitListener callback) {
-        Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init();
-        return true;
-    }
-
-    /**
-     * <p>Initialises a session with the Branch API, with associated data from the supplied
-     * {@link Uri}.</p>
-     *
-     * @param data A {@link  Uri} variable containing the details of the source link that
-     *             led to this
-     *             initialisation action.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSessionWithData(Uri data) {
-        Branch.sessionBuilder(null).withData(data).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, with associated data from the supplied
-     * {@link Uri}.</p>
-     *
-     * @param data     A {@link  Uri} variable containing the details of the source link that led to this
-     *                 initialisation action.
-     * @param activity The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSessionWithData(Uri data, Activity activity) {
-        Branch.sessionBuilder(activity).withData(data).init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, specifying whether the initialisation can count
-     * as a referrable action.</p>
-     *
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(boolean isReferrable) {
-        Branch.sessionBuilder(null)
-                .isReferrable(isReferrable)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API, specifying whether the initialisation can count
-     * as a referrable action, and supplying the calling {@link Activity} for context.</p>
-     *
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {
-        Branch.sessionBuilder(activity)
-                .isReferrable(isReferrable)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {
-        Branch.sessionBuilder(null)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .withData(data)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {
-        Branch.sessionBuilder(null)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .withData(data)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
-        Branch.sessionBuilder(activity)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .withData(data)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param data         A {@link  Uri} variable containing the details of the source link that
-     *                     led to this initialisation action.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {
-        Branch.sessionBuilder(activity)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .withData(data)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {
-        Branch.sessionBuilder(null)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) {
-        Branch.sessionBuilder(null)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {
-        Branch.sessionBuilder(activity)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .init();
-        return true;
-    }
-    
-    /**
-     * <p>Initialises a session with the Branch API.</p>
-     *
-     * @param callback     A {@link BranchReferralInitListener} instance that will be called
-     *                     following successful (or unsuccessful) initialisation of the session
-     *                     with the Branch API.
-     * @param isReferrable A {@link Boolean} value indicating whether this initialisation
-     *                     session should be considered as potentially referrable or not.
-     *                     By default, a user is only referrable if initSession results in a
-     *                     fresh install. Overriding this gives you control of who is referrable.
-     * @param activity     The calling {@link Activity} for context.
-     * @return A {@link Boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder()
-     */
-    @Deprecated
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {
-        Branch.sessionBuilder(activity)
-                .withCallback(callback)
-                .isReferrable(isReferrable)
-                .init();
-        return true;
-    }
-
-    /**
-     * @deprecated use Branch.sessionBuilder().reInit()
-     */
-    @Deprecated
-    public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {
-        Branch.sessionBuilder(activity)
-                .withCallback(callback)
-                .reInit();
-        return activity == null || activity.getIntent() == null;// preserved past behavior, the new Branch.sessionBuilder().reinit() returns void.
-    }
-    /**
-     * Re-Initialize a session.
-     * This solves a very specific use case, whereas the app is already in the foreground and a new
-     * intent with a Uri is delivered to the activity.  In this case we want to re-initialize the
-     * session and call back with the decoded parameters. Note that Uri can also be stored as an extra
-     * under the field "branch"
-     *
-     * @param activity  The calling {@link Activity} for context.
-     * @param callback  A {@link BranchReferralInitListener} instance that will be called
-     *                  following successful (or unsuccessful) initialization of the session
-     *                  with the Branch API.
-     * @return A {@link boolean} value that returns <i>false</i> if unsuccessful.
-     *
-     * @deprecated use Branch.sessionBuilder().reInit()
-     */
-    @Deprecated
-    public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {
-        Branch.sessionBuilder(activity)
-                .withCallback(callback)
-                .reInit();
-        return activity == null || activity.getIntent() == null;
     }
     
     /*
@@ -3809,7 +3312,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return BuildConfig.VERSION_NAME;
     }
 
-    //-------------------------- Branch Builders--------------------------------------//
+    //-------------------------- DEPRECATED --------------------------------------//
 
     /**
      * <p> Legacy class for building a share link dialog. Use {@link BranchShareSheetBuilder} instead. </p>
@@ -3848,4 +3351,54 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) { super.includeInShareSheet(packageName); return this; }
         public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) { super.includeInShareSheet(packageNames); return this; }
     }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback) { Branch.sessionBuilder(null).withCallback(callback).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).init(); */
+    public boolean initSession(BranchReferralInitListener callback) { Branch.sessionBuilder(null).withCallback(callback).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).init(); */
+    public boolean initSession(BranchReferralInitListener callback, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).withData(data).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {Branch.sessionBuilder(null).withCallback(callback).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).withData(data).init(); */
+    public boolean initSession(BranchReferralInitListener callback, Uri data) {Branch.sessionBuilder(null).withCallback(callback).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).withData(data).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).withData(data).init(); */
+    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).init(); */
+    public boolean initSession() {Branch.sessionBuilder(null).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).init(); */
+    public boolean initSession(Activity activity) {Branch.sessionBuilder(activity).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init(); */
+    public boolean initSessionForced(BranchReferralInitListener callback) { Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withData(data).init(); */
+    public boolean initSessionWithData(Uri data) {Branch.sessionBuilder(null).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withData(data).init(); */
+    public boolean initSessionWithData(Uri data, Activity activity) {Branch.sessionBuilder(activity).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).isReferrable(isReferrable).init(); */
+    public boolean initSession(boolean isReferrable) {Branch.sessionBuilder(null).isReferrable(isReferrable).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).isReferrable(isReferrable).init(); */
+    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {Branch.sessionBuilder(activity).isReferrable(isReferrable).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init(); */
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) { Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init(); */
+    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init(); */
+    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init();return true; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit(); */
+    public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
+    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit();*/
+    public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
 }
