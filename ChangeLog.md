@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.0.0
+  * _*Master Release*_ - March 17, 2020
+  * Bump up major version to signify switch to session builder from initSession (old functionality is maintained)
+  * Added documentation with 1:1 session builder replacements of deprecated initSession methods
+  * Add disableAdNetworkCallouts(boolean) API
+
 - v4.4.0
   * _*Master Release*_ - March 12, 2020
   * Do not check Facebook app links unless feature is explicitly enabled
