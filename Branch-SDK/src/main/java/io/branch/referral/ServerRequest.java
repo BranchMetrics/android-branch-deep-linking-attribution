@@ -540,7 +540,7 @@ public abstract class ServerRequest {
         updateDisableAdNetworkCallouts();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
-        if (isGAdsParamsRequired() && !BranchUtil.isTestModeEnabled()) {
+        if (isGAdsParamsRequired()) {
             updateGAdsParams();
         }
     }
