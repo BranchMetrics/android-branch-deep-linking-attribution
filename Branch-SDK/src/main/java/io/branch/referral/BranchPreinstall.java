@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -114,4 +115,26 @@ class BranchPreinstall {
             }
         }
     }
+
+    public static void setBranchPreInstallGoogleReferrer(Context context, HashMap<String, String> referrerMap){
+
+        Branch branchInstance = Branch.getInstance();
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+
+        //Set PreInstallData from GoogleReferrer api
+        // only if PreInstallMetaData has not been updated by either of the methods(Manual setting or OS level)
+        if(!(prefHelper.getInstallMetaData(PreinstallKey.partner.getKey())!=null || PrefHelper.getInstance(context).getInstallMetaData(PreinstallKey.campaign.getKey())!=null)){
+
+            if(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey())!=null){
+                branchInstance.setPreinstallCampaign(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey()));
+            }
+
+            if(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey())!=null){
+                branchInstance.setPreinstallPartner(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey()));
+            }
+
+        }
+
+    }
+
 }

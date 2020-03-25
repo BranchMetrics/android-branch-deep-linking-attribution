@@ -24,7 +24,10 @@ public class Defines {
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
         @Deprecated BranchData("branch_data"),              //use Defines.IntentKeys.BranchData
-        
+        PlayAutoInstalls("play-auto-installs"),             //UTM_Source set by Xiaomi
+        UTMCampaign("utm_campaign"),
+        UTMMedium("utm_medium"),
+
         Bucket("bucket"),
         DefaultBucket("default"),
         Amount("amount"),

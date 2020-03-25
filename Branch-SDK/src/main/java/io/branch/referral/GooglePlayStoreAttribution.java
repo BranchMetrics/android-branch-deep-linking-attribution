@@ -143,7 +143,13 @@ class GooglePlayStoreAttribution {
                     prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
                     prefHelper.setGooglePlayReferrer(rawReferrerString);
                 }
-                
+
+                if(referrerMap.containsValue(Defines.Jsonkey.PlayAutoInstalls.getKey())) {
+
+                    prefHelper.setGooglePlayReferrer(rawReferrerString);
+                    BranchPreinstall.setBranchPreInstallGoogleReferrer(context,referrerMap);
+                }
+
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
