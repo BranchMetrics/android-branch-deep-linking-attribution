@@ -122,7 +122,7 @@ class BranchPreinstall {
 
         // Set PreInstallData from GoogleReferrer api
         // only if PreInstallMetaData has not been updated by either of the methods(Manual setting or OS level)
-        if(!(TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.partner.getKey())) || TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.campaign.getKey())))){
+        if((TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.partner.getKey())) && TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.campaign.getKey())))){
             if(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey())!=null){
                 branchInstance.setPreinstallCampaign(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey()));
             }
