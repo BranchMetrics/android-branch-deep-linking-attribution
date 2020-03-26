@@ -117,14 +117,12 @@ class BranchPreinstall {
     }
 
     public static void setBranchPreInstallGoogleReferrer(Context context, HashMap<String, String> referrerMap){
-
         Branch branchInstance = Branch.getInstance();
         PrefHelper prefHelper = PrefHelper.getInstance(context);
 
-        //Set PreInstallData from GoogleReferrer api
+        // Set PreInstallData from GoogleReferrer api
         // only if PreInstallMetaData has not been updated by either of the methods(Manual setting or OS level)
-        if(!(prefHelper.getInstallMetaData(PreinstallKey.partner.getKey())!=null || PrefHelper.getInstance(context).getInstallMetaData(PreinstallKey.campaign.getKey())!=null)){
-
+        if(!(TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.partner.getKey())) || TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.campaign.getKey())))){
             if(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey())!=null){
                 branchInstance.setPreinstallCampaign(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey()));
             }
@@ -132,7 +130,6 @@ class BranchPreinstall {
             if(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey())!=null){
                 branchInstance.setPreinstallPartner(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey()));
             }
-
         }
 
     }
