@@ -375,7 +375,9 @@ abstract class SystemObserver {
             WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (windowManager != null) {
                 Display display = windowManager.getDefaultDisplay();
-                display.getMetrics(displayMetrics);
+                if (display != null) {
+                    display.getMetrics(displayMetrics);
+                }
             }
         }
         return displayMetrics;
@@ -399,15 +401,7 @@ abstract class SystemObserver {
      */
     @SuppressWarnings("MissingPermission")
     static boolean getWifiConnected(Context context) {
-        if (context != null && PackageManager.PERMISSION_GRANTED == context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo wifiInfo = null;
-            if (connManager != null) {
-                wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            }
-            return ((wifiInfo != null) && wifiInfo.isConnected());
-        }
-        return false;
+        return "wifi".equalsIgnoreCase(getConnectionType(context));
     }
 
     /**
