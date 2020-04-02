@@ -2678,18 +2678,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return matched;
     }
-    
-    public static void enableSimulateInstalls() {
-        isSimulatingInstalls_ = true;
-    }
-    
-    public static void disableSimulateInstalls() {
-        isSimulatingInstalls_ = false;
-    }
-
-    static boolean isSimulatingInstalls() {
-        return isSimulatingInstalls_;
-    }
 
     /**
      * Enable Logging, independent of Debug Mode.
@@ -3408,4 +3396,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /** @deprecated (deprecated and all functionality has been disabled, see enableDebugMode for more information) */
     public static void disableDebugMode() {}
+
+    /**
+     * @deprecated enableSimulateInstalls is deprecated and all functionality has been disabled. If
+     * you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
+     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
+     * */
+    public static void enableSimulateInstalls() {
+        PrefHelper.LogAlways("enableSimulateInstalls is deprecated and all functionality has been disabled. " +
+                "If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
+                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
+    }
+
+    /** @deprecated see enableSimulateInstalls() for more information */
+    public static void disableSimulateInstalls() { }
 }
