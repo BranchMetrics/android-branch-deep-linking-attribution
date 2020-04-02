@@ -99,7 +99,7 @@ public class BranchUtil {
 
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
-     * This value can be overriden via. {@link Branch#enableTestMode()}
+     * This value can be overridden via. {@link Branch#enableTestMode()}
      *
      * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.

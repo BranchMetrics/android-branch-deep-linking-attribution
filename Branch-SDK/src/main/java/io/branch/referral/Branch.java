@@ -429,12 +429,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>
-     * Enables the test mode for the SDK. This will use the Branch Test Keys.
-     * Note: This is same as setting "io.branch.sdk.TestMode" to "True" in Manifest file
+     * Enables the test mode for the SDK. This will use the Branch Test Keys. This is same as setting
+     * "io.branch.sdk.TestMode" to "True" in Manifest file.
+     *
+     * Note: As of v5.0.1, enableTestMode has been changed. It now uses the test key but will not log or randomize
+     * the device IDs. If you wish to enable logging, please invoke enableLogging. If you wish to simulate
+     * installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
+     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
      * </p>
      */
     public static void enableTestMode() {
         BranchUtil.setTestMode(true);
+        PrefHelper.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
+                " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
+                " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
+                " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
     }
 
     /**
