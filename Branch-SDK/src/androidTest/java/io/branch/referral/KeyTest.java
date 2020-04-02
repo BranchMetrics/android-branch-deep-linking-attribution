@@ -11,7 +11,6 @@ public class KeyTest extends BranchTest {
 
     @Test
     public void testManifestKeys() {
-        Assert.assertFalse(BranchUtil.isDebugEnabled());
         Assert.assertFalse(BranchUtil.isTestModeEnabled());
 
         String branchKey = BranchUtil.readBranchKey(getTestContext());
@@ -25,7 +24,7 @@ public class KeyTest extends BranchTest {
     @Test
     public void testAutoInstanceWithKey() {
         final String expectedKey = "key_XXX";
-        Branch branch = Branch.getAutoInstance(getTestContext(), expectedKey);
+        Branch.getAutoInstance(getTestContext(), expectedKey);
 
         final String actualKey = PrefHelper.getInstance(getTestContext()).getBranchKey();
         Assert.assertEquals(expectedKey, actualKey);

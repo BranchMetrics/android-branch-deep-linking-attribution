@@ -27,9 +27,6 @@ import java.util.jar.JarFile;
  */
 public class BranchUtil {
 
-    /** For setting debug mode using {@link Branch#setDebug()} api */
-    private static boolean isCustomDebugEnabled_ = false;
-
     /** For setting test mode using {@link Branch#enableTestMode()} */
     private static boolean isTestModeEnabled_ = false;
 
@@ -38,7 +35,6 @@ public class BranchUtil {
 
     // Package Private
     static void shutDown() {
-        isCustomDebugEnabled_ = false;
         isTestModeEnabled_ = false;
         isManifestTestModeEnabled = null;
     }
@@ -116,17 +112,8 @@ public class BranchUtil {
         isTestModeEnabled_ = testMode;
     }
 
-    /**
-     * Determine if Debug Mode is enabled.
-     * @return {@code true} if Debug is enabled, or if {@link BranchUtil#isTestModeEnabled()}
-     */
-    public static boolean isDebugEnabled() {
-        return isCustomDebugEnabled_ || isTestModeEnabled();
-    }
-
-    static void setDebugMode(boolean debugMode) {
-        isCustomDebugEnabled_ = debugMode;
-    }
+    /** @deprecated (see enableDebugMode for more information) */
+    public static boolean isDebugEnabled() { return false; }
 
     /**
      * Converts a given link param as {@link JSONObject} to string after adding the source param and removes replaces any illegal characters.

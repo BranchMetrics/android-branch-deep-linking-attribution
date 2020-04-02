@@ -284,20 +284,11 @@ class DeviceInfo {
     }
 
     /**
-     * @return true if a Debug HardwareId is needed.
-     * Note that if either Debug is enabled or Fetch has been disabled, then requests for a Hardware Id will return a "fake" ID.
-     */
-    static public boolean isDebugHardwareIdNeeded() {
-        boolean isDebugHardwareIdNeeded = Branch.isDeviceIDFetchDisabled() || BranchUtil.isDebugEnabled();
-        return isDebugHardwareIdNeeded;
-    }
-
-    /**
      * @return the device Hardware ID.
      * Note that if either Debug is enabled or Fetch has been disabled, then return a "fake" ID.
      */
     public SystemObserver.UniqueId getHardwareID() {
-        return getSystemObserver().getUniqueID(context_, isDebugHardwareIdNeeded());
+        return getSystemObserver().getUniqueID(context_, Branch.isDeviceIDFetchDisabled());
     }
 
     public String getOsName() {
