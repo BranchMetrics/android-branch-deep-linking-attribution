@@ -2,9 +2,15 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.branch.indexing.ContentDiscoverer;
 import io.branch.indexing.ContentDiscoveryManifest;
@@ -22,8 +28,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private final ContentDiscoveryManifest contentDiscoveryManifest_;
 
     private static final int STATE_FRESH_INSTALL = 0;
-    private static final int STATE_UPDATE = 2;
     private static final int STATE_NO_CHANGE = 1;
+    private static final int STATE_UPDATE = 2;
+    private static final int STATE_TUNE_MIGRATION = 5;
 
 
     ServerRequestInitSession(Context context, String requestPath) {
@@ -202,48 +209,53 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     /*
-     * Method to update the install or update state along with the timestamps.
-     * PRS NOTE
+     * Method to determine the install/update/no_change state along with the timestamps. Note that the
+     * back end has its own logic to interpret these (that logic includes 'reinstall' state).
+     * https://branch.atlassian.net/wiki/spaces/EN/pages/798786098/Open+Install+Reinstall+Logic+from+API+Open
+     *
      * The Original install time will have a the very first install time only if the app allows preference back up.
      * Apps that need to distinguish between a fresh install and re-install need to allow backing up of preferences.
-     * Previous install time stamp always carry the last last known update time. the value will be zero for any fresh install and will be the last update time with successive opens.
-     * Previous install time will have a value less than last update time ever since the app is updated.
      *
-     *  ------------------------------------------------------------
-     * |   update_state_install    | lut <= fit, fit = oit, put = 0 |
-     *  --------------------------- --------------------------------
-     * |   update_state_reinstall  | oit < fit, put = 0             |
-     *  --------------------------- --------------------------------
-     * |   update_state_update     | lut > fit, put < lut           |
-     *  --------------------------- --------------------------------
-     * |   update_state_no_update  | lut == put                     |
-     *  --------------------------- --------------------------------
      * @param post Post body for init request which need to be updated
      * @throws JSONException when there is any exception on adding time stamps or update state
      */
     private void updateInstallStateAndTimestamps(JSONObject post) throws JSONException {
+        // Default, just a regular open
         int installOrUpdateState = STATE_NO_CHANGE;
-        String currAppVersion = DeviceInfo.getInstance().getAppVersion();
-        long updateBufferTime = (24 * 60 * 60 * 1000); // Update buffer time is a day.
 
+        String currAppVersion = DeviceInfo.getInstance().getAppVersion();
+
+        long updateBufferTime = (24 * 60 * 60 * 1000); // Update buffer time is a day.
         long firstInstallTime = DeviceInfo.getInstance().getFirstInstallTime();
         long lastUpdateTime = DeviceInfo.getInstance().getLastUpdateTime();
 
         if (PrefHelper.NO_STRING_VALUE.equals(prefHelper_.getAppVersion())) {
-            // Default, just register an install
+            // if no app version is in storage, this must be the first time Branch is here, register an install
             installOrUpdateState = STATE_FRESH_INSTALL;
-            // if no app version is in storage, this must be the first time Branch is here. 24 hour buffer for updating as an update state
+
+            // However, if package info tells us that last update time is not the same as first install time
+            // then, from the users perspective, this is an `update` version of the app that happens to have
+            // Branch in it for the first time, so we record the session as 'update'.
             if ((lastUpdateTime - firstInstallTime) >= updateBufferTime) {
                 installOrUpdateState = STATE_UPDATE;
             }
+
+            // Finally, we check if this is the first session after a TUNE-> Branch migration, in which
+            // case server expects a special value.
+            if (isTuneMigration()) {
+                installOrUpdateState = STATE_TUNE_MIGRATION;
+            }
+
         } else if (!prefHelper_.getAppVersion().equals(currAppVersion)) {
-            // if the current app version doesn't match the stored, it's an update
+            // if the current app version doesn't match the stored version, then it's an update
             installOrUpdateState = STATE_UPDATE;
         }
 
         post.put(Defines.Jsonkey.Update.getKey(), installOrUpdateState);
         post.put(Defines.Jsonkey.FirstInstallTime.getKey(), firstInstallTime);
         post.put(Defines.Jsonkey.LastUpdateTime.getKey(), lastUpdateTime);
+
+        // only available when backing up of prefs is allowed (default on Android but users can override with allowBackup=false in manifest)
         long originalInstallTime = prefHelper_.getLong(PrefHelper.KEY_ORIGINAL_INSTALL_TIME);
         if (originalInstallTime == 0) {
             originalInstallTime = firstInstallTime;
@@ -257,6 +269,14 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, lastUpdateTime);
         }
         post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
+    }
+
+    private boolean isTuneMigration() {
+        // getApplicationContext() matters here
+        SharedPreferences tunePrefs = context_.getApplicationContext().getSharedPreferences(
+                "com.mobileapptracking", Context.MODE_PRIVATE);
+        final String tuneID = tunePrefs.getString("mat_id", null);
+        return !TextUtils.isEmpty(tuneID);
     }
 
     @Override
