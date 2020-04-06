@@ -540,10 +540,8 @@ abstract class SystemObserver {
             this.uniqueId = BLANK;
 
             String androidID = null;
-            if (context != null) {
-                if (!isDebug && !Branch.isSimulatingInstalls()) {
-                    androidID = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
-                }
+            if (context != null && !isDebug) {
+                androidID = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
             }
 
             if (androidID == null) {
