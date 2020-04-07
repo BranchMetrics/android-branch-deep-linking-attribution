@@ -1,4 +1,13 @@
 # Branch Android SDK change log
+- v5.0.1
+  * _*Master Release*_ - March 8, 2020
+  * Report GAID when test key is used
+  * Detect TUNE migrations, report them via the `update` field in open/install payload
+  * Deprecate enableSimulateInstalls
+  * Deprecate enableDebugMode
+  * Modify enableTestMode
+  * Support for air-preload campaigns via Play Install Referrer API
+
 - v5.0.0
   * _*Master Release*_ - March 17, 2020
   * Bump up major version to signify switch to session builder from initSession (old functionality is maintained)
