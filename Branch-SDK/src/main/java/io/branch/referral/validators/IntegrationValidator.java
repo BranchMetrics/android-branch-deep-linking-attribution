@@ -62,7 +62,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         // 3. Verify the package name of app with Branch dash board settings
         logValidationProgress("3. Verifying application package name");
         if (!integrationModel.packageName.equals(branchAppConfig.optString("android_package_name"))) {
-            logIntegrationError("Incorrect package name in Branch dashboard. Please correct your package name in dashboard -> link Settings page.",
+            logIntegrationError("Incorrect package name in Branch dashboard. Please correct your package name in dashboard -> Configuration page.",
                     "https://docs.branch.io/pages/dashboard/integrate/#android");
             return;
         } else {
