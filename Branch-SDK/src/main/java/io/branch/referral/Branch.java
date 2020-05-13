@@ -820,7 +820,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>Sets the number of times to re-attempt a timed-out request to the Branch API, before
-     * considering the request to have failed entirely. Default 5.</p>
+     * considering the request to have failed entirely. Default 3.</p>
      *
      * @param retryCount An {@link Integer} specifying the number of times to retry before giving
      *                   up and declaring defeat.
@@ -833,7 +833,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
-     * to the Branch API. Default 3000 ms.</p>
+     * to the Branch API. Default 5500 ms.</p>
      *
      * @param retryInterval An {@link Integer} value specifying the number of milliseconds to
      *                      wait before re-attempting a timed-out request.
