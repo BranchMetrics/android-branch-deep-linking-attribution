@@ -32,12 +32,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs { release {
-        storeFile file('/Users/benas.klastaitis/branchsterRelease.jks')
-        storePassword 'kindred2013'
-        keyPassword 'kindred2013'
-        keyAlias = 'branchsterrelease'
-    }}
+    signingConfigs { release }
 
     buildTypes {
         release {
@@ -49,7 +44,7 @@ android {
     }
 }
 
-File propFile = file('signing.properties');
+File propFile = file('signing.properties.sample');
 if (propFile.exists()) {
     def Properties props = new Properties()
     props.load(new FileInputStream(propFile))

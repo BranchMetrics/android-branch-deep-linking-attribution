@@ -1,4 +1,4 @@
-STORE_FILE=/path/to/your.keystore
-STORE_PASSWORD=yourkeystorepass
-KEY_ALIAS=projectkeyalias
-KEY_PASSWORD=keyaliaspassword
+STORE_FILE=../testKeystore
+STORE_PASSWORD=branch
+KEY_ALIAS=key0
+KEY_PASSWORD=branch
