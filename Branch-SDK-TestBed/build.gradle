@@ -1,8 +1,20 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-    implementation project(':Branch-SDK')
-    implementation ('com.google.android.gms:play-services-ads:16.0.0')
+//    implementation project(':Branch-SDK')
+    if (false) {
+        implementation ('io.branch.sdk.android:library:5.0.1')
+        implementation ('com.google.android.gms:play-services-ads-identifier:17.0.0')
+        implementation 'com.huawei.hms:ads-identifier:3.4.28.305'
+        implementation 'com.huawei.hms:hwid:4.0.1.300'
+    } else {
+        implementation(name:'Branch-SDK-release', ext:'aar')
+        implementation 'androidx.annotation:annotation:1.1.0'
+        implementation 'com.android.installreferrer:installreferrer:1.0'
+//        implementation ('com.google.android.gms:play-services-ads-identifier:17.0.0') // this wasn't explicitly mentioned on slack
+        implementation 'com.huawei.hms:ads-identifier:3.4.28.305'
+        implementation 'com.huawei.hms:hwid:4.0.1.300'
+    }
 
     /* Add chrome custom tabs for guaranteed matching */
     implementation ('androidx.browser:browser:1.0.0') {
@@ -33,12 +45,15 @@ android {
 
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }
 }
 
-File propFile = file('signing.properties');
+File propFile = file('signing.properties.sample');
 if (propFile.exists()) {
     def Properties props = new Properties()
     props.load(new FileInputStream(propFile))
