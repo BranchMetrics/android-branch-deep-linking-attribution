@@ -1,8 +1,11 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-    implementation project(':Branch-SDK')
-    implementation ('com.google.android.gms:play-services-ads:16.0.0')
+//    implementation project(':Branch-SDK')
+    implementation ('io.branch.sdk.android:library:5.0.2')
+    implementation ('com.google.android.gms:play-services-ads-identifier:17.0.0')
+    implementation 'com.huawei.hms:ads-identifier:3.4.28.305'
+    implementation 'com.huawei.hms:hwid:4.0.1.300'
 
     /* Add chrome custom tabs for guaranteed matching */
     implementation ('androidx.browser:browser:1.0.0') {
@@ -29,10 +32,18 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs { release }
+    signingConfigs { release {
+        storeFile file('/Users/benas.klastaitis/branchsterRelease.jks')
+        storePassword 'kindred2013'
+        keyPassword 'kindred2013'
+        keyAlias = 'branchsterrelease'
+    }}
 
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }

@@ -18,3 +18,10 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-keep class com.google.android.gms.** { *; }
+-keep class com.huawei.hms.ads.** { *; }
+-keep interface com.huawei.hms.ads.** { *; }
+
+# if you add below and use 5.0.2 on devices that have both GMS and HMS, you will always pick up oaid
+-keep class com.huawei.hms.api.** { *; }
+-keep interface com.huawei.hms.api.** { *; }
