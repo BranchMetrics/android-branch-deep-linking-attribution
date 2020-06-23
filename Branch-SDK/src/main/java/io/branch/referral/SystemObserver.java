@@ -228,23 +228,24 @@ abstract class SystemObserver {
      * for example "Mate 30 Pro". Note that non-Huawei devices will return false even if gradle pulls in HMS.
      */
     static boolean isHuaweiMobileServicesAvailable(@NonNull Context context) {
-        // the proper way would be to use com.huawei.hms.api.HuaweiApiAvailability, however this class
-        // is only found if Huawei ID lib is used (e.g. implementation 'com.huawei.hms:hwid:4.0.1.300')
-        return isHuaweiDevice() && !isGooglePlayServicesAvailable(context);
-    }
+        if (!isHuaweiDevice()) {
+            PrefHelper.Debug("Not Huawei device");
+            return false;
+        }
 
-    static boolean isGooglePlayServicesAvailable(@NonNull Context context) {
         try {
             //get an instance of com.huawei.hms.api.HuaweiApiAvailability
-            Class GoogleApiAvailability = Class.forName("com.google.android.gms.common.GoogleApiAvailability");
-            Method GoogleApiAvailability_getInstance = GoogleApiAvailability.getDeclaredMethod("getInstance");
-            Object GoogleApiAvailabilityInstance = GoogleApiAvailability_getInstance.invoke(null);
+            Class huaweiApiAvailability = Class.forName("com.huawei.hms.api.HuaweiApiAvailability");
+            Method huaweiApiAvailability_getInstance = huaweiApiAvailability.getDeclaredMethod("getInstance");
+            Object huaweiApiAvailabilityInstance = huaweiApiAvailability_getInstance.invoke(null);
 
             // call isGooglePlayServicesAvailable on that instance
-            Method GoogleisPlayServicesAvailable = GoogleApiAvailability.getDeclaredMethod("isGooglePlayServicesAvailable", Context.class);
-            Object result = GoogleisPlayServicesAvailable.invoke(GoogleApiAvailabilityInstance, context);
+            Method GoogleisPlayServicesAvailable = huaweiApiAvailability.getDeclaredMethod("isHuaweiMobileServicesAvailable", Context.class);
+            Object result = GoogleisPlayServicesAvailable.invoke(huaweiApiAvailabilityInstance, context);
+            PrefHelper.Debug("isHuaweiMobileServicesAvailable result = " + result);
             return (result instanceof Integer) && (Integer) result == 0;
         } catch (Exception e) {
+            PrefHelper.Debug("isHuaweiMobileServicesAvailable error = " + e);
             return false;
         }
     }
