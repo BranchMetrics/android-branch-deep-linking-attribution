@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 dependencies {
 //    implementation project(':Branch-SDK')
-    if (false) {
+    if (true) {
         implementation ('io.branch.sdk.android:library:5.0.1')
         implementation ('com.google.android.gms:play-services-ads-identifier:17.0.0')
         implementation 'com.huawei.hms:ads-identifier:3.4.28.305'
@@ -11,7 +11,7 @@ dependencies {
         implementation(name:'Branch-SDK-release', ext:'aar')
         implementation 'androidx.annotation:annotation:1.1.0'
         implementation 'com.android.installreferrer:installreferrer:1.0'
-//        implementation ('com.google.android.gms:play-services-ads-identifier:17.0.0') // this wasn't explicitly mentioned on slack
+        implementation ('com.google.android.gms:play-services-ads-identifier:17.0.0') // this wasn't explicitly mentioned on slack
         implementation 'com.huawei.hms:ads-identifier:3.4.28.305'
         implementation 'com.huawei.hms:hwid:4.0.1.300'
     }
