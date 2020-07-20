@@ -12,8 +12,6 @@ import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.branch.indexing.ContentDiscoverer;
-
 /**
  * <p>Class that observes activity life cycle events and determines when to start and stop
  * session.</p>
@@ -50,13 +48,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         branch.currentActivityReference_ = new WeakReference<>(activity);
 
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
-        // If configured on dashboard, trigger content discovery runnable
-        if (branch.getInitState() == Branch.SESSION_STATE.INITIALISED) {
-            try {
-                ContentDiscoverer.getInstance().discoverContent(activity, branch.getSessionReferredLink());
-            } catch (Exception ignore) {
-            }
-        }
         activityCnt_++;
 
         maybeRefreshAdvertisingID(activity);
@@ -108,7 +99,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
-        ContentDiscoverer.getInstance().onActivityStopped(activity);
         activityCnt_--; // Check if this is the last activity. If so, stop the session.
         if (activityCnt_ < 1) {
             branch.setInstantDeepLinkPossible(false);
