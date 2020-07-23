@@ -8,8 +8,6 @@ import android.text.TextUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.indexing.ContentDiscoverer;
-import io.branch.indexing.ContentDiscoveryManifest;
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
 /**
@@ -21,7 +19,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     static final String ACTION_OPEN = "open";
     static final String ACTION_INSTALL = "install";
     private final Context context_;
-    private final ContentDiscoveryManifest contentDiscoveryManifest_;
 
     private static final int STATE_FRESH_INSTALL = 0;
     private static final int STATE_NO_CHANGE = 1;
@@ -32,13 +29,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
     ServerRequestInitSession(Context context, String requestPath) {
         super(context, requestPath);
         context_ = context;
-        contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
-        contentDiscoveryManifest_ = ContentDiscoveryManifest.getInstance(context_);
     }
 
     @Override
@@ -118,15 +113,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
-        if (contentDiscoveryManifest_ != null) {
-            contentDiscoveryManifest_.onBranchInitialised(response.getObject());
-            if (branch.getCurrentActivity() != null) {
-                try {
-                    ContentDiscoverer.getInstance().onSessionStarted(branch.getCurrentActivity(), branch.getSessionReferredLink());
-                } catch (Exception ignore) {
-                }
-            }
-        }
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
     }
@@ -192,12 +178,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
 
-            if (contentDiscoveryManifest_ != null) {
-                JSONObject cdObj = new JSONObject();
-                cdObj.put(ContentDiscoveryManifest.MANIFEST_VERSION_KEY, contentDiscoveryManifest_.getManifestVersion());
-                cdObj.put(ContentDiscoveryManifest.PACKAGE_NAME_KEY, context_.getPackageName());
-                post.put(ContentDiscoveryManifest.CONTENT_DISCOVER_KEY, cdObj);
-            }
         } catch (JSONException ignore) { }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
