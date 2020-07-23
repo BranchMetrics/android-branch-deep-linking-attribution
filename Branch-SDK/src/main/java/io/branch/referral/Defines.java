@@ -144,7 +144,6 @@ public class Defines {
         ContentData("content_data"),
         ContentEvents("events"),
         ContentAnalyticsMode("content_analytics_mode"),
-        ContentDiscovery("cd"),
         Environment("environment"),
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),

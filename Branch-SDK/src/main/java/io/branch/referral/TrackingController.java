@@ -45,7 +45,6 @@ class TrackingController {
         
         // Clear  any tracking specific preference items
         PrefHelper prefHelper = PrefHelper.getInstance(context);
-        prefHelper.clearBranchAnalyticsData();
         prefHelper.setSessionID(PrefHelper.NO_STRING_VALUE);
         prefHelper.setLinkClickID(PrefHelper.NO_STRING_VALUE);
         prefHelper.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
