@@ -1296,10 +1296,8 @@ public class PrefHelper {
      * @param message A {@link String} value containing the debug message to record.
      */
     public static void Debug(String message) {
-        if (BranchUtil.isDebugEnabled() || enableLogging_) {
-            if (!TextUtils.isEmpty(message)) {
-                Log.i(TAG, message);
-            }
+        if (enableLogging_ && !TextUtils.isEmpty(message)) {
+            Log.i(TAG, message);
         }
     }
 
