@@ -620,7 +620,11 @@ public class BranchUniversalObject implements Parcelable {
      * @param callback       An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
      */
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
-        getLinkBuilder(context, linkProperties).generateShortUrl(callback);
+        if (Branch.getInstance().isTrackingDisabled()) {
+            callback.onLinkCreate(getLinkBuilder(context, linkProperties).getShortUrl(), null);
+        } else {
+            getLinkBuilder(context, linkProperties).generateShortUrl(callback);
+        }
     }
     
     /**

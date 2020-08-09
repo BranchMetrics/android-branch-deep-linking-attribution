@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.0.3
+  * _*Master Release*_ - August 10, 2020
+  * Upgrade referrer library
+  
 - v5.0.2
   * _*Master Release*_ - July 22, 2020
   * Remove content discovery

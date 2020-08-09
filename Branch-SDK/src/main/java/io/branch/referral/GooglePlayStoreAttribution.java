@@ -53,9 +53,12 @@ class GooglePlayStoreAttribution {
                                 }
                                 onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp);
                             } catch (RemoteException ex) {
+                                PrefHelper.Debug("onInstallReferrerSetupFinished() Remote Exception: " + ex.getMessage());
+                                onReferrerClientError();
+                            } catch (Exception ex) {
                                 PrefHelper.Debug("onInstallReferrerSetupFinished() Exception: " + ex.getMessage());
                                 onReferrerClientError();
-                            }
+                            } 
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:// API not available on the current Play Store app
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:// Connection could not be established
@@ -143,7 +146,12 @@ class GooglePlayStoreAttribution {
                     prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
                     prefHelper.setGooglePlayReferrer(rawReferrerString);
                 }
-                
+
+                if(referrerMap.containsValue(Defines.Jsonkey.PlayAutoInstalls.getKey())) {
+                    prefHelper.setGooglePlayReferrer(rawReferrerString);
+                    BranchPreinstall.setBranchPreInstallGoogleReferrer(context, referrerMap);
+                }
+
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {

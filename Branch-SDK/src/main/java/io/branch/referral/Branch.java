@@ -429,48 +429,30 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>
-     * Enables the test mode for the SDK. This will use the Branch Test Keys.
-     * This will also enable debug logs.
-     * Note: This is same as setting "io.branch.sdk.TestMode" to "True" in Manifest file
+     * Enables the test mode for the SDK. This will use the Branch Test Keys. This is same as setting
+     * "io.branch.sdk.TestMode" to "True" in Manifest file.
+     *
+     * Note: As of v5.0.1, enableTestMode has been changed. It now uses the test key but will not log or randomize
+     * the device IDs. If you wish to enable logging, please invoke enableLogging. If you wish to simulate
+     * installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
+     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
      * </p>
      */
     public static void enableTestMode() {
         BranchUtil.setTestMode(true);
-        enableDebugMode();
+        PrefHelper.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
+                " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
+                " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
+                " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
     }
 
     /**
      * <p>
      * Disables the test mode for the SDK.
-     * This will also disable debug logs.
      * </p>
      */
     public static void disableTestMode() {
         BranchUtil.setTestMode(false);
-        disableDebugMode();
-    }
-
-    /**
-     * Enables debug mode for the SDK.
-     * @deprecated use {@link Branch#enableDebugMode()}
-     */
-    public void setDebug() {
-        enableDebugMode();
-    }
-
-    /**
-     * Enables debug mode for the SDK and log the SDK Version Declaration Tag.
-     */
-    public static void enableDebugMode() {
-        BranchUtil.setDebugMode(true);
-        PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
-    }
-
-    /**
-     * Disables debug mode for the SDK.
-     */
-    public static void disableDebugMode() {
-        BranchUtil.setDebugMode(false);
     }
 
     /**
@@ -2705,23 +2687,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return matched;
     }
-    
-    public static void enableSimulateInstalls() {
-        isSimulatingInstalls_ = true;
-    }
-    
-    public static void disableSimulateInstalls() {
-        isSimulatingInstalls_ = false;
-    }
-
-    static boolean isSimulatingInstalls() {
-        return isSimulatingInstalls_;
-    }
 
     /**
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
+        PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
         PrefHelper.enableLogging(true);
     }
 
@@ -3401,4 +3372,51 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
     /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit();*/
     public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
+
+    /**
+     * @deprecated setDebug is deprecated and all functionality has been disabled. If you wish to enable
+     * logging, please invoke enableLogging. If you wish to simulate installs, please see add a Test Device
+     * (https://help.branch.io/using-branch/docs/adding-test-devices) then reset your test device's data
+     * (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
+     * If you wish to use the test key rather than the live key, please invoke enableTestMode.
+     */
+    public void setDebug() {
+        PrefHelper.LogAlways("setDebug is deprecated and all functionality has been disabled. " +
+                "If you wish to enable logging, please invoke enableLogging. If you wish to simulate installs," +
+                " please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
+                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data). " +
+                "If you wish to use the test key rather than the live key, please invoke enableTestMode.");
+    }
+
+    /**
+     * @deprecated enableDebugMode is deprecated and all functionality has been disabled. If you wish to enable
+     * logging, please invoke enableLogging. If you wish to simulate installs, please see add a Test Device
+     * (https://help.branch.io/using-branch/docs/adding-test-devices) then reset your test device's data
+     * (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
+     * If you wish to use the test key rather than the live key, please invoke enableTestMode.
+     */
+    public static void enableDebugMode() {
+        PrefHelper.LogAlways("enableDebugMode is deprecated and all functionality has been disabled. " +
+                "If you wish to enable logging, please invoke enableLogging. If you wish to simulate installs," +
+                " please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
+                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data). " +
+                "If you wish to use the test key rather than the live key, please invoke enableTestMode.");
+    }
+
+    /** @deprecated (deprecated and all functionality has been disabled, see enableDebugMode for more information) */
+    public static void disableDebugMode() {}
+
+    /**
+     * @deprecated enableSimulateInstalls is deprecated and all functionality has been disabled. If
+     * you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
+     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
+     * */
+    public static void enableSimulateInstalls() {
+        PrefHelper.LogAlways("enableSimulateInstalls is deprecated and all functionality has been disabled. " +
+                "If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
+                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
+    }
+
+    /** @deprecated see enableSimulateInstalls() for more information */
+    public static void disableSimulateInstalls() { }
 }
