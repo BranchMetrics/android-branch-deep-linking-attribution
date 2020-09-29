@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
@@ -47,6 +48,11 @@ public class BranchUtil {
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
     static boolean checkTestMode(Context context) {
+        BranchJsonConfig jsonConfig = new BranchJsonConfig(context);
+        if (jsonConfig.isValid()) {
+            isTestModeEnabled_ = jsonConfig.getUseTestInstance();
+        }
+
         // Test Mode can be enabled independently of checking the manifest.
         if (!isTestModeEnabled_ && isManifestTestModeEnabled == null) {
             String testModeKey = "io.branch.sdk.TestMode";
@@ -69,19 +75,32 @@ public class BranchUtil {
 
     public static String readBranchKey(Context context) {
         String branchKey = null;
+
+        BranchJsonConfig jsonConfig = new BranchJsonConfig(context);
+        if (jsonConfig.isValid()) {
+            branchKey = jsonConfig.getBranchKey();
+            if (branchKey == null) {
+                branchKey = jsonConfig.getUseTestInstance() ? jsonConfig.getTestKey() : jsonConfig.getLiveKey();
+            }
+        }
+
         String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
 
-        try {
-            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                branchKey = ai.metaData.getString(metaDataKey);
-                if (branchKey == null && isTestModeEnabled()) {
-                    // If test mode is enabled, but the test key cannot be found, fall back to the live key.
-                    branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
+        if (TextUtils.isEmpty(branchKey)) {
+            try {
+
+                final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+                if (ai.metaData != null) {
+                    branchKey = ai.metaData.getString(metaDataKey);
+                    if (branchKey == null && isTestModeEnabled()) {
+                        // If test mode is enabled, but the test key cannot be found, fall back to the live key.
+                        branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
+                    }
                 }
+            } catch (final Exception ignore) {
             }
-        } catch (final Exception ignore) {
         }
+
 
         // If Branch key is not specified in the manifest check String resource
         if (TextUtils.isEmpty(branchKey)) {
@@ -114,6 +133,11 @@ public class BranchUtil {
 
     /** @deprecated (see enableDebugMode for more information) */
     public static boolean isDebugEnabled() { return false; }
+
+    public static boolean getEnableFacebookLinkCheck(Context context) {
+        BranchJsonConfig jsonConfig = new BranchJsonConfig(context);
+        return jsonConfig.getEnableFacebookLinkCheck();
+    }
 
     /**
      * Converts a given link param as {@link JSONObject} to string after adding the source param and removes replaces any illegal characters.

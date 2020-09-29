@@ -625,6 +625,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.linkCache_.clear();
                 branchReferral_.requestQueue_.clear();
             }
+
+            if (BranchUtil.getEnableFacebookLinkCheck(context)) {
+                branchReferral_.enableFacebookAppLinkCheck();
+            }
             
             branchReferral_.context_ = context.getApplicationContext();
             /* If {@link Application} is instantiated register for activity life cycle events. */
