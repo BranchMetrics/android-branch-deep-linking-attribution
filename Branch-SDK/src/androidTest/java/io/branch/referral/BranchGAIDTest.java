@@ -24,7 +24,6 @@ import io.branch.referral.util.CommerceEvent;
  [-] ServerRequestPing.java                     testPing()
  [X] ServerRequestActionCompleted.java          testCommerceEvent()
  [X] ServerRequestRedeemRewards.java            testRedeemRewards()
- [-] ServerRequestRegisterClose.java            testClose()
  [ ] ServerRequestRegisterInstall.java
  [ ] ServerRequestRegisterOpen.java
  */
@@ -170,12 +169,6 @@ public class BranchGAIDTest extends BranchEventTest {
     @Test
     public void testPing_hasGAIDv1() throws Throwable {
         // TODO: Ping does not get enqueued
-    }
-
-    @Test
-    public void testClose_hasGAIDv1() throws Throwable {
-        // TODO: Close happens in a Session context
-        // Note that closeSessionInternal cannot be run on a non-UI thread
     }
 
     @Test

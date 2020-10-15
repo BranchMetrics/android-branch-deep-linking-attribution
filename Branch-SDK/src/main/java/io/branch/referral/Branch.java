@@ -977,7 +977,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * </p>
      */
     void closeSessionInternal() {
-        executeClose();
+        if (initState_ != SESSION_STATE.UNINITIALISED) {
+            if (!hasNetwork_) {
+                // if there's no network connectivity, purge the old install/open
+                ServerRequest req = requestQueue_.peek();
+                if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
+                    requestQueue_.dequeue();
+                }
+            }
+            setInitState(SESSION_STATE.UNINITIALISED);
+        }
         prefHelper_.setExternalIntentUri(null);
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
@@ -1012,28 +1021,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void enableCookieBasedMatching(String cookieMatchDomain, int delay) {
         cookieBasedMatchDomain_ = cookieMatchDomain;
         BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay);
-    }
-    
-    /**
-     * <p>Perform the state-safe actions required to terminate any open session, and report the
-     * closed application event to the Branch API.</p>
-     */
-    private void executeClose() {
-        if (initState_ != SESSION_STATE.UNINITIALISED) {
-            if (!hasNetwork_) {
-                // if there's no network connectivity, purge the old install/open
-                ServerRequest req = requestQueue_.peek();
-                if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
-                    requestQueue_.dequeue();
-                }
-            } else {
-                if (!requestQueue_.containsClose()) {
-                    ServerRequest req = new ServerRequestRegisterClose(context_);
-                    handleNewRequest(req);
-                }
-            }
-            setInitState(SESSION_STATE.UNINITIALISED);
-        }
     }
 
     public static void registerPlugin(String name, String version) {
@@ -2135,10 +2122,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if ((req instanceof ServerRequestLogout)) {
                 req.handleFailure(BranchError.ERR_NO_SESSION, "");
                 PrefHelper.Debug("Branch is not initialized, cannot logout");
-                return;
-            }
-            if ((req instanceof ServerRequestRegisterClose)) {
-                PrefHelper.Debug("Branch is not initialized, cannot close session");
                 return;
             }
             if (requestNeedsSession(req)) {

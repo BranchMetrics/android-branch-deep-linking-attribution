@@ -362,8 +362,6 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestLogout(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())) {
             extendedReq = new ServerRequestRedeemRewards(requestPath, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
-            extendedReq = new ServerRequestRegisterClose(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
             extendedReq = new ServerRequestRegisterInstall(requestPath, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
