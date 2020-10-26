@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import androidx.annotation.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,6 +34,11 @@ public class ServerResponse {
      * cast to a type before use to allow the appropriate "get" methods to be used.
      */
     private Object post_;
+
+    /**
+     * Unique timestamp based request id provided from internal Branch servers for debugging
+     */
+    private String requestId_;
 
 
     /**
@@ -106,6 +112,14 @@ public class ServerResponse {
         return null;
     }
 
+    /**
+     * Set the passed request id
+     *
+     * @param requestId_ passed in from the response headers
+     */
+    public void setRequestId_(@Nullable String requestId_) {
+        this.requestId_ = requestId_;
+    }
 
     /**
      * Get the reason for failure if there any

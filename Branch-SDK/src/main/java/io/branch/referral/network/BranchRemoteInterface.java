@@ -1,6 +1,7 @@
 package io.branch.referral.network;
 
 import android.content.Context;
+import android.text.TextUtils;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -97,7 +98,7 @@ public abstract class BranchRemoteInterface {
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
-            return processEntityForJSON(response.responseData, response.responseCode, tag);
+            return processEntityForJSON(response.responseData, response.responseCode, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
@@ -134,7 +135,7 @@ public abstract class BranchRemoteInterface {
 
         try {
             BranchResponse response = doRestfulPost(url, body);
-            return processEntityForJSON(response.responseData, response.responseCode, tag);
+            return processEntityForJSON(response.responseData, response.responseCode, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
@@ -178,9 +179,14 @@ public abstract class BranchRemoteInterface {
      * response in Branch SDK terms.
      * see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
-    private ServerResponse processEntityForJSON(String responseString, int statusCode, String tag) {
+    private ServerResponse processEntityForJSON(String responseString, int statusCode, String tag,@Nullable String requestId) {
         ServerResponse result = new ServerResponse(tag, statusCode);
-        PrefHelper.Debug("returned " + responseString);
+        if(!TextUtils.isEmpty(requestId)){
+            result.setRequestId_(requestId);
+            PrefHelper.Debug(String.format("returned request-id: [ %s ] with %s", requestId, responseString));
+        } else {
+            PrefHelper.Debug(String.format("returned %s", responseString));
+        }
 
         if (responseString != null) {
             try {
@@ -255,6 +261,7 @@ public abstract class BranchRemoteInterface {
     public static class BranchResponse {
         private final String responseData;
         private final int responseCode;
+        private final String requestId;
 
         /**
          * Creates a BranchResponse object with response data and status code
@@ -262,9 +269,10 @@ public abstract class BranchRemoteInterface {
          * @param responseData The data returned by branch server. Nullable in case of errors.(Note :please see {@link io.branch.referral.network.BranchRemoteInterface.BranchRemoteException} for a better handling of errors)
          * @param responseCode Standard Http Response code (rfc2616 http error codes)
          */
-        public BranchResponse(@Nullable String responseData, int responseCode) {
+        public BranchResponse(@Nullable String responseData, int responseCode, @Nullable String requestId) {
             this.responseData = responseData;
             this.responseCode = responseCode;
+            this.requestId = requestId;
         }
     }
 
