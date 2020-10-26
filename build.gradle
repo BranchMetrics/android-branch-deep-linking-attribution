@@ -28,3 +28,11 @@ allprojects {
 subprojects {
     tasks.withType(Javadoc).all { enabled = false }
 }
+
+tasks.withType(Test) {
+    testLogging {
+        exceptionFormat "full"
+        events "started", "skipped", "passed", "failed"
+        showStandardStreams true
+    }
+}
