@@ -1,4 +1,8 @@
-version: 2
+version: 2.1
+
+orbs:
+  android: circleci/android@0.2.1
+
 jobs:
   build:
     working_directory: ~/code
@@ -6,12 +10,21 @@ jobs:
       - image: circleci/android:api-28
     steps:
       - checkout
+      - restore_cache:
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
-          name: Update SDK Tools
-          command: $ANDROID_HOME/tools/bin/sdkmanager --update
+          name: Download Dependencies
+          command: ./gradlew androidDependencies
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Run Lint
           command: ./gradlew lint
+      - run:
+          name: Run Test
+          command: ./gradlew test
       - run:
           name: Run Build
           command: ./gradlew build
