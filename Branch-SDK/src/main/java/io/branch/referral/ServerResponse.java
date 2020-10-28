@@ -36,12 +36,6 @@ public class ServerResponse {
     private Object post_;
 
     /**
-     * Unique timestamp based request id provided from internal Branch servers for debugging
-     */
-    private String requestId_;
-
-
-    /**
      * <p>Main constructor method for the {@link ServerResponse} class that allows for the instantiation
      * of a server response object as a direct result of a server call.</p>
      *
@@ -110,15 +104,6 @@ public class ServerResponse {
         }
 
         return null;
-    }
-
-    /**
-     * Set the passed request id
-     *
-     * @param requestId_ passed in from the response headers
-     */
-    public void setRequestId_(@Nullable String requestId_) {
-        this.requestId_ = requestId_;
     }
 
     /**

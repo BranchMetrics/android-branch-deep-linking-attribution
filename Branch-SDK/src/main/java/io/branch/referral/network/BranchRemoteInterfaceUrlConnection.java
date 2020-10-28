@@ -49,7 +49,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     ///-------------- private methods to implement RESTful GET / POST using HttpURLConnection ---------------//
     private BranchResponse doRestfulGet(String url, int retryNumber) throws BranchRemoteException {
         HttpsURLConnection connection = null;
-        String requestId = null;
         try {
             int timeout = prefHelper.getTimeout();
             if (timeout <= 0) {
@@ -62,7 +61,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
 
-            requestId = getRequestIdFromHeader(connection);
+            String requestId = getRequestIdFromHeader(connection);
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= 500 &&

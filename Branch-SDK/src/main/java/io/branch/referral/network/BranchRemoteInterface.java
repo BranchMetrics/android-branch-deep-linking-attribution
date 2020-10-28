@@ -98,7 +98,7 @@ public abstract class BranchRemoteInterface {
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
-            return processEntityForJSON(response.responseData, response.responseCode, tag, response.requestId);
+            return processEntityForJSON(response, tag);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
@@ -135,7 +135,7 @@ public abstract class BranchRemoteInterface {
 
         try {
             BranchResponse response = doRestfulPost(url, body);
-            return processEntityForJSON(response.responseData, response.responseCode, tag, response.requestId);
+            return processEntityForJSON(response, tag);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
@@ -171,18 +171,21 @@ public abstract class BranchRemoteInterface {
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
      *
-     * @param responseString Branch server response received. A  string form of the input or error stream payload
-     * @param statusCode     An {@link Integer} value containing the HTTP response code.
+     * @param response Branch server response received containing response data with headers and response code
      * @param tag            A {@link String} value containing the tag value to be applied to the
      *                       resultant {@link ServerResponse} object.
      * @return A {@link ServerResponse} object representing the resultant output object from Branch Remote server
      * response in Branch SDK terms.
      * see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
-    private ServerResponse processEntityForJSON(String responseString, int statusCode, String tag,@Nullable String requestId) {
+    private ServerResponse processEntityForJSON(BranchResponse response, String tag) {
+        String responseString = response.responseData;
+        String requestId = response.requestId;
+
+        int statusCode = response.responseCode;
+
         ServerResponse result = new ServerResponse(tag, statusCode);
         if(!TextUtils.isEmpty(requestId)){
-            result.setRequestId_(requestId);
             PrefHelper.Debug(String.format("returned request-id: [ %s ] with %s", requestId, responseString));
         } else {
             PrefHelper.Debug(String.format("returned %s", responseString));
