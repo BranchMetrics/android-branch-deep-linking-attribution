@@ -40,7 +40,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         logValidationProgress("1. Verifying Branch instance creation");
         if (Branch.getInstance() == null) {
             logIntegrationError("Branch is not initialised from your Application class. Please add `Branch.getAutoInstance(this);` to your Application#onCreate() method.",
-                    "https://docs.branch.io/pages/apps/android/#load-branch");
+                    "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
             return;
         }
         logValidationPassed();
@@ -49,7 +49,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         logValidationProgress("2. Checking Branch keys");
         if (TextUtils.isEmpty(BranchUtil.readBranchKey(context))) {
             logIntegrationError("Unable to read Branch keys from your application. Did you forget to add Branch keys in your application?.",
-                    "https://docs.branch.io/pages/apps/android/#configure-app");
+                    "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
             return;
         }
         logValidationPassed();
@@ -62,8 +62,8 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         // 3. Verify the package name of app with Branch dash board settings
         logValidationProgress("3. Verifying application package name");
         if (!integrationModel.packageName.equals(branchAppConfig.optString("android_package_name"))) {
-            logIntegrationError("Incorrect package name in Branch dashboard. Please correct your package name in dashboard -> link Settings page.",
-                    "https://docs.branch.io/pages/dashboard/integrate/#android");
+            logIntegrationError("Incorrect package name in Branch dashboard. Please correct your package name in dashboard -> Configuration page.",
+                    "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-branch-dashboard");
             return;
         } else {
             logValidationPassed();
@@ -77,7 +77,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             } else {
                 logIntegrationError(String.format("No intent found for opening the app through uri Scheme '%s'." +
                                 "Please add the intent with URI scheme to your Android manifest.", branchAppConfig.optString("android_uri_scheme")),
-                        "https://docs.branch.io/pages/apps/android/#configure-app");
+                        "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
                 return;
             }
         } else {
@@ -89,7 +89,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         String branchAppUriScheme = branchAppConfig.optString("android_uri_scheme");
         if (TextUtils.isEmpty(branchAppUriScheme)) {
             logIntegrationError("Uri Scheme to open your app is not specified in Branch dashboard. Please add URI scheme in Branch dashboard.",
-                    "https://docs.branch.io/pages/dashboard/integrate/#android");
+                    "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-branch-dashboard");
             return;
         }
         logValidationPassed();
@@ -101,7 +101,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
                 logValidationProgress("- Skipping. Unable to verify intent for receiving URI scheme. Failed to read the Android Manifest");
             } else {
                 logIntegrationError(String.format("Uri scheme '%s' specified in Branch dashboard doesn't match with the deep link intent in manifest file", branchAppUriScheme),
-                        "https://docs.branch.io/pages/dashboard/integrate/#android");
+                        "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-branch-dashboard");
                 return;
             }
         } else {
@@ -115,7 +115,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
                 logValidationProgress("- Skipping. Unable to verify intent for receiving URI scheme. Failed to read the Android Manifest");
             } else {
                 logIntegrationError("Could not find any App Link hosts to support Android AppLinks. Please add intent filter for handling AppLinks in your Android Manifest file",
-                        "https://docs.branch.io/pages/deep-linking/android-app-links/#add-intent-filter-to-manifest");
+                        "https://help.branch.io/using-branch/docs/android-app-links#section-add-intent-filter-to-manifest");
                 return;
             }
         } else {
@@ -131,7 +131,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
                     logValidationProgress("- Skipping. Unable to verify supported custom link domains. Failed to read the Android Manifest");
                 } else {
                     logIntegrationError(String.format("Could not find intent filter to support custom link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", customDomain),
-                            "https://docs.branch.io/pages/apps/android/#configure-app");
+                            "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
                     return;
                 }
 
@@ -150,7 +150,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
                     logValidationProgress("- Skipping. Unable to verify default link domains. Failed to read the Android Manifest");
                 } else {
                     logIntegrationError(String.format("Could not find intent filter to support Branch default link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", defAppLinkDomain),
-                            "https://docs.branch.io/pages/apps/android/#configure-app");
+                            "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
                     return;
                 }
             } else {
@@ -168,7 +168,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
                     logValidationProgress("- Skipping.Unable to verify alternate link domains. Failed to read the Android Manifest");
                 } else {
                     logIntegrationError(String.format("Could not find intent filter to support alternate link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", alternateAppLinkDomain),
-                            "https://docs.branch.io/pages/apps/android/#configure-app");
+                            "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
                     return;
                 }
             } else {
