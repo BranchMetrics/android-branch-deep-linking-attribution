@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import androidx.annotation.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

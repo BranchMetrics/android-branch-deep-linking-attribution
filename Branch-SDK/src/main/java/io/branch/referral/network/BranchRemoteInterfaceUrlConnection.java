@@ -6,6 +6,7 @@ import android.os.NetworkOnMainThreadException;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import io.branch.referral.BranchError;
+import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -217,8 +218,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     @Nullable
     private String getRequestIdFromHeader(@NonNull HttpsURLConnection connection) {
         if (!connection.getHeaderFields().isEmpty() && connection.getHeaderFields()
-            .containsKey("X-Branch-Request-Id")) {
-            return connection.getHeaderField("X-Branch-Request-Id");
+            .containsKey(Defines.HeaderKey.RequestId.getKey())) {
+            return connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
         }
         return null;
     }
