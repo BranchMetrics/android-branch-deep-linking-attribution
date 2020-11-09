@@ -90,20 +90,25 @@ public abstract class BranchRemoteInterface {
         if (addCommonParams(params, branchKey)) {
             modifiedUrl += this.convertJSONtoString(params);
         } else {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID);
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
 
         long reqStartTime = System.currentTimeMillis();
         PrefHelper.Debug("getting " + modifiedUrl);
 
+        String requestId = "";
+
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
+            if(response != null) {
+                requestId = response.requestId;
+            }
             return processEntityForJSON(response, tag);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, requestId);
             } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, requestId);
             }
         } finally {
             // Add total round trip time
@@ -128,19 +133,23 @@ public abstract class BranchRemoteInterface {
         body = body != null ? body : new JSONObject();
 
         if (!addCommonParams(body, branchKey)) {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID);
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
         PrefHelper.Debug("posting to " + url);
         PrefHelper.Debug("Post value = " + body.toString());
 
+        String requestId = "";
         try {
             BranchResponse response = doRestfulPost(url, body);
+            if(response != null) {
+                requestId = response.requestId;
+            }
             return processEntityForJSON(response, tag);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, requestId);
             } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, requestId);
             }
         } finally {
             if (Branch.getInstance() != null) {
@@ -184,7 +193,7 @@ public abstract class BranchRemoteInterface {
 
         int statusCode = response.responseCode;
 
-        ServerResponse result = new ServerResponse(tag, statusCode);
+        ServerResponse result = new ServerResponse(tag, statusCode, requestId);
         if(!TextUtils.isEmpty(requestId)){
             PrefHelper.Debug(String.format("returned request-id: [ %s ] with %s", requestId, responseString));
         } else {

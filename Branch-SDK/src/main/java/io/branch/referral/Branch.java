@@ -2405,7 +2405,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
             thisReq_.doFinalUpdateOnBackgroundThread();
             if (isTrackingDisabled() && thisReq_.prepareExecuteWithoutTracking() == false) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED);
+                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             }
             if (thisReq_.isGetRequest()) {
                 return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
