@@ -8,6 +8,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.BuildConfig;
@@ -195,7 +197,7 @@ public abstract class BranchRemoteInterface {
 
         ServerResponse result = new ServerResponse(tag, statusCode, requestId);
         if(!TextUtils.isEmpty(requestId)){
-            PrefHelper.Debug(String.format("returned request-id: [ %s ] with %s", requestId, responseString));
+            PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
             PrefHelper.Debug(String.format("returned %s", responseString));
         }
