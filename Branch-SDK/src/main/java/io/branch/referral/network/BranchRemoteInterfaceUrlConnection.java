@@ -3,10 +3,14 @@ package io.branch.referral.network;
 import android.content.Context;
 import android.net.TrafficStats;
 import android.os.NetworkOnMainThreadException;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.android.gms.common.util.Strings;
 
+import io.branch.referral.BranchError;
+import io.branch.referral.Defines;
+import io.branch.referral.PrefHelper;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,11 +20,9 @@ import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-
 import javax.net.ssl.HttpsURLConnection;
-
-import io.branch.referral.BranchError;
-import io.branch.referral.PrefHelper;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by sojanpr on 5/31/17.
@@ -63,6 +65,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
 
+            String requestId = getRequestIdFromHeader(connection);
+
             int responseCode = connection.getResponseCode();
             if (responseCode >= 500 &&
                     retryNumber < prefHelper.getRetryCount()) {
@@ -76,14 +80,14 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             } else {
                 try {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                        return new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
+                        return new BranchResponse(getResponseString(connection.getErrorStream()), responseCode, Strings.emptyToNull(requestId));
                     } else {
-                        return new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
+                        return new BranchResponse(getResponseString(connection.getInputStream()), responseCode, Strings.emptyToNull(requestId));
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     PrefHelper.Debug("A resource conflict occurred with this request " + url);
-                    return new BranchResponse(null, responseCode);
+                    return new BranchResponse(null, responseCode, Strings.emptyToNull(requestId));
                 }
             }
         } catch (SocketException ex) {
@@ -116,6 +120,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
     private BranchResponse doRestfulPost(String url, JSONObject payload, int retryNumber) throws BranchRemoteException {
         HttpsURLConnection connection = null;
+        String requestId = null;
         int timeout = prefHelper.getTimeout();
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
@@ -146,6 +151,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             outputStreamWriter.flush();
             outputStreamWriter.close();
 
+            requestId = getRequestIdFromHeader(connection);
+
             int responseCode = connection.getResponseCode();
             if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
                     && retryNumber < prefHelper.getRetryCount()) {
@@ -164,11 +171,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     } else {
                         inputStream = connection.getInputStream();
                     }
-                    return new BranchResponse(getResponseString(inputStream), responseCode);
+                    return new BranchResponse(getResponseString(inputStream), responseCode, Strings.emptyToNull(requestId));
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     PrefHelper.Debug("A resource conflict occurred with this request " + url);
-                    return new BranchResponse(null, responseCode);
+                    return new BranchResponse(null, responseCode, Strings.emptyToNull(requestId));
                 } finally {
                     try {
                         if (inputStream != null) {
@@ -203,12 +210,21 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 if (ex instanceof NetworkOnMainThreadException)
                     PrefHelper.Debug("Branch Error: Don't call our synchronous methods on the main thread!!!");
             }
-            return new BranchResponse(null, 500);
+            return new BranchResponse(null, 500, Strings.emptyToNull(requestId));
         } finally {
             if (connection != null) {
                 connection.disconnect();
             }
         }
+    }
+
+    @Nullable
+    private String getRequestIdFromHeader(@NonNull HttpsURLConnection connection) {
+        if (!connection.getHeaderFields().isEmpty() && connection.getHeaderFields()
+            .containsKey(Defines.HeaderKey.RequestId.getKey())) {
+            return connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
+        }
+        return null;
     }
 
 
