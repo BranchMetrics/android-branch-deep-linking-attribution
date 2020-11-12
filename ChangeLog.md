@@ -1,4 +1,21 @@
 # Branch Android SDK change log
+- v5.0.3
+  * _*Master Release*_ - August 10, 2020
+  * Upgrade referrer library
+  
+- v5.0.2
+  * _*Master Release*_ - July 22, 2020
+  * Remove content discovery
+
+- v5.0.1
+  * _*Master Release*_ - March 8, 2020
+  * Report GAID when test key is used
+  * Detect TUNE migrations, report them via the `update` field in open/install payload
+  * Deprecate enableSimulateInstalls
+  * Deprecate enableDebugMode
+  * Modify enableTestMode
+  * Support for air-preload campaigns via Play Install Referrer API
+
 - v5.0.0
   * _*Master Release*_ - March 17, 2020
   * Bump up major version to signify switch to session builder from initSession (old functionality is maintained)
@@ -134,13 +151,13 @@
   * _*Master Release*_ - August 10, 2018
   * Added notify network API to process requests when network is available. DEVEX-711
 
-- v2.19.1 [09-AUG-18] Fixed GAID fetch issue.
+- v2.19.1 Fixed GAID fetch issue.
 
-- v2.19.0 [03-JUL-18] Support for adding custom install metadata. Fix for an ANR in debug mode. Fix for crash caused by reading user agent. SDK Integration validator.
+- v2.19.0 Support for adding custom install metadata. Fix for an ANR in debug mode. Fix for crash caused by reading user agent. SDK Integration validator.
 
-- v2.18.1 [17-JUN-18] Fixing issue with facebook app link check caused by incorrect value for facebook_app_link_checked state. Fix for app indexing to run on separate thread.
+- v2.18.1 Fixing issue with facebook app link check caused by incorrect value for facebook_app_link_checked state. Fix for app indexing to run on separate thread.
 
-- v2.18.0 [10-JUN-18] Removing unnecessary String conversion for deeplink data JSONObject. This will fix the issue of additional escape characters present in the deep link data
+- v2.18.0 Removing unnecessary String conversion for deeplink data JSONObject. This will fix the issue of additional escape characters present in the deep link data
 
 - v2.17.1 Hot fix : Preference items cleared over app re-open if Branch key is missing in manifest file.
 

@@ -93,7 +93,6 @@ public class PrefHelper {
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
     
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
-    private static final String KEY_BRANCH_ANALYTICAL_DATA = "bnc_branch_analytical_data";
     private static final String KEY_LAST_STRONG_MATCH_TIME = "bnc_branch_strong_match_time";
     
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
@@ -1148,53 +1147,6 @@ public class PrefHelper {
         return getInteger(key, 0);
     }
     
-    
-    public JSONObject getBranchAnalyticsData() {
-        JSONObject analyticsDataObject;
-        if (savedAnalyticsData_ != null) {
-            analyticsDataObject = savedAnalyticsData_;
-        } else {
-            String savedAnalyticsData = getString(KEY_BRANCH_ANALYTICAL_DATA);
-            analyticsDataObject = new JSONObject();
-            if (!TextUtils.isEmpty(savedAnalyticsData) && !savedAnalyticsData.equals(NO_STRING_VALUE)) {
-                try {
-                    analyticsDataObject = new JSONObject(savedAnalyticsData);
-                } catch (JSONException ignore) {
-                }
-            }
-        }
-        return analyticsDataObject;
-    }
-    
-    
-    public void clearBranchAnalyticsData() {
-        savedAnalyticsData_ = null;
-        setString(KEY_BRANCH_ANALYTICAL_DATA, "");
-    }
-    
-    
-    public void saveBranchAnalyticsData(JSONObject analyticsData) {
-        String sessionID = getSessionID();
-        if (!sessionID.equals(NO_STRING_VALUE)) {
-            if (savedAnalyticsData_ == null) {
-                savedAnalyticsData_ = getBranchAnalyticsData();
-            }
-            try {
-                JSONArray viewDataArray;
-                if (savedAnalyticsData_.has(sessionID)) {
-                    viewDataArray = savedAnalyticsData_.getJSONArray(sessionID);
-                    
-                } else {
-                    viewDataArray = new JSONArray();
-                    savedAnalyticsData_.put(sessionID, viewDataArray);
-                }
-                viewDataArray.put(analyticsData);
-                setString(KEY_BRANCH_ANALYTICAL_DATA, savedAnalyticsData_.toString());
-            } catch (JSONException ignore) {
-            }
-        }
-    }
-    
     /**
      * Saves the last strong match epoch time stamp
      *
@@ -1344,10 +1296,8 @@ public class PrefHelper {
      * @param message A {@link String} value containing the debug message to record.
      */
     public static void Debug(String message) {
-        if (BranchUtil.isDebugEnabled() || enableLogging_) {
-            if (!TextUtils.isEmpty(message)) {
-                Log.i(TAG, message);
-            }
+        if (enableLogging_ && !TextUtils.isEmpty(message)) {
+            Log.i(TAG, message);
         }
     }
 

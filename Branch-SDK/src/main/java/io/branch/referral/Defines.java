@@ -24,7 +24,10 @@ public class Defines {
         BranchIdentity("branch_identity"),
         BranchKey("branch_key"),
         @Deprecated BranchData("branch_data"),              //use Defines.IntentKeys.BranchData
-        
+        PlayAutoInstalls("play-auto-installs"),             //UTM_Source set by Xiaomi
+        UTMCampaign("utm_campaign"),
+        UTMMedium("utm_medium"),
+
         Bucket("bucket"),
         DefaultBucket("default"),
         Amount("amount"),
@@ -144,7 +147,6 @@ public class Defines {
         ContentData("content_data"),
         ContentEvents("events"),
         ContentAnalyticsMode("content_analytics_mode"),
-        ContentDiscovery("cd"),
         Environment("environment"),
         InstantApp("INSTANT_APP"),
         NativeApp("FULL_APP"),
@@ -357,6 +359,31 @@ public class Defines {
         private String key = "";
 
         IntentKeys(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
+
+    /**
+     * <p>
+     * Defines Branch header keys
+     * </p>
+     */
+    public enum HeaderKey {
+        RequestId("X-Branch-Request-Id");
+
+        private String key = "";
+
+        HeaderKey(String key) {
             this.key = key;
         }
 

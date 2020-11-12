@@ -6,8 +6,6 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.indexing.ContentDiscoverer;
-
 /**
  * * <p>
  * The server request for closing any open session. Handles request creation and execution.
@@ -30,10 +28,6 @@ class ServerRequestRegisterClose extends ServerRequest {
             closePost.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 closePost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
-            }
-            JSONObject ciObject = ContentDiscoverer.getInstance().getContentDiscoverDataForCloseRequest(context);
-            if (ciObject != null) {
-                closePost.put(Defines.Jsonkey.ContentDiscovery.getKey(), ciObject);
             }
             if (DeviceInfo.getInstance() != null) {
                 closePost.put(Defines.Jsonkey.AppVersion.getKey(), DeviceInfo.getInstance().getAppVersion());
