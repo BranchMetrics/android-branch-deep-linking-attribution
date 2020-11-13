@@ -820,7 +820,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>Sets the number of times to re-attempt a timed-out request to the Branch API, before
-     * considering the request to have failed entirely. Default 5.</p>
+     * considering the request to have failed entirely. Default 3.</p>
      *
      * @param retryCount An {@link Integer} specifying the number of times to retry before giving
      *                   up and declaring defeat.
@@ -833,7 +833,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
-     * to the Branch API. Default 3000 ms.</p>
+     * to the Branch API. Default 5500 ms.</p>
      *
      * @param retryInterval An {@link Integer} value specifying the number of milliseconds to
      *                      wait before re-attempting a timed-out request.
@@ -2405,7 +2405,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
             thisReq_.doFinalUpdateOnBackgroundThread();
             if (isTrackingDisabled() && thisReq_.prepareExecuteWithoutTracking() == false) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED);
+                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             }
             if (thisReq_.isGetRequest()) {
                 return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());

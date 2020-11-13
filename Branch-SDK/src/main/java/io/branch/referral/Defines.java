@@ -372,4 +372,29 @@ public class Defines {
         }
 
     }
+
+    /**
+     * <p>
+     * Defines Branch header keys
+     * </p>
+     */
+    public enum HeaderKey {
+        RequestId("X-Branch-Request-Id");
+
+        private String key = "";
+
+        HeaderKey(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
 }
