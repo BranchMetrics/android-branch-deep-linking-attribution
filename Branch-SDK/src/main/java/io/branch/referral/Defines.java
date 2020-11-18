@@ -204,7 +204,7 @@ public class Defines {
         DisableAdNetworkCallouts("disable_ad_network_callouts"),
         Instant("instant");
         
-        private String key = "";
+        private final String key;
         
         Jsonkey(String key) {
             this.key = key;
@@ -243,7 +243,7 @@ public class Defines {
         GetCPID("v1/cpid"),
         GetLATD("v1/cpid/latd");
         
-        private String key = "";
+        private final String key;
         
         RequestPath(String key) {
             this.key = key;
@@ -276,7 +276,7 @@ public class Defines {
         Data("data"),
         URL("url");
         
-        private String key = "";
+        private final String key;
         
         LinkParam(String key) {
             this.key = key;
@@ -302,7 +302,7 @@ public class Defines {
         campaign("preinstall_campaign"),
         partner("preinstall_partner");
 
-        private String key = "";
+        private final String key;
 
         PreinstallKey(String key) {
             this.key = key;
@@ -327,7 +327,7 @@ public class Defines {
     public enum ModuleNameKeys {
         imei("imei");
 
-        private String key = "";
+        private final String key;
 
         ModuleNameKeys(String key) {
             this.key = key;
@@ -356,7 +356,7 @@ public class Defines {
         BranchLinkUsed("branch_used"),
         BranchURI("branch");
 
-        private String key = "";
+        private final String key;
 
         IntentKeys(String key) {
             this.key = key;
@@ -379,9 +379,10 @@ public class Defines {
      * </p>
      */
     public enum HeaderKey {
-        RequestId("X-Branch-Request-Id");
+        RequestId("X-Branch-Request-Id"),
+        SendCloseRequest("X-Branch-Send-Close-Request");
 
-        private String key = "";
+        private final String key;
 
         HeaderKey(String key) {
             this.key = key;
@@ -395,6 +396,5 @@ public class Defines {
         public String toString() {
             return key;
         }
-
     }
 }

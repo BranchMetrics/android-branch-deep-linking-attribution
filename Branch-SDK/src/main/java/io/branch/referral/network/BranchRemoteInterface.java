@@ -102,9 +102,6 @@ public abstract class BranchRemoteInterface {
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
-            if(response != null) {
-                requestId = response.requestId;
-            }
             return processEntityForJSON(response, tag);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
@@ -143,9 +140,6 @@ public abstract class BranchRemoteInterface {
         String requestId = "";
         try {
             BranchResponse response = doRestfulPost(url, body);
-            if(response != null) {
-                requestId = response.requestId;
-            }
             return processEntityForJSON(response, tag);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {

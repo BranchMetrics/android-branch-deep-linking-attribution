@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.common.util.Strings;
 
+import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
@@ -65,7 +66,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
 
-            String requestId = getRequestIdFromHeader(connection);
+            String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
+            Branch.getInstance().setCloseRequestNeeded(Boolean.parseBoolean(connection.getHeaderField(Defines.HeaderKey.SendCloseRequest.getKey())));
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= 500 &&
@@ -151,7 +153,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             outputStreamWriter.flush();
             outputStreamWriter.close();
 
-            requestId = getRequestIdFromHeader(connection);
+            requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
+            Branch.getInstance().setCloseRequestNeeded(Boolean.parseBoolean(connection.getHeaderField(Defines.HeaderKey.SendCloseRequest.getKey())));
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
@@ -217,16 +220,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             }
         }
     }
-
-    @Nullable
-    private String getRequestIdFromHeader(@NonNull HttpsURLConnection connection) {
-        if (!connection.getHeaderFields().isEmpty() && connection.getHeaderFields()
-            .containsKey(Defines.HeaderKey.RequestId.getKey())) {
-            return connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
-        }
-        return null;
-    }
-
 
     private String getResponseString(InputStream inputStream) {
         String responseString = null;

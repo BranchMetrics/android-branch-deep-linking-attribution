@@ -333,6 +333,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
+    /* Flag to indicate if the `v1/close` is expected by the server at the end this session. */
+    private boolean closeRequestNeeded = false;
+
     /* Instance  of share link manager to share links automatically with third party applications. */
     private ShareLinkManager shareLinkManager_;
     
@@ -1027,13 +1030,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     requestQueue_.dequeue();
                 }
             } else {
-                if (!requestQueue_.containsClose()) {
+                if (!requestQueue_.containsClose() && closeRequestNeeded) {
                     ServerRequest req = new ServerRequestRegisterClose(context_);
                     handleNewRequest(req);
                 }
             }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
+        closeRequestNeeded = false;
     }
 
     public static void registerPlugin(String name, String version) {
@@ -3074,6 +3078,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     @Nullable Activity getCurrentActivity() {
         if (currentActivityReference_ == null) return null;
         return currentActivityReference_.get();
+    }
+
+    public void setCloseRequestNeeded(boolean closeRequestNeeded) {
+        this.closeRequestNeeded = closeRequestNeeded;
     }
 
     public static class InitSessionBuilder {
