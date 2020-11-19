@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.0.4
+  * _*Master Release*_ - November 19, 2020
+  * Reduce calls to v1/close
+  * Fix validator errors
+
 - v5.0.3
   * _*Master Release*_ - August 10, 2020
   * Upgrade referrer library
