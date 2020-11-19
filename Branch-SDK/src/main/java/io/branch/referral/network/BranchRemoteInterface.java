@@ -1,6 +1,5 @@
 package io.branch.referral.network;
 
-import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.Nullable;
 
@@ -153,18 +152,6 @@ public abstract class BranchRemoteInterface {
                 Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
-    }
-
-    public static final BranchRemoteInterface getDefaultBranchRemoteInterface(Context context) {
-        BranchRemoteInterface branchRemoteInterface = null;
-
-        boolean isOkHttpAvailable = false; // TODO : Check for OKHTTP Availability
-        if (isOkHttpAvailable) {
-            // TODO return default OKHTTP Remote interface here
-        } else {
-            branchRemoteInterface = new BranchRemoteInterfaceUrlConnection(context);
-        }
-        return branchRemoteInterface;
     }
 
 

@@ -34,10 +34,10 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private static final int DEFAULT_TIMEOUT = 3000;
     private static final int THREAD_TAG_POST= 102;
 
-    private PrefHelper prefHelper;
+    private @NonNull final Branch branch;
 
-    BranchRemoteInterfaceUrlConnection(Context context) {
-        prefHelper = PrefHelper.getInstance(context);
+    public BranchRemoteInterfaceUrlConnection(@NonNull Branch branch) {
+        this.branch = branch;
     }
 
     @Override
@@ -54,6 +54,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     ///-------------- private methods to implement RESTful GET / POST using HttpURLConnection ---------------//
     private BranchResponse doRestfulGet(String url, int retryNumber) throws BranchRemoteException {
         HttpsURLConnection connection = null;
+        PrefHelper prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         try {
             int timeout = prefHelper.getTimeout();
             if (timeout <= 0) {
@@ -67,7 +68,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setReadTimeout(timeout);
 
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
-            Branch.getInstance().setCloseRequestNeeded(Boolean.parseBoolean(connection.getHeaderField(Defines.HeaderKey.SendCloseRequest.getKey())));
+            maybeSetCloseRequestFlag(connection);
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= 500 &&
@@ -123,6 +124,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private BranchResponse doRestfulPost(String url, JSONObject payload, int retryNumber) throws BranchRemoteException {
         HttpsURLConnection connection = null;
         String requestId = null;
+        PrefHelper prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         int timeout = prefHelper.getTimeout();
         if (timeout <= 0) {
             timeout = DEFAULT_TIMEOUT;
@@ -154,7 +156,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             outputStreamWriter.close();
 
             requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
-            Branch.getInstance().setCloseRequestNeeded(Boolean.parseBoolean(connection.getHeaderField(Defines.HeaderKey.SendCloseRequest.getKey())));
+            maybeSetCloseRequestFlag(connection);
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
@@ -218,6 +220,18 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             if (connection != null) {
                 connection.disconnect();
             }
+        }
+    }
+
+    private void maybeSetCloseRequestFlag(HttpsURLConnection connection) {
+        // technically only open/install events should have this header, but this method is called with
+        // every request and, by default, "X-Branch-Send-Close-Request" header is not added to the response.
+        // Note that, even if it gets added, we do not reset the `branch.closeRequestNeeded` flag if it has been set to `true`
+        // at least once during this session already. The flag will be reset in `executeClose()` where we potentially call v1/close.
+        // In the case of intra-app linking, this means that we will close session after the last v1/open event.
+        @Nullable String maybeHeaderVal =  connection.getHeaderField(Defines.HeaderKey.SendCloseRequest.getKey());
+        if (maybeHeaderVal != null && !branch.closeRequestNeeded) {
+            branch.closeRequestNeeded = Boolean.parseBoolean(maybeHeaderVal);
         }
     }
 

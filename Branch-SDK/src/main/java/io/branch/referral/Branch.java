@@ -47,8 +47,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.network.BranchRemoteInterface;
+import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
@@ -273,8 +276,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private boolean enableFacebookAppLinkCheck_ = false;
     
-    private static boolean isSimulatingInstalls_;
-    
     static boolean bypassWaitingForIntent_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
@@ -333,8 +334,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
-    /* Flag to indicate if the `v1/close` is expected by the server at the end this session. */
-    private boolean closeRequestNeeded = false;
+    /* Flag to indicate if the `v1/close` is expected by the server at the end of this session. */
+    public boolean closeRequestNeeded = false;
 
     /* Instance  of share link manager to share links automatically with third party applications. */
     private ShareLinkManager shareLinkManager_;
@@ -399,9 +400,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param context A {@link Context} from which this call was made.
      */
     private Branch(@NonNull Context context) {
+        context_ = context;
         prefHelper_ = PrefHelper.getInstance(context);
         trackingController = new TrackingController(context);
-        branchRemoteInterface_ = BranchRemoteInterface.getDefaultBranchRemoteInterface(context);
+        branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
         deviceInfo_ = DeviceInfo.initialize(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         serverSema_ = new Semaphore(1);
@@ -590,7 +592,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (branchReferral_ == null) {
             branchReferral_ = Branch.initInstance(context);
         }
-        branchReferral_.context_ = context.getApplicationContext();
         if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
             boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
             //on setting a new key clear link cache and pending requests
@@ -807,7 +808,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isAutoSessionMode_ = false;
 
         bypassWaitingForIntent_ = false;
-        isSimulatingInstalls_ = false;
 
         checkInstallReferrer_ = true;
     }
@@ -3078,10 +3078,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     @Nullable Activity getCurrentActivity() {
         if (currentActivityReference_ == null) return null;
         return currentActivityReference_.get();
-    }
-
-    public void setCloseRequestNeeded(boolean closeRequestNeeded) {
-        this.closeRequestNeeded = closeRequestNeeded;
     }
 
     public static class InitSessionBuilder {
