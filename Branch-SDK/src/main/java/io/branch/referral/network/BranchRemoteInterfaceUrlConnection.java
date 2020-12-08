@@ -31,7 +31,6 @@ import org.json.JSONObject;
  * This class provides implementation for Branch RESTful operations using HTTP URL Connection.
  */
 public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
-    private static final int DEFAULT_TIMEOUT = 3000;
     private static final int THREAD_TAG_POST= 102;
 
     private @NonNull final Branch branch;
@@ -57,9 +56,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         PrefHelper prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         try {
             int timeout = prefHelper.getTimeout();
-            if (timeout <= 0) {
-                timeout = DEFAULT_TIMEOUT;
-            }
             String appendKey = url.contains("?") ? "&" : "?";
             String modifiedUrl = url + appendKey + RETRY_NUMBER + "=" + retryNumber;
             URL urlObject = new URL(modifiedUrl);
@@ -125,12 +121,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
     private BranchResponse doRestfulPost(String url, JSONObject payload, int retryNumber) throws BranchRemoteException {
         HttpsURLConnection connection = null;
-        String requestId = null;
         PrefHelper prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         int timeout = prefHelper.getTimeout();
-        if (timeout <= 0) {
-            timeout = DEFAULT_TIMEOUT;
-        }
         try {
             payload.put(RETRY_NUMBER, retryNumber);
         } catch (JSONException ignore) {
@@ -157,7 +149,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             outputStreamWriter.flush();
             outputStreamWriter.close();
 
-            requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
+            String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
             maybeSetCloseRequestFlag(connection);
 
             int responseCode = connection.getResponseCode();
