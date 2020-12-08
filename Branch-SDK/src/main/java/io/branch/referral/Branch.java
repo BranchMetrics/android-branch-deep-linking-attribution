@@ -1826,10 +1826,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         new Thread(new Runnable() {@Override public void run() {
             try {
                 if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                    // don't interrupt in case the task is already in onPostExecute(...).
                     postTask.cancel(true);
-                    requestQueue_.remove(postTask.thisReq_);
-                    postTask.thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + postTask.thisReq_.getRequestUrl());
                 }
             } catch (InterruptedException ignored) {
                 PrefHelper.Debug("benas");
@@ -2570,7 +2567,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         protected void onCancelled(ServerResponse v) {
-            new ServerResponse(thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, "");
+            thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + thisReq_.getRequestUrl());
+            requestQueue_.remove(thisReq_);
         }
     }
     
