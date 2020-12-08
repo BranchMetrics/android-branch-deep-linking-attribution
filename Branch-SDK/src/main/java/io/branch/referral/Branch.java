@@ -1827,10 +1827,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             try {
                 if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                     postTask.cancel(true);
+
+                    // it takes time to cancel the thread, so we do the timeout state cleanup here instead of postTask.onCancelled().
+                    postTask.thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + postTask.thisReq_.getRequestUrl());
+                    requestQueue_.remove(postTask.thisReq_);
                 }
-            } catch (InterruptedException ignored) {
-                PrefHelper.Debug("benas");
-            }
+            } catch (InterruptedException ignored) {}
         }}).start();
     }
 
@@ -2567,8 +2569,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         @Override
         protected void onCancelled(ServerResponse v) {
-            thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + thisReq_.getRequestUrl());
-            requestQueue_.remove(thisReq_);
+            super.onCancelled();
+            // Timeout cleanup happens in branch.startTimeoutTimer(...) to preserve timeout accuracy
         }
     }
     

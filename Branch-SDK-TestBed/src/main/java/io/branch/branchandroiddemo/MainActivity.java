@@ -64,6 +64,7 @@ public class MainActivity extends Activity {
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
 
         createNotificationChannel();
+        Branch.getInstance().setNetworkTimeout(10000);
 
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
