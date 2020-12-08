@@ -171,27 +171,20 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                InputStream inputStream = null;
+                BranchResponse result;
                 try {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                        inputStream = connection.getErrorStream();
+                        result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
                     } else {
-                        inputStream = connection.getInputStream();
+                        result = new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
                     }
-                    return new BranchResponse(getResponseString(inputStream), responseCode);
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     PrefHelper.Debug("A resource conflict occurred with this request " + url);
-                    return new BranchResponse(null, responseCode);
-                } finally {
-                    try {
-                        if (inputStream != null) {
-                            inputStream.close();
-                        }
-                    } catch(IOException e) {
-                        e.printStackTrace();
-                    }
+                    result = new BranchResponse(null, responseCode);
                 }
+                result.requestId = requestId;
+                return result;
             }
 
 
