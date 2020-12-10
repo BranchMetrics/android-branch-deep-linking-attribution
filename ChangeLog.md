@@ -3,6 +3,7 @@
   * _*Master Release*_ - November 19, 2020
   * Reduce calls to v1/close
   * Fix validator errors
+  * Fix setNetworkTimeoutApi(...) API
 
 - v5.0.3
   * _*Master Release*_ - August 10, 2020
