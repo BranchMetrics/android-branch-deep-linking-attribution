@@ -8,6 +8,8 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.webkit.WebSettings;
 
+import com.google.firebase.BuildConfig;
+
 import io.branch.referral.Defines.ModuleNameKeys;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,35 +26,18 @@ class DeviceInfo {
     private final SystemObserver systemObserver_;
     private final Context context_;
 
-    private static DeviceInfo thisInstance_ = null;
-
-    /**
-     * Initialize the singleton instance for deviceInfo class
-     *
-     * @return {@link DeviceInfo} global instance
-     */
-    static DeviceInfo initialize(Context context) {
-        if (thisInstance_ == null) {
-            thisInstance_ = new DeviceInfo(context);
-        }
-        return thisInstance_;
-    }
-
     /**
      * Get the singleton instance for this class
      *
      * @return {@link DeviceInfo} instance if already initialised or null
      */
     static DeviceInfo getInstance() {
-        return thisInstance_;
+        Branch b = Branch.getInstance();
+        if (b == null) return null;
+        return b.getDeviceInfo();
     }
 
-    // Package Private
-    static void shutDown() {
-        thisInstance_ = null;
-    }
-
-    private DeviceInfo(Context context) {
+    DeviceInfo(Context context) {
         context_ = context;
         systemObserver_ = new SystemObserverInstance();
     }
@@ -123,9 +108,7 @@ class DeviceInfo {
                     requestObj.put(ModuleNameKeys.imei.getKey(), imei);
                 }
             }
-        } catch (JSONException ignore) {
-
-        }
+        } catch (JSONException ignore) { }
     }
 
     /**
@@ -147,7 +130,7 @@ class DeviceInfo {
      *
      * @param requestObj JSON object for Branch server request
      */
-    void updateRequestWithV2Params(ServerRequest serverRequest, Context context, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
@@ -221,14 +204,13 @@ class DeviceInfo {
             requestObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
             requestObj.put(Defines.Jsonkey.SDK.getKey(), "android");
             requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
-            requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context));
+            requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context_));
 
             if (serverRequest instanceof ServerRequestGetLATD) {
                 requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
-        } catch (JSONException ignore) {
-        }
+        } catch (JSONException ignore) { }
     }
 
     private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {

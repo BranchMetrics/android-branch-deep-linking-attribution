@@ -191,7 +191,7 @@ public abstract class ServerRequest {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(this, context_, prefHelper_, userDataObj);
+                DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
             } catch (JSONException ignored) {}
         }
     }
