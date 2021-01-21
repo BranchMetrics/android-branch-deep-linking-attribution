@@ -33,7 +33,7 @@ public abstract class ServerRequest {
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    private String requestPath_;
+    private final String requestPath_;
     protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;
@@ -185,6 +185,7 @@ public abstract class ServerRequest {
     protected void setPost(JSONObject post) throws JSONException {
         params_ = post;
 
+        prefHelper_.addPartnerParams(params_);
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
         } else {

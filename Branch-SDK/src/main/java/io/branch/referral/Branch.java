@@ -299,8 +299,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
     private final Context context_;
-
-    final Object lock = new Object();
     
     private final Semaphore serverSema_ = new Semaphore(1);
     
@@ -764,7 +762,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
-        DeviceInfo.shutDown();
 
         // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
@@ -958,6 +955,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * </p>
      */
     void closeSessionInternal() {
+        clearPartnerParameters();
         executeClose();
         prefHelper_.setExternalIntentUri(null);
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
@@ -1632,14 +1630,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * See Facebook's documentation for details on valid parameters
      */
     public void addFacebookPartnerParameterWithName(@NonNull String key, @NonNull String value) {
-
+        prefHelper_.partnerParams_.addFacebookParameter(key, value);
     }
 
     /**
      * Clears all Partner Parameters
      */
     public void clearPartnerParameters() {
-
+        prefHelper_.partnerParams_.clearAllParameters();
     }
     
     /**

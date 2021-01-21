@@ -128,86 +128,86 @@ class DeviceInfo {
     /**
      * Update the given server request JSON with user data. Used for V2 events
      *
-     * @param requestObj JSON object for Branch server request
+     * @param userDataObj JSON object for Branch server request
      */
-    void updateRequestWithV2Params(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj) {
+    void updateRequestWithV2Params(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject userDataObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
-                requestObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
+                userDataObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
             } else {
-                requestObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
+                userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
             }
 
             String brandName = SystemObserver.getPhoneBrand();
             if (!isNullOrEmptyOrBlank(brandName)) {
-                requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName);
+                userDataObj.put(Defines.Jsonkey.Brand.getKey(), brandName);
             }
 
             String modelName = SystemObserver.getPhoneModel();
             if (!isNullOrEmptyOrBlank(modelName)) {
-                requestObj.put(Defines.Jsonkey.Model.getKey(), modelName);
+                userDataObj.put(Defines.Jsonkey.Model.getKey(), modelName);
             }
 
             DisplayMetrics displayMetrics = SystemObserver.getScreenDisplay(context_);
-            requestObj.put(Defines.Jsonkey.ScreenDpi.getKey(), displayMetrics.densityDpi);
-            requestObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
-            requestObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
-            requestObj.put(Defines.Jsonkey.UIMode.getKey(), SystemObserver.getUIMode(context_));
+            userDataObj.put(Defines.Jsonkey.ScreenDpi.getKey(), displayMetrics.densityDpi);
+            userDataObj.put(Defines.Jsonkey.ScreenHeight.getKey(), displayMetrics.heightPixels);
+            userDataObj.put(Defines.Jsonkey.ScreenWidth.getKey(), displayMetrics.widthPixels);
+            userDataObj.put(Defines.Jsonkey.UIMode.getKey(), SystemObserver.getUIMode(context_));
 
             String osName = SystemObserver.getOS(context_);
             if (!isNullOrEmptyOrBlank(osName)) {
-                requestObj.put(Defines.Jsonkey.OS.getKey(), osName);
+                userDataObj.put(Defines.Jsonkey.OS.getKey(), osName);
             }
 
-            requestObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
+            userDataObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
 
-            maybeAddTuneFields(serverRequest, requestObj);
+            maybeAddTuneFields(serverRequest, userDataObj);
 
             if (Branch.getPluginName() != null) {
-                requestObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
-                requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
+                userDataObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
+                userDataObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
             }
 
             String countryCode = SystemObserver.getISO2CountryCode();
             if (!TextUtils.isEmpty(countryCode)) {
-                requestObj.put(Defines.Jsonkey.Country.getKey(), countryCode);
+                userDataObj.put(Defines.Jsonkey.Country.getKey(), countryCode);
             }
 
             String languageCode = SystemObserver.getISO2LanguageCode();
             if (!TextUtils.isEmpty(languageCode)) {
-                requestObj.put(Defines.Jsonkey.Language.getKey(), languageCode);
+                userDataObj.put(Defines.Jsonkey.Language.getKey(), languageCode);
             }
 
             String localIpAddr = SystemObserver.getLocalIPAddress();
             if ((!TextUtils.isEmpty(localIpAddr))) {
-                requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
+                userDataObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
 
             if (prefHelper != null) {
                 if (!isNullOrEmptyOrBlank(prefHelper.getDeviceFingerPrintID())) {
-                    requestObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
+                    userDataObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
                 }
                 String devId = prefHelper.getIdentity();
                 if (!isNullOrEmptyOrBlank(devId)) {
-                    requestObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), devId);
+                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), devId);
                 }
             }
 
             if (prefHelper != null && prefHelper.shouldAddModules()) {
                 String imei = SystemObserver.getImei(context_);
                 if (!isNullOrEmptyOrBlank(imei)) {
-                    requestObj.put(ModuleNameKeys.imei.getKey(), imei);
+                    userDataObj.put(ModuleNameKeys.imei.getKey(), imei);
                 }
             }
 
-            requestObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
-            requestObj.put(Defines.Jsonkey.SDK.getKey(), "android");
-            requestObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
-            requestObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context_));
+            userDataObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
+            userDataObj.put(Defines.Jsonkey.SDK.getKey(), "android");
+            userDataObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
+            userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context_));
 
             if (serverRequest instanceof ServerRequestGetLATD) {
-                requestObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
+                userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
         } catch (JSONException ignore) { }
