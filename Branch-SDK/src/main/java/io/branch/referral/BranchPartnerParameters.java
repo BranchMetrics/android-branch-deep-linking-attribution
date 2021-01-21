@@ -1,6 +1,8 @@
 package io.branch.referral;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,12 +35,14 @@ public class BranchPartnerParameters {
         }
     }
 
-    private boolean isSha256Hashed(@NonNull String value) {
-        return value.length() == 64 && isHexadecimal(value);
+    boolean isSha256Hashed(String value) {
+        return value != null && value.length() == 64 && isHexadecimal(value);
     }
 
     private static final Pattern HEXADECIMAL_PATTERN = Pattern.compile("\\p{XDigit}+");
-    private boolean isHexadecimal(String input) {
+    boolean isHexadecimal(String input) {
+        if (input == null) return false;
+        if (input.length() == 0) return true;
         final Matcher matcher = HEXADECIMAL_PATTERN.matcher(input);
         return matcher.matches();
     }

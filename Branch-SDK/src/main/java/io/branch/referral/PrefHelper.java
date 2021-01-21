@@ -1320,17 +1320,4 @@ public class PrefHelper {
     boolean isValidBranchKey(String branchKey) {
         return branchKey != null && branchKey.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
     }
-
-    void addPartnerParams(JSONObject body) throws JSONException {
-        if (body == null) return;
-        JSONObject partnerData = new JSONObject();
-        for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams_.allParams().entrySet()) {
-            JSONObject individualPartnerParams = new JSONObject();
-            for (Map.Entry<String, String> p : e.getValue().entrySet()) {
-                individualPartnerParams.put(p.getKey(), p.getValue());
-            }
-            partnerData.put(e.getKey(), individualPartnerParams);
-        }
-        body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
-    }
 }
