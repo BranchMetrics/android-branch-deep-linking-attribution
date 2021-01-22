@@ -186,7 +186,6 @@ public abstract class ServerRequest {
     protected void setPost(JSONObject post) throws JSONException {
         params_ = post;
 
-        addPartnerParams(params_, prefHelper_.partnerParams_);
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
         } else {
@@ -674,7 +673,7 @@ public abstract class ServerRequest {
         return false;
     }
 
-    static void addPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
+    protected static void addPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
         if (body == null) return;
         JSONObject partnerData = new JSONObject();
         for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {
