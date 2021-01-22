@@ -157,7 +157,7 @@ public class PrefHelper {
     /**
      * Branch partner parameters.
      */
-    final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
+    public final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
 
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
