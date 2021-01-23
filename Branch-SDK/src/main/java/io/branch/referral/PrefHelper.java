@@ -105,7 +105,6 @@ public class PrefHelper {
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     
-    private static String branchKey_ = null;
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -190,7 +189,6 @@ public class PrefHelper {
 
         // Reset all of the statics.
         enableLogging_ = false;
-        branchKey_ = null;
         prefHelper_ = null;
         customServerURL_ = null;
         customCDNBaseURL_ = null;
@@ -336,7 +334,6 @@ public class PrefHelper {
      * @return A {@link Boolean} which is true if the key set is a new key. On Setting a new key need to clear all preference items.
      */
     public boolean setBranchKey(String key) {
-        branchKey_ = key;
         String currentBranchKey = getString(KEY_BRANCH_KEY);
         if (!currentBranchKey.equals(key)) {
             clearPrefOnBranchKeyChange();
@@ -354,10 +351,7 @@ public class PrefHelper {
     }
     
     public String getBranchKey() {
-        if (branchKey_ == null) {
-            branchKey_ = getString(KEY_BRANCH_KEY);
-        }
-        return branchKey_;
+        return getString(KEY_BRANCH_KEY);
     }
     
     /**
