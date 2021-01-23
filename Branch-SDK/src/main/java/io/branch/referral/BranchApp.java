@@ -23,10 +23,6 @@ public class BranchApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (!BranchUtil.checkTestMode(this)) {
-            Branch.getAutoInstance(this);
-        } else {
-            Branch.getTestInstance(this);
-        }
+        Branch.getAutoInstance(this);
     }
 }

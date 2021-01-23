@@ -49,22 +49,25 @@ public class BranchUtil {
     static boolean checkTestMode(Context context) {
         // Test Mode can be enabled independently of checking the manifest.
         if (!isTestModeEnabled_ && isManifestTestModeEnabled == null) {
-            String testModeKey = "io.branch.sdk.TestMode";
-            try {
-                final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-                if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
-                    isTestModeEnabled_ = ai.metaData.getBoolean(testModeKey, false);
-                } else {
-                    Resources resources = context.getResources();
-                    isTestModeEnabled_ = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
-                }
-            } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
-            }
-
-            isManifestTestModeEnabled = isTestModeEnabled_;
+            isManifestTestModeEnabled = isTestModeEnabled_ = readTestMode(context);
         }
-
         return isTestModeEnabled_;
+    }
+
+    private static boolean readTestMode(Context context) {
+        boolean result = false;
+        String testModeKey = "io.branch.sdk.TestMode";
+        try {
+            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
+                result = ai.metaData.getBoolean(testModeKey, false);
+            } else {
+                Resources resources = context.getResources();
+                result = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
+            }
+        } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
+        }
+        return result;
     }
 
     public static String readBranchKey(Context context) {
@@ -94,8 +97,6 @@ public class BranchUtil {
 
         return branchKey;
     }
-
-
 
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.

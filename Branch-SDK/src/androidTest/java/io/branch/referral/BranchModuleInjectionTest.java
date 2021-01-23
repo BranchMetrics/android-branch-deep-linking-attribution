@@ -14,7 +14,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
     @Test
     public void testResultSuccess() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
@@ -34,7 +34,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
     @Test
     public void testNoModuleAddedWhenModuleNameMismatch() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         JSONObject branchFileJson = new JSONObject("{\"imei_rouge\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
@@ -54,7 +54,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
     @Test
     public void testCommerceEventHasImeiData() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 

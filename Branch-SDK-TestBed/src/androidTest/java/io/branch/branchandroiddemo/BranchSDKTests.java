@@ -54,7 +54,7 @@ public class BranchSDKTests {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getContext();
-        branch = Branch.getInstance(mContext);
+        branch = Branch.getAutoInstance(mContext);
         prefHelper = PrefHelper.getInstance(mContext);
     }
 

@@ -63,7 +63,6 @@ public class Defines {
         APILevel("os_version"),
         Country("country"),
         Language("language"),
-        IsReferrable("is_referrable"),
         Update("update"),
         OriginalInstallTime("first_install_time"),
         FirstInstallTime("latest_install_time"),

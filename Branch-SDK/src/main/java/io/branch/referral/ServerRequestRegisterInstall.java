@@ -72,11 +72,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                     // Check if there is any install params. Install param will be empty on until click a branch link
                     // or When a user logout
                     if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                        // if clicked on link then check for is Referrable state
-                        if (prefHelper_.getIsReferrable() == 1) {
-                            String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
-                            prefHelper_.setInstallParams(params);
-                        }
+                        String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
+                        prefHelper_.setInstallParams(params);
                     }
                 }
             }

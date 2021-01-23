@@ -3,6 +3,7 @@ package io.branch.referral;
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
+import static io.branch.referral.PrefHelper.isValidBranchKey;
 
 import android.app.Activity;
 import android.app.Application;
@@ -49,8 +50,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.network.BranchRemoteInterface;
@@ -302,17 +301,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private final Semaphore serverSema_ = new Semaphore(1);
     
-    private final ServerRequestQueue requestQueue_;
+    final ServerRequestQueue requestQueue_;
     
     private int networkCount_ = 0;
     
     private boolean hasNetwork_ = true;
     
-    private final Map<BranchLinkData, String> linkCache_ = new HashMap<>();
-    
-    
-    /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
-    private static boolean isAutoSessionMode_ = false;
+    final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
     
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
@@ -395,8 +390,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
-     * pattern.</p>     *
-     * <p>Use {@link #getInstance(Context) getInstance} method when instantiating.</p>
+     * pattern.</p>
+     * <p>Use {@link #getAutoInstance(Context)} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
@@ -412,6 +407,85 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
+    /**
+     * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
+     * Make sure your app is instantiating {@link BranchApp} before calling this method
+     * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
+     *
+     * @return An initialised singleton {@link Branch} object
+     */
+    synchronized public static Branch getInstance() {
+        if (branchReferral_ == null) {
+            PrefHelper.Debug("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
+        }
+        return branchReferral_;
+    }
+
+    synchronized private static Branch initBranchSDK(@NonNull Context context, String branchKey) {
+        if (branchReferral_ != null) {
+            PrefHelper.Debug("Warning, attempted to reinitialize Branch SDK singleton!");
+            return branchReferral_;
+        }
+        branchReferral_ = new Branch(context.getApplicationContext());
+
+        if (TextUtils.isEmpty(branchKey)) {
+            PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
+            branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+        } else {
+            branchReferral_.prefHelper_.setBranchKey(branchKey);
+        }
+
+        /* If {@link Application} is instantiated register for activity life cycle events. */
+        if (context instanceof Application) {
+            branchReferral_.setActivityLifeCycleObserver((Application) context);
+        }
+
+        return branchReferral_;
+    }
+
+    /**
+     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+     * object of the type {@link Branch}.</p>
+     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+     *
+     * @param context A {@link Context} from which this call was made.
+     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
+     * instance within the singleton class, or a newly instantiated object where
+     * one was not already requested during the current app lifecycle.
+     */
+    synchronized public static Branch getAutoInstance(@NonNull Context context) {
+        if (branchReferral_ == null) {
+            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
+            branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
+            getPreinstallSystemData(branchReferral_, context);
+        }
+        return branchReferral_;
+    }
+
+    /**
+     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+     * object of the type {@link Branch}.</p>
+     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+     *
+     * @param context   A {@link Context} from which this call was made.
+     * @param branchKey A {@link String} value used to initialize Branch.
+     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
+     * instance within the singleton class, or a newly instantiated object where
+     * one was not already requested during the current app lifecycle.
+     */
+    public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
+        if (branchReferral_ == null) {
+            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
+            // If a Branch key is passed already use it. Else read the key
+            if (!isValidBranchKey(branchKey)) {
+                PrefHelper.Debug("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
+                branchKey = BranchUtil.readBranchKey(context);
+            }
+            branchReferral_ = initBranchSDK(context, branchKey);
+            getPreinstallSystemData(branchReferral_, context);
+        }
+        return branchReferral_;
+    }
 
     public Context getApplicationContext() {
         return context_;
@@ -549,212 +623,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void disableInstantDeepLinking(boolean disableIDL) {
         enableInstantDeepLinking = !disableIDL;
     }
-    
-    /**
-     * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-     * Make sure your app is instantiating {@link BranchApp} before calling this method
-     * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
-     *
-     * @return An initialised singleton {@link Branch} object
-     */
-    public static Branch getInstance() {
-        /* Check if BranchApp is instantiated. */
-        if (branchReferral_ == null) {
-            PrefHelper.Debug("Branch instance is not created yet. Make sure you have initialised Branch. [Consider Calling getInstance(Context ctx) if you still have issue.]");
-        } else if (isAutoSessionMode_) {
-            /* Check if Activity life cycle callbacks are set if in auto session mode. */
-            if (!isActivityLifeCycleCallbackRegistered_) {
-                PrefHelper.Debug("Branch instance is not properly initialised. Make sure your Application class is extending BranchApp class. " +
-                        "If you are not extending BranchApp class make sure you are initialising Branch in your Applications onCreate()");
-            }
-        }
-        return branchReferral_;
-    }
-    
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey Your Branch key as a {@link String}.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     * @see <a href="https://github.com/BranchMetrics/Branch-Android-SDK/blob/05e234855f983ae022633eb01989adb05775532e/README.md#add-your-app-key-to-your-project">
-     * Adding your app key to your project</a>
-     */
-    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) {
-        if (branchReferral_ == null) {
-            branchReferral_ = new Branch(context.getApplicationContext());
-            if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
-                branchReferral_.prefHelper_.setBranchKey(branchKey);
-            } else {
-                PrefHelper.Debug("Branch Key is invalid. Please check your BranchKey");
-            }
-        }
-        return branchReferral_;
-    }
-    
-    private static Branch getBranchInstance(@NonNull Context context, boolean isLive, String branchKey) {
-        if (branchReferral_ == null) {
-            branchReferral_ = new Branch(context.getApplicationContext());
-
-            // Configure live or test mode
-            boolean testModeAvailable = BranchUtil.checkTestMode(context);
-            BranchUtil.setTestMode(isLive ? false : testModeAvailable);
-            
-            // If a Branch key is passed already use it. Else read the key
-            if (TextUtils.isEmpty(branchKey)) {
-                branchKey = BranchUtil.readBranchKey(context);
-            }
-            boolean isNewBranchKeySet;
-            if (TextUtils.isEmpty(branchKey)) {
-                PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
-                isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
-            } else {
-                isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
-            }
-            //on setting a new key clear link cache and pending requests
-            if (isNewBranchKeySet) {
-                branchReferral_.linkCache_.clear();
-                branchReferral_.requestQueue_.clear();
-            }
-
-            /* If {@link Application} is instantiated register for activity life cycle events. */
-            if (context instanceof Application) {
-                isAutoSessionMode_ = true;
-                branchReferral_.setActivityLifeCycleObserver((Application) context);
-            }
-        }
-        return branchReferral_;
-    }
-    
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getInstance(@NonNull Context context) {
-        return getBranchInstance(context, true, null);
-    }
-    
-    /**
-     * <p>If you configured the your Strings file according to the guide, you'll be able to use
-     * the test version of your app by just calling this static method before calling initSession.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object.
-     */
-    public static Branch getTestInstance(@NonNull Context context) {
-        return getBranchInstance(context, false, null);
-    }
-    
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getAutoInstance(@NonNull Context context) {
-        isAutoSessionMode_ = true;
-        boolean isTest = BranchUtil.checkTestMode(context);
-        getBranchInstance(context, !isTest, null);
-        getPreinstallSystemData(branchReferral_, context);
-        return branchReferral_;
-    }
-    
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context      A {@link Context} from which this call was made.
-     * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
-     *                     should be considered as potentially referrable or not. By default, a user is only referrable
-     *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) {
-        isAutoSessionMode_ = true;
-        boolean isTest = BranchUtil.checkTestMode(context);
-        getBranchInstance(context, !isTest, null);
-        getPreinstallSystemData(branchReferral_, context);
-        branchReferral_.setIsReferrable(isReferrable);
-        return branchReferral_;
-    }
-    
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey A {@link String} value used to initialize Branch.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
-        isAutoSessionMode_ = true;
-        boolean isTest = BranchUtil.checkTestMode(context);
-        getBranchInstance(context, !isTest, branchKey);
-        
-        if (branchReferral_.prefHelper_.isValidBranchKey(branchKey)) {
-            boolean isNewBranchKeySet = branchReferral_.prefHelper_.setBranchKey(branchKey);
-            //on setting a new key clear link cache and pending requests
-            if (isNewBranchKeySet) {
-                branchReferral_.linkCache_.clear();
-                branchReferral_.requestQueue_.clear();
-            }
-        } else {
-            PrefHelper.Debug("Branch Key is invalid. Please check your BranchKey");
-        }
-        getPreinstallSystemData(branchReferral_, context);
-        return branchReferral_;
-    }
-    
-    /**
-     * <p>If you configured the your Strings file according to the guide, you'll be able to use
-     * the test version of your app by just calling this static method before calling initSession.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object.
-     */
-    public static Branch getAutoTestInstance(@NonNull Context context) {
-        isAutoSessionMode_ = true;
-        getBranchInstance(context, false, null);
-        getPreinstallSystemData(branchReferral_, context);
-        return branchReferral_;
-    }
-    
-    /**
-     * <p>If you configured the your Strings file according to the guide, you'll be able to use
-     * the test version of your app by just calling this static method before calling initSession.</p>
-     *
-     * @param context      A {@link Context} from which this call was made.
-     * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
-     *                     should be considered as potentially referrable or not. By default, a user is only referrable
-     *                     if initSession results in a fresh install. Overriding this gives you control of who is referrable.
-     * @return An initialised {@link Branch} object.
-     */
-    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
-        isAutoSessionMode_ = true;
-        getBranchInstance(context, false, null);
-        getPreinstallSystemData(branchReferral_, context);
-        branchReferral_.setIsReferrable(isReferrable);
-        return branchReferral_;
-    }
 
     // Package Private
     // For Unit Testing, we need to reset the Branch state
@@ -779,7 +647,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         bypassCurrentActivityIntentState_ = false;
         enableInstantDeepLinking = false;
         isActivityLifeCycleCallbackRegistered_ = false;
-        isAutoSessionMode_ = false;
 
         bypassWaitingForIntent_ = false;
 
@@ -2182,7 +2049,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             
         } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
-            isAutoSessionMode_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
             PrefHelper.Debug(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
         }
@@ -2776,19 +2642,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static boolean bypassCurrentActivityIntentState() {
         return bypassCurrentActivityIntentState_;
     }
-
-    @SuppressWarnings("WeakerAccess")
-    void setIsReferrable(boolean isReferrable) {
-        if (isReferrable) {
-            prefHelper_.setIsReferrable();
-        } else {
-            prefHelper_.clearIsReferrable();
-        }
-    }
-
-    boolean isReferrable() {
-        return prefHelper_.getIsReferrable() == 1;
-    }
     
     //------------------------ Content Indexing methods----------------------//
     
@@ -3101,7 +2954,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         private int delay;
         private Uri uri;
         private Boolean ignoreIntent;
-        private Boolean isReferrable;
         private boolean isReInitializing;
 
         private InitSessionBuilder(Activity activity) {
@@ -3171,17 +3023,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return this;
         }
 
-        /**
-         * <p> Specify whether the initialisation can count as a referrable action. </p>
-         *
-         * @param isReferrable A {@link Boolean} value indicating whether initialising a session on this Branch instance
-         *                     should be considered as potentially referrable or not. By default, a session is only referrable
-         *                     if it is a fresh install resulting from clicking on a Branch link. Overriding this gives you
-         *                     control of who is referrable.
-         */
+        /** @deprecated */
         @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder isReferrable(boolean isReferrable) {
-            this.isReferrable = isReferrable;
             return this;
         }
 
@@ -3218,9 +3062,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
-            }
-            if (isReferrable != null) {
-                branch.setIsReferrable(isReferrable);
             }
             if (ignoreIntent != null) {
                 Branch.bypassWaitingForIntent(ignoreIntent);
@@ -3439,4 +3280,31 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /** @deprecated see enableSimulateInstalls() for more information */
     public static void disableSimulateInstalls() { }
+
+    /** @deprecated use getAutoInstance(context) and the set <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> in your manifest */
+    public static Branch getInstance(@NonNull Context context) { return getAutoInstance(context); }
+
+    /** @deprecated use getAutoInstance(context) and the set <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in your manifest */
+    public static Branch getTestInstance(@NonNull Context context) {
+        Branch.enableTestMode();
+        return getAutoInstance(context);
+    }
+
+    /** @deprecated use getAutoInstance(Context), isReferrable functionality (i.e. treating opens as installs) is discontinued. */
+    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) { return getAutoInstance(context); }
+
+    /** @deprecated use Branch.enableTestMode() together with getAutoInstance(Context) */
+    public static Branch getAutoTestInstance(@NonNull Context context) {
+        Branch.enableTestMode();
+        return getAutoInstance(context);
+    }
+
+    /** @deprecated use getAutoInstance(Context, String) */
+    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) { return getAutoInstance(context, branchKey); }
+
+    /** @deprecated use Branch.enableTestMode() together with getAutoInstance(Context), isReferrable functionality (i.e. treating opens as installs) is discontinued. */
+    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
+        Branch.enableTestMode();
+        return getAutoInstance(context, null);
+    }
 }

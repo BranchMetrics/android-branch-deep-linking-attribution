@@ -10,15 +10,12 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.URLUtil;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
@@ -75,7 +72,6 @@ public class PrefHelper {
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
-    private static final String KEY_IS_REFERRABLE = "bnc_is_referrable";
     private static final String KEY_LATD_ATTRIBUTION_WINDOW = "bnc_latd_attributon_window";
 
     private static final String KEY_BUCKETS = "bnc_buckets";
@@ -109,7 +105,7 @@ public class PrefHelper {
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     
-    private static String Branch_Key = null;
+    private static String branchKey_ = null;
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -194,7 +190,7 @@ public class PrefHelper {
 
         // Reset all of the statics.
         enableLogging_ = false;
-        Branch_Key = null;
+        branchKey_ = null;
         prefHelper_ = null;
         customServerURL_ = null;
         customCDNBaseURL_ = null;
@@ -340,21 +336,28 @@ public class PrefHelper {
      * @return A {@link Boolean} which is true if the key set is a new key. On Setting a new key need to clear all preference items.
      */
     public boolean setBranchKey(String key) {
-        Branch_Key = key;
+        branchKey_ = key;
         String currentBranchKey = getString(KEY_BRANCH_KEY);
         if (!currentBranchKey.equals(key)) {
             clearPrefOnBranchKeyChange();
             setString(KEY_BRANCH_KEY, key);
+
+            // PrefHelper can be retrieved before Branch singleton is initialized
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().linkCache_.clear();
+                Branch.getInstance().requestQueue_.clear();
+            }
+
             return true;
         }
         return false;
     }
     
     public String getBranchKey() {
-        if (Branch_Key == null) {
-            Branch_Key = getString(KEY_BRANCH_KEY);
+        if (branchKey_ == null) {
+            branchKey_ = getString(KEY_BRANCH_KEY);
         }
-        return Branch_Key;
+        return branchKey_;
     }
     
     /**
@@ -720,40 +723,6 @@ public class PrefHelper {
      */
     public String getUserURL() {
         return getString(KEY_USER_URL);
-    }
-    
-    /**
-     * <p>Gets the {@link Integer} value of the preference setting {@link #KEY_IS_REFERRABLE}, which
-     * indicates whether or not the current session should be considered referrable.</p>
-     *
-     * @return A {@link Integer} value indicating whether or not the session should be
-     * considered referrable.
-     */
-    public int getIsReferrable() {
-        return getInteger(KEY_IS_REFERRABLE);
-    }
-    
-    /**
-     * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 1, or <i>true</i> if parsed as a {@link Boolean}.
-     * This value is used by the {@link Branch} object.</p>
-     * <ul>
-     * <li>Sets {@link #KEY_IS_REFERRABLE} to 1 - <i>true</i> - This session <b><u>is</u></b> referrable.</li>
-     * </ul>
-     */
-    public void setIsReferrable() {
-        setInteger(KEY_IS_REFERRABLE, 1);
-    }
-    
-    /**
-     * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}.
-     * This value is used by the {@link Branch} object.</p>
-     * <p>
-     * <ul>
-     * <li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
-     * </ul>
-     */
-    public void clearIsReferrable() {
-        setInteger(KEY_IS_REFERRABLE, 0);
     }
     
     /**
@@ -1317,7 +1286,7 @@ public class PrefHelper {
         return isValidBranchKey(getBranchKey());
     }
 
-    boolean isValidBranchKey(String branchKey) {
+    static boolean isValidBranchKey(String branchKey) {
         return branchKey != null && branchKey.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
     }
 }

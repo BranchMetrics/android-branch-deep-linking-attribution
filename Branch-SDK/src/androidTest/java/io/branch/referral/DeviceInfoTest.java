@@ -14,14 +14,14 @@ public class DeviceInfoTest extends BranchTest {
 
     @Test
     public void testDeviceInfoExists() {
-        Assert.assertNotNull(Branch.getInstance(getTestContext()));
+        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
         Assert.assertNotNull(DeviceInfo.getInstance());
     }
 
     @Test
     public void testHardwareIdDebug() {
         // NOTE that this is essentially the same test as using Simulated Installs
-        Assert.assertNotNull(Branch.getInstance(getTestContext()));
+        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         SystemObserver.UniqueId uniqueId1 = DeviceInfo.getInstance().getHardwareID();
@@ -32,7 +32,7 @@ public class DeviceInfoTest extends BranchTest {
     @Test
     public void testHardwareIdSimulatedInstall() {
         // NOTE that this is essentially the same test as using Debug
-        Assert.assertNotNull(Branch.getInstance(getTestContext()));
+        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         // Start with simulation mode off and get a hardwareId
@@ -54,7 +54,7 @@ public class DeviceInfoTest extends BranchTest {
 
     @Test
     public void testGAIDFetch() {
-        Assert.assertNotNull(Branch.getInstance(getTestContext()));
+        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         final CountDownLatch latch = new CountDownLatch(1);
