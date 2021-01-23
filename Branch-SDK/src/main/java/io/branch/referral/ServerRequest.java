@@ -373,8 +373,6 @@ public abstract class ServerRequest {
         
         return extendedReq;
     }
-
-    boolean skipOnTimeOut = false;
     
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection

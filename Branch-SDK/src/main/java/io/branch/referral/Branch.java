@@ -2159,10 +2159,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
-        if (!(req instanceof ServerRequestPing)) {
-            requestQueue_.enqueue(req);
-            req.onRequestQueued();
-        }
+        requestQueue_.enqueue(req);
+        req.onRequestQueued();
 
         processNextQueueItem();
     }
@@ -2171,8 +2169,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Notify Branch when network is available in order to process the next request in the queue.
      */
     public void notifyNetworkAvailable() {
-        ServerRequest req = new ServerRequestPing(context_);
-        handleNewRequest(req);
+        processNextQueueItem();
     }
 
     private void setActivityLifeCycleObserver(Application application) {
