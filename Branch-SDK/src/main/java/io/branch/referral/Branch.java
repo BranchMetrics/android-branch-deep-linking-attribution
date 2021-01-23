@@ -1208,7 +1208,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
         if (context_ != null) {
-            handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID.getPath(), callback));
+            handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID, callback));
         }
     }
 
@@ -1223,7 +1223,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void getLastAttributedTouchData(@NonNull BranchLastAttributedTouchDataListener callback) {
         if (context_ != null) {
-            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback));
+            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback));
         }
     }
 
@@ -1239,7 +1239,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
         if (context_ != null) {
-            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD.getPath(), callback, attributionWindow));
+            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback, attributionWindow));
         }
     }
 

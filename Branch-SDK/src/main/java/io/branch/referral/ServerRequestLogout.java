@@ -24,7 +24,7 @@ class ServerRequestLogout extends ServerRequest {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public ServerRequestLogout(Context context, Branch.LogoutStatusListener callback) {
-        super(context, Defines.RequestPath.Logout.getPath());
+        super(context, Defines.RequestPath.Logout);
         callback_ = callback;
         JSONObject post = new JSONObject();
         try {
@@ -41,7 +41,7 @@ class ServerRequestLogout extends ServerRequest {
         }
     }
 
-    public ServerRequestLogout(String requestPath, JSONObject post, Context context) {
+    public ServerRequestLogout(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

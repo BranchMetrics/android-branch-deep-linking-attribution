@@ -26,7 +26,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
      *                 the data associated with the user id being assigned, if available.
      */
     public ServerRequestIdentifyUserRequest(Context context, Branch.BranchReferralInitListener callback, String userId) {
-        super(context, Defines.RequestPath.IdentifyUser.getPath());
+        super(context, Defines.RequestPath.IdentifyUser);
 
         callback_ = callback;
         userId_ = userId;
@@ -47,7 +47,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
         }
     }
 
-    public ServerRequestIdentifyUserRequest(String requestPath, JSONObject post, Context context) {
+    public ServerRequestIdentifyUserRequest(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

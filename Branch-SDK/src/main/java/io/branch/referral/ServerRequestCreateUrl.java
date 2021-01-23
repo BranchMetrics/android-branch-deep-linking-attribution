@@ -60,7 +60,7 @@ class ServerRequestCreateUrl extends ServerRequest {
                                   final Collection<String> tags, final String channel, final String feature,
                                   final String stage, final String campaign, final JSONObject params,
                                   Branch.BranchLinkCreateListener callback, boolean async, boolean defaultToLongUrl) {
-        super(context, Defines.RequestPath.GetURL.getPath());
+        super(context, Defines.RequestPath.GetURL);
 
         callback_ = callback;
         isAsync_ = async;
@@ -94,7 +94,7 @@ class ServerRequestCreateUrl extends ServerRequest {
 
     }
 
-    public ServerRequestCreateUrl(String requestPath, JSONObject post, Context context) {
+    public ServerRequestCreateUrl(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

@@ -26,12 +26,12 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private static final int STATE_TUNE_MIGRATION = 5;
 
 
-    ServerRequestInitSession(Context context, String requestPath) {
+    ServerRequestInitSession(Context context, Defines.RequestPath requestPath) {
         super(context, requestPath);
         context_ = context;
     }
 
-    ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
+    ServerRequestInitSession(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
     }

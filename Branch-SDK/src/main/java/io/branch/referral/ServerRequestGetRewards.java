@@ -27,11 +27,11 @@ class ServerRequestGetRewards extends ServerRequest {
      *                 trigger actions defined therein upon a referral state change.
      */
     public ServerRequestGetRewards(Context context, Branch.BranchReferralStateChangedListener callback) {
-        super(context, Defines.RequestPath.GetCredits.getPath());
+        super(context, Defines.RequestPath.GetCredits);
         callback_ = callback;
     }
 
-    public ServerRequestGetRewards(String requestPath, JSONObject post, Context context) {
+    public ServerRequestGetRewards(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

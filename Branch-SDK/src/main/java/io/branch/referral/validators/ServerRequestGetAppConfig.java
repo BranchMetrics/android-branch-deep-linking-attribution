@@ -13,7 +13,7 @@ class ServerRequestGetAppConfig extends ServerRequest {
     private final IGetAppConfigEvents callback;
 
     public ServerRequestGetAppConfig(Context context, IGetAppConfigEvents callback) {
-        super(context, "");
+        super(context, Defines.RequestPath.GetApp);
         this.callback = callback;
     }
 
@@ -43,7 +43,7 @@ class ServerRequestGetAppConfig extends ServerRequest {
 
     @Override
     public String getRequestUrl() {
-        return prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetApp.getPath() + "/" + prefHelper_.getBranchKey();
+        return prefHelper_.getAPIBaseUrl() + getRequestPath() + "/" + prefHelper_.getBranchKey();
     }
 
     @Override

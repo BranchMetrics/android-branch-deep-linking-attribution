@@ -40,7 +40,7 @@ class ServerRequestGetRewardHistory extends ServerRequest {
     public ServerRequestGetRewardHistory(Context context, String bucket, String afterId, int length,
                                          Branch.CreditHistoryOrder order, Branch.BranchListResponseListener callback) {
 
-        super(context, Defines.RequestPath.GetCreditHistory.getPath());
+        super(context, Defines.RequestPath.GetCreditHistory);
         callback_ = callback;
 
         JSONObject getCreditHistoryPost = new JSONObject();
@@ -69,7 +69,7 @@ class ServerRequestGetRewardHistory extends ServerRequest {
 
     }
 
-    public ServerRequestGetRewardHistory(String requestPath, JSONObject post, Context context) {
+    public ServerRequestGetRewardHistory(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

@@ -23,7 +23,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
      *                    the data associated with new install registration.
      */
     ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback) {
-        super(context, Defines.RequestPath.RegisterOpen.getPath());
+        super(context, Defines.RequestPath.RegisterOpen);
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
@@ -37,7 +37,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         
     }
     
-    ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
+    ServerRequestRegisterOpen(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

@@ -13,7 +13,7 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     private BranchCrossPlatformIdListener callback;
 
-    ServerRequestGetCPID(Context context, String requestPath, BranchCrossPlatformIdListener callback) {
+    ServerRequestGetCPID(Context context, Defines.RequestPath requestPath, BranchCrossPlatformIdListener callback) {
         super(context, requestPath);
         this.callback = callback;
         JSONObject reqBody = new JSONObject();
