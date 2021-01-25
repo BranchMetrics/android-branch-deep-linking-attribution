@@ -293,7 +293,7 @@ public class BranchEvent {
         @Override
         protected void setPost(JSONObject post) throws JSONException {
             super.setPost(post);
-            addPartnerParams(post, prefHelper_.partnerParams_);
+            prefHelper_.loadPartnerParams(post);
         }
 
         @Override

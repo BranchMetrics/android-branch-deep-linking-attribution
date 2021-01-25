@@ -16,6 +16,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
@@ -152,7 +154,7 @@ public class PrefHelper {
     /**
      * Branch partner parameters.
      */
-    public final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
+    final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
 
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
@@ -1282,5 +1284,23 @@ public class PrefHelper {
 
     static boolean isValidBranchKey(String branchKey) {
         return branchKey != null && branchKey.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
+    }
+
+    public void loadPartnerParams(JSONObject body) throws JSONException {
+        loadPartnerParams(body, partnerParams_);
+    }
+
+    // package private loadPartnerParams(...) allows to unit test BranchPartnerParameters, besides tests, this should only be invoked from the public loadPartnerParams(...) method.
+    static void loadPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
+        if (body == null) return;
+        JSONObject partnerData = new JSONObject();
+        for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {
+            JSONObject individualPartnerParams = new JSONObject();
+            for (Map.Entry<String, String> p : e.getValue().entrySet()) {
+                individualPartnerParams.put(p.getKey(), p.getValue());
+            }
+            partnerData.put(e.getKey(), individualPartnerParams);
+        }
+        body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
     }
 }

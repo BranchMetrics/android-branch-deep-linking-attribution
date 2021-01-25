@@ -40,7 +40,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
 
-        addPartnerParams(post, prefHelper_.partnerParams_);
+        prefHelper_.loadPartnerParams(post);
 
         String appVersion = DeviceInfo.getInstance().getAppVersion();
         if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {

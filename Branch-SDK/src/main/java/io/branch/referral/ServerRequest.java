@@ -668,17 +668,4 @@ public abstract class ServerRequest {
         }
         return false;
     }
-
-    protected static void addPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
-        if (body == null) return;
-        JSONObject partnerData = new JSONObject();
-        for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {
-            JSONObject individualPartnerParams = new JSONObject();
-            for (Map.Entry<String, String> p : e.getValue().entrySet()) {
-                individualPartnerParams.put(p.getKey(), p.getValue());
-            }
-            partnerData.put(e.getKey(), individualPartnerParams);
-        }
-        body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
-    }
 }
