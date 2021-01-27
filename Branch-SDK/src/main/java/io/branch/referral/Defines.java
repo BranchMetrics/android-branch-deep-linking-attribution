@@ -202,6 +202,7 @@ public class Defines {
         CreationTimestamp("$creation_timestamp"),
         TrackingDisabled("tracking_disabled"),
         DisableAdNetworkCallouts("disable_ad_network_callouts"),
+        PartnerData("partner_data"),
         Instant("instant");
         
         private final String key;

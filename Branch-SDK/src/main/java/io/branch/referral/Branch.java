@@ -24,6 +24,8 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.google.firebase.BuildConfig;
+
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
@@ -294,21 +296,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static Branch branchReferral_;
     
     private BranchRemoteInterface branchRemoteInterface_;
-    private PrefHelper prefHelper_;
+    private final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
-    private Context context_;
-
-    final Object lock;
+    private final Context context_;
     
-    private Semaphore serverSema_;
+    private final Semaphore serverSema_ = new Semaphore(1);
     
     private final ServerRequestQueue requestQueue_;
     
-    private int networkCount_;
+    private int networkCount_ = 0;
     
-    private boolean hasNetwork_;
+    private boolean hasNetwork_ = true;
     
-    private Map<BranchLinkData, String> linkCache_;
+    private final Map<BranchLinkData, String> linkCache_ = new HashMap<>();
     
     
     /* Set to true when application is instantiating {@BranchApp} by extending or adding manifest entry. */
@@ -362,14 +362,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
-    private final ConcurrentHashMap<String, String> instrumentationExtraData_;
+    private final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
 
     private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
     
-    private static int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+    private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
     
     /* List of keys whose values are collected from the Intent Extra.*/
     private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[]{
@@ -405,14 +405,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         prefHelper_ = PrefHelper.getInstance(context);
         trackingController = new TrackingController(context);
         branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
-        deviceInfo_ = DeviceInfo.initialize(context);
+        deviceInfo_ = new DeviceInfo(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
-        serverSema_ = new Semaphore(1);
-        lock = new Object();
-        networkCount_ = 0;
-        hasNetwork_ = true;
-        linkCache_ = new HashMap<>();
-        instrumentationExtraData_ = new ConcurrentHashMap<>();
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
@@ -625,8 +619,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.linkCache_.clear();
                 branchReferral_.requestQueue_.clear();
             }
-            
-            branchReferral_.context_ = context.getApplicationContext();
+
             /* If {@link Application} is instantiated register for activity life cycle events. */
             if (context instanceof Application) {
                 isAutoSessionMode_ = true;
@@ -769,7 +762,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         ServerRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
-        DeviceInfo.shutDown();
 
         // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
@@ -781,10 +773,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // UniversalResourceAnalyser.shutDown();
 
         // Release these contexts immediately.
-        if (branchReferral_ != null) {
-            branchReferral_.context_ = null;
-            branchReferral_.currentActivityReference_ = null;
-        }
 
         // Reset all of the statics.
         branchReferral_ = null;
@@ -967,6 +955,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * </p>
      */
     void closeSessionInternal() {
+        clearPartnerParameters();
         executeClose();
         prefHelper_.setExternalIntentUri(null);
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
@@ -1632,6 +1621,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         latestParams = appendDebugParams(latestParams);
         getLatestReferringParamsLatch = null;
         return latestParams;
+    }
+
+    /**
+     * Add a Partner Parameter for Facebook.
+     * Once set, this parameter is attached to installs, opens and events until cleared or the app restarts.
+     *
+     * See Facebook's documentation for details on valid parameters
+     */
+    public void addFacebookPartnerParameterWithName(@NonNull String key, @NonNull String value) {
+        prefHelper_.partnerParams_.addFacebookParameter(key, value);
+    }
+
+    /**
+     * Clears all Partner Parameters
+     */
+    public void clearPartnerParameters() {
+        prefHelper_.partnerParams_.clearAllParameters();
     }
     
     /**

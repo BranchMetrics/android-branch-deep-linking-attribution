@@ -17,12 +17,17 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import io.branch.indexing.BranchUniversalObject;
@@ -42,6 +47,8 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class MainActivity extends Activity {
@@ -436,11 +443,35 @@ public class MainActivity extends Activity {
         }
     }
 
+    // https://www.baeldung.com/sha-256-hashing-java
+    private static String getHashedValue(@NonNull String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return bytesToHex(digest.digest(value.getBytes(Charset.forName("UTF-8"))));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String bytesToHex(byte[] hash) {
+        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
 
     @Override
     protected void onStart() {
         super.onStart();
-        Branch.getInstance().initSession(new Branch.BranchUniversalReferralInitListener() {
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
+        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
@@ -465,7 +496,7 @@ public class MainActivity extends Activity {
                 // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
 
             }
-        }, this.getIntent().getData(), this);
+        }).withData(this.getIntent().getData()).init();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -480,7 +511,7 @@ public class MainActivity extends Activity {
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         this.setIntent(intent);
-        Branch.getInstance().reInitSession(this, new BranchReferralInitListener() {
+        Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error != null) {
@@ -489,7 +520,7 @@ public class MainActivity extends Activity {
                     Log.i("BranchTestBed", referringParams.toString());
                 }
             }
-        });
+        }).reInit();
     }
 
     @Override
