@@ -2,6 +2,8 @@ package io.branch.referral;
 
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
+import static io.branch.referral.BranchUtil.isRunningAndroidTest;
+import static io.branch.referral.BranchUtil.pathForSuccessResponse;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
 
@@ -44,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -1678,8 +1681,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         } else {
                             final CountDownLatch latch = new CountDownLatch(1);
                             final BranchPostTask postTask = new BranchPostTask(req, latch);
-                            postTask.executeTask();
-                            startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
+                            if (isRunningAndroidTest()) {
+                                ServerResponse resp = new ServerResponse(req.getRequestPath(), 200, UUID.randomUUID().toString());
+                                String respBody = pathForSuccessResponse(req.requestPath_);
+                                resp.setPost(respBody.startsWith("[") ? new JSONArray(respBody) : new JSONObject(respBody));
+                                postTask.onPostExecute(resp);
+                            } else {
+                                postTask.executeTask();
+                                startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
+                            }
                         }
                     } else {
                         networkCount_ = 0;
@@ -2295,7 +2305,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         protected void onPostExecute(ServerResponse serverResponse) {
             super.onPostExecute(serverResponse);
-            latch_.countDown();
+            if (latch_ != null) {
+                latch_.countDown();
+            }
 
             if (serverResponse == null || isCancelled()) return;
 

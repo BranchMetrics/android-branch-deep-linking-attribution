@@ -83,7 +83,7 @@ public class BranchEventTest extends BranchTest {
 
     @Test
     public void testLogEvent() {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
 
         new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).logEvent(getTestContext());
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
@@ -93,14 +93,14 @@ public class BranchEventTest extends BranchTest {
         Assert.assertEquals(Defines.RequestPath.TrackStandardEvent.getPath(), eventRequest.getRequestPath());
         Assert.assertTrue(eventRequest.isWaitingOnProcessToFinish());
 
-        Branch.getInstance().initSession();
+        initTestSession();
 
         Assert.assertEquals(2, queue.getSize());
     }
 
     @Test
     public void testLogEvent_queue() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         ServerRequest serverRequest = logEvent(getTestContext(), new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE));
@@ -111,7 +111,7 @@ public class BranchEventTest extends BranchTest {
 
     @Test
     public void testAdType() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         BranchEvent branchEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_AD);
@@ -140,7 +140,7 @@ public class BranchEventTest extends BranchTest {
     // Note that adding an event to the queue the first time generates an install event as a side effect.
     void initQueue(Context context) throws Throwable {
         final String EVENT_NAME = "XXXyyyXXX";
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
 
         // Queue should be empty when we initialize

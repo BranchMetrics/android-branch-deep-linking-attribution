@@ -964,7 +964,7 @@ public class PrefHelper {
      * @return A {@link Boolean} indicating whether some preference exists.
      */
     public boolean hasPrefValue(String key) {
-        return prefHelper_.appSharedPrefs_.contains(key);
+        return appSharedPrefs_.contains(key);
     }
 
     /**
@@ -973,7 +973,7 @@ public class PrefHelper {
      * @param key A {@link String} value containing the key to the value that's to be deleted.
      */
     public void removePrefValue(String key) {
-        prefHelper_.prefsEditor_.remove(key).apply();
+        prefsEditor_.remove(key).apply();
     }
     
     /**
@@ -997,7 +997,7 @@ public class PrefHelper {
      * default value if null.
      */
     public int getInteger(String key, int defaultValue) {
-        return prefHelper_.appSharedPrefs_.getInt(key, defaultValue);
+        return appSharedPrefs_.getInt(key, defaultValue);
     }
     
     /**
@@ -1007,7 +1007,7 @@ public class PrefHelper {
      * @return A {@link Long} value of the specified key as stored in preferences.
      */
     public long getLong(String key) {
-        return prefHelper_.appSharedPrefs_.getLong(key, 0);
+        return appSharedPrefs_.getLong(key, 0);
     }
     
     /**
@@ -1017,7 +1017,7 @@ public class PrefHelper {
      * @return A {@link Float} value of the specified key as stored in preferences.
      */
     public float getFloat(String key) {
-        return prefHelper_.appSharedPrefs_.getFloat(key, 0);
+        return appSharedPrefs_.getFloat(key, 0);
     }
     
     /**
@@ -1027,7 +1027,7 @@ public class PrefHelper {
      * @return A {@link String} value of the specified key as stored in preferences.
      */
     public String getString(String key) {
-        return prefHelper_.appSharedPrefs_.getString(key, NO_STRING_VALUE);
+        return appSharedPrefs_.getString(key, NO_STRING_VALUE);
     }
     
     /**
@@ -1037,7 +1037,7 @@ public class PrefHelper {
      * @return An {@link Boolean} value of the specified key as stored in preferences.
      */
     public boolean getBool(String key) {
-        return prefHelper_.appSharedPrefs_.getBoolean(key, false);
+        return appSharedPrefs_.getBoolean(key, false);
     }
     
     /**
@@ -1047,8 +1047,8 @@ public class PrefHelper {
      * @param value An {@link Integer} value to set the preference record to.
      */
     public void setInteger(String key, int value) {
-        prefHelper_.prefsEditor_.putInt(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putInt(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1058,8 +1058,8 @@ public class PrefHelper {
      * @param value A {@link Long} value to set the preference record to.
      */
     public void setLong(String key, long value) {
-        prefHelper_.prefsEditor_.putLong(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putLong(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1069,8 +1069,8 @@ public class PrefHelper {
      * @param value A {@link Float} value to set the preference record to.
      */
     public void setFloat(String key, float value) {
-        prefHelper_.prefsEditor_.putFloat(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putFloat(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1080,8 +1080,8 @@ public class PrefHelper {
      * @param value A {@link String} value to set the preference record to.
      */
     public void setString(String key, String value) {
-        prefHelper_.prefsEditor_.putString(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putString(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1091,8 +1091,8 @@ public class PrefHelper {
      * @param value A {@link Boolean} value to set the preference record to.
      */
     public void setBool(String key, Boolean value) {
-        prefHelper_.prefsEditor_.putBoolean(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putBoolean(key, value);
+        prefsEditor_.apply();
     }
     
     public void updateBranchViewUsageCount(String branchViewId) {
@@ -1141,7 +1141,7 @@ public class PrefHelper {
         setLinkClickIdentifier(linkClickIdentifier);
         setAppLink(appLink);
         setPushIdentifier(pushIdentifier);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.apply();
     }
     
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {

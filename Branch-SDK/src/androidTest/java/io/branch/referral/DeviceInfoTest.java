@@ -53,7 +53,7 @@ public class DeviceInfoTest extends BranchTest {
     }
 
     @Test
-    public void testGAIDFetch() {
+    public void testGAIDFetch() throws InterruptedException {
         Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
         Assert.assertNotNull(DeviceInfo.getInstance());
 
@@ -65,11 +65,7 @@ public class DeviceInfoTest extends BranchTest {
             }
         });
 
-        try {
-            latch.await(5000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Assert.fail();
-        }
+        Assert.assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
 
         Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
     }

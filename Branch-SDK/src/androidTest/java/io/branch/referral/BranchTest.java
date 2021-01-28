@@ -2,39 +2,57 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Assert;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.lang.reflect.Field;
+import io.branch.referral.mock.MockActivity;
 
 /**
  * Base Instrumented test, which will execute on an Android device.
  */
 @RunWith(AndroidJUnit4.class)
-public class BranchTest {
-    private Context mContext;
+abstract public class BranchTest {
+    private static final String TAG = "BranchTest";
+
+    protected Context mContext;
+    protected Branch branch;
+    protected PrefHelper prefHelper;
+    protected ActivityScenario<MockActivity> activityScenario;
 
     @Before
     public void setUp() {
+        Branch.shutDown();
         mContext = ApplicationProvider.getApplicationContext();
     }
 
     @After
     public void tearDown() {
-        Branch.shutDown();
+        if (activityScenario != null) {
+            activityScenario.close();
+        }
+
+        if (branch != null) {
+            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
+            Branch.shutDown();
+            branch = null;
+        }
+
         mContext = null;
     }
 
     @Before
     @After
-    public void clearSharedPrefs(){
+    public void clearSharedPrefs() {
+        if (mContext == null) return;
         // Clear the PrefHelper shared preferences
         SharedPreferences sharedPreferences =
                 mContext.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);
@@ -50,48 +68,41 @@ public class BranchTest {
         editor.commit();
     }
 
-    @Test
-    public void testAppContext() {
-        // Context of the app under test.
-        Assert.assertNotNull(getTestContext());
+    protected void initBranchInstance() {
+        initBranchInstance(null);
     }
 
-    @Test
-    public void testPackageName() {
-        // Context of the app under test.
-        Context appContext = getTestContext();
-
-        Assert.assertEquals("io.branch.referral.test", appContext.getPackageName());
-    }
-
-    @Test
-    public void initBranchInstance() {
-        Branch branch = Branch.getAutoInstance(getTestContext());
-
+    protected void initBranchInstance(String branchKey) {
+        if (branch != null) throw new IllegalStateException("sdk already initialized, makes sure initBranchInstance is called just once per test.");
+        createActivity();
+        if (branchKey == null) {
+            branch = Branch.getAutoInstance(getTestContext());
+        } else {
+            branch = Branch.getAutoInstance(getTestContext(), branchKey);
+        }
         Assert.assertEquals(branch, Branch.getInstance());
+//        activityScenario.moveToState(Lifecycle.State.RESUMED);
     }
 
-    @Test
-    public void initBranchTestInstance() {
-        Branch branch = Branch.getAutoTestInstance(getTestContext());
-
-        Assert.assertEquals(branch, Branch.getInstance());
-    }
-    
-    @Test
-    public void testSdkVersion() {
-        Assert.assertNotNull(Branch.getSdkVersionNumber());
+    protected void initTestSession() {
+        Branch.sessionBuilder(null).init();
     }
 
-    Context getTestContext() {
+    private void createActivity() {
+        if (branch != null) {
+            Log.d(TAG, "Warning! Activity is being initialized after SDK initialization. Beware that SDK will self-initialize session.");
+        }
+
+        activityScenario = ActivityScenario.launch(MockActivity.class);
+
+        // There is no way to launch Activity into some lifecycle state and halt it there,
+        // i.e. ActivityScenario.launch(...) will traverse all lifecycle states and we can only move it to Lifecycle.State.CREATED afterwards
+        // https://developer.android.com/reference/androidx/test/core/app/ActivityScenario
+        // We move it to Lifecycle.State.CREATED, so we can simulate Activity boot up and test session initialization
+        activityScenario.moveToState(Lifecycle.State.CREATED);
+    }
+
+    protected Context getTestContext() {
         return mContext;
-    }
-
-    // Set the Branch Instance.
-    // This is useful for creating a Mock instance and setting it in the SDK
-    void setBranchInstance(Branch branchInstance) throws Throwable {
-        Field f = Branch.class.getDeclaredField("branchReferral_");
-        f.setAccessible(true);
-        f.set(null, branchInstance);
     }
 }

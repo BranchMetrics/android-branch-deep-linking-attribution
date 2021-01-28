@@ -14,7 +14,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
     @Test
     public void testResultSuccess() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
@@ -22,7 +22,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
+        initTestSession();
         Assert.assertEquals(1, queue.getSize());
 
         ServerRequest initRequest = queue.peekAt(0);
@@ -34,7 +34,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
     @Test
     public void testNoModuleAddedWhenModuleNameMismatch() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         JSONObject branchFileJson = new JSONObject("{\"imei_rouge\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
@@ -42,7 +42,7 @@ public class BranchModuleInjectionTest extends BranchEventTest {
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
+        initTestSession();
         Assert.assertEquals(1, queue.getSize());
 
         ServerRequest initRequest = queue.peekAt(0);

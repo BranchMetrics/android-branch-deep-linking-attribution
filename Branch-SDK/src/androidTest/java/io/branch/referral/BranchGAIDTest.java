@@ -36,9 +36,9 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testInitSession_hasGAIDv1() throws Throwable {
-        Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         initQueue(getTestContext());
-        Branch.getInstance().initSession();
+        initTestSession();
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(1, queue.getSize());
@@ -79,7 +79,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testCommerceEvent_hasGAIDv1() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         CommerceEvent commerceEvent = new CommerceEvent();
@@ -109,7 +109,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testRedeemAwards_hasGAIDv1() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         // Backdoor to set credits before we try to redeem them.
@@ -130,7 +130,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testCreditHistory_hasGAIDv1() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         Branch.getInstance().getCreditHistory(null);
@@ -147,7 +147,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testIdentity_hasGAIDv1() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         Branch.getInstance().setIdentity("Alex");
@@ -180,7 +180,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testStandardEvent_hasGAIDv2() throws Throwable {
-        Branch.getInstance(getTestContext(), TEST_KEY);
+        initBranchInstance(TEST_KEY);
         initQueue(getTestContext());
 
         BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;

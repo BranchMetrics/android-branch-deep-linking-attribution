@@ -34,7 +34,7 @@ public abstract class ServerRequest {
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    private final Defines.RequestPath requestPath_;
+    final Defines.RequestPath requestPath_;
     protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;

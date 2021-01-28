@@ -13,12 +13,12 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testResultSuccess() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
+        initTestSession();
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
@@ -47,12 +47,12 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testResultPackageNameNotPresent() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
+        initTestSession();
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils
@@ -81,7 +81,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testAppLevelDataOverride() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         branch.setPreinstallPartner("partner1");
         branch.setPreinstallCampaign("campaign1");
 
@@ -89,7 +89,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
+        initTestSession();
         Assert.assertEquals(1, queue.getSize());
 
         String branchFileData = AssetUtils

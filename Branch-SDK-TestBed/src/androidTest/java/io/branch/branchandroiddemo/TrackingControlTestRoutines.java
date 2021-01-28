@@ -206,15 +206,14 @@ public class TrackingControlTestRoutines {
     
     
     private void waitForBranchInitAndExecuteNext(final int testCnt) {
-        Branch.getInstance().initSession(new Branch.BranchUniversalReferralInitListener() {
+        Branch.sessionBuilder(null).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
                     runTrackingControlTest(testCnt);
                 }
             }
-        });
-        
+        }).init();
     }
     
 }
