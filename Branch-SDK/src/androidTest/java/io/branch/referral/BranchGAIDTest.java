@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,32 +31,33 @@ import io.branch.referral.util.CommerceEvent;
  */
 
 @RunWith(AndroidJUnit4.class)
-public class BranchGAIDTest extends BranchEventTest {
-    private static final String TAG = "Branch::GAIDTest";
-    private static final String TEST_KEY = "key_live_testkey";
+public class BranchGAIDTest extends BranchEventTestUtil {
+    private static final String TAG = "BranchGAIDTest";
 
     @Test
     public void testInitSession_hasGAIDv1() throws Throwable {
         initBranchInstance();
-        initQueue(getTestContext());
-        initTestSession();
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
-        Assert.assertEquals(1, queue.getSize());
+                ServerRequest initRequest = queue.peekAt(0);
+                doFinalUpdate(initRequest);
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-
-        assumingLatIsDisabledHasGAIDv1(initRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(initRequest, true);
-        assumingLatIsDisabledHasGAIDv2(initRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(initRequest, false);
+                assumingLatIsDisabledHasGAIDv1(initRequest, true);
+                assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(initRequest, true);
+                assumingLatIsDisabledHasGAIDv2(initRequest, false);
+                assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(initRequest, false);
+            }
+        });
     }
 
     @Test
-    public void testActionCompleted_hasGAIDv1() throws Throwable {
-        Branch.getAutoInstance(getTestContext());
-        initQueue(getTestContext());
+    public void testActionCompleted_hasGAIDv1() throws InterruptedException, JSONException {
+        initBranchInstance();
+        initSessionResumeActivity();
 
         JSONObject params = new JSONObject();
         params.put("name", "Alex");
@@ -78,9 +80,9 @@ public class BranchGAIDTest extends BranchEventTest {
     }
 
     @Test
-    public void testCommerceEvent_hasGAIDv1() throws Throwable {
+    public void testCommerceEvent_hasGAIDv1() throws InterruptedException {
         initBranchInstance(TEST_KEY);
-        initQueue(getTestContext());
+        initSessionResumeActivity();
 
         CommerceEvent commerceEvent = new CommerceEvent();
         commerceEvent.setTransactionID("123XYZ");
@@ -88,7 +90,7 @@ public class BranchGAIDTest extends BranchEventTest {
         commerceEvent.setTax(.314);
         commerceEvent.setCoupon("MyCoupon");
 
-        Branch.getInstance().sendCommerceEvent(commerceEvent);
+        branch.sendCommerceEvent(commerceEvent);
         ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
         Assert.assertNotNull(serverRequest);
@@ -98,8 +100,6 @@ public class BranchGAIDTest extends BranchEventTest {
         assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
         assumingLatIsDisabledHasGAIDv2(serverRequest, false);
         assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
-
-        DebugLogQueue(getTestContext());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class BranchGAIDTest extends BranchEventTest {
     @Test
     public void testRedeemAwards_hasGAIDv1() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initQueue(getTestContext());
+        initSessionResumeActivity();
 
         // Backdoor to set credits before we try to redeem them.
         PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
@@ -131,7 +131,7 @@ public class BranchGAIDTest extends BranchEventTest {
     @Test
     public void testCreditHistory_hasGAIDv1() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initQueue(getTestContext());
+        initSessionResumeActivity();
 
         Branch.getInstance().getCreditHistory(null);
         ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
@@ -148,7 +148,7 @@ public class BranchGAIDTest extends BranchEventTest {
     @Test
     public void testIdentity_hasGAIDv1() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initQueue(getTestContext());
+        initSessionResumeActivity();
 
         Branch.getInstance().setIdentity("Alex");
         ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
@@ -181,7 +181,7 @@ public class BranchGAIDTest extends BranchEventTest {
     @Test
     public void testStandardEvent_hasGAIDv2() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initQueue(getTestContext());
+        initSessionResumeActivity();
 
         BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
         BranchEvent branchEvent = new BranchEvent(eventType);

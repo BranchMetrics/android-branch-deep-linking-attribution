@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 
 import io.branch.referral.mock.MockActivity;
+import io.branch.referral.mock.MockRemoteInterface;
 
 /**
  * Base Instrumented test, which will execute on an Android device.
@@ -22,10 +23,11 @@ import io.branch.referral.mock.MockActivity;
 @RunWith(AndroidJUnit4.class)
 abstract public class BranchTest {
     private static final String TAG = "BranchTest";
+    public static final int TEST_TIMEOUT = 300;// can be pretty short because we mock remote interface and don't actually make async calls from the SDK
+    protected static final String TEST_KEY = "key_live_testing_only";
 
     protected Context mContext;
     protected Branch branch;
-    protected PrefHelper prefHelper;
     protected ActivityScenario<MockActivity> activityScenario;
 
     @Before
@@ -35,9 +37,10 @@ abstract public class BranchTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws InterruptedException {
         if (activityScenario != null) {
             activityScenario.close();
+            Thread.sleep(TEST_TIMEOUT);
         }
 
         if (branch != null) {
@@ -73,26 +76,9 @@ abstract public class BranchTest {
     }
 
     protected void initBranchInstance(String branchKey) {
-        if (branch != null) throw new IllegalStateException("sdk already initialized, makes sure initBranchInstance is called just once per test.");
-        createActivity();
-        if (branchKey == null) {
-            branch = Branch.getAutoInstance(getTestContext());
-        } else {
-            branch = Branch.getAutoInstance(getTestContext(), branchKey);
-        }
-        Assert.assertEquals(branch, Branch.getInstance());
-//        activityScenario.moveToState(Lifecycle.State.RESUMED);
-    }
-
-    protected void initTestSession() {
-        Branch.sessionBuilder(null).init();
-    }
-
-    private void createActivity() {
         if (branch != null) {
-            Log.d(TAG, "Warning! Activity is being initialized after SDK initialization. Beware that SDK will self-initialize session.");
+            throw new IllegalStateException("sdk already initialized, makes sure initBranchInstance is called just once per test.");
         }
-
         activityScenario = ActivityScenario.launch(MockActivity.class);
 
         // There is no way to launch Activity into some lifecycle state and halt it there,
@@ -100,6 +86,29 @@ abstract public class BranchTest {
         // https://developer.android.com/reference/androidx/test/core/app/ActivityScenario
         // We move it to Lifecycle.State.CREATED, so we can simulate Activity boot up and test session initialization
         activityScenario.moveToState(Lifecycle.State.CREATED);
+
+        Branch.enableLogging();
+        if (branchKey == null) {
+            branch = Branch.getAutoInstance(getTestContext());
+        } else {
+            branch = Branch.getAutoInstance(getTestContext(), branchKey);
+        }
+        Assert.assertEquals(branch, Branch.getInstance());
+
+        branch.setBranchRemoteInterface(new MockRemoteInterface());
+    }
+
+    protected void initSessionResumeActivity() throws InterruptedException {
+        initSessionResumeActivity(null);
+    }
+
+    protected void initSessionResumeActivity(Runnable subtest) throws InterruptedException {
+        activityScenario.moveToState(Lifecycle.State.RESUMED);
+        if (subtest != null) {
+            subtest.run();
+        }
+        Thread.sleep(TEST_TIMEOUT * 2);
+        Log.d(TAG, "initSessionResumeActivity completed");
     }
 
     protected Context getTestContext() {

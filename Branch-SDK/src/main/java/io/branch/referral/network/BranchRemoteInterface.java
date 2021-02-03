@@ -128,11 +128,13 @@ public abstract class BranchRemoteInterface {
         long reqStartTime = System.currentTimeMillis();
         body = body != null ? body : new JSONObject();
 
+        PrefHelper.Debug("benas posting to " + url);
+        PrefHelper.Debug("benas Post value = " + body.toString());
+        PrefHelper.Debug("benas branchKey = " + branchKey);
+
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
-        PrefHelper.Debug("posting to " + url);
-        PrefHelper.Debug("Post value = " + body.toString());
 
         try {
             BranchResponse response = doRestfulPost(url, body);
@@ -205,6 +207,12 @@ public abstract class BranchRemoteInterface {
                 return true;
             }
         } catch (JSONException ignore) {
+        }
+        PrefHelper.Debug("benas addCommonParams, post =  " + post.toString() + ", branch_key = " + branch_key);
+        try {
+            PrefHelper.Debug("benas1 addCommonParams, post =  " + post.toString(4) + ", branch_key = " + branch_key);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         return false;
     }

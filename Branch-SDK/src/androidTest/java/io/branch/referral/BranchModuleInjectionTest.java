@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * Created by --vbajpai on --2019-08-29 at --21:56 for --android-branch-deep-linking-attribution
  */
-public class BranchModuleInjectionTest extends BranchEventTest {
+public class BranchModuleInjectionTest extends BranchEventTestUtil {
 
     @Test
     public void testResultSuccess() throws Throwable {
@@ -18,18 +18,20 @@ public class BranchModuleInjectionTest extends BranchEventTest {
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
-        initQueue(getTestContext());
-
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        initTestSession();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
+                ServerRequest initRequest = queue.peekAt(0);
+                doFinalUpdate(initRequest);
+                doFinalUpdateOnMainThread(initRequest);
 
-        Assert.assertTrue(hasV1InstallImeiData(initRequest));
+                Assert.assertTrue(hasV1InstallImeiData(initRequest));
+            }
+        });
     }
 
     @Test
@@ -38,27 +40,29 @@ public class BranchModuleInjectionTest extends BranchEventTest {
         JSONObject branchFileJson = new JSONObject("{\"imei_rouge\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
-        initQueue(getTestContext());
-
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        initTestSession();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
+                ServerRequest initRequest = queue.peekAt(0);
+                doFinalUpdate(initRequest);
+                doFinalUpdateOnMainThread(initRequest);
 
-        Assert.assertTrue(doesNotHaveV1InstallImeiData(initRequest));
+                Assert.assertTrue(doesNotHaveV1InstallImeiData(initRequest));
+            }
+        });
     }
 
     @Test
     public void testCommerceEventHasImeiData() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+        initBranchInstance();
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
-        initQueue(getTestContext());
+        initSessionResumeActivity();
 
         CommerceEvent commerceEvent = new CommerceEvent();
         commerceEvent.setTransactionID("123XYZ");

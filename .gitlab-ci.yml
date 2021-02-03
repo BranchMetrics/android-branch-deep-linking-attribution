@@ -16,7 +16,7 @@ lintDebug:
   script:
   - ./gradlew lint
 
-buildDebug:
+buildSDK:
   stage: build
   tags:
   - mac_mini
@@ -26,14 +26,14 @@ buildDebug:
     paths:
     - ./Branch-SDK/build/outputs/aar/
 
-debugTests:
+unitTests:
   stage: build
   tags:
   - mac_mini
   script:
   - ./gradlew test
 
-emulatortest_py:
+gradleConnectedCheckExecutedOnMacMini:
   stage: test
   tags:
   - mac_mini

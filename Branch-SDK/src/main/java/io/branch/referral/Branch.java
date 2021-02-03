@@ -2,8 +2,6 @@ package io.branch.referral;
 
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
-import static io.branch.referral.BranchUtil.isRunningAndroidTest;
-import static io.branch.referral.BranchUtil.pathForSuccessResponse;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
 
@@ -40,13 +38,10 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -296,7 +291,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
-    
+
     private BranchRemoteInterface branchRemoteInterface_;
     private final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
@@ -498,10 +493,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
      * Branch SDK and remote Branch server
      *
-     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with implementation for abstract RESTful GET or POST methods
+     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with implementation for abstract RESTful GET or POST methods, if null is passed, the SDK will use its default.
      */
     public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
-        branchRemoteInterface_ = remoteInterface;
+        if (remoteInterface == null) {
+            branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
+        } else {
+            branchRemoteInterface_ = remoteInterface;
+        }
+    }
+
+    public BranchRemoteInterface getBranchRemoteInterface() {
+        return branchRemoteInterface_;
     }
     
     /**
@@ -802,7 +805,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>
-     *     Add key value pairs from the injected modules to all requests
+     *     Add key value pairs from the passed in json to all requests, json values must be strings.
      * </p>
      */
     public void addModule(JSONObject module) {
@@ -1600,10 +1603,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     // PRIVATE FUNCTIONS
     
-    private String convertDate(Date date) {
-        return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
-    }
-    
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
         if (trackingController.isTrackingDisabled()) {
             return req.getLongUrl();
@@ -1681,15 +1680,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         } else {
                             final CountDownLatch latch = new CountDownLatch(1);
                             final BranchPostTask postTask = new BranchPostTask(req, latch);
-                            if (isRunningAndroidTest()) {
-                                ServerResponse resp = new ServerResponse(req.getRequestPath(), 200, UUID.randomUUID().toString());
-                                String respBody = pathForSuccessResponse(req.requestPath_);
-                                resp.setPost(respBody.startsWith("[") ? new JSONArray(respBody) : new JSONObject(respBody));
-                                postTask.onPostExecute(resp);
-                            } else {
-                                postTask.executeTask();
-                                startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
-                            }
+                            postTask.executeTask();
+                            startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
                         }
                     } else {
                         networkCount_ = 0;
@@ -2255,11 +2247,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Async Task to create  a shorlink for synchronous methods
+     * Async Task to create  a short link for synchronous methods
      */
     private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
         @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
+            return Branch.getInstance().branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
                     prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
                     Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
@@ -2296,9 +2288,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             }
             if (thisReq_.isGetRequest()) {
-                return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
+                return getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             } else {
-                return branchRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
+                return getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
             }
         }
         

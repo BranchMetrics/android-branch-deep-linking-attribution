@@ -24,7 +24,7 @@ public class KeyTest extends BranchTest {
     @Test
     public void testAutoInstanceWithKey() {
         final String expectedKey = "key_XXX";
-        Branch.getAutoInstance(getTestContext(), expectedKey);
+        initBranchInstance(expectedKey);
 
         final String actualKey = PrefHelper.getInstance(getTestContext()).getBranchKey();
         Assert.assertEquals(expectedKey, actualKey);

@@ -22,6 +22,12 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
 
+import static io.branch.referral.Defines.RequestPath.GetCPID;
+import static io.branch.referral.Defines.RequestPath.GetCreditHistory;
+import static io.branch.referral.Defines.RequestPath.GetURL;
+import static io.branch.referral.Defines.RequestPath.RegisterInstall;
+import static io.branch.referral.Defines.RequestPath.RegisterOpen;
+
 
 /**
  * Class for Branch utility methods
@@ -300,29 +306,5 @@ public class BranchUtil {
             }
         }
         return obj;
-    }
-
-    private static AtomicBoolean isAndroidTest = null;
-    synchronized public static boolean isRunningAndroidTest() {
-        if (null == isAndroidTest) {
-            try {
-                Class.forName("io.branch.referral.test.BuildConfig");
-                isAndroidTest = new AtomicBoolean(true);
-            } catch (ClassNotFoundException e) {
-                isAndroidTest = new AtomicBoolean(false);
-            }
-        }
-        return isAndroidTest.get();
-    }
-
-    public static String pathForSuccessResponse(Defines.RequestPath path) {
-        switch (path) {
-            case GetURL: return "{\"url\":\"https://bnc.lt/a/key_live_testing_only?channel=facebook&type=0&duration=0&source=android&data=eyJzb3VyY2UiOiJhbmRyb2lkIn0%3D\"}";
-            case GetCreditHistory: return "[]";
-            case RegisterInstall:
-            case RegisterOpen: return "{\"session_id\":\"880938553235373649\",\"identity_id\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24identity_id=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"device_fingerprint_id\":\"867130134518497054\"}";
-            case GetCPID: return "{\"user_data\":{\"cross_platform_id\":\"afb3e7f98b18dc6c90ebaeade4dbc6cac67fbb8e3f34e9cd8217490bf8f24b1f\",\"past_cross_platform_ids\":[],\"prob_cross_platform_ids\":[],\"developer_identity\":\"880938553226608667\"}}";
-            default: return "{}";
-        }
     }
 }
