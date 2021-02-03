@@ -4,20 +4,33 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.util.Random;
+
+import io.branch.referral.Branch;
 import io.branch.referral.BranchTest;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.network.BranchRemoteInterface;
 
 import static io.branch.referral.Defines.RequestPath.GetCPID;
 import static io.branch.referral.Defines.RequestPath.GetCreditHistory;
+import static io.branch.referral.Defines.RequestPath.GetCredits;
 import static io.branch.referral.Defines.RequestPath.GetURL;
+import static io.branch.referral.Defines.RequestPath.IdentifyUser;
 import static io.branch.referral.Defines.RequestPath.RegisterInstall;
 import static io.branch.referral.Defines.RequestPath.RegisterOpen;
 
 public class MockRemoteInterface extends BranchRemoteInterface {
+
+
+    // since most tests use TEST_TIMEOUT to await network requests, lower it here, so TEST_TIMEOUT
+    // ends up including a little bit of a buffer for scheduling network requests.
+    private final long networkRequestDuration = BranchTest.TEST_TIMEOUT / 3;
+
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {
         try {
-            Thread.sleep(BranchTest.TEST_TIMEOUT);
+
+            Thread.sleep(networkRequestDuration);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -28,7 +41,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
     @Override
     public BranchResponse doRestfulPost(String url, JSONObject payload) throws BranchRemoteException {
         try {
-            Thread.sleep(BranchTest.TEST_TIMEOUT);
+            Thread.sleep(networkRequestDuration);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -41,6 +54,10 @@ public class MockRemoteInterface extends BranchRemoteInterface {
             return "{\"url\":\"https://bnc.lt/a/key_live_testing_only?channel=facebook&type=0&duration=0&source=android&data=eyJzb3VyY2UiOiJhbmRyb2lkIn0%3D\"}";
         } else if (url.contains(GetCreditHistory.getPath())) {
             return "[]";
+        } else if (url.contains(GetCredits.getPath())) {
+            return "{\"credits\": " + PrefHelper.getInstance(Branch.getInstance().getApplicationContext()).getCreditCount() + "}";
+        } else if (url.contains(IdentifyUser.getPath())) {
+            return "{\"session_id\":\"880938553235373649\",\"identity_id\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24identity_id=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"device_fingerprint_id\":\"867130134518497054\"}";
         } else if (url.contains(RegisterInstall.getPath()) || url.contains(RegisterOpen.getPath())) {
             return "{\"session_id\":\"880938553235373649\",\"identity_id\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24identity_id=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"device_fingerprint_id\":\"867130134518497054\"}";
         } else if (url.contains(GetCPID.getPath())) {

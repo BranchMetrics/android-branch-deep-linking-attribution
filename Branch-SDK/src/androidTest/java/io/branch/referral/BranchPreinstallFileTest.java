@@ -57,61 +57,73 @@ public class BranchPreinstallFileTest extends BranchEventTestUtil {
     public void testResultPackageNameNotPresent() throws Throwable {
         initBranchInstance();
 
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        initSessionResumeActivity();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "pre_install_apps_no_package.branch");
-        Assert.assertTrue(branchFileData.length() > 0);
+                String branchFileData = AssetUtils
+                        .readJsonFile(getTestContext(), "pre_install_apps_no_package.branch");
+                Assert.assertTrue(branchFileData.length() > 0);
+                try {
+                    JSONObject branchFileJson = new JSONObject(branchFileData);
+                    BranchPreinstall.getBranchFileContent(branchFileJson, branch,
+                            getTestContext());
 
-        JSONObject branchFileJson = new JSONObject(branchFileData);
-        BranchPreinstall.getBranchFileContent(branchFileJson, branch,
-                getTestContext());
+                    ServerRequest initRequest = queue.peekAt(0);
+                    doFinalUpdate(initRequest);
+                    doFinalUpdateOnMainThread(initRequest);
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
-
-        Assert.assertFalse(hasV1InstallPreinstallCampaign(initRequest));
-        Assert.assertFalse(hasV1InstallPreinstallPartner(initRequest));
-        Assert.assertFalse(hasV1InstallPreinstallCustomData(initRequest));
+                    Assert.assertFalse(hasV1InstallPreinstallCampaign(initRequest));
+                    Assert.assertFalse(hasV1InstallPreinstallPartner(initRequest));
+                    Assert.assertFalse(hasV1InstallPreinstallCustomData(initRequest));
+                } catch (JSONException e) {
+                    Assert.fail(e.getMessage());
+                }
+            }
+        });
     }
 
     @Test
-    public void testResultFileNotPresent() throws Throwable {
-        String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "pre_install_apps_not_present.branch");
+    public void testResultFileNotPresent() {
+        String branchFileData = AssetUtils.readJsonFile(getTestContext(), "pre_install_apps_not_present.branch");
         Assert.assertFalse(branchFileData.length() > 0);
     }
 
     @Test
-    public void testAppLevelDataOverride() throws Throwable {
+    public void testAppLevelDataOverride() throws InterruptedException {
         initBranchInstance();
         branch.setPreinstallPartner("partner1");
         branch.setPreinstallCampaign("campaign1");
 
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        initSessionResumeActivity();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        String branchFileData = AssetUtils.readJsonFile(getTestContext(), "pre_install_apps.branch");
-        Assert.assertTrue(branchFileData.length() > 0);
+                String branchFileData = AssetUtils.readJsonFile(getTestContext(), "pre_install_apps.branch");
+                Assert.assertTrue(branchFileData.length() > 0);
+                try {
+                    JSONObject branchFileJson = new JSONObject(branchFileData);
+                    BranchPreinstall.getBranchFileContent(branchFileJson, branch, getTestContext());
 
-        JSONObject branchFileJson = new JSONObject(branchFileData);
-        BranchPreinstall.getBranchFileContent(branchFileJson, branch,
-                getTestContext());
+                    ServerRequest initRequest = queue.peekAt(0);
+                    doFinalUpdate(initRequest);
+                    doFinalUpdateOnMainThread(initRequest);
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
-
-        Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
-        Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
-        Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
-        Assert.assertEquals(getPreinstallData(branch, PreinstallKey.partner.getKey()), "partner1");
+                    Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
+                    Assert.assertEquals(getPreinstallData(branch, PreinstallKey.partner.getKey()), "partner1");
+                } catch (JSONException e) {
+                    Assert.fail(e.getMessage());
+                }
+            }
+        });
     }
 
     // Check to see if the preinstall campaign is available (V1)
@@ -129,7 +141,7 @@ public class BranchPreinstallFileTest extends BranchEventTestUtil {
     }
 
     // Check to see if the preinstall custom data is available (V1)
-    private boolean hasV1InstallPreinstallCustomData(ServerRequest request) throws Throwable {
+    private boolean hasV1InstallPreinstallCustomData(ServerRequest request) throws JSONException {
         JSONObject jsonObject = request.getGetParams().getJSONObject("metadata");
         String custom_key = jsonObject.optString("custom_key");
         return (custom_key.length() > 0);

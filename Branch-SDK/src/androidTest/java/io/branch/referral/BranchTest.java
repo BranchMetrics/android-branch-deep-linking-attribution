@@ -23,7 +23,7 @@ import io.branch.referral.mock.MockRemoteInterface;
 @RunWith(AndroidJUnit4.class)
 abstract public class BranchTest {
     private static final String TAG = "BranchTest";
-    public static final int TEST_TIMEOUT = 300;// can be pretty short because we mock remote interface and don't actually make async calls from the SDK
+    public static final int TEST_TIMEOUT = 500;// can be pretty short because we mock remote interface and don't actually make async calls from the SDK
     protected static final String TEST_KEY = "key_live_testing_only";
 
     protected Context mContext;
@@ -34,6 +34,7 @@ abstract public class BranchTest {
     public void setUp() {
         Branch.shutDown();
         mContext = ApplicationProvider.getApplicationContext();
+        clearSharedPrefs(mContext);
     }
 
     @After
@@ -49,23 +50,21 @@ abstract public class BranchTest {
             branch = null;
         }
 
+        clearSharedPrefs(mContext);
         mContext = null;
     }
 
-    @Before
-    @After
-    public void clearSharedPrefs() {
-        if (mContext == null) return;
+
+    public void clearSharedPrefs(Context mContext) {
+        PrefHelper.Debug("clearSharedPrefs");
         // Clear the PrefHelper shared preferences
-        SharedPreferences sharedPreferences =
-                mContext.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.commit();
 
         // Clear the ServerRequestQueue shared preferences
-        sharedPreferences =
-                mContext.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
+        sharedPreferences = mContext.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
         editor.clear();
         editor.commit();
@@ -107,7 +106,7 @@ abstract public class BranchTest {
         if (subtest != null) {
             subtest.run();
         }
-        Thread.sleep(TEST_TIMEOUT * 2);
+        Thread.sleep(TEST_TIMEOUT * 3); // make timeout longer to account for lifecycle transitions
         Log.d(TAG, "initSessionResumeActivity completed");
     }
 

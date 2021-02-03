@@ -408,6 +408,7 @@ public class PrefHelper {
      *                    within preferences.
      */
     public void setIdentityID(String identity_id) {
+        Log.d("benas", "setIdentityID, identity_id: " + identity_id );
         setString(KEY_IDENTITY_ID, identity_id);
     }
     

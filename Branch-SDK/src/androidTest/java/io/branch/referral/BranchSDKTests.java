@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.util.BranchCPID;
@@ -33,6 +34,7 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void testGetCPID() throws Throwable {
+        initSessionResumeActivity();
         final CountDownLatch lock = new CountDownLatch(1);
         branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
             @Override public void onDataFetched(BranchCPID cpidResponse, BranchError error) {
@@ -56,6 +58,7 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void test02GetShortURLAsync() throws InterruptedException {
+        initSessionResumeActivity();
         final FBUrl urlFB = new FBUrl(null);
         getFBUrl(urlFB);
         Assert.assertNotNull(urlFB.val);
@@ -63,6 +66,8 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void test04GetShortURLAsync1Cached() throws InterruptedException {
+        initSessionResumeActivity();
+
         final FBUrl urlFB = new FBUrl(null);
         getFBUrl(urlFB);
 
@@ -74,7 +79,7 @@ public class BranchSDKTests extends BranchTest {
                     public void onLinkCreate(String url, BranchError error) {
                         Assert.assertNull(error);
                         Assert.assertNotNull(url);
-                        Assert.assertSame(url, urlFB.val);
+                        Assert.assertTrue(url.equals(urlFB.val));
 
                         signal.countDown();
                     }
@@ -84,18 +89,20 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void test04GetShortURLAsync2Uncached() throws InterruptedException {
+        initSessionResumeActivity();
+
         final FBUrl urlFB = new FBUrl(null);
         getFBUrl(urlFB);
 
         final CountDownLatch signal = new CountDownLatch(1);
         new BranchShortLinkBuilder(getTestContext())
-                .setChannel("twitter")
+                .setChannel("facebook")
                 .generateShortUrl(new BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         Assert.assertNull(error);
                         Assert.assertNotNull(url);
-                        Assert.assertSame(url, urlFB.val);
+                        Assert.assertTrue(url.equals(urlFB.val));
 
                         signal.countDown();
                     }
@@ -125,6 +132,8 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void test01SetIdentity() throws InterruptedException {
+        initSessionResumeActivity();
+
         final CountDownLatch signal = new CountDownLatch(1);
         prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
         branch.setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
@@ -132,7 +141,7 @@ public class BranchSDKTests extends BranchTest {
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 Assert.assertNull(error);
                 Assert.assertNotNull(referringParams);
-                Assert.assertEquals(prefHelper.getIdentityID(), "85338557421453831");
+                Assert.assertEquals(prefHelper.getIdentityID(), "880938553226608667");
 
                 JSONObject installParams = branch.getFirstReferringParams();
                 try {
@@ -149,6 +158,8 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void test03GetRewardsChanged() throws InterruptedException {
+        initSessionResumeActivity();
+
         final CountDownLatch signal = new CountDownLatch(1);
         prefHelper.setCreditCount("default", 9999999);
 
@@ -166,6 +177,7 @@ public class BranchSDKTests extends BranchTest {
 
     @Test
     public void testGetRewardsUnchanged() throws InterruptedException {
+        initSessionResumeActivity();
         final CountDownLatch signal = new CountDownLatch(1);
         prefHelper.setCreditCount("default", prefHelper.getCreditCount("default"));
 
@@ -186,8 +198,9 @@ public class BranchSDKTests extends BranchTest {
         initSessionResumeActivity();
         final CountDownLatch signalFinal = new CountDownLatch(1);
         final CountDownLatch signal = new CountDownLatch(1);
-        for (int i = 0; i < 100; i++) {
-            final int idx = i;
+        final int reps = 20;
+        final AtomicInteger callbackInvocations = new AtomicInteger(0);
+        for (int i = 0; i < reps; i++) {
             new BranchShortLinkBuilder(getTestContext())
                     .setChannel(i + "")
                     .generateShortUrl(new BranchLinkCreateListener() {
@@ -195,13 +208,14 @@ public class BranchSDKTests extends BranchTest {
                         public void onLinkCreate(String url, BranchError error) {
                             Assert.assertNull(error);
                             Assert.assertNotNull(url);
-                            if (idx == 99) {
+                            PrefHelper.Debug("idx = " + callbackInvocations.get());
+                            if (callbackInvocations.getAndIncrement() == reps - 1) {
                                 signal.countDown();
                             }
                         }
                     });
         }
-        Assert.assertTrue(signal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await((TEST_TIMEOUT * reps), TimeUnit.MILLISECONDS));
 
         new BranchShortLinkBuilder(getTestContext())
                 .setFeature("loadTest")
@@ -215,6 +229,7 @@ public class BranchSDKTests extends BranchTest {
                 });
 
         Assert.assertTrue(signalFinal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertNotNull(activityScenario);
     }
 
 
@@ -254,7 +269,7 @@ public class BranchSDKTests extends BranchTest {
                         signal.countDown();
                     }
                 });
-        Thread.sleep(TEST_TIMEOUT);
+        Thread.sleep(TEST_TIMEOUT * 5);
         Assert.assertEquals(0, signal.getCount());
     }
 

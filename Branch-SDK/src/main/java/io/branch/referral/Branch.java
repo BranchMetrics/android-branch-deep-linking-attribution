@@ -2392,7 +2392,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                         if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
                                             //On setting a new identity Id clear the link cache
                                             linkCache_.clear();
-                                            prefHelper_.setIdentityID(respJson.getString(Defines.Jsonkey.IdentityID.getKey()));
+                                            prefHelper_.setIdentityID(new_Identity_Id);
                                             updateRequestsInQueue = true;
                                         }
                                     }
