@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -296,9 +297,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
     private final Context context_;
-    
+
     private final Semaphore serverSema_ = new Semaphore(1);
-    
     final ServerRequestQueue requestQueue_;
     
     private int networkCount_ = 0;
