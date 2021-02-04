@@ -495,10 +495,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
      * Branch SDK and remote Branch server
      *
-     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with implementation for abstract RESTful GET or POST methods
+     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with
+     *                        implementation for abstract RESTful GET or POST methods, if null
+     *                        is passed, the SDK will use its default.
      */
     public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
-        branchRemoteInterface_ = remoteInterface;
+        if (remoteInterface == null) {
+            branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
+        } else {
+            branchRemoteInterface_ = remoteInterface;
+        }
+    }
+
+    public BranchRemoteInterface getBranchRemoteInterface() {
+        return branchRemoteInterface_;
     }
     
     /**
@@ -799,7 +809,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * <p>
-     *     Add key value pairs from the injected modules to all requests
+     *     Add key value pairs from the passed in json to all requests, json values must be strings.
      * </p>
      */
     public void addModule(JSONObject module) {
@@ -1597,10 +1607,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     // PRIVATE FUNCTIONS
     
-    private String convertDate(Date date) {
-        return android.text.format.DateFormat.format("yyyy-MM-dd", date).toString();
-    }
-    
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
         if (trackingController.isTrackingDisabled()) {
             return req.getLongUrl();
@@ -2245,7 +2251,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * Async Task to create  a shorlink for synchronous methods
+     * Async Task to create  a short link for synchronous methods
      */
     private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
         @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
@@ -2388,7 +2394,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                         if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
                                             //On setting a new identity Id clear the link cache
                                             linkCache_.clear();
-                                            prefHelper_.setIdentityID(respJson.getString(Defines.Jsonkey.IdentityID.getKey()));
+                                            prefHelper_.setIdentityID(new_Identity_Id);
                                             updateRequestsInQueue = true;
                                         }
                                     }
