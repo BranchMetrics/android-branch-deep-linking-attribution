@@ -33,7 +33,7 @@ unitTests:
   script:
   - ./gradlew test
 
-gradleConnectedCheckExecutedOnMacMini:
+androidTests:
   stage: test
   tags:
   - mac_mini

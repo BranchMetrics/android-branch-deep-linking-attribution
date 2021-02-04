@@ -13,7 +13,7 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CurrencyType;
 
 @RunWith(AndroidJUnit4.class)
-public class BranchEventTest extends BranchEventTestUtil {
+public class BranchEventTest extends BranchTest {
 
     @Test
     public void testStandardEvent() throws Throwable {

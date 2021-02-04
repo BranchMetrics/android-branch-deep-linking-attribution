@@ -31,7 +31,7 @@ import io.branch.referral.util.CommerceEvent;
  */
 
 @RunWith(AndroidJUnit4.class)
-public class BranchGAIDTest extends BranchEventTestUtil {
+public class BranchGAIDTest extends BranchTest {
     private static final String TAG = "BranchGAIDTest";
 
     @Test
@@ -68,7 +68,7 @@ public class BranchGAIDTest extends BranchEventTestUtil {
         // final CountDownLatch latch = new CountDownLatch(1);
         Branch.getInstance().userCompletedAction("buy", params);
 
-        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", "buy");
+        ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", "buy");
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
@@ -91,7 +91,7 @@ public class BranchGAIDTest extends BranchEventTestUtil {
         commerceEvent.setCoupon("MyCoupon");
 
         branch.sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
+        ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
@@ -117,7 +117,7 @@ public class BranchGAIDTest extends BranchEventTestUtil {
         prefHelper.setCreditCount(100);
 
         Branch.getInstance().redeemRewards(100);
-        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
+        ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
@@ -134,7 +134,7 @@ public class BranchGAIDTest extends BranchEventTestUtil {
         initSessionResumeActivity();
 
         Branch.getInstance().getCreditHistory(null);
-        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
+        ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);
@@ -151,7 +151,7 @@ public class BranchGAIDTest extends BranchEventTestUtil {
         initSessionResumeActivity();
 
         Branch.getInstance().setIdentity("Alex");
-        ServerRequest serverRequest = getLastEventOnQueue(getTestContext(), 1);
+        ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);

@@ -2,26 +2,24 @@ package io.branch.referral;
 
 import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import android.util.Log;
 
 import org.json.JSONObject;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.lang.reflect.Field;
 
-import io.branch.referral.util.AdType;
-import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
-import io.branch.referral.util.CurrencyType;
 
 /**
  * BranchEvent class tests.
  */
 @RunWith(AndroidJUnit4.class)
-abstract class BranchEventTestUtil extends BranchTest {
+abstract class BranchTestRequestUtil {
     private static final String TAG = "BranchEventTestUtil";
+
+    // can be pretty short because we mock remote interface and don't actually make async calls from the SDK
+    public static final int TEST_REQUEST_TIMEOUT = 500;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.
     protected boolean isStandardEvent(BranchEvent event) throws Throwable {
@@ -37,7 +35,7 @@ abstract class BranchEventTestUtil extends BranchTest {
         int queueSizeIn = queue.getSize();
 
         event.logEvent(context);
-        ServerRequest queuedEvent = findEventOnQueue(context, "name", event.getEventName());
+        ServerRequest queuedEvent = findRequestOnQueue(context, "name", event.getEventName());
         Assert.assertNotNull(queuedEvent);
 
         int queueSizeOut = queue.getSize();
@@ -46,7 +44,7 @@ abstract class BranchEventTestUtil extends BranchTest {
         return doFinalUpdate(queuedEvent);
     }
 
-    protected ServerRequest findEventOnQueue(Context context, String key, String eventName) throws InterruptedException {
+    protected ServerRequest findRequestOnQueue(Context context, String key, String eventName) throws InterruptedException {
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
 
         int wait_remaining = 2000;
@@ -72,7 +70,7 @@ abstract class BranchEventTestUtil extends BranchTest {
         return null;
     }
 
-    protected ServerRequest getLastEventOnQueue(Context context, int minimumQueueSize) {
+    protected ServerRequest getLastRequestOnQueue(Context context, int minimumQueueSize) {
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
 
         int size = queue.getSize();

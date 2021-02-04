@@ -21,7 +21,7 @@ import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.util.BranchCPID;
 
 @RunWith(AndroidJUnit4.class)
-public class BranchSDKTests extends BranchTest {
+public class BranchApiTests extends BranchTest {
     private static final String TAG = "BranchSDKTests";
 
     private PrefHelper prefHelper;
@@ -54,7 +54,7 @@ public class BranchSDKTests extends BranchTest {
             }
         });
 
-        Assert.assertTrue(lock.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(lock.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class BranchSDKTests extends BranchTest {
                         signal.countDown();
                     }
                 });
-        Assert.assertTrue(signal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -114,7 +114,7 @@ public class BranchSDKTests extends BranchTest {
                         signal.countDown();
                     }
                 });
-        Assert.assertTrue(signal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -124,17 +124,18 @@ public class BranchSDKTests extends BranchTest {
         FBUrl urlFB = new FBUrl(null);
         getFBUrl(urlFB);
 
-        String url = new BranchShortLinkBuilder(getTestContext())
+        String urlFB2 = new BranchShortLinkBuilder(getTestContext())
                 .setChannel("facebook")
                 .getShortUrl();
 
-        Log.d(TAG, "url = " + url + ", urlFB = " + urlFB.val);
-        Assert.assertTrue(url != null && url.equals(urlFB.val));
+        Assert.assertNotNull(urlFB2);
+        Assert.assertTrue(urlFB2.equals(urlFB.val));
 
-        url = new BranchShortLinkBuilder(getTestContext())
+        String linkedinUrl = new BranchShortLinkBuilder(getTestContext())
                 .setChannel("linkedin")
                 .getShortUrl();
-        Assert.assertFalse(url != null && !url.equals(urlFB.val));
+        Assert.assertNotNull(linkedinUrl);
+        Assert.assertFalse(linkedinUrl.equals(urlFB.val));
     }
 
     @Test
@@ -160,7 +161,7 @@ public class BranchSDKTests extends BranchTest {
                 signal.countDown();
             }
         });
-        Assert.assertTrue(signal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -179,7 +180,7 @@ public class BranchSDKTests extends BranchTest {
                 signal.countDown();
             }
         });
-        Assert.assertTrue(signal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -197,7 +198,7 @@ public class BranchSDKTests extends BranchTest {
                 signal.countDown();
             }
         });
-        Assert.assertTrue(signal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -222,7 +223,7 @@ public class BranchSDKTests extends BranchTest {
                         }
                     });
         }
-        Assert.assertTrue(signal.await((TEST_TIMEOUT * reps), TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signal.await((TEST_REQUEST_TIMEOUT * reps), TimeUnit.MILLISECONDS));
 
         new BranchShortLinkBuilder(getTestContext())
                 .setFeature("loadTest")
@@ -235,7 +236,7 @@ public class BranchSDKTests extends BranchTest {
                     }
                 });
 
-        Assert.assertTrue(signalFinal.await(TEST_TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(signalFinal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
         Assert.assertNotNull(activityScenario);
     }
 
@@ -273,7 +274,7 @@ public class BranchSDKTests extends BranchTest {
                         signal.countDown();
                     }
                 });
-        Thread.sleep(TEST_TIMEOUT * 5);
+        Thread.sleep(TEST_REQUEST_TIMEOUT * 5);
         Assert.assertEquals(0, signal.getCount());
     }
 

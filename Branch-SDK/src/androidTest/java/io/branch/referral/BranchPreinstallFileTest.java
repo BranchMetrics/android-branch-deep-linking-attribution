@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public class BranchPreinstallFileTest extends BranchEventTestUtil {
+public class BranchPreinstallFileTest extends BranchTest {
 
     @Test
     public void testResultSuccess() throws Throwable {

@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * Created by --vbajpai on --2019-08-29 at --21:56 for --android-branch-deep-linking-attribution
  */
-public class BranchModuleInjectionTest extends BranchEventTestUtil {
+public class BranchModuleInjectionTest extends BranchTest {
 
     @Test
     public void testResultSuccess() throws Throwable {
@@ -71,7 +71,7 @@ public class BranchModuleInjectionTest extends BranchEventTestUtil {
         commerceEvent.setCoupon("MyCoupon");
 
         Branch.getInstance().sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findEventOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
+        ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
         Assert.assertNotNull(serverRequest);
         doFinalUpdate(serverRequest);

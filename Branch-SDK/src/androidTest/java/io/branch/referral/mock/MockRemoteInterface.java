@@ -4,8 +4,6 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
-import java.util.Random;
-
 import io.branch.referral.Branch;
 import io.branch.referral.BranchTest;
 import io.branch.referral.PrefHelper;
@@ -24,7 +22,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
 
     // since most tests use TEST_TIMEOUT to await network requests, lower it here, so TEST_TIMEOUT
     // ends up including a little bit of a buffer for scheduling network requests.
-    private final long networkRequestDuration = BranchTest.TEST_TIMEOUT / 3;
+    private final long networkRequestDuration = BranchTest.TEST_REQUEST_TIMEOUT / 3;
 
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {

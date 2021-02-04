@@ -13,7 +13,7 @@ import org.junit.runner.RunWith;
  */
 
 @RunWith(AndroidJUnit4.class)
-public class BranchCPIDTest extends BranchEventTestUtil {
+public class BranchCPIDTest extends BranchTest {
 
     @Test
     public void testGetCPID() throws Throwable{

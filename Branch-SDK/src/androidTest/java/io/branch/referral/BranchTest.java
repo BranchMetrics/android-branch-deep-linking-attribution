@@ -21,9 +21,8 @@ import io.branch.referral.mock.MockRemoteInterface;
  * Base Instrumented test, which will execute on an Android device.
  */
 @RunWith(AndroidJUnit4.class)
-abstract public class BranchTest {
+abstract public class BranchTest extends BranchTestRequestUtil {
     private static final String TAG = "BranchTest";
-    public static final int TEST_TIMEOUT = 500;// can be pretty short because we mock remote interface and don't actually make async calls from the SDK
     protected static final String TEST_KEY = "key_live_testing_only";
 
     protected Context mContext;
@@ -41,7 +40,7 @@ abstract public class BranchTest {
     public void tearDown() throws InterruptedException {
         if (activityScenario != null) {
             activityScenario.close();
-            Thread.sleep(TEST_TIMEOUT);
+            Thread.sleep(TEST_REQUEST_TIMEOUT);
         }
 
         if (branch != null) {
@@ -103,10 +102,15 @@ abstract public class BranchTest {
 
     protected void initSessionResumeActivity(Runnable subtest) throws InterruptedException {
         activityScenario.moveToState(Lifecycle.State.RESUMED);
+        // MockRemoteInterface will purposefully delay session initialization request for TEST_TIMEOUT/2 millis,
+        // `subtest`, which typically tests properties of requests retrieved from the queue must complete
+        // in that amount of time
         if (subtest != null) {
             subtest.run();
         }
-        Thread.sleep(TEST_TIMEOUT * 3); // make timeout longer to account for lifecycle transitions
+        // activityScenario.moveToState is async, so we stop the test's thread for Activity to complete the
+        // lifecycle transitions (and session initialization)
+        Thread.sleep(TEST_REQUEST_TIMEOUT * 3);
         Log.d(TAG, "initSessionResumeActivity completed");
     }
 
