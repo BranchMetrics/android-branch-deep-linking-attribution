@@ -620,6 +620,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branchReferral_.requestQueue_.clear();
             }
 
+            Boolean enableFbLinkCheck = BranchJsonConfig.getInstance(context).getEnableFacebookLinkCheck();
+            if (enableFbLinkCheck != null && enableFbLinkCheck) {
+                branchReferral_.enableFacebookAppLinkCheck();
+            }
+
             /* If {@link Application} is instantiated register for activity life cycle events. */
             if (context instanceof Application) {
                 isAutoSessionMode_ = true;
