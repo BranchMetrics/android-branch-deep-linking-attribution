@@ -1674,10 +1674,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             networkCount_ = 0;
                             handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
                         } else {
-                            final CountDownLatch latch = new CountDownLatch(1);
-                            final BranchPostTask postTask = new BranchPostTask(req, latch);
-                            postTask.executeTask();
-                            startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
+                            executeTimedBranchPostTask(req, prefHelper_.getTimeout());
                         }
                     } else {
                         networkCount_ = 0;
@@ -1693,18 +1690,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void startTimeoutTimer(final CountDownLatch latch, final BranchPostTask postTask, final int timeout) {
-        new Thread(new Runnable() {@Override public void run() {
-            try {
-                if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                    postTask.cancel(true);
+    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final BranchPostTask postTask = new BranchPostTask(req, latch);
 
-                    // it takes time to cancel the thread, so we do the timeout state cleanup here instead of postTask.onCancelled().
-                    postTask.thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + postTask.thisReq_.getRequestUrl());
-                    requestQueue_.remove(postTask.thisReq_);
-                }
-            } catch (InterruptedException ignored) {}
-        }}).start();
+        try {
+            postTask.executeTask();
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                postTask.cancel(true);
+            }
+        } catch (InterruptedException e) {
+            postTask.cancel(true);
+        }
     }
 
     // Determine if a Request needs a Session to proceed.
@@ -2297,7 +2294,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 latch_.countDown();
             }
 
-            if (serverResponse == null || isCancelled()) return;
+            if (serverResponse == null) return;
 
             try {
                 int status = serverResponse.getStatusCode();
@@ -2439,7 +2436,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         protected void onCancelled(ServerResponse v) {
             super.onCancelled();
-            // Timeout cleanup happens in branch.startTimeoutTimer(...) to preserve timeout accuracy
+            onPostExecute(new ServerResponse(thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
         }
     }
     
