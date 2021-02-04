@@ -1,11 +1,13 @@
 package io.branch.referral.network;
 
-import android.content.Context;
+import android.text.TextUtils;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Locale;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -89,7 +91,7 @@ public abstract class BranchRemoteInterface {
         if (addCommonParams(params, branchKey)) {
             modifiedUrl += this.convertJSONtoString(params);
         } else {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID);
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
 
         long reqStartTime = System.currentTimeMillis();
@@ -97,12 +99,12 @@ public abstract class BranchRemoteInterface {
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
-            return processEntityForJSON(response.responseData, response.responseCode, tag);
+            return processEntityForJSON(response, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
             } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
             }
         } finally {
             // Add total round trip time
@@ -127,19 +129,19 @@ public abstract class BranchRemoteInterface {
         body = body != null ? body : new JSONObject();
 
         if (!addCommonParams(body, branchKey)) {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID);
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
         PrefHelper.Debug("posting to " + url);
         PrefHelper.Debug("Post value = " + body.toString());
 
         try {
             BranchResponse response = doRestfulPost(url, body);
-            return processEntityForJSON(response.responseData, response.responseCode, tag);
+            return processEntityForJSON(response, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
             } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
             }
         } finally {
             if (Branch.getInstance() != null) {
@@ -147,18 +149,6 @@ public abstract class BranchRemoteInterface {
                 Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
-    }
-
-    public static final BranchRemoteInterface getDefaultBranchRemoteInterface(Context context) {
-        BranchRemoteInterface branchRemoteInterface = null;
-
-        boolean isOkHttpAvailable = false; // TODO : Check for OKHTTP Availability
-        if (isOkHttpAvailable) {
-            // TODO return default OKHTTP Remote interface here
-        } else {
-            branchRemoteInterface = new BranchRemoteInterfaceUrlConnection(context);
-        }
-        return branchRemoteInterface;
     }
 
 
@@ -170,17 +160,24 @@ public abstract class BranchRemoteInterface {
      * that contains the same data. This data is then attached as the post data of the
      * {@link ServerResponse} object returned.</p>
      *
-     * @param responseString Branch server response received. A  string form of the input or error stream payload
-     * @param statusCode     An {@link Integer} value containing the HTTP response code.
+     * @param response Branch server response received containing response data with headers and response code
      * @param tag            A {@link String} value containing the tag value to be applied to the
      *                       resultant {@link ServerResponse} object.
      * @return A {@link ServerResponse} object representing the resultant output object from Branch Remote server
      * response in Branch SDK terms.
      * see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">HTTP/1.1: Status Codes</a>
      */
-    private ServerResponse processEntityForJSON(String responseString, int statusCode, String tag) {
-        ServerResponse result = new ServerResponse(tag, statusCode);
-        PrefHelper.Debug("returned " + responseString);
+    private ServerResponse processEntityForJSON(BranchResponse response, String tag, String requestId) {
+        String responseString = response.responseData;
+
+        int statusCode = response.responseCode;
+
+        ServerResponse result = new ServerResponse(tag, statusCode, requestId);
+        if(!TextUtils.isEmpty(requestId)){
+            PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
+        } else {
+            PrefHelper.Debug(String.format("returned %s", responseString));
+        }
 
         if (responseString != null) {
             try {
@@ -255,6 +252,7 @@ public abstract class BranchRemoteInterface {
     public static class BranchResponse {
         private final String responseData;
         private final int responseCode;
+        String requestId;
 
         /**
          * Creates a BranchResponse object with response data and status code

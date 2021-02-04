@@ -39,7 +39,7 @@ public class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
                     Object adInfoObj = getAdInfoObject(context);
 
                     DeviceInfo di = DeviceInfo.getInstance();
-                    if (di == null) di = DeviceInfo.initialize(context);// some tests complete early and garbage collect DeviceInfo singleton before this point is reached
+                    if (di == null) di = new DeviceInfo(context);// some tests complete early and garbage collect DeviceInfo singleton before this point is reached
 
                     SystemObserver so = di.getSystemObserver();
                     if (so != null) {

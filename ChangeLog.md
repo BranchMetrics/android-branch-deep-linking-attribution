@@ -1,4 +1,14 @@
 # Branch Android SDK change log
+- v5.0.5
+  * _*Master Release*_ - January 21, 2020
+  * Add API to pass hashed partner parameters
+  
+- v5.0.4
+  * _*Master Release*_ - December 9, 2020
+  * Reduce calls to v1/close
+  * Fix validator errors
+  * Fix setNetworkTimeout(...) API
+
 - v5.0.3
   * _*Master Release*_ - August 10, 2020
   * Upgrade referrer library

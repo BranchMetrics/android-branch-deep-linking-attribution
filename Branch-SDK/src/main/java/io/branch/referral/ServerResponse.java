@@ -34,6 +34,10 @@ public class ServerResponse {
      */
     private Object post_;
 
+    /**
+     * Unique timestamp based request id provided from internal Branch servers for debugging
+     */
+    private String requestId_;
 
     /**
      * <p>Main constructor method for the {@link ServerResponse} class that allows for the instantiation
@@ -42,9 +46,10 @@ public class ServerResponse {
      * @param tag        A {@link String} value of the <i>Tag</i> attribute of the current link.
      * @param statusCode {@link Integer} value of the HTTP status code.
      */
-    public ServerResponse(String tag, int statusCode) {
+    public ServerResponse(String tag, int statusCode, String requestId) {
         tag_ = tag;
         statusCode_ = statusCode;
+        requestId_ = requestId;
     }
 
     /**
@@ -105,7 +110,6 @@ public class ServerResponse {
 
         return null;
     }
-
 
     /**
      * Get the reason for failure if there any

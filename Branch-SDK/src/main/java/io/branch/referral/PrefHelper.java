@@ -17,6 +17,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
@@ -119,7 +121,7 @@ public class PrefHelper {
      * object for use whenever {@link SharedPreferences} values are read or written via this helper
      * class.
      */
-    private SharedPreferences appSharedPrefs_;
+    private final SharedPreferences appSharedPrefs_;
     
     /**
      * A single variable that holds a reference to an {@link Editor} object that is used by the
@@ -130,25 +132,17 @@ public class PrefHelper {
     /**
      * Arbitrary key values added to all requests.
      */
-    private final JSONObject requestMetadata;
+    private final JSONObject requestMetadata = new JSONObject();
 
     /**
      * Arbitrary key values added to Install requests.
      */
-    private final JSONObject installMetadata;
+    private final JSONObject installMetadata = new JSONObject();
 
     /**
      * Module injected key values added to all requests.
      */
-    private final JSONObject secondaryRequestMetadata;
-
-
-    //private final List<Module> factories = new ArrayList<>();
-
-    /**
-     * Branch Content discovery data
-     */
-    private static JSONObject savedAnalyticsData_;
+    private final JSONObject secondaryRequestMetadata = new JSONObject();
 
     /**
      * Branch Custom server url.  Used by clients that want to proxy all requests.
@@ -160,6 +154,10 @@ public class PrefHelper {
      */
     private static String customCDNBaseURL_ = null;
 
+    /**
+     * Branch partner parameters.
+     */
+    public final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
 
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
@@ -170,9 +168,6 @@ public class PrefHelper {
     private PrefHelper(Context context) {
         this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
-        this.requestMetadata = new JSONObject();
-        this.installMetadata = new JSONObject();
-        this.secondaryRequestMetadata = new JSONObject();
     }
     
     /**
@@ -200,7 +195,6 @@ public class PrefHelper {
         // Reset all of the statics.
         enableLogging_ = false;
         Branch_Key = null;
-        savedAnalyticsData_ = null;
         prefHelper_ = null;
         customServerURL_ = null;
         customCDNBaseURL_ = null;

@@ -85,7 +85,7 @@ public class HuaweiOAIDFetchTask extends BranchAsyncTask<Void, Void, Void> {
             Boolean HW_lat = (Boolean) HW_isLimitAdTrackingEnabled.invoke(HW_AdvertisingIdClient_Info);
 
             DeviceInfo di = DeviceInfo.getInstance();
-            if (di == null) di = DeviceInfo.initialize(context);// some tests complete early and garbage collect DeviceInfo singleton before this point is reached
+            if (di == null) di = new DeviceInfo(context);// some tests complete early and garbage collect DeviceInfo singleton before this point is reached
 
             SystemObserver so = di.getSystemObserver();
             so.setGAID(HW_id);

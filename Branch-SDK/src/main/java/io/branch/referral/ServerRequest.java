@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +34,7 @@ public abstract class ServerRequest {
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    private String requestPath_;
+    private final String requestPath_;
     protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;
@@ -191,7 +192,7 @@ public abstract class ServerRequest {
             try {
                 JSONObject userDataObj = new JSONObject();
                 params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(this, context_, prefHelper_, userDataObj);
+                DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
             } catch (JSONException ignored) {}
         }
     }
@@ -670,5 +671,18 @@ public abstract class ServerRequest {
             if (item.equals(requestPath_)) return true;
         }
         return false;
+    }
+
+    protected static void addPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
+        if (body == null) return;
+        JSONObject partnerData = new JSONObject();
+        for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {
+            JSONObject individualPartnerParams = new JSONObject();
+            for (Map.Entry<String, String> p : e.getValue().entrySet()) {
+                individualPartnerParams.put(p.getKey(), p.getValue());
+            }
+            partnerData.put(e.getKey(), individualPartnerParams);
+        }
+        body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
     }
 }
