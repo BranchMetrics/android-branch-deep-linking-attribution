@@ -1667,12 +1667,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             PrefHelper.Debug("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
-                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                            handleFailure(req, BranchError.ERR_NO_SESSION);
                         }
                         // Determine if a session is needed to execute (SDK-271)
                         else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
                             networkCount_ = 0;
-                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                            handleFailure(req, BranchError.ERR_NO_SESSION);
                         } else {
                             executeTimedBranchPostTask(req, prefHelper_.getTimeout());
                         }
@@ -1721,19 +1721,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return (hasSession() && hasDeviceFingerPrint());
     }
     
-    private void handleFailure(int index, int statusCode) {
-        ServerRequest req;
-        if (index >= requestQueue_.getSize()) {
-            req = requestQueue_.peekAt(requestQueue_.getSize() - 1);
-        } else {
-            req = requestQueue_.peekAt(index);
-        }
-        handleFailure(req, statusCode);
-    }
-    
     private void handleFailure(final ServerRequest req, int statusCode) {
-        if (req == null)
-            return;
+        if (req == null) return;
         req.handleFailure(statusCode, "");
     }
     
@@ -2318,7 +2307,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
                             } else {
                                 PrefHelper.LogAlways("Branch API Error: Conflicting resource error code from API");
-                                handleFailure(0, status);
+                                handleFailure(thisReq_, status);
                             }
                         }
                         //On Network error or Branch is down fail all the pending requests in the queue except

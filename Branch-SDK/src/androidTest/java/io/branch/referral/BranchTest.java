@@ -110,7 +110,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         }
         // activityScenario.moveToState is async, so we stop the test's thread for Activity to complete the
         // lifecycle transitions (and session initialization)
-        Thread.sleep(TEST_REQUEST_TIMEOUT * 3);
+        Thread.sleep(4000);
         Log.d(TAG, "initSessionResumeActivity completed");
     }
 

@@ -7,6 +7,7 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.text.TextUtils;
+import android.webkit.TracingController;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,6 +25,7 @@ import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
+import io.branch.referral.TrackingController;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.ContentMetadata;
@@ -620,7 +622,7 @@ public class BranchUniversalObject implements Parcelable {
      * @param callback       An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
      */
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
-        if (Branch.getInstance().isTrackingDisabled()) {
+        if (TrackingController.isTrackingDisabled(context) && callback != null) {
             callback.onLinkCreate(getLinkBuilder(context, linkProperties).getShortUrl(), null);
         } else {
             getLinkBuilder(context, linkProperties).generateShortUrl(callback);

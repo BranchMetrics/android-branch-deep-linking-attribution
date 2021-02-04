@@ -51,9 +51,7 @@ public class ServerRequestGetCPID extends ServerRequest {
             return;
         }
 
-        callback.onDataFetched(null,
-                new BranchError("Failed to get the Cross Platform IDs",
-                        BranchError.ERR_BRANCH_INVALID_REQUEST));
+        callback.onDataFetched(null, new BranchError("Failed to get the Cross Platform IDs", statusCode));
     }
 
     @Override
