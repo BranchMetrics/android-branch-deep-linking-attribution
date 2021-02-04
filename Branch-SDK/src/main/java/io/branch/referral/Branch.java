@@ -1006,9 +1006,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     requestQueue_.dequeue();
                 }
             } else {
-                if (!requestQueue_.containsClose() && closeRequestNeeded) {
-                    ServerRequest req = new ServerRequestRegisterClose(context_);
+                ServerRequest req = new ServerRequestRegisterClose(context_);
+                if (closeRequestNeeded) {
                     handleNewRequest(req);
+                } else {
+                    req.onRequestSucceeded(null, null);
                 }
             }
             setInitState(SESSION_STATE.UNINITIALISED);

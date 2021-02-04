@@ -280,25 +280,6 @@ class ServerRequestQueue {
     }
     
     /**
-     * <p>Determines whether the queue contains a session/app close request.</p>
-     *
-     * @return A {@link Boolean} value indicating whether or not the queue contains a
-     * session close request. <i>True</i> if the queue contains a close request,
-     * <i>False</i> if not.
-     */
-    boolean containsClose() {
-        synchronized (reqQueueLockObject) {
-            for (ServerRequest req : queue) {
-                if (req != null &&
-                        req.getRequestPath().equals(Defines.RequestPath.RegisterClose.getPath())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    /**
      * <p>Determines whether the queue contains an install/register request.</p>
      *
      * @return A {@link Boolean} value indicating whether or not the queue contains an
