@@ -1291,7 +1291,7 @@ public class PrefHelper {
     }
 
     // package private loadPartnerParams(...) allows to unit test BranchPartnerParameters, besides tests, this should only be invoked from the public loadPartnerParams(...) method.
-    static void loadPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
+    static void  loadPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
         if (body == null) return;
         JSONObject partnerData = new JSONObject();
         for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {

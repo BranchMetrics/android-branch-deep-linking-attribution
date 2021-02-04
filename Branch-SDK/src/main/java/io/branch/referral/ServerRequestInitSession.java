@@ -39,7 +39,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
-
         prefHelper_.loadPartnerParams(post);
 
         String appVersion = DeviceInfo.getInstance().getAppVersion();
