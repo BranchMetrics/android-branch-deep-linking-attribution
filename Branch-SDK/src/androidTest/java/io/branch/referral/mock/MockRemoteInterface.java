@@ -51,7 +51,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
 
     public static String pathForSuccessResponse(String url) {
         if (url.contains(GetURL.getPath())) {
-            return "{\"url\":\"https://bnc.lt/a/key_live_testing_only?channel=facebook&type=0&duration=0&source=android&data=eyJzb3VyY2UiOiJhbmRyb2lkIn0%3D\"}";
+            return "{\"url\":\"https://bnc.lt/l/OiJhbmRy\"}";
         } else if (url.contains(GetCreditHistory.getPath())) {
             return "[]";
         } else if (url.contains(GetCredits.getPath())) {

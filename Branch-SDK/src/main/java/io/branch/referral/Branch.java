@@ -1561,7 +1561,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 return url;
             } else {
                 if (req.isAsync()) {
-                    generateShortLinkAsync(req);
+                    handleNewRequest(req);
                 } else {
                     return generateShortLinkSync(req);
                 }
@@ -1633,10 +1633,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             PrefHelper.Debug("Warning: User session has not been initialized");
         }
         return null;
-    }
-    
-    private void generateShortLinkAsync(final ServerRequest req) {
-        handleNewRequest(req);
     }
     
     private JSONObject convertParamsStringToDictionary(String paramString) {

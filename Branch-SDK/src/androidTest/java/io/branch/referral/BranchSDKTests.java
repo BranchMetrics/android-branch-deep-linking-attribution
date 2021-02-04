@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +31,12 @@ public class BranchSDKTests extends BranchTest {
         super.setUp();
         initBranchInstance();
         prefHelper = PrefHelper.getInstance(mContext);
+    }
+
+    @After
+    public void tearDown() throws InterruptedException {
+        branch.linkCache_.clear();
+        super.tearDown();
     }
 
     @Test
@@ -96,7 +103,7 @@ public class BranchSDKTests extends BranchTest {
 
         final CountDownLatch signal = new CountDownLatch(1);
         new BranchShortLinkBuilder(getTestContext())
-                .setChannel("facebook")
+                .setChannel("twitter")
                 .generateShortUrl(new BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
@@ -232,8 +239,6 @@ public class BranchSDKTests extends BranchTest {
         Assert.assertNotNull(activityScenario);
     }
 
-
-
     @Test
     public void testAppContext() {
         // Context of the app under test.
@@ -259,11 +264,10 @@ public class BranchSDKTests extends BranchTest {
                 .generateShortUrl(new BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        Assert.assertNull(error); // todo fix?
+                        Assert.assertNull(error);
                         Assert.assertNotNull(url);
-                        // long url route = "/l/", short url route = "/a/"
-                        Log.d(TAG, "urlFB = " + url);
-                        Assert.assertTrue(url.startsWith("https://bnc.lt/a/"));
+                        // long url route = "/a/", short url route = "/l/"
+                        Assert.assertTrue(url.startsWith("https://bnc.lt/l/"));
                         res.val = url;
 
                         signal.countDown();
