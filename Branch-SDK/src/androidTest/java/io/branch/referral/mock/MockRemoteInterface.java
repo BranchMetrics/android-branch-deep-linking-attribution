@@ -20,7 +20,7 @@ import static io.branch.referral.Defines.RequestPath.RegisterInstall;
 import static io.branch.referral.Defines.RequestPath.RegisterOpen;
 
 public class MockRemoteInterface extends BranchRemoteInterface {
-
+    private final static String TAG = "MockRemoteInterface";
 
     // since most tests use TEST_TIMEOUT to await network requests, lower it here, so TEST_TIMEOUT
     // ends up including a little bit of a buffer for scheduling network requests.
@@ -34,7 +34,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Log.d("benas", "doRestfulGet, url: " + url);
+        Log.d(TAG, "doRestfulGet, url: " + url);
         return new BranchResponse(pathForSuccessResponse(url), 200);
     }
 
@@ -45,7 +45,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Log.d("benas", "doRestfulPost, url: " + url + ", payload: " + payload);
+        Log.d(TAG, "doRestfulPost, url: " + url + ", payload: " + payload);
         return new BranchResponse(pathForSuccessResponse(url), 200);
     }
 

@@ -121,7 +121,7 @@ public class BranchSDKTests extends BranchTest {
                 .setChannel("facebook")
                 .getShortUrl();
 
-        Log.d("benas", "url = " + url + ", urlFB = " + urlFB.val);
+        Log.d(TAG, "url = " + url + ", urlFB = " + urlFB.val);
         Assert.assertTrue(url != null && url.equals(urlFB.val));
 
         url = new BranchShortLinkBuilder(getTestContext())
@@ -262,7 +262,7 @@ public class BranchSDKTests extends BranchTest {
                         Assert.assertNull(error); // todo fix?
                         Assert.assertNotNull(url);
                         // long url route = "/l/", short url route = "/a/"
-                        Log.d("benas", "urlFB = " + url);
+                        Log.d(TAG, "urlFB = " + url);
                         Assert.assertTrue(url.startsWith("https://bnc.lt/a/"));
                         res.val = url;
 
