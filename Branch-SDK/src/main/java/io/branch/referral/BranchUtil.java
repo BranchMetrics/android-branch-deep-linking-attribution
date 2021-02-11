@@ -9,7 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
+
 import android.util.DisplayMetrics;
 
 import org.json.JSONArray;
@@ -30,13 +30,12 @@ public class BranchUtil {
     /** For setting test mode using {@link Branch#enableTestMode()} */
     private static boolean isTestModeEnabled_ = false;
 
-    // Only need to check once for Manifest Flags
-    private static Boolean isManifestTestModeEnabled = null;
+    private static Boolean testModeEnabledViaCompileTimeConfiguration = null;
 
     // Package Private
     static void shutDown() {
         isTestModeEnabled_ = false;
-        isManifestTestModeEnabled = null;
+        testModeEnabledViaCompileTimeConfiguration = null;
     }
 
     /**
@@ -47,15 +46,29 @@ public class BranchUtil {
      * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
      */
     static boolean checkTestMode(Context context) {
-        // Test Mode can be enabled independently of checking the manifest.
-        if (!isTestModeEnabled_ && isManifestTestModeEnabled == null) {
-            isManifestTestModeEnabled = isTestModeEnabled_ = readTestMode(context);
+        // setting isTestModeEnabled_ programmatically overrides both manifest and branch.json configurations.
+        if (!isTestModeEnabled_) {
+
+            if (testModeEnabledViaCompileTimeConfiguration == null) {
+
+                BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+                if (jsonConfig.isValid(BranchJsonConfig.BranchJsonKey.useTestInstance)) {
+                    // branch.json overrides manifest configurations
+                    Boolean r = jsonConfig.getUseTestInstance();
+                    isTestModeEnabled_ = r != null ? r : false;
+                } else {
+                    // manifest configurations is the last resort
+                    isTestModeEnabled_  = readTestMode(context);
+                }
+
+                testModeEnabledViaCompileTimeConfiguration = isTestModeEnabled_;
+            }
         }
         return isTestModeEnabled_;
     }
 
     private static boolean readTestMode(Context context) {
-        boolean result = false;
+        boolean result = isTestModeEnabled_;
         String testModeKey = "io.branch.sdk.TestMode";
         try {
             final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
@@ -72,8 +85,14 @@ public class BranchUtil {
 
     public static String readBranchKey(Context context) {
         String branchKey = null;
-        String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
 
+        // branch.json overrides manifest or string resources configurations
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        if (jsonConfig.isValid()) branchKey = jsonConfig.getBranchKey();
+        if (branchKey != null) return branchKey;
+
+        String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
+        // manifest overrides string resources
         try {
             final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             if (ai.metaData != null) {
@@ -83,17 +102,12 @@ public class BranchUtil {
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
             }
-        } catch (final Exception ignore) {
-        }
+        } catch (final PackageManager.NameNotFoundException ignore) { }
+        if (branchKey != null) return branchKey;
 
-        // If Branch key is not specified in the manifest check String resource
-        if (TextUtils.isEmpty(branchKey)) {
-            try {
-                Resources resources = context.getResources();
-                branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
-            } catch (Exception ignore) {
-            }
-        }
+        // check string resources as the last resort
+        Resources resources = context.getResources();
+        branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
 
         return branchKey;
     }
