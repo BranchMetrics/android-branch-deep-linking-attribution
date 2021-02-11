@@ -23,7 +23,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      *                    the data associated with new install registration.
      */
     ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback) {
-        super(context, Defines.RequestPath.RegisterInstall.getPath());
+        super(context, Defines.RequestPath.RegisterInstall);
         callback_ = callback;
         try {
             setPost(new JSONObject());
@@ -33,7 +33,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         }
     }
     
-    ServerRequestRegisterInstall(String requestPath, JSONObject post, Context context) {
+    ServerRequestRegisterInstall(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
     
@@ -72,11 +72,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                     // Check if there is any install params. Install param will be empty on until click a branch link
                     // or When a user logout
                     if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                        // if clicked on link then check for is Referrable state
-                        if (prefHelper_.getIsReferrable() == 1) {
-                            String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
-                            prefHelper_.setInstallParams(params);
-                        }
+                        String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
+                        prefHelper_.setInstallParams(params);
                     }
                 }
             }

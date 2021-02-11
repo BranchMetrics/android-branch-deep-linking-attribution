@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.URLUtil;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -75,7 +74,6 @@ public class PrefHelper {
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
-    private static final String KEY_IS_REFERRABLE = "bnc_is_referrable";
     private static final String KEY_LATD_ATTRIBUTION_WINDOW = "bnc_latd_attributon_window";
 
     private static final String KEY_BUCKETS = "bnc_buckets";
@@ -109,7 +107,6 @@ public class PrefHelper {
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     
-    private static String Branch_Key = null;
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -157,7 +154,7 @@ public class PrefHelper {
     /**
      * Branch partner parameters.
      */
-    public final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
+    final BranchPartnerParameters partnerParams_ = new BranchPartnerParameters();
 
     /**
      * <p>Constructor with context passed from calling {@link Activity}.</p>
@@ -194,7 +191,6 @@ public class PrefHelper {
 
         // Reset all of the statics.
         enableLogging_ = false;
-        Branch_Key = null;
         prefHelper_ = null;
         customServerURL_ = null;
         customCDNBaseURL_ = null;
@@ -340,21 +336,24 @@ public class PrefHelper {
      * @return A {@link Boolean} which is true if the key set is a new key. On Setting a new key need to clear all preference items.
      */
     public boolean setBranchKey(String key) {
-        Branch_Key = key;
         String currentBranchKey = getString(KEY_BRANCH_KEY);
         if (!currentBranchKey.equals(key)) {
             clearPrefOnBranchKeyChange();
             setString(KEY_BRANCH_KEY, key);
+
+            // PrefHelper can be retrieved before Branch singleton is initialized
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().linkCache_.clear();
+                Branch.getInstance().requestQueue_.clear();
+            }
+
             return true;
         }
         return false;
     }
     
     public String getBranchKey() {
-        if (Branch_Key == null) {
-            Branch_Key = getString(KEY_BRANCH_KEY);
-        }
-        return Branch_Key;
+        return getString(KEY_BRANCH_KEY);
     }
     
     /**
@@ -723,40 +722,6 @@ public class PrefHelper {
     }
     
     /**
-     * <p>Gets the {@link Integer} value of the preference setting {@link #KEY_IS_REFERRABLE}, which
-     * indicates whether or not the current session should be considered referrable.</p>
-     *
-     * @return A {@link Integer} value indicating whether or not the session should be
-     * considered referrable.
-     */
-    public int getIsReferrable() {
-        return getInteger(KEY_IS_REFERRABLE);
-    }
-    
-    /**
-     * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 1, or <i>true</i> if parsed as a {@link Boolean}.
-     * This value is used by the {@link Branch} object.</p>
-     * <ul>
-     * <li>Sets {@link #KEY_IS_REFERRABLE} to 1 - <i>true</i> - This session <b><u>is</u></b> referrable.</li>
-     * </ul>
-     */
-    public void setIsReferrable() {
-        setInteger(KEY_IS_REFERRABLE, 1);
-    }
-    
-    /**
-     * <p>Sets the {@link #KEY_IS_REFERRABLE} value in preferences to 0, or <i>false</i> if parsed as a {@link Boolean}.
-     * This value is used by the {@link Branch} object.</p>
-     * <p>
-     * <ul>
-     * <li>Sets {@link #KEY_IS_REFERRABLE} to 0 - <i>false</i> - This session <b><u>is not</u></b> referrable.</li>
-     * </ul>
-     */
-    public void clearIsReferrable() {
-        setInteger(KEY_IS_REFERRABLE, 0);
-    }
-    
-    /**
      * <p>Resets the time that the system was last read. This is used to calculate how "stale" the
      * values are that are in use in preferences.</p>
      */
@@ -999,7 +964,7 @@ public class PrefHelper {
      * @return A {@link Boolean} indicating whether some preference exists.
      */
     public boolean hasPrefValue(String key) {
-        return prefHelper_.appSharedPrefs_.contains(key);
+        return appSharedPrefs_.contains(key);
     }
 
     /**
@@ -1008,7 +973,7 @@ public class PrefHelper {
      * @param key A {@link String} value containing the key to the value that's to be deleted.
      */
     public void removePrefValue(String key) {
-        prefHelper_.prefsEditor_.remove(key).apply();
+        prefsEditor_.remove(key).apply();
     }
     
     /**
@@ -1032,7 +997,7 @@ public class PrefHelper {
      * default value if null.
      */
     public int getInteger(String key, int defaultValue) {
-        return prefHelper_.appSharedPrefs_.getInt(key, defaultValue);
+        return appSharedPrefs_.getInt(key, defaultValue);
     }
     
     /**
@@ -1042,7 +1007,7 @@ public class PrefHelper {
      * @return A {@link Long} value of the specified key as stored in preferences.
      */
     public long getLong(String key) {
-        return prefHelper_.appSharedPrefs_.getLong(key, 0);
+        return appSharedPrefs_.getLong(key, 0);
     }
     
     /**
@@ -1052,7 +1017,7 @@ public class PrefHelper {
      * @return A {@link Float} value of the specified key as stored in preferences.
      */
     public float getFloat(String key) {
-        return prefHelper_.appSharedPrefs_.getFloat(key, 0);
+        return appSharedPrefs_.getFloat(key, 0);
     }
     
     /**
@@ -1062,7 +1027,7 @@ public class PrefHelper {
      * @return A {@link String} value of the specified key as stored in preferences.
      */
     public String getString(String key) {
-        return prefHelper_.appSharedPrefs_.getString(key, NO_STRING_VALUE);
+        return appSharedPrefs_.getString(key, NO_STRING_VALUE);
     }
     
     /**
@@ -1072,7 +1037,7 @@ public class PrefHelper {
      * @return An {@link Boolean} value of the specified key as stored in preferences.
      */
     public boolean getBool(String key) {
-        return prefHelper_.appSharedPrefs_.getBoolean(key, false);
+        return appSharedPrefs_.getBoolean(key, false);
     }
     
     /**
@@ -1082,8 +1047,8 @@ public class PrefHelper {
      * @param value An {@link Integer} value to set the preference record to.
      */
     public void setInteger(String key, int value) {
-        prefHelper_.prefsEditor_.putInt(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putInt(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1093,8 +1058,8 @@ public class PrefHelper {
      * @param value A {@link Long} value to set the preference record to.
      */
     public void setLong(String key, long value) {
-        prefHelper_.prefsEditor_.putLong(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putLong(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1104,8 +1069,8 @@ public class PrefHelper {
      * @param value A {@link Float} value to set the preference record to.
      */
     public void setFloat(String key, float value) {
-        prefHelper_.prefsEditor_.putFloat(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putFloat(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1115,8 +1080,8 @@ public class PrefHelper {
      * @param value A {@link String} value to set the preference record to.
      */
     public void setString(String key, String value) {
-        prefHelper_.prefsEditor_.putString(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putString(key, value);
+        prefsEditor_.apply();
     }
     
     /**
@@ -1126,8 +1091,8 @@ public class PrefHelper {
      * @param value A {@link Boolean} value to set the preference record to.
      */
     public void setBool(String key, Boolean value) {
-        prefHelper_.prefsEditor_.putBoolean(key, value);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.putBoolean(key, value);
+        prefsEditor_.apply();
     }
     
     public void updateBranchViewUsageCount(String branchViewId) {
@@ -1176,7 +1141,7 @@ public class PrefHelper {
         setLinkClickIdentifier(linkClickIdentifier);
         setAppLink(appLink);
         setPushIdentifier(pushIdentifier);
-        prefHelper_.prefsEditor_.apply();
+        prefsEditor_.apply();
     }
     
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
@@ -1317,7 +1282,25 @@ public class PrefHelper {
         return isValidBranchKey(getBranchKey());
     }
 
-    boolean isValidBranchKey(String branchKey) {
+    static boolean isValidBranchKey(String branchKey) {
         return branchKey != null && branchKey.startsWith(isTestModeEnabled() ? "key_test_" : "key_");
+    }
+
+    public void loadPartnerParams(JSONObject body) throws JSONException {
+        loadPartnerParams(body, partnerParams_);
+    }
+
+    // package private loadPartnerParams(...) allows to unit test BranchPartnerParameters, besides tests, this should only be invoked from the public loadPartnerParams(...) method.
+    static void  loadPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
+        if (body == null) return;
+        JSONObject partnerData = new JSONObject();
+        for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {
+            JSONObject individualPartnerParams = new JSONObject();
+            for (Map.Entry<String, String> p : e.getValue().entrySet()) {
+                individualPartnerParams.put(p.getKey(), p.getValue());
+            }
+            partnerData.put(e.getKey(), individualPartnerParams);
+        }
+        body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
     }
 }

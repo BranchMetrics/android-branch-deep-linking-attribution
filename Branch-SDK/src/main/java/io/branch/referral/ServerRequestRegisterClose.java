@@ -20,7 +20,7 @@ class ServerRequestRegisterClose extends ServerRequest {
      * @param context Current {@link Application} context
      */
     public ServerRequestRegisterClose(Context context) {
-        super(context, Defines.RequestPath.RegisterClose.getPath());
+        super(context, Defines.RequestPath.RegisterClose);
         JSONObject closePost = new JSONObject();
         try {
             closePost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
@@ -39,7 +39,7 @@ class ServerRequestRegisterClose extends ServerRequest {
         }
     }
     
-    public ServerRequestRegisterClose(String requestPath, JSONObject post, Context context) {
+    public ServerRequestRegisterClose(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
     

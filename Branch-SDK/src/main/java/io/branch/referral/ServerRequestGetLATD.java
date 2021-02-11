@@ -12,11 +12,11 @@ public class ServerRequestGetLATD extends ServerRequest {
     protected static final int defaultAttributionWindow = -1;
     private int attributionWindow;
 
-    ServerRequestGetLATD(Context context, String requestPath, BranchLastAttributedTouchDataListener callback) {
+    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, BranchLastAttributedTouchDataListener callback) {
         this(context, requestPath, callback, PrefHelper.getInstance(context).getLATDAttributionWindow());
     }
 
-    ServerRequestGetLATD(Context context, String requestPath,
+    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath,
                          BranchLastAttributedTouchDataListener callback, int attributionWindow) {
         super(context, requestPath);
         this.callback = callback;

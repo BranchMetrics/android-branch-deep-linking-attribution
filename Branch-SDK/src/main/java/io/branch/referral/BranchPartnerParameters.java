@@ -1,8 +1,6 @@
 package io.branch.referral;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -17,7 +17,7 @@ public class BranchCPIDTest extends BranchEventTest {
 
     @Test
     public void testGetCPID() throws Throwable{
-        Branch.getInstance(getTestContext()).getCrossPlatformIds(null);
+        Branch.getAutoInstance(getTestContext()).getCrossPlatformIds(null);
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(1, queue.getSize());
@@ -29,7 +29,7 @@ public class BranchCPIDTest extends BranchEventTest {
 
     @Test
     public void testGetLATD() throws Throwable{
-        Branch.getInstance(getTestContext()).getLastAttributedTouchData(null);
+        Branch.getAutoInstance(getTestContext()).getLastAttributedTouchData(null);
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(1, queue.getSize());
@@ -41,7 +41,7 @@ public class BranchCPIDTest extends BranchEventTest {
 
     @Test
     public void testGetLATDAttributionWindowDefault() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
 
         // Defaults to ServerRequestGetLATD.defaultAttributionWindow
@@ -57,7 +57,7 @@ public class BranchCPIDTest extends BranchEventTest {
     @Test
     public void testGetLATDAttributionWindowSetting() throws Throwable {
         //setup
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
 
         // Defaults to ServerRequestGetLATD.defaultAttributionWindow

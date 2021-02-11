@@ -30,7 +30,7 @@ class ServerRequestRedeemRewards extends ServerRequest {
      *                             trigger actions defined therein upon a executing redeem rewards.
      */
     public ServerRequestRedeemRewards(Context context, String bucketName, int numOfCreditsToRedeem, Branch.BranchReferralStateChangedListener callback) {
-        super(context, Defines.RequestPath.RedeemRewards.getPath());
+        super(context, Defines.RequestPath.RedeemRewards);
 
         callback_ = callback;
 
@@ -60,7 +60,7 @@ class ServerRequestRedeemRewards extends ServerRequest {
 
     }
 
-    public ServerRequestRedeemRewards(String requestPath, JSONObject post, Context context) {
+    public ServerRequestRedeemRewards(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 

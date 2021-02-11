@@ -26,12 +26,12 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private static final int STATE_TUNE_MIGRATION = 5;
 
 
-    ServerRequestInitSession(Context context, String requestPath) {
+    ServerRequestInitSession(Context context, Defines.RequestPath requestPath) {
         super(context, requestPath);
         context_ = context;
     }
 
-    ServerRequestInitSession(String requestPath, JSONObject post, Context context) {
+    ServerRequestInitSession(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         context_ = context;
     }
@@ -39,15 +39,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
-
-        addPartnerParams(post, prefHelper_.partnerParams_);
+        prefHelper_.loadPartnerParams(post);
 
         String appVersion = DeviceInfo.getInstance().getAppVersion();
         if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
             post.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
         }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
-        post.put(Defines.Jsonkey.IsReferrable.getKey(), prefHelper_.getIsReferrable());
         post.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
 
         updateInstallStateAndTimestamps(post);

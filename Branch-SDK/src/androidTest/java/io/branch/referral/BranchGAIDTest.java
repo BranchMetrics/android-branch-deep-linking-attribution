@@ -36,7 +36,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testInitSession_hasGAIDv1() throws Throwable {
-        Branch.getInstance(getTestContext());
+        Branch.getAutoInstance(getTestContext());
         initQueue(getTestContext());
         Branch.getInstance().initSession();
 
@@ -54,7 +54,7 @@ public class BranchGAIDTest extends BranchEventTest {
 
     @Test
     public void testActionCompleted_hasGAIDv1() throws Throwable {
-        Branch.getInstance(getTestContext());
+        Branch.getAutoInstance(getTestContext());
         initQueue(getTestContext());
 
         JSONObject params = new JSONObject();

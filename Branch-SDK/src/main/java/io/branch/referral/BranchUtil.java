@@ -54,31 +54,35 @@ public class BranchUtil {
                 BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
                 if (jsonConfig.isValid(BranchJsonConfig.BranchJsonKey.useTestInstance)) {
                     // branch.json overrides manifest configurations
-                    isTestModeEnabled_ = jsonConfig.getUseTestInstance();
+                    Boolean r = jsonConfig.getUseTestInstance();
+                    isTestModeEnabled_ = r != null ? r : false;
                 } else {
                     // manifest configurations is the last resort
-                    String testModeKey = "io.branch.sdk.TestMode";
-                    try {
-                        final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-                        if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
-                            isTestModeEnabled_ = ai.metaData.getBoolean(testModeKey, false);
-                        } else {
-                            Resources resources = context.getResources();
-                            isTestModeEnabled_ = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
-                        }
-                    } catch (Exception ignore) { }
+                    isTestModeEnabled_  = readTestMode(context);
                 }
 
                 testModeEnabledViaCompileTimeConfiguration = isTestModeEnabled_;
             }
         }
-
         return isTestModeEnabled_;
     }
 
-    // This method only gets called if client didn't pass branch key programmatically, so we don't
-    // have to worry about that value, which logically, should always override branch key configurations
-    // defined in branch.json/manifest/string resources.
+    private static boolean readTestMode(Context context) {
+        boolean result = isTestModeEnabled_;
+        String testModeKey = "io.branch.sdk.TestMode";
+        try {
+            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
+                result = ai.metaData.getBoolean(testModeKey, false);
+            } else {
+                Resources resources = context.getResources();
+                result = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
+            }
+        } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
+        }
+        return result;
+    }
+
     public static String readBranchKey(Context context) {
         String branchKey = null;
 

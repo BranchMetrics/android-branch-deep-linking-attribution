@@ -13,7 +13,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testResultSuccess() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
@@ -47,7 +47,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testResultPackageNameNotPresent() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         initQueue(getTestContext());
 
         ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
@@ -81,7 +81,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testAppLevelDataOverride() throws Throwable {
-        Branch branch = Branch.getInstance(getTestContext());
+        Branch branch = Branch.getAutoInstance(getTestContext());
         branch.setPreinstallPartner("partner1");
         branch.setPreinstallCampaign("campaign1");
 

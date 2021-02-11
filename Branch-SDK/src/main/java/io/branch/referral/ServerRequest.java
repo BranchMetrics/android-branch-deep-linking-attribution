@@ -22,19 +22,19 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class ServerRequest {
 
-    private static final String[] initializationAndEventRoutes = new String[]{
-            Defines.RequestPath.RegisterInstall.getPath(),
-            Defines.RequestPath.RegisterOpen.getPath(),
-            Defines.RequestPath.CompletedAction.getPath(),
-            Defines.RequestPath.ContentEvent.getPath(),
-            Defines.RequestPath.TrackStandardEvent.getPath(),
-            Defines.RequestPath.TrackCustomEvent.getPath()};
+    private static final Defines.RequestPath[] initializationAndEventRoutes = new Defines.RequestPath[]{
+            Defines.RequestPath.RegisterInstall,
+            Defines.RequestPath.RegisterOpen,
+            Defines.RequestPath.CompletedAction,
+            Defines.RequestPath.ContentEvent,
+            Defines.RequestPath.TrackStandardEvent,
+            Defines.RequestPath.TrackCustomEvent};
     
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    private final String requestPath_;
+    private final Defines.RequestPath requestPath_;
     protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;
@@ -64,7 +64,7 @@ public abstract class ServerRequest {
      * @param context     Application context.
      * @param requestPath Path to server for this request.
      */
-    public ServerRequest(Context context, String requestPath) {
+    public ServerRequest(Context context, Defines.RequestPath requestPath) {
         context_ = context;
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
@@ -80,7 +80,7 @@ public abstract class ServerRequest {
      *                    as key-value pairs.
      * @param context     Application context.
      */
-    protected ServerRequest(String requestPath, JSONObject post, Context context) {
+    protected ServerRequest(Defines.RequestPath requestPath, JSONObject post, Context context) {
         context_ = context;
         requestPath_ = requestPath;
         params_ = post;
@@ -164,7 +164,7 @@ public abstract class ServerRequest {
      * @return Path for this request.
      */
     public final String getRequestPath() {
-        return requestPath_;
+        return requestPath_.getPath();
     }
     
     /**
@@ -174,7 +174,7 @@ public abstract class ServerRequest {
      * @return A url for executing this request against the server.
      */
     public String getRequestUrl() {
-        return prefHelper_.getAPIBaseUrl() + requestPath_;
+        return prefHelper_.getAPIBaseUrl() + requestPath_.getPath();
     }
     
     /**
@@ -189,11 +189,9 @@ public abstract class ServerRequest {
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
         } else {
-            try {
-                JSONObject userDataObj = new JSONObject();
-                params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
-                DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
-            } catch (JSONException ignored) {}
+            JSONObject userDataObj = new JSONObject();
+            params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
+            DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
     }
     
@@ -295,7 +293,7 @@ public abstract class ServerRequest {
         JSONObject json = new JSONObject();
         try {
             json.put(POST_KEY, params_);
-            json.put(POST_PATH_KEY, requestPath_);
+            json.put(POST_PATH_KEY, requestPath_.getPath());
         } catch (JSONException e) {
             return null;
         }
@@ -350,31 +348,29 @@ public abstract class ServerRequest {
         ServerRequest extendedReq = null;
         
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
-            extendedReq = new ServerRequestActionCompleted(requestPath, post, context);
+            extendedReq = new ServerRequestActionCompleted(Defines.RequestPath.CompletedAction, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
-            extendedReq = new ServerRequestCreateUrl(requestPath, post, context);
+            extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())) {
-            extendedReq = new ServerRequestGetRewardHistory(requestPath, post, context);
+            extendedReq = new ServerRequestGetRewardHistory(Defines.RequestPath.GetCreditHistory, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())) {
-            extendedReq = new ServerRequestGetRewards(requestPath, post, context);
+            extendedReq = new ServerRequestGetRewards(Defines.RequestPath.GetCredits, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
-            extendedReq = new ServerRequestIdentifyUserRequest(requestPath, post, context);
+            extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
-            extendedReq = new ServerRequestLogout(requestPath, post, context);
+            extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())) {
-            extendedReq = new ServerRequestRedeemRewards(requestPath, post, context);
+            extendedReq = new ServerRequestRedeemRewards(Defines.RequestPath.RedeemRewards, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
-            extendedReq = new ServerRequestRegisterClose(requestPath, post, context);
+            extendedReq = new ServerRequestRegisterClose(Defines.RequestPath.RegisterClose, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
-            extendedReq = new ServerRequestRegisterInstall(requestPath, post, context);
+            extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
-            extendedReq = new ServerRequestRegisterOpen(requestPath, post, context);
+            extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context);
         }
         
         return extendedReq;
     }
-    
-    boolean skipOnTimeOut = false;
     
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
@@ -650,7 +646,7 @@ public abstract class ServerRequest {
     }
     
     public void reportTrackingDisabledError() {
-        PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + requestPath_ + "]");
+        PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + requestPath_.getPath() + "]");
         handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
     }
     
@@ -667,7 +663,7 @@ public abstract class ServerRequest {
 
     // needed for TUNE/Branch field parity for certain request (i.e. initialization and events)
     boolean isInitializationOrEventRequest() {
-        for (String item : initializationAndEventRoutes) {
+        for (Defines.RequestPath item : initializationAndEventRoutes) {
             if (item.equals(requestPath_)) return true;
         }
         return false;

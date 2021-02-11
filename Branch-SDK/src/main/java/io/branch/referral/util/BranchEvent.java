@@ -248,7 +248,7 @@ public class BranchEvent {
      */
     public boolean logEvent(Context context) {
         boolean isReqQueued = false;
-        String reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent.getPath() : Defines.RequestPath.TrackCustomEvent.getPath();
+        Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
         if (Branch.getInstance() != null) {
             Branch.getInstance().handleNewRequest(new ServerRequestLogEvent(context, reqPath));
             isReqQueued = true;
@@ -257,7 +257,7 @@ public class BranchEvent {
     }
 
     private class ServerRequestLogEvent extends ServerRequest {
-        ServerRequestLogEvent(Context context, String requestPath) {
+        ServerRequestLogEvent(Context context, Defines.RequestPath requestPath) {
             super(context, requestPath);
             JSONObject reqBody = new JSONObject();
             try {
@@ -293,7 +293,7 @@ public class BranchEvent {
         @Override
         protected void setPost(JSONObject post) throws JSONException {
             super.setPost(post);
-            addPartnerParams(post, prefHelper_.partnerParams_);
+            prefHelper_.loadPartnerParams(post);
         }
 
         @Override

@@ -33,7 +33,7 @@ class ServerRequestActionCompleted extends ServerRequest {
      */
     public ServerRequestActionCompleted(Context context, String action, CommerceEvent commerceEvent,
                                 JSONObject metadata, BranchViewHandler.IBranchViewEvents callback) {
-        super(context, Defines.RequestPath.CompletedAction.getPath());
+        super(context, Defines.RequestPath.CompletedAction);
         callback_ = callback;
         JSONObject post = new JSONObject();
 
@@ -65,7 +65,7 @@ class ServerRequestActionCompleted extends ServerRequest {
         }
     }
 
-    public ServerRequestActionCompleted(String requestPath, JSONObject post, Context context) {
+    public ServerRequestActionCompleted(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
         callback_ = null;
     }

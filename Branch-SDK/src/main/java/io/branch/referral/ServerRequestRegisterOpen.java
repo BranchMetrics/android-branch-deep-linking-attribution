@@ -23,7 +23,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
      *                    the data associated with new install registration.
      */
     ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback) {
-        super(context, Defines.RequestPath.RegisterOpen.getPath());
+        super(context, Defines.RequestPath.RegisterOpen);
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
@@ -37,7 +37,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         
     }
     
-    ServerRequestRegisterOpen(String requestPath, JSONObject post, Context context) {
+    ServerRequestRegisterOpen(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
     }
 
@@ -64,24 +64,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
-            }
-            
-            if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
-                JSONObject dataObj = new JSONObject(resp.getObject().getString(Defines.Jsonkey.Data.getKey()));
-                // If Clicked on a branch link
-                if (dataObj.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
-                        && dataObj.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
-                    
-                    // Check if there is any install params. Install param will be empty on until click a branch link
-                    // or When a user logout
-                    if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                        // if clicked on link then check for is Referrable state
-                        if (prefHelper_.getIsReferrable() == 1) {
-                            String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
-                            prefHelper_.setInstallParams(params);
-                        }
-                    }
-                }
             }
             
             if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
