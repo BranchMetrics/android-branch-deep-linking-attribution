@@ -1667,17 +1667,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             PrefHelper.Debug("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
-                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                            handleFailure(req, BranchError.ERR_NO_SESSION);
                         }
                         // Determine if a session is needed to execute (SDK-271)
                         else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
                             networkCount_ = 0;
-                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                            handleFailure(req, BranchError.ERR_NO_SESSION);
                         } else {
-                            final CountDownLatch latch = new CountDownLatch(1);
-                            final BranchPostTask postTask = new BranchPostTask(req, latch);
-                            postTask.executeTask();
-                            startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
+                            executeTimedBranchPostTask(req, prefHelper_.getTimeout());
                         }
                     } else {
                         networkCount_ = 0;
@@ -1693,18 +1690,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void startTimeoutTimer(final CountDownLatch latch, final BranchPostTask postTask, final int timeout) {
-        new Thread(new Runnable() {@Override public void run() {
-            try {
-                if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                    postTask.cancel(true);
+    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final BranchPostTask postTask = new BranchPostTask(req, latch);
 
-                    // it takes time to cancel the thread, so we do the timeout state cleanup here instead of postTask.onCancelled().
-                    postTask.thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + postTask.thisReq_.getRequestUrl());
-                    requestQueue_.remove(postTask.thisReq_);
-                }
-            } catch (InterruptedException ignored) {}
-        }}).start();
+        try {
+            postTask.executeTask();
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                postTask.cancel(true);
+            }
+        } catch (InterruptedException e) {
+            postTask.cancel(true);
+        }
     }
 
     // Determine if a Request needs a Session to proceed.
@@ -1724,19 +1721,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return (hasSession() && hasDeviceFingerPrint());
     }
     
-    private void handleFailure(int index, int statusCode) {
-        ServerRequest req;
-        if (index >= requestQueue_.getSize()) {
-            req = requestQueue_.peekAt(requestQueue_.getSize() - 1);
-        } else {
-            req = requestQueue_.peekAt(index);
-        }
-        handleFailure(req, statusCode);
-    }
-    
     private void handleFailure(final ServerRequest req, int statusCode) {
-        if (req == null)
-            return;
+        if (req == null) return;
         req.handleFailure(statusCode, "");
     }
     
@@ -2297,7 +2283,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 latch_.countDown();
             }
 
-            if (serverResponse == null || isCancelled()) return;
+            if (serverResponse == null) return;
 
             try {
                 int status = serverResponse.getStatusCode();
@@ -2321,7 +2307,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                                 ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
                             } else {
                                 PrefHelper.LogAlways("Branch API Error: Conflicting resource error code from API");
-                                handleFailure(0, status);
+                                handleFailure(thisReq_, status);
                             }
                         }
                         //On Network error or Branch is down fail all the pending requests in the queue except
@@ -2439,7 +2425,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         @Override
         protected void onCancelled(ServerResponse v) {
             super.onCancelled();
-            // Timeout cleanup happens in branch.startTimeoutTimer(...) to preserve timeout accuracy
+            onPostExecute(new ServerResponse(thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
         }
     }
     

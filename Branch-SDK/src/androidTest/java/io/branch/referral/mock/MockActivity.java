@@ -18,6 +18,7 @@ import io.branch.referral.BranchError;
 public class MockActivity extends Activity {
     private static final String TAG = "MockActivity";
     public String state;
+    public boolean initSessionCallbackInvoked = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -30,28 +31,28 @@ public class MockActivity extends Activity {
         super.onStart();
         state = "started";
         if (Branch.getInstance() != null) {
-            final CountDownLatch testCallbackInvoked = new CountDownLatch(1);
+            final CountDownLatch latch = new CountDownLatch(1);
             Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
                 @Override
                 public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
                     // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
                     Log.d(TAG, "onInitFinished, referringParams: " + referringParams + ", error: " + error);
                     Assert.assertNotNull(referringParams);
-                    Assert.assertNull(error);
-                    testCallbackInvoked.countDown();
+                    if (error != null) {
+                        if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
+                            Assert.fail("error should be null unless we are testing timeouts" + error.getMessage());
+                        }
+                    }
+                    latch.countDown();
                 }
             }).withData(getIntent() == null ? null : getIntent().getData()).init();
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        testCallbackInvoked.await(5000, TimeUnit.MILLISECONDS);
-                    } catch (InterruptedException e) {
-                        Assert.fail("testCallbackInvoked failed");
-                    }
-                }
-            }).start();
+            try {
+                initSessionCallbackInvoked = latch.getCount() != 0 || latch.await(5000, TimeUnit.MILLISECONDS);
+                Assert.assertTrue(initSessionCallbackInvoked);
+            } catch (InterruptedException e) {
+                Assert.fail("testCallbackInvoked failed");
+            }
         } else {
             Log.d(TAG, "MockActivity started but sdk not initialized.");
         }

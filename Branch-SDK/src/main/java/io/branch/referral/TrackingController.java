@@ -2,6 +2,8 @@ package io.branch.referral;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 /**
  * Created by sojanpr on 3/7/18.
  * <p>
@@ -11,7 +13,7 @@ import android.content.Context;
  * </p>
  */
 
-class TrackingController {
+public class TrackingController {
     /* Flag for controlling the user data tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls when tracking is disabled*/
     private boolean trackingDisabled = true;
     
@@ -33,6 +35,10 @@ class TrackingController {
     
     boolean isTrackingDisabled() {
         return trackingDisabled;
+    }
+
+    public static boolean isTrackingDisabled(@NonNull Context context) {
+        return PrefHelper.getInstance(context).getBool(PrefHelper.KEY_TRACKING_STATE);
     }
     
     void updateTrackingState(Context context) {
