@@ -2,17 +2,23 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.branch.referral.mock.MockActivity;
 import io.branch.referral.mock.MockRemoteInterface;
@@ -77,15 +83,10 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         if (branch != null) {
             throw new IllegalStateException("sdk already initialized, makes sure initBranchInstance is called just once per test.");
         }
-        activityScenario = ActivityScenario.launch(MockActivity.class);
-
-        // There is no way to launch Activity into some lifecycle state and halt it there,
-        // i.e. ActivityScenario.launch(...) will traverse all lifecycle states and we can only move it to Lifecycle.State.CREATED afterwards
-        // https://developer.android.com/reference/androidx/test/core/app/ActivityScenario
-        // We move it to Lifecycle.State.CREATED, so we can simulate Activity boot up and test session initialization
-        activityScenario.moveToState(Lifecycle.State.CREATED);
 
         Branch.enableLogging();
+        Branch.expectDelayedSessionInitialization(true);
+
         if (branchKey == null) {
             branch = Branch.getAutoInstance(getTestContext());
         } else {
@@ -93,25 +94,53 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         }
         Assert.assertEquals(branch, Branch.getInstance());
 
+        activityScenario = ActivityScenario.launch(MockActivity.class);
+
         branch.setBranchRemoteInterface(new MockRemoteInterface());
     }
 
-    protected void initSessionResumeActivity() throws InterruptedException {
-        initSessionResumeActivity(null);
-    }
+    protected synchronized void initSessionResumeActivity(final Runnable pretest, final Runnable posttest) {
+        final CountDownLatch sessionLatch = new CountDownLatch(1);
 
-    protected void initSessionResumeActivity(Runnable subtest) throws InterruptedException {
-        activityScenario.moveToState(Lifecycle.State.RESUMED);
-        // MockRemoteInterface will purposefully delay session initialization request for TEST_TIMEOUT/2 millis,
-        // `subtest`, which typically tests properties of requests retrieved from the queue must complete
-        // in that amount of time
-        if (subtest != null) {
-            subtest.run();
+        activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
+            @Override
+            public void perform(final MockActivity activity) {
+                Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
+                    @Override
+                    public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
+                        // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
+                        PrefHelper.Debug(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
+                        Assert.assertNotNull(referringParams);
+                        if (error != null) {
+                            if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
+                                Assert.fail("error should be null unless we are testing timeouts" + error.getMessage());
+                            }
+                        }
+                        sessionLatch.countDown();
+                    }
+                }).withData(activity.getIntent() == null ? null : activity.getIntent().getData()).init();
+
+                // `pretest`s, are typically gonna test request post body. The request is retrieved from the queue while it's
+                // waiting for session to be initialized. MockRemoteInterface will purposefully delay session initialization
+                // request for TEST_TIMEOUT/2 millis, to mimic real life delay and to allow for pretests to be executed. Note,
+                // pretests must complete in TEST_TIMEOUT/2 millis.
+                if (pretest != null) {
+                    pretest.run();
+                }
+
+                Log.d(TAG, "initSessionResumeActivity completed");
+            }
+        });
+
+        try {
+            Assert.assertTrue(sessionLatch.await(TEST_INIT_SESSION_TIMEOUT, TimeUnit.MILLISECONDS));
+        } catch (InterruptedException e) {
+            Assert.fail("session initialization timeout");
         }
-        // activityScenario.moveToState is async, so we stop the test's thread for Activity to complete the
-        // lifecycle transitions (and session initialization)
-        Thread.sleep(4000);
-        Log.d(TAG, "initSessionResumeActivity completed");
+
+        if (posttest != null) {
+            posttest.run();
+        }
     }
 
     protected Context getTestContext() {

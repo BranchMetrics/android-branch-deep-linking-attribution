@@ -102,21 +102,24 @@ public class BranchPartnerParametersTest {
     }
 
     @Test public void testJsonEmpty() throws JSONException {
-        JSONObject body = new JSONObject();PrefHelper.loadPartnerParams(body, partnerParams);
+        JSONObject body = new JSONObject();
+        PrefHelper.loadPartnerParams(body, partnerParams);
 
         JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
     }
 
     @Test public void testJsonFBParameterEmpty() throws JSONException {
         partnerParams.addFacebookParameter("em", "");
-        JSONObject body = new JSONObject();PrefHelper.loadPartnerParams(body, partnerParams);
+        JSONObject body = new JSONObject();
+        PrefHelper.loadPartnerParams(body, partnerParams);
 
         JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
     }
 
     @Test public void testJsonFBParameterShort() throws JSONException {
         partnerParams.addFacebookParameter("em", "0123456789ABCDEF0123456789ABCDEF1234567890abcdef1234567890abcde");
-        JSONObject body = new JSONObject();PrefHelper.loadPartnerParams(body, partnerParams);
+        JSONObject body = new JSONObject();
+        PrefHelper.loadPartnerParams(body, partnerParams);
 
         JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
     }

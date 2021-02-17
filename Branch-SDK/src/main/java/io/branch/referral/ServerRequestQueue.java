@@ -87,7 +87,7 @@ class ServerRequestQueue {
                 }
 
                 try {
-                    editor.putString(PREF_KEY, jsonArr.toString()).commit();
+                    editor.putString(PREF_KEY, jsonArr.toString()).apply();
                 } catch (Exception ex) {
                     String msg = ex.getMessage();
                     PrefHelper.Debug("Failed to persist queue" + (msg == null ? "" : msg));
@@ -255,6 +255,7 @@ class ServerRequestQueue {
      * @return A {@link Boolean} whose value is true if the object is removed.
      */
     public boolean remove(ServerRequest request) {
+        PrefHelper.Debug("ServerRequestQueue.remove " + request.getClass().getSimpleName());
         boolean isRemoved = false;
         synchronized (reqQueueLockObject) {
             try {
@@ -277,25 +278,6 @@ class ServerRequestQueue {
             } catch (UnsupportedOperationException ignored) {
             }
         }
-    }
-    
-    /**
-     * <p>Determines whether the queue contains a session/app close request.</p>
-     *
-     * @return A {@link Boolean} value indicating whether or not the queue contains a
-     * session close request. <i>True</i> if the queue contains a close request,
-     * <i>False</i> if not.
-     */
-    boolean containsClose() {
-        synchronized (reqQueueLockObject) {
-            for (ServerRequest req : queue) {
-                if (req != null &&
-                        req.getRequestPath().equals(Defines.RequestPath.RegisterClose.getPath())) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
     
     /**

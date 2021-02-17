@@ -51,55 +51,69 @@ public class BranchGAIDTest extends BranchTest {
                 assumingLatIsDisabledHasGAIDv2(initRequest, false);
                 assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(initRequest, false);
             }
-        });
+        }, null);
     }
 
     @Test
     public void testActionCompleted_hasGAIDv1() throws InterruptedException, JSONException {
         initBranchInstance();
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONObject params = new JSONObject();
+                    params.put("name", "Alex");
+                    params.put("boolean", true);
+                    params.put("int", 1);
+                    params.put("double", 0.13415512301);
 
-        JSONObject params = new JSONObject();
-        params.put("name", "Alex");
-        params.put("boolean", true);
-        params.put("int", 1);
-        params.put("double", 0.13415512301);
+                    // final CountDownLatch latch = new CountDownLatch(1);
+                    Branch.getInstance().userCompletedAction("buy", params);
 
-        // final CountDownLatch latch = new CountDownLatch(1);
-        Branch.getInstance().userCompletedAction("buy", params);
+                    ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", "buy");
 
-        ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", "buy");
+                    Assert.assertNotNull(serverRequest);
+                    doFinalUpdate(serverRequest);
 
-        Assert.assertNotNull(serverRequest);
-        doFinalUpdate(serverRequest);
-
-        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
+                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                } catch (Exception e) {
+                    Assert.fail();
+                }
+            }
+        }, null);
     }
 
     @Test
     public void testCommerceEvent_hasGAIDv1() throws InterruptedException {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    CommerceEvent commerceEvent = new CommerceEvent();
+                    commerceEvent.setTransactionID("123XYZ");
+                    commerceEvent.setRevenue(3.14);
+                    commerceEvent.setTax(.314);
+                    commerceEvent.setCoupon("MyCoupon");
 
-        CommerceEvent commerceEvent = new CommerceEvent();
-        commerceEvent.setTransactionID("123XYZ");
-        commerceEvent.setRevenue(3.14);
-        commerceEvent.setTax(.314);
-        commerceEvent.setCoupon("MyCoupon");
+                    branch.sendCommerceEvent(commerceEvent);
+                    ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
 
-        branch.sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
+                    Assert.assertNotNull(serverRequest);
+                    doFinalUpdate(serverRequest);
 
-        Assert.assertNotNull(serverRequest);
-        doFinalUpdate(serverRequest);
-
-        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
+                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                } catch (Exception e) {
+                    Assert.fail();
+                }
+            }
+        }, null);
     }
 
     @Test
@@ -110,56 +124,77 @@ public class BranchGAIDTest extends BranchTest {
     @Test
     public void testRedeemAwards_hasGAIDv1() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Backdoor to set credits before we try to redeem them.
+                    PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
+                    prefHelper.setCreditCount(100);
 
-        // Backdoor to set credits before we try to redeem them.
-        PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
-        prefHelper.setCreditCount(100);
+                    Branch.getInstance().redeemRewards(100);
+                    ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
 
-        Branch.getInstance().redeemRewards(100);
-        ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
+                    Assert.assertNotNull(serverRequest);
+                    doFinalUpdate(serverRequest);
 
-        Assert.assertNotNull(serverRequest);
-        doFinalUpdate(serverRequest);
-
-        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
+                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                } catch (Exception e) {
+                    Assert.fail();
+                }
+            }
+        }, null);
     }
 
     @Test
     public void testCreditHistory_hasGAIDv1() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Branch.getInstance().getCreditHistory(null);
+                    ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
 
-        Branch.getInstance().getCreditHistory(null);
-        ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
+                    Assert.assertNotNull(serverRequest);
+                    doFinalUpdate(serverRequest);
 
-        Assert.assertNotNull(serverRequest);
-        doFinalUpdate(serverRequest);
-
-        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
+                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                } catch (Exception e) {
+                    Assert.fail();
+                }
+            }
+        }, null);
     }
 
     @Test
     public void testIdentity_hasGAIDv1() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Branch.getInstance().setIdentity("Alex");
+                    ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
 
-        Branch.getInstance().setIdentity("Alex");
-        ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
+                    Assert.assertNotNull(serverRequest);
+                    doFinalUpdate(serverRequest);
 
-        Assert.assertNotNull(serverRequest);
-        doFinalUpdate(serverRequest);
-
-        assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-        assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
+                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
+                } catch (Exception e) {
+                    Assert.fail();
+                }
+            }
+        }, null);
     }
 
     @Test
@@ -181,18 +216,25 @@ public class BranchGAIDTest extends BranchTest {
     @Test
     public void testStandardEvent_hasGAIDv2() throws Throwable {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
+                    BranchEvent branchEvent = new BranchEvent(eventType);
 
-        BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
-        BranchEvent branchEvent = new BranchEvent(eventType);
+                    ServerRequest serverRequest = logEvent(getTestContext(), branchEvent);
+                    Assert.assertNotNull(serverRequest);
 
-        ServerRequest serverRequest = logEvent(getTestContext(), branchEvent);
-        Assert.assertNotNull(serverRequest);
-
-        assumingLatIsDisabledHasGAIDv1(serverRequest, false);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, false);
-        assumingLatIsDisabledHasGAIDv2(serverRequest, true);
-        assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, true);
+                    assumingLatIsDisabledHasGAIDv1(serverRequest, false);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, false);
+                    assumingLatIsDisabledHasGAIDv2(serverRequest, true);
+                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, true);
+                } catch (Exception e) {
+                    Assert.fail();
+                }
+            }
+        }, null);
     }
 
     // Check to see if the LAT is available (V1)

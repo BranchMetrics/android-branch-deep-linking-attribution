@@ -353,7 +353,7 @@ class BranchLinkData extends JSONObject {
         if (params == null) {
             if (other.params != null)
                 return false;
-        } else if (!params.equals(other.params))
+        } else if (!params.toString().equals(other.params.toString()))
             return false;
         if (stage == null) {
             if (other.stage != null)

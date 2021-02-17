@@ -40,21 +40,29 @@ public class BranchApiTests extends BranchTest {
     }
 
     @Test
-    public void testGetCPID() throws Throwable {
-        initSessionResumeActivity();
-        final CountDownLatch lock = new CountDownLatch(1);
-        branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
-            @Override public void onDataFetched(BranchCPID cpidResponse, BranchError error) {
-                if (error == null) {
-                    Assert.assertNotNull(cpidResponse);
-                } else {
-                    Assert.fail("getCrossPlatformIds returned error, " + error.getMessage());
+    public void testGetCPID() {
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                final CountDownLatch lock = new CountDownLatch(1);
+                branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
+                    @Override public void onDataFetched(BranchCPID cpidResponse, BranchError error) {
+                        if (error == null) {
+                            Assert.assertNotNull(cpidResponse);
+                        } else {
+                            Assert.fail("getCrossPlatformIds returned error, " + error.getMessage());
+                        }
+                        lock.countDown();
+                    }
+                });
+
+                try {
+                    Assert.assertTrue(lock.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail("timeout");
                 }
-                lock.countDown();
             }
         });
-
-        Assert.assertTrue(lock.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -64,180 +72,257 @@ public class BranchApiTests extends BranchTest {
     }
 
     @Test
-    public void test02GetShortURLAsync() throws InterruptedException {
-        initSessionResumeActivity();
-        final FBUrl urlFB = new FBUrl(null);
-        getFBUrl(urlFB);
-        Assert.assertNotNull(urlFB.val);
-    }
-
-    @Test
-    public void test04GetShortURLAsync1Cached() throws InterruptedException {
-        initSessionResumeActivity();
-
-        final FBUrl urlFB = new FBUrl(null);
-        getFBUrl(urlFB);
-
-        final CountDownLatch signal = new CountDownLatch(1);
-        new BranchShortLinkBuilder(getTestContext())
-                .setChannel("facebook")
-                .generateShortUrl(new BranchLinkCreateListener() {
-                    @Override
-                    public void onLinkCreate(String url, BranchError error) {
-                        Assert.assertNull(error);
-                        Assert.assertNotNull(url);
-                        Assert.assertTrue(url.equals(urlFB.val));
-
-                        signal.countDown();
-                    }
-                });
-        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-    }
-
-    @Test
-    public void test04GetShortURLAsync2Uncached() throws InterruptedException {
-        initSessionResumeActivity();
-
-        final FBUrl urlFB = new FBUrl(null);
-        getFBUrl(urlFB);
-
-        final CountDownLatch signal = new CountDownLatch(1);
-        new BranchShortLinkBuilder(getTestContext())
-                .setChannel("twitter")
-                .generateShortUrl(new BranchLinkCreateListener() {
-                    @Override
-                    public void onLinkCreate(String url, BranchError error) {
-                        Assert.assertNull(error);
-                        Assert.assertNotNull(url);
-                        Assert.assertTrue(url.equals(urlFB.val));
-
-                        signal.countDown();
-                    }
-                });
-        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-    }
-
-    @Test
-    public void test04GetShortURLSync() throws InterruptedException {
-        initSessionResumeActivity();
-
-        FBUrl urlFB = new FBUrl(null);
-        getFBUrl(urlFB);
-
-        String urlFB2 = new BranchShortLinkBuilder(getTestContext())
-                .setChannel("facebook")
-                .getShortUrl();
-
-        Assert.assertNotNull(urlFB2);
-        Assert.assertTrue(urlFB2.equals(urlFB.val));
-
-        String linkedinUrl = new BranchShortLinkBuilder(getTestContext())
-                .setChannel("linkedin")
-                .getShortUrl();
-        Assert.assertNotNull(linkedinUrl);
-        Assert.assertFalse(linkedinUrl.equals(urlFB.val));
-    }
-
-    @Test
-    public void test01SetIdentity() throws InterruptedException {
-        initSessionResumeActivity();
-
-        final CountDownLatch signal = new CountDownLatch(1);
-        prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
-        branch.setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
+    public void test02GetShortURLAsync() {
+        initSessionResumeActivity(null, new Runnable() {
             @Override
-            public void onInitFinished(JSONObject referringParams, BranchError error) {
-                Assert.assertNull(error);
-                Assert.assertNotNull(referringParams);
-                Assert.assertEquals(prefHelper.getIdentityID(), "880938553226608667");
-
-                JSONObject installParams = branch.getFirstReferringParams();
+            public void run() {
+                final FBUrl urlFB = new FBUrl(null);
                 try {
-                    Assert.assertEquals(installParams.getString("name"), "test name");
-                    Assert.assertEquals(installParams.getString("message"), "hello there with short url");
-                } catch (JSONException ignore) {
+                    getFBUrl(urlFB);
+                } catch (InterruptedException e) {
+                    Assert.fail();
                 }
-
-                signal.countDown();
+                Assert.assertNotNull(urlFB.val);
             }
         });
-        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    public void test04GetShortURLAsync1Cached() {
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                final FBUrl urlFB = new FBUrl(null);
+                try {
+                    getFBUrl(urlFB);
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+
+                final CountDownLatch signal = new CountDownLatch(1);
+                new BranchShortLinkBuilder(getTestContext())
+                        .setChannel("facebook")
+                        .generateShortUrl(new BranchLinkCreateListener() {
+                            @Override
+                            public void onLinkCreate(String url, BranchError error) {
+                                Assert.assertNull(error);
+                                Assert.assertNotNull(url);
+                                Assert.assertTrue(url.equals(urlFB.val));
+
+                                signal.countDown();
+                            }
+                        });
+                try {
+                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail("timeout");
+                }
+            }
+        });
+    }
+
+    @Test
+    public void test04GetShortURLAsync2Uncached() {
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                final FBUrl urlFB = new FBUrl(null);
+                try {
+                    getFBUrl(urlFB);
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+
+                final CountDownLatch signal = new CountDownLatch(1);
+                new BranchShortLinkBuilder(getTestContext())
+                        .setChannel("twitter")
+                        .generateShortUrl(new BranchLinkCreateListener() {
+                            @Override
+                            public void onLinkCreate(String url, BranchError error) {
+                                Assert.assertNull(error);
+                                Assert.assertNotNull(url);
+                                Assert.assertNotEquals(url, urlFB.val);
+
+                                signal.countDown();
+                            }
+                        });
+                try {
+                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+            }
+        });
+    }
+
+    @Test
+    public void test04GetShortURLSync() {
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                FBUrl urlFB = new FBUrl(null);
+                try {
+                    getFBUrl(urlFB);
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+
+                String urlFB2 = new BranchShortLinkBuilder(getTestContext())
+                        .setChannel("facebook")
+                        .getShortUrl();
+
+                Assert.assertNotNull(urlFB2);
+                Assert.assertEquals(urlFB2, urlFB.val);
+
+                String linkedinUrl = new BranchShortLinkBuilder(getTestContext())
+                        .setChannel("linkedin")
+                        .getShortUrl();
+
+                Assert.assertNotNull(linkedinUrl);
+                PrefHelper.Debug("linkedinUrl: " + linkedinUrl + ", urlFB.val: " + urlFB.val);
+                Assert.assertNotEquals(linkedinUrl, urlFB.val);
+            }
+        });
+    }
+
+    @Test
+    public void test01SetIdentity() {
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                final CountDownLatch signal = new CountDownLatch(1);
+                prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
+                branch.setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
+                    @Override
+                    public void onInitFinished(JSONObject referringParams, BranchError error) {
+                        Assert.assertNull(error);
+                        Assert.assertNotNull(referringParams);
+                        Assert.assertEquals(prefHelper.getIdentityID(), "880938553226608667");
+
+                        JSONObject installParams = branch.getFirstReferringParams();
+                        try {
+                            Assert.assertEquals(installParams.getString("name"), "test name");
+                            Assert.assertEquals(installParams.getString("message"), "hello there with short url");
+                        } catch (JSONException ignore) {
+                        }
+
+                        signal.countDown();
+                    }
+                });
+                try {
+                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+            }
+        });
     }
 
     @Test
     public void test03GetRewardsChanged() throws InterruptedException {
-        initSessionResumeActivity();
-
-        final CountDownLatch signal = new CountDownLatch(1);
-        prefHelper.setCreditCount("default", 9999999);
-
-        branch.loadRewards(new Branch.BranchReferralStateChangedListener() {
+        initSessionResumeActivity(null, new Runnable() {
             @Override
-            public void onStateChanged(boolean changed, BranchError error) {
-                Assert.assertNull(error);
-                Assert.assertTrue(changed);
+            public void run() {
+                final CountDownLatch signal = new CountDownLatch(1);
+                prefHelper.setCreditCount("default", 9999999);
 
-                signal.countDown();
-            }
-        });
-        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-    }
-
-    @Test
-    public void testGetRewardsUnchanged() throws InterruptedException {
-        initSessionResumeActivity();
-        final CountDownLatch signal = new CountDownLatch(1);
-        prefHelper.setCreditCount("default", prefHelper.getCreditCount("default"));
-
-        branch.loadRewards(new Branch.BranchReferralStateChangedListener() {
-            @Override
-            public void onStateChanged(boolean changed, BranchError error) {
-                Assert.assertNull(error);
-                Assert.assertFalse(changed);
-
-                signal.countDown();
-            }
-        });
-        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-    }
-
-    @Test
-    public void testZLoad() throws InterruptedException {
-        initSessionResumeActivity();
-        final CountDownLatch signalFinal = new CountDownLatch(1);
-        final CountDownLatch signal = new CountDownLatch(1);
-        final int reps = 20;
-        final AtomicInteger callbackInvocations = new AtomicInteger(0);
-        for (int i = 0; i < reps; i++) {
-            new BranchShortLinkBuilder(getTestContext())
-                    .setChannel(i + "")
-                    .generateShortUrl(new BranchLinkCreateListener() {
-                        @Override
-                        public void onLinkCreate(String url, BranchError error) {
-                            Assert.assertNull(error);
-                            Assert.assertNotNull(url);
-                            PrefHelper.Debug("idx = " + callbackInvocations.get());
-                            if (callbackInvocations.getAndIncrement() == reps - 1) {
-                                signal.countDown();
-                            }
-                        }
-                    });
-        }
-        Assert.assertTrue(signal.await((TEST_REQUEST_TIMEOUT * reps), TimeUnit.MILLISECONDS));
-
-        new BranchShortLinkBuilder(getTestContext())
-                .setFeature("loadTest")
-                .generateShortUrl(new BranchLinkCreateListener() {
+                branch.loadRewards(new Branch.BranchReferralStateChangedListener() {
                     @Override
-                    public void onLinkCreate(String url, BranchError error) {
+                    public void onStateChanged(boolean changed, BranchError error) {
                         Assert.assertNull(error);
-                        Assert.assertNotNull(url);
-                        signalFinal.countDown();
+                        Assert.assertTrue(changed);
+
+                        signal.countDown();
                     }
                 });
+                try {
+                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+            }
+        });
+    }
 
-        Assert.assertTrue(signalFinal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(activityScenario);
+    @Test
+    public void testGetRewardsUnchanged() {
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                final CountDownLatch signal = new CountDownLatch(1);
+                prefHelper.setCreditCount("default", prefHelper.getCreditCount("default"));
+
+                branch.loadRewards(new Branch.BranchReferralStateChangedListener() {
+                    @Override
+                    public void onStateChanged(boolean changed, BranchError error) {
+                        Assert.assertNull(error);
+                        Assert.assertFalse(changed);
+
+                        signal.countDown();
+                    }
+                });
+                try {
+                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
+            }
+        });
+    }
+
+    @Test
+    public void testZLoad() {
+        final long now = System.currentTimeMillis();
+        initSessionResumeActivity(null, new Runnable() {
+            @Override
+            public void run() {
+                PrefHelper.Debug("benas after init session = " + (now - System.currentTimeMillis()));
+                final CountDownLatch signalFinal = new CountDownLatch(1);
+                final CountDownLatch signal = new CountDownLatch(1);
+                final int reps = 20;
+                final AtomicInteger callbackInvocations = new AtomicInteger(0);
+                for (int i = 0; i < reps; i++) {
+                    new BranchShortLinkBuilder(getTestContext())
+                            .setChannel(i + "")
+                            .generateShortUrl(new BranchLinkCreateListener() {
+                                @Override
+                                public void onLinkCreate(String url, BranchError error) {
+                                    PrefHelper.Debug("benas callback " + callbackInvocations.get() + ": " + (now - System.currentTimeMillis()));
+                                    PrefHelper.Debug("url = " + url + ", error = " + error);
+                                    Assert.assertNull(error);
+                                    Assert.assertNotNull(url);
+                                    PrefHelper.Debug("idx = " + callbackInvocations.get());
+                                    if (callbackInvocations.getAndIncrement() == reps - 1) {
+                                        signal.countDown();
+                                    }
+                                }
+                            });
+                }
+                try {
+                    Assert.assertTrue(signal.await((reps * TEST_REQUEST_TIMEOUT + TEST_INIT_SESSION_TIMEOUT) * 2, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail("timeout");
+                }
+
+                new BranchShortLinkBuilder(getTestContext())
+                        .setFeature("loadTest")
+                        .generateShortUrl(new BranchLinkCreateListener() {
+                            @Override
+                            public void onLinkCreate(String url, BranchError error) {
+                                Assert.assertNull(error);
+                                Assert.assertNotNull(url);
+                                signalFinal.countDown();
+                            }
+                        });
+
+                try {
+                    Assert.assertTrue(signalFinal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Assert.fail("timeout");
+                }
+                Assert.assertNotNull(activityScenario);
+            }
+        });
     }
 
     @Test
@@ -274,8 +359,7 @@ public class BranchApiTests extends BranchTest {
                         signal.countDown();
                     }
                 });
-        Thread.sleep(TEST_REQUEST_TIMEOUT * 5);
-        Assert.assertEquals(0, signal.getCount());
+        Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
     }
 
     private static class FBUrl {

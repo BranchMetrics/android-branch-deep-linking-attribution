@@ -34,6 +34,6 @@ public class BranchReferralUrlBuilder extends BranchUrlBuilder<BranchReferralUrl
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger when link is generated.
      */
     public void generateReferralUrl(Branch.BranchLinkCreateListener callback) {
-        super.generateUrl(callback);
+        super.generateUrlInternal(callback);
     }
 }

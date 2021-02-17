@@ -102,13 +102,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         onInitSessionCompleted(resp, branch);
     }
     
-    
-    void setInitFinishedCallback(Branch.BranchReferralInitListener callback) {
-        if (callback != null) {  // Update callback if set with valid callback instance.
-            callback_ = callback;
-        }
-    }
-    
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null) {

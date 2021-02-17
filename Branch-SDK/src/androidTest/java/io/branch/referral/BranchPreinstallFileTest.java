@@ -43,7 +43,7 @@ public class BranchPreinstallFileTest extends BranchTest {
                     Assert.fail("parsing of test resources failed");
                 }
             }
-        });
+        }, null);
     }
 
     @Test
@@ -83,7 +83,7 @@ public class BranchPreinstallFileTest extends BranchTest {
                     Assert.fail(e.getMessage());
                 }
             }
-        });
+        }, null);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class BranchPreinstallFileTest extends BranchTest {
                     Assert.fail(e.getMessage());
                 }
             }
-        });
+        }, null);
     }
 
     // Check to see if the preinstall campaign is available (V1)

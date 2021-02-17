@@ -137,10 +137,6 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
      */
     public void generateShortUrl(Branch.BranchLinkCreateListener callback) {
-        super.generateUrl(callback);
-    }
-
-    void generateShortUrlInternal(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
-        super.generateUrlInternal(callback, isFromShareSheet);
+        super.generateUrlInternal(callback);
     }
 }

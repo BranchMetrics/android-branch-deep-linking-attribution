@@ -38,7 +38,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     /* Branch Instance */
     protected Branch branchReferral_;
     /* Default to long url incase of link creation error*/
-    private boolean defaultToLongUrl_;
+    private boolean defaultToLongUrl_ = true;
     /* Application context. */
     private final Context context_;
 
@@ -54,7 +54,6 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     protected BranchUrlBuilder(Context context) {
         branchReferral_ = Branch.getInstance();
         context_ = context.getApplicationContext();
-        defaultToLongUrl_ = true; /* By default fallback to long url */
     }
 
     /**
@@ -125,16 +124,11 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         return shortUrl;
     }
 
-    protected void generateUrl(Branch.BranchLinkCreateListener callback) {
-        generateUrlInternal(callback, false);
-    }
-
-    protected void generateUrlInternal(Branch.BranchLinkCreateListener callback, boolean isFromShareSheet) {
+    protected void generateUrlInternal(Branch.BranchLinkCreateListener callback) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,
                     BranchUtil.formatLinkParam(params_), callback, true, defaultToLongUrl_);
-            req.setIsReqStartedFromBranchShareSheet(isFromShareSheet);
             branchReferral_.generateShortLinkInternal(req);
         } else {
             if (callback != null) {

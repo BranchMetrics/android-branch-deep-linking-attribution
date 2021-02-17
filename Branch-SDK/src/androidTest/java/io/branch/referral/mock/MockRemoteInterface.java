@@ -1,8 +1,8 @@
 package io.branch.referral.mock;
 
-import android.util.Log;
-
 import org.json.JSONObject;
+
+import java.util.UUID;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchTest;
@@ -22,17 +22,16 @@ public class MockRemoteInterface extends BranchRemoteInterface {
 
     // since most tests use TEST_TIMEOUT to await network requests, lower it here, so TEST_TIMEOUT
     // ends up including a little bit of a buffer for scheduling network requests.
-    private final long networkRequestDuration = BranchTest.TEST_REQUEST_TIMEOUT / 3;
+    private final long networkRequestDuration = BranchTest.TEST_REQUEST_TIMEOUT / 2;
 
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {
         try {
-
             Thread.sleep(networkRequestDuration);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "doRestfulGet, url: " + url);
+        PrefHelper.Debug(TAG + ", doRestfulGet, url: " + url);
         return new BranchResponse(pathForSuccessResponse(url), 200);
     }
 
@@ -43,13 +42,13 @@ public class MockRemoteInterface extends BranchRemoteInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "doRestfulPost, url: " + url + ", payload: " + payload);
+        PrefHelper.Debug(TAG + ", doRestfulPost, url: " + url + ", payload: " + payload);
         return new BranchResponse(pathForSuccessResponse(url), 200);
     }
 
     public static String pathForSuccessResponse(String url) {
         if (url.contains(GetURL.getPath())) {
-            return "{\"url\":\"https://bnc.lt/l/OiJhbmRy\"}";
+            return "{\"url\":\"https://bnc.lt/l/randomized_test_route_" + UUID.randomUUID().toString() + "\"}";
         } else if (url.contains(GetCreditHistory.getPath())) {
             return "[]";
         } else if (url.contains(GetCredits.getPath())) {

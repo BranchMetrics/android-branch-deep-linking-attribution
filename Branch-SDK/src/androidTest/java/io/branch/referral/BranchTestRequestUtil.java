@@ -20,6 +20,7 @@ abstract class BranchTestRequestUtil {
 
     // can be pretty short because we mock remote interface and don't actually make async calls from the SDK
     public static final int TEST_REQUEST_TIMEOUT = 500;
+    public static final int TEST_INIT_SESSION_TIMEOUT = 7000;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.
     protected boolean isStandardEvent(BranchEvent event) throws Throwable {
@@ -30,7 +31,7 @@ abstract class BranchTestRequestUtil {
     }
 
     // Obtain the ServerRequest that is on the queue that matches the BranchEvent to be logged.
-    protected ServerRequest logEvent(Context context, BranchEvent event) throws Throwable {
+    protected ServerRequest logEvent(Context context, BranchEvent event) throws Exception {
         ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
         int queueSizeIn = queue.getSize();
 

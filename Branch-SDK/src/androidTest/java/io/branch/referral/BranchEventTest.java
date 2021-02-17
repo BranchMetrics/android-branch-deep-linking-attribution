@@ -89,7 +89,7 @@ public class BranchEventTest extends BranchTest {
             public void run() {
                 Assert.assertEquals(2, queue.getSize());
             }
-        });
+        }, null);
     }
 
     @Test

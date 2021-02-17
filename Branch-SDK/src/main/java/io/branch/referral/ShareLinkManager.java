@@ -329,7 +329,7 @@ class ShareLinkManager {
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
         
-        shortLinkBuilder.generateShortUrlInternal(new Branch.BranchLinkCreateListener() {
+        shortLinkBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {
@@ -355,7 +355,7 @@ class ShareLinkManager {
                     }
                 }
             }
-        }, true);
+        });
     }
     
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {

@@ -1047,8 +1047,7 @@ public class PrefHelper {
      * @param value An {@link Integer} value to set the preference record to.
      */
     public void setInteger(String key, int value) {
-        prefsEditor_.putInt(key, value);
-        prefsEditor_.apply();
+        prefsEditor_.putInt(key, value).apply();
     }
     
     /**
@@ -1058,8 +1057,7 @@ public class PrefHelper {
      * @param value A {@link Long} value to set the preference record to.
      */
     public void setLong(String key, long value) {
-        prefsEditor_.putLong(key, value);
-        prefsEditor_.apply();
+        prefsEditor_.putLong(key, value).apply();
     }
     
     /**
@@ -1069,8 +1067,7 @@ public class PrefHelper {
      * @param value A {@link Float} value to set the preference record to.
      */
     public void setFloat(String key, float value) {
-        prefsEditor_.putFloat(key, value);
-        prefsEditor_.apply();
+        prefsEditor_.putFloat(key, value).apply();
     }
     
     /**
@@ -1080,8 +1077,7 @@ public class PrefHelper {
      * @param value A {@link String} value to set the preference record to.
      */
     public void setString(String key, String value) {
-        prefsEditor_.putString(key, value);
-        prefsEditor_.apply();
+        prefsEditor_.putString(key, value).apply();
     }
     
     /**
@@ -1091,8 +1087,7 @@ public class PrefHelper {
      * @param value A {@link Boolean} value to set the preference record to.
      */
     public void setBool(String key, Boolean value) {
-        prefsEditor_.putBoolean(key, value);
-        prefsEditor_.apply();
+        prefsEditor_.putBoolean(key, value).apply();
     }
     
     public void updateBranchViewUsageCount(String branchViewId) {

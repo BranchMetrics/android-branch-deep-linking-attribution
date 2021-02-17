@@ -31,7 +31,7 @@ public class BranchModuleInjectionTest extends BranchTest {
 
                 Assert.assertTrue(hasV1InstallImeiData(initRequest));
             }
-        });
+        }, null);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class BranchModuleInjectionTest extends BranchTest {
 
                 Assert.assertTrue(doesNotHaveV1InstallImeiData(initRequest));
             }
-        });
+        }, null);
     }
 
     @Test
@@ -62,21 +62,29 @@ public class BranchModuleInjectionTest extends BranchTest {
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
 
-        initSessionResumeActivity();
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                CommerceEvent commerceEvent = new CommerceEvent();
+                commerceEvent.setTransactionID("123XYZ");
+                commerceEvent.setRevenue(3.14);
+                commerceEvent.setTax(.314);
+                commerceEvent.setCoupon("MyCoupon");
 
-        CommerceEvent commerceEvent = new CommerceEvent();
-        commerceEvent.setTransactionID("123XYZ");
-        commerceEvent.setRevenue(3.14);
-        commerceEvent.setTax(.314);
-        commerceEvent.setCoupon("MyCoupon");
+                Branch.getInstance().sendCommerceEvent(commerceEvent);
+                ServerRequest serverRequest = null;
+                try {
+                    serverRequest = findRequestOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                }
 
-        Branch.getInstance().sendCommerceEvent(commerceEvent);
-        ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", BRANCH_STANDARD_EVENT.PURCHASE.getName());
+                Assert.assertNotNull(serverRequest);
+                doFinalUpdate(serverRequest);
 
-        Assert.assertNotNull(serverRequest);
-        doFinalUpdate(serverRequest);
-
-        Assert.assertTrue(hasCommerceImeiData(serverRequest));
+                Assert.assertTrue(hasCommerceImeiData(serverRequest));
+            }
+        }, null);
     }
 
     // Check to see if the module injected imei is in the install request
