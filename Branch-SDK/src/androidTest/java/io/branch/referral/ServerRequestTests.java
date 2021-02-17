@@ -62,6 +62,7 @@ public class ServerRequestTests extends BranchTest {
                     public void onDataFetched(BranchCPID branchCPID, BranchError error) {
                         PrefHelper.Debug("branchCPID = " + branchCPID + ", error: " + error);
                         lock.countDown();
+                        Assert.assertNotNull(error);
                         Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
                     }
                 });

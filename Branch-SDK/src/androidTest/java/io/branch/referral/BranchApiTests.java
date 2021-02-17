@@ -385,7 +385,7 @@ public class BranchApiTests extends BranchTest {
                             });
                 }
                 try {
-                    Assert.assertTrue(signal.await((reps * TEST_REQUEST_TIMEOUT + TEST_INIT_SESSION_TIMEOUT) * 2, TimeUnit.MILLISECONDS));
+                    Assert.assertTrue(signal.await((reps * TEST_REQUEST_TIMEOUT + TEST_INIT_SESSION_TIMEOUT), TimeUnit.MILLISECONDS));
                 } catch (InterruptedException e) {
                     Assert.fail("timeout");
                 }

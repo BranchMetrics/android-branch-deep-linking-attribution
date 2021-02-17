@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,122 +61,134 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
     @Override
     protected void onPostExecute(ServerResponse serverResponse) {
         super.onPostExecute(serverResponse);
-        PrefHelper.Debug("benas onPostExecute " + thisReq_.getClass().getSimpleName() + ", " + serverResponse.getObject().toString());
         if (latch_ != null) {
             latch_.countDown();
         }
-        if (serverResponse == null) return;
+        if (serverResponse == null) {
+            thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
+            return;
+        }
 
-        try {
-            int status = serverResponse.getStatusCode();
-            branch.hasNetwork_ = true;
-            if (status == 200) {
-                // If the request succeeded
-                branch.hasNetwork_ = true;
+        int status = serverResponse.getStatusCode();
+        if (status == 200) {
+            onRequestSuccess(serverResponse);
+        } else {
+            onRequestFailed(serverResponse, status);
+        }
+        branch.networkCount_ = 0;
 
-                if (thisReq_ instanceof ServerRequestCreateUrl) {
-                    //On create  new url cache the url.
-                    if (serverResponse.getObject() != null) {
-                        // cache the link
-                        final String url = serverResponse.getObject().getString("url");
-                        BranchLinkData postBody = ((ServerRequestCreateUrl) thisReq_).getLinkPost();
-                        postBody.remove(Defines.Jsonkey.Metadata.getKey());
-                        postBody.remove(Defines.Jsonkey.GoogleAdvertisingID.getKey());
-                        postBody.remove(Defines.Jsonkey.LATVal.getKey());
-                        postBody.remove(Defines.Jsonkey.AdvertisingIDs.getKey());
-                        branch.linkCache_.put(postBody, url);
+        branch.processNextQueueItem();
+    }
+
+    private void onRequestSuccess(ServerResponse serverResponse) {
+        // If the request succeeded
+        @Nullable final JSONObject respJson = serverResponse.getObject();
+        if (respJson == null) {
+            thisReq_.handleFailure(500, "Null response json.");
+        }
+
+        if (thisReq_ instanceof ServerRequestCreateUrl && respJson != null) {
+            try {
+                // cache the link
+                BranchLinkData postBody = ((ServerRequestCreateUrl) thisReq_).getLinkPost();
+                final String url = respJson.getString("url");
+                branch.linkCache_.put(postBody, url);
+            } catch (JSONException ex) {
+                ex.printStackTrace();
+            }
+        } else if (thisReq_ instanceof ServerRequestLogout) {
+            //On Logout clear the link cache and all pending requests
+            branch.linkCache_.clear();
+            branch.requestQueue_.clear();
+        }
+
+
+        if (thisReq_ instanceof ServerRequestInitSession || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
+            // If this request changes a session update the session-id to queued requests.
+            boolean updateRequestsInQueue = false;
+            if (!branch.isTrackingDisabled() && respJson != null) {
+                // Update PII data only if tracking is disabled
+                try {
+                    if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                        branch.prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
+                        updateRequestsInQueue = true;
                     }
-                } else if (thisReq_ instanceof ServerRequestLogout) {
-                    //On Logout clear the link cache and all pending requests
-                    branch.linkCache_.clear();
-                    branch.requestQueue_.clear();
-                }
-
-
-                if (thisReq_ instanceof ServerRequestInitSession || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
-                    // If this request changes a session update the session-id to queued requests.
-                    JSONObject respJson = serverResponse.getObject();
-                    if (respJson != null) {
-                        boolean updateRequestsInQueue = false;
-                        if (!branch.isTrackingDisabled()) { // Update PII data only if tracking is disabled
-                            if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                                branch.prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
-                                updateRequestsInQueue = true;
-                            }
-                            if (respJson.has(Defines.Jsonkey.IdentityID.getKey())) {
-                                String new_Identity_Id = respJson.getString(Defines.Jsonkey.IdentityID.getKey());
-                                if (!branch.prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                    //On setting a new identity Id clear the link cache
-                                    branch.linkCache_.clear();
-                                    branch.prefHelper_.setIdentityID(new_Identity_Id);
-                                    updateRequestsInQueue = true;
-                                }
-                            }
-                            if (respJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                                branch.prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
-                                updateRequestsInQueue = true;
-                            }
-                        }
-
-                        if (updateRequestsInQueue) {
-                            branch.updateAllRequestsInQueue();
-                        }
-
-                        if (thisReq_ instanceof ServerRequestInitSession) {
-                            branch.setInitState(Branch.SESSION_STATE.INITIALISED);
-                            thisReq_.onRequestSucceeded(serverResponse, branch);
-                            if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                                branch.checkForAutoDeepLinkConfiguration();
-                            }
-                            // Count down the latch holding getLatestReferringParamsSync
-                            if (branch.getLatestReferringParamsLatch != null) {
-                                branch.getLatestReferringParamsLatch.countDown();
-                            }
-                            // Count down the latch holding getFirstReferringParamsSync
-                            if (branch.getFirstReferringParamsLatch != null) {
-                                branch.getFirstReferringParamsLatch.countDown();
-                            }
-                        } else {
-                            // For setting identity just call only request succeeded
-                            thisReq_.onRequestSucceeded(serverResponse, branch);
+                    if (respJson.has(Defines.Jsonkey.IdentityID.getKey())) {
+                        String new_Identity_Id = respJson.getString(Defines.Jsonkey.IdentityID.getKey());
+                        if (!branch.prefHelper_.getIdentityID().equals(new_Identity_Id)) {
+                            //On setting a new identity Id clear the link cache
+                            branch.linkCache_.clear();
+                            branch.prefHelper_.setIdentityID(new_Identity_Id);
+                            updateRequestsInQueue = true;
                         }
                     }
-                } else {
-                    //Publish success to listeners
-                    thisReq_.onRequestSucceeded(serverResponse, branch);
-                }
-            } else {
-                //If failed request is an initialisation request then mark session not initialised
-                if (thisReq_ instanceof ServerRequestInitSession) {
-                    branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
-                }
-
-                // On a bad request or in case of a conflict notify with call back and remove the request.
-                if (status == 400 || status == 409 && thisReq_ instanceof ServerRequestCreateUrl) {
-                    ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
-                } else {
-                    //On Network error or Branch is down fail all the pending requests in the queue except
-                    //for request which need to be replayed on failure.
-                    branch.hasNetwork_ = false;
-                    branch.networkCount_ = 0;
-                    thisReq_.handleFailure(status, serverResponse.getFailReason());
+                    if (respJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
+                        branch.prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
+                        updateRequestsInQueue = true;
+                    }
+                    if (updateRequestsInQueue) {
+                        branch.updateAllRequestsInQueue();
+                    }
+                } catch (JSONException ex) {
+                    ex.printStackTrace();
                 }
             }
+
+            if (thisReq_ instanceof ServerRequestInitSession) {
+                branch.setInitState(Branch.SESSION_STATE.INITIALISED);
+                if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
+                    branch.checkForAutoDeepLinkConfiguration();
+                }
+                // Count down the latch holding getLatestReferringParamsSync
+                if (branch.getLatestReferringParamsLatch != null) {
+                    branch.getLatestReferringParamsLatch.countDown();
+                }
+                // Count down the latch holding getFirstReferringParamsSync
+                if (branch.getFirstReferringParamsLatch != null) {
+                    branch.getFirstReferringParamsLatch.countDown();
+                }
+            }
+        }
+
+        if (respJson != null) {
+            thisReq_.onRequestSucceeded(serverResponse, branch);
             branch.requestQueue_.remove(thisReq_);
-            branch.networkCount_ = 0;
+        } else if (thisReq_.shouldRetryOnFail()) {
+            // already called handleFailure above
+            thisReq_.clearCallbacks();
+        } else {
+            branch.requestQueue_.remove(thisReq_);
+        }
+    }
 
-            if (branch.hasNetwork_ && branch.initState_ != Branch.SESSION_STATE.UNINITIALISED) {
-                branch.processNextQueueItem();
-            }
-        } catch (JSONException ex) {
-            ex.printStackTrace();
+    private void onRequestFailed(ServerResponse serverResponse, int status) {
+        // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
+        if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(branch.prefHelper_.getSessionParams())) {
+            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
+        }
+
+        // On a bad request or in case of a conflict notify with call back and remove the request.
+        if (status == 400 || status == 409 && thisReq_ instanceof ServerRequestCreateUrl) {
+            ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
+        } else {
+            //On Network error or Branch is down fail all the pending requests in the queue except
+            //for request which need to be replayed on failure.
+            branch.networkCount_ = 0;
+            thisReq_.handleFailure(status, serverResponse.getFailReason());
+        }
+
+        if (!thisReq_.shouldRetryOnFail()) {
+            branch.requestQueue_.remove(thisReq_);
+        } else {
+            // failure has already been handled
+            // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
+            thisReq_.clearCallbacks();
         }
     }
 
     @Override
     protected void onCancelled(ServerResponse v) {
         super.onCancelled();
-        PrefHelper.Debug("benas onCancelled " + thisReq_.getClass().getSimpleName());
         onPostExecute(new ServerResponse(thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
     }
 }

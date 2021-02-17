@@ -13,8 +13,8 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     private BranchCrossPlatformIdListener callback;
 
-    ServerRequestGetCPID(Context context, Defines.RequestPath requestPath, BranchCrossPlatformIdListener callback) {
-        super(context, requestPath);
+    ServerRequestGetCPID(Context context, BranchCrossPlatformIdListener callback) {
+        super(context, Defines.RequestPath.GetCPID);
         this.callback = callback;
         JSONObject reqBody = new JSONObject();
         try {
@@ -61,6 +61,7 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
+        callback = null;
     }
 
     @Override
@@ -73,6 +74,7 @@ public class ServerRequestGetCPID extends ServerRequest {
         return true;
     }
 
+    @Override
     public boolean shouldRetryOnFail() {
         return true; // Branch event need to be retried on failure.
     }

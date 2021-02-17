@@ -66,6 +66,7 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
+        callback = null;
     }
 
     @Override
@@ -78,6 +79,7 @@ public class ServerRequestGetLATD extends ServerRequest {
         return true;
     }
 
+    @Override
     public boolean shouldRetryOnFail() {
         return true; // Branch event need to be retried on failure.
     }

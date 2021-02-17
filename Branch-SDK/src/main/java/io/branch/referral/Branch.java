@@ -299,12 +299,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private final Context context_;
 
     private final Semaphore serverSema_ = new Semaphore(1);
+
     final ServerRequestQueue requestQueue_;
     
     int networkCount_ = 0;
-    
-    boolean hasNetwork_ = true;
-    
+
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
     
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
@@ -874,19 +873,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void executeClose() {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
-            if (!hasNetwork_) {
-                // if there's no network connectivity, purge the old install/open
-                ServerRequest req = requestQueue_.peek();
-                if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
-                    requestQueue_.remove(req);
-                }
+            ServerRequest req = new ServerRequestRegisterClose(context_);
+            if (closeRequestNeeded) {
+                handleNewRequest(req);
             } else {
-                ServerRequest req = new ServerRequestRegisterClose(context_);
-                if (closeRequestNeeded) {
-                    handleNewRequest(req);
-                } else {
-                    req.onRequestSucceeded(null, null);
-                }
+                req.onRequestSucceeded(null, null);
             }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
@@ -1085,7 +1076,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
         if (context_ != null) {
-            handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID, callback));
+            handleNewRequest(new ServerRequestGetCPID(context_, callback));
         }
     }
 
@@ -2234,7 +2225,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
         @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return Branch.getInstance().branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
+            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
                     prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
                     Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
