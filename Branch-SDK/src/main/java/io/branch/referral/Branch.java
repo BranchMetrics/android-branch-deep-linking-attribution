@@ -878,7 +878,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 // if there's no network connectivity, purge the old install/open
                 ServerRequest req = requestQueue_.peek();
                 if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
-                    requestQueue_.dequeue();
+                    requestQueue_.remove(req);
                 }
             } else {
                 ServerRequest req = new ServerRequestRegisterClose(context_);

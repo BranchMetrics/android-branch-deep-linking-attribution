@@ -143,26 +143,8 @@ class ServerRequestQueue {
     }
     
     /**
-     * <p>Removes the queued {@link ServerRequest} object at position with index 0 within the queue,
-     * and returns it as a result.</p>
-     *
-     * @return The {@link ServerRequest} object at position with index 0 within the queue.
-     */
-    ServerRequest dequeue() {
-        ServerRequest req = null;
-        synchronized (reqQueueLockObject) {
-            try {
-                req = queue.remove(0);
-                persist();
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
-            }
-        }
-        return req;
-    }
-    
-    /**
-     * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue, but
-     * unlike {@link #dequeue()}, does not remove it from the queue.</p>
+     * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue
+     * without removing it.</p>
      *
      * @return The {@link ServerRequest} object at position with index 0 within the queue.
      */
