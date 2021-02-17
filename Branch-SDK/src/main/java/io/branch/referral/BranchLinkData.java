@@ -350,11 +350,6 @@ class BranchLinkData extends JSONObject {
                 return false;
         } else if (!feature.equals(other.feature))
             return false;
-        if (params == null) {
-            if (other.params != null)
-                return false;
-        } else if (!params.toString().equals(other.params.toString()))
-            return false;
         if (stage == null) {
             if (other.stage != null)
                 return false;
@@ -373,7 +368,14 @@ class BranchLinkData extends JSONObject {
         if (tags == null) {
             if (other.tags != null)
                 return false;
-        } else if (!tags.toString().equals(other.tags.toString()))
+        } else if (!tags.toString().equals(other.tags != null ? other.tags.toString() : null))
+            return false;
+
+        // todo JSONObject's order of keys is not consistent, so this equality can lead to false positives
+        if (params == null) {
+            if (other.params != null)
+                return false;
+        } else if (!params.toString().equals(other.params != null ? other.params.toString() : null))
             return false;
 
         return true;
