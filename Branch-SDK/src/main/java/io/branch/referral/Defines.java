@@ -219,11 +219,6 @@ public class Defines {
             return key;
         }
     }
-    // vivo appstore spec
-    // PR reviews for Charles
-    // Core-1588
-    // Connected with Richard, Pawel and Charles about AD+
-    // SMB-613
 
     /**
      * <p>

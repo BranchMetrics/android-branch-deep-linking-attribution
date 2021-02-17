@@ -19,15 +19,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
-
-import static io.branch.referral.Defines.RequestPath.GetCPID;
-import static io.branch.referral.Defines.RequestPath.GetCreditHistory;
-import static io.branch.referral.Defines.RequestPath.GetURL;
-import static io.branch.referral.Defines.RequestPath.RegisterInstall;
-import static io.branch.referral.Defines.RequestPath.RegisterOpen;
-
 
 /**
  * Class for Branch utility methods
@@ -75,7 +67,7 @@ public class BranchUtil {
     }
 
     private static boolean readTestMode(Context context) {
-        boolean result = false;
+        boolean result = isTestModeEnabled_;
         String testModeKey = "io.branch.sdk.TestMode";
         try {
             final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);

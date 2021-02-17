@@ -71,29 +71,24 @@ class ServerRequestQueue {
     }
     
     private void persist() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                JSONArray jsonArr = new JSONArray();
-                synchronized (reqQueueLockObject) {
-                    for (ServerRequest aQueue : queue) {
-                        if (aQueue.isPersistable()) {
-                            JSONObject json = aQueue.toJSON();
-                            if (json != null) {
-                                jsonArr.put(json);
-                            }
+        try {
+            JSONArray jsonArr = new JSONArray();
+            synchronized (reqQueueLockObject) {
+                for (ServerRequest aQueue : queue) {
+                    if (aQueue.isPersistable()) {
+                        JSONObject json = aQueue.toJSON();
+                        if (json != null) {
+                            jsonArr.put(json);
                         }
                     }
                 }
-
-                try {
-                    editor.putString(PREF_KEY, jsonArr.toString()).apply();
-                } catch (Exception ex) {
-                    String msg = ex.getMessage();
-                    PrefHelper.Debug("Failed to persist queue" + (msg == null ? "" : msg));
-                }
             }
-        }).start();
+
+            editor.putString(PREF_KEY, jsonArr.toString()).apply();
+        } catch (Exception ex) {
+            String msg = ex.getMessage();
+            PrefHelper.Debug("Failed to persist queue" + (msg == null ? "" : msg));
+        }
     }
     
     private List<ServerRequest> retrieve(Context context) {
@@ -255,7 +250,6 @@ class ServerRequestQueue {
      * @return A {@link Boolean} whose value is true if the object is removed.
      */
     public boolean remove(ServerRequest request) {
-        PrefHelper.Debug("ServerRequestQueue.remove " + request.getClass().getSimpleName());
         boolean isRemoved = false;
         synchronized (reqQueueLockObject) {
             try {
