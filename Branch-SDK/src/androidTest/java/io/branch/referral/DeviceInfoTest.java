@@ -14,14 +14,14 @@ public class DeviceInfoTest extends BranchTest {
 
     @Test
     public void testDeviceInfoExists() {
-        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
+        initBranchInstance();
         Assert.assertNotNull(DeviceInfo.getInstance());
     }
 
     @Test
     public void testHardwareIdDebug() {
         // NOTE that this is essentially the same test as using Simulated Installs
-        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
+        initBranchInstance();
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         SystemObserver.UniqueId uniqueId1 = DeviceInfo.getInstance().getHardwareID();
@@ -32,7 +32,7 @@ public class DeviceInfoTest extends BranchTest {
     @Test
     public void testHardwareIdSimulatedInstall() {
         // NOTE that this is essentially the same test as using Debug
-        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
+        initBranchInstance();
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         // Start with simulation mode off and get a hardwareId
@@ -53,8 +53,8 @@ public class DeviceInfoTest extends BranchTest {
     }
 
     @Test
-    public void testGAIDFetch() {
-        Assert.assertNotNull(Branch.getAutoInstance(getTestContext()));
+    public void testGAIDFetch() throws InterruptedException {
+        initBranchInstance();
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -65,11 +65,7 @@ public class DeviceInfoTest extends BranchTest {
             }
         });
 
-        try {
-            latch.await(5000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Assert.fail();
-        }
+        Assert.assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
 
         Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
     }

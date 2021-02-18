@@ -34,7 +34,7 @@ public abstract class ServerRequest {
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
 
     private JSONObject params_;
-    private final Defines.RequestPath requestPath_;
+    final Defines.RequestPath requestPath_;
     protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;
@@ -375,7 +375,7 @@ public abstract class ServerRequest {
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      */
-    private void updateGAdsParams() {
+    void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
@@ -645,11 +645,6 @@ public abstract class ServerRequest {
         return BRANCH_API_VERSION.V1;  // Default is v1
     }
     
-    public void reportTrackingDisabledError() {
-        PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + requestPath_.getPath() + "]");
-        handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
-    }
-    
     /**
      * Method to notify that this request is being executed when tracking is disabled.
      * Remove all PII data from the request added to the request
@@ -667,18 +662,5 @@ public abstract class ServerRequest {
             if (item.equals(requestPath_)) return true;
         }
         return false;
-    }
-
-    protected static void addPartnerParams(JSONObject body, BranchPartnerParameters partnerParams) throws JSONException {
-        if (body == null) return;
-        JSONObject partnerData = new JSONObject();
-        for (Map.Entry<String, ConcurrentHashMap<String, String>> e : partnerParams.allParams().entrySet()) {
-            JSONObject individualPartnerParams = new JSONObject();
-            for (Map.Entry<String, String> p : e.getValue().entrySet()) {
-                individualPartnerParams.put(p.getKey(), p.getValue());
-            }
-            partnerData.put(e.getKey(), individualPartnerParams);
-        }
-        body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
     }
 }

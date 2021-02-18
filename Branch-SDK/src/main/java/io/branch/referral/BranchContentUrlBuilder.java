@@ -31,6 +31,6 @@ public class BranchContentUrlBuilder extends BranchUrlBuilder<BranchContentUrlBu
      * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
      */
     public void generateContentUrl(Branch.BranchLinkCreateListener callback) {
-        super.generateUrl(callback);
+        super.generateUrlInternal(callback);
     }
 }

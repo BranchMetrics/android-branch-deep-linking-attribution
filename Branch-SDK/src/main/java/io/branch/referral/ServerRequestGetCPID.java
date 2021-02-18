@@ -13,8 +13,8 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     private BranchCrossPlatformIdListener callback;
 
-    ServerRequestGetCPID(Context context, Defines.RequestPath requestPath, BranchCrossPlatformIdListener callback) {
-        super(context, requestPath);
+    ServerRequestGetCPID(Context context, BranchCrossPlatformIdListener callback) {
+        super(context, Defines.RequestPath.GetCPID);
         this.callback = callback;
         JSONObject reqBody = new JSONObject();
         try {
@@ -51,9 +51,7 @@ public class ServerRequestGetCPID extends ServerRequest {
             return;
         }
 
-        callback.onDataFetched(null,
-                new BranchError("Failed to get the Cross Platform IDs",
-                        BranchError.ERR_BRANCH_INVALID_REQUEST));
+        callback.onDataFetched(null, new BranchError("Failed to get the Cross Platform IDs", statusCode));
     }
 
     @Override
@@ -63,6 +61,7 @@ public class ServerRequestGetCPID extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
+        callback = null;
     }
 
     @Override
@@ -73,10 +72,6 @@ public class ServerRequestGetCPID extends ServerRequest {
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
-    }
-
-    public boolean shouldRetryOnFail() {
-        return true; // Branch event need to be retried on failure.
     }
 
     public interface BranchCrossPlatformIdListener {

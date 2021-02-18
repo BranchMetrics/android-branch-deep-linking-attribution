@@ -22,7 +22,6 @@ class ServerRequestCreateUrl extends ServerRequest {
     private Branch.BranchLinkCreateListener callback_;
     /* Default long link base url*/
     private static final String DEF_BASE_URL = "https://bnc.lt/a/";
-    private boolean isReqStartedFromBranchShareSheet_;
     private boolean defaultToLongUrl_ = true;
 
     /**
@@ -248,14 +247,6 @@ class ServerRequestCreateUrl extends ServerRequest {
         }
 
         return longUrl;
-    }
-
-    void setIsReqStartedFromBranchShareSheet(boolean startedByShareSheet) {
-        isReqStartedFromBranchShareSheet_ = startedByShareSheet;
-    }
-
-    boolean isReqStartedFromBranchShareSheet() {
-        return isReqStartedFromBranchShareSheet_;
     }
 
     @Override

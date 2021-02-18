@@ -219,7 +219,7 @@ public class Defines {
             return key;
         }
     }
-    
+
     /**
      * <p>
      * Defines all server path for the requests

@@ -1,7 +1,11 @@
 # Branch Android SDK change log
 - v5.0.5
   * _*Master Release*_ - January 21, 2020
-  * Add API to pass hashed partner parameters
+  * Add API to pass hashed partner parameters (Facebook integration)
+  * Fix bugs in the networking pipeline of CPID and LATD requests
+  * Fix bug preventing callback invocation when url creation request times out
+  * Add support for static SKD configuration via branch.json file
+  * Deprecate SDK initializers with isReferrable flag
   
 - v5.0.4
   * _*Master Release*_ - December 9, 2020

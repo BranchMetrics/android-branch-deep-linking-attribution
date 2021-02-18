@@ -16,14 +16,11 @@ public abstract class BranchAsyncTask<Params, Progress, Result> extends AsyncTas
      * @param params Params for executing this Async task
      * @return This object for method chaining
      */
-    public AsyncTask<Params, Progress, Result> executeTask(Params... params) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            try {
-                return executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
-            } catch (Throwable t) {
-                return execute(params);
-            }
-        } else
+    public final AsyncTask<Params, Progress, Result> executeTask(Params... params) {
+        try {
+            return executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+        } catch (Throwable t) {
             return execute(params);
+        }
     }
 }

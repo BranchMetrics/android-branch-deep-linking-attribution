@@ -55,8 +55,7 @@ public class ServerRequestGetLATD extends ServerRequest {
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         if (callback != null) {
-            callback.onDataFetched(null, new BranchError("Failed to get last attributed touch data",
-                            BranchError.ERR_BRANCH_INVALID_REQUEST));
+            callback.onDataFetched(null, new BranchError("Failed to get last attributed touch data", statusCode));
         }
     }
 
@@ -67,6 +66,7 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
+        callback = null;
     }
 
     @Override
@@ -77,10 +77,6 @@ public class ServerRequestGetLATD extends ServerRequest {
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
-    }
-
-    public boolean shouldRetryOnFail() {
-        return true; // Branch event need to be retried on failure.
     }
 
     public interface BranchLastAttributedTouchDataListener {

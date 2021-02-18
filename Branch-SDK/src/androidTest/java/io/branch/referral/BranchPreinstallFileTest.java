@@ -3,39 +3,47 @@ package io.branch.referral;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.utils.AssetUtils;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public class BranchPreinstallFileTest extends BranchEventTest {
+public class BranchPreinstallFileTest extends BranchTest {
 
     @Test
     public void testResultSuccess() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
-        initQueue(getTestContext());
+        initBranchInstance();
 
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "pre_install_apps.branch");
-        Assert.assertTrue(branchFileData.length() > 0);
+                String branchFileData = AssetUtils.readJsonFile(getTestContext(), "pre_install_apps.branch");
+                Assert.assertTrue(branchFileData.length() > 0);
 
-        JSONObject branchFileJson = new JSONObject(branchFileData);
-        BranchPreinstall.getBranchFileContent(branchFileJson, branch,
-                getTestContext());
+                JSONObject branchFileJson = null;
+                try {
+                    branchFileJson = new JSONObject(branchFileData);
+                    BranchPreinstall.getBranchFileContent(branchFileJson, branch, getTestContext());
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
+                    ServerRequest initRequest = queue.peekAt(0);
+                    doFinalUpdate(initRequest);
+                    doFinalUpdateOnMainThread(initRequest);
 
-        Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
-        Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
-        Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
+                } catch (Throwable e) {
+                    Assert.fail("parsing of test resources failed");
+                }
+            }
+        }, null);
     }
 
     @Test
@@ -47,67 +55,75 @@ public class BranchPreinstallFileTest extends BranchEventTest {
 
     @Test
     public void testResultPackageNameNotPresent() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
-        initQueue(getTestContext());
+        initBranchInstance();
 
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "pre_install_apps_no_package.branch");
-        Assert.assertTrue(branchFileData.length() > 0);
+                String branchFileData = AssetUtils
+                        .readJsonFile(getTestContext(), "pre_install_apps_no_package.branch");
+                Assert.assertTrue(branchFileData.length() > 0);
+                try {
+                    JSONObject branchFileJson = new JSONObject(branchFileData);
+                    BranchPreinstall.getBranchFileContent(branchFileJson, branch,
+                            getTestContext());
 
-        JSONObject branchFileJson = new JSONObject(branchFileData);
-        BranchPreinstall.getBranchFileContent(branchFileJson, branch,
-                getTestContext());
+                    ServerRequest initRequest = queue.peekAt(0);
+                    doFinalUpdate(initRequest);
+                    doFinalUpdateOnMainThread(initRequest);
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
-
-        Assert.assertFalse(hasV1InstallPreinstallCampaign(initRequest));
-        Assert.assertFalse(hasV1InstallPreinstallPartner(initRequest));
-        Assert.assertFalse(hasV1InstallPreinstallCustomData(initRequest));
+                    Assert.assertFalse(hasV1InstallPreinstallCampaign(initRequest));
+                    Assert.assertFalse(hasV1InstallPreinstallPartner(initRequest));
+                    Assert.assertFalse(hasV1InstallPreinstallCustomData(initRequest));
+                } catch (JSONException e) {
+                    Assert.fail(e.getMessage());
+                }
+            }
+        }, null);
     }
 
     @Test
-    public void testResultFileNotPresent() throws Throwable {
-        String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "pre_install_apps_not_present.branch");
+    public void testResultFileNotPresent() {
+        String branchFileData = AssetUtils.readJsonFile(getTestContext(), "pre_install_apps_not_present.branch");
         Assert.assertFalse(branchFileData.length() > 0);
     }
 
     @Test
-    public void testAppLevelDataOverride() throws Throwable {
-        Branch branch = Branch.getAutoInstance(getTestContext());
+    public void testAppLevelDataOverride() throws InterruptedException {
+        initBranchInstance();
         branch.setPreinstallPartner("partner1");
         branch.setPreinstallCampaign("campaign1");
 
-        initQueue(getTestContext());
-
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
-        branch.initSession();
-        Assert.assertEquals(1, queue.getSize());
+        initSessionResumeActivity(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, queue.getSize());
 
-        String branchFileData = AssetUtils
-                .readJsonFile(getTestContext(), "pre_install_apps.branch");
-        Assert.assertTrue(branchFileData.length() > 0);
+                String branchFileData = AssetUtils.readJsonFile(getTestContext(), "pre_install_apps.branch");
+                Assert.assertTrue(branchFileData.length() > 0);
+                try {
+                    JSONObject branchFileJson = new JSONObject(branchFileData);
+                    BranchPreinstall.getBranchFileContent(branchFileJson, branch, getTestContext());
 
-        JSONObject branchFileJson = new JSONObject(branchFileData);
-        BranchPreinstall.getBranchFileContent(branchFileJson, branch,
-                getTestContext());
+                    ServerRequest initRequest = queue.peekAt(0);
+                    doFinalUpdate(initRequest);
+                    doFinalUpdateOnMainThread(initRequest);
 
-        ServerRequest initRequest = queue.peekAt(0);
-        doFinalUpdate(initRequest);
-        doFinalUpdateOnMainThread(initRequest);
-
-        Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
-        Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
-        Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
-        Assert.assertEquals(getPreinstallData(branch, PreinstallKey.partner.getKey()), "partner1");
+                    Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
+                    Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
+                    Assert.assertEquals(getPreinstallData(branch, PreinstallKey.partner.getKey()), "partner1");
+                } catch (JSONException e) {
+                    Assert.fail(e.getMessage());
+                }
+            }
+        }, null);
     }
 
     // Check to see if the preinstall campaign is available (V1)
@@ -125,7 +141,7 @@ public class BranchPreinstallFileTest extends BranchEventTest {
     }
 
     // Check to see if the preinstall custom data is available (V1)
-    private boolean hasV1InstallPreinstallCustomData(ServerRequest request) throws Throwable {
+    private boolean hasV1InstallPreinstallCustomData(ServerRequest request) throws JSONException {
         JSONObject jsonObject = request.getGetParams().getJSONObject("metadata");
         String custom_key = jsonObject.optString("custom_key");
         return (custom_key.length() > 0);

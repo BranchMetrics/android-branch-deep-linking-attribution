@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.jar.JarFile;
 
-
 /**
  * Class for Branch utility methods
  */
@@ -58,7 +57,7 @@ public class BranchUtil {
                     isTestModeEnabled_ = r != null ? r : false;
                 } else {
                     // manifest configurations is the last resort
-                    isTestModeEnabled_  = readTestMode(context);
+                    isTestModeEnabled_ = readTestMode(context);
                 }
 
                 testModeEnabledViaCompileTimeConfiguration = isTestModeEnabled_;

@@ -38,7 +38,6 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -293,20 +292,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
-    
+
     private BranchRemoteInterface branchRemoteInterface_;
-    private final PrefHelper prefHelper_;
+    final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
     private final Context context_;
-    
+
     private final Semaphore serverSema_ = new Semaphore(1);
-    
+
     final ServerRequestQueue requestQueue_;
     
-    private int networkCount_ = 0;
-    
-    private boolean hasNetwork_ = true;
-    
+    int networkCount_ = 0;
+
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
     
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
@@ -328,7 +325,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
-    private SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
+    SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
     /* Flag to indicate if the `v1/close` is expected by the server at the end of this session. */
     public boolean closeRequestNeeded = false;
@@ -357,7 +354,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
-    private final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
@@ -372,8 +369,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             "branch_intent"       // A boolean that specifies if this intent is originated by Branch
     };
     
-    private CountDownLatch getFirstReferringParamsLatch = null;
-    private CountDownLatch getLatestReferringParamsLatch = null;
+    CountDownLatch getFirstReferringParamsLatch = null;
+    CountDownLatch getLatestReferringParamsLatch = null;
     
     /* Flag for checking of Strong matching is waiting on GAID fetch */
     private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
@@ -876,19 +873,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void executeClose() {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
-            if (!hasNetwork_) {
-                // if there's no network connectivity, purge the old install/open
-                ServerRequest req = requestQueue_.peek();
-                if (req instanceof ServerRequestRegisterInstall || req instanceof ServerRequestRegisterOpen) {
-                    requestQueue_.dequeue();
-                }
+            ServerRequest req = new ServerRequestRegisterClose(context_);
+            if (closeRequestNeeded) {
+                handleNewRequest(req);
             } else {
-                ServerRequest req = new ServerRequestRegisterClose(context_);
-                if (closeRequestNeeded) {
-                    handleNewRequest(req);
-                } else {
-                    req.onRequestSucceeded(null, null);
-                }
+                req.onRequestSucceeded(null, null);
             }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
@@ -1087,7 +1076,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
         if (context_ != null) {
-            handleNewRequest(new ServerRequestGetCPID(context_, Defines.RequestPath.GetCPID, callback));
+            handleNewRequest(new ServerRequestGetCPID(context_, callback));
         }
     }
 
@@ -1565,12 +1554,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 String url = linkCache_.get(req.getLinkPost());
                 req.onUrlAvailable(url);
                 return url;
+            }
+            if (req.isAsync()) {
+                handleNewRequest(req);
             } else {
-                if (req.isAsync()) {
-                    generateShortLinkAsync(req);
-                } else {
-                    return generateShortLinkSync(req);
-                }
+                return generateShortLinkSync(req);
             }
         }
         return null;
@@ -1641,10 +1629,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return null;
     }
     
-    private void generateShortLinkAsync(final ServerRequest req) {
-        handleNewRequest(req);
-    }
-    
     private JSONObject convertParamsStringToDictionary(String paramString) {
         if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
             return new JSONObject();
@@ -1663,7 +1647,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
-    private void processNextQueueItem() {
+    void processNextQueueItem() {
         try {
             serverSema_.acquire();
             if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
@@ -1672,22 +1656,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 
                 serverSema_.release();
                 if (req != null) {
+                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid IdentityID
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             PrefHelper.Debug("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
-                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         }
                         // Determine if a session is needed to execute (SDK-271)
                         else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
                             networkCount_ = 0;
-                            handleFailure(requestQueue_.getSize() - 1, BranchError.ERR_NO_SESSION);
+                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         } else {
-                            final CountDownLatch latch = new CountDownLatch(1);
-                            final BranchPostTask postTask = new BranchPostTask(req, latch);
-                            postTask.executeTask();
-                            startTimeoutTimer(latch, postTask, prefHelper_.getTimeout());
+                            executeTimedBranchPostTask(req, prefHelper_.getTimeout());
                         }
                     } else {
                         networkCount_ = 0;
@@ -1703,18 +1685,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void startTimeoutTimer(final CountDownLatch latch, final BranchPostTask postTask, final int timeout) {
-        new Thread(new Runnable() {@Override public void run() {
-            try {
-                if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                    postTask.cancel(true);
+    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final BranchPostTask postTask = new BranchPostTask(branchReferral_, req, latch);
 
-                    // it takes time to cancel the thread, so we do the timeout state cleanup here instead of postTask.onCancelled().
-                    postTask.thisReq_.handleFailure(ERR_BRANCH_REQ_TIMED_OUT,  "Timed out: " + postTask.thisReq_.getRequestUrl());
-                    requestQueue_.remove(postTask.thisReq_);
-                }
-            } catch (InterruptedException ignored) {}
-        }}).start();
+        try {
+            postTask.executeTask();
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                postTask.cancel(true);
+            }
+        } catch (InterruptedException e) {
+            PrefHelper.Debug("executeTimedBranchPostTask,InterruptedException ");
+            postTask.cancel(true);
+        }
     }
 
     // Determine if a Request needs a Session to proceed.
@@ -1734,23 +1717,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return (hasSession() && hasDeviceFingerPrint());
     }
     
-    private void handleFailure(int index, int statusCode) {
-        ServerRequest req;
-        if (index >= requestQueue_.getSize()) {
-            req = requestQueue_.peekAt(requestQueue_.getSize() - 1);
-        } else {
-            req = requestQueue_.peekAt(index);
-        }
-        handleFailure(req, statusCode);
-    }
-    
-    private void handleFailure(final ServerRequest req, int statusCode) {
-        if (req == null)
-            return;
-        req.handleFailure(statusCode, "");
-    }
-    
-    private void updateAllRequestsInQueue() {
+    void updateAllRequestsInQueue() {
         try {
             for (int i = 0; i < requestQueue_.getSize(); i++) {
                 ServerRequest req = requestQueue_.peekAt(i);
@@ -2015,7 +1982,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void handleNewRequest(ServerRequest req) {
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
-            req.reportTrackingDisabledError();
+            PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
+            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
@@ -2263,194 +2231,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    /**
-     * Asynchronous task handling execution of server requests. Execute the network task on background
-     * thread and request are  executed in sequential manner. Handles the request execution in
-     * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
-     * published in the main thread.
-     */
-    private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
-        ServerRequest thisReq_;
-        private final CountDownLatch latch_;
-        
-        public BranchPostTask(ServerRequest request, CountDownLatch latch) {
-            thisReq_ = request;
-            latch_ = latch;
-        }
-        
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            thisReq_.onPreExecute();
-            thisReq_.doFinalUpdateOnMainThread();
-        }
-        
-        @Override
-        protected ServerResponse doInBackground(Void... voids) {
-            // update queue wait time
-            addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
-            thisReq_.doFinalUpdateOnBackgroundThread();
-            if (isTrackingDisabled() && thisReq_.prepareExecuteWithoutTracking() == false) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
-            }
-            if (thisReq_.isGetRequest()) {
-                return branchRemoteInterface_.make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
-            } else {
-                return branchRemoteInterface_.make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), prefHelper_.getBranchKey());
-            }
-        }
-        
-        @Override
-        protected void onPostExecute(ServerResponse serverResponse) {
-            super.onPostExecute(serverResponse);
-            latch_.countDown();
-
-            if (serverResponse == null || isCancelled()) return;
-
-            try {
-                int status = serverResponse.getStatusCode();
-                hasNetwork_ = true;
-
-                if (serverResponse.getStatusCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
-                    thisReq_.reportTrackingDisabledError();
-                    requestQueue_.remove(thisReq_);
-
-                } else {
-                    //If the request is not succeeded
-                    if (status != 200) {
-                        //If failed request is an initialisation request then mark session not initialised
-                        if (thisReq_ instanceof ServerRequestInitSession) {
-                            setInitState(SESSION_STATE.UNINITIALISED);
-                        }
-                        // On a bad request or in canse of a conflict notify with call back and remove the request.
-                        if (status == 400 || status == 409) {
-                            requestQueue_.remove(thisReq_);
-                            if (thisReq_ instanceof ServerRequestCreateUrl) {
-                                ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
-                            } else {
-                                PrefHelper.LogAlways("Branch API Error: Conflicting resource error code from API");
-                                handleFailure(0, status);
-                            }
-                        }
-                        //On Network error or Branch is down fail all the pending requests in the queue except
-                        //for request which need to be replayed on failure.
-                        else {
-                            hasNetwork_ = false;
-                            //Collect all request from the queue which need to be failed.
-                            ArrayList<ServerRequest> requestToFail = new ArrayList<>();
-                            for (int i = 0; i < requestQueue_.getSize(); i++) {
-                                requestToFail.add(requestQueue_.peekAt(i));
-                            }
-                            //Remove the requests from the request queue first
-                            for (ServerRequest req : requestToFail) {
-                                if (req == null || !req.shouldRetryOnFail()) { // Should remove any nullified request object also from queue
-                                    requestQueue_.remove(req);
-                                }
-                            }
-                            // Then, set the network count to zero, indicating that requests can be started again.
-                            networkCount_ = 0;
-
-                            //Finally call the request callback with the error.
-                            for (ServerRequest req : requestToFail) {
-                                if (req != null) {
-                                    req.handleFailure(status, serverResponse.getFailReason());
-                                    //If request need to be replayed, no need for the callbacks
-                                    if (req.shouldRetryOnFail())
-                                        req.clearCallbacks();
-                                }
-                            }
-                        }
-                    }
-                    // If the request succeeded
-                    else {
-                        hasNetwork_ = true;
-                        //On create  new url cache the url.
-                        if (thisReq_ instanceof ServerRequestCreateUrl) {
-                            if (serverResponse.getObject() != null) {
-                                final String url = serverResponse.getObject().getString("url");
-                                // cache the link
-                                linkCache_.put(((ServerRequestCreateUrl) thisReq_).getLinkPost(), url);
-                            }
-                        }
-                        //On Logout clear the link cache and all pending requests
-                        else if (thisReq_ instanceof ServerRequestLogout) {
-                            linkCache_.clear();
-                            requestQueue_.clear();
-                        }
-                        requestQueue_.dequeue();
-
-                        // If this request changes a session update the session-id to queued requests.
-                        if (thisReq_ instanceof ServerRequestInitSession
-                                || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
-                            // Immediately set session and Identity and update the pending request with the params
-                            JSONObject respJson = serverResponse.getObject();
-                            if (respJson != null) {
-                                boolean updateRequestsInQueue = false;
-                                if (!isTrackingDisabled()) { // Update PII data only if tracking is disabled
-                                    if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                                        prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
-                                        updateRequestsInQueue = true;
-                                    }
-                                    if (respJson.has(Defines.Jsonkey.IdentityID.getKey())) {
-                                        String new_Identity_Id = respJson.getString(Defines.Jsonkey.IdentityID.getKey());
-                                        if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                            //On setting a new identity Id clear the link cache
-                                            linkCache_.clear();
-                                            prefHelper_.setIdentityID(new_Identity_Id);
-                                            updateRequestsInQueue = true;
-                                        }
-                                    }
-                                    if (respJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                                        prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
-                                        updateRequestsInQueue = true;
-                                    }
-                                }
-
-                                if (updateRequestsInQueue) {
-                                    updateAllRequestsInQueue();
-                                }
-
-                                if (thisReq_ instanceof ServerRequestInitSession) {
-                                    setInitState(SESSION_STATE.INITIALISED);
-                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-                                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                                        checkForAutoDeepLinkConfiguration();
-                                    }
-                                    // Count down the latch holding getLatestReferringParamsSync
-                                    if (getLatestReferringParamsLatch != null) {
-                                        getLatestReferringParamsLatch.countDown();
-                                    }
-                                    // Count down the latch holding getFirstReferringParamsSync
-                                    if (getFirstReferringParamsLatch != null) {
-                                        getFirstReferringParamsLatch.countDown();
-                                    }
-                                } else {
-                                    // For setting identity just call only request succeeded
-                                    thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-                                }
-                            }
-                        } else {
-                            //Publish success to listeners
-                            thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-                        }
-                    }
-                }
-                networkCount_ = 0;
-                if (hasNetwork_ && initState_ != SESSION_STATE.UNINITIALISED) {
-                    processNextQueueItem();
-                }
-            } catch (JSONException ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        @Override
-        protected void onCancelled(ServerResponse v) {
-            super.onCancelled();
-            // Timeout cleanup happens in branch.startTimeoutTimer(...) to preserve timeout accuracy
-        }
-    }
-    
     //-------------------Auto deep link feature-------------------------------------------//
     
     /**
@@ -2470,7 +2250,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return (activity.getIntent().getStringExtra(AUTO_DEEP_LINKED) != null);
     }
     
-    private void checkForAutoDeepLinkConfiguration() {
+    void checkForAutoDeepLinkConfiguration() {
         JSONObject latestParams = getLatestReferringParams();
         String deepLinkActivity = null;
         
