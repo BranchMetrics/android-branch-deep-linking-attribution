@@ -168,7 +168,7 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
         }
 
         // On a bad request or in case of a conflict notify with call back and remove the request.
-        if (status == 400 || status == 409 && thisReq_ instanceof ServerRequestCreateUrl) {
+        if ((status == 400 || status == 409) && thisReq_ instanceof ServerRequestCreateUrl) {
             ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
         } else {
             //On Network error or Branch is down fail all the pending requests in the queue except
