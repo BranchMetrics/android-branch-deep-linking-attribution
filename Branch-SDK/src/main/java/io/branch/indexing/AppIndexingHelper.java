@@ -36,7 +36,7 @@ class AppIndexingHelper {
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
                     PrefHelper.Debug("Firebase app indexing is not available. Please consider enabling Firebase app indexing for your app for better indexing experience with Google.");
-                } catch (Throwable ignore) {
+                } catch (Exception ignore) {
                     // unexpected exception
                     PrefHelper.Debug("Failed to index your contents using Firebase. Please make sure Firebase  is enabled and initialised in your app");
                 }
@@ -55,7 +55,7 @@ class AppIndexingHelper {
                             //noinspection deprecation
                             listOnGoogleSearch(contentUrl, context, buo);
                         }
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         PrefHelper.Debug("Warning: Unable to list your content in Google search. Please make sure you have added latest Firebase app indexing SDK to your project dependencies.");
                     }
                 }
@@ -79,7 +79,7 @@ class AppIndexingHelper {
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
                     PrefHelper.Debug("Failed to remove the BranchUniversalObject from Firebase local indexing. Please make sure Firebase is enabled and initialised in your app");
-                } catch (Throwable ignore) {
+                } catch (Exception ignore) {
                     // unexpected exception
                     PrefHelper.Debug("Failed to index your contents using Firebase. Please make sure Firebase is enabled and initialised in your app");
                 }

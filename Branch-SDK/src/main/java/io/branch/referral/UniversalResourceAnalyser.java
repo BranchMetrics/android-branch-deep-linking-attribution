@@ -105,8 +105,7 @@ class UniversalResourceAnalyser {
     void checkAndUpdateSkipURLFormats(Context context) {
         try {
             new UrlSkipListUpdateTask(context).executeTask();
-        } catch (Throwable ignore) {
-        }
+        } catch (Exception ignore) { }
     }
     
     String getStrippedURL(String url) {
@@ -172,7 +171,7 @@ class UniversalResourceAnalyser {
                         respObject = new JSONObject(rd.readLine());
                     }
                 }
-            } catch (Throwable ignore) {
+            } catch (Exception ignore) {
             } finally {
                 if (connection != null) {
                     connection.disconnect();

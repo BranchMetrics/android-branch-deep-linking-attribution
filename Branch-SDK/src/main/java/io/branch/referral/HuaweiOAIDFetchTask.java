@@ -94,7 +94,7 @@ public class HuaweiOAIDFetchTask extends BranchAsyncTask<Void, Void, Void> {
             if (TextUtils.isEmpty(HW_id) || HW_id.equals(UUID_EMPTY) || HW_lat) {
                 so.setGAID(null);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             PrefHelper.Debug("failed to retrieve OAID, error = " + e);
         }
     }

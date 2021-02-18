@@ -23,7 +23,7 @@ abstract class BranchTestRequestUtil {
     public static final int TEST_INIT_SESSION_TIMEOUT = 5000;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.
-    protected boolean isStandardEvent(BranchEvent event) throws Throwable {
+    protected boolean isStandardEvent(BranchEvent event) throws Exception {
         // Use Reflection to find if it is considered a "Standard Event"
         Field f = event.getClass().getDeclaredField("isStandardEvent"); //NoSuchFieldException
         f.setAccessible(true);

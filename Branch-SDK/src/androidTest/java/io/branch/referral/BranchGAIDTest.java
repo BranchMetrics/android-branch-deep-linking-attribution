@@ -35,7 +35,7 @@ public class BranchGAIDTest extends BranchTest {
     private static final String TAG = "BranchGAIDTest";
 
     @Test
-    public void testInitSession_hasGAIDv1() throws Throwable {
+    public void testInitSession_hasGAIDv1() {
         initBranchInstance();
         final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         initSessionResumeActivity(new Runnable() {
@@ -55,7 +55,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testActionCompleted_hasGAIDv1() throws InterruptedException, JSONException {
+    public void testActionCompleted_hasGAIDv1() {
         initBranchInstance();
         initSessionResumeActivity(new Runnable() {
             @Override
@@ -87,7 +87,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testCommerceEvent_hasGAIDv1() throws InterruptedException {
+    public void testCommerceEvent_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
             @Override
@@ -117,12 +117,12 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testLoadRewards_hasGAIDv1() throws Throwable {
+    public void testLoadRewards_hasGAIDv1() {
         // TODO:  loadRewards() puts an empty JSON object on the queue
     }
 
     @Test
-    public void testRedeemAwards_hasGAIDv1() throws Throwable {
+    public void testRedeemAwards_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
             @Override
@@ -150,7 +150,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testCreditHistory_hasGAIDv1() throws Throwable {
+    public void testCreditHistory_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
             @Override
@@ -174,7 +174,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testIdentity_hasGAIDv1() throws Throwable {
+    public void testIdentity_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
             @Override
@@ -198,23 +198,23 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testLogout_hasGAIDv1() throws Throwable {
+    public void testLogout_hasGAIDv1() {
         // TODO: initSession needed first
     }
 
     @Test
-    public void testPing_hasGAIDv1() throws Throwable {
+    public void testPing_hasGAIDv1() {
         // TODO: Ping does not get enqueued
     }
 
     @Test
-    public void testClose_hasGAIDv1() throws Throwable {
+    public void testClose_hasGAIDv1() {
         // TODO: Close happens in a Session context
         // Note that closeSessionInternal cannot be run on a non-UI thread
     }
 
     @Test
-    public void testStandardEvent_hasGAIDv2() throws Throwable {
+    public void testStandardEvent_hasGAIDv2() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
             @Override

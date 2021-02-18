@@ -88,7 +88,7 @@ public class GAdsPrefetchTask extends BranchAsyncTask<Void, Void, Void> {
                 Class<?> advertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
                 Method getAdvertisingIdInfoMethod = advertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
                 adInfoObj = getAdvertisingIdInfoMethod.invoke(null, context);
-            } catch (Throwable ignore) {
+            } catch (Exception ignore) {
                 PrefHelper.Debug("Either class com.google.android.gms.ads.identifier.AdvertisingIdClient " +
                         "or its method, getAdvertisingIdInfo, was not found");
             }
