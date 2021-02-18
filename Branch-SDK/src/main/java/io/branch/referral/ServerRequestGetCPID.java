@@ -74,11 +74,6 @@ public class ServerRequestGetCPID extends ServerRequest {
         return true;
     }
 
-    @Override
-    public boolean shouldRetryOnFail() {
-        return true; // Branch event need to be retried on failure.
-    }
-
     public interface BranchCrossPlatformIdListener {
         void onDataFetched(BranchCPID branchCPID, BranchError error);
     }

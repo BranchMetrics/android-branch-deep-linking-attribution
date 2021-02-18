@@ -79,11 +79,6 @@ public class ServerRequestGetLATD extends ServerRequest {
         return true;
     }
 
-    @Override
-    public boolean shouldRetryOnFail() {
-        return true; // Branch event need to be retried on failure.
-    }
-
     public interface BranchLastAttributedTouchDataListener {
         void onDataFetched(JSONObject jsonObject, BranchError error);
     }
