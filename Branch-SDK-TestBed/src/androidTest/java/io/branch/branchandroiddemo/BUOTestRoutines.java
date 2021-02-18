@@ -179,7 +179,7 @@ public class BUOTestRoutines {
                         respObject = new JSONObject(rd.readLine());
                     }
                 }
-            } catch (Throwable ignore) {
+            } catch (Exception ignore) {
             } finally {
                 if (connection != null) {
                     connection.disconnect();

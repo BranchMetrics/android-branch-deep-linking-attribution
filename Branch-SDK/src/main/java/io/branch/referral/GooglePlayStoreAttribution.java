@@ -79,7 +79,7 @@ class GooglePlayStoreAttribution {
                     PrefHelper.Debug("onInstallReferrerServiceDisconnected()");
                 }
             });
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             PrefHelper.Debug("ReferrerClientWrapper Exception: " + ex.getMessage());
         }
 

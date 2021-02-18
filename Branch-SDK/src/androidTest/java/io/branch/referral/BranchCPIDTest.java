@@ -16,7 +16,7 @@ import org.junit.runner.RunWith;
 public class BranchCPIDTest extends BranchTest {
 
     @Test
-    public void testGetCPID() throws Throwable{
+    public void testGetCPID() {
         initBranchInstance();
         branch.getCrossPlatformIds(null);
 
@@ -29,7 +29,7 @@ public class BranchCPIDTest extends BranchTest {
     }
 
     @Test
-    public void testGetLATD() throws Throwable{
+    public void testGetLATD() {
         initBranchInstance();
         branch.getLastAttributedTouchData(null);
 
@@ -42,7 +42,7 @@ public class BranchCPIDTest extends BranchTest {
     }
 
     @Test
-    public void testGetLATDAttributionWindowDefault() throws Throwable {
+    public void testGetLATDAttributionWindowDefault() {
         initBranchInstance();
         PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
 
@@ -57,7 +57,7 @@ public class BranchCPIDTest extends BranchTest {
     }
 
     @Test
-    public void testGetLATDAttributionWindowSetting() throws Throwable {
+    public void testGetLATDAttributionWindowSetting() {
         //setup
         initBranchInstance();
         PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());

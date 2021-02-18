@@ -1255,7 +1255,7 @@ public class PrefHelper {
         }
     }
 
-    public static void LogException(String message, Throwable t) {
+    public static void LogException(String message, Exception t) {
         if (!TextUtils.isEmpty(message)) {
             Log.e(TAG, message, t);
         }

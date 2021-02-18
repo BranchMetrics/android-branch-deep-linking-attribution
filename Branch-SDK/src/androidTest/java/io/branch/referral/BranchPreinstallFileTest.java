@@ -14,7 +14,7 @@ import org.junit.runner.RunWith;
 public class BranchPreinstallFileTest extends BranchTest {
 
     @Test
-    public void testResultSuccess() throws Throwable {
+    public void testResultSuccess() {
         initBranchInstance();
 
         final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
@@ -39,7 +39,7 @@ public class BranchPreinstallFileTest extends BranchTest {
                     Assert.assertTrue(hasV1InstallPreinstallCampaign(initRequest));
                     Assert.assertTrue(hasV1InstallPreinstallPartner(initRequest));
                     Assert.assertTrue(hasV1InstallPreinstallCustomData(initRequest));
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     Assert.fail("parsing of test resources failed");
                 }
             }
@@ -47,14 +47,14 @@ public class BranchPreinstallFileTest extends BranchTest {
     }
 
     @Test
-    public void testResultNullFile() throws Throwable {
+    public void testResultNullFile() {
         String branchFileData = AssetUtils
                 .readJsonFile(getTestContext(), "pre_install_apps_null.branch");
         Assert.assertFalse(branchFileData.length() > 0);
     }
 
     @Test
-    public void testResultPackageNameNotPresent() throws Throwable {
+    public void testResultPackageNameNotPresent() {
         initBranchInstance();
 
         final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
@@ -93,7 +93,7 @@ public class BranchPreinstallFileTest extends BranchTest {
     }
 
     @Test
-    public void testAppLevelDataOverride() throws InterruptedException {
+    public void testAppLevelDataOverride() {
         initBranchInstance();
         branch.setPreinstallPartner("partner1");
         branch.setPreinstallCampaign("campaign1");

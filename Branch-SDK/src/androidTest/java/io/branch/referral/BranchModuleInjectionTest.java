@@ -13,7 +13,7 @@ import org.junit.Test;
 public class BranchModuleInjectionTest extends BranchTest {
 
     @Test
-    public void testResultSuccess() throws Throwable {
+    public void testResultSuccess() throws Exception {
         initBranchInstance();
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);
@@ -35,7 +35,7 @@ public class BranchModuleInjectionTest extends BranchTest {
     }
 
     @Test
-    public void testNoModuleAddedWhenModuleNameMismatch() throws Throwable {
+    public void testNoModuleAddedWhenModuleNameMismatch() throws Exception {
         initBranchInstance();
         JSONObject branchFileJson = new JSONObject("{\"imei_rouge\":\"1234567890\"}");
         branch.addModule(branchFileJson);
@@ -57,7 +57,7 @@ public class BranchModuleInjectionTest extends BranchTest {
     }
 
     @Test
-    public void testCommerceEventHasImeiData() throws Throwable {
+    public void testCommerceEventHasImeiData() throws Exception {
         initBranchInstance();
         JSONObject branchFileJson = new JSONObject("{\"imei\":\"1234567890\"}");
         branch.addModule(branchFileJson);

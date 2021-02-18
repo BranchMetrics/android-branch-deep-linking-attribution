@@ -29,7 +29,7 @@ class DeferredAppLinkDataHandler {
 
             InvocationHandler ALDataCompletionHandler = new InvocationHandler() {
                 @Override
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
                     if (method.getName().equals("onDeferredAppLinkDataFetched") && args[0] != null) {
                         String appLinkUrl = null;
                         Object appLinkDataClass = AppLinkDataClass.cast(args[0]);
@@ -64,7 +64,7 @@ class DeferredAppLinkDataHandler {
                 fetchDeferredAppLinkDataMethod.invoke(null, context, fbAppID, completionListenerInterface);
             }
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             isRequestSucceeded = false;
         }
         return isRequestSucceeded;

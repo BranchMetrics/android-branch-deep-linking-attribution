@@ -51,8 +51,7 @@ class BranchIntegrationModel {
             // Avoid ANRs on reading and parsing manifest with a timeout
             obj = new getDeepLinkSchemeTasks().executeTask(context).get(2500, TimeUnit.MILLISECONDS);
             appSettingsAvailable = true;
-        } catch (Throwable t) {
-        }
+        } catch (Exception ignored) { }
         if (obj != null) {
             deeplinkUriScheme = obj.optJSONObject(Defines.Jsonkey.URIScheme.getKey());
             JSONArray hostArray = obj.optJSONArray(Defines.Jsonkey.AppLinks.getKey());

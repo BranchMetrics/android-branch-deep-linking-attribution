@@ -16,7 +16,7 @@ import io.branch.referral.util.CurrencyType;
 public class BranchEventTest extends BranchTest {
 
     @Test
-    public void testStandardEvent() throws Throwable {
+    public void testStandardEvent() throws Exception {
         BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
         Assert.assertEquals("PURCHASE", eventType.getName());
 
@@ -25,13 +25,13 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testCustomEvent() throws Throwable {
+    public void testCustomEvent() throws Exception {
         BranchEvent branchEvent = new BranchEvent("CustomEvent");
         Assert.assertFalse(isStandardEvent(branchEvent));
     }
 
     @Test
-    public void testCustomEventWithStandardName() throws Throwable {
+    public void testCustomEventWithStandardName() throws Exception {
         // We assert that creating an event using a String *will be considered a custom event*
         BRANCH_STANDARD_EVENT eventType = BRANCH_STANDARD_EVENT.PURCHASE;
         BranchEvent branchEvent = new BranchEvent(eventType.getName());
@@ -39,7 +39,7 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testAllStandardEvents() throws Throwable {
+    public void testAllStandardEvents() throws Exception {
         for (BRANCH_STANDARD_EVENT eventType : BRANCH_STANDARD_EVENT.values()) {
             BranchEvent branchEvent = new BranchEvent(eventType);
             Assert.assertTrue(isStandardEvent(branchEvent));
@@ -73,7 +73,7 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testLogEvent() throws InterruptedException {
+    public void testLogEvent() {
         initBranchInstance(TEST_KEY);
 
         new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).logEvent(getTestContext());
@@ -93,7 +93,7 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testLogEvent_queue() throws Throwable {
+    public void testLogEvent_queue() throws Exception {
         initBranchInstance(TEST_KEY);
 
         ServerRequest serverRequest = logEvent(getTestContext(), new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE));
@@ -103,7 +103,7 @@ public class BranchEventTest extends BranchTest {
     }
 
     @Test
-    public void testAdType() throws Throwable {
+    public void testAdType() throws Exception {
         initBranchInstance(TEST_KEY);
 
         BranchEvent branchEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_AD);

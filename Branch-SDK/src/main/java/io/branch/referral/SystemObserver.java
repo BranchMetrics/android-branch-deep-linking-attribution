@@ -469,8 +469,7 @@ abstract class SystemObserver {
                     }
                 }
             }
-        } catch (Throwable ignore) {
-        }
+        } catch (Exception ignore) { }
 
         return ipAddress;
     }

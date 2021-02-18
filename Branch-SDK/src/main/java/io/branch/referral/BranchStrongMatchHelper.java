@@ -46,7 +46,7 @@ class BranchStrongMatchHelper {
             CustomTabsCallbackClass = Class.forName("android.support.customtabs.CustomTabsCallback");
             CustomTabsSessionClass = Class.forName("android.support.customtabs.CustomTabsSession");
             ICustomTabsServiceClass = Class.forName("android.support.customtabs.ICustomTabsService");
-        } catch (Throwable t) {
+        } catch (Exception t) {
             isCustomTabsAvailable_ = false;
         }
     }
@@ -109,7 +109,7 @@ class BranchStrongMatchHelper {
                                             prefHelper.saveLastStrongMatchTime(System.currentTimeMillis());
                                             isStrongMatchUrlLaunched = true;
                                         }
-                                    } catch (Throwable t) {
+                                    } catch (Exception t) {
                                         mClient_ = null;
                                         updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                                     }
@@ -130,7 +130,7 @@ class BranchStrongMatchHelper {
                     updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
                     PrefHelper.Debug("Cannot use cookie-based matching since device id is not available");
                 }
-            } catch (Throwable ignore) {
+            } catch (Exception ignore) {
                 updateStrongMatchCheckFinished(callback, isStrongMatchUrlLaunched);
             }
         }
@@ -209,7 +209,7 @@ class BranchStrongMatchHelper {
 
                 Object customTabClientObject = customTabClientConstructor.newInstance(asInterfaceMethod.invoke(null, service), name);
                 this.onCustomTabsServiceConnected(name, customTabClientObject);
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 this.onCustomTabsServiceConnected(null, null);
             }
         }

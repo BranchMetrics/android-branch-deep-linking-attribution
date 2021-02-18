@@ -19,7 +19,7 @@ public abstract class BranchAsyncTask<Params, Progress, Result> extends AsyncTas
     public final AsyncTask<Params, Progress, Result> executeTask(Params... params) {
         try {
             return executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             return execute(params);
         }
     }
