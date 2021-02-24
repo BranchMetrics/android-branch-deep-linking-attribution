@@ -25,7 +25,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 
-import com.google.firebase.BuildConfig;
+import io.branch.referral.BuildConfig;
 
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
