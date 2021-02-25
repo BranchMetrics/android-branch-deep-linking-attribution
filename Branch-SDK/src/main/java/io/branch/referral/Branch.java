@@ -25,7 +25,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 
-import com.google.firebase.BuildConfig;
+import io.branch.referral.BuildConfig;
 
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -75,7 +75,7 @@ import io.branch.referral.util.LinkProperties;
  */
 public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, GooglePlayStoreAttribution.IInstallReferrerEvents {
     
-    private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + BuildConfig.VERSION_NAME;
+    private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
 
     /**

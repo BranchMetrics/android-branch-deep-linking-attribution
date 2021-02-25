@@ -198,7 +198,7 @@ public abstract class BranchRemoteInterface {
     private boolean addCommonParams(JSONObject post, String branch_key) {
         try {
             if (!post.has(Defines.Jsonkey.UserData.getKey())) { // user data already has the sdk in it as part of v2 request
-                post.put(Defines.Jsonkey.SDK.getKey(), "android" + BuildConfig.VERSION_NAME);
+                post.put(Defines.Jsonkey.SDK.getKey(), "android" + Branch.getSdkVersionNumber());
             }
             if (!branch_key.equals(PrefHelper.NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.BranchKey.getKey(), branch_key);
