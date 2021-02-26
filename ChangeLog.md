@@ -1,6 +1,11 @@
 # Branch Android SDK change log
+- v5.0.6
+  * _*Master Release*_ - February 26, 2020
+  * Add INITIATE_STREAM and COMPLETE_STREAM standard events
+  * Fix getSdkVersionNumber() API
+  
 - v5.0.5
-  * _*Master Release*_ - January 21, 2020
+  * _*Master Release*_ - February 17, 2020
   * Add API to pass hashed partner parameters (Facebook integration)
   * Fix bugs in the networking pipeline of CPID and LATD requests
   * Fix bug preventing callback invocation when url creation request times out
