@@ -25,8 +25,6 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 
-import io.branch.referral.BuildConfig;
-
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
@@ -2929,7 +2927,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return String value representing the current SDK version number (e.g. 4.3.2)
      */
     public static String getSdkVersionNumber() {
-        return BuildConfig.VERSION_NAME;
+        return io.branch.referral.BuildConfig.VERSION_NAME;
     }
 
     //-------------------------- DEPRECATED --------------------------------------//

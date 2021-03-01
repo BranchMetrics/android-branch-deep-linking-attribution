@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.0.7
+  * _*Master Release*_ - March 1, 2020
+  * Patch: fix getSdkVersionNumber() API in v2 events as well
+  
 - v5.0.6
   * _*Master Release*_ - February 26, 2020
   * Add INITIATE_STREAM and COMPLETE_STREAM standard events

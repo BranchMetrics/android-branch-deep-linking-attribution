@@ -8,8 +8,6 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.webkit.WebSettings;
 
-import com.google.firebase.BuildConfig;
-
 import io.branch.referral.Defines.ModuleNameKeys;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -203,7 +201,7 @@ class DeviceInfo {
 
             userDataObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
             userDataObj.put(Defines.Jsonkey.SDK.getKey(), "android");
-            userDataObj.put(Defines.Jsonkey.SdkVersion.getKey(), BuildConfig.VERSION_NAME);
+            userDataObj.put(Defines.Jsonkey.SdkVersion.getKey(), Branch.getSdkVersionNumber());
             userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context_));
 
             if (serverRequest instanceof ServerRequestGetLATD) {
