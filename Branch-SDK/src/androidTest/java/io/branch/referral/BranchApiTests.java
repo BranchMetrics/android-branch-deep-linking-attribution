@@ -427,7 +427,7 @@ public class BranchApiTests extends BranchTest {
     @Test
     public void testSdkVersion() {
         Assert.assertNotNull(Branch.getSdkVersionNumber());
-        Assert.assertEquals(BuildConfig.VERSION_NAME, Branch.getSdkVersionNumber());
+        Assert.assertEquals(io.branch.referral.BuildConfig.VERSION_NAME, Branch.getSdkVersionNumber());
     }
 
     private void getFBUrl(final FBUrl res) throws InterruptedException {

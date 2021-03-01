@@ -11,7 +11,6 @@ import java.util.Locale;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
-import io.branch.referral.BuildConfig;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
