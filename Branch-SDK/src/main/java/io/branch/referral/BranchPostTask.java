@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -177,7 +179,7 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
             thisReq_.handleFailure(status, serverResponse.getFailReason());
         }
 
-        if (!thisReq_.shouldRetryOnFail()) {
+        if (status == 400 || !thisReq_.shouldRetryOnFail()) {
             branch.requestQueue_.remove(thisReq_);
         } else {
             // failure has already been handled
