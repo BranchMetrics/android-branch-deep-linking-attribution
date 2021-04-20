@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
