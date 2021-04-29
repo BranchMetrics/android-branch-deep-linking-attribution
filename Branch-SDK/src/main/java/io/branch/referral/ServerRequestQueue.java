@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -263,15 +264,18 @@ class ServerRequestQueue {
      * install/register request. <i>True</i> if the queue contains a close request,
      * <i>False</i> if not.
      */
-    boolean containsInitRequest() {
+    ServerRequestInitSession getSelfInitRequest() {
         synchronized (reqQueueLockObject) {
             for (ServerRequest req : queue) {
                 if (req instanceof ServerRequestInitSession) {
-                    return true;
+                    ServerRequestInitSession r = (ServerRequestInitSession) req;
+                    if (r.initiatedByClient) {
+                        return r;
+                    }
                 }
             }
         }
-        return false;
+        return null;
     }
     
     /**

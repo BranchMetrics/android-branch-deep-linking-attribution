@@ -5,8 +5,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import androidx.annotation.CallSuper;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
@@ -25,15 +29,21 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private static final int STATE_UPDATE = 2;
     private static final int STATE_TUNE_MIGRATION = 5;
 
+    static final String INITIATED_BY_CLIENT = "INITIATED_BY_CLIENT";
 
-    ServerRequestInitSession(Context context, Defines.RequestPath requestPath) {
+    Branch.BranchReferralInitListener callback_;
+    boolean initiatedByClient;
+
+    ServerRequestInitSession(Context context, Defines.RequestPath requestPath, boolean isAutoInitialization) {
         super(context, requestPath);
         context_ = context;
+        initiatedByClient = !isAutoInitialization;
     }
 
-    ServerRequestInitSession(Defines.RequestPath requestPath, JSONObject post, Context context) {
+    ServerRequestInitSession(Defines.RequestPath requestPath, JSONObject post, Context context, boolean isAutoInitialization) {
         super(requestPath, post, context);
         context_ = context;
+        initiatedByClient = !isAutoInitialization;
     }
 
     @Override
@@ -285,5 +295,16 @@ abstract class ServerRequestInitSession extends ServerRequest {
         } else {
             return super.prepareExecuteWithoutTracking();
         }
+    }
+
+    @Override
+    public JSONObject toJSON() {
+        JSONObject r = super.toJSON();
+        try {
+            r.put(INITIATED_BY_CLIENT, initiatedByClient);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return r;
     }
 }

@@ -109,10 +109,11 @@ public class MainActivity extends Activity {
                 Branch.getInstance().setIdentity("test_user_10", new BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(JSONObject referringParams, BranchError error) {
+                        Log.e("BranchSDK_Tester", "install params = " + referringParams.toString());
                         if (error != null) {
-                            Log.i("BranchTestBed", "branch set Identity failed. Caused by -" + error.getMessage());
+                            Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                         } else {
-                            Log.i("BranchTestBed", "install params = " + referringParams.toString());
+                            Log.e("BranchSDK_Tester", "install params = " + referringParams.toString());
                         }
                     }
                 });
@@ -125,7 +126,7 @@ public class MainActivity extends Activity {
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        Log.i("BranchTestBed", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
                     }
                 });
 
@@ -138,7 +139,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getFirstReferringParams();
-                Log.i("BranchTestBed", "install params = " + obj.toString());
+                Log.e("BranchSDK_Tester", "install params = " + obj.toString());
             }
         });
 
@@ -180,9 +181,9 @@ public class MainActivity extends Activity {
                     @Override
                     public void onStateChanged(boolean changed, BranchError error) {
                         if (error != null) {
-                            Log.i("BranchTestBed", "branch load rewards failed. Caused by -" + error.getMessage());
+                            Log.e("BranchSDK_Tester", "branch load rewards failed. Caused by -" + error.getMessage());
                         } else {
-                            Log.i("BranchTestBed", "changed = " + changed);
+                            Log.e("BranchSDK_Tester", "changed = " + changed);
                             txtRewardBalance.setText(getString(R.string.rewards, Branch.getInstance().getCredits()));
                         }
                     }
@@ -197,13 +198,13 @@ public class MainActivity extends Activity {
                     @Override
                     public void onStateChanged(boolean changed, BranchError error) {
                         if (error != null) {
-                            Log.i("BranchTestBed", "branch redeem rewards failed. Caused by -" + error.getMessage());
+                            Log.e("BranchSDK_Tester", "branch redeem rewards failed. Caused by -" + error.getMessage());
                         } else {
                             if (changed) {
-                                Log.i("BranchTestBed", "redeemed rewards = " + true);
+                                Log.e("BranchSDK_Tester", "redeemed rewards = " + true);
                                 txtRewardBalance.setText(getString(R.string.rewards, Branch.getInstance().getCredits()));
                             } else {
-                                Log.i("BranchTestBed", "redeem rewards unknown error ");
+                                Log.e("BranchSDK_Tester", "redeem rewards unknown error ");
                             }
                         }
                     }
@@ -217,22 +218,22 @@ public class MainActivity extends Activity {
                 Branch.getInstance().userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
                     @Override
                     public void onBranchViewVisible(String action, String branchViewID) {
-                        Log.i("BranchTestBed", "onBranchViewVisible");
+                        Log.e("BranchSDK_Tester", "onBranchViewVisible");
                     }
 
                     @Override
                     public void onBranchViewAccepted(String action, String branchViewID) {
-                        Log.i("BranchTestBed", "onBranchViewAccepted");
+                        Log.e("BranchSDK_Tester", "onBranchViewAccepted");
                     }
 
                     @Override
                     public void onBranchViewCancelled(String action, String branchViewID) {
-                        Log.i("BranchTestBed", "onBranchViewCancelled");
+                        Log.e("BranchSDK_Tester", "onBranchViewCancelled");
                     }
 
                     @Override
                     public void onBranchViewError(int errorCode, String errorMsg, String action) {
-                        Log.i("BranchTestBed", "onBranchViewError " + errorMsg);
+                        Log.e("BranchSDK_Tester", "onBranchViewError " + errorMsg);
                     }
                 });
             }
@@ -259,7 +260,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdGetCreditHistory).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i("BranchTestBed", "Getting credit history...");
+                Log.e("BranchSDK_Tester", "Getting credit history...");
                 Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
                 // Test for preventing second intent reading
                 i.setData(Uri.parse("https://testintentread.app.link?error_if_assigned_to_android_app_link"));
@@ -361,7 +362,7 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(MainActivity.this, MainActivity.class);
                 String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
                 if (shortURL == null) {
-                    Log.i("BranchTestBed", "branchUniversalObject.getShortUrl = null");
+                    Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
                     return;
                 }
 //                intent.setData(Uri.parse(shortURL));
@@ -471,22 +472,23 @@ public class MainActivity extends Activity {
         super.onStart();
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+        Log.e("BranchSDK_Tester", "initSession");
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
-                    Log.i("BranchTestBed", "branch init failed. Caused by -" + error.getMessage());
+                    Log.e("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
                 } else {
-                    Log.i("BranchTestBed", "branch init complete!");
+                    Log.e("BranchSDK_Tester", "branch init complete!");
                     if (branchUniversalObject != null) {
-                        Log.i("BranchTestBed", "title " + branchUniversalObject.getTitle());
-                        Log.i("BranchTestBed", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.i("ContentMetaData", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                        Log.e("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                        Log.e("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.e("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
 
                     if (linkProperties != null) {
-                        Log.i("BranchTestBed", "Channel " + linkProperties.getChannel());
-                        Log.i("BranchTestBed", "control params " + linkProperties.getControlParams());
+                        Log.e("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                        Log.e("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
                     }
                 }
 
@@ -515,9 +517,9 @@ public class MainActivity extends Activity {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error != null) {
-                    Log.i("BranchTestBed", error.getMessage());
+                    Log.e("BranchSDK_Tester", error.getMessage());
                 } else if (referringParams != null) {
-                    Log.i("BranchTestBed", referringParams.toString());
+                    Log.e("BranchSDK_Tester", referringParams.toString());
                 }
             }
         }).reInit();

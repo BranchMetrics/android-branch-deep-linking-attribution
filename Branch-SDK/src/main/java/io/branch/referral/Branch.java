@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StyleRes;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -39,7 +40,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -1687,14 +1687,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         final CountDownLatch latch = new CountDownLatch(1);
         final BranchPostTask postTask = new BranchPostTask(branchReferral_, req, latch);
 
+        postTask.executeTask();
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            new Thread(new Runnable() {
+                @Override public void run() {
+                    awaitTimedBranchPostTask(latch, timeout, postTask);
+                }
+            }).start();
+        } else {
+            awaitTimedBranchPostTask(latch, timeout, postTask);
+        }
+    }
+
+    private void awaitTimedBranchPostTask(CountDownLatch latch, int timeout, BranchPostTask postTask) {
         try {
-            postTask.executeTask();
             if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                 postTask.cancel(true);
+                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
             }
         } catch (InterruptedException e) {
-            PrefHelper.Debug("executeTimedBranchPostTask,InterruptedException ");
             postTask.cancel(true);
+            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
         }
     }
 
@@ -1803,16 +1816,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    private void initializeSession(final BranchReferralInitListener callback) {
-        initializeSession(callback, 0);
-    }
-
-    private void initializeSession(final BranchReferralInitListener callback, int delay) {
+    private void initializeSession(ServerRequestInitSession initRequest, int delay) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
-            if (callback != null) {
-                callback.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
+            if (initRequest.callback_ != null) {
+                initRequest.callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
             PrefHelper.Debug("Warning: Please enter your branch_key in your project's manifest");
             return;
@@ -1820,7 +1829,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
-        ServerRequestInitSession initRequest = getInstallOrOpenRequest(callback);
         if (initState_ == SESSION_STATE.UNINITIALISED && getSessionReferredLink() == null && enableFacebookAppLinkCheck_) {
             // Check if opened by facebook with deferred install data
             boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
@@ -1864,16 +1872,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
 
-        // !isFirstInitialization condition equals true only when user calls reInitSession()
-
         if (getInitState() == SESSION_STATE.UNINITIALISED || forceBranchSession) {
             if (forceBranchSession && intent != null) {
-                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey());
+                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
             registerAppInit(initRequest, false);
-        } else if (callback != null) {
+        } else if (initRequest.callback_ != null) {
             // Else, let the user know session initialization failed because it's already initialized.
-            callback.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
+            initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
         }
     }
     
@@ -1910,22 +1916,23 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         }
 
-        if (!requestQueue_.containsInitRequest()) {
+        ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+        if (r == null) {
             insertRequestAtFront(request);
             processNextQueueItem();
         } else {
-            PrefHelper.Debug("Warning! Attempted to queue multiple init session requests");
+            r.callback_ = request.callback_;
         }
     }
     
-    ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback) {
+    ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
         if (hasUser()) {
             // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback);
+            request = new ServerRequestRegisterOpen(context_, callback, isAutoInitialization);
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback);
+            request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
         }
         return request;
     }
@@ -2737,6 +2744,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public static class InitSessionBuilder {
         private BranchReferralInitListener callback;
+        private boolean isAutoInitialization;
         private int delay;
         private Uri uri;
         private Boolean ignoreIntent;
@@ -2751,6 +2759,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 // however, if they don't, we try to set currentActivityReference_ here too.
                 branch.currentActivityReference_ = new WeakReference<>(activity);
             }
+        }
+
+        /**
+         * Helps differentiating between sdk session auto-initialization and client driven session
+         * initialization. For internal SDK use only.
+         */
+        InitSessionBuilder isAutoInitialization(boolean isAuto) {
+            this.isAutoInitialization = isAuto;
+            return this;
         }
 
         /**
@@ -2885,7 +2902,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 expectDelayedSessionInitialization(true);
             }
 
-            branch.initializeSession(callback, delay);
+            ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
+            branch.initializeSession(initRequest, delay);
         }
 
         /**
