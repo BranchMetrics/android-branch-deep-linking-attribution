@@ -1,15 +1,20 @@
 # Branch Android SDK change log
+- v5.0.8
+  * _*Master Release*_ - April 29, 2021
+  * Fix bug can block UI thread
+  * Fix race condition between session initialization requests invoked by client and SDK
+  
 - v5.0.7
-  * _*Master Release*_ - March 1, 2020
+  * _*Master Release*_ - March 1, 2021
   * Patch: fix getSdkVersionNumber() API in v2 events as well
   
 - v5.0.6
-  * _*Master Release*_ - February 26, 2020
+  * _*Master Release*_ - February 26, 2021
   * Add INITIATE_STREAM and COMPLETE_STREAM standard events
   * Fix getSdkVersionNumber() API
   
 - v5.0.5
-  * _*Master Release*_ - February 17, 2020
+  * _*Master Release*_ - February 17, 2021
   * Add API to pass hashed partner parameters (Facebook integration)
   * Fix bugs in the networking pipeline of CPID and LATD requests
   * Fix bug preventing callback invocation when url creation request times out

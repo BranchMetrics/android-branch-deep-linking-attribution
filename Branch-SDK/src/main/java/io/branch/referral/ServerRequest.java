@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 
 import org.json.JSONException;
@@ -16,6 +17,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -289,6 +292,7 @@ public abstract class ServerRequest {
      * {@link ServerRequest#POST_KEY} as currently configured, or <i>null</i> if
      * one or both of those values have not yet been set.
      */
+    @CallSuper
     public JSONObject toJSON() {
         JSONObject json = new JSONObject();
         try {
@@ -313,6 +317,7 @@ public abstract class ServerRequest {
     public static ServerRequest fromJSON(JSONObject json, Context context) {
         JSONObject post = null;
         String requestPath = "";
+        boolean initiatedByClient = true;
         try {
             if (json.has(POST_KEY)) {
                 post = json.getJSONObject(POST_KEY);
@@ -328,9 +333,15 @@ public abstract class ServerRequest {
         } catch (JSONException e) {
             // it's OK for post to be null
         }
+
+        try {
+            if (json.has(INITIATED_BY_CLIENT)) {
+                initiatedByClient = json.getBoolean(INITIATED_BY_CLIENT);
+            }
+        } catch (JSONException ignored) { }
         
         if (!TextUtils.isEmpty(requestPath)) {
-            return getExtendedServerRequest(requestPath, post, context);
+            return getExtendedServerRequest(requestPath, post, context, initiatedByClient);
         }
         return null;
     }
@@ -344,7 +355,7 @@ public abstract class ServerRequest {
      * @param context     Application context.
      * @return A {@link ServerRequest} object for the given Post data.
      */
-    private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context) {
+    private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context, boolean initiatedByClient) {
         ServerRequest extendedReq = null;
         
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
@@ -364,9 +375,9 @@ public abstract class ServerRequest {
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
             extendedReq = new ServerRequestRegisterClose(Defines.RequestPath.RegisterClose, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
-            extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context);
+            extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context, initiatedByClient);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
-            extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context);
+            extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context, initiatedByClient);
         }
         
         return extendedReq;

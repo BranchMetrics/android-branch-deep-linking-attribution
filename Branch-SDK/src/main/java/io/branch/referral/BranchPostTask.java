@@ -61,9 +61,15 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
     @Override
     protected void onPostExecute(ServerResponse serverResponse) {
         super.onPostExecute(serverResponse);
+        onPostExecuteInner(serverResponse);
+    }
+
+    void onPostExecuteInner(ServerResponse serverResponse) {
         if (latch_ != null) {
             latch_.countDown();
+            PrefHelper.Debug("latch_.countDown()");
         }
+        PrefHelper.Debug("onPostExecute, serverResponse = " + serverResponse);
         if (serverResponse == null) {
             thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
             return;
@@ -161,7 +167,7 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
         }
     }
 
-    private void onRequestFailed(ServerResponse serverResponse, int status) {
+    void onRequestFailed(ServerResponse serverResponse, int status) {
         // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
         if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(branch.prefHelper_.getSessionParams())) {
             branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
@@ -185,11 +191,5 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
             // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
             thisReq_.clearCallbacks();
         }
-    }
-
-    @Override
-    protected void onCancelled(ServerResponse v) {
-        super.onCancelled();
-        onPostExecute(new ServerResponse(thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
     }
 }

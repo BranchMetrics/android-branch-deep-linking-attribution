@@ -13,8 +13,6 @@ import org.json.JSONObject;
  */
 class ServerRequestRegisterInstall extends ServerRequestInitSession {
     
-    Branch.BranchReferralInitListener callback_;
-    
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
@@ -22,8 +20,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      */
-    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback) {
-        super(context, Defines.RequestPath.RegisterInstall);
+    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback, boolean isAutoInitialization) {
+        super(context, Defines.RequestPath.RegisterInstall, isAutoInitialization);
         callback_ = callback;
         try {
             setPost(new JSONObject());
@@ -33,10 +31,10 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         }
     }
     
-    ServerRequestRegisterInstall(Defines.RequestPath requestPath, JSONObject post, Context context) {
-        super(requestPath, post, context);
+    ServerRequestRegisterInstall(Defines.RequestPath requestPath, JSONObject post, Context context, boolean isAutoInitialization) {
+        super(requestPath, post, context, isAutoInitialization);
     }
-    
+
     @Override
     public void onPreExecute() {
         super.onPreExecute();

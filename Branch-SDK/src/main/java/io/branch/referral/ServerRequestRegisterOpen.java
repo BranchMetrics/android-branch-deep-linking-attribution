@@ -13,8 +13,6 @@ import org.json.JSONObject;
  */
 class ServerRequestRegisterOpen extends ServerRequestInitSession {
     
-    Branch.BranchReferralInitListener callback_;
-    
     /**
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
      *
@@ -22,8 +20,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
      * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      */
-    ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback) {
-        super(context, Defines.RequestPath.RegisterOpen);
+    ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback, boolean isAutoInitialization) {
+        super(context, Defines.RequestPath.RegisterOpen, isAutoInitialization);
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
@@ -37,8 +35,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         
     }
     
-    ServerRequestRegisterOpen(Defines.RequestPath requestPath, JSONObject post, Context context) {
-        super(requestPath, post, context);
+    ServerRequestRegisterOpen(Defines.RequestPath requestPath, JSONObject post, Context context, boolean isAutoInitialization) {
+        super(requestPath, post, context, isAutoInitialization);
     }
 
     @Override
