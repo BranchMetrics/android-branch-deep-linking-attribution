@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
+import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
@@ -2879,6 +2880,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             } else if (isReInitializing) {
                 // User called reInit but isRestartSessionRequested = false, meaning the new intent was
                 // not initiated by Branch and should not be considered a "new session", return early
+                if (callback != null) callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
                 return;
             }
 
@@ -2888,12 +2890,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 branch.isInstantDeepLinkPossible = false;
                 // invoke callback returning LatestReferringParams, which were parsed out inside readAndStripParam
                 // from either intent extra "branch_data", or as parameters attached to the referring app link
-                callback.onInitFinished(branch.getLatestReferringParams(), null);
+                if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
                 // mark this session as IDL session
                 branch.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
                 // potentially routes the user to the Activity configured to consume this particular link
                 branch.checkForAutoDeepLinkConfiguration();
-                // we already invoked the callback for let's set it to null, make will still make the
+                // we already invoked the callback for let's set it to null, we will still make the
                 // init session request but for analytics purposes only
                 callback = null;
             }

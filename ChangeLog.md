@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.0.9
+  * _*Master Release*_ - April 29, 2021
+  * Avoid potential NPE
+  * When reinitializing session without an expected intent flag, invoke callback with error rather than ignoring it.
+
 - v5.0.8
   * _*Master Release*_ - April 29, 2021
   * Fix bug can block UI thread
