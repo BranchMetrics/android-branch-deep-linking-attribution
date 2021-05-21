@@ -6,11 +6,7 @@ import androidx.annotation.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
-
-import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
 
 /**
  * Asynchronous task handling execution of server requests. Execute the network task on background
@@ -67,9 +63,7 @@ public class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> 
     void onPostExecuteInner(ServerResponse serverResponse) {
         if (latch_ != null) {
             latch_.countDown();
-            PrefHelper.Debug("latch_.countDown()");
         }
-        PrefHelper.Debug("onPostExecute, serverResponse = " + serverResponse);
         if (serverResponse == null) {
             thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
             return;

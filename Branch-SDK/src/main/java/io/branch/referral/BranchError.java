@@ -44,6 +44,8 @@ public class BranchError {
     public static final int ERR_BRANCH_TRACKING_DISABLED = -117;
     /* Branch session is already initialized */
     public static final int ERR_BRANCH_ALREADY_INITIALIZED = -118;
+    /* Reinitializing session without the flag, IntentKey.ForceNewBranchSession */
+    public static final int ERR_IMPROPER_REINITIALIZATION = -119;
     
     /**
      * <p>Returns the message explaining the error.</p>
@@ -143,6 +145,9 @@ public class BranchError {
         } else if (statusCode >= 400 || statusCode == ERR_BRANCH_INVALID_REQUEST) {
             errorCode_ = ERR_BRANCH_INVALID_REQUEST;
             errMsg = " The request was invalid.";
+        } else if (statusCode == ERR_IMPROPER_REINITIALIZATION) {
+            errorCode_ = ERR_IMPROPER_REINITIALIZATION;
+            errMsg = "Intra-app linking (i.e. session reinitialization) requires an intent flag, \"branch_force_new_session\".";
         } else {
             errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
             errMsg = " Check network connectivity and that you properly initialized.";
