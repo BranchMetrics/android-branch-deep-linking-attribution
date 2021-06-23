@@ -17,6 +17,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,6 +26,7 @@ import androidx.annotation.StyleRes;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import io.branch.referral.Defines.PreinstallKey;
@@ -2861,9 +2863,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
+
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                PrefHelper.LogAlways    ("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
@@ -2873,6 +2876,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
+
+            if(activity.getReferrer()!=null){
+                PrefHelper.getInstance(activity).setInitialReferrer(activity.getReferrer().toString());
+            }
+
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
             } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {

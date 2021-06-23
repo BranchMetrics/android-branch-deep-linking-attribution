@@ -27,6 +27,7 @@ public class Defines {
         PlayAutoInstalls("play-auto-installs"),             //UTM_Source set by Xiaomi
         UTMCampaign("utm_campaign"),
         UTMMedium("utm_medium"),
+        InitialReferrer("initial_referrer"),
 
         Bucket("bucket"),
         DefaultBucket("default"),
