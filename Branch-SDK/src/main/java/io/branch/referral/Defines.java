@@ -351,7 +351,6 @@ public class Defines {
      */
     public enum IntentKeys {
         BranchData("branch_data"),
-        AndroidPushNotificationKey("branch"),
         ForceNewBranchSession("branch_force_new_session"),
         BranchLinkUsed("branch_used"),
         BranchURI("branch");
