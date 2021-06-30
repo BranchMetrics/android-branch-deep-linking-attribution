@@ -2865,7 +2865,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                PrefHelper.LogAlways    ("Branch is not setup properly, make sure to call getAutoInstance" +
+                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
@@ -2876,7 +2876,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
 
-            if(activity.getReferrer()!=null){
+            if (activity.getReferrer()!=null){
                 PrefHelper.getInstance(activity).setInitialReferrer(activity.getReferrer().toString());
             }
 
