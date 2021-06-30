@@ -335,9 +335,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
     
-    /* Key to indicate whether the Activity was launched by Branch or not. */
-    private static final String AUTO_DEEP_LINKED = "io.branch.sdk.auto_linked";
-    
     /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
     
@@ -2253,7 +2250,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
      */
     public static boolean isAutoDeepLinkLaunch(Activity activity) {
-        return (activity.getIntent().getStringExtra(AUTO_DEEP_LINKED) != null);
+        return (activity.getIntent().getStringExtra(Defines.IntentKeys.AutoDeepLinked.getKey()) != null);
     }
     
     void checkForAutoDeepLinkConfiguration() {
@@ -2291,7 +2288,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     Activity currentActivity = getCurrentActivity();
 
                     Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
-                    intent.putExtra(AUTO_DEEP_LINKED, "true");
+                    intent.putExtra(Defines.IntentKeys.AutoDeepLinked.getKey(), "true");
 
                     // Put the raw JSON params as extra in case need to get the deep link params as JSON String
                     intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());

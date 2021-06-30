@@ -351,10 +351,12 @@ public class Defines {
      */
     public enum IntentKeys {
         BranchData("branch_data"),
-        AndroidPushNotificationKey("branch"),
         ForceNewBranchSession("branch_force_new_session"),
         BranchLinkUsed("branch_used"),
-        BranchURI("branch");
+        BranchURI("branch"),
+
+        /* Key to indicate whether the Activity was launched by Branch or not. */
+        AutoDeepLinked("io.branch.sdk.auto_linked");
 
         private final String key;
 
