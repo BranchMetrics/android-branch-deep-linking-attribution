@@ -52,7 +52,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
             post.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
         }
-        if(prefHelper_.getInitialReferrer() != null && prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
+        if(prefHelper_.getInitialReferrer() != null && !prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
             post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
         }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
