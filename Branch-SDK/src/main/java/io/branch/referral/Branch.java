@@ -2862,7 +2862,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
-
             final Branch branch = Branch.getInstance();
             if (branch == null) {
                 PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
@@ -2876,7 +2875,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
 
-            if (activity.getReferrer()!=null){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && activity.getReferrer() != null) {
                 PrefHelper.getInstance(activity).setInitialReferrer(activity.getReferrer().toString());
             }
 

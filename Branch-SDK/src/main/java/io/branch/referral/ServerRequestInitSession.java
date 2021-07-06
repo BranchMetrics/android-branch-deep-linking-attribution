@@ -5,13 +5,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
-import androidx.annotation.CallSuper;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Logger;
 
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
@@ -50,16 +46,17 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     protected void setPost(JSONObject post) throws JSONException {
         super.setPost(post);
-
         prefHelper_.loadPartnerParams(post);
 
         String appVersion = DeviceInfo.getInstance().getAppVersion();
         if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
             post.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
         }
+        if(prefHelper_.getInitialReferrer() != null && prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
+            post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
+        }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
         post.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
-        post.put(Defines.Jsonkey.InitialReferrer.getKey(),prefHelper_.getInitialReferrer());
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);

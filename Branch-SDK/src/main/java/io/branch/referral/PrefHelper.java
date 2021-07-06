@@ -75,7 +75,7 @@ public class PrefHelper {
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
     private static final String KEY_LATD_ATTRIBUTION_WINDOW = "bnc_latd_attributon_window";
-    private static final String KEY_INITIAL_REFERRER = "initial_referrer";
+    private static final String KEY_INITIAL_REFERRER = "bnc_initial_referrer";
 
     private static final String KEY_BUCKETS = "bnc_buckets";
     private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
@@ -941,7 +941,7 @@ public class PrefHelper {
     }
 
     /**
-     * Sets the android.intent.extra.REFERRER to the pref
+     * Persist the android.intent.extra.REFERRER value
      *
      * @param initialReferrer android.intent.extra.REFERRER
      */
@@ -950,7 +950,7 @@ public class PrefHelper {
     }
 
     /**
-     * Gets the android.intent.extra.REFERRER
+     * Get the persisted android.intent.extra.REFERRER value
      *
      * @return {@link String} android.intent.extra.REFERRER
      */
