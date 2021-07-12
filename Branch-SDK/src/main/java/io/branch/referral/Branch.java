@@ -28,6 +28,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 
+import androidx.core.app.ActivityCompat;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
@@ -2875,8 +2876,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && activity.getReferrer() != null) {
-                PrefHelper.getInstance(activity).setInitialReferrer(activity.getReferrer().toString());
+            if (ActivityCompat.getReferrer(activity) != null) {
+                PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
             }
 
             if (uri != null) {
