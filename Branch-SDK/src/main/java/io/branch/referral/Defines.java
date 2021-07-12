@@ -357,6 +357,10 @@ public class Defines {
         BranchLinkUsed("branch_used"),
         BranchURI("branch");
 
+        // The below intent keys are also used to extract data from the intent (via ActivityCompact.getReferrer())
+        // public static final String EXTRA_REFERRER = "android.intent.extra.REFERRER";
+        // public static final String EXTRA_REFERRER_NAME = "android.intent.extra.REFERRER_NAME";
+
         private final String key;
 
         IntentKeys(String key) {

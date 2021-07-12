@@ -523,6 +523,8 @@ public class MainActivity extends Activity {
                 }
             }
         }).reInit();
+
+        
     }
 
     @Override
@@ -537,4 +539,6 @@ public class MainActivity extends Activity {
             startActivity(i);
         }
     }
+
+
 }
