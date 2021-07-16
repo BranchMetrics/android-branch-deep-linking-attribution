@@ -17,6 +17,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +28,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 
+import androidx.core.app.ActivityCompat;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
@@ -2870,6 +2872,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
+
+            if (ActivityCompat.getReferrer(activity) != null) {
+                PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
+            }
+
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
             } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {

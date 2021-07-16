@@ -5,12 +5,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
-import androidx.annotation.CallSuper;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.locks.ReentrantLock;
 
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
@@ -54,6 +51,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
         String appVersion = DeviceInfo.getInstance().getAppVersion();
         if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
             post.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
+        }
+        if(!TextUtils.isEmpty(prefHelper_.getInitialReferrer()) && !prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
+            post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
         }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
         post.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
@@ -117,6 +117,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         prefHelper_.setIsAppLinkTriggeredInit(false);
         prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setIsFullAppConversion(false);
+        prefHelper_.setInitialReferrer(PrefHelper.NO_STRING_VALUE);
 
         if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
             prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));

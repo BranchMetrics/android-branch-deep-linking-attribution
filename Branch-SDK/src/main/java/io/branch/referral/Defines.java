@@ -27,6 +27,7 @@ public class Defines {
         PlayAutoInstalls("play-auto-installs"),             //UTM_Source set by Xiaomi
         UTMCampaign("utm_campaign"),
         UTMMedium("utm_medium"),
+        InitialReferrer("initial_referrer"),
 
         Bucket("bucket"),
         DefaultBucket("default"),
@@ -357,6 +358,10 @@ public class Defines {
 
         /* Key to indicate whether the Activity was launched by Branch or not. */
         AutoDeepLinked("io.branch.sdk.auto_linked");
+
+        // The below intent keys are also used to extract data from the intent (via ActivityCompact.getReferrer())
+        // public static final String EXTRA_REFERRER = "android.intent.extra.REFERRER";
+        // public static final String EXTRA_REFERRER_NAME = "android.intent.extra.REFERRER_NAME";
 
         private final String key;
 

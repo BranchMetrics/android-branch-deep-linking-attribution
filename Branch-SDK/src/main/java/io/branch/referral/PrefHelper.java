@@ -75,6 +75,7 @@ public class PrefHelper {
     private static final String KEY_INSTALL_PARAMS = "bnc_install_params";
     private static final String KEY_USER_URL = "bnc_user_url";
     private static final String KEY_LATD_ATTRIBUTION_WINDOW = "bnc_latd_attributon_window";
+    private static final String KEY_INITIAL_REFERRER = "bnc_initial_referrer";
 
     private static final String KEY_BUCKETS = "bnc_buckets";
     private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
@@ -938,7 +939,26 @@ public class PrefHelper {
         return getInteger(KEY_LATD_ATTRIBUTION_WINDOW,
                 ServerRequestGetLATD.defaultAttributionWindow);
     }
-    
+
+    /**
+     * Persist the android.intent.extra.REFERRER value
+     *
+     * @param initialReferrer android.intent.extra.REFERRER
+     */
+    public void setInitialReferrer(String initialReferrer) {
+        setString(KEY_INITIAL_REFERRER, initialReferrer);
+    }
+
+    /**
+     * Get the persisted android.intent.extra.REFERRER value
+     *
+     * @return {@link String} android.intent.extra.REFERRER
+     */
+    public String getInitialReferrer() {
+        return getString(KEY_INITIAL_REFERRER);
+    }
+
+
     // ALL GENERIC CALLS
     
     private String serializeArrayList(ArrayList<String> strings) {
