@@ -22,6 +22,7 @@ class BranchIntegrationModel {
     final List<String> applinkScheme;
     final String packageName;
     boolean appSettingsAvailable = false;
+    private Context context;
 
 
     public BranchIntegrationModel(Context context) {
@@ -29,7 +30,7 @@ class BranchIntegrationModel {
         ApplicationInfo appInfo;
         applinkScheme = new ArrayList<>();
         packageName = context.getPackageName();
-
+        this.context = context;
         try {
             appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             if (appInfo.metaData != null) {
@@ -61,6 +62,17 @@ class BranchIntegrationModel {
                 }
             }
         }
+    }
+
+    //Function to get value from string resource
+    public String getStringResource(String stringWithIdValue){
+        if(stringWithIdValue.contains("resourceID")){
+            String resourceIdArr[] = stringWithIdValue.split(" ");
+            if(context!=null && resourceIdArr!=null && resourceIdArr.length==2){
+                return context.getResources().getString(Integer.parseInt(resourceIdArr[1].replace("0x",""),16));
+            }
+        }
+        return stringWithIdValue;
     }
 
     // Reading deep linked schemes involves decompressing of apk and parsing manifest. This can lead to a ANR if reading file is slower

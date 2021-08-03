@@ -198,7 +198,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
                     JSONArray hosts = integrationModel.deeplinkUriScheme.optJSONArray(key);
                     if (hosts != null && hosts.length() > 0) {
                         for (int i = 0; i < hosts.length(); ++i) {
-                            if (uriPath != null && uriPath.equals(hosts.optString(i))) {
+                            if (uriPath != null && uriPath.equals(integrationModel.getStringResource(hosts.optString(i)))) {
                                 foundMatchingUri = true;
                                 break;
                             }
@@ -217,7 +217,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         boolean foundIntentFilterMatchingDomainName = false;
         if (!TextUtils.isEmpty(domainName) && integrationModel.applinkScheme != null) {
             for (String host : integrationModel.applinkScheme) {
-                if (domainName.equals(host)) {
+                if (domainName.equals(integrationModel.getStringResource(host))) {
                     foundIntentFilterMatchingDomainName = true;
                     break;
                 }
