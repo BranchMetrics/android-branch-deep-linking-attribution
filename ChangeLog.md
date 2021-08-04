@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.0.10
+  * _*Master Release*_ - Aug 4, 2021
+  * Collect initial_referrer
+  
 - v5.0.9
   * _*Master Release*_ - April 29, 2021
   * Avoid potential NPE
