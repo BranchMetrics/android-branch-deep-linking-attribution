@@ -2873,7 +2873,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
 
-            if (ActivityCompat.getReferrer(activity) != null) {
+            if (activity != null && ActivityCompat.getReferrer(activity) != null) {
                 PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
             }
 
