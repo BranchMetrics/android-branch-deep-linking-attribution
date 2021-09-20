@@ -76,9 +76,6 @@ import io.branch.referral.util.LinkProperties;
  */
 public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, GooglePlayStoreAttribution.IInstallReferrerEvents {
 
-    //Sanity check for AAR inclusion:
-    public static final int SANITY_CHECK = 3;
-    
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
 
