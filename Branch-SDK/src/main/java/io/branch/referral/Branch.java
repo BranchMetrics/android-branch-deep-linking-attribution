@@ -25,7 +25,6 @@ import androidx.annotation.StyleRes;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
