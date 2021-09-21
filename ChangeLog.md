@@ -1,8 +1,12 @@
 # Branch Android SDK change log
+- v5.0.12
+  * _*Master Release*_ - Sep 21, 2021
+  * Avoid NPE when Branch reference in BranchPostTask is garbage collected
+
 - v5.0.11
   * _*Master Release*_ - Aug 23, 2021
   * Avoid NPE when Activity reference is null
-  
+
 - v5.0.10
   * _*Master Release*_ - Aug 4, 2021
   * Collect initial_referrer
