@@ -43,6 +43,12 @@ android {
     lintOptions {
         abortOnError false
     }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+    }
 }
 
 //------------- Jar Generation code. ---------------//
