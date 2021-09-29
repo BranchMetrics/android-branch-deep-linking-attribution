@@ -326,11 +326,24 @@ public class BranchGAIDTest extends BranchTest {
         JSONObject adIdsObject = jsonObject.optJSONObject(Defines.Jsonkey.AdvertisingIDs.getKey());
         if (adIdsObject == null) return "";
 
-        if (jsonObject.optString(Defines.Jsonkey.OS.getKey()).toLowerCase().contains("amazon")) {
+        if (getOSFromAdIdObject(jsonObject).contains("amazon")) {
             return adIdsObject.optString(Defines.Jsonkey.FireAdId.getKey());
         } else {
             return adIdsObject.optString(Defines.Jsonkey.AAID.getKey());
         }
+    }
+
+    private String getOSFromAdIdObject(JSONObject jsonObject) {
+        if(jsonObject == null) return "";
+
+        //check for user_data child object
+        JSONObject userDataObject = jsonObject.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        if(userDataObject != null) {
+            return userDataObject.optString(Defines.Jsonkey.OS.getKey()).toLowerCase();
+        }
+
+        //data is in root object
+        return jsonObject.optString(Defines.Jsonkey.OS.getKey()).toLowerCase();
     }
 
     private void assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(ServerRequest serverRequest, boolean assertTrue) {

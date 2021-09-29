@@ -117,6 +117,9 @@ class GooglePlayStoreAttribution {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
                 HashMap<String, String> referrerMap = new HashMap<>();
                 String[] referralParams = rawReferrerString.split("&");
+
+                //Always set the raw referrer string:
+                prefHelper.setGooglePlayReferrer(rawReferrerString);
                 
                 for (String referrerParam : referralParams) {
                     if (!TextUtils.isEmpty(referrerParam)) {
@@ -144,11 +147,9 @@ class GooglePlayStoreAttribution {
                 
                 if (referrerMap.containsKey(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey())) {
                     prefHelper.setGoogleSearchInstallIdentifier(referrerMap.get(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey()));
-                    prefHelper.setGooglePlayReferrer(rawReferrerString);
                 }
 
                 if(referrerMap.containsValue(Defines.Jsonkey.PlayAutoInstalls.getKey())) {
-                    prefHelper.setGooglePlayReferrer(rawReferrerString);
                     BranchPreinstall.setBranchPreInstallGoogleReferrer(context, referrerMap);
                 }
 
