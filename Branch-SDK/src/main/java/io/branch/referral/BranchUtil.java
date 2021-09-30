@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class for Branch utility methods
@@ -156,6 +158,56 @@ public class BranchUtil {
             e.printStackTrace();
         }
         return params;
+    }
+
+    /**
+     * Encodes resource identifier for passing around in json. Use {@link #decodeResourceId} to convert back to int.
+     *
+     * @param resourceId integer value to be encoded
+     * @return human readable string value converted to hex
+     */
+    public static String encodeResourceId(int resourceId) {
+        return "resourceID 0x" + Integer.toHexString(resourceId);
+    }
+
+    /**
+     * Reverse an encoded resource id from string back to int (from {@link #encodeResourceId}).
+     *
+     * @param value string encoded originally with encodeResourceId
+     * @return integer value of the resourceId
+     */
+    public static int decodeResourceId(String value) {
+        try {
+            Matcher matcher = Pattern.compile("resourceID 0x([a-fA-F0-9]+)").matcher(value);
+            if (matcher.find()) {
+                // Group 0 is the entire match, group 1 is the first matched pattern (inside the parentheses)
+                // We need to use Long.parseLong because Integer.toHexString is unsigned.
+                return (int) Long.parseLong(matcher.group(1), 16);
+            }
+        }
+        catch (Exception ignored) { }
+        return -1;
+    }
+
+    /**
+     * Renames a key of a child element in jsonObject from findKey to replaceKey in-place.
+     *
+     * @param jsonObject    json object containing the element to rename
+     * @param findKey       element name to be replaced
+     * @param replaceKey    the new name for the element
+     */
+    public static void replaceJsonKey(JSONObject jsonObject, String findKey, String replaceKey) {
+        Object findObj = jsonObject.opt(findKey);
+        Object replaceObj = jsonObject.opt(replaceKey);
+        if(findObj != null && replaceObj == null && !findKey.equals(replaceKey)) {
+            try {
+                jsonObject.putOpt(replaceKey, findObj);
+            } catch (JSONException e) {
+                // If there was a problem, don't do the remove.
+                return;
+            }
+            jsonObject.remove(findKey);
+        }
     }
 
     public static class JsonReader {
