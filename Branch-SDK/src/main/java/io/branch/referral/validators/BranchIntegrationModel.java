@@ -55,9 +55,11 @@ class BranchIntegrationModel {
         } catch (Exception ignored) { }
         if (obj != null) {
             deeplinkUriScheme = obj.optJSONObject(Defines.Jsonkey.URIScheme.getKey());
-            for (Iterator<String> it = deeplinkUriScheme.keys(); it.hasNext(); ) {
-                String key = it.next();
-                BranchUtil.replaceJsonKey(deeplinkUriScheme, key, decodeResourceString(context, key));
+            if (deeplinkUriScheme != null) {
+                for (Iterator<String> it = deeplinkUriScheme.keys(); it.hasNext(); ) {
+                    String key = it.next();
+                    BranchUtil.replaceJsonKey(deeplinkUriScheme, key, decodeResourceString(context, key));
+                }
             }
             JSONArray hostArray = obj.optJSONArray(Defines.Jsonkey.AppLinks.getKey());
             if (hostArray != null) {

@@ -62,7 +62,6 @@ public class BranchUtilTest {
 
     @Test
     public void testDecodeResourceId() {
-        Assert.assertEquals(resourceIds[6], BranchUtil.decodeResourceId(encodedIds[6]));
         for (int i = 0; i < encodedIds.length; i++) {
             Assert.assertEquals(resourceIds[i], BranchUtil.decodeResourceId(encodedIds[i]));
         }
