@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.0.13
+  * _*Master Release*_ - Oct 1, 2021
+  * Always include Google Play Store referrer in install 
+  * IntegrationValidator now recoginizes String resources
+  * Fix edge case that could cause a stack overflow
+
 - v5.0.12
   * _*Master Release*_ - Sep 21, 2021
   * Avoid NPE when Branch reference in BranchPostTask is garbage collected
