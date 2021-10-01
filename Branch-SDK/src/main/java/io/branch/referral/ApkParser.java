@@ -123,7 +123,7 @@ class ApkParser {
 
                         attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
                         if ("scheme".equals(attrName)) {
-                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.encodeResourceId(attrResId);
                             if (validURI(attrValue)) {
                                 scheme = attrValue;
                                 if (!intentFilters.has(scheme)) {
@@ -142,7 +142,7 @@ class ApkParser {
                                 scheme = attrValue;
                             }
                         } else if ("host".equals(attrName)) {
-                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.encodeResourceId(attrResId);
                             JSONArray domainList;
                             if (intentFilters.has(scheme) && scheme != null
                                     && !"https".equals(scheme) && !"http".equals(scheme)) {
@@ -159,7 +159,7 @@ class ApkParser {
                             }
                         } else if ("name".equals(attrName)) {
                             //reset the scheme name
-                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : "resourceID 0x" + Integer.toHexString(attrResId);
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.encodeResourceId(attrResId);
                             if ("android.intent.action.VIEW".equals(attrValue)) {
                                 scheme = null;
                             }
