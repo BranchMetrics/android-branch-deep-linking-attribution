@@ -199,6 +199,7 @@ public class BranchUtil {
     public static void replaceJsonKey(JSONObject jsonObject, String findKey, String replaceKey) {
         Object findObj = jsonObject.opt(findKey);
         Object replaceObj = jsonObject.opt(replaceKey);
+        if(findKey == null || replaceKey == null) return;
         if(findObj != null && replaceObj == null && !findKey.equals(replaceKey)) {
             try {
                 jsonObject.putOpt(replaceKey, findObj);
