@@ -2302,7 +2302,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
             networkCount_ = 0;
 
-            processNextQueueItem();
+            // In rare cases where this method is called directly (eg. when network calls time out),
+            // starting the next queue item can lead to stack over flow. Ensuring that this is
+            // queued back to the main thread mitigates this.
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    processNextQueueItem();
+                }
+            });
         }
 
         private void onRequestSuccess(ServerResponse serverResponse) {
