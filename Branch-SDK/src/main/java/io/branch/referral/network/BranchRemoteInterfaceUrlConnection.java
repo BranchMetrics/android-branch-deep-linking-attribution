@@ -227,7 +227,13 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         if (inputStream != null) {
             BufferedReader rd = new BufferedReader(new InputStreamReader(inputStream));
             try {
-                responseString = rd.readLine();
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    sb.append(line);
+                }
+                rd.close();
+                responseString = sb.toString();
             } catch (IOException ignore) {
             }
         }
