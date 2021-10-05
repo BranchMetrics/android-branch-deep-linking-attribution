@@ -158,7 +158,7 @@ public class BranchJsonConfig {
     }
 
     public @Nullable Boolean getUseTestInstance() {
-        if (isValid(BranchJsonKey.useTestInstance)) return null;
+        if (!isValid(BranchJsonKey.useTestInstance)) return null;
 
         try {
             return mConfiguration.getBoolean(BranchJsonKey.useTestInstance.toString());
