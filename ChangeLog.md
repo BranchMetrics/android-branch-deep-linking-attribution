@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.0.14
+  * _*Master Release*_ - Oct 15, 2021
+  * Bug fixes: improper shutdown of resource, multiline server responses
+  * Fix crash when using Branch JSON config
+
 - v5.0.13
   * _*Master Release*_ - Oct 1, 2021
   * Always include Google Play Store referrer in install 
