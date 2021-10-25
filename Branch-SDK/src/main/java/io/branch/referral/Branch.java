@@ -2072,6 +2072,38 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public interface BranchReferralInitListener {
         void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error);
     }
+
+    /**
+     * <p>An Interface class that is implemented by all classes that make use of
+     * {@link BranchReferralInitListener2}, defining 3 methods that takes a list of params in
+     * {@link JSONObject} format, and an error message of {@link BranchError} format that will be
+     * returned on failure/warning of the request response.</p>
+     *
+     * @see JSONObject
+     * @see BranchError
+     */
+    public interface BranchReferralInitListener2 extends BranchReferralInitListener {
+        void onError(BranchError error);
+
+        void onWarning(BranchError warning);
+
+        void onFinished(JSONObject referringParams);
+
+        @Override
+        default void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
+            if (referringParams != null) {
+                onFinished(referringParams);
+                return;
+            }
+            if (error != null) {
+                if (error.errorMessage_.startsWith("Warning.")) {
+                    onWarning(error);
+                } else {
+                    onError(error);
+                }
+            }
+        }
+    }
     
     /**
      * <p>An Interface class that is implemented by all classes that make use of
