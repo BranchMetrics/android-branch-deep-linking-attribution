@@ -114,63 +114,6 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testLoadRewards_hasGAIDv1() {
-        // TODO:  loadRewards() puts an empty JSON object on the queue
-    }
-
-    @Test
-    public void testRedeemAwards_hasGAIDv1() {
-        initBranchInstance(TEST_KEY);
-        initSessionResumeActivity(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Backdoor to set credits before we try to redeem them.
-                    PrefHelper prefHelper = PrefHelper.getInstance(getTestContext());
-                    prefHelper.setCreditCount(100);
-
-                    Branch.getInstance().redeemRewards(100);
-                    ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
-
-                    Assert.assertNotNull(serverRequest);
-                    doFinalUpdate(serverRequest);
-
-                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
-                } catch (Exception e) {
-                    Assert.fail();
-                }
-            }
-        }, null);
-    }
-
-    @Test
-    public void testCreditHistory_hasGAIDv1() {
-        initBranchInstance(TEST_KEY);
-        initSessionResumeActivity(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Branch.getInstance().getCreditHistory(null);
-                    ServerRequest serverRequest = getLastRequestOnQueue(getTestContext(), 1);
-
-                    Assert.assertNotNull(serverRequest);
-                    doFinalUpdate(serverRequest);
-
-                    assumingLatIsDisabledHasGAIDv1(serverRequest, true);
-                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
-                    assumingLatIsDisabledHasGAIDv2(serverRequest, false);
-                    assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(serverRequest, false);
-                } catch (Exception e) {
-                    Assert.fail();
-                }
-            }
-        }, null);
-    }
-
-    @Test
     public void testIdentity_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
