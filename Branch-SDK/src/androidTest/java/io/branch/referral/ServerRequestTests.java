@@ -101,30 +101,6 @@ public class ServerRequestTests extends BranchTest {
     }
 
     @Test
-    public void testTimedOutCreditHistoryCallbackInvoked() throws InterruptedException {
-        initSessionResumeActivity(null, new Runnable() {
-            @Override
-            public void run() {
-                branch.setNetworkTimeout(10);// forces timeouts
-
-                final CountDownLatch lock2 = new CountDownLatch(1);
-                Branch.getInstance().getCreditHistory(new Branch.BranchListResponseListener() {
-                    @Override
-                    public void onReceivingResponse(JSONArray list, BranchError error) {
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
-                        lock2.countDown();
-                    }
-                });
-                try {
-                    Assert.assertTrue(lock2.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Assert.fail();
-                }
-            }
-        });
-    }
-
-    @Test
     public void testTimedOutGenerateShortUrlCallbackInvoked() throws InterruptedException {
         initSessionResumeActivity(null, new Runnable() {
             @Override

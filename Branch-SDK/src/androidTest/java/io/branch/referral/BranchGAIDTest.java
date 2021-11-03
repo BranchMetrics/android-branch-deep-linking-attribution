@@ -17,14 +17,11 @@ import io.branch.referral.util.CommerceEvent;
 
  [X] ServerRequestActionCompleted.java          testActionCompleted()
  [ ] ServerRequestCreateUrl.java
- [-] ServerRequestGetRewardHistory.java         testCreditHistory()
- [-] ServerRequestGetRewards.java               testLoadRewards()
  [-] ServerRequestIdentifyUserRequest.java      testIdentity()
  [X] ServerRequestInitSession.java              testInitSession()
  [-] ServerRequestLogout.java                   testLogout()
  [-] ServerRequestPing.java                     testPing()
  [X] ServerRequestActionCompleted.java          testCommerceEvent()
- [X] ServerRequestRedeemRewards.java            testRedeemRewards()
  [-] ServerRequestRegisterClose.java            testClose()
  [ ] ServerRequestRegisterInstall.java
  [ ] ServerRequestRegisterOpen.java
