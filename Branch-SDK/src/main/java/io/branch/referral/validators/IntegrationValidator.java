@@ -108,7 +108,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             logValidationPassed();
         }
 
-        // 5. Check if AppLinks are specified in the Manifest
+        // 7. Check if AppLinks are specified in the Manifest
         logValidationProgress("7. Checking AndroidManifest for AppLink config.");
         if (integrationModel.applinkScheme.isEmpty()) {
             if (!integrationModel.appSettingsAvailable) {
@@ -122,7 +122,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             logValidationPassed();
         }
 
-        // 6. Look for any custom domains specified in the dash board and has matching intent filter
+        // 8. Look for any custom domains specified in the dash board and has matching intent filter
         {
             logValidationProgress("8. Verifying any supported custom link domains.");
             String customDomain = branchAppConfig.optString("short_url_domain");
@@ -141,7 +141,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         }
 
 
-        // 7. Check for matching intent filter for default app link domains
+        // 9. Check for matching intent filter for default app link domains
         {
             logValidationProgress("9. Verifying default link domains integrations.");
             String defAppLinkDomain = branchAppConfig.optString("default_short_url_domain");
@@ -159,7 +159,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         }
 
 
-        // 8. Check for matching intent filter for alternative app link domains
+        // 10. Check for matching intent filter for alternative app link domains
         {
             logValidationProgress("10. Verifying alternate link domains integrations.");
             String alternateAppLinkDomain = branchAppConfig.optString("alternate_short_url_domain");
