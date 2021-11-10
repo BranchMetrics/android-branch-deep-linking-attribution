@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.0.15
+  * _*Master Release*_ - Nov 10, 2021
+  * Bug fixes: IntegrationValidator (ConcurrentModificationException, Decoding Resource Strings)
+
 - v5.0.14
   * _*Master Release*_ - Oct 15, 2021
   * Bug fixes: improper shutdown of resource, multiline server responses
