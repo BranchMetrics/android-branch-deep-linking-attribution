@@ -89,50 +89,53 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * with a referral program, incentivized or not.
      */
     public static final String FEATURE_TAG_REFERRAL = "referral";
-    
+
     /**
-     * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as
-     * referral actions by users of an app using an 'invite contacts' feature for instance.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String FEATURE_TAG_INVITE = "invite";
-    
+
     /**
-     * Hard-coded {@link String} that denotes a link that is part of a commercial 'deal' or offer.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String FEATURE_TAG_DEAL = "deal";
-    
+
     /**
-     * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or
-     * product.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String FEATURE_TAG_GIFT = "gift";
-    
+
     /**
-     * The code to be passed as part of a deal or gift; retrieved from the Branch object as a
-     * tag upon initialisation. Of {@link String} format.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REDEEM_CODE = "$redeem_code";
-    
+
     /**
-     * <p>Default value of referral bucket; referral buckets contain credits that are used when users
-     * are referred to your apps. These can be viewed in the Branch dashboard under Referrals.</p>
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REFERRAL_BUCKET_DEFAULT = "default";
-    
+
     /**
-     * <p>Hard-coded value for referral code type. Referral codes will always result on "credit" actions.
-     * Even if they are of 0 value.</p>
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REFERRAL_CODE_TYPE = "credit";
-    
+
     /**
-     * Branch SDK version for the current release of the Branch SDK.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
-    
+
     /**
-     * Key value for referral code as a parameter.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REFERRAL_CODE = "referral_code";
     
     /**

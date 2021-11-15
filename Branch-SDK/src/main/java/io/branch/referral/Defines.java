@@ -29,8 +29,8 @@ public class Defines {
         UTMMedium("utm_medium"),
         InitialReferrer("initial_referrer"),
 
-        Bucket("bucket"),
-        DefaultBucket("default"),
+        @Deprecated Bucket("bucket"),
+        @Deprecated DefaultBucket("default"),
         Amount("amount"),
         CalculationType("calculation_type"),
         Location("location"),

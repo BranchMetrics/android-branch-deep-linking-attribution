@@ -751,12 +751,6 @@ public class PrefHelper {
      * sync to occur whenever a method reads any of the values and finds the value to be 0 or unset.</p>
      */
     public void clearUserValues() {
-        ArrayList<String> buckets = getBuckets();
-        for (String bucket : buckets) {
-            setCreditCount(bucket, 0);
-        }
-        setBuckets(new ArrayList<String>());
-        
         ArrayList<String> actions = getActions();
         for (String action : actions) {
             setActionTotalCount(action, 0);
@@ -766,82 +760,29 @@ public class PrefHelper {
     }
     
     // REWARD TRACKING CALLS
-    
-    private ArrayList<String> getBuckets() {
-        String bucketList = getString(KEY_BUCKETS);
-        if (bucketList.equals(NO_STRING_VALUE)) {
-            return new ArrayList<>();
-        } else {
-            return deserializeString(bucketList);
-        }
-    }
-    
-    private void setBuckets(ArrayList<String> buckets) {
-        if (buckets.size() == 0) {
-            setString(KEY_BUCKETS, NO_STRING_VALUE);
-        } else {
-            setString(KEY_BUCKETS, serializeArrayList(buckets));
-        }
-    }
-    
     /**
-     * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     * <p>
-     * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
-     * but only the cached value as stored in preferences for the current app. The age of that value
-     * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
-     * when the last system sync occurred.
-     * </p>
-     *
-     * @param count A {@link Integer} value that the default bucket credit count will be set to.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void setCreditCount(int count) {
-        setCreditCount(Defines.Jsonkey.DefaultBucket.getKey(), count);
-    }
-    
+    @Deprecated
+    public void setCreditCount(int count) { /* no-op */ }
+
     /**
-     * <p>Sets the credit count for the default bucket to the specified {@link Integer}, in preferences.</p>
-     * <p>
-     * <p><b>Note:</b> This does not set the actual value of the bucket itself on the Branch server,
-     * but only the cached value as stored in preferences for the current app. The age of that value
-     * should be checked before being considered accurate; read {@link #KEY_LAST_READ_SYSTEM} to see
-     * when the last system sync occurred.
-     * </p>
-     *
-     * @param bucket A {@link String} value containing the value of the bucket being referenced.
-     * @param count  A {@link Integer} value that the default bucket credit count will be set to.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void setCreditCount(String bucket, int count) {
-        ArrayList<String> buckets = getBuckets();
-        if (!buckets.contains(bucket)) {
-            buckets.add(bucket);
-            setBuckets(buckets);
-        }
-        setInteger(KEY_CREDIT_BASE + bucket, count);
-    }
-    
+    @Deprecated
+    public void setCreditCount(String bucket, int count) { /* no-op */ }
+
     /**
-     * <p>Get the current cached credit count for the default bucket, as currently stored in
-     * preferences for the current app.</p>
-     *
-     * @return A {@link Integer} value specifying the current number of credits in the bucket, as
-     * currently stored in preferences.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public int getCreditCount() {
-        return getCreditCount(Defines.Jsonkey.DefaultBucket.getKey());
-    }
-    
+    @Deprecated
+    public int getCreditCount() { /* no-op */ return 0; }
+
     /**
-     * <p>Get the current cached credit count for the default bucket, as currently stored in
-     * preferences for the current app.</p>
-     *
-     * @param bucket A {@link String} value containing the value of the bucket being referenced.
-     * @return A {@link Integer} value specifying the current number of credits in the bucket, as
-     * currently stored in preferences.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public int getCreditCount(String bucket) {
-        return getInteger(KEY_CREDIT_BASE + bucket);
-    }
+    @Deprecated
+    public int getCreditCount(String bucket) { /* no-op */ return 0; }
     
     // EVENT REFERRAL INSTALL CALLS
     

@@ -18,10 +18,8 @@ public class BranchError {
     public static final int ERR_BRANCH_INIT_FAILED = -104;
     /* Error processing request since alias is already used. */
     public static final int ERR_BRANCH_DUPLICATE_URL = -105;
-    /* Error processing request since alias is already used. */
-    public static final int ERR_BRANCH_DUPLICATE_REFERRAL_CODE = -106;
-    /* Error redeeming rewards. */
-    public static final int ERR_BRANCH_REDEEM_REWARD = -107;
+    @Deprecated public static final int ERR_BRANCH_DUPLICATE_REFERRAL_CODE = -106;
+    @Deprecated public static final int ERR_BRANCH_REDEEM_REWARD = -107;
     /* Error with API level below 14. */
     public static final int ERR_API_LVL_14_NEEDED = -108;
     /* Error Branch is not instantiated. */
@@ -108,12 +106,6 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_DUPLICATE_URL) {
             errorCode_ = ERR_BRANCH_DUPLICATE_URL;
             errMsg = " Unable to create a URL with that alias. If you want to reuse the alias, make sure to submit the same properties for all arguments and that the user is the same owner.";
-        } else if (statusCode == ERR_BRANCH_DUPLICATE_REFERRAL_CODE) {
-            errorCode_ = ERR_BRANCH_DUPLICATE_REFERRAL_CODE;
-            errMsg = " That Branch referral code is already in use.";
-        } else if (statusCode == ERR_BRANCH_REDEEM_REWARD) {
-            errorCode_ = ERR_BRANCH_REDEEM_REWARD;
-            errMsg = " Unable to redeem rewards. Please make sure you have credits available to redeem.";
         } else if (statusCode == ERR_API_LVL_14_NEEDED) {
             errorCode_ = ERR_API_LVL_14_NEEDED;
             errMsg = "BranchApp class can be used only" +
