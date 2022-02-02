@@ -707,6 +707,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             prefHelper_.setTimeout(timeout);
         }
     }
+
+    // TODO: Test
+    /**
+     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
+     * * request.</p>
+     *
+     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
+     *                considering the initialization to have timed out.
+     */
+    public void setNetworkConnectTimeout(int connectTimeout) {
+        if (prefHelper_ != null && connectTimeout > 0) {
+            prefHelper_.setConnectTimeout(connectTimeout);
+        }
+    }
     
     /**
      * Method to control reading Android ID from device. Set this to true to disable reading the device id.

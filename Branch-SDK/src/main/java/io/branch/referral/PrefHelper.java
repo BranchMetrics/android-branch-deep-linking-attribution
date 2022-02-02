@@ -54,7 +54,8 @@ public class PrefHelper {
      */
     private static final int MAX_RETRIES = 3; // Default retry count is 3
 
-    static final int TIMEOUT = 5500; // Default timeout id 5.5 sec
+    static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
+    static final int CONNECT_TIMEOUT = 1000; // Default timeout is 10 seconds
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -87,7 +88,8 @@ public class PrefHelper {
     private static final String KEY_RETRY_COUNT = "bnc_retry_count";
     private static final String KEY_RETRY_INTERVAL = "bnc_retry_interval";
     private static final String KEY_TIMEOUT = "bnc_timeout";
-    
+    private static final String KEY_CONNECT_TIMEOUT = "bnc_connect_timeout";
+
     private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
     
     private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
@@ -265,6 +267,27 @@ public class PrefHelper {
      */
     public int getTimeout() {
         return getInteger(KEY_TIMEOUT, TIMEOUT);
+    }
+
+    /**
+     * <p>Sets the duration in milliseconds to override the timeout value for initiating requests.</p>
+     *
+     * @param connectTimeout The {@link Integer} value of the connect timeout setting in milliseconds.
+     */
+    public void setConnectTimeout(int connectTimeout) {
+        setInteger(KEY_CONNECT_TIMEOUT, connectTimeout);
+    }
+
+
+    /**
+     * <p>Returns the currently set timeout value for opening a communication channel with a remote
+     * resource. This may take longer on older devices with lower memory and threading capabilities.</p>
+     *
+     * @return An {@link Integer} value containing the currently set timeout value in
+     * milliseconds.
+     */
+    public int getConnectTimeout() {
+        return getInteger(KEY_CONNECT_TIMEOUT, CONNECT_TIMEOUT);
     }
     
     /**

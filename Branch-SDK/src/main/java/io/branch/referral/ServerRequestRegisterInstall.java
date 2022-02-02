@@ -138,4 +138,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     public String getRequestActionName() {
         return ACTION_INSTALL;
     }
+
+    @Override
+    public boolean shouldRetryOnFail() {
+        return true;   //Install request needs to retry on failure.
+    }
 }

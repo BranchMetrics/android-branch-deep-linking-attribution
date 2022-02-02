@@ -46,7 +46,9 @@ public class BranchError {
     public static final int ERR_BRANCH_ALREADY_INITIALIZED = -118;
     /* Reinitializing session without the flag, IntentKey.ForceNewBranchSession */
     public static final int ERR_IMPROPER_REINITIALIZATION = -119;
-    
+    /* Request thread timed out before contacting Branch servers */
+    public static final int ERR_BRANCH_THREAD_TIMEOUT = -120;
+
     /**
      * <p>Returns the message explaining the error.</p>
      *

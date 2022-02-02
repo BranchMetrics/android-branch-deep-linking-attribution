@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -56,6 +57,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         PrefHelper prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         try {
             int timeout = prefHelper.getTimeout();
+            int connectTimeout = prefHelper.getConnectTimeout();
             String appendKey = url.contains("?") ? "&" : "?";
             String modifiedUrl = url + appendKey + RETRY_NUMBER + "=" + retryNumber;
             URL urlObject = new URL(modifiedUrl);
@@ -192,6 +194,19 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 return doRestfulPost(url, payload, retryNumber);
             } else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+            }
+        } catch(InterruptedIOException ex){
+            // When the thread times out before sending the request
+            if (retryNumber < prefHelper.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper.getRetryInterval());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return doRestfulPost(url, payload, retryNumber);
+            } else {
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_THREAD_TIMEOUT);
             }
         } catch (IOException ex) {
             PrefHelper.Debug("Http connect exception: " + ex.getMessage());
