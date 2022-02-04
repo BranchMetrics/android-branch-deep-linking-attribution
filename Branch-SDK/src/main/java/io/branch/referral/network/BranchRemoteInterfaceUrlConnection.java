@@ -1,6 +1,5 @@
 package io.branch.referral.network;
 
-import android.content.Context;
 import android.net.TrafficStats;
 import android.os.NetworkOnMainThreadException;
 import androidx.annotation.NonNull;
@@ -62,7 +61,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             String modifiedUrl = url + appendKey + RETRY_NUMBER + "=" + retryNumber;
             URL urlObject = new URL(modifiedUrl);
             connection = (HttpsURLConnection) urlObject.openConnection();
-            connection.setConnectTimeout(timeout);
+            connection.setConnectTimeout(connectTimeout);
             connection.setReadTimeout(timeout);
 
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
@@ -110,6 +109,19 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             } else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
+        } catch(InterruptedIOException ex){
+            // When the thread times out before or while sending the request
+            if (retryNumber < prefHelper.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper.getRetryInterval());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return doRestfulGet(url, retryNumber);
+            } else {
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
+            }
         } catch (IOException ex) {
             PrefHelper.Debug("Branch connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
@@ -125,6 +137,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         HttpsURLConnection connection = null;
         PrefHelper prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         int timeout = prefHelper.getTimeout();
+        int connectTimeout = prefHelper.getConnectTimeout();
+
         try {
             payload.put(RETRY_NUMBER, retryNumber);
         } catch (JSONException ignore) {
@@ -137,7 +151,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
             URL urlObject = new URL(url);
             connection = (HttpsURLConnection) urlObject.openConnection();
-            connection.setConnectTimeout(timeout);
+            connection.setConnectTimeout(connectTimeout);
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);
             connection.setDoOutput(true);
@@ -196,7 +210,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
             }
         } catch(InterruptedIOException ex){
-            // When the thread times out before sending the request
+            // When the thread times out before or while sending the request
             if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
@@ -206,7 +220,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_THREAD_TIMEOUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
             }
         } catch (IOException ex) {
             PrefHelper.Debug("Http connect exception: " + ex.getMessage());
