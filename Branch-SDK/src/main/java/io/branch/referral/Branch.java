@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
+import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -708,7 +709,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    // TODO: Test
     /**
      * <p>Sets the duration in milliseconds that the system should wait for initializing a network
      * * request.</p>
@@ -722,7 +722,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
 
-    // TODO: Test
     /**
      * <p>Sets the duration in milliseconds that the system should wait for tasks to complete</p>
      *
@@ -1729,11 +1728,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         try {
             if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                 postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
+                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
             }
         } catch (InterruptedException e) {
             postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
+            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
         }
     }
 
