@@ -32,7 +32,7 @@ class AppIndexingHelper {
             @Override
             public void run() {
                 try {
-                    firebaseUserActionsInstance = FirebaseUserActions.getInstance();
+                    firebaseUserActionsInstance = FirebaseUserActions.getInstance(context);
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
                     PrefHelper.Debug("Firebase app indexing is not available. Please consider enabling Firebase app indexing for your app for better indexing experience with Google.");
@@ -50,7 +50,7 @@ class AppIndexingHelper {
                 if (!TextUtils.isEmpty(contentUrl)) {
                     try {
                         if (firebaseUserActionsInstance != null) {
-                            addToAppIndexUsingFirebase(contentUrl, buo);
+                            addToAppIndexUsingFirebase(context, contentUrl, buo);
                         } else {
                             //noinspection deprecation
                             listOnGoogleSearch(contentUrl, context, buo);
@@ -75,7 +75,7 @@ class AppIndexingHelper {
                         contentUrl = buo.getShortUrl(context, linkProperties);
                     }
                     PrefHelper.Debug("Removing indexed BranchUniversalObject with link " + contentUrl);
-                    FirebaseAppIndex.getInstance().remove(contentUrl);
+                    FirebaseAppIndex.getInstance(context).remove(contentUrl);
                 } catch (NoClassDefFoundError ignore) {
                     // Expected when Firebase app indexing dependency is not available
                     PrefHelper.Debug("Failed to remove the BranchUniversalObject from Firebase local indexing. Please make sure Firebase is enabled and initialised in your app");
@@ -87,12 +87,12 @@ class AppIndexingHelper {
         }).run();
     }
     
-    private static void addToAppIndexUsingFirebase(String contentUrl, BranchUniversalObject buo) {
+    private static void addToAppIndexUsingFirebase(final Context context, String contentUrl, BranchUniversalObject buo) {
         //PRS: Add to the Firebase local app indexing only if BUO is locally indexable
         String contentText = buo.getTitle() + "\n" + buo.getDescription();
         if (buo.isLocallyIndexable()) {
             Indexable buoToIndex = Indexables.newSimple(contentText, contentUrl);
-            Task<Void> task = FirebaseAppIndex.getInstance().update(buoToIndex);
+            Task<Void> task = FirebaseAppIndex.getInstance(context).update(buoToIndex);
         }
         
         // Log a Firebase user action inorder for Google to Index the content
