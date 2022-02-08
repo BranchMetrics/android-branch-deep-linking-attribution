@@ -35,7 +35,6 @@ public class BranchPluginSupportTest extends BranchTest {
 
     @Test
     public void testAppVersion() {
-        System.out.println("deviceData Log: " + deviceData.toString());
         Assert.assertEquals("bnc_no_value", deviceData.get("app_version"));
     }
 
