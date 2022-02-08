@@ -721,18 +721,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             prefHelper_.setConnectTimeout(connectTimeout);
         }
     }
-
-    /**
-     * <p>Sets the duration in milliseconds that the system should wait for tasks to complete</p>
-     *
-     * @param taskTimeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the task to have timed out.
-     */
-    public void setTaskTimeout(int taskTimeout) {
-        if (prefHelper_ != null && taskTimeout > 0) {
-            prefHelper_.setTaskTimeout(taskTimeout);
-        }
-    }
     
     /**
      * Method to control reading Android ID from device. Set this to true to disable reading the device id.

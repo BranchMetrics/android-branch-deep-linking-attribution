@@ -272,24 +272,13 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Sets the duration in milliseconds to override the timeout value for tasks</p>
-     *
-     * @param taskTimeout The {@link Integer} value of the timeout setting in milliseconds.
-     */
-    public void setTaskTimeout(int taskTimeout) {
-        setInteger(KEY_TASK_TIMEOUT, taskTimeout);
-    }
-
-    /**
-     * <p>Returns the currently set timeout value for tasks. This will be the default
-     * SDK setting unless it has been overridden manually between Branch object instantiation and
-     * this call.</p>
+     * <p>Returns the computed value of the connect and read timeout for web requests</p>
      *
      * @return An {@link Integer} value containing the currently set timeout value in
      * milliseconds.
      */
     public int getTaskTimeout() {
-        return getInteger(KEY_TASK_TIMEOUT, TASK_TIMEOUT);
+        return getInteger(KEY_TIMEOUT, TIMEOUT) + getInteger(KEY_CONNECT_TIMEOUT, CONNECT_TIMEOUT);
     }
 
     /**

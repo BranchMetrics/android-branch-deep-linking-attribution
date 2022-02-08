@@ -29,13 +29,13 @@ public class ServerRequestTests extends BranchTest {
     }
     @After
     public void tearDown() throws InterruptedException {
-        setTimeouts(PrefHelper.TIMEOUT, PrefHelper.CONNECT_TIMEOUT, PrefHelper.TASK_TIMEOUT);
+        setTimeouts(PrefHelper.TIMEOUT, PrefHelper.CONNECT_TIMEOUT);
         super.tearDown();
     }
 
     @Test
     public void testTimedOutInitSessionCallbackInvoked() throws InterruptedException {
-        setTimeouts(10,10,10000);
+        setTimeouts(10,10000);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -50,7 +50,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10,10);
+                setTimeouts(10,10);
 
                 final CountDownLatch lock = new CountDownLatch(1);
                 branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
@@ -76,7 +76,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10,10);
+                setTimeouts(10,10);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
                 Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
@@ -101,7 +101,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10,10);
+                setTimeouts(10,10);
 
                 final CountDownLatch lock2 = new CountDownLatch(1);
                 Branch.getInstance().getCreditHistory(new Branch.BranchListResponseListener() {
@@ -125,7 +125,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10,10);
+                setTimeouts(10,10);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
                 BranchUniversalObject buo = new BranchUniversalObject()
@@ -162,9 +162,8 @@ public class ServerRequestTests extends BranchTest {
         });
     }
 
-    private void setTimeouts(int timeout, int connectTimeout, int taskTimeout){
+    private void setTimeouts(int timeout, int connectTimeout){
         branch.setNetworkTimeout(timeout);
         branch.setNetworkConnectTimeout(connectTimeout);
-        branch.setTaskTimeout(taskTimeout);
     }
 }

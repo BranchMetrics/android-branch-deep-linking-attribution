@@ -91,10 +91,14 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testSetTaskTimeout(){
-        int TEST_TASK_TIMEOUT = 3;
-        prefHelper.setTaskTimeout(TEST_TASK_TIMEOUT);
+        int TEST_TIMEOUT = 3;
+        int TEST_CONNECT_TIMEOUT = 4;
+
+        prefHelper.setTimeout(TEST_TIMEOUT);
+        prefHelper.setConnectTimeout(TEST_CONNECT_TIMEOUT);
+
 
         int result = prefHelper.getTaskTimeout();
-        Assert.assertEquals(TEST_TASK_TIMEOUT, result);
+        Assert.assertEquals(TEST_TIMEOUT + TEST_CONNECT_TIMEOUT, result);
     }
 }
