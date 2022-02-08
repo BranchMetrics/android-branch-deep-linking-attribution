@@ -296,6 +296,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private BranchRemoteInterface branchRemoteInterface_;
     final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
+    private final BranchPluginSupport branchPluginSupport_;
     private final Context context_;
 
     private final Semaphore serverSema_ = new Semaphore(1);
@@ -395,6 +396,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         trackingController = new TrackingController(context);
         branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
         deviceInfo_ = new DeviceInfo(context);
+        branchPluginSupport_ = new BranchPluginSupport(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
@@ -1757,6 +1759,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public DeviceInfo getDeviceInfo() {
         return deviceInfo_;
+    }
+
+    public BranchPluginSupport getBranchPluginSupport() {
+        return branchPluginSupport_;
     }
 
     PrefHelper getPrefHelper() {
