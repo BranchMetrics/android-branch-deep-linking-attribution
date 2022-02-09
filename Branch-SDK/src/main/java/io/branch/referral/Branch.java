@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
+import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -707,6 +708,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setNetworkTimeout(int timeout) {
         if (prefHelper_ != null && timeout > 0) {
             prefHelper_.setTimeout(timeout);
+        }
+    }
+
+    /**
+     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
+     * * request.</p>
+     *
+     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
+     *                considering the initialization to have timed out.
+     */
+    public void setNetworkConnectTimeout(int connectTimeout) {
+        if (prefHelper_ != null && connectTimeout > 0) {
+            prefHelper_.setConnectTimeout(connectTimeout);
         }
     }
     
@@ -1668,7 +1682,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             networkCount_ = 0;
                             req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         } else {
-                            executeTimedBranchPostTask(req, prefHelper_.getTimeout());
+                            executeTimedBranchPostTask(req, prefHelper_.getTaskTimeout());
                         }
                     } else {
                         networkCount_ = 0;
@@ -1704,11 +1718,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         try {
             if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                 postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
+                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
             }
         } catch (InterruptedException e) {
             postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
+            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
         }
     }
 

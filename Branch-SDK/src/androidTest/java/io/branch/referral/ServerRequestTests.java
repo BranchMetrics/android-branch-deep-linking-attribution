@@ -1,8 +1,5 @@
 package io.branch.referral;
 
-import android.os.Handler;
-
-import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONArray;
@@ -18,7 +15,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.mock.MockActivity;
 import io.branch.referral.util.BranchCPID;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.LinkProperties;
@@ -33,13 +29,13 @@ public class ServerRequestTests extends BranchTest {
     }
     @After
     public void tearDown() throws InterruptedException {
-        branch.setNetworkTimeout(PrefHelper.TIMEOUT);
+        setTimeouts(PrefHelper.TIMEOUT, PrefHelper.CONNECT_TIMEOUT);
         super.tearDown();
     }
 
     @Test
     public void testTimedOutInitSessionCallbackInvoked() throws InterruptedException {
-        branch.setNetworkTimeout(10);// forces timeouts
+        setTimeouts(10,10000);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -54,7 +50,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                branch.setNetworkTimeout(10);// forces timeouts
+                setTimeouts(10,10);
 
                 final CountDownLatch lock = new CountDownLatch(1);
                 branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
@@ -63,7 +59,7 @@ public class ServerRequestTests extends BranchTest {
                         PrefHelper.Debug("branchCPID = " + branchCPID + ", error: " + error);
                         lock.countDown();
                         Assert.assertNotNull(error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
+                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
                     }
                 });
                 try {
@@ -80,13 +76,13 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                branch.setNetworkTimeout(10);// forces timeouts
+                setTimeouts(10,10);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
                 Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
+                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
                         lock1.countDown();
                     }
                 });
@@ -105,13 +101,13 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                branch.setNetworkTimeout(10);// forces timeouts
+                setTimeouts(10,10);
 
                 final CountDownLatch lock2 = new CountDownLatch(1);
                 Branch.getInstance().getCreditHistory(new Branch.BranchListResponseListener() {
                     @Override
                     public void onReceivingResponse(JSONArray list, BranchError error) {
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
+                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
                         lock2.countDown();
                     }
                 });
@@ -129,7 +125,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                branch.setNetworkTimeout(10);// forces timeouts
+                setTimeouts(10,10);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
                 BranchUniversalObject buo = new BranchUniversalObject()
@@ -152,7 +148,8 @@ public class ServerRequestTests extends BranchTest {
                 buo.generateShortUrl(getTestContext(), linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
+                        PrefHelper.Debug("error is " + error);
+                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
                         lock3.countDown();
                     }
                 });
@@ -163,5 +160,10 @@ public class ServerRequestTests extends BranchTest {
                 }
             }
         });
+    }
+
+    private void setTimeouts(int timeout, int connectTimeout){
+        branch.setNetworkTimeout(timeout);
+        branch.setNetworkConnectTimeout(connectTimeout);
     }
 }
