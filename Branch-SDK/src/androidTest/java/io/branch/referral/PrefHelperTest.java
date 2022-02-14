@@ -101,4 +101,42 @@ public class PrefHelperTest extends BranchTest {
         int result = prefHelper.getTaskTimeout();
         Assert.assertEquals(TEST_TIMEOUT + TEST_CONNECT_TIMEOUT, result);
     }
+
+    @Test
+    public void testSetReferrerGclidExpirationWindow(){
+        long testExpirationWindow = 1L;
+
+        prefHelper.setReferrerGclidExpirationWindow(testExpirationWindow);
+
+        long result = prefHelper.getReferrerGclidExpirationWindow();
+        Assert.assertEquals(testExpirationWindow, result);
+    }
+
+    @Test
+    public void testSetGclid(){
+        String testGclid = "test_gclid";
+
+        prefHelper.setReferrerGclid(testGclid);
+
+        String result = prefHelper.getReferrerGclid();
+        Assert.assertEquals(testGclid, result);
+    }
+
+    @Test
+    public void testSetGclid_Expired(){
+        String testGclid = "testSetGclid_Expired";
+
+        prefHelper.setReferrerGclidExpirationWindow(1L);
+        prefHelper.setReferrerGclid(testGclid);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException interruptedException) {
+            interruptedException.printStackTrace();
+        }
+
+        String result = prefHelper.getReferrerGclid();
+        Assert.assertNull(result);
+        prefHelper.setReferrerGclidExpirationWindow(PrefHelper.DEFAULT_EXPIRATION_WINDOW_REFERRER_GCLID);
+    }
 }

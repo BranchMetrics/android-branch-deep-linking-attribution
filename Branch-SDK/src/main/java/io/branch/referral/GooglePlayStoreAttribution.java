@@ -152,6 +152,9 @@ class GooglePlayStoreAttribution {
                 if(referrerMap.containsValue(Defines.Jsonkey.PlayAutoInstalls.getKey())) {
                     BranchPreinstall.setBranchPreInstallGoogleReferrer(context, referrerMap);
                 }
+                if(referrerMap.containsKey(Defines.Jsonkey.ReferrerGclid.getKey())){
+                    prefHelper.setReferrerGclid(referrerMap.get(Defines.Jsonkey.ReferrerGclid.getKey()));
+                }
 
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

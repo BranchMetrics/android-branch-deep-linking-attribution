@@ -17,6 +17,7 @@ public class Defines {
         GoogleSearchInstallReferrer("google_search_install_referrer"),
         GooglePlayInstallReferrer("install_referrer_extras"),
         ClickedReferrerTimeStamp("clicked_referrer_ts"),
+        ReferrerGclid("referrer_gclid"),
         InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         @Deprecated BranchLinkUsed("branch_used"),          //use Defines.IntentKeys.BranchLinkUsed
