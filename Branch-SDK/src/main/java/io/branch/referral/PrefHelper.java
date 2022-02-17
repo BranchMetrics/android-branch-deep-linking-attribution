@@ -57,7 +57,7 @@ public class PrefHelper {
     static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
     static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds
     static final int TASK_TIMEOUT = TIMEOUT+CONNECT_TIMEOUT; // Default timeout is 15.5 seconds
-    static final long DEFAULT_EXPIRATION_WINDOW_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
+    static final long DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -74,7 +74,7 @@ public class PrefHelper {
     private static final String KEY_GCLID_JSON_OBJECT = "bnc_gclid_json_object";
     private static final String KEY_GCLID_VALUE = "bnc_gclid_value";
     private static final String KEY_GCLID_EXPIRATION_DATE = "bnc_gclid_expiration_date";
-    private static final String KEY_GCLID_EXPIRATION_WINDOW = "bnc_gclid_expiration_window";
+    private static final String KEY_GCLID_VALID_FOR_WINDOW = "bnc_gclid_expiration_window";
     private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
@@ -646,7 +646,7 @@ public class PrefHelper {
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put(KEY_GCLID_VALUE, referrerGclid);
-            jsonObject.put(KEY_GCLID_EXPIRATION_DATE, System.currentTimeMillis() + getReferrerGclidExpirationWindow());
+            jsonObject.put(KEY_GCLID_EXPIRATION_DATE, System.currentTimeMillis() + getReferrerGclidValidForWindow());
 
             setString(KEY_GCLID_JSON_OBJECT, jsonObject.toString());
         } catch (JSONException e) {
@@ -661,7 +661,13 @@ public class PrefHelper {
      */
     public String getReferrerGclid(){
         String gclidObjectString = getString(KEY_GCLID_JSON_OBJECT);
+
+        if(gclidObjectString.equals(NO_STRING_VALUE) ){
+            return NO_STRING_VALUE;
+        }
+
         String gclid = null;
+
         try {
             JSONObject gclidJsonObject = new JSONObject(gclidObjectString);
             long expiryDate = (long) gclidJsonObject.get(KEY_GCLID_EXPIRATION_DATE);
@@ -685,16 +691,16 @@ public class PrefHelper {
      * Sets the GCLID expiry window in milliseconds
      * @param window
      */
-    public void setReferrerGclidExpirationWindow(long window){
-        setLong(KEY_GCLID_EXPIRATION_WINDOW, window);
+    public void setReferrerGclidValidForWindow(long window){
+        setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
     }
 
     /**
      * Gets the GCLID expiration window in milliseconds
      * @return
      */
-    public long getReferrerGclidExpirationWindow() {
-        return getLong(KEY_GCLID_EXPIRATION_WINDOW, DEFAULT_EXPIRATION_WINDOW_REFERRER_GCLID);
+    public long getReferrerGclidValidForWindow() {
+        return getLong(KEY_GCLID_VALID_FOR_WINDOW, DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
     }
 
     /**

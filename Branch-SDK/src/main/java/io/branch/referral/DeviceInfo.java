@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import static android.content.Context.UI_MODE_SERVICE;
+import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 
 /**
  * <p>
@@ -100,10 +101,20 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
 
-            if (PrefHelper.getInstance(context_).shouldAddModules()) {
+            PrefHelper prefHelper_ = PrefHelper.getInstance(context_);
+
+            if (prefHelper_.shouldAddModules()) {
                 String imei = SystemObserver.getImei(context_);
                 if (!isNullOrEmptyOrBlank(imei)) {
                     requestObj.put(ModuleNameKeys.imei.getKey(), imei);
+                }
+            }
+
+            // For install events, referrer GCLID is already contained in `install_referrer_extras`
+            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
+                String gclid = PrefHelper.getInstance(context_).getReferrerGclid();
+                if(gclid != null && !gclid.equals(NO_STRING_VALUE)){
+                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
                 }
             }
         } catch (JSONException ignore) { }
@@ -208,6 +219,14 @@ class DeviceInfo {
                 userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
+
+            if (prefHelper != null) {
+                String gclid = prefHelper.getReferrerGclid();
+                if(gclid != null && !gclid.equals(NO_STRING_VALUE)){
+                    userDataObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
+                }
+            }
+
         } catch (JSONException ignore) { }
     }
 

@@ -103,13 +103,13 @@ public class PrefHelperTest extends BranchTest {
     }
 
     @Test
-    public void testSetReferrerGclidExpirationWindow(){
-        long testExpirationWindow = 1L;
+    public void testSetReferrerGclidValidForWindow(){
+        long testValidForWindow = 1L;
 
-        prefHelper.setReferrerGclidExpirationWindow(testExpirationWindow);
+        prefHelper.setReferrerGclidValidForWindow(testValidForWindow);
 
-        long result = prefHelper.getReferrerGclidExpirationWindow();
-        Assert.assertEquals(testExpirationWindow, result);
+        long result = prefHelper.getReferrerGclidValidForWindow();
+        Assert.assertEquals(testValidForWindow, result);
     }
 
     @Test
@@ -126,7 +126,7 @@ public class PrefHelperTest extends BranchTest {
     public void testSetGclid_Expired(){
         String testGclid = "testSetGclid_Expired";
 
-        prefHelper.setReferrerGclidExpirationWindow(1L);
+        prefHelper.setReferrerGclidValidForWindow(1L);
         prefHelper.setReferrerGclid(testGclid);
 
         try {
@@ -137,6 +137,6 @@ public class PrefHelperTest extends BranchTest {
 
         String result = prefHelper.getReferrerGclid();
         Assert.assertNull(result);
-        prefHelper.setReferrerGclidExpirationWindow(PrefHelper.DEFAULT_EXPIRATION_WINDOW_REFERRER_GCLID);
+        prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
     }
 }

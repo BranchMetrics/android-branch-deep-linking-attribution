@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
 import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
@@ -721,6 +720,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setNetworkConnectTimeout(int connectTimeout) {
         if (prefHelper_ != null && connectTimeout > 0) {
             prefHelper_.setConnectTimeout(connectTimeout);
+        }
+    }
+
+    /**
+     * Sets the window for the referrer GCLID field. The GCLID will be persisted locally from the
+     * time it is set + window in milliseconds. Thereafter, it will be deleted.
+     *
+     * By default, the window is set to 30 days, or 2592000000L in millseconds
+     * @param window A {@link Long} value specifying the number of milliseconds to wait before
+     *               deleting the locally persisted GCLID value.
+     */
+    public void setReferrerGclidValidForWindow(long window){
+        if(prefHelper_ != null && window > 0L){
+            prefHelper_.setReferrerGclidValidForWindow(window);
         }
     }
     
