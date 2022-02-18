@@ -1,5 +1,8 @@
 # Branch Android SDK change log
 
+- v5.1.1
+  * Fix NPE if intent is null while getting referrer
+
 - v5.1.0
   * _*Master Release*_ - Feb 9, 2022
   * Added BranchPluginSupport class with deviceDescription() method. Will be used by the AdobeBranchExtension to pass device data.
