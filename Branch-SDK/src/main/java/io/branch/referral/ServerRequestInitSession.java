@@ -288,6 +288,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.remove(Defines.Jsonkey.HardwareID.getKey());
             post.remove(Defines.Jsonkey.IsHardwareIDReal.getKey());
             post.remove(Defines.Jsonkey.LocalIP.getKey());
+            post.remove(Defines.Jsonkey.ReferrerGclid.getKey());
             try {
                 post.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
             } catch (JSONException ignore) {
