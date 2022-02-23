@@ -110,12 +110,9 @@ class DeviceInfo {
                 }
             }
 
-            // For install events, referrer GCLID is already contained in `install_referrer_extras`
-            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
-                String gclid = PrefHelper.getInstance(context_).getReferrerGclid();
-                if(gclid != null && !gclid.equals(NO_STRING_VALUE)){
-                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
-                }
+            String gclid = PrefHelper.getInstance(context_).getReferrerGclid();
+            if(gclid != null && !gclid.equals(NO_STRING_VALUE)){
+                requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
             }
         } catch (JSONException ignore) { }
     }
