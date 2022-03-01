@@ -392,6 +392,8 @@ public abstract class ServerRequest {
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
         if (!TextUtils.isEmpty(gaid)) {
             updateAdvertisingIdsObject(gaid);
+            // gaid is put in the request body below, calling to remove hardware id from request now
+            removeHardwareIdOnValidAdvertisingId();
         }
         try {
             if (version == BRANCH_API_VERSION.V1) {
@@ -444,6 +446,27 @@ public abstract class ServerRequest {
         } catch (JSONException ignored) {}
     }
 
+    /**
+     * Called when advertising ids are successfully set on the request body
+     * Because params including hardware id are set on the request before the advertising ids are obtained,
+     * remove the hardware ID and disable future calls from reading it
+     */
+    private void removeHardwareIdOnValidAdvertisingId(){
+        //v1
+        params_.remove(Defines.Jsonkey.HardwareID.getKey());
+        params_.remove(Defines.Jsonkey.IsHardwareIDReal.getKey());
+
+        //v2
+        try {
+            JSONObject userData = params_.getJSONObject(Defines.Jsonkey.UserData.getKey());
+            userData.remove(Defines.Jsonkey.AndroidID.getKey());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        // Disable device id fetch for successive calls
+        Branch.disableDeviceIDFetch(true);
+    }
+    
     private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
         return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
                 payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||
