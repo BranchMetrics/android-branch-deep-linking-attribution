@@ -221,7 +221,7 @@ class DeviceInfo {
      * @param prefHelper
      * @param requestObj
      */
-    void UpdateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
+    void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
             // For install events, referrer GCLID is already contained in `install_referrer_extras`
             // Otherwise, for all other v1 and v2 events, add referrer_gclid to top level

@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -196,7 +195,7 @@ public abstract class ServerRequest {
             params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
-        DeviceInfo.getInstance().UpdateRequestWithParamsAllEvents(this, prefHelper_, params_);
+        DeviceInfo.getInstance().updateRequestWithParamsAllEvents(this, prefHelper_, params_);
     }
     
     /**
