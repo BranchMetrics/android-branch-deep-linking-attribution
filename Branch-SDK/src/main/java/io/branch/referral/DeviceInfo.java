@@ -131,10 +131,8 @@ class DeviceInfo {
     void updateRequestWithV2Params(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject userDataObj) {
         try {
             SystemObserver.UniqueId hardwareID = getHardwareID();
-            if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
+            if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
                 userDataObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
-            } else {
-                userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
             }
 
             String brandName = SystemObserver.getPhoneBrand();

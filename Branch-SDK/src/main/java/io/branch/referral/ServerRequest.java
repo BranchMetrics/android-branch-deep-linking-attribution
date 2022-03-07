@@ -385,6 +385,8 @@ public abstract class ServerRequest {
     
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
+     * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
+     * Otherwise we're good to send the generated UUID
      */
     void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
@@ -452,19 +454,24 @@ public abstract class ServerRequest {
      * remove the hardware ID and disable future calls from reading it
      */
     private void removeHardwareIdOnValidAdvertisingId(){
-        //v1
-        params_.remove(Defines.Jsonkey.HardwareID.getKey());
-        params_.remove(Defines.Jsonkey.IsHardwareIDReal.getKey());
-
-        //v2
         try {
-            JSONObject userData = params_.getJSONObject(Defines.Jsonkey.UserData.getKey());
-            userData.remove(Defines.Jsonkey.AndroidID.getKey());
+            //v1
+            SystemObserver.UniqueId generatedHardwareID = DeviceInfo.getInstance().getHardwareID();
+
+            // Replace the hardware id with randomly generated UUID, generate new one if we haven't previously
+            params_.put(Defines.Jsonkey.HardwareID.getKey(), generatedHardwareID.getId());
+            params_.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), generatedHardwareID.isReal());
+
+            //v2
+            if(params_.has(Defines.Jsonkey.UserData.getKey())) {
+                JSONObject userData = params_.getJSONObject(Defines.Jsonkey.UserData.getKey());
+                if (userData.has(Defines.Jsonkey.AndroidID.getKey())) {
+                    userData.put(Defines.Jsonkey.AndroidID.getKey(), generatedHardwareID.getId());
+                }
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        // Disable device id fetch for successive calls
-        Branch.disableDeviceIDFetch(true);
     }
     
     private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
