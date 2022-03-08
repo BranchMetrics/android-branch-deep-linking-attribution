@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -395,7 +394,7 @@ public abstract class ServerRequest {
         if (!TextUtils.isEmpty(gaid)) {
             updateAdvertisingIdsObject(gaid);
             // gaid is put in the request body below, calling to remove hardware id from request now
-            removeHardwareIdOnValidAdvertisingId();
+            replaceHardwareIdOnValidAdvertisingId();
         }
         try {
             if (version == BRANCH_API_VERSION.V1) {
@@ -453,7 +452,7 @@ public abstract class ServerRequest {
      * Because params including hardware id are set on the request before the advertising ids are obtained,
      * remove the hardware ID and disable future calls from reading it
      */
-    private void removeHardwareIdOnValidAdvertisingId(){
+    private void replaceHardwareIdOnValidAdvertisingId(){
         try {
             //v1
             SystemObserver.UniqueId generatedHardwareID = DeviceInfo.getInstance().getHardwareID();
