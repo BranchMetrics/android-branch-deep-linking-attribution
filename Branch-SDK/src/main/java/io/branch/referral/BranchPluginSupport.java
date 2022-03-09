@@ -37,8 +37,9 @@ public class BranchPluginSupport {
         deviceDataObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
 
         SystemObserver.UniqueId hardwareID = getHardwareID();
-        if (!isNullOrEmptyOrBlank(hardwareID.getId()) && hardwareID.isReal()) {
+        if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
             deviceDataObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
+            deviceDataObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), hardwareID.isReal());
         } else {
             deviceDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
         }

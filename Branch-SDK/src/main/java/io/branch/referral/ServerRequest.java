@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -385,6 +384,8 @@ public abstract class ServerRequest {
     
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
+     * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
+     * Otherwise we're good to send the generated UUID
      */
     void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
@@ -392,6 +393,8 @@ public abstract class ServerRequest {
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
         if (!TextUtils.isEmpty(gaid)) {
             updateAdvertisingIdsObject(gaid);
+            // gaid is put in the request body below, calling to remove hardware id from request now
+            replaceHardwareIdOnValidAdvertisingId();
         }
         try {
             if (version == BRANCH_API_VERSION.V1) {
@@ -444,6 +447,32 @@ public abstract class ServerRequest {
         } catch (JSONException ignored) {}
     }
 
+    /**
+     * Called when advertising ids are successfully set on the request body
+     * Because params including hardware id are set on the request before the advertising ids are obtained,
+     * remove the hardware ID and disable future calls from reading it
+     */
+    private void replaceHardwareIdOnValidAdvertisingId(){
+        try {
+            //v1
+            SystemObserver.UniqueId generatedHardwareID = DeviceInfo.getInstance().getHardwareID();
+
+            // Replace the hardware id with randomly generated UUID, generate new one if we haven't previously
+            params_.put(Defines.Jsonkey.HardwareID.getKey(), generatedHardwareID.getId());
+            params_.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), generatedHardwareID.isReal());
+
+            //v2
+            if(params_.has(Defines.Jsonkey.UserData.getKey())) {
+                JSONObject userData = params_.getJSONObject(Defines.Jsonkey.UserData.getKey());
+                if (userData.has(Defines.Jsonkey.AndroidID.getKey())) {
+                    userData.put(Defines.Jsonkey.AndroidID.getKey(), generatedHardwareID.getId());
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+    
     private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
         return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
                 payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||

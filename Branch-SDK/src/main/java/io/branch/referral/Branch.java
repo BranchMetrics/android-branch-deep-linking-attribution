@@ -2431,7 +2431,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 thisReq_.handleFailure(status, serverResponse.getFailReason());
             }
 
-            boolean unretryableErrorCode = (400 <= status && status <= 451);
+            boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
             if (unretryableErrorCode || !thisReq_.shouldRetryOnFail()) {
                 requestQueue_.remove(thisReq_);
             } else {

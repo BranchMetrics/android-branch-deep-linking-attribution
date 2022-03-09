@@ -111,6 +111,8 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
+
+    static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
     
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
@@ -493,7 +495,21 @@ public class PrefHelper {
     public void setLinkClickID(String link_click_id) {
         setString(KEY_LINK_CLICK_ID, link_click_id);
     }
-    
+
+    /**
+     * Sets a new randomly generated UUID to be associated with the device.
+     * @param uuid
+     */
+    public void setRandomlyGeneratedUuid(String uuid){
+        setString(KEY_RANDOMLY_GENERATED_UUID, uuid);
+    }
+
+    /**
+     * Returns our own randomly generated UUID associated with the device
+     */
+    public String getRandomlyGeneratedUuid() {
+        return getString(KEY_RANDOMLY_GENERATED_UUID);
+    }
     
     /**
      * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>

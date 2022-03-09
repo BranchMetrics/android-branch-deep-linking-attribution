@@ -539,12 +539,32 @@ abstract class SystemObserver {
             this.uniqueId = BLANK;
 
             String androidID = null;
-            if (context != null && !isDebug) {
+
+            boolean aidIsValid = !TextUtils.isEmpty(DeviceInfo.getInstance().getSystemObserver().getAID());
+
+            // If aid is invalid and we haven't disabled hardware id fetch (isDebug), then we can send a real hardware id
+            if (context != null && !isDebug && !aidIsValid) {
                 androidID = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
             }
 
             if (androidID == null) {
-                androidID = UUID.randomUUID().toString();
+                // Current behavior isDeviceIDFetchDisabled == true, simulate installs
+                if(isDebug){
+                    androidID =  UUID.randomUUID().toString();
+                }
+                // Else check for persisted UUID
+                else {
+                    String randomlyGeneratedUuid = PrefHelper.getInstance(context).getRandomlyGeneratedUuid();
+                    if (!TextUtils.isEmpty(randomlyGeneratedUuid) && !randomlyGeneratedUuid.equals(BLANK)) {
+                        androidID = randomlyGeneratedUuid;
+                    }
+                    // If not found generate a new id and persist it.
+                    else {
+                        androidID = UUID.randomUUID().toString();
+                        PrefHelper.getInstance(context).setRandomlyGeneratedUuid(androidID);
+                    }
+                }
+
                 isRealId = false;
             }
             uniqueId = androidID;
