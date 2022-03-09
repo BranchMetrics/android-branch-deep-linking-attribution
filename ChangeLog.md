@@ -1,6 +1,11 @@
 # Branch Android SDK change log
+- v5.1.2
+  * _*Master Release*_ - Mar 9, 2022
+  * Update payloads to include generated UUID when valid GAID is retrieved, replacing hardware ID. UUID is persisted locally.
+  * Fix bug which spammed the log for no-op event retry attempts when tracking is disabled.
 
 - v5.1.1
+  * _*Master Release*_ - Feb 18, 2022
   * Fix NPE if intent is null while getting referrer
 
 - v5.1.0
