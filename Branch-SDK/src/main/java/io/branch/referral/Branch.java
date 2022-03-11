@@ -728,11 +728,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * time it is set + window in milliseconds. Thereafter, it will be deleted.
      *
      * By default, the window is set to 30 days, or 2592000000L in millseconds
+     * Minimum of 0 milliseconds
+     * Maximum of 3 years
      * @param window A {@link Long} value specifying the number of milliseconds to wait before
      *               deleting the locally persisted GCLID value.
      */
     public void setReferrerGclidValidForWindow(long window){
-        if(prefHelper_ != null && window > 0L){
+        if(prefHelper_ != null){
             prefHelper_.setReferrerGclidValidForWindow(window);
         }
     }

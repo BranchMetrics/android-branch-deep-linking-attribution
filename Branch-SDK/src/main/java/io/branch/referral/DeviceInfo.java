@@ -101,9 +101,7 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
 
-            PrefHelper prefHelper_ = PrefHelper.getInstance(context_);
-
-            if (prefHelper_.shouldAddModules()) {
+            if (PrefHelper.getInstance(context_).shouldAddModules()) {
                 String imei = SystemObserver.getImei(context_);
                 if (!isNullOrEmptyOrBlank(imei)) {
                     requestObj.put(ModuleNameKeys.imei.getKey(), imei);

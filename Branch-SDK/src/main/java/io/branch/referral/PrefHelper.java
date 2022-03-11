@@ -58,6 +58,9 @@ public class PrefHelper {
     static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds
     static final int TASK_TIMEOUT = TIMEOUT+CONNECT_TIMEOUT; // Default timeout is 15.5 seconds
     static final long DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
+    static final long MAX_VALID_WINDOW_FOR_REFERRER_GCLID = 100000000000L; // Arbitrary maximum window to prevent overflow, 3 years, in milliseconds
+    static final long MIN_VALID_WINDOW_FOR_REFERRER_GCLID = 0L; // Don't allow time set in the past , in milliseconds
+
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -673,6 +676,7 @@ public class PrefHelper {
             long expiryDate = (long) gclidJsonObject.get(KEY_GCLID_EXPIRATION_DATE);
 
             // If expiry time has not elapsed, return it
+            // No undefined behavior within bounds
             if(expiryDate - System.currentTimeMillis() > 0){
                 gclid = gclidJsonObject.getString(KEY_GCLID_VALUE);
             }
@@ -681,6 +685,7 @@ public class PrefHelper {
                 removePrefValue(KEY_GCLID_JSON_OBJECT);
             }
         } catch (JSONException e) {
+            removePrefValue(KEY_GCLID_JSON_OBJECT);
             e.printStackTrace();
         }
 
@@ -688,11 +693,14 @@ public class PrefHelper {
     }
 
     /**
-     * Sets the GCLID expiry window in milliseconds
+     * Sets the GCLID expiration window in milliseconds
      * @param window
      */
     public void setReferrerGclidValidForWindow(long window){
-        setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
+        if (MAX_VALID_WINDOW_FOR_REFERRER_GCLID > window
+                && window >= MIN_VALID_WINDOW_FOR_REFERRER_GCLID) {
+            setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
+        }
     }
 
     /**

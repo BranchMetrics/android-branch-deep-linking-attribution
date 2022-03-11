@@ -110,6 +110,7 @@ public class PrefHelperTest extends BranchTest {
 
         long result = prefHelper.getReferrerGclidValidForWindow();
         Assert.assertEquals(testValidForWindow, result);
+        prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
     }
 
     @Test
@@ -137,6 +138,37 @@ public class PrefHelperTest extends BranchTest {
 
         String result = prefHelper.getReferrerGclid();
         Assert.assertNull(result);
+        prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
+    }
+
+    @Test
+    public void testSetGclid_PastDateReturnsDefault(){
+        String testGclid = "testSetGclid_PastDateReturnsDefault";
+
+        //1 millisecond in the past
+        prefHelper.setReferrerGclidValidForWindow(-1L);
+        prefHelper.setReferrerGclid(testGclid);
+
+        long result = prefHelper.getReferrerGclidValidForWindow();
+        Assert.assertEquals(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID, result);
+
+        String resultGclid = prefHelper.getReferrerGclid();
+        Assert.assertEquals(testGclid, resultGclid);
+        prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
+    }
+
+    @Test
+    public void testSetGclid_OverMaximumReturnsDefault(){
+        String testGclid = "testSetGclid_OverMaximumReturnsDefault";
+
+        prefHelper.setReferrerGclidValidForWindow(Long.MAX_VALUE);
+        prefHelper.setReferrerGclid(testGclid);
+
+        long result = prefHelper.getReferrerGclidValidForWindow();
+        Assert.assertEquals(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID, result);
+
+        String resultGclid = prefHelper.getReferrerGclid();
+        Assert.assertEquals(testGclid, resultGclid);
         prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
     }
 }
