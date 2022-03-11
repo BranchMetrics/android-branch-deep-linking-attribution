@@ -8,7 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,32 +54,13 @@ class BranchIntegrationModel {
         } catch (Exception ignored) { }
         if (obj != null) {
             deeplinkUriScheme = obj.optJSONObject(Defines.Jsonkey.URIScheme.getKey());
-            if (deeplinkUriScheme != null) {
-                for (Iterator<String> it = deeplinkUriScheme.keys(); it.hasNext(); ) {
-                    String key = it.next();
-                    BranchUtil.replaceJsonKey(deeplinkUriScheme, key, decodeResourceString(context, key));
-                }
-            }
             JSONArray hostArray = obj.optJSONArray(Defines.Jsonkey.AppLinks.getKey());
             if (hostArray != null) {
                 for (int i = 0; i < hostArray.length(); i++) {
-                    applinkScheme.add(decodeResourceString(context, hostArray.optString(i)));
+                    applinkScheme.add(hostArray.optString(i));
                 }
             }
         }
-    }
-
-    // In ApkParser, resource pointers are returned as `resourceID 0x00000000`.
-    // This will attempt to decode them.
-    private String decodeResourceString(Context context, String value) {
-        try {
-            int resourceId = BranchUtil.decodeResourceId(value);
-            if (resourceId != -1) {
-                return context.getResources().getString(resourceId);
-            }
-        }
-        catch (Exception ignored) { }
-        return value;
     }
 
     // Reading deep linked schemes involves decompressing of apk and parsing manifest. This can lead to a ANR if reading file is slower

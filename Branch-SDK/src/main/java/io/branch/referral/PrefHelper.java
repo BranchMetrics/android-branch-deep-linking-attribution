@@ -54,7 +54,9 @@ public class PrefHelper {
      */
     private static final int MAX_RETRIES = 3; // Default retry count is 3
 
-    static final int TIMEOUT = 5500; // Default timeout id 5.5 sec
+    static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
+    static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds
+    static final int TASK_TIMEOUT = TIMEOUT+CONNECT_TIMEOUT; // Default timeout is 15.5 seconds
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -87,7 +89,9 @@ public class PrefHelper {
     private static final String KEY_RETRY_COUNT = "bnc_retry_count";
     private static final String KEY_RETRY_INTERVAL = "bnc_retry_interval";
     private static final String KEY_TIMEOUT = "bnc_timeout";
-    
+    private static final String KEY_TASK_TIMEOUT = "bnc_task_timeout";
+    private static final String KEY_CONNECT_TIMEOUT = "bnc_connect_timeout";
+
     private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
     
     private static final String KEY_EXTERNAL_INTENT_URI = "bnc_external_intent_uri";
@@ -107,6 +111,8 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
+
+    static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
     
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
@@ -265,6 +271,37 @@ public class PrefHelper {
      */
     public int getTimeout() {
         return getInteger(KEY_TIMEOUT, TIMEOUT);
+    }
+
+    /**
+     * <p>Returns the computed value of the connect and read timeout for web requests</p>
+     *
+     * @return An {@link Integer} value containing the currently set timeout value in
+     * milliseconds.
+     */
+    public int getTaskTimeout() {
+        return getInteger(KEY_TIMEOUT, TIMEOUT) + getInteger(KEY_CONNECT_TIMEOUT, CONNECT_TIMEOUT);
+    }
+
+    /**
+     * <p>Sets the duration in milliseconds to override the timeout value for initiating requests.</p>
+     *
+     * @param connectTimeout The {@link Integer} value of the connect timeout setting in milliseconds.
+     */
+    public void setConnectTimeout(int connectTimeout) {
+        setInteger(KEY_CONNECT_TIMEOUT, connectTimeout);
+    }
+
+
+    /**
+     * <p>Returns the currently set timeout value for opening a communication channel with a remote
+     * resource.</p>
+     *
+     * @return An {@link Integer} value containing the currently set timeout value in
+     * milliseconds.
+     */
+    public int getConnectTimeout() {
+        return getInteger(KEY_CONNECT_TIMEOUT, CONNECT_TIMEOUT);
     }
     
     /**
@@ -458,7 +495,21 @@ public class PrefHelper {
     public void setLinkClickID(String link_click_id) {
         setString(KEY_LINK_CLICK_ID, link_click_id);
     }
-    
+
+    /**
+     * Sets a new randomly generated UUID to be associated with the device.
+     * @param uuid
+     */
+    public void setRandomlyGeneratedUuid(String uuid){
+        setString(KEY_RANDOMLY_GENERATED_UUID, uuid);
+    }
+
+    /**
+     * Returns our own randomly generated UUID associated with the device
+     */
+    public String getRandomlyGeneratedUuid() {
+        return getString(KEY_RANDOMLY_GENERATED_UUID);
+    }
     
     /**
      * <p>Gets the {@link #KEY_LINK_CLICK_ID} {@link String} value that has been set via the Branch API.</p>

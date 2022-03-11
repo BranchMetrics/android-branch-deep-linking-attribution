@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import android.content.Context;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,11 +45,11 @@ class ApkParser {
      * <p>The {@link IntegrationValidator} uses this method by taking in the required {@link Byte} array,
      * The output of this method is used to compare against the server side Integration</p>
      *
-     * @param xml A {@link Byte[]} containing the XML to be decompr
-     *            essed.
+     * @param xml A {@link Byte[]} containing the XML to be decompressed.
+     * @param context Android context used to decode resource strings.
      * @return A {@link JSONObject} containing the result of the decompression action.
      */
-    public JSONObject decompressXMLForValidator(byte[] xml) {
+    public JSONObject decompressXMLForValidator(byte[] xml, Context context) {
         JSONObject intentFilters = new JSONObject();
         JSONArray applinkFilters = new JSONArray();
         JSONObject results = new JSONObject();
@@ -123,7 +125,7 @@ class ApkParser {
 
                         attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
                         if ("scheme".equals(attrName)) {
-                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.encodeResourceId(attrResId);
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.decodeResourceId(context, attrResId);
                             if (validURI(attrValue)) {
                                 scheme = attrValue;
                                 if (!intentFilters.has(scheme)) {
@@ -142,7 +144,7 @@ class ApkParser {
                                 scheme = attrValue;
                             }
                         } else if ("host".equals(attrName)) {
-                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.encodeResourceId(attrResId);
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.decodeResourceId(context, attrResId);
                             JSONArray domainList;
                             if (intentFilters.has(scheme) && scheme != null
                                     && !"https".equals(scheme) && !"http".equals(scheme)) {
@@ -159,7 +161,7 @@ class ApkParser {
                             }
                         } else if ("name".equals(attrName)) {
                             //reset the scheme name
-                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.encodeResourceId(attrResId);
+                            attrValue = attrValueSi != -1 ? compXmlString(xml, sitOff, stOff, attrValueSi) : BranchUtil.decodeResourceId(context, attrResId);
                             if ("android.intent.action.VIEW".equals(attrValue)) {
                                 scheme = null;
                             }

@@ -1,4 +1,27 @@
 # Branch Android SDK change log
+- v5.1.2
+  * _*Master Release*_ - Mar 9, 2022
+  * Update payloads to include generated UUID when valid GAID is retrieved, replacing hardware ID. UUID is persisted locally.
+  * Fix bug which spammed the log for no-op event retry attempts when tracking is disabled.
+
+- v5.1.1
+  * _*Master Release*_ - Feb 18, 2022
+  * Fix NPE if intent is null while getting referrer
+
+- v5.1.0
+  * _*Master Release*_ - Feb 9, 2022
+  * Added BranchPluginSupport class with deviceDescription() method. Will be used by the AdobeBranchExtension to pass device data.
+  * Resolves timeout and non-initialization issues introducing a connect timeout, and retrying init requests.
+    * Possible behavior change is with the increased timeout, any operations awaiting these requests may see longer timeouts.
+    * To set the timeouts:
+      * `public void setConnectTimeout(int connectTimeout)`
+      * `public void setTimeout(int timeout)`
+      * Time is in milliseconds
+
+- v5.0.15
+  * _*Master Release*_ - Nov 10, 2021
+  * Bug fixes: IntegrationValidator (ConcurrentModificationException, Decoding Resource Strings)
+
 - v5.0.14
   * _*Master Release*_ - Oct 15, 2021
   * Bug fixes: improper shutdown of resource, multiline server responses

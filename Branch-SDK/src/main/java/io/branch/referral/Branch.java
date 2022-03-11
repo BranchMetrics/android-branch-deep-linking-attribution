@@ -1,6 +1,7 @@
 package io.branch.referral;
 
 import static io.branch.referral.BranchError.ERR_BRANCH_REQ_TIMED_OUT;
+import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -299,6 +300,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private BranchRemoteInterface branchRemoteInterface_;
     final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
+    private final BranchPluginSupport branchPluginSupport_;
     private final Context context_;
 
     private final Semaphore serverSema_ = new Semaphore(1);
@@ -398,6 +400,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         trackingController = new TrackingController(context);
         branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
         deviceInfo_ = new DeviceInfo(context);
+        branchPluginSupport_ = new BranchPluginSupport(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
@@ -708,6 +711,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setNetworkTimeout(int timeout) {
         if (prefHelper_ != null && timeout > 0) {
             prefHelper_.setTimeout(timeout);
+        }
+    }
+
+    /**
+     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
+     * * request.</p>
+     *
+     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
+     *                considering the initialization to have timed out.
+     */
+    public void setNetworkConnectTimeout(int connectTimeout) {
+        if (prefHelper_ != null && connectTimeout > 0) {
+            prefHelper_.setConnectTimeout(connectTimeout);
         }
     }
     
@@ -1562,7 +1578,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             networkCount_ = 0;
                             req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         } else {
-                            executeTimedBranchPostTask(req, prefHelper_.getTimeout());
+                            executeTimedBranchPostTask(req, prefHelper_.getTaskTimeout());
                         }
                     } else {
                         networkCount_ = 0;
@@ -1598,11 +1614,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         try {
             if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                 postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
+                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
             }
         } catch (InterruptedException e) {
             postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_REQ_TIMED_OUT, ""));
+            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
         }
     }
 
@@ -1653,6 +1669,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public DeviceInfo getDeviceInfo() {
         return deviceInfo_;
+    }
+
+    public BranchPluginSupport getBranchPluginSupport() {
+        return branchPluginSupport_;
     }
 
     PrefHelper getPrefHelper() {
@@ -2307,7 +2327,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 thisReq_.handleFailure(status, serverResponse.getFailReason());
             }
 
-            boolean unretryableErrorCode = (400 <= status && status <= 451);
+            boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
             if (unretryableErrorCode || !thisReq_.shouldRetryOnFail()) {
                 requestQueue_.remove(thisReq_);
             } else {
@@ -2955,7 +2975,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
 
-            if (activity != null && ActivityCompat.getReferrer(activity) != null) {
+            if (activity != null && intent != null && ActivityCompat.getReferrer(activity) != null) {
                 PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
             }
 

@@ -121,5 +121,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     public String getRequestActionName() {
         return ACTION_OPEN;
     }
-    
+
+    @Override
+    public boolean shouldRetryOnFail() {
+        return true;   //Open request needs to retry on failure.
+    }
 }

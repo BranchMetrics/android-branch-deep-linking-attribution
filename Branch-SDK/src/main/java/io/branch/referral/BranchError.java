@@ -44,7 +44,9 @@ public class BranchError {
     public static final int ERR_BRANCH_ALREADY_INITIALIZED = -118;
     /* Reinitializing session without the flag, IntentKey.ForceNewBranchSession */
     public static final int ERR_IMPROPER_REINITIALIZATION = -119;
-    
+    /* Request task timed out before completing*/
+    public static final int ERR_BRANCH_TASK_TIMEOUT = -120;
+
     /**
      * <p>Returns the message explaining the error.</p>
      *
@@ -140,6 +142,9 @@ public class BranchError {
         } else if (statusCode == ERR_IMPROPER_REINITIALIZATION) {
             errorCode_ = ERR_IMPROPER_REINITIALIZATION;
             errMsg = "Intra-app linking (i.e. session reinitialization) requires an intent flag, \"branch_force_new_session\".";
+        } else if (statusCode == ERR_BRANCH_TASK_TIMEOUT) {
+            errorCode_ = ERR_BRANCH_TASK_TIMEOUT;
+            errMsg = " Task exceeded timeout.";
         } else {
             errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
             errMsg = " Check network connectivity and that you properly initialized.";
