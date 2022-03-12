@@ -361,16 +361,10 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestActionCompleted(Defines.RequestPath.CompletedAction, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())) {
-            extendedReq = new ServerRequestGetRewardHistory(Defines.RequestPath.GetCreditHistory, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())) {
-            extendedReq = new ServerRequestGetRewards(Defines.RequestPath.GetCredits, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
             extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())) {
-            extendedReq = new ServerRequestRedeemRewards(Defines.RequestPath.RedeemRewards, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
             extendedReq = new ServerRequestRegisterClose(Defines.RequestPath.RegisterClose, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {

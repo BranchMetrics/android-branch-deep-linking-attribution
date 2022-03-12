@@ -50,10 +50,6 @@ public class MockRemoteInterface extends BranchRemoteInterface {
     public static String pathForSuccessResponse(String url) {
         if (url.contains(GetURL.getPath())) {
             return "{\"url\":\"https://bnc.lt/l/randomized_test_route_" + UUID.randomUUID().toString() + "\"}";
-        } else if (url.contains(GetCreditHistory.getPath())) {
-            return "[]";
-        } else if (url.contains(GetCredits.getPath())) {
-            return "{\"credits\": " + PrefHelper.getInstance(Branch.getInstance().getApplicationContext()).getCreditCount() + "}";
         } else if (url.contains(IdentifyUser.getPath())) {
             return "{\"session_id\":\"880938553235373649\",\"identity_id\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24identity_id=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"device_fingerprint_id\":\"867130134518497054\"}";
         } else if (url.contains(RegisterInstall.getPath()) || url.contains(RegisterOpen.getPath())) {

@@ -54,7 +54,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
     private TextView txtInstallCount;
-    private TextView txtRewardBalance;
 
     private BranchUniversalObject branchUniversalObject;
 
@@ -67,7 +66,6 @@ public class MainActivity extends Activity {
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
         txtInstallCount = findViewById(R.id.txtInstallCount);
-        txtRewardBalance = findViewById(R.id.txtRewardBalance);
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
 
         createNotificationChannel();
@@ -130,7 +128,6 @@ public class MainActivity extends Activity {
                     }
                 });
 
-                txtRewardBalance.setText(R.string.rewards_empty);
                 txtInstallCount.setText(R.string.install_count_empty);
             }
         });
@@ -167,45 +164,6 @@ public class MainActivity extends Activity {
                             txtShortUrl.setText(error.getMessage());
                         } else {
                             txtShortUrl.setText(url);
-                        }
-                    }
-                });
-            }
-        });
-
-
-        findViewById(R.id.cmdRefreshReward).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                Branch.getInstance().loadRewards(new BranchReferralStateChangedListener() {
-                    @Override
-                    public void onStateChanged(boolean changed, BranchError error) {
-                        if (error != null) {
-                            Log.e("BranchSDK_Tester", "branch load rewards failed. Caused by -" + error.getMessage());
-                        } else {
-                            Log.e("BranchSDK_Tester", "changed = " + changed);
-                            txtRewardBalance.setText(getString(R.string.rewards, Branch.getInstance().getCredits()));
-                        }
-                    }
-                });
-            }
-        });
-
-        findViewById(R.id.cmdRedeemFive).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Branch.getInstance().redeemRewards(5, new BranchReferralStateChangedListener() {
-                    @Override
-                    public void onStateChanged(boolean changed, BranchError error) {
-                        if (error != null) {
-                            Log.e("BranchSDK_Tester", "branch redeem rewards failed. Caused by -" + error.getMessage());
-                        } else {
-                            if (changed) {
-                                Log.e("BranchSDK_Tester", "redeemed rewards = " + true);
-                                txtRewardBalance.setText(getString(R.string.rewards, Branch.getInstance().getCredits()));
-                            } else {
-                                Log.e("BranchSDK_Tester", "redeem rewards unknown error ");
-                            }
                         }
                     }
                 });
@@ -256,19 +214,6 @@ public class MainActivity extends Activity {
             }
 
         });
-
-        findViewById(R.id.cmdGetCreditHistory).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.e("BranchSDK_Tester", "Getting credit history...");
-                Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
-                // Test for preventing second intent reading
-                i.setData(Uri.parse("https://testintentread.app.link?error_if_assigned_to_android_app_link"));
-                i.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), false);
-                startActivity(i);
-            }
-        });
-
 
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
@@ -535,7 +480,7 @@ public class MainActivity extends Activity {
         if (requestCode == getResources().getInteger(R.integer.AutoDeeplinkRequestCode)) {
             //Decide here where  to navigate  when an auto deep linked activity finishes.
             //For e.g. Go to HomeActivity or a  SignUp Activity.
-            Intent i = new Intent(getApplicationContext(), CreditHistoryActivity.class);
+            Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(i);
         }
     }

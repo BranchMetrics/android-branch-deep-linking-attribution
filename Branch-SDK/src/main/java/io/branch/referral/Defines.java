@@ -29,8 +29,8 @@ public class Defines {
         UTMMedium("utm_medium"),
         InitialReferrer("initial_referrer"),
 
-        Bucket("bucket"),
-        DefaultBucket("default"),
+        @Deprecated Bucket("bucket"),
+        @Deprecated DefaultBucket("default"),
         Amount("amount"),
         CalculationType("calculation_type"),
         Location("location"),
@@ -41,7 +41,7 @@ public class Defines {
         Event("event"),
         Metadata("metadata"),
         CommerceData("commerce_data"),
-        ReferralCode("referral_code"),
+        @Deprecated ReferralCode("referral_code"),
         Total("total"),
         Unique("unique"),
         Length("length"),
@@ -227,14 +227,14 @@ public class Defines {
      * </p>
      */
     public enum RequestPath {
-        RedeemRewards("v1/redeem"),
+        @Deprecated RedeemRewards("v1/redeem"),
         GetURL("v1/url"),
         GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
-        GetCredits("v1/credits/"),
-        GetCreditHistory("v1/credithistory"),
+        @Deprecated GetCredits("v1/credits/"),
+        @Deprecated GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
         Logout("v1/logout"),
