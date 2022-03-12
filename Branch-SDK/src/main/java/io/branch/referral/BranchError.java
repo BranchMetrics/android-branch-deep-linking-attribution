@@ -13,7 +13,7 @@ public class BranchError {
     /* Error processing request since app doesn't have internet permission. */
     public static final int ERR_NO_INTERNET_PERMISSION = -102;
     /* Error processing request since referral code provided is invalid. */
-    public static final int ERR_INVALID_REFERRAL_CODE = -103;
+    @Deprecated public static final int ERR_INVALID_REFERRAL_CODE = -103;
     /* Error processing request since Branch is not initialised. */
     public static final int ERR_BRANCH_INIT_FAILED = -104;
     /* Error processing request since alias is already used. */
