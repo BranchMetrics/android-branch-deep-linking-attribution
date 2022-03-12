@@ -41,7 +41,7 @@ public class Defines {
         Event("event"),
         Metadata("metadata"),
         CommerceData("commerce_data"),
-        ReferralCode("referral_code"),
+        @Deprecated ReferralCode("referral_code"),
         Total("total"),
         Unique("unique"),
         Length("length"),
