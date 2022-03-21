@@ -52,6 +52,8 @@ public class DeviceInfoTest extends BranchTest {
         Assert.assertEquals(uniqueId1, uniqueId2);
     }
 
+    // TODO: Need to mock advertising ID providers
+    //  Tests are written to assume a valid AID is obtainable from the system
     @Test
     public void testGAIDFetch() throws InterruptedException {
         initBranchInstance();

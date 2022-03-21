@@ -7,6 +7,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.UUID;
+
 public class PrefHelperTest extends BranchTest {
     Context context;
     PrefHelper prefHelper;
@@ -170,5 +172,13 @@ public class PrefHelperTest extends BranchTest {
         String resultGclid = prefHelper.getReferrerGclid();
         Assert.assertEquals(testGclid, resultGclid);
         prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
+
+    public void testSetRandomlyGeneratedUuid(){
+        String uuid = UUID.randomUUID().toString();
+
+        prefHelper.setRandomlyGeneratedUuid(uuid);
+        String result = prefHelper.getRandomlyGeneratedUuid();
+
+        Assert.assertEquals(uuid, result);
     }
 }

@@ -362,16 +362,10 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestActionCompleted(Defines.RequestPath.CompletedAction, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCreditHistory.getPath())) {
-            extendedReq = new ServerRequestGetRewardHistory(Defines.RequestPath.GetCreditHistory, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetCredits.getPath())) {
-            extendedReq = new ServerRequestGetRewards(Defines.RequestPath.GetCredits, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
             extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RedeemRewards.getPath())) {
-            extendedReq = new ServerRequestRedeemRewards(Defines.RequestPath.RedeemRewards, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
             extendedReq = new ServerRequestRegisterClose(Defines.RequestPath.RegisterClose, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
@@ -385,6 +379,8 @@ public abstract class ServerRequest {
     
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
+     * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
+     * Otherwise we're good to send the generated UUID
      */
     void updateGAdsParams() {
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
@@ -392,6 +388,8 @@ public abstract class ServerRequest {
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
         if (!TextUtils.isEmpty(gaid)) {
             updateAdvertisingIdsObject(gaid);
+            // gaid is put in the request body below, calling to remove hardware id from request now
+            replaceHardwareIdOnValidAdvertisingId();
         }
         try {
             if (version == BRANCH_API_VERSION.V1) {
@@ -444,6 +442,32 @@ public abstract class ServerRequest {
         } catch (JSONException ignored) {}
     }
 
+    /**
+     * Called when advertising ids are successfully set on the request body
+     * Because params including hardware id are set on the request before the advertising ids are obtained,
+     * remove the hardware ID and disable future calls from reading it
+     */
+    private void replaceHardwareIdOnValidAdvertisingId(){
+        try {
+            //v1
+            SystemObserver.UniqueId generatedHardwareID = DeviceInfo.getInstance().getHardwareID();
+
+            // Replace the hardware id with randomly generated UUID, generate new one if we haven't previously
+            params_.put(Defines.Jsonkey.HardwareID.getKey(), generatedHardwareID.getId());
+            params_.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), generatedHardwareID.isReal());
+
+            //v2
+            if(params_.has(Defines.Jsonkey.UserData.getKey())) {
+                JSONObject userData = params_.getJSONObject(Defines.Jsonkey.UserData.getKey());
+                if (userData.has(Defines.Jsonkey.AndroidID.getKey())) {
+                    userData.put(Defines.Jsonkey.AndroidID.getKey(), generatedHardwareID.getId());
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+    
     private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
         return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
                 payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||

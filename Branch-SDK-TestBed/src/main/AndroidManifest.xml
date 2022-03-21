@@ -51,7 +51,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="io.branch.branchandroiddemo.CreditHistoryActivity"/>
         <activity android:name=".SettingsActivity"/>
 
         <activity android:name=".AutoDeepLinkTestActivity">

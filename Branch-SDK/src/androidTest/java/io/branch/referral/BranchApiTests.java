@@ -305,58 +305,6 @@ public class BranchApiTests extends BranchTest {
     }
 
     @Test
-    public void test03GetRewardsChanged() throws InterruptedException {
-        initSessionResumeActivity(null, new Runnable() {
-            @Override
-            public void run() {
-                final CountDownLatch signal = new CountDownLatch(1);
-                prefHelper.setCreditCount("default", 9999999);
-
-                branch.loadRewards(new Branch.BranchReferralStateChangedListener() {
-                    @Override
-                    public void onStateChanged(boolean changed, BranchError error) {
-                        Assert.assertNull(error);
-                        Assert.assertTrue(changed);
-
-                        signal.countDown();
-                    }
-                });
-                try {
-                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Assert.fail();
-                }
-            }
-        });
-    }
-
-    @Test
-    public void testGetRewardsUnchanged() {
-        initSessionResumeActivity(null, new Runnable() {
-            @Override
-            public void run() {
-                final CountDownLatch signal = new CountDownLatch(1);
-                prefHelper.setCreditCount("default", prefHelper.getCreditCount("default"));
-
-                branch.loadRewards(new Branch.BranchReferralStateChangedListener() {
-                    @Override
-                    public void onStateChanged(boolean changed, BranchError error) {
-                        Assert.assertNull(error);
-                        Assert.assertFalse(changed);
-
-                        signal.countDown();
-                    }
-                });
-                try {
-                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Assert.fail();
-                }
-            }
-        });
-    }
-
-    @Test
     public void testZLoad() {
         final long now = System.currentTimeMillis();
         initSessionResumeActivity(null, new Runnable() {

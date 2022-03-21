@@ -89,50 +89,53 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * with a referral program, incentivized or not.
      */
     public static final String FEATURE_TAG_REFERRAL = "referral";
-    
+
     /**
-     * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are sent as
-     * referral actions by users of an app using an 'invite contacts' feature for instance.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String FEATURE_TAG_INVITE = "invite";
-    
+
     /**
-     * Hard-coded {@link String} that denotes a link that is part of a commercial 'deal' or offer.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String FEATURE_TAG_DEAL = "deal";
-    
+
     /**
-     * Hard-coded {@link String} that denotes a link tagged as a gift action within a service or
-     * product.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String FEATURE_TAG_GIFT = "gift";
-    
+
     /**
-     * The code to be passed as part of a deal or gift; retrieved from the Branch object as a
-     * tag upon initialisation. Of {@link String} format.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REDEEM_CODE = "$redeem_code";
-    
+
     /**
-     * <p>Default value of referral bucket; referral buckets contain credits that are used when users
-     * are referred to your apps. These can be viewed in the Branch dashboard under Referrals.</p>
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REFERRAL_BUCKET_DEFAULT = "default";
-    
+
     /**
-     * <p>Hard-coded value for referral code type. Referral codes will always result on "credit" actions.
-     * Even if they are of 0 value.</p>
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REFERRAL_CODE_TYPE = "credit";
-    
+
     /**
-     * Branch SDK version for the current release of the Branch SDK.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
-    
+
     /**
-     * Key value for referral code as a parameter.
+     * @deprecated Referral feature has been deprecated.
      */
+    @Deprecated
     public static final String REFERRAL_CODE = "referral_code";
     
     /**
@@ -1174,187 +1177,80 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * <p>Fire-and-forget retrieval of rewards for the current session. Without a callback.</p>
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void loadRewards() {
-        loadRewards(null);
-    }
-    
+    @Deprecated
+    public void loadRewards() { /* no-op */ }
+
     /**
-     * <p>Retrieves rewards for the current session, with a callback to perform a predefined
-     * action following successful report of state change. You'll then need to call getCredits
-     * in the callback to update the credit totals in your UX.</p>
-     *
-     * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon a referral state change.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void loadRewards(BranchReferralStateChangedListener callback) {
-        ServerRequest req = new ServerRequestGetRewards(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-    
+    @Deprecated
+    public void loadRewards(BranchReferralStateChangedListener callback) { /* no-op */ }
+
     /**
-     * <p>Retrieve the number of credits available for the "default" bucket.</p>
-     *
-     * @return An {@link Integer} value of the number credits available in the "default" bucket.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public int getCredits() {
-        return prefHelper_.getCreditCount();
-    }
-    
+    @Deprecated
+    public int getCredits() { /* no-op */ return 0; }
+
     /**
-     * Returns an {@link Integer} of the number of credits available for use within the supplied
-     * bucket name.
-     *
-     * @param bucket A {@link String} value indicating the name of the bucket to get credits for.
-     * @return An {@link Integer} value of the number credits available in the specified
-     * bucket.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public int getCreditsForBucket(String bucket) {
-        return prefHelper_.getCreditCount(bucket);
-    }
-    
-    
+    @Deprecated
+    public int getCreditsForBucket(String bucket) { /* no-op */ return 0; }
+
     /**
-     * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
-     * credits within it. If the number to redeem exceeds the number available in the bucket, all of
-     * the available credits will be redeemed instead.</p>
-     *
-     * @param count A {@link Integer} specifying the number of credits to attempt to redeem from
-     *              the bucket.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void redeemRewards(int count) {
-        redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, null);
-    }
-    
+    @Deprecated
+    public void redeemRewards(int count) { /* no-op */ }
+
     /**
-     * <p>Redeems the specified number of credits from the "default" bucket, if there are sufficient
-     * credits within it. If the number to redeem exceeds the number available in the bucket, all of
-     * the available credits will be redeemed instead.</p>
-     *
-     * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
-     *                 the bucket.
-     * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon a executing redeem rewards.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void redeemRewards(int count, BranchReferralStateChangedListener callback) {
-        redeemRewards(Defines.Jsonkey.DefaultBucket.getKey(), count, callback);
-    }
-    
+    @Deprecated
+    public void redeemRewards(int count, BranchReferralStateChangedListener callback) { /* no-op */ }
+
     /**
-     * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
-     * credits within it. If the number to redeem exceeds the number available in the bucket, all of
-     * the available credits will be redeemed instead.</p>
-     *
-     * @param bucket A {@link String} value containing the name of the referral bucket to attempt
-     *               to redeem credits from.
-     * @param count  A {@link Integer} specifying the number of credits to attempt to redeem from
-     *               the specified bucket.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void redeemRewards(@NonNull final String bucket, final int count) {
-        redeemRewards(bucket, count, null);
-    }
-    
-    
+    @Deprecated
+    public void redeemRewards(@NonNull final String bucket, final int count) { /* no-op */ }
+
     /**
-     * <p>Redeems the specified number of credits from the named bucket, if there are sufficient
-     * credits within it. If the number to redeem exceeds the number available in the bucket, all of
-     * the available credits will be redeemed instead.</p>
-     *
-     * @param bucket   A {@link String} value containing the name of the referral bucket to attempt
-     *                 to redeem credits from.
-     * @param count    A {@link Integer} specifying the number of credits to attempt to redeem from
-     *                 the specified bucket.
-     * @param callback A {@link BranchReferralStateChangedListener} callback instance that will
-     *                 trigger actions defined therein upon a executing redeem rewards.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
+    @Deprecated
     public void redeemRewards(@NonNull final String bucket,
-                              final int count, BranchReferralStateChangedListener callback) {
-        ServerRequestRedeemRewards req = new ServerRequestRedeemRewards(context_, bucket, count, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-    
+                              final int count, BranchReferralStateChangedListener callback) { /* no-op */ }
+
     /**
-     * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
-     * response.</p>
-     *
-     * @param callback A {@link BranchListResponseListener} callback instance that will trigger
-     *                 actions defined therein upon receipt of a response to a create link request.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
-    public void getCreditHistory(BranchListResponseListener callback) {
-        getCreditHistory(null, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
-    }
-    
+    @Deprecated
+    public void getCreditHistory(BranchListResponseListener callback) { /* no-op */ }
+
     /**
-     * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
-     * response.</p>
-     *
-     * @param bucket   A {@link String} value containing the name of the referral bucket that the
-     *                 code will belong to.
-     * @param callback A {@link BranchListResponseListener} callback instance that will trigger
-     *                 actions defined therein upon receipt of a response to a create link request.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
+    @Deprecated
     public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener
-            callback) {
-        getCreditHistory(bucket, null, 100, CreditHistoryOrder.kMostRecentFirst, callback);
-    }
-    
+            callback) { /* no-op */ }
+
     /**
-     * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
-     * response.</p>
-     *
-     * @param afterId  A {@link String} value containing the ID of the history record to begin after.
-     *                 This allows for a partial history to be retrieved, rather than the entire
-     *                 credit history of the bucket.
-     * @param length   A {@link Integer} value containing the number of credit history records to
-     *                 return.
-     * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
-     *                 be returned in.
-     *                 <p>Valid choices:</p>
-     *                 <ul>
-     *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
-     *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
-     *                 </ul>
-     * @param callback A {@link BranchListResponseListener} callback instance that will trigger
-     *                 actions defined therein upon receipt of a response to a create link request.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
+    @Deprecated
     public void getCreditHistory(@NonNull final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
-        getCreditHistory(null, afterId, length, order, callback);
-    }
-    
+                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
+
     /**
-     * <p>Gets the credit history of the specified bucket and triggers a callback to handle the
-     * response.</p>
-     *
-     * @param bucket   A {@link String} value containing the name of the referral bucket that the
-     *                 code will belong to.
-     * @param afterId  A {@link String} value containing the ID of the history record to begin after.
-     *                 This allows for a partial history to be retrieved, rather than the entire
-     *                 credit history of the bucket.
-     * @param length   A {@link Integer} value containing the number of credit history records to
-     *                 return.
-     * @param order    A {@link CreditHistoryOrder} object indicating which order the results should
-     *                 be returned in.
-     *                 <p>Valid choices:</p>
-     *                 <ul>
-     *                 <li>{@link CreditHistoryOrder#kMostRecentFirst}</li>
-     *                 <li>{@link CreditHistoryOrder#kLeastRecentFirst}</li>
-     *                 </ul>
-     * @param callback A {@link BranchListResponseListener} callback instance that will trigger
-     *                 actions defined therein upon receipt of a response to a create link request.
+     * @deprecated Referral feature has been deprecated. This is no-op.
      */
+    @Deprecated
     public void getCreditHistory(final String bucket, final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) {
-        ServerRequest req = new ServerRequestGetRewardHistory(context_, bucket, afterId, length, order, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
+                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
     
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
@@ -2446,7 +2342,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 thisReq_.handleFailure(status, serverResponse.getFailReason());
             }
 
-            boolean unretryableErrorCode = (400 <= status && status <= 451);
+            boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
             if (unretryableErrorCode || !thisReq_.shouldRetryOnFail()) {
                 requestQueue_.remove(thisReq_);
             } else {
