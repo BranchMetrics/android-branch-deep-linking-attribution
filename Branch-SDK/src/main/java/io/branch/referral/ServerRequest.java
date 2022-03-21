@@ -195,6 +195,7 @@ public abstract class ServerRequest {
             params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
+        DeviceInfo.getInstance().updateRequestWithParamsAllEvents(this, prefHelper_, params_);
     }
     
     /**

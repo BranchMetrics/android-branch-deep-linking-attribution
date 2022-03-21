@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import static android.content.Context.UI_MODE_SERVICE;
+import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 
 /**
  * <p>
@@ -206,7 +207,29 @@ class DeviceInfo {
                 userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
+
         } catch (JSONException ignore) { }
+    }
+
+    /**
+     * Update the server request with params for all events
+     * @param serverRequest
+     * @param prefHelper
+     * @param requestObj
+     */
+    void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
+        try {
+            // For install events, referrer GCLID is already contained in `install_referrer_extras`
+            // Otherwise, for all other v1 and v2 events, add referrer_gclid to top level
+            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
+                String gclid = prefHelper.getReferrerGclid();
+                if (gclid != null && !gclid.equals(NO_STRING_VALUE)) {
+                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
+                }
+            }
+        }
+        catch (JSONException ignore){
+        }
     }
 
     private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {

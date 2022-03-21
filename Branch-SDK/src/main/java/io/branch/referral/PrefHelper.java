@@ -57,6 +57,10 @@ public class PrefHelper {
     static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
     static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds
     static final int TASK_TIMEOUT = TIMEOUT+CONNECT_TIMEOUT; // Default timeout is 15.5 seconds
+    static final long DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
+    static final long MAX_VALID_WINDOW_FOR_REFERRER_GCLID = 100000000000L; // Arbitrary maximum window to prevent overflow, 3 years, in milliseconds
+    static final long MIN_VALID_WINDOW_FOR_REFERRER_GCLID = 0L; // Don't allow time set in the past , in milliseconds
+
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -70,6 +74,10 @@ public class PrefHelper {
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
     private static final String KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER = "bnc_google_search_install_identifier";
     private static final String KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA = "bnc_google_play_install_referrer_extras";
+    private static final String KEY_GCLID_JSON_OBJECT = "bnc_gclid_json_object";
+    private static final String KEY_GCLID_VALUE = "bnc_gclid_value";
+    private static final String KEY_GCLID_EXPIRATION_DATE = "bnc_gclid_expiration_date";
+    private static final String KEY_GCLID_VALID_FOR_WINDOW = "bnc_gclid_expiration_window";
     private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
@@ -648,8 +656,77 @@ public class PrefHelper {
     public String getGooglePlayReferrer() {
         return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
     }
-    
-    
+
+    /**
+     * Sets the referrer Google Click ID with an expiration date computed by time set + expiration window
+     * @param referrerGclid
+     */
+    public void setReferrerGclid(String referrerGclid){
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put(KEY_GCLID_VALUE, referrerGclid);
+            jsonObject.put(KEY_GCLID_EXPIRATION_DATE, System.currentTimeMillis() + getReferrerGclidValidForWindow());
+
+            setString(KEY_GCLID_JSON_OBJECT, jsonObject.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Returns the persisted referrer Google Click ID
+     * If the expiry date has passed, the entry is deleted and will return null
+     * @return
+     */
+    public String getReferrerGclid(){
+        String gclidObjectString = getString(KEY_GCLID_JSON_OBJECT);
+
+        if(gclidObjectString.equals(NO_STRING_VALUE) ){
+            return NO_STRING_VALUE;
+        }
+
+        String gclid = null;
+
+        try {
+            JSONObject gclidJsonObject = new JSONObject(gclidObjectString);
+            long expiryDate = (long) gclidJsonObject.get(KEY_GCLID_EXPIRATION_DATE);
+
+            // If expiry time has not elapsed, return it
+            // No undefined behavior within bounds
+            if(expiryDate - System.currentTimeMillis() > 0){
+                gclid = gclidJsonObject.getString(KEY_GCLID_VALUE);
+            }
+            // Else delete it
+            else{
+                removePrefValue(KEY_GCLID_JSON_OBJECT);
+            }
+        } catch (JSONException e) {
+            removePrefValue(KEY_GCLID_JSON_OBJECT);
+            e.printStackTrace();
+        }
+
+        return gclid;
+    }
+
+    /**
+     * Sets the GCLID expiration window in milliseconds
+     * @param window
+     */
+    public void setReferrerGclidValidForWindow(long window){
+        if (MAX_VALID_WINDOW_FOR_REFERRER_GCLID > window
+                && window >= MIN_VALID_WINDOW_FOR_REFERRER_GCLID) {
+            setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
+        }
+    }
+
+    /**
+     * Gets the GCLID expiration window in milliseconds
+     * @return
+     */
+    public long getReferrerGclidValidForWindow() {
+        return getLong(KEY_GCLID_VALID_FOR_WINDOW, DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
+    }
+
     /**
      * <p> Set the KEY_APP_LINK {@link String} values that has been started the application. </p>
      *
@@ -1019,7 +1096,11 @@ public class PrefHelper {
      * @return A {@link Long} value of the specified key as stored in preferences.
      */
     public long getLong(String key) {
-        return appSharedPrefs_.getLong(key, 0);
+        return getLong(key, 0);
+    }
+
+    public long getLong(String key, long defaultValue) {
+        return appSharedPrefs_.getLong(key, defaultValue);
     }
     
     /**
