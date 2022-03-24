@@ -378,7 +378,9 @@ abstract class SystemObserver {
             // Use DisplayManager instead of WindowManager as API 31 will log IncorrectContextUseViolation/IllegalAccessException
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
                 DisplayManager displayManager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
-                display = displayManager.getDisplay(Display.DEFAULT_DISPLAY);
+                if(displayManager != null) {
+                    display = displayManager.getDisplay(Display.DEFAULT_DISPLAY);
+                }
             }
             else {
                 WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
