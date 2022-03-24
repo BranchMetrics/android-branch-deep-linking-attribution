@@ -8,10 +8,9 @@ package io.branch.referral;
 public class Defines {
     
     public enum Jsonkey {
-        
-        IdentityID("identity_id"),
+        RandomizedBundleToken("randomized_bundle_token"),
         Identity("identity"),
-        DeviceFingerprintID("device_fingerprint_id"),
+        RandomizedDeviceToken("randomized_device_token"),
         SessionID("session_id"),
         LinkClickID("link_click_id"),
         GoogleSearchInstallReferrer("google_search_install_referrer"),

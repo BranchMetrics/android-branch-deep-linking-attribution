@@ -470,7 +470,7 @@ public abstract class ServerRequest {
     
     private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
         return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
-                payload.has(Defines.Jsonkey.DeviceFingerprintID.getKey()) ||
+                payload.has(Defines.Jsonkey.RandomizedDeviceToken.getKey()) ||
                 payload.has(Defines.ModuleNameKeys.imei.getKey());
     }
     
@@ -481,7 +481,7 @@ public abstract class ServerRequest {
             if (userDataObj != null) {
                 try {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
-                    userDataObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                    userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
                 } catch (JSONException ignore) {
                 }
             }

@@ -25,8 +25,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
         callback_ = callback;
         JSONObject openPost = new JSONObject();
         try {
-            openPost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
-            openPost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            openPost.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
+            openPost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             setPost(openPost);
         } catch (JSONException ex) {
             ex.printStackTrace();

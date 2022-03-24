@@ -167,9 +167,9 @@ class BranchStrongMatchHelper {
             if (gaid != null && !BranchUtil.checkTestMode(context)) {
                 uriString += "&" + Defines.Jsonkey.GoogleAdvertisingID.getKey() + "=" + gaid;
             }
-            // Add device finger print if available
-            if (!prefHelper.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE)) {
-                uriString += "&" + Defines.Jsonkey.DeviceFingerprintID.getKey() + "=" + prefHelper.getDeviceFingerPrintID();
+            // Add randomized device token if available
+            if (!prefHelper.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)) {
+                uriString += "&" + Defines.Jsonkey.RandomizedDeviceToken.getKey() + "=" + prefHelper.getRandomizedDeviceToken();
             }
             //Add App version
             if (!deviceInfo.getAppVersion().equals(SystemObserver.BLANK)) {

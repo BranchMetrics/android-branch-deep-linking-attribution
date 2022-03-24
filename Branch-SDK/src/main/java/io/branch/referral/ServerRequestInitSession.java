@@ -274,8 +274,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
                 || post.has(Defines.Jsonkey.LinkIdentifier.getKey()))) {
 
-            post.remove(Defines.Jsonkey.DeviceFingerprintID.getKey());
-            post.remove(Defines.Jsonkey.IdentityID.getKey());
+            post.remove(Defines.Jsonkey.RandomizedDeviceToken.getKey());
+            post.remove(Defines.Jsonkey.RandomizedBundleToken.getKey());
             post.remove(Defines.Jsonkey.FaceBookAppLinkChecked.getKey());
             post.remove(Defines.Jsonkey.External_Intent_Extra.getKey());
             post.remove(Defines.Jsonkey.External_Intent_URI.getKey());

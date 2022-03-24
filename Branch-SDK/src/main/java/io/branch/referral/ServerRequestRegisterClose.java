@@ -23,8 +23,8 @@ class ServerRequestRegisterClose extends ServerRequest {
         super(context, Defines.RequestPath.RegisterClose);
         JSONObject closePost = new JSONObject();
         try {
-            closePost.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
-            closePost.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+            closePost.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
+            closePost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             closePost.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 closePost.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());

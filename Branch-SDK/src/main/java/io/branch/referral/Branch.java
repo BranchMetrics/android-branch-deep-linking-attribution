@@ -1582,7 +1582,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 if (req != null) {
                     PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
                     if (!req.isWaitingOnProcessToFinish()) {
-                        // All request except Install request need a valid IdentityID
+                        // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             PrefHelper.Debug("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
@@ -1651,7 +1651,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     // Determine if a Session is available for a Request to proceed.
     private boolean isSessionAvailableForRequest() {
-        return (hasSession() && hasDeviceFingerPrint());
+        return (hasSession() && hasRandomizedDeviceToken());
     }
     
     void updateAllRequestsInQueue() {
@@ -1664,11 +1664,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                         if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
                             req.getPost().put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
                         }
-                        if (reqJson.has(Defines.Jsonkey.IdentityID.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
+                        if (reqJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
+                            req.getPost().put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
                         }
-                        if (reqJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+                        if (reqJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
+                            req.getPost().put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
                         }
                     }
                 }
@@ -1730,12 +1730,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return isInstantDeepLinkPossible;
     }
     
-    private boolean hasDeviceFingerPrint() {
-        return !prefHelper_.getDeviceFingerPrintID().equals(PrefHelper.NO_STRING_VALUE);
+    private boolean hasRandomizedDeviceToken() {
+        return !prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE);
     }
     
     private boolean hasUser() {
-        return !prefHelper_.getIdentityID().equals(PrefHelper.NO_STRING_VALUE);
+        return !prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE);
     }
     
     private void insertRequestAtFront(ServerRequest req) {
@@ -2278,17 +2278,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                             prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
                             updateRequestsInQueue = true;
                         }
-                        if (respJson.has(Defines.Jsonkey.IdentityID.getKey())) {
-                            String new_Identity_Id = respJson.getString(Defines.Jsonkey.IdentityID.getKey());
-                            if (!prefHelper_.getIdentityID().equals(new_Identity_Id)) {
-                                //On setting a new identity Id clear the link cache
+                        if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
+                            String new_Randomized_Bundle_Token = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey());
+                            if (!prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                                //On setting a new Randomized Bundle Token clear the link cache
                                 linkCache_.clear();
-                                prefHelper_.setIdentityID(new_Identity_Id);
+                                prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
                                 updateRequestsInQueue = true;
                             }
                         }
-                        if (respJson.has(Defines.Jsonkey.DeviceFingerprintID.getKey())) {
-                            prefHelper_.setDeviceFingerPrintID(respJson.getString(Defines.Jsonkey.DeviceFingerprintID.getKey()));
+                        if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
+                            prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
                             updateRequestsInQueue = true;
                         }
                         if (updateRequestsInQueue) {
