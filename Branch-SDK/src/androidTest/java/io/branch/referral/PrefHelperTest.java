@@ -172,6 +172,7 @@ public class PrefHelperTest extends BranchTest {
         String resultGclid = prefHelper.getReferrerGclid();
         Assert.assertEquals(testGclid, resultGclid);
         prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
+    }
 
     public void testSetRandomlyGeneratedUuid(){
         String uuid = UUID.randomUUID().toString();

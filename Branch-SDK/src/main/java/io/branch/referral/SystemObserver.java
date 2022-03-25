@@ -10,6 +10,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
+import android.hardware.display.DisplayManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -370,15 +371,27 @@ abstract class SystemObserver {
      * @see DisplayMetrics
      */
     static DisplayMetrics getScreenDisplay(Context context) {
+        Display display = null;
         DisplayMetrics displayMetrics = new DisplayMetrics();
-        if (context != null) {
-            WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (windowManager != null) {
-                Display display = windowManager.getDefaultDisplay();
-                if (display != null) {
-                    display.getMetrics(displayMetrics);
+        if(context != null) {
+            // DisplayManager is introduced in API 17, current sdk minimum is 16
+            // Use DisplayManager instead of WindowManager as API 31 will log IncorrectContextUseViolation/IllegalAccessException
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
+                DisplayManager displayManager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
+                if(displayManager != null) {
+                    display = displayManager.getDisplay(Display.DEFAULT_DISPLAY);
                 }
             }
+            else {
+                WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+                if (windowManager != null) {
+                    display = windowManager.getDefaultDisplay();
+                }
+            }
+        }
+
+        if(display != null){
+            display.getMetrics(displayMetrics);
         }
         return displayMetrics;
     }
