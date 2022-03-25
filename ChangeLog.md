@@ -1,4 +1,11 @@
 # Branch Android SDK change log
+- v5.1.3
+  * _*Master Release*_ - Mar 25, 2022
+  * Collect and persist GCLID
+    * A custom expiration window for the GCLID can be set by `public void setReferrerGclidValidForWindow(long window)`
+  * Credits related methods and fields marked as deprecated
+  * Fixed IllegalAccessException on API 31, using DisplayManager instead of WindowManager
+
 - v5.1.2
   * _*Master Release*_ - Mar 9, 2022
   * Update payloads to include generated UUID when valid GAID is retrieved, replacing hardware ID. UUID is persisted locally.
