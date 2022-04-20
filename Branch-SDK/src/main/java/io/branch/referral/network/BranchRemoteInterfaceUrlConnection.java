@@ -222,9 +222,22 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             } else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
             }
-        } catch (IOException ex) {
-            PrefHelper.Debug("Http connect exception: " + ex.getMessage());
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+        }
+        // Unable to resolve host/Unknown host exception
+        catch (IOException ex) {
+            if (retryNumber < prefHelper.getRetryCount()) {
+                try {
+                    Thread.sleep(prefHelper.getRetryInterval());
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                retryNumber++;
+                return doRestfulPost(url, payload, retryNumber);
+            }
+            else {
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+            }
         } catch (Exception ex) {
             PrefHelper.Debug("Exception: " + ex.getMessage());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
