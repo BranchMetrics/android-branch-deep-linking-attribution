@@ -385,6 +385,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * us make data driven decisions. */
     private static String pluginVersion = null;
     private static String pluginName = null;
+
+    private IGAIDProvider gaidProvider = null;
     
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -404,6 +406,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
+
+        gaidProvider = new IGAIDProvider() {
+            @Override
+            public String fetchGAID() {
+                return "ERNEST FAKE GAID";
+            }
+        };
     }
 
     /**
@@ -582,6 +591,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static void setCDNBaseUrl(String url) {
         PrefHelper.setCDNBaseUrl(url);
+    }
+
+    /**
+     * Overrides default GAID provider. Currently, this is only necessary when using Xamarin.
+     * @param provider
+     */
+    public void setGAIDProvider(IGAIDProvider provider) {
+        gaidProvider = provider;
     }
 
     /**
@@ -1747,6 +1764,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
+        // Just testing
+        if (gaidProvider != null) {
+            String gaid = gaidProvider.fetchGAID();
+            PrefHelper.Debug("ERNEST TEST: " + gaid);
+        }
+
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
@@ -2147,7 +2170,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
     }
-    
+
+    /**
+     * <p>
+     * An Interface class that provides the GAID to the Branch SDK.
+     * </p>
+     */
+    public interface IGAIDProvider {
+        String fetchGAID();
+    }
+
     /**
      * <p>enum containing the sort options for return of credit history.</p>
      */
