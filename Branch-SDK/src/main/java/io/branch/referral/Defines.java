@@ -205,8 +205,19 @@ public class Defines {
         TrackingDisabled("tracking_disabled"),
         DisableAdNetworkCallouts("disable_ad_network_callouts"),
         PartnerData("partner_data"),
-        Instant("instant");
-        
+        Instant("instant"),
+
+        CodeColor("code_color"),
+        BackgroundColor("background_color"),
+        Width("width"),
+        Margin("margin"),
+        ImageFormat("image_format"),
+        CenterLogo("center_logo_url"),
+        QRCodeSettings("qr_code_settings"),
+        QRCodeData("data"),
+        QRCodeBranchKey("branch_key");
+
+
         private final String key;
         
         Jsonkey(String key) {
@@ -244,8 +255,9 @@ public class Defines {
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
         GetCPID("v1/cpid"),
-        GetLATD("v1/cpid/latd");
-        
+        GetLATD("v1/cpid/latd"),
+        QRCode("v1/qr-code");
+
         private final String key;
         
         RequestPath(String key) {

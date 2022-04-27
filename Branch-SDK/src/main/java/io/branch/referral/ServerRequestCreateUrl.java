@@ -12,7 +12,7 @@ import java.util.Collection;
 
 /**
  * * <p>
- * The server request for creating a  synchronous or asynchronous short url. Handles request creation and execution.
+ * The server request for creating a synchronous or asynchronous short url. Handles request creation and execution.
  * </p>
  */
 class ServerRequestCreateUrl extends ServerRequest {

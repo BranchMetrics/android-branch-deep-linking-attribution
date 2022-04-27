@@ -37,7 +37,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     protected ArrayList<String> tags_;
     /* Branch Instance */
     protected Branch branchReferral_;
-    /* Default to long url incase of link creation error*/
+    /* Default to long url in case of link creation error*/
     private boolean defaultToLongUrl_ = true;
     /* Application context. */
     private final Context context_;
@@ -137,5 +137,4 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
             PrefHelper.Debug("Warning: User session has not been initialized");
         }
     }
-
 }
