@@ -403,7 +403,7 @@ public class PrefHelper {
     }
     
     /**
-     * <p>Sets the {@link android.os.Build#RANDOMIZEDDEVICETOKEN} value of the current OS build, on the current device,
+     * <p>Sets the randomized device token value of the current OS build, on the current device,
      * as a {@link String} in preferences.</p>
      *
      * @param randomized_device_token A {@link String} that uniquely identifies this build.
@@ -413,7 +413,7 @@ public class PrefHelper {
     }
     
     /**
-     * <p>Gets the {@link android.os.Build#RANDOMIZEDDEVICETOKEN} value of the current OS build, on the current device,
+     * <p>Gets the randomized device token value of the current OS build, on the current device,
      * as a {@link String} from preferences.</p>
      *
      * @return A {@link String} that uniquely identifies this build.
