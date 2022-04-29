@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.1.4
+  * _*Master Release*_ - Apr 29, 2022
+  * Fix retry logic for network requests when there is no internet availability.
+  * Replace "identity_id" with "randomized_bundle_token" and "device_fingerprint_id" with "randomized_device_token"
+
 - v5.1.3
   * _*Master Release*_ - Mar 25, 2022
   * Collect and persist GCLID
