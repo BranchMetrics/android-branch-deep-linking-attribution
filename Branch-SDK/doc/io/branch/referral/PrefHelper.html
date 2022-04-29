@@ -327,8 +327,8 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i15" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#getDeviceFingerPrintID--">getDeviceFingerPrintID</a></span>()</code>
-<div class="block">Gets the <code>android.os.Build#FINGERPRINT</code> value of the current OS build, on the current device,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#getRandomizedDeviceToken--">getRandomizedDeviceToken</a></span>()</code>
+<div class="block">Gets the <code>android.os.Build#RANDOMIZEDDEVICETOKEN</code> value of the current OS build, on the current device,
  as a <code>String</code> from preferences.</div>
 </td>
 </tr>
@@ -358,8 +358,8 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i20" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#getIdentityID--">getIdentityID</a></span>()</code>
-<div class="block">Gets the <code>KEY_IDENTITY_ID</code> <code>String</code> value that has been set via the Branch API.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#getRandomizedBundleToken--">getRandomizedBundleToken</a></span>()</code>
+<div class="block">Gets the <code>KEY_RANDOMIZED_BUNDLE_TOKEN</code> <code>String</code> value that has been set via the Branch API.</div>
 </td>
 </tr>
 <tr id="i21" class="rowColor">
@@ -541,8 +541,8 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i48" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#setDeviceFingerPrintID-java.lang.String-">setDeviceFingerPrintID</a></span>(java.lang.String&nbsp;device_fingerprint_id)</code>
-<div class="block">Sets the <code>android.os.Build#FINGERPRINT</code> value of the current OS build, on the current device,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#setRandomizedDeviceToken-java.lang.String-">setRandomizedDeviceToken</a></span>(java.lang.String&nbsp;randomized_device_token)</code>
+<div class="block">Sets the <code>android.os.Build#RANDOMIZEDDEVICETOKEN</code> value of the current OS build, on the current device,
  as a <code>String</code> in preferences.</div>
 </td>
 </tr>
@@ -567,8 +567,8 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i52" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#setIdentityID-java.lang.String-">setIdentityID</a></span>(java.lang.String&nbsp;identity_id)</code>
-<div class="block">Sets the <code>KEY_IDENTITY_ID</code> <code>String</code> value that has been set via the Branch API.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../io/branch/referral/PrefHelper.html#setRandomizedBundleToken-java.lang.String-">setRandomizedBundleToken</a></span>(java.lang.String&nbsp;randomized_bundle_token)</code>
+<div class="block">Sets the <code>KEY_RANDOMIZED_BUNDLE_TOKEN</code> <code>String</code> value that has been set via the Branch API.</div>
 </td>
 </tr>
 <tr id="i53" class="rowColor">
@@ -1024,31 +1024,31 @@ public&nbsp;void&nbsp;setAppKey(java.lang.String&nbsp;key)</pre>
 </dl>
 </li>
 </ul>
-<a name="setDeviceFingerPrintID-java.lang.String-">
+<a name="setRandomizedDeviceToken-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>setDeviceFingerPrintID</h4>
-<pre>public&nbsp;void&nbsp;setDeviceFingerPrintID(java.lang.String&nbsp;device_fingerprint_id)</pre>
-<div class="block"><p>Sets the <code>android.os.Build#FINGERPRINT</code> value of the current OS build, on the current device,
+<h4>setRandomizedDeviceToken</h4>
+<pre>public&nbsp;void&nbsp;setRandomizedDeviceToken(java.lang.String&nbsp;randomized_device_token)</pre>
+<div class="block"><p>Sets the <code>android.os.Build#RANDOMIZEDDEVICETOKEN</code> value of the current OS build, on the current device,
  as a <code>String</code> in preferences.</p></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>device_fingerprint_id</code> - A <code>String</code> that uniquely identifies this build.</dd>
+<dd><code>randomized_device_token</code> - A <code>String</code> that uniquely identifies this build.</dd>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><code>android.os.Build#FINGERPRINT}</code></dd>
+<dd><code>android.os.Build#RANDOMIZEDDEVICETOKEN}</code></dd>
 </dl>
 </li>
 </ul>
-<a name="getDeviceFingerPrintID--">
+<a name="getRandomizedDeviceToken--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getDeviceFingerPrintID</h4>
-<pre>public&nbsp;java.lang.String&nbsp;getDeviceFingerPrintID()</pre>
-<div class="block"><p>Gets the <code>android.os.Build#FINGERPRINT</code> value of the current OS build, on the current device,
+<h4>getRandomizedDeviceToken</h4>
+<pre>public&nbsp;java.lang.String&nbsp;getRandomizedDeviceToken()</pre>
+<div class="block"><p>Gets the <code>android.os.Build#RANDOMIZEDDEVICETOKEN</code> value of the current OS build, on the current device,
  as a <code>String</code> from preferences.</p></div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -1090,14 +1090,14 @@ public&nbsp;void&nbsp;setAppKey(java.lang.String&nbsp;key)</pre>
 </dl>
 </li>
 </ul>
-<a name="setIdentityID-java.lang.String-">
+<a name="setRandomizedBundleToken-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>setIdentityID</h4>
-<pre>public&nbsp;void&nbsp;setIdentityID(java.lang.String&nbsp;identity_id)</pre>
-<div class="block"><p>Sets the <code>KEY_IDENTITY_ID</code> <code>String</code> value that has been set via the Branch API.</p>
+<h4>setRandomizedBundleToken</h4>
+<pre>public&nbsp;void&nbsp;setRandomizedBundleToken(java.lang.String&nbsp;randomized_bundle_token)</pre>
+<div class="block"><p>Sets the <code>KEY_RANDOMIZED_BUNDLE_TOKEN</code> <code>String</code> value that has been set via the Branch API.</p>
  
  <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both 
  for analytics and debugging purposes.</p>
@@ -1105,21 +1105,21 @@ public&nbsp;void&nbsp;setAppKey(java.lang.String&nbsp;key)</pre>
  <p><b>Note: </b> Not to be confused with <a href="../../../io/branch/referral/PrefHelper.html#setIdentity-java.lang.String-"><code>setIdentity(String)</code></a> - the name of the user</p></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>identity_id</code> - A <code>String</code> value containing the currently configured identity 
+<dd><code>randomized_bundle_token</code> - A <code>String</code> value containing the currently configured identity
                                                         within preferences.</dd>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><code>Branch}</code></dd>
 </dl>
 </li>
 </ul>
-<a name="getIdentityID--">
+<a name="getRandomizedBundleToken--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getIdentityID</h4>
-<pre>public&nbsp;java.lang.String&nbsp;getIdentityID()</pre>
-<div class="block"><p>Gets the <code>KEY_IDENTITY_ID</code> <code>String</code> value that has been set via the Branch API.</p></div>
+<h4>getRandomizedBundleToken</h4>
+<pre>public&nbsp;java.lang.String&nbsp;getRandomizedBundleToken()</pre>
+<div class="block"><p>Gets the <code>KEY_RANDOMIZED_BUNDLE_TOKEN</code> <code>String</code> value that has been set via the Branch API.</p></div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A <code>String</code> value containing the currently configured user id within 
@@ -1141,7 +1141,7 @@ public&nbsp;void&nbsp;setAppKey(java.lang.String&nbsp;key)</pre>
  <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both 
  for analytics and debugging purposes.</p>
  
- <p><b>Note: </b> Not to be confused with <a href="../../../io/branch/referral/PrefHelper.html#setIdentityID-java.lang.String-"><code>setIdentityID(String)</code></a> - the UID reference of the user</p></div>
+ <p><b>Note: </b> Not to be confused with <a href="../../../io/branch/referral/PrefHelper.html#setRandomizedBundleToken-java.lang.String-"><code>setRandomizedBundleToken(String)</code></a> - the UID reference of the user</p></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>identity</code> - A <code>String</code> value containing the currently configured identity 
@@ -1163,7 +1163,7 @@ public&nbsp;void&nbsp;setAppKey(java.lang.String&nbsp;key)</pre>
  <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both 
  for analytics and debugging purposes.</p>
  
- <p><b>Note: </b> Not to be confused with <code>#getIdentityID(String)</code> - the UID reference of the user</p></div>
+ <p><b>Note: </b> Not to be confused with <code>#getRandomizedBundleToken(String)</code> - the UID reference of the user</p></div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A <code>String</code> value containing the username assigned to the currentuser ID.</dd>

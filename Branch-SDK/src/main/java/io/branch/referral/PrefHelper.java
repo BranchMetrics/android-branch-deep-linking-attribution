@@ -66,9 +66,9 @@ public class PrefHelper {
     
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
     private static final String KEY_APP_VERSION = "bnc_app_version";
-    private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
+    private static final String KEY_RANDOMIZED_DEVICE_TOKEN = "bnc_randomized_device_token";
     private static final String KEY_SESSION_ID = "bnc_session_id";
-    private static final String KEY_IDENTITY_ID = "bnc_identity_id";
+    private static final String KEY_RANDOMIZED_BUNDLE_TOKEN = "bnc_randomized_bundle_token";
     private static final String KEY_IDENTITY = "bnc_identity";
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
@@ -403,23 +403,23 @@ public class PrefHelper {
     }
     
     /**
-     * <p>Sets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
+     * <p>Sets the randomized device token value of the current OS build, on the current device,
      * as a {@link String} in preferences.</p>
      *
-     * @param device_fingerprint_id A {@link String} that uniquely identifies this build.
+     * @param randomized_device_token A {@link String} that uniquely identifies this build.
      */
-    public void setDeviceFingerPrintID(String device_fingerprint_id) {
-        setString(KEY_DEVICE_FINGERPRINT_ID, device_fingerprint_id);
+    public void setRandomizedDeviceToken(String randomized_device_token) {
+        setString(KEY_RANDOMIZED_DEVICE_TOKEN, randomized_device_token);
     }
     
     /**
-     * <p>Gets the {@link android.os.Build#FINGERPRINT} value of the current OS build, on the current device,
+     * <p>Gets the randomized device token value of the current OS build, on the current device,
      * as a {@link String} from preferences.</p>
      *
      * @return A {@link String} that uniquely identifies this build.
      */
-    public String getDeviceFingerPrintID() {
-        return getString(KEY_DEVICE_FINGERPRINT_ID);
+    public String getRandomizedDeviceToken() {
+        return getString(KEY_RANDOMIZED_DEVICE_TOKEN);
     }
     
     /**
@@ -443,28 +443,28 @@ public class PrefHelper {
     }
     
     /**
-     * <p>Sets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+     * <p>Sets the {@link #KEY_RANDOMIZED_BUNDLE_TOKEN} {@link String} value that has been set via the Branch API.</p>
      * <p>
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      * <p>
      * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
      *
-     * @param identity_id A {@link String} value containing the currently configured identity
+     * @param randomized_bundle_token A {@link String} value containing the currently configured identity
      *                    within preferences.
      */
-    public void setIdentityID(String identity_id) {
-        setString(KEY_IDENTITY_ID, identity_id);
+    public void setRandomizedBundleToken(String randomized_bundle_token) {
+        setString(KEY_RANDOMIZED_BUNDLE_TOKEN, randomized_bundle_token);
     }
     
     /**
-     * <p>Gets the {@link #KEY_IDENTITY_ID} {@link String} value that has been set via the Branch API.</p>
+     * <p>Gets the {@link #KEY_RANDOMIZED_BUNDLE_TOKEN} {@link String} value that has been set via the Branch API.</p>
      *
      * @return A {@link String} value containing the currently configured user id within
      * preferences.
      */
-    public String getIdentityID() {
-        return getString(KEY_IDENTITY_ID);
+    public String getRandomizedBundleToken() {
+        return getString(KEY_RANDOMIZED_BUNDLE_TOKEN);
     }
     
     /**
@@ -473,7 +473,7 @@ public class PrefHelper {
      * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      * <p>
-     * <p><b>Note: </b> Not to be confused with {@link #setIdentityID(String)} - the UID reference of the user</p>
+     * <p><b>Note: </b> Not to be confused with {@link #setRandomizedBundleToken(String)} - the UID reference of the user</p>
      *
      * @param identity A {@link String} value containing the currently configured identity
      *                 within preferences.

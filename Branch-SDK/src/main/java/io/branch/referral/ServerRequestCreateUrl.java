@@ -67,8 +67,8 @@ class ServerRequestCreateUrl extends ServerRequest {
 
         linkPost_ = new BranchLinkData();
         try {
-            linkPost_.put(Defines.Jsonkey.IdentityID.getKey(), prefHelper_.getIdentityID());
-            linkPost_.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper_.getDeviceFingerPrintID());
+            linkPost_.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
+            linkPost_.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
             linkPost_.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 linkPost_.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
@@ -191,7 +191,7 @@ class ServerRequestCreateUrl extends ServerRequest {
         String longUrl = baseUrl;
         try {
             if (Branch.getInstance().isTrackingDisabled() && !longUrl.contains(DEF_BASE_URL)) {
-                // By def the base url contains identity id as query param. This should be removed when tracking is disabled.
+                // By def the base url contains randomized bundle token as query param. This should be removed when tracking is disabled.
                 longUrl = longUrl.replace(new URL(longUrl).getQuery(), "");
             }
             longUrl += longUrl.contains("?") ? "" : "?";

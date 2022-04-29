@@ -182,8 +182,8 @@ class DeviceInfo {
             }
 
             if (prefHelper != null) {
-                if (!isNullOrEmptyOrBlank(prefHelper.getDeviceFingerPrintID())) {
-                    userDataObj.put(Defines.Jsonkey.DeviceFingerprintID.getKey(), prefHelper.getDeviceFingerPrintID());
+                if (!isNullOrEmptyOrBlank(prefHelper.getRandomizedDeviceToken())) {
+                    userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper.getRandomizedDeviceToken());
                 }
                 String devId = prefHelper.getIdentity();
                 if (!isNullOrEmptyOrBlank(devId)) {
