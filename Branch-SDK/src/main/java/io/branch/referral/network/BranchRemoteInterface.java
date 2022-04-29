@@ -187,7 +187,17 @@ public abstract class BranchRemoteInterface {
                     JSONArray jsonArray = new JSONArray(responseString);
                     result.setPost(jsonArray);
                 } catch (JSONException ex2) {
-                    PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                    if (tag.contains("qr-code")) {
+                        JSONObject jsonObj = new JSONObject();
+                        try {
+                            jsonObj.put("QRCodeData", responseString);
+                            result.setPost(jsonObj);
+                        } catch (JSONException e) {
+                            PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                        }
+                    } else {
+                        PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                    }
                 }
             }
         }

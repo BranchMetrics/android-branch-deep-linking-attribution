@@ -49,7 +49,7 @@ public class ServerRequestCreateQRCode extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         Log.d("Request succeeded", String.valueOf(response));
-        callback_.onSuccess(response);
+        callback_.onDataReceived(response);
     }
 
     @Override
