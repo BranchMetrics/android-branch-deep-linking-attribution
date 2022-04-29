@@ -1,18 +1,26 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -24,6 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Date;
@@ -35,6 +44,7 @@ import io.branch.referral.BranchError;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
+import io.branch.referral.ServerResponse;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -368,7 +378,10 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
+        final ImageView imageView = this.findViewById(R.id.qrCode_imgView);
+        imageView.setBackgroundColor(Color.RED);
+
+        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 BranchQRCode qrCode = new BranchQRCode()
@@ -392,21 +405,66 @@ public class MainActivity extends Activity {
                         .setStage("new user");
 
                 try {
-                    qrCode.getQRCodeAsData(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeResultHandler() {
+                    qrCode.showShareSheetWithQRCode(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeImageHandler() {
                         @Override
-                        public void onSuccess(Object data) {
-                            Log.d("Data in main activity", String.valueOf(data));
+                        public void onSuccess(Bitmap qrCodeImage) {
+                            BitmapDrawable bdrawable = new BitmapDrawable(getResources(),qrCodeImage);
+
+                            MainActivity.this.findViewById(R.id.qrCode_imgView).setBackground(bdrawable);
+
+                            imageView.setImageBitmap(Bitmap.createScaledBitmap(qrCodeImage, imageView.getWidth(), imageView.getHeight(), false));
                         }
 
                         @Override
                         public void onFailure(Exception e) {
-                            Log.d("Fail in main activity", String.valueOf(e));
 
                         }
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+//                try {
+//                    qrCode.getQRCodeAsData(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeDataHandler() {
+//                        @Override
+//                        public void onSuccess(byte[] qrCodeData) {
+//                            Log.d("Data in main activity", String.valueOf(qrCodeData));
+//                            try {
+//                                String text = new String(qrCodeData, "UTF-8");
+//                                Log.d("QRCodeText", text);
+//
+//                                AlertDialog.Builder ImageDialog = new AlertDialog.Builder(MainActivity.this);
+//                                ImageDialog.setTitle("Title");
+//                                ImageView showImage = new ImageView(MainActivity.this);
+//
+//                                Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
+//                                showImage.setImageBitmap(bmp);//(Bitmap.createScaledBitmap(bmp, showImage.getWidth(), showImage.getHeight(), false));
+//                                ImageDialog.setView(showImage);
+//
+//                                ImageDialog.setNegativeButton("ok", new DialogInterface.OnClickListener()
+//                                {
+//                                    public void onClick(DialogInterface arg0, int arg1)
+//                                    {
+//                                    }
+//                                });
+//                                ImageDialog.show();
+//
+//                            } catch (UnsupportedEncodingException e) {
+//                                Log.d("Adding Image to Alert", "Failed");
+//                                e.printStackTrace();
+//                            }
+//
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Exception e) {
+//                            Log.d("Fail in main activity", String.valueOf(e));
+//
+//                        }
+//                    });
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
 
             }
         });

@@ -155,8 +155,13 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Accept", "application/json");
+            if (url.contains("qr-code")) {
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Accept", "image/*");
+            } else {
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Accept", "application/json");
+             }
             connection.setRequestMethod("POST");
 
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());

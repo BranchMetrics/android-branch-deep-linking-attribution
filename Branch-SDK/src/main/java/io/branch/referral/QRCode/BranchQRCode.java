@@ -2,6 +2,10 @@ package io.branch.referral.QRCode;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -9,19 +13,24 @@ import androidx.annotation.NonNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
+import io.branch.referral.SharingHelper;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ShareSheetStyle;
 
 public class BranchQRCode {
 
@@ -126,7 +135,15 @@ public class BranchQRCode {
      * @return This instance to allow for chaining of calls to set methods
      */
     public BranchQRCode setWidth(@NonNull Integer width) {
-        this.width_ = width;
+        if (width > 2000) {
+            PrefHelper.Debug("Width was reduced to the maximum of 2000.");
+            this.width_ = 2000;
+        } else if (width < 500) {
+            PrefHelper.Debug("Width was increased to the minimum of 500.");
+            this.width_ = 500;
+        } else {
+            this.width_ = width;
+        }
         return this;
     }
 
@@ -139,7 +156,15 @@ public class BranchQRCode {
      * @return This instance to allow for chaining of calls to set methods
      */
     public BranchQRCode setMargin(@NonNull Integer margin) {
-        this.margin_ = margin;
+        if (margin > 20) {
+            PrefHelper.Debug("Margin was reduced to the maximum of 20.");
+            this.margin_ = 20;
+        } else if (margin < 0) {
+            PrefHelper.Debug("Margin was increased to the minimum of 0.");
+            this.margin_ = 0;
+        } else {
+            this.margin_ = margin;
+        }
         return this;
     }
 
@@ -156,19 +181,25 @@ public class BranchQRCode {
         return this;
     }
 
-    public interface BranchQRCodeResultHandler<T> {
-        void onSuccess(T data);
+    public interface BranchQRCodeDataHandler<T> {
+        void onSuccess(byte[] qrCodeData);
+
+        void onFailure(Exception e);
+    }
+
+    public interface BranchQRCodeImageHandler<T> {
+        void onSuccess(Bitmap qrCodeImage);
 
         void onFailure(Exception e);
     }
 
     public interface BranchQRCodeRequestHandler<T> {
-        void onSuccess(T data);
+        void onDataReceived(ServerResponse data);
 
         void onFailure(Exception e);
     }
 
-    public void getQRCodeAsData(@NonNull Context context, @NonNull BranchUniversalObject branchUniversalObject, @NonNull LinkProperties linkProperties, @NonNull final BranchQRCodeResultHandler callback) throws IOException {
+    public void getQRCodeAsData(@NonNull Context context, @NonNull BranchUniversalObject branchUniversalObject, @NonNull LinkProperties linkProperties, @NonNull final BranchQRCodeDataHandler callback) throws IOException {
         Map<String, Object> settings = new HashMap<String, Object>();
         if (this.codeColor_ != null) {
             settings.put(Defines.Jsonkey.CodeColor.getKey(), codeColor_);
@@ -209,76 +240,100 @@ public class BranchQRCode {
             parameters.put(Defines.LinkParam.Tags.getKey(), linkProperties.getTags());
         }
 
-        //parameters.put(Defines.Jsonkey.QRCodeSettings.getKey(), settings);
+        parameters.put(Defines.Jsonkey.QRCodeSettings.getKey(), settings);
         parameters.put(Defines.Jsonkey.QRCodeData.getKey(), branchUniversalObject.convertToJson());
         parameters.put(Defines.Jsonkey.QRCodeBranchKey.getKey(), PrefHelper.getInstance(context).getBranchKey());
-        Log.d("QR Code Parameters", String.valueOf(parameters));
 
         JSONObject paramsJSON = new JSONObject(parameters);
 
         ServerRequestCreateQRCode req = new ServerRequestCreateQRCode(Defines.RequestPath.QRCode, paramsJSON, context, new BranchQRCodeRequestHandler() {
             @Override
-            public void onSuccess(Object data) {
-                Log.d("Got QR Code data", String.valueOf(data));
-                callback.onSuccess(data);
+            public void onDataReceived(ServerResponse data) {
+                try {
+                    String qrCodeString = data.getObject().getString("QRCodeData");
+                    byte[] qrCodeBytes = qrCodeString.getBytes("UTF-8");
+                    callback.onSuccess(qrCodeBytes);
+                } catch (UnsupportedEncodingException | JSONException e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                }
             }
 
             @Override
             public void onFailure(Exception e) {
-                Log.d("Failed to get QR Code", String.valueOf(e));
                 callback.onFailure(e);
             }
         });
-
         Branch.getInstance().handleNewRequest(req);
-
-        //callQRCodeAPI(parameters, context, apiCallback);
     }
 
-    public void getQRCodeAsImage(@NonNull Activity activity, @NonNull BranchUniversalObject branchUniversalObject, @NonNull LinkProperties linkProperties, @NonNull BranchQRCodeResultHandler callback) {
+    public void getQRCodeAsImage(@NonNull Activity activity, @NonNull BranchUniversalObject branchUniversalObject, @NonNull LinkProperties linkProperties, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
+        getQRCodeAsData(activity, branchUniversalObject, linkProperties, new BranchQRCodeDataHandler() {
+            @Override
+            public void onSuccess(byte[] qrCodeData) {
+                //Convert byteArray to Image
+                Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
+                callback.onSuccess(bmp);
+            }
 
+            @Override
+            public void onFailure(Exception e) {
+                callback.onFailure(e);
+            }
+        });
     }
 
-//    private void callQRCodeAPI(@NonNull final Map parameters, @NonNull Context context, @NonNull BranchQRCodeRequestHandler callback) throws IOException {
+    public void showShareSheetWithQRCode(@NonNull final Activity activity, @NonNull final BranchUniversalObject branchUniversalObject, @NonNull final LinkProperties linkProperties, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
+        getQRCodeAsData(activity, branchUniversalObject, linkProperties, new BranchQRCodeDataHandler() {
+            @Override
+            public void onSuccess(byte[] qrCodeData) {
+                //Convert byteArray to Image
+                Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
+                //Show share sheet
+
+//                ShareSheetStyle shareSheetStyle = new ShareSheetStyle(activity, "My Sharing Message Title", "My Sharing message body")
+//                        //.setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Save this URl", "Link added to clipboard")
+//                        //.setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
+//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
+//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
+//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
+//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
+//                        .setAsFullWidthStyle(true)
+//                        .setSharingTitle("Share With")
+//                        .includeInShareSheet(bmp);
+//                branchUniversalObject.showShareSheet(activity, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
 //
-//        JSONObject paramsJSON = new JSONObject(parameters);
+//                    @Override
+//                    public void onShareLinkDialogLaunched() {
 //
-//        ServerRequestCreateQRCode req = new ServerRequestCreateQRCode(Defines.RequestPath.QRCode, paramsJSON, context, callback);
+//                    }
 //
-//    }
+//                    @Override
+//                    public void onShareLinkDialogDismissed() {
+//
+//                    }
+//
+//                    @Override
+//                    public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onChannelSelected(String channelName) {
+//
+//                    }
+//                });
+
+
+                callback.onSuccess(bmp);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                callback.onFailure(e);
+            }
+        });
+    }
+
+
 }
-
-
-//        new Thread( new Runnable() { @Override public void run() {
-//            try {
-//            URL apiEndpoint = new URL(Branch.getInstance().prefHelper_.getAPIBaseUrl() + "v1/qr-code"); //Change to get base URL automatically
-//            //URL apiEndpoint = new
-//                Log.d("API Url", String.valueOf(apiEndpoint));
-//
-//            HttpsURLConnection connection = null;
-//
-//                connection = (HttpsURLConnection) apiEndpoint.openConnection();
-//                connection.setRequestMethod("POST");
-//                connection.setDoOutput(true);
-//
-//                JSONObject newJSON = new JSONObject(parameters);
-//                connection.getOutputStream().write(newJSON.toString().getBytes("UTF-8"));
-//
-//                if (connection.getResponseCode() == 200) {
-//
-//                    InputStream responseBody = connection.getInputStream();
-//
-//
-//
-//                    connection.disconnect();
-//                } else {
-//                    // Error handling code goes here
-//                    connection.disconnect();
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//
-//
-//        } } ).start();
