@@ -8,10 +8,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/qrCode_imgView"
+        <Button
+            android:id="@+id/qrCode_btn"
+            style="@style/testbed_button_style"
             android:layout_width="180dp"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:layout_below="@id/cmdPrintInstallParam"
             android:layout_alignParentRight="true"
             android:layout_marginTop="5dp"
@@ -117,9 +118,17 @@
             android:text="Share Link" />
 
         <Button
+            android:id="@+id/share_qrcode_btn"
+            style="@style/testbed_button_style"
+            android:layout_below="@id/share_btn"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:text="Share QR Code" />
+
+        <Button
             android:id="@+id/notif_btn"
             style="@style/testbed_button_style"
-            android:layout_below="@+id/share_btn"
+            android:layout_below="@+id/share_qrcode_btn"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
             android:text="Fire notif" />

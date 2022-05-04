@@ -378,10 +378,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        final ImageView imageView = this.findViewById(R.id.qrCode_imgView);
-        imageView.setBackgroundColor(Color.RED);
-
-        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
+        findViewById(R.id.share_qrcode_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 BranchQRCode qrCode = new BranchQRCode()
@@ -408,11 +405,7 @@ public class MainActivity extends Activity {
                     qrCode.showShareSheetWithQRCode(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeImageHandler() {
                         @Override
                         public void onSuccess(Bitmap qrCodeImage) {
-                            BitmapDrawable bdrawable = new BitmapDrawable(getResources(),qrCodeImage);
-
-                            MainActivity.this.findViewById(R.id.qrCode_imgView).setBackground(bdrawable);
-
-                            imageView.setImageBitmap(Bitmap.createScaledBitmap(qrCodeImage, imageView.getWidth(), imageView.getHeight(), false));
+                            Log.d("Share QR Code:", "Got qrCodeImage");
                         }
 
                         @Override
@@ -423,52 +416,68 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-//                try {
-//                    qrCode.getQRCodeAsData(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeDataHandler() {
-//                        @Override
-//                        public void onSuccess(byte[] qrCodeData) {
-//                            Log.d("Data in main activity", String.valueOf(qrCodeData));
-//                            try {
-//                                String text = new String(qrCodeData, "UTF-8");
-//                                Log.d("QRCodeText", text);
-//
-//                                AlertDialog.Builder ImageDialog = new AlertDialog.Builder(MainActivity.this);
-//                                ImageDialog.setTitle("Title");
-//                                ImageView showImage = new ImageView(MainActivity.this);
-//
-//                                Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
-//                                showImage.setImageBitmap(bmp);//(Bitmap.createScaledBitmap(bmp, showImage.getWidth(), showImage.getHeight(), false));
-//                                ImageDialog.setView(showImage);
-//
-//                                ImageDialog.setNegativeButton("ok", new DialogInterface.OnClickListener()
-//                                {
-//                                    public void onClick(DialogInterface arg0, int arg1)
-//                                    {
-//                                    }
-//                                });
-//                                ImageDialog.show();
-//
-//                            } catch (UnsupportedEncodingException e) {
-//                                Log.d("Adding Image to Alert", "Failed");
-//                                e.printStackTrace();
-//                            }
-//
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Exception e) {
-//                            Log.d("Fail in main activity", String.valueOf(e));
-//
-//                        }
-//                    });
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-
             }
         });
 
+        findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BranchQRCode qrCode = new BranchQRCode()
+                        .setCodeColor("#57dbe0")
+                        .setBackgroundColor("#2a2e2e")
+                        .setMargin(2)
+                        .setWidth(512)
+                        .setImageFormat(BranchQRCode.BranchImageFormat.PNG)
+                        .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png");
+
+                BranchUniversalObject buo = new BranchUniversalObject()
+                        .setCanonicalIdentifier("content/12345")
+                        .setTitle("My Content Title")
+                        .setContentDescription("My Content Description")
+                        .setContentImageUrl("https://lorempixel.com/400/400");
+
+                LinkProperties lp = new LinkProperties()
+                        .setChannel("facebook")
+                        .setFeature("sharing")
+                        .setCampaign("content 123 launch")
+                        .setStage("new user");
+
+                try {
+                    qrCode.getQRCodeAsImage(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeImageHandler() {
+                        @Override
+                        public void onSuccess(Bitmap qrCodeImage) {
+                            try {
+                                AlertDialog.Builder ImageDialog = new AlertDialog.Builder(MainActivity.this);
+                                ImageDialog.setTitle("Your QR Code");
+                                ImageView showImage = new ImageView(MainActivity.this);
+
+                                showImage.setImageBitmap(qrCodeImage);
+                                ImageDialog.setView(showImage);
+
+                                ImageDialog.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface arg0, int arg1) {
+                                    }
+                                });
+                                ImageDialog.show();
+
+                            } catch (Exception e) {
+                                Log.d("Adding Image to Alert", "Failed");
+                                e.printStackTrace();
+                            }
+
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.d("Fail in main activity", String.valueOf(e));
+
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void createNotificationChannel() {
