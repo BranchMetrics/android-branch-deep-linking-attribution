@@ -1,6 +1,8 @@
 package io.branch.referral.network;
 
 import android.text.TextUtils;
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -173,7 +175,7 @@ public abstract class BranchRemoteInterface {
 
         ServerResponse result = new ServerResponse(tag, statusCode, requestId);
         if(!TextUtils.isEmpty(requestId)){
-            PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
+            //PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
             PrefHelper.Debug(String.format("returned %s", responseString));
         }
@@ -188,12 +190,12 @@ public abstract class BranchRemoteInterface {
                     result.setPost(jsonArray);
                 } catch (JSONException ex2) {
                     if (tag.contains("qr-code")) {
-                        JSONObject jsonObj = new JSONObject();
                         try {
-                            jsonObj.put("QRCodeData", responseString);
+                            JSONObject jsonObj = new JSONObject();
+                            jsonObj.put("QRCodeString", responseString);
                             result.setPost(jsonObj);
                         } catch (JSONException e) {
-                            PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                            PrefHelper.Debug("JSON exception: " + e.getMessage());
                         }
                     } else {
                         PrefHelper.Debug("JSON exception: " + ex2.getMessage());

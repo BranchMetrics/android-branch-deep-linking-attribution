@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -244,16 +248,19 @@ public class BranchQRCode {
         parameters.put(Defines.Jsonkey.QRCodeData.getKey(), branchUniversalObject.convertToJson());
         parameters.put(Defines.Jsonkey.QRCodeBranchKey.getKey(), PrefHelper.getInstance(context).getBranchKey());
 
+        //Check if we have seen params before for caching
+
         JSONObject paramsJSON = new JSONObject(parameters);
 
         ServerRequestCreateQRCode req = new ServerRequestCreateQRCode(Defines.RequestPath.QRCode, paramsJSON, context, new BranchQRCodeRequestHandler() {
             @Override
             public void onDataReceived(ServerResponse data) {
                 try {
-                    String qrCodeString = data.getObject().getString("QRCodeData");
-                    byte[] qrCodeBytes = qrCodeString.getBytes("UTF-8");
+                    String qrCodeString = data.getObject().getString("QRCodeString"); //Add to defines
+                    byte[] qrCodeBytes = Base64.decode(qrCodeString, Base64.DEFAULT);
+
                     callback.onSuccess(qrCodeBytes);
-                } catch (UnsupportedEncodingException | JSONException e) {
+                } catch (JSONException e) {
                     e.printStackTrace();
                     callback.onFailure(e);
                 }
@@ -271,7 +278,6 @@ public class BranchQRCode {
         getQRCodeAsData(activity, branchUniversalObject, linkProperties, new BranchQRCodeDataHandler() {
             @Override
             public void onSuccess(byte[] qrCodeData) {
-                //Convert byteArray to Image
                 Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
                 callback.onSuccess(bmp);
             }
@@ -284,46 +290,20 @@ public class BranchQRCode {
     }
 
     public void showShareSheetWithQRCode(@NonNull final Activity activity, @NonNull final BranchUniversalObject branchUniversalObject, @NonNull final LinkProperties linkProperties, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
+
         getQRCodeAsData(activity, branchUniversalObject, linkProperties, new BranchQRCodeDataHandler() {
             @Override
             public void onSuccess(byte[] qrCodeData) {
-                //Convert byteArray to Image
                 Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
-                //Show share sheet
 
-//                ShareSheetStyle shareSheetStyle = new ShareSheetStyle(activity, "My Sharing Message Title", "My Sharing message body")
-//                        //.setCopyUrlStyle(getResources().getDrawable(android.R.drawable.ic_menu_send), "Save this URl", "Link added to clipboard")
-//                        //.setMoreOptionStyle(getResources().getDrawable(android.R.drawable.ic_menu_search), "Show more")
-//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
-//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
-//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
-//                        .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
-//                        .setAsFullWidthStyle(true)
-//                        .setSharingTitle("Share With")
-//                        .includeInShareSheet(bmp);
-//                branchUniversalObject.showShareSheet(activity, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
-//
-//                    @Override
-//                    public void onShareLinkDialogLaunched() {
-//
-//                    }
-//
-//                    @Override
-//                    public void onShareLinkDialogDismissed() {
-//
-//                    }
-//
-//                    @Override
-//                    public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onChannelSelected(String channelName) {
-//
-//                    }
-//                });
+                String path = MediaStore.Images.Media.insertImage(activity.getContentResolver(), bmp, "", null);
+                Uri uri = Uri.parse(path);
 
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("image/*");
+                intent.putExtra(Intent.EXTRA_STREAM, uri);
+
+                activity.startActivity(Intent.createChooser(intent, "Share QR Code"));
 
                 callback.onSuccess(bmp);
             }

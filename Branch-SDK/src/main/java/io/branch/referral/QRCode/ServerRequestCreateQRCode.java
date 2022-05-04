@@ -19,7 +19,6 @@ public class ServerRequestCreateQRCode extends ServerRequest {
 
     private JSONObject params_;
     final Defines.RequestPath requestPath_;
-   // protected final PrefHelper prefHelper_;
     private long queueWaitTime_ = 0;
     private final Context context_;
     private BranchQRCode.BranchQRCodeRequestHandler callback_;
@@ -37,7 +36,6 @@ public class ServerRequestCreateQRCode extends ServerRequest {
         context_ = context;
         requestPath_ = requestPath;
         params_ = post;
-       // prefHelper_ = PrefHelper.getInstance(context);
         callback_ = callback;
     }
 
@@ -55,12 +53,14 @@ public class ServerRequestCreateQRCode extends ServerRequest {
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
         Log.d("Failed server request", String.valueOf(statusCode));
+        Exception e = new Exception("Failed server request: " + statusCode + causeMsg);
+        callback_.onFailure(e);
 
     }
 
     @Override
     /**
-     * Called when request is added to teh queue
+     * Called when request is added to the queue
      */
     public void onRequestQueued() {
         queueWaitTime_ = System.currentTimeMillis();
