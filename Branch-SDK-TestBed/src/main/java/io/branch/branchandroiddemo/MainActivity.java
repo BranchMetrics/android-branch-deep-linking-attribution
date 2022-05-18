@@ -8,16 +8,12 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -32,7 +28,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Date;
@@ -44,7 +39,6 @@ import io.branch.referral.BranchError;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
-import io.branch.referral.ServerResponse;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -402,7 +396,7 @@ public class MainActivity extends Activity {
                         .setStage("new user");
 
                 try {
-                    qrCode.showShareSheetWithQRCode(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeImageHandler() {
+                    qrCode.showShareSheetWithQRCode(MainActivity.this, buo, lp,"Your QR Code", new BranchQRCode.BranchQRCodeImageHandler() {
                         @Override
                         public void onSuccess(Bitmap qrCodeImage) {
                             Log.d("Share QR Code:", "Got qrCodeImage");
@@ -418,7 +412,6 @@ public class MainActivity extends Activity {
                 }
             }
         });
-
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
