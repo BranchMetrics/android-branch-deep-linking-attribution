@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -302,6 +303,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private final BranchPluginSupport branchPluginSupport_;
     private final Context context_;
 
+    private final BranchQRCodeCache branchQRCodeCache_;
+
     private final Semaphore serverSema_ = new Semaphore(1);
 
     final ServerRequestQueue requestQueue_;
@@ -309,7 +312,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     int networkCount_ = 0;
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
-    
+
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
     
@@ -400,6 +403,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
+        branchQRCodeCache_ = new BranchQRCodeCache(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
@@ -1688,6 +1692,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public BranchPluginSupport getBranchPluginSupport() {
         return branchPluginSupport_;
+    }
+
+    public BranchQRCodeCache getBranchQRCodeCache() {
+        return branchQRCodeCache_;
     }
 
     PrefHelper getPrefHelper() {

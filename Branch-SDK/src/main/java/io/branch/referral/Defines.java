@@ -207,6 +207,7 @@ public class Defines {
         PartnerData("partner_data"),
         Instant("instant"),
 
+        QRCodeTag("qr-code"),
         CodeColor("code_color"),
         BackgroundColor("background_color"),
         Width("width"),
@@ -215,8 +216,8 @@ public class Defines {
         CenterLogo("center_logo_url"),
         QRCodeSettings("qr_code_settings"),
         QRCodeData("data"),
-        QRCodeBranchKey("branch_key");
-
+        QRCodeBranchKey("branch_key"),
+        QRCodeResponseString("QRCodeString");
 
         private final String key;
         

@@ -23,10 +23,12 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchQRCodeCache;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
@@ -44,12 +46,14 @@ public class BranchQRCode {
     private String backgroundColor_;
     /* A URL of an image that will be added to the center of the QR code. Must be a PNG or JPEG. */
     private String centerLogo_;
-    /* Output size of QR Code image. Min 500px. Max 2000px. */
+    /* Output size of QR Code image. Min 300px. Max 2000px. */
     private Integer width_;
-    /*  The number of pixels for the QR code's border.  Min 0px. Max 20px. */
+    /*  The number of pixels for the QR code's border.  Min 1px. Max 20px. */
     private Integer margin_;
     /* Image Format of the returned QR code. Can be a JPEG or PNG. */
     private BranchImageFormat imageFormat_;
+
+    //final ConcurrentHashMap<Map<String, Object>, byte[]> branchQRCodeCache = new ConcurrentHashMap<>();
 
     public enum BranchImageFormat {
         JPEG, /* QR code is returned as a JPEG */
@@ -142,9 +146,9 @@ public class BranchQRCode {
         if (width > 2000) {
             PrefHelper.Debug("Width was reduced to the maximum of 2000.");
             this.width_ = 2000;
-        } else if (width < 500) {
-            PrefHelper.Debug("Width was increased to the minimum of 500.");
-            this.width_ = 500;
+        } else if (width < 300) {
+            PrefHelper.Debug("Width was increased to the minimum of 300.");
+            this.width_ = 300;
         } else {
             this.width_ = width;
         }
@@ -163,9 +167,9 @@ public class BranchQRCode {
         if (margin > 20) {
             PrefHelper.Debug("Margin was reduced to the maximum of 20.");
             this.margin_ = 20;
-        } else if (margin < 0) {
-            PrefHelper.Debug("Margin was increased to the minimum of 0.");
-            this.margin_ = 0;
+        } else if (margin < 1) {
+            PrefHelper.Debug("Margin was increased to the minimum of 1.");
+            this.margin_ = 1;
         } else {
             this.margin_ = margin;
         }
@@ -226,7 +230,7 @@ public class BranchQRCode {
             settings.put(Defines.Jsonkey.CenterLogo.getKey(), centerLogo_);
         }
 
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        final Map<String, Object> parameters = new HashMap<String, Object>();
 
         if (linkProperties.getChannel() != null) {
             parameters.put(Defines.LinkParam.Channel.getKey(), linkProperties.getChannel());
@@ -248,16 +252,26 @@ public class BranchQRCode {
         parameters.put(Defines.Jsonkey.QRCodeData.getKey(), branchUniversalObject.convertToJson());
         parameters.put(Defines.Jsonkey.QRCodeBranchKey.getKey(), PrefHelper.getInstance(context).getBranchKey());
 
-        //Check if we have seen params before for caching
+        final JSONObject paramsJSON = new JSONObject(parameters);
 
-        JSONObject paramsJSON = new JSONObject(parameters);
+        byte[] cachedQRCode = BranchQRCodeCache.getInstance().checkQRCodeCache(paramsJSON);
+        if (cachedQRCode != null) {
+            Log.d("QR Code Cache", "Found params in the cache. Returning QR Code");
+            callback.onSuccess(cachedQRCode);
+            return;
+        } else {
+            Log.d("QR Code Cache", "Did not find these params in the cache.");
+        }
 
         ServerRequestCreateQRCode req = new ServerRequestCreateQRCode(Defines.RequestPath.QRCode, paramsJSON, context, new BranchQRCodeRequestHandler() {
             @Override
             public void onDataReceived(ServerResponse data) {
                 try {
-                    String qrCodeString = data.getObject().getString("QRCodeString"); //Add to defines
+                    String qrCodeString = data.getObject().getString(Defines.Jsonkey.QRCodeResponseString.getKey());
                     byte[] qrCodeBytes = Base64.decode(qrCodeString, Base64.DEFAULT);
+
+                    final JSONObject cacheParamsJSON = new JSONObject(parameters);
+                    BranchQRCodeCache.getInstance().addQRCodeToCache(cacheParamsJSON, qrCodeBytes);
 
                     callback.onSuccess(qrCodeBytes);
                 } catch (JSONException e) {
@@ -289,14 +303,14 @@ public class BranchQRCode {
         });
     }
 
-    public void showShareSheetWithQRCode(@NonNull final Activity activity, @NonNull final BranchUniversalObject branchUniversalObject, @NonNull final LinkProperties linkProperties, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
+    public void showShareSheetWithQRCode(@NonNull final Activity activity, @NonNull final BranchUniversalObject branchUniversalObject, @NonNull final LinkProperties linkProperties, final String title, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
 
         getQRCodeAsData(activity, branchUniversalObject, linkProperties, new BranchQRCodeDataHandler() {
             @Override
             public void onSuccess(byte[] qrCodeData) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
 
-                String path = MediaStore.Images.Media.insertImage(activity.getContentResolver(), bmp, "", null);
+                String path = MediaStore.Images.Media.insertImage(activity.getContentResolver(), bmp, title, null);
                 Uri uri = Uri.parse(path);
 
                 Intent intent = new Intent(Intent.ACTION_SEND);
@@ -314,6 +328,4 @@ public class BranchQRCode {
             }
         });
     }
-
-
 }

@@ -160,7 +160,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            if (url.contains("qr-code")) {
+            if (url.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 connection.setRequestProperty("Accept", "image/*");
             } else {
@@ -194,7 +194,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
                     } else {
-                        if (url.contains("qr-code")) {
+                        if (url.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
                             // Converting binary data to Base64
                             InputStream inputStream = connection.getInputStream();
                             Bitmap bmp = BitmapFactory.decodeStream(inputStream);
