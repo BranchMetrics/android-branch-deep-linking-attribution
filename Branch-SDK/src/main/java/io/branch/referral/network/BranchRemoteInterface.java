@@ -175,7 +175,7 @@ public abstract class BranchRemoteInterface {
 
         ServerResponse result = new ServerResponse(tag, statusCode, requestId);
         if(!TextUtils.isEmpty(requestId)){
-            //PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
+            PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
             PrefHelper.Debug(String.format("returned %s", responseString));
         }
