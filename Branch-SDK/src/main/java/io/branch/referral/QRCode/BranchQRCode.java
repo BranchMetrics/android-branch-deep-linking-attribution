@@ -53,8 +53,6 @@ public class BranchQRCode {
     /* Image Format of the returned QR code. Can be a JPEG or PNG. */
     private BranchImageFormat imageFormat_;
 
-    //final ConcurrentHashMap<Map<String, Object>, byte[]> branchQRCodeCache = new ConcurrentHashMap<>();
-
     public enum BranchImageFormat {
         JPEG, /* QR code is returned as a JPEG */
         PNG /*QR code is returned as a PNG */
