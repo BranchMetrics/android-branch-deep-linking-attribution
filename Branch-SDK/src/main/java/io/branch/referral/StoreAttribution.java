@@ -18,6 +18,8 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Class to access Google Play Referrer Library to get ReferrerDetails object using the InstallReferrerClient.
@@ -34,26 +36,28 @@ class StoreAttribution {
     // even been added to the queue yet. To mitigate this, we use the flag `erroredOut`
     static boolean erroredOut;
 
+    // This is called on main thread
     void captureInstallReferrer(final Context context, final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
         hasBeenUsed = true;
         callback_ = installReferrerFetch;
 
         try {
             if (classExists("com.huawei.hms.ads.installreferrer.api.InstallReferrerClient")) {
+                //add to erroredout check
                 tryHuaweiAppGalleryConnection(context);
             }
 
-            if (classExists("com.miui.referrer.api.GetAppsReferrerClient")){
+            if (classExists("com.miui.referrer.api.GetAppsReferrerClient")) {
+                //add to erroredout check
                 tryXiaomiGetAppsConnection(context);
             }
 
-            if(classExists("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient")){
+            if (classExists("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient")) {
+                //add to erroredout check
                 trySamsungGalaxyStoreConnection(context);
             }
 
-            // This is imported by default as it is the most common case
             tryGooglePlayStoreConnection(context);
-
         }
         catch (Exception ex) {
             PrefHelper.Debug("ReferrerClientWrapper Exception: " + ex.getMessage());
@@ -156,7 +160,7 @@ class StoreAttribution {
         mReferrerClient.startConnection(new com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener() {
             @Override
             public void onInstallReferrerSetupFinished(int responseCode) {
-                PrefHelper.Debug("Huawei AppGallery onInstallReferrerSetupFinished, responseCode = " + responseCode);
+                PrefHelper.Debug("Huawei AppGallery onInstallReferrerSetupFinished, responseCode = " + responseCode + Thread.currentThread().getName());
 
                 switch (responseCode) {
                     case com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK:
@@ -170,7 +174,7 @@ class StoreAttribution {
                             onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp);
                         }
                         catch (RemoteException | IOException e) {
-                            PrefHelper.Debug( e.getMessage());
+                            PrefHelper.Debug(e.getMessage());
                             mReferrerClient.endConnection();
                             onReferrerClientError();
                         }
@@ -197,7 +201,8 @@ class StoreAttribution {
         referrerClient.startConnection(new InstallReferrerStateListener() {
             @Override
             public void onInstallReferrerSetupFinished(int responseCode) {
-                PrefHelper.Debug("Google Play onInstallReferrerSetupFinished, responseCode = " + responseCode);
+                PrefHelper.Debug("Google Play onInstallReferrerSetupFinished, responseCode = " + responseCode + Thread.currentThread().getName());
+
                 switch (responseCode) {
                     case InstallReferrerClient.InstallReferrerResponse.OK:
                         try {
@@ -244,13 +249,11 @@ class StoreAttribution {
     private static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS) {
         PrefHelper.Debug("onReferrerClientFinished()");
         processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
-        reportInstallReferrer();
     }
 
     private static void onReferrerClientError() {
         PrefHelper.Debug("onReferrerClientError()");
         erroredOut = true;
-        reportInstallReferrer();
     }
 
     private static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS) {
@@ -335,7 +338,7 @@ class StoreAttribution {
             Class.forName(className);
             return true;
         }  catch (ClassNotFoundException e) {
-            PrefHelper.Debug("Could not find " + e + ". If expected, import the dependency into your app.");
+            PrefHelper.Debug("Could not find " + className + ". If expected, import the dependency into your app.");
             return false;
         }
     }
