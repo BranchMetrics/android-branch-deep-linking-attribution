@@ -24,13 +24,6 @@ allprojects {
         maven {
             url 'https://developer.huawei.com/repo/' // Huawei's Maven Repository, use for compilation only
         }
-        maven {
-            url 'https://repos.xiaomi.com/maven/' // Xiaomi's Maven Repository
-            credentials{
-                username xiaomiMavenUser
-                password xiaomiMavenPassword
-            }
-        }
         google()
     }
 }
