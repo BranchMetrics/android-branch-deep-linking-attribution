@@ -1834,7 +1834,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 new StoreReferrer().captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
 
-                // StoreAttribution error are thrown synchronously, so we remove
+                // StoreReferrer error are thrown synchronously, so we remove
                 // INSTALL_REFERRER_FETCH_WAIT_LOCK manually (see StoreAttribution.erroredOut)
                 if (StoreReferrer.erroredOut) {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
