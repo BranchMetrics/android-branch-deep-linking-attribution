@@ -1,25 +1,13 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.os.RemoteException;
 import android.text.TextUtils;
 
-import com.android.installreferrer.api.InstallReferrerClient;
-import com.android.installreferrer.api.InstallReferrerStateListener;
-import com.android.installreferrer.api.ReferrerDetails;
-import com.miui.referrer.annotation.GetAppsReferrerResponse;
-import com.miui.referrer.api.GetAppsReferrerClient;
-import com.miui.referrer.api.GetAppsReferrerDetails;
-import com.miui.referrer.api.GetAppsReferrerStateListener;
-
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Class to access Google Play Referrer Library to get ReferrerDetails object using the InstallReferrerClient.
@@ -32,228 +20,65 @@ class StoreAttribution {
 
     static boolean hasBeenUsed;
     // startConnection appears to throw errors synchronously, so IInstallReferrerEvents gets invoked, removes
-    // INSTALL_REFERRER_FETCH_WAIT_LOCK form all requests on the queue but the install request has not
+    // INSTALL_REFERRER_FETCH_WAIT_LOCK from all requests on the queue but the install request has not
     // even been added to the queue yet. To mitigate this, we use the flag `erroredOut`
     static boolean erroredOut;
 
-    // This is called on main thread
     void captureInstallReferrer(final Context context, final long maxWaitTime, IInstallReferrerEvents installReferrerFetch) {
         hasBeenUsed = true;
         callback_ = installReferrerFetch;
 
         try {
-            if (classExists("com.huawei.hms.ads.installreferrer.api.InstallReferrerClient")) {
-                //add to erroredout check
-                tryHuaweiAppGalleryConnection(context);
+            //use the initial referrer to determine which OEM app store to use.
+            String initialReferrer = PrefHelper.getInstance(context).getInitialReferrer();
+
+            if (initialReferrer != null && initialReferrer.contains("com.huawei.appmarket")) {
+                if (classExists("com.huawei.hms.ads.installreferrer.api.InstallReferrerClient")) {
+                    StoreReferrerHuaweiAppGallery.fetch(context);
+                }
             }
 
-            if (classExists("com.miui.referrer.api.GetAppsReferrerClient")) {
-                //add to erroredout check
-                tryXiaomiGetAppsConnection(context);
+            else if (initialReferrer != null && initialReferrer.contains("com.xiaomi.mipicks")) {
+                if (classExists("com.miui.referrer.api.GetAppsReferrerClient")) {
+                    StoreReferrerXiaomiGetApps.fetch(context);
+                }
             }
 
-            if (classExists("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient")) {
-                //add to erroredout check
-                trySamsungGalaxyStoreConnection(context);
+            else if (initialReferrer != null && initialReferrer.contains("com.sec.android.app.samsungapps")) {
+                if (classExists("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient")) {
+                    StoreReferrerSamsungGalaxyStore.fetch(context);
+                }
             }
-
-            tryGooglePlayStoreConnection(context);
+            // Default to play store as before
+            else {
+                StoreReferrerGooglePlayStore.fetch(context);
+            }
         }
         catch (Exception ex) {
             PrefHelper.Debug("ReferrerClientWrapper Exception: " + ex.getMessage());
         }
 
+        // TODO: This may release the lock before the callback finishes
         // Google Play Referrer Library may sometimes not invoke the callback, so we need to release
         // the wait lock if it hasn't been released yet
         new Timer().schedule(new TimerTask() {
             @Override public void run() {
+                PrefHelper.Debug("Store Referrer fetch lock released by timer");
                 reportInstallReferrer();
             }
         }, maxWaitTime);
     }
 
-    private void trySamsungGalaxyStoreConnection(final Context context) {
-        final com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient referrerClient =
-                com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient.newBuilder(context).build();
-
-        referrerClient.startConnection(new com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerStateListener() {
-            @Override
-            public void onInstallReferrerSetupFinished(int responseCode) {
-                switch (responseCode) {
-                    case com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK:
-                        // Connection established.
-                        try {
-                            com.sec.android.app.samsungapps.installreferrer.api.ReferrerDetails details = referrerClient.getInstallReferrer();
-
-                            String rawReferrer = details.getInstallReferrer();
-                            long clickTimeStamp = details.getReferrerClickTimestampSeconds();
-                            long installBeginTimeStamp = details.getInstallBeginTimestampSeconds();
-
-                            onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp);
-                            referrerClient.endConnection();
-                        }
-                        catch (Exception e){
-                            PrefHelper.Debug(e.getMessage());
-                            onReferrerClientError();
-                        }
-                        break;
-                    case com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED: // API not available on the current Galaxy Store app.
-                    case com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:// Connection couldn't be established.
-                    case com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:
-                    case com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:
-                        PrefHelper.Debug("responseCode: " + responseCode);
-                        onReferrerClientError();
-                        break;
-                }
-            }
-
-            @Override
-            public void onInstallReferrerServiceDisconnected() {
-                PrefHelper.Debug("onInstallReferrerServiceDisconnected");
-            }
-        });
-    }
-
-    private void tryXiaomiGetAppsConnection(final Context context) {
-        final com.miui.referrer.api.GetAppsReferrerClient referrerClient = GetAppsReferrerClient.Companion.newBuilder(context).build();
-        referrerClient.startConnection(new GetAppsReferrerStateListener() {
-            @Override
-            public void onGetAppsReferrerSetupFinished(int responseCode) {
-                PrefHelper.Debug("Xiaomi GetApps onGetAppsReferrerSetupFinished, responseCode = " + responseCode);
-
-                switch (responseCode) {
-                    case GetAppsReferrerResponse.OK:
-                        try {
-                            GetAppsReferrerDetails response = referrerClient.getInstallReferrer();
-
-                            String rawReferrer = response.getInstallReferrer();
-                            long clickTimeStamp = response.getReferrerClickTimestampSeconds();
-                            long installBeginTimeStamp = response.getInstallBeginTimestampSeconds();
-
-                            onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp);
-                            referrerClient.endConnection();
-                        }
-                        catch (Exception e) {
-                            PrefHelper.Debug(e.getMessage());
-                            onReferrerClientError();
-                        }
-                        break;
-                    case GetAppsReferrerResponse.SERVICE_UNAVAILABLE:
-                    case GetAppsReferrerResponse.FEATURE_NOT_SUPPORTED:
-                    case GetAppsReferrerResponse.DEVELOPER_ERROR:
-                    case GetAppsReferrerResponse.PERMISSION_ERROR:
-                        PrefHelper.Debug("responseCode: " + responseCode);
-                        onReferrerClientError();
-                        break;
-                }
-            }
-
-            @Override
-            public void onGetAppsServiceDisconnected() {
-                PrefHelper.Debug("onGetAppsServiceDisconnected");
-            }
-        });
-    }
-
-    private void tryHuaweiAppGalleryConnection(final Context context) {
-        final com.huawei.hms.ads.installreferrer.api.InstallReferrerClient mReferrerClient = com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.newBuilder(context).build();
-        mReferrerClient.startConnection(new com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener() {
-            @Override
-            public void onInstallReferrerSetupFinished(int responseCode) {
-                PrefHelper.Debug("Huawei AppGallery onInstallReferrerSetupFinished, responseCode = " + responseCode + Thread.currentThread().getName());
-
-                switch (responseCode) {
-                    case com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK:
-                        try {
-                            com.huawei.hms.ads.installreferrer.api.ReferrerDetails referrerDetails = mReferrerClient.getInstallReferrer();
-
-                            String rawReferrer = referrerDetails.getInstallReferrer();
-                            long clickTimeStamp = referrerDetails.getReferrerClickTimestampSeconds();
-                            long installBeginTimeStamp = referrerDetails.getInstallBeginTimestampSeconds();
-
-                            onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp);
-                        }
-                        catch (RemoteException | IOException e) {
-                            PrefHelper.Debug(e.getMessage());
-                            mReferrerClient.endConnection();
-                            onReferrerClientError();
-                        }
-                        break;
-                    case com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
-                    case com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
-                    case com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:
-                    case com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:
-                        PrefHelper.Debug("responseCode: " + responseCode);
-                        onReferrerClientError();
-                        break;
-                }
-            }
-
-            @Override
-            public void onInstallReferrerServiceDisconnected() {
-                PrefHelper.Debug("onInstallReferrerServiceDisconnected");
-            }
-        });
-    }
-
-    private void tryGooglePlayStoreConnection(final Context context) {
-        final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
-        referrerClient.startConnection(new InstallReferrerStateListener() {
-            @Override
-            public void onInstallReferrerSetupFinished(int responseCode) {
-                PrefHelper.Debug("Google Play onInstallReferrerSetupFinished, responseCode = " + responseCode + Thread.currentThread().getName());
-
-                switch (responseCode) {
-                    case InstallReferrerClient.InstallReferrerResponse.OK:
-                        try {
-                            ReferrerDetails response = referrerClient.getInstallReferrer();
-                            String rawReferrer = null;
-                            long clickTimeStamp = 0L;
-                            long installBeginTimeStamp = 0L;
-                            if (response != null) {
-                                rawReferrer = response.getInstallReferrer();
-                                clickTimeStamp = response.getReferrerClickTimestampSeconds();
-                                installBeginTimeStamp = response.getInstallBeginTimestampSeconds();
-                            }
-                            onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp);
-                        } catch (RemoteException ex) {
-                            PrefHelper.Debug("onInstallReferrerSetupFinished() Remote Exception: " + ex.getMessage());
-                            onReferrerClientError();
-                        } catch (Exception ex) {
-                            PrefHelper.Debug("onInstallReferrerSetupFinished() Exception: " + ex.getMessage());
-                            onReferrerClientError();
-                        }
-                        break;
-                    case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:// API not available on the current Play Store app
-                    case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:// Connection could not be established
-                    case InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:// General errors caused by incorrect usage
-                    case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:// Play Store service is not connected now - potentially transient state.
-                        PrefHelper.Debug("responseCode: " + responseCode);
-                        // Play Store service is not connected now - potentially transient state.
-                        onReferrerClientError();
-                        break;
-                }
-            }
-
-            @Override
-            public void onInstallReferrerServiceDisconnected() {
-                // "This does not remove install referrer service connection itself - this binding
-                // to the service will remain active, and you will receive a call to onInstallReferrerSetupFinished(int)
-                // when install referrer service is next running and setup is complete."
-                // https://developer.android.com/reference/com/android/installreferrer/api/InstallReferrerStateListener.html#oninstallreferrerservicedisconnected
-                PrefHelper.Debug("onInstallReferrerServiceDisconnected()");
-            }
-        });
-    }
-
-    private static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS) {
-        PrefHelper.Debug("onReferrerClientFinished()");
+    protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
+        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
         processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        reportInstallReferrer();
     }
 
-    private static void onReferrerClientError() {
+    protected static void onReferrerClientError() {
         PrefHelper.Debug("onReferrerClientError()");
         erroredOut = true;
+        reportInstallReferrer();
     }
 
     private static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS) {
@@ -264,9 +89,7 @@ class StoreAttribution {
         if (installClickTS > 0) {
             prefHelper.setLong(PrefHelper.KEY_INSTALL_BEGIN_TS, installClickTS);
         }
-
-        if (rawReferrerString != null &&
-                prefHelper.getGooglePlayReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
+        if (rawReferrerString != null) {
             try {
                 rawReferrerString = URLDecoder.decode(rawReferrerString, "UTF-8");
                 HashMap<String, String> referrerMap = new HashMap<>();
@@ -305,6 +128,7 @@ class StoreAttribution {
                 if(referrerMap.containsValue(Defines.Jsonkey.PlayAutoInstalls.getKey())) {
                     BranchPreinstall.setBranchPreInstallGoogleReferrer(context, referrerMap);
                 }
+
                 if(referrerMap.containsKey(Defines.Jsonkey.ReferrerExtraGclidParam.getKey())){
                     prefHelper.setReferrerGclid(referrerMap.get(Defines.Jsonkey.ReferrerExtraGclidParam.getKey()));
                 }
@@ -323,6 +147,7 @@ class StoreAttribution {
     }
 
     private static void reportInstallReferrer() {
+        PrefHelper.Debug("reportInstallReferrer");
         if (callback_ != null) {
             callback_.onInstallReferrerEventsFinished();
             callback_ = null;
