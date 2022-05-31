@@ -73,7 +73,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreAttribution.IInstallReferrerEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrer.IInstallReferrerEvents {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -1830,13 +1830,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
             // just in case user accidentally queues up a couple install requests at the same time. During later sessions
             // request instanceof ServerRequestRegisterInstall = false
-            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !StoreAttribution.hasBeenUsed) {
+            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall && !StoreReferrer.hasBeenUsed) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                new StoreAttribution().captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
+                new StoreReferrer().captureInstallReferrer(context_, playStoreReferrerWaitTime, this);
 
                 // StoreAttribution error are thrown synchronously, so we remove
                 // INSTALL_REFERRER_FETCH_WAIT_LOCK manually (see StoreAttribution.erroredOut)
-                if (StoreAttribution.erroredOut) {
+                if (StoreReferrer.erroredOut) {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
             }

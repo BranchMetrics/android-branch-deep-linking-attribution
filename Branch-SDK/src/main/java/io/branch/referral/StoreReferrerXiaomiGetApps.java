@@ -60,11 +60,11 @@ public class StoreReferrerXiaomiGetApps {
                             Method endConnectionMethod = getAppsReferrerClientClass.getMethod("endConnection");
                             endConnectionMethod.invoke(getAppsReferrerClientObject);
 
-                            StoreAttribution.onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, getAppsReferrerClientClass.getName());
+                            StoreReferrer.onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, getAppsReferrerClientClass.getName());
                         }
                         // To improve performance, we are not going to reflect out every field when our handling is the same for all other cases
                         else{
-                            StoreAttribution.onReferrerClientError();
+                            StoreReferrer.onReferrerClientError();
                         }
                     }
                     else if(method.getName().equals("onGetAppsServiceDisconnected")){

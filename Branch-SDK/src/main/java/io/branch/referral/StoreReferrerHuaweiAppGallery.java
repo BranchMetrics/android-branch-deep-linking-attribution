@@ -26,18 +26,18 @@ public class StoreReferrerHuaweiAppGallery {
                                 long installBeginTimeStamp = referrerDetails.getInstallBeginTimestampSeconds();
 
                                 mReferrerClient.endConnection();
-                                StoreAttribution.onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, mReferrerClient.getClass().getName());
+                                StoreReferrer.onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, mReferrerClient.getClass().getName());
                             }
                             catch (Exception e) {
                                 PrefHelper.Debug(e.getMessage());
-                                StoreAttribution.onReferrerClientError();
+                                StoreReferrer.onReferrerClientError();
                             }
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:
                         case InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:
-                            StoreAttribution.onReferrerClientError();
+                            StoreReferrer.onReferrerClientError();
                             break;
                     }
                 }

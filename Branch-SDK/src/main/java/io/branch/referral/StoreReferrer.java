@@ -12,7 +12,7 @@ import java.util.TimerTask;
 /**
  * Class to access Google Play Referrer Library to get ReferrerDetails object using the InstallReferrerClient.
  */
-class StoreAttribution {
+class StoreReferrer {
 
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;

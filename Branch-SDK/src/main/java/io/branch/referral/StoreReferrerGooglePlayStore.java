@@ -31,15 +31,15 @@ public class StoreReferrerGooglePlayStore {
                             }
 
                             referrerClient.endConnection();
-                            StoreAttribution.onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, referrerClient.getClass().getName());
+                            StoreReferrer.onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, referrerClient.getClass().getName());
                         }
                         catch (RemoteException ex) {
                             PrefHelper.Debug("onInstallReferrerSetupFinished() Remote Exception: " + ex.getMessage());
-                            StoreAttribution.onReferrerClientError();
+                            StoreReferrer.onReferrerClientError();
                         }
                         catch (Exception ex) {
                             PrefHelper.Debug("onInstallReferrerSetupFinished() Exception: " + ex.getMessage());
-                            StoreAttribution.onReferrerClientError();
+                            StoreReferrer.onReferrerClientError();
                         }
                         break;
                     case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:// API not available on the current Play Store app
@@ -48,7 +48,7 @@ public class StoreReferrerGooglePlayStore {
                     case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:// Play Store service is not connected now - potentially transient state.
                         PrefHelper.Debug("responseCode: " + responseCode);
                         // Play Store service is not connected now - potentially transient state.
-                        StoreAttribution.onReferrerClientError();
+                        StoreReferrer.onReferrerClientError();
                         break;
                 }
             }

@@ -133,7 +133,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
      * Update link referrer params.
      * For link clicked installs, link click id is updated via the Google Play Referrer lib.
      *
-     * @see StoreAttribution
+     * @see StoreReferrer
      * @see Branch#setPlayStoreReferrerCheckTimeout(long)
      */
     void updateLinkReferrerParams() {

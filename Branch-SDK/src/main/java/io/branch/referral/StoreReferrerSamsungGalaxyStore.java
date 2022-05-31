@@ -61,11 +61,11 @@ public class StoreReferrerSamsungGalaxyStore {
                             Method endConnectionMethod = installReferrerClientClass.getMethod("endConnection");
                             endConnectionMethod.invoke(installReferrerClientObject);
 
-                            StoreAttribution.onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, installReferrerClientClass.getName());
+                            StoreReferrer.onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, installReferrerClientClass.getName());
                         }
                         // To improve performance, we are not going to reflect out every field when our handling is the same for all other cases
                         else {
-                            StoreAttribution.onReferrerClientError();
+                            StoreReferrer.onReferrerClientError();
                         }
                     }
                     else if (method.getName().equals("onInstallReferrerServiceDisconnected")) {
