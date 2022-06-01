@@ -66,8 +66,10 @@ public class PrefHelper {
     
     private static final String KEY_BRANCH_KEY = "bnc_branch_key";
     private static final String KEY_APP_VERSION = "bnc_app_version";
+    private static final String KEY_DEVICE_FINGERPRINT_ID = "bnc_device_fingerprint_id";
     private static final String KEY_RANDOMIZED_DEVICE_TOKEN = "bnc_randomized_device_token";
     private static final String KEY_SESSION_ID = "bnc_session_id";
+    private static final String KEY_IDENTITY_ID = "bnc_identity_id";
     private static final String KEY_RANDOMIZED_BUNDLE_TOKEN = "bnc_randomized_bundle_token";
     private static final String KEY_IDENTITY = "bnc_identity";
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
@@ -419,7 +421,16 @@ public class PrefHelper {
      * @return A {@link String} that uniquely identifies this build.
      */
     public String getRandomizedDeviceToken() {
-        return getString(KEY_RANDOMIZED_DEVICE_TOKEN);
+        // If a newly (5.1.4+) set, valid, value exists, return it
+        String rdt = getString(KEY_RANDOMIZED_DEVICE_TOKEN);
+        if(!TextUtils.isEmpty(rdt) && !rdt.equals(NO_STRING_VALUE)){
+            return rdt;
+        }
+        // Otherwise this call checks if we have the old "bnc_device_fingerprint_id",
+        // or "bnc_no_value" if neither the new, or old value do not exist
+        else {
+            return getString(KEY_DEVICE_FINGERPRINT_ID);
+        }
     }
     
     /**
@@ -464,7 +475,16 @@ public class PrefHelper {
      * preferences.
      */
     public String getRandomizedBundleToken() {
-        return getString(KEY_RANDOMIZED_BUNDLE_TOKEN);
+        // If a newly (5.1.4+) set, valid, value exists, return it
+        String rbt = getString(KEY_RANDOMIZED_BUNDLE_TOKEN);
+        if(!TextUtils.isEmpty(rbt) && !rbt.equals(NO_STRING_VALUE)){
+            return rbt;
+        }
+        // Otherwise this call checks if we have the old bnc_identity_id,
+        // or "bnc_no_value" if neither the new, or old value do not exist
+        else {
+            return getString(KEY_IDENTITY_ID);
+        }
     }
     
     /**
