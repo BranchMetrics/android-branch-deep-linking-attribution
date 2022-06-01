@@ -4,7 +4,7 @@
   * Fixes an issue with previously set randomly generated id values being skipped over in favor of newer values. Now old values, if they exist, are sent up without.    
 
 - ⚠️ v5.1.4  
-Warning: This release has a major configuration issue that incorrectly marks opens as reinstalls. Please use 5.1.5.
+Warning: This release has a configuration issue that incorrectly marks opens as reinstalls. Please use 5.1.5.
   * _*Master Release*_ - Apr 29, 2022
   * Fix retry logic for network requests when there is no internet availability.
   * Replace "identity_id" with "randomized_bundle_token" and "device_fingerprint_id" with "randomized_device_token"
