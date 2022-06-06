@@ -6,10 +6,18 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class StoreReferrerXiaomiGetApps {
+public class StoreReferrerXiaomiGetApps extends AppStoreReferrer{
+    private static IXiaomiInstallReferrerEvents callback_ = null;
+    static boolean hasBeenUsed = false;
+    static boolean erroredOut = false;
 
-    public static void fetch(final Context context){
+    public static void fetch(final Context context, IXiaomiInstallReferrerEvents iXiaomiInstallReferrerEvents){
+        hasBeenUsed = true;
+        callback_ = iXiaomiInstallReferrerEvents;
+
         try {
             final Class<?> getAppsReferrerClientClass = Class.forName("com.miui.referrer.api.GetAppsReferrerClient");
 
@@ -60,11 +68,11 @@ public class StoreReferrerXiaomiGetApps {
                             Method endConnectionMethod = getAppsReferrerClientClass.getMethod("endConnection");
                             endConnectionMethod.invoke(getAppsReferrerClientObject);
 
-                            StoreReferrer.onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, getAppsReferrerClientClass.getName());
+                            onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, getAppsReferrerClientClass.getName());
                         }
                         // To improve performance, we are not going to reflect out every field when our handling is the same for all other cases
                         else{
-                            StoreReferrer.onReferrerClientError();
+                            onReferrerClientError();
                         }
                     }
                     else if(method.getName().equals("onGetAppsServiceDisconnected")){
@@ -80,6 +88,36 @@ public class StoreReferrerXiaomiGetApps {
         catch (Exception e) {
             PrefHelper.Debug(e.getMessage());
             e.printStackTrace();
+            onReferrerClientError();
         }
+
+        new Timer().schedule(new TimerTask() {
+            @Override public void run() {
+                PrefHelper.Debug("Xiaomi Store Referrer fetch lock released by timer");
+                reportInstallReferrer();
+            }
+        }, 1500);
+    }
+
+    private static void onReferrerClientError() {
+        erroredOut = true;
+        reportInstallReferrer();
+    }
+
+    interface IXiaomiInstallReferrerEvents {
+        void onXiaomiInstallReferrerEventsFinished();
+    }
+
+    public static void reportInstallReferrer() {
+        if (callback_ != null) {
+            callback_.onXiaomiInstallReferrerEventsFinished();
+            callback_ = null;
+        }
+    }
+
+    protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
+        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
+        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        reportInstallReferrer();
     }
 }

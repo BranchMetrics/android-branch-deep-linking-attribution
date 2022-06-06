@@ -6,8 +6,18 @@ import com.huawei.hms.ads.installreferrer.api.InstallReferrerClient;
 import com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener;
 import com.huawei.hms.ads.installreferrer.api.ReferrerDetails;
 
-public class StoreReferrerHuaweiAppGallery {
-    public static void fetch(final Context context) {
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
+    private static IHuaweiInstallReferrerEvents callback_ = null;
+    static boolean hasBeenUsed = false;
+    static boolean erroredOut = false;
+
+    public static void fetch(final Context context, IHuaweiInstallReferrerEvents iHuaweiInstallReferrerEvents) {
+        callback_ = iHuaweiInstallReferrerEvents;
+        hasBeenUsed = true;
+
         try {
             final InstallReferrerClient mReferrerClient = InstallReferrerClient.newBuilder(context).build();
 
@@ -26,18 +36,18 @@ public class StoreReferrerHuaweiAppGallery {
                                 long installBeginTimeStamp = referrerDetails.getInstallBeginTimestampSeconds();
 
                                 mReferrerClient.endConnection();
-                                StoreReferrer.onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, mReferrerClient.getClass().getName());
+                                onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, mReferrerClient.getClass().getName());
                             }
                             catch (Exception e) {
                                 PrefHelper.Debug(e.getMessage());
-                                StoreReferrer.onReferrerClientError();
+                                onReferrerClientError();
                             }
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:
                         case InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:
-                            StoreReferrer.onReferrerClientError();
+                            onReferrerClientError();
                             break;
                     }
                 }
@@ -47,10 +57,39 @@ public class StoreReferrerHuaweiAppGallery {
                     PrefHelper.Debug("Huawei AppGallery onInstallReferrerServiceDisconnected");
                 }
             });
+
+            new Timer().schedule(new TimerTask() {
+                @Override public void run() {
+                    PrefHelper.Debug("Huawei Store Referrer fetch lock released by timer");
+                    reportInstallReferrer();
+                }
+            }, 1500);
         }
         catch (Exception exception) {
             PrefHelper.Debug(exception.getMessage());
             exception.printStackTrace();
         }
+    }
+
+    private static void onReferrerClientError() {
+        erroredOut = true;
+        reportInstallReferrer();
+    }
+
+    interface IHuaweiInstallReferrerEvents {
+        void onHuaweiInstallReferrerEventsFinished();
+    }
+
+    public static void reportInstallReferrer() {
+        if (callback_ != null) {
+            callback_.onHuaweiInstallReferrerEventsFinished();
+            callback_ = null;
+        }
+    }
+
+    protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
+        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
+        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        reportInstallReferrer();
     }
 }

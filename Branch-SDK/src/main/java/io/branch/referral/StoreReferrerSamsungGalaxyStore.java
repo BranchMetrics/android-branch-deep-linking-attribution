@@ -5,9 +5,18 @@ import android.content.Context;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class StoreReferrerSamsungGalaxyStore {
-    public static void fetch(final Context context) {
+public class StoreReferrerSamsungGalaxyStore extends AppStoreReferrer{
+    private static ISamsungInstallReferrerEvents callback_ = null;
+    static boolean hasBeenUsed = false;
+    static boolean erroredOut = false;
+
+    public static void fetch(final Context context, ISamsungInstallReferrerEvents iSamsungInstallReferrerEvents) {
+        hasBeenUsed = true;
+        callback_ = iSamsungInstallReferrerEvents;
+
         try{
             final Class<?> installReferrerClientClass = Class.forName("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient");
 
@@ -61,11 +70,11 @@ public class StoreReferrerSamsungGalaxyStore {
                             Method endConnectionMethod = installReferrerClientClass.getMethod("endConnection");
                             endConnectionMethod.invoke(installReferrerClientObject);
 
-                            StoreReferrer.onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, installReferrerClientClass.getName());
+                            onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, installReferrerClientClass.getName());
                         }
                         // To improve performance, we are not going to reflect out every field when our handling is the same for all other cases
                         else {
-                            StoreReferrer.onReferrerClientError();
+                            onReferrerClientError();
                         }
                     }
                     else if (method.getName().equals("onInstallReferrerServiceDisconnected")) {
@@ -77,10 +86,41 @@ public class StoreReferrerSamsungGalaxyStore {
             });
 
             startConnectionMethod.invoke(installReferrerClientObject, proxy);
+
+            new Timer().schedule(new TimerTask() {
+                @Override public void run() {
+                    PrefHelper.Debug("Samsung Store Referrer fetch lock released by timer");
+                    reportInstallReferrer();
+                }
+            }, 1500);
         }
         catch (Exception e) {
             PrefHelper.Debug(e.getMessage());
             e.printStackTrace();
+            onReferrerClientError();
         }
+    }
+
+    private static void onReferrerClientError() {
+        erroredOut = true;
+        reportInstallReferrer();
+    }
+
+    interface ISamsungInstallReferrerEvents {
+        void onSamsungInstallReferrerEventsFinished();
+    }
+
+
+    public static void reportInstallReferrer() {
+        if (callback_ != null) {
+            callback_.onSamsungInstallReferrerEventsFinished();
+            callback_ = null;
+        }
+    }
+
+    protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
+        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
+        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        reportInstallReferrer();
     }
 }

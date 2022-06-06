@@ -7,9 +7,18 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 
-public class StoreReferrerGooglePlayStore {
+import java.util.Timer;
+import java.util.TimerTask;
 
-    public static void fetch(final Context context) {
+public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
+    private static IGoogleInstallReferrerEvents callback_ = null;
+    static boolean hasBeenUsed = false;
+    static boolean erroredOut = false;
+
+    public static void fetch(final Context context, IGoogleInstallReferrerEvents iGoogleInstallReferrerEvents) {
+        callback_ = iGoogleInstallReferrerEvents;
+        hasBeenUsed = true;
+
         final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
 
         referrerClient.startConnection(new InstallReferrerStateListener() {
@@ -31,15 +40,15 @@ public class StoreReferrerGooglePlayStore {
                             }
 
                             referrerClient.endConnection();
-                            StoreReferrer.onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, referrerClient.getClass().getName());
+                            onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, referrerClient.getClass().getName());
                         }
                         catch (RemoteException ex) {
                             PrefHelper.Debug("onInstallReferrerSetupFinished() Remote Exception: " + ex.getMessage());
-                            StoreReferrer.onReferrerClientError();
+                            onReferrerClientError();
                         }
                         catch (Exception ex) {
                             PrefHelper.Debug("onInstallReferrerSetupFinished() Exception: " + ex.getMessage());
-                            StoreReferrer.onReferrerClientError();
+                            onReferrerClientError();
                         }
                         break;
                     case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:// API not available on the current Play Store app
@@ -48,7 +57,7 @@ public class StoreReferrerGooglePlayStore {
                     case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:// Play Store service is not connected now - potentially transient state.
                         PrefHelper.Debug("responseCode: " + responseCode);
                         // Play Store service is not connected now - potentially transient state.
-                        StoreReferrer.onReferrerClientError();
+                        onReferrerClientError();
                         break;
                 }
             }
@@ -62,5 +71,35 @@ public class StoreReferrerGooglePlayStore {
                 PrefHelper.Debug("onInstallReferrerServiceDisconnected()");
             }
         });
+
+        new Timer().schedule(new TimerTask() {
+            @Override public void run() {
+                PrefHelper.Debug("Google Store Referrer fetch lock released by timer");
+                reportInstallReferrer();
+            }
+        }, 1500);
+    }
+
+    private static void onReferrerClientError() {
+        erroredOut = true;
+        reportInstallReferrer();
+    }
+
+    public static void reportInstallReferrer() {
+        if (callback_ != null) {
+            callback_.onGoogleInstallReferrerEventsFinished();
+            callback_ = null;
+        }
+    }
+
+
+    interface IGoogleInstallReferrerEvents {
+        void onGoogleInstallReferrerEventsFinished();
+    }
+
+    protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
+        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
+        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        reportInstallReferrer();
     }
 }
