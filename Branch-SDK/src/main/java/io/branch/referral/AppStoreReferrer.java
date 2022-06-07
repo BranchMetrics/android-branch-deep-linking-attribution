@@ -10,7 +10,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Class to access Google Play Referrer Library to get ReferrerDetails object using the InstallReferrerClient.
+ * Abstract class for Store Referrers
  */
 abstract class AppStoreReferrer {
 
