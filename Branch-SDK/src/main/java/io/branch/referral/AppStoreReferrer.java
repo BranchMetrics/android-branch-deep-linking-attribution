@@ -6,8 +6,6 @@ import android.text.TextUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Abstract class for Store Referrers
@@ -16,10 +14,6 @@ abstract class AppStoreReferrer {
 
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
-
-    // startConnection appears to throw errors synchronously, so IInstallReferrerEvents gets invoked, removes
-    // INSTALL_REFERRER_FETCH_WAIT_LOCK from all requests on the queue but the install request has not
-    // even been added to the queue yet. To mitigate this, we use the flag `erroredOut`
 
     protected static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS) {
         PrefHelper prefHelper = PrefHelper.getInstance(context);
@@ -36,7 +30,7 @@ abstract class AppStoreReferrer {
                 String[] referralParams = rawReferrerString.split("&");
 
                 //Always set the raw referrer string:
-                prefHelper.setGooglePlayReferrer(rawReferrerString);
+                prefHelper.setAppStoreReferrer(rawReferrerString);
                 for (String referrerParam : referralParams) {
                     if (!TextUtils.isEmpty(referrerParam)) {
                         String splitter = "=";

@@ -1040,7 +1040,25 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void tryProcessNextQueueItemAfterInstallReferrer() {
         if(!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)){
+            writeLatestInstallReferrer();
             processNextQueueItem();
+        }
+    }
+
+    private void writeLatestInstallReferrer() {
+        String store = StoreReferrerUtils.getLatestValidReferrerStore();
+
+        if(store.equals(Defines.Jsonkey.GOOGLE_PLAY_STORE.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerGooglePlayStore.rawReferrer, StoreReferrerGooglePlayStore.clickTimestamp, StoreReferrerGooglePlayStore.installBeginTimestamp);
+        }
+        if(store.equals(Defines.Jsonkey.HUAWEI_APP_GALLERY.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerHuaweiAppGallery.rawReferrer, StoreReferrerHuaweiAppGallery.clickTimestamp, StoreReferrerHuaweiAppGallery.installBeginTimestamp);
+        }
+        if(store.equals(Defines.Jsonkey.SAMSUNG_GALAXY_STORE.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerSamsungGalaxyStore.rawReferrer, StoreReferrerSamsungGalaxyStore.clickTimestamp, StoreReferrerSamsungGalaxyStore.installBeginTimestamp);
+        }
+        if(store.equals(Defines.Jsonkey.XIAOMI_GET_APPS.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerXiaomiGetApps.rawReferrer, StoreReferrerXiaomiGetApps.clickTimestamp, StoreReferrerXiaomiGetApps.installBeginTimestamp);
         }
     }
 

@@ -204,7 +204,12 @@ public class Defines {
         TrackingDisabled("tracking_disabled"),
         DisableAdNetworkCallouts("disable_ad_network_callouts"),
         PartnerData("partner_data"),
-        Instant("instant");
+        Instant("instant"),
+
+        GOOGLE_PLAY_STORE("google_play_store"),
+        HUAWEI_APP_GALLERY("huawei_app_gallery"),
+        SAMSUNG_GALAXY_STORE("samsung_galaxy_store"),
+        XIAOMI_GET_APPS("xiaomi_get_apps");
         
         private final String key;
         

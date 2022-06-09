@@ -14,12 +14,16 @@ public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
     static boolean hasBeenUsed = false;
     static boolean erroredOut = false;
 
+    static long clickTimestamp = Long.MIN_VALUE;
+    static long installBeginTimestamp = Long.MIN_VALUE;
+    static String rawReferrer = null;
+
     public static void fetch(final Context context, IHuaweiInstallReferrerEvents iHuaweiInstallReferrerEvents) {
         callback_ = iHuaweiInstallReferrerEvents;
         hasBeenUsed = true;
 
         try {
-            final InstallReferrerClient mReferrerClient = InstallReferrerClient.newBuilder(context).build();
+            final InstallReferrerClient mReferrerClient = InstallReferrerClient.newBuilder(context).setTest(true).build();
 
             mReferrerClient.startConnection(new InstallReferrerStateListener() {
                 @Override
@@ -31,12 +35,12 @@ public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
                             try {
                                 ReferrerDetails referrerDetails = mReferrerClient.getInstallReferrer();
 
-                                String rawReferrer = referrerDetails.getInstallReferrer();
-                                long clickTimeStamp = referrerDetails.getReferrerClickTimestampSeconds();
-                                long installBeginTimeStamp = referrerDetails.getInstallBeginTimestampSeconds();
+                                rawReferrer = referrerDetails.getInstallReferrer();
+                                clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
+                                installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
 
                                 mReferrerClient.endConnection();
-                                onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, mReferrerClient.getClass().getName());
+                                onReferrerClientFinished(context, rawReferrer, clickTimestamp, installBeginTimestamp, mReferrerClient.getClass().getName());
                             }
                             catch (Exception e) {
                                 PrefHelper.Debug(e.getMessage());
@@ -88,8 +92,7 @@ public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
     }
 
     protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
-        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
-        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        PrefHelper.Debug(clientName + " onReferrerClientFinished() Referrer: " + rawReferrerString + " Click Timestamp: " + clickTS + " Install Timestamp: "  + InstallBeginTS);
         reportInstallReferrer();
     }
 }

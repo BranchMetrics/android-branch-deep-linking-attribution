@@ -15,6 +15,10 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
     static boolean hasBeenUsed = false;
     static boolean erroredOut = false;
 
+    static Long clickTimestamp = Long.MIN_VALUE;
+    static Long installBeginTimestamp = Long.MIN_VALUE;
+    static String rawReferrer = null;
+
     public static void fetch(final Context context, IGoogleInstallReferrerEvents iGoogleInstallReferrerEvents) {
         callback_ = iGoogleInstallReferrerEvents;
         hasBeenUsed = true;
@@ -30,17 +34,15 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
                     case InstallReferrerClient.InstallReferrerResponse.OK:
                         try {
                             ReferrerDetails response = referrerClient.getInstallReferrer();
-                            String rawReferrer = null;
-                            long clickTimeStamp = 0L;
-                            long installBeginTimeStamp = 0L;
+
                             if (response != null) {
                                 rawReferrer = response.getInstallReferrer();
-                                clickTimeStamp = response.getReferrerClickTimestampSeconds();
-                                installBeginTimeStamp = response.getInstallBeginTimestampSeconds();
+                                clickTimestamp = response.getReferrerClickTimestampSeconds();
+                                installBeginTimestamp = response.getInstallBeginTimestampSeconds();
                             }
 
                             referrerClient.endConnection();
-                            onReferrerClientFinished(context, rawReferrer, clickTimeStamp, installBeginTimeStamp, referrerClient.getClass().getName());
+                            onReferrerClientFinished(context, rawReferrer, clickTimestamp, installBeginTimestamp, referrerClient.getClass().getName());
                         }
                         catch (RemoteException ex) {
                             PrefHelper.Debug("onInstallReferrerSetupFinished() Remote Exception: " + ex.getMessage());
@@ -92,14 +94,12 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
         }
     }
 
-
     interface IGoogleInstallReferrerEvents {
         void onGoogleInstallReferrerEventsFinished();
     }
 
     protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
-        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
-        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        PrefHelper.Debug(clientName + " onReferrerClientFinished() Referrer: " + rawReferrerString + " Click Timestamp: " + clickTS + " Install Timestamp: "  + InstallBeginTS);
         reportInstallReferrer();
     }
 }

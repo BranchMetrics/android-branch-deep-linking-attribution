@@ -13,6 +13,10 @@ public class StoreReferrerSamsungGalaxyStore extends AppStoreReferrer{
     static boolean hasBeenUsed = false;
     static boolean erroredOut = false;
 
+    static Long clickTimestamp = Long.MIN_VALUE;
+    static Long installBeginTimestamp = Long.MIN_VALUE;
+    static String rawReferrer = null;
+
     public static void fetch(final Context context, ISamsungInstallReferrerEvents iSamsungInstallReferrerEvents) {
         hasBeenUsed = true;
         callback_ = iSamsungInstallReferrerEvents;
@@ -55,22 +59,22 @@ public class StoreReferrerSamsungGalaxyStore extends AppStoreReferrer{
 
                             Object installReferrerObject = getInstallReferrerMethod.invoke(installReferrerClientObject);
 
-                            String rawReferrerString = (String) getInstallReferrerStringMethod.invoke(installReferrerObject);
-                            Long clickTimestamp = (Long) getReferrerClickTimestampSecondsMethod.invoke(installReferrerObject);
-                            Long installBeginTimestamp = (Long) getInstallBeginTimestampSecondsMethod.invoke(installReferrerObject);
+                            rawReferrer = (String) getInstallReferrerStringMethod.invoke(installReferrerObject);
+                            clickTimestamp = (Long) getReferrerClickTimestampSecondsMethod.invoke(installReferrerObject);
+                            installBeginTimestamp = (Long) getInstallBeginTimestampSecondsMethod.invoke(installReferrerObject);
 
                             if (clickTimestamp == null) {
-                                clickTimestamp = 0L;
+                                clickTimestamp = Long.MIN_VALUE;
                             }
 
                             if (installBeginTimestamp == null) {
-                                installBeginTimestamp = 0L;
+                                installBeginTimestamp = Long.MIN_VALUE;
                             }
 
                             Method endConnectionMethod = installReferrerClientClass.getMethod("endConnection");
                             endConnectionMethod.invoke(installReferrerClientObject);
 
-                            onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, installReferrerClientClass.getName());
+                            onReferrerClientFinished(context, rawReferrer, clickTimestamp, installBeginTimestamp, installReferrerClientClass.getName());
                         }
                         // To improve performance, we are not going to reflect out every field when our handling is the same for all other cases
                         else {
@@ -119,8 +123,7 @@ public class StoreReferrerSamsungGalaxyStore extends AppStoreReferrer{
     }
 
     protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
-        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
-        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        PrefHelper.Debug(clientName + " onReferrerClientFinished() Referrer: " + rawReferrerString + " Click Timestamp: " + clickTS + " Install Timestamp: "  + InstallBeginTS);
         reportInstallReferrer();
     }
 }

@@ -640,20 +640,20 @@ public class PrefHelper {
     }
     
     /**
-     * Sets the Google play install referrer string
+     * Sets the app store install referrer string
      *
-     * @param referrer Google play install referrer string
+     * @param referrer App store install referrer string
      */
-    public void setGooglePlayReferrer(String referrer) {
+    public void setAppStoreReferrer(String referrer) {
         setString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA, referrer);
     }
     
     /**
-     * Gets the google play install referrer string
+     * Gets the app store install referrer string
      *
-     * @return {@link String}  Google play install referrer string
+     * @return {@link String}  App store install referrer string
      */
-    public String getGooglePlayReferrer() {
+    public String getAppStoreReferrer() {
         return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
     }
 

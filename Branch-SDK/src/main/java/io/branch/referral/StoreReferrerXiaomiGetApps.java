@@ -14,6 +14,10 @@ public class StoreReferrerXiaomiGetApps extends AppStoreReferrer{
     static boolean hasBeenUsed = false;
     static boolean erroredOut = false;
 
+    static Long clickTimestamp = Long.MIN_VALUE;
+    static Long installBeginTimestamp = Long.MIN_VALUE;
+    static String rawReferrer = null;
+
     public static void fetch(final Context context, IXiaomiInstallReferrerEvents iXiaomiInstallReferrerEvents){
         hasBeenUsed = true;
         callback_ = iXiaomiInstallReferrerEvents;
@@ -53,22 +57,22 @@ public class StoreReferrerXiaomiGetApps extends AppStoreReferrer{
 
                             Object installReferrerObject = getInstallReferrerMethod.invoke(getAppsReferrerClientObject);
 
-                            String rawReferrerString = (String) getInstallReferrerStringMethod.invoke(installReferrerObject);
-                            Long clickTimestamp = (Long) getReferrerClickTimestampSecondsMethod.invoke(installReferrerObject);
-                            Long installBeginTimestamp = (Long) getInstallBeginTimestampSecondsMethod.invoke(installReferrerObject);
+                            rawReferrer = (String) getInstallReferrerStringMethod.invoke(installReferrerObject);
+                            clickTimestamp = (Long) getReferrerClickTimestampSecondsMethod.invoke(installReferrerObject);
+                            installBeginTimestamp = (Long) getInstallBeginTimestampSecondsMethod.invoke(installReferrerObject);
 
                             if(clickTimestamp == null){
-                                clickTimestamp = 0L;
+                                clickTimestamp = Long.MIN_VALUE;
                             }
 
                             if(installBeginTimestamp == null){
-                                installBeginTimestamp = 0L;
+                                installBeginTimestamp = Long.MIN_VALUE;
                             }
 
                             Method endConnectionMethod = getAppsReferrerClientClass.getMethod("endConnection");
                             endConnectionMethod.invoke(getAppsReferrerClientObject);
 
-                            onReferrerClientFinished(context, rawReferrerString, clickTimestamp, installBeginTimestamp, getAppsReferrerClientClass.getName());
+                            onReferrerClientFinished(context, rawReferrer, clickTimestamp, installBeginTimestamp, getAppsReferrerClientClass.getName());
                         }
                         // To improve performance, we are not going to reflect out every field when our handling is the same for all other cases
                         else{
@@ -116,8 +120,7 @@ public class StoreReferrerXiaomiGetApps extends AppStoreReferrer{
     }
 
     protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
-        PrefHelper.Debug(clientName + " onReferrerClientFinished()");
-        processReferrerInfo(context, rawReferrerString, clickTS, InstallBeginTS);
+        PrefHelper.Debug(clientName + " onReferrerClientFinished() Referrer: " + rawReferrerString + " Click Timestamp: " + clickTS + " Install Timestamp: "  + InstallBeginTS);
         reportInstallReferrer();
     }
 }
