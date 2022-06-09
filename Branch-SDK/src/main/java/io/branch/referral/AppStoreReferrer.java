@@ -10,7 +10,7 @@ import java.util.HashMap;
 /**
  * Abstract class for Store Referrers
  */
-abstract class AppStoreReferrer {
+public abstract class AppStoreReferrer {
 
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
