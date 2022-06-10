@@ -17,14 +17,14 @@ allprojects {
     group = GROUP
 
     repositories {
-        jcenter()
+        mavenCentral()
         maven {
             url "https://maven.google.com" // Google's Maven repository
         }
+        google()
         maven {
             url 'https://developer.huawei.com/repo/' // Huawei's Maven Repository, use for compilation only
         }
-        google()
     }
 }
 

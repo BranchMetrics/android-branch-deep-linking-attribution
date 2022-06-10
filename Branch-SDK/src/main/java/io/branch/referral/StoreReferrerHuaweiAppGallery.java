@@ -23,7 +23,7 @@ public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
         hasBeenUsed = true;
 
         try {
-            final InstallReferrerClient mReferrerClient = InstallReferrerClient.newBuilder(context).setTest(true).build();
+            final InstallReferrerClient mReferrerClient = InstallReferrerClient.newBuilder(context).build();
 
             mReferrerClient.startConnection(new InstallReferrerStateListener() {
                 @Override
