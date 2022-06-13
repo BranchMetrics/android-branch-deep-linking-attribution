@@ -6,14 +6,16 @@ def jarFileName
 
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
-    implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'com.android.installreferrer:installreferrer:2.1'
+    implementation 'androidx.annotation:annotation:1.3.0'
+    implementation 'com.android.installreferrer:installreferrer:2.2'
 
     // --- optional dependencies -----
     //Please note that the Branch SDK does not require any of the below optional dependencies to operate. This dependency is listed here so there will not be build errors,
     // but the library is *not* added to your app unless you do so yourself. Please check the code in gradle-mvn-push script to see how this works
 
     implementation 'com.google.firebase:firebase-appindexing:19.0.0'
+
+    compileOnly 'com.huawei.hms:ads-installreferrer:3.4.39.302'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test:runner:1.3.0'

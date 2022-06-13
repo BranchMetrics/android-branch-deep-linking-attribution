@@ -109,7 +109,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         // Check for any Third party SDK for data handling
         prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setGooglePlayReferrer(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
@@ -133,7 +133,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
      * Update link referrer params.
      * For link clicked installs, link click id is updated via the Google Play Referrer lib.
      *
-     * @see GooglePlayStoreAttribution
+     * @see StoreReferrer
      * @see Branch#setPlayStoreReferrerCheckTimeout(long)
      */
     void updateLinkReferrerParams() {
@@ -155,7 +155,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
         // Add Google play raw referrer if present
-        String googlePlayReferrer = prefHelper_.getGooglePlayReferrer();
+        String googlePlayReferrer = prefHelper_.getAppStoreReferrer();
         if (!googlePlayReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
