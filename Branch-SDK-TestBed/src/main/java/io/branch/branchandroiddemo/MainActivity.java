@@ -380,7 +380,7 @@ public class MainActivity extends Activity {
                         .setBackgroundColor(Color.WHITE)
                         .setMargin(1)
                         .setWidth(512)
-                        .setImageFormat(BranchQRCode.BranchImageFormat.PNG)
+                        .setImageFormat(BranchQRCode.BranchImageFormat.JPEG)
                         .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png");
 
                 BranchUniversalObject buo = new BranchUniversalObject()
