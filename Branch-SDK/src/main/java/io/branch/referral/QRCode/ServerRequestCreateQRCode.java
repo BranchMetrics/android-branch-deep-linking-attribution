@@ -3,15 +3,10 @@ package io.branch.referral.QRCode;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import org.json.JSONObject;
-
-import java.util.HashSet;
 
 import io.branch.referral.Branch;
 import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerResponse;
 
@@ -46,16 +41,13 @@ public class ServerRequestCreateQRCode extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        Log.d("Request succeeded", String.valueOf(response));
         callback_.onDataReceived(response);
     }
 
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        Log.d("Failed server request", String.valueOf(statusCode));
         Exception e = new Exception("Failed server request: " + statusCode + causeMsg);
         callback_.onFailure(e);
-
     }
 
     @Override

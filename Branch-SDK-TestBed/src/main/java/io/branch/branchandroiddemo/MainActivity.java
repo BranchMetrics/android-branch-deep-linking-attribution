@@ -372,46 +372,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.share_qrcode_btn).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                BranchQRCode qrCode = new BranchQRCode()
-                        .setCodeColor("#a4c639")
-                        .setBackgroundColor(Color.WHITE)
-                        .setMargin(1)
-                        .setWidth(512)
-                        .setImageFormat(BranchQRCode.BranchImageFormat.JPEG)
-                        .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png");
-
-                BranchUniversalObject buo = new BranchUniversalObject()
-                        .setCanonicalIdentifier("content/12345")
-                        .setTitle("My Content Title")
-                        .setContentDescription("My Content Description")
-                        .setContentImageUrl("https://lorempixel.com/400/400");
-
-                LinkProperties lp = new LinkProperties()
-                        .setChannel("facebook")
-                        .setFeature("sharing")
-                        .setCampaign("content 123 launch")
-                        .setStage("new user");
-
-                try {
-                    qrCode.showShareSheetWithQRCode(MainActivity.this, buo, lp,"Your QR Code", new BranchQRCode.BranchQRCodeImageHandler() {
-                        @Override
-                        public void onSuccess(Bitmap qrCodeImage) {
-                            Log.d("Share QR Code:", "Got qrCodeImage");
-                        }
-
-                        @Override
-                        public void onFailure(Exception e) {
-
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {

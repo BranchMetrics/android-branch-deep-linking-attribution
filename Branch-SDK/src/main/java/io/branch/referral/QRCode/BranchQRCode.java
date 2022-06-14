@@ -2,41 +2,26 @@ package io.branch.referral.QRCode;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
 import io.branch.referral.BranchQRCodeCache;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
-import io.branch.referral.SharingHelper;
-import io.branch.referral.network.BranchRemoteInterface;
-import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.LinkProperties;
-import io.branch.referral.util.ShareSheetStyle;
 
 public class BranchQRCode {
 
@@ -254,11 +239,9 @@ public class BranchQRCode {
 
         byte[] cachedQRCode = BranchQRCodeCache.getInstance().checkQRCodeCache(paramsJSON);
         if (cachedQRCode != null) {
-            Log.d("QR Code Cache", "Found params in the cache. Returning QR Code");
             callback.onSuccess(cachedQRCode);
             return;
         } else {
-            Log.d("QR Code Cache", "Did not find these params in the cache.");
         }
 
         ServerRequestCreateQRCode req = new ServerRequestCreateQRCode(Defines.RequestPath.QRCode, paramsJSON, context, new BranchQRCodeRequestHandler() {
@@ -291,32 +274,6 @@ public class BranchQRCode {
             @Override
             public void onSuccess(byte[] qrCodeData) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
-                callback.onSuccess(bmp);
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                callback.onFailure(e);
-            }
-        });
-    }
-
-    public void showShareSheetWithQRCode(@NonNull final Activity activity, @NonNull final BranchUniversalObject branchUniversalObject, @NonNull final LinkProperties linkProperties, final String title, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
-
-        getQRCodeAsData(activity, branchUniversalObject, linkProperties, new BranchQRCodeDataHandler() {
-            @Override
-            public void onSuccess(byte[] qrCodeData) {
-                Bitmap bmp = BitmapFactory.decodeByteArray(qrCodeData, 0, qrCodeData.length);
-
-                String path = MediaStore.Images.Media.insertImage(activity.getContentResolver(), bmp, title, null);
-                Uri uri = Uri.parse(path);
-
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("image/*");
-                intent.putExtra(Intent.EXTRA_STREAM, uri);
-
-                activity.startActivity(Intent.createChooser(intent, "Share QR Code"));
-
                 callback.onSuccess(bmp);
             }
 

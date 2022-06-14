@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,7 +56,7 @@ public class BranchQRCodeCache {
     public void addQRCodeToCache(JSONObject parameters, byte[] qrCodeData) {
         cache.clear();
         try {
-            parameters.getJSONObject("data").remove("$creation_timestamp");
+            parameters.getJSONObject("data").remove(Defines.Jsonkey.CreationTimestamp.getKey());
             cache.put(parameters, qrCodeData);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -69,14 +68,12 @@ public class BranchQRCodeCache {
             return null;
         }
         try {
-            parameters.getJSONObject("data").remove("$creation_timestamp");
+            parameters.getJSONObject("data").remove(Defines.Jsonkey.CreationTimestamp.getKey());
             JSONObject cacheParam = (JSONObject) cache.keySet().iterator().next();
 
             if (areEqual(parameters, cacheParam)) {
-                Log.d("JSON COMPARE", "JSONs Match");
                 return cache.get(cacheParam);
             } else {
-                Log.d("JSON COMPARE", "JSONs DO NOT Match");
                 return null;
             }
         } catch (JSONException e) {
