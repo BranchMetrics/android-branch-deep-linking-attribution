@@ -216,6 +216,7 @@ public class Defines {
         QRCodeSettings("qr_code_settings"),
         QRCodeData("data"),
         QRCodeBranchKey("branch_key"),
+        QRCodeResponseString("QRCodeString"),
 
         GOOGLE_PLAY_STORE("google_play_store"),
         HUAWEI_APP_GALLERY("huawei_app_gallery"),
