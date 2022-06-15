@@ -1,4 +1,27 @@
 # Branch Android SDK change log
+- v5.2.0
+  * _*Master Release*_ - Jun 15, 2022
+  * Added methods to generate Branch QR codes.
+      New methods:
+        - getQRCodeAsData
+        - getQRCodeAsImage()
+      Utility methods:
+        - setCodeColor()
+        - setBackgroundColor()
+        - setCenterLogo()
+        - setWidth()
+        - setMargin()
+        - setImageFormat()
+  * Added support for additional store referrer APIs. No code needed other than to import the store's referrer API artifact into your app. 
+      New app stores:
+        - Huawei App Gallery
+        - Samsung Galaxy Store*
+        - Xiaomi GetApps*
+        * Contact your Samsung or Xiaomi representative for assistance with obtaining their store referrer API artifact.
+  * Upgraded Google Install Referrer API
+  * Updated Android minimum SDK to 21
+  * Replaced JCenter with mavenCentral in `allprojects.repositories` 
+
 - v5.1.5
   * _*Master Release*_ - Jun 1, 2022
   * Fixes an issue with previously set randomly generated id values being skipped over in favor of newer values. Now old values, if they exist, are sent up without.    
