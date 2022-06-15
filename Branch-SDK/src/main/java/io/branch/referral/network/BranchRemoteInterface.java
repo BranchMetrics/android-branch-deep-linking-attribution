@@ -1,6 +1,8 @@
 package io.branch.referral.network;
 
 import android.text.TextUtils;
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -187,7 +189,17 @@ public abstract class BranchRemoteInterface {
                     JSONArray jsonArray = new JSONArray(responseString);
                     result.setPost(jsonArray);
                 } catch (JSONException ex2) {
-                    PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                    if (tag.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
+                        try {
+                            JSONObject jsonObj = new JSONObject();
+                            jsonObj.put(Defines.Jsonkey.QRCodeResponseString.getKey(), responseString);
+                            result.setPost(jsonObj);
+                        } catch (JSONException e) {
+                            PrefHelper.Debug("JSON exception: " + e.getMessage());
+                        }
+                    } else {
+                        PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                    }
                 }
             }
         }

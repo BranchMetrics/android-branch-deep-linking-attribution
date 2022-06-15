@@ -8,6 +8,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <Button
+            android:id="@+id/qrCode_btn"
+            style="@style/testbed_button_style"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/cmdPrintInstallParam"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="5dp"
+            android:text="Create QR Code" />
+
         <EditText
             android:id="@+id/editReferralShortUrl"
             android:layout_width="260dp"

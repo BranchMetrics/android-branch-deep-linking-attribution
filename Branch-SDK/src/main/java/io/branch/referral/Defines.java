@@ -206,11 +206,23 @@ public class Defines {
         PartnerData("partner_data"),
         Instant("instant"),
 
+        QRCodeTag("qr-code"),
+        CodeColor("code_color"),
+        BackgroundColor("background_color"),
+        Width("width"),
+        Margin("margin"),
+        ImageFormat("image_format"),
+        CenterLogo("center_logo_url"),
+        QRCodeSettings("qr_code_settings"),
+        QRCodeData("data"),
+        QRCodeBranchKey("branch_key"),
+        QRCodeResponseString("QRCodeString"),
+
         GOOGLE_PLAY_STORE("google_play_store"),
         HUAWEI_APP_GALLERY("huawei_app_gallery"),
         SAMSUNG_GALAXY_STORE("samsung_galaxy_store"),
         XIAOMI_GET_APPS("xiaomi_get_apps");
-        
+
         private final String key;
         
         Jsonkey(String key) {
@@ -248,8 +260,9 @@ public class Defines {
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
         GetCPID("v1/cpid"),
-        GetLATD("v1/cpid/latd");
-        
+        GetLATD("v1/cpid/latd"),
+        QRCode("v1/qr-code");
+
         private final String key;
         
         RequestPath(String key) {

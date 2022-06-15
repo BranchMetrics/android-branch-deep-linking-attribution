@@ -1,19 +1,22 @@
 package io.branch.branchandroiddemo;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -24,20 +27,18 @@ import androidx.core.app.NotificationManagerCompat;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
-import io.branch.referral.Branch.BranchReferralStateChangedListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -47,8 +48,6 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class MainActivity extends Activity {
@@ -373,6 +372,65 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BranchQRCode qrCode = new BranchQRCode()
+                        .setCodeColor("#57dbe0")
+                        .setBackgroundColor("#2a2e2e")
+                        .setMargin(2)
+                        .setWidth(512)
+                        .setImageFormat(BranchQRCode.BranchImageFormat.PNG)
+                        .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png");
+
+                BranchUniversalObject buo = new BranchUniversalObject()
+                        .setCanonicalIdentifier("content/12345")
+                        .setTitle("My Content Title")
+                        .setContentDescription("My Content Description")
+                        .setContentImageUrl("https://lorempixel.com/400/400");
+
+                LinkProperties lp = new LinkProperties()
+                        .setChannel("facebook")
+                        .setFeature("sharing")
+                        .setCampaign("content 123 launch")
+                        .setStage("new user");
+
+                try {
+                    qrCode.getQRCodeAsImage(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeImageHandler() {
+                        @Override
+                        public void onSuccess(Bitmap qrCodeImage) {
+                            try {
+                                AlertDialog.Builder ImageDialog = new AlertDialog.Builder(MainActivity.this);
+                                ImageDialog.setTitle("Your QR Code");
+                                ImageView showImage = new ImageView(MainActivity.this);
+
+                                showImage.setImageBitmap(qrCodeImage);
+                                ImageDialog.setView(showImage);
+
+                                ImageDialog.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface arg0, int arg1) {
+                                    }
+                                });
+                                ImageDialog.show();
+
+                            } catch (Exception e) {
+                                Log.d("Adding Image to Alert", "Failed");
+                                e.printStackTrace();
+                            }
+
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.d("Fail in main activity", String.valueOf(e));
+
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void createNotificationChannel() {

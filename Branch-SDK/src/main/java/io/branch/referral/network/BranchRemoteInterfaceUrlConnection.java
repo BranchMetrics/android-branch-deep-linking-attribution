@@ -1,7 +1,11 @@
 package io.branch.referral.network;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.TrafficStats;
 import android.os.NetworkOnMainThreadException;
+import android.util.Base64;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -12,6 +16,7 @@ import io.branch.referral.BranchError;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -155,8 +160,13 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setReadTimeout(timeout);
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Accept", "application/json");
+            if (url.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Accept", "image/*");
+            } else {
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Accept", "application/json");
+             }
             connection.setRequestMethod("POST");
 
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
@@ -184,13 +194,27 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
                     } else {
-                        result = new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
+                        if (url.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
+                            // Converting binary data to Base64
+                            InputStream inputStream = connection.getInputStream();
+                            Bitmap bmp = BitmapFactory.decodeStream(inputStream);
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            bmp.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                            byte[] b = baos.toByteArray();
+                            String bmpString = Base64.encodeToString(b, Base64.DEFAULT);
+
+                            result = new BranchResponse(bmpString, responseCode);
+                        } else {
+                            result = new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
+                        }
                     }
+
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
                     PrefHelper.Debug("A resource conflict occurred with this request " + url);
                     result = new BranchResponse(null, responseCode);
                 }
+
                 result.requestId = requestId;
                 return result;
             }
