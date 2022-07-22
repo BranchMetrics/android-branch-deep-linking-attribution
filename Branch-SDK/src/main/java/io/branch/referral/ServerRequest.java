@@ -474,8 +474,7 @@ public abstract class ServerRequest {
     
     private boolean payloadContainsDeviceIdentifiers(JSONObject payload) {
         return payload.has(Defines.Jsonkey.AndroidID.getKey()) ||
-                payload.has(Defines.Jsonkey.RandomizedDeviceToken.getKey()) ||
-                payload.has(Defines.ModuleNameKeys.imei.getKey());
+                payload.has(Defines.Jsonkey.RandomizedDeviceToken.getKey());
     }
     
     private void updateDeviceInfo() {

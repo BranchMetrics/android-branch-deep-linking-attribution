@@ -24,8 +24,6 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
-import io.branch.referral.Defines.ModuleNameKeys;
-
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -635,18 +633,6 @@ abstract class SystemObserver {
 
     void setLAT(int lat) {
         LATVal_ = lat;
-    }
-
-    /**
-     * Get IP address from the Module injected key-value pairs
-     */
-    static String getImei(Context context_) {
-        String imei = PrefHelper.getInstance(context_)
-                .getSecondaryRequestMetaData(ModuleNameKeys.imei.getKey());
-        if (!TextUtils.isEmpty(imei)) {
-            return imei;
-        }
-        return null;
     }
 
     String getAIDInitializationSessionID() {

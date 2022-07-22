@@ -344,31 +344,6 @@ public class Defines {
      * Defines module name keys
      * </p>
      */
-    public enum ModuleNameKeys {
-        imei("imei");
-
-        private final String key;
-
-        ModuleNameKeys(String key) {
-            this.key = key;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public String toString() {
-            return key;
-        }
-
-    }
-
-    /**
-     * <p>
-     * Defines module name keys
-     * </p>
-     */
     public enum IntentKeys {
         BranchData("branch_data"),
         ForceNewBranchSession("branch_force_new_session"),
