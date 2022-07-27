@@ -11,7 +11,7 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
     implementation(kotlin("stdlib"))
     implementation(kotlin("stdlib-jdk8"))
-    implementation("androidx.annotation:annotation:1.3.0")
+    implementation("androidx.annotation:annotation:1.4.0")
     implementation("com.android.installreferrer:installreferrer:2.2")
 
     // --- optional dependencies -----
@@ -22,10 +22,10 @@ dependencies {
 
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.2")
-    androidTestImplementation("androidx.test:runner:1.3.0")
-    androidTestImplementation("androidx.test:rules:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation("androidx.test:runner:1.4.0")
+    androidTestImplementation("androidx.test:rules:1.4.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     // assume partner has it
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:17.0.0")
 

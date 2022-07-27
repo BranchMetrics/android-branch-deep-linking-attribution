@@ -2,26 +2,24 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Handler;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONObject;
-import org.junit.Assert;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.branch.referral.mock.MockActivity;
-import io.branch.referral.mock.MockRemoteInterface;
+import io.branch.referral.test.mock.MockActivity;
+import io.branch.referral.test.mock.MockRemoteInterface;
 
 /**
  * Base Instrumented test, which will execute on an Android device.

@@ -1,4 +1,4 @@
-package io.branch.referral.mock;
+package io.branch.referral.test.mock;
 
 import org.json.JSONObject;
 
