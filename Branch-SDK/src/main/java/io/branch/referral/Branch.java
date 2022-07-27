@@ -843,26 +843,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
         return this;
     }
-
-    /**
-     * <p>
-     *     Add key value pairs from the passed in json to all requests, json values must be strings.
-     * </p>
-     */
-    public void addModule(JSONObject module) {
-        if (module!=null) {
-            Iterator<String> keys = module.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                if (!TextUtils.isEmpty(key)) {
-                    try {
-                        prefHelper_.addSecondaryRequestMetadata(key, module.getString(key));
-                    } catch (JSONException ignore) {
-                    }
-                }
-            }
-        }
-    }
     
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.

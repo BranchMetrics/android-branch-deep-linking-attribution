@@ -1310,41 +1310,6 @@ public class PrefHelper {
     }
 
     /**
-     * adds the Module injected key-value pairs in the all the requests
-     * adds the Module injected key-value pairs in the all the requests
-     *
-     * @param key   A {@link String} value containing the key to reference.
-     * @param value A {@link String} value of the specified key to be added in the request
-     */
-    void addSecondaryRequestMetadata(String key, String value) {
-        if (key == null) {
-            return;
-        }
-        try {
-            secondaryRequestMetadata.putOpt(key, value);
-        } catch (JSONException ignore) {
-        }
-    }
-
-    /**
-     * gets the Module injected value
-     *
-     * @param key   A {@link String} value containing the key to reference.
-     * @return value A {@link String} value of the specified key to be added in the request
-     */
-    String getSecondaryRequestMetaData(String key) {
-        if (key == null) {
-            return null;
-        }
-
-        try {
-            return this.secondaryRequestMetadata.get(key).toString();
-        } catch (JSONException ignore) {
-            return null;
-        }
-    }
-
-    /**
      * helper method to check of the modules need to be added in the requests
      *
      * @return value A {@link Boolean} returns true if the module data is present else false

@@ -8,7 +8,6 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.webkit.WebSettings;
 
-import io.branch.referral.Defines.ModuleNameKeys;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -100,13 +99,6 @@ class DeviceInfo {
             if ((!TextUtils.isEmpty(localIpAddr))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
-
-            if (PrefHelper.getInstance(context_).shouldAddModules()) {
-                String imei = SystemObserver.getImei(context_);
-                if (!isNullOrEmptyOrBlank(imei)) {
-                    requestObj.put(ModuleNameKeys.imei.getKey(), imei);
-                }
-            }
         } catch (JSONException ignore) { }
     }
 
@@ -188,13 +180,6 @@ class DeviceInfo {
                 String devId = prefHelper.getIdentity();
                 if (!isNullOrEmptyOrBlank(devId)) {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), devId);
-                }
-            }
-
-            if (prefHelper != null && prefHelper.shouldAddModules()) {
-                String imei = SystemObserver.getImei(context_);
-                if (!isNullOrEmptyOrBlank(imei)) {
-                    userDataObj.put(ModuleNameKeys.imei.getKey(), imei);
                 }
             }
 
