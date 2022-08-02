@@ -1107,6 +1107,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
             callback) {
+        prefHelper_.setIdentity(userId);
+
         ServerRequestIdentifyUserRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);

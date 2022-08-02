@@ -53,10 +53,6 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
 
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            if (getPost() != null && getPost().has(Defines.Jsonkey.Identity.getKey())) {
-                prefHelper_.setIdentity(getPost().getString(Defines.Jsonkey.Identity.getKey()));
-            }
-
             prefHelper_.setRandomizedBundleToken(resp.getObject().getString(Defines.Jsonkey.RandomizedBundleToken.getKey()));
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
 
@@ -114,7 +110,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
     /**
      * Return true if the user id provided for user identification is the same as existing id
      *
-     * @return True if the user id refferes to the existing user
+     * @return True if the user id refers to the existing user
      */
     public boolean isExistingID() {
         try {

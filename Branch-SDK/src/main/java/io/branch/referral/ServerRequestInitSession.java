@@ -60,6 +60,12 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
+
+        String identity = prefHelper_.getIdentity();
+
+        if(!TextUtils.isEmpty(identity) && !identity.equals(PrefHelper.NO_STRING_VALUE)){
+            post.put(Defines.Jsonkey.Identity.getKey(), identity);
+        }
     }
 
     @Override
@@ -289,6 +295,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.remove(Defines.Jsonkey.IsHardwareIDReal.getKey());
             post.remove(Defines.Jsonkey.LocalIP.getKey());
             post.remove(Defines.Jsonkey.ReferrerGclid.getKey());
+            post.remove(Defines.Jsonkey.Identity.getKey());
             try {
                 post.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
             } catch (JSONException ignore) {
