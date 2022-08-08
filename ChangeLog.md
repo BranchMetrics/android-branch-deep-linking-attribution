@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.2.1
+  * _*Master Release*_ - Aug 8, 2022
+  * Removed unused IMEI strings and references in the Java
+  * Change setIdentity call to immediately save provided identity string instead of waiting for network call. Additionally it is sent as part of v1 open and install requests.
+
 - v5.2.0
   * _*Master Release*_ - Jun 15, 2022
   * Added methods to generate Branch QR codes.
