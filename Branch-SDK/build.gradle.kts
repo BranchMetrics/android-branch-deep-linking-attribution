@@ -120,6 +120,7 @@ publishing {
     val GROUP: String by project
     val VERSION_NAME: String by project
     val POM_ARTIFACT_ID: String by project
+    val POM_NAME: String by project
     val POM_DESCRIPTION: String by project
     val POM_URL: String by project
     val POM_SCM_URL: String by project
@@ -137,6 +138,7 @@ publishing {
             artifactId = POM_ARTIFACT_ID
             version = VERSION_NAME
             pom {
+                name.set(POM_NAME)
                 url.set(POM_URL)
                 description.set(POM_DESCRIPTION)
                 developers {
