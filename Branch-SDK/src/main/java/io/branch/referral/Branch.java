@@ -740,7 +740,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * set a maximum number of attempts for the Branch Request to be tried.
      *
      * Must be greater than 0
-     * Defaults to 2
+     * Defaults to 3
      * @param retryMax
      */
     public void setNoConnectionRetryMax(int retryMax){
