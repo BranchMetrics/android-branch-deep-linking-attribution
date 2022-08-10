@@ -736,6 +736,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * In cases of persistent no internet connection or offline modes,
+     * set a maximum number of attempts for the Branch Request to be tried.
+     *
+     * Must be greater than 0
+     * Defaults to 3
+     * @param retryMax
+     */
+    public void setNoConnectionRetryMax(int retryMax){
+        if(prefHelper_ != null && retryMax > 0){
+            prefHelper_.setNoConnectionRetryMax(retryMax);
+        }
+    }
+
+    /**
      * Sets the window for the referrer GCLID field. The GCLID will be persisted locally from the
      * time it is set + window in milliseconds. Thereafter, it will be deleted.
      *
@@ -2426,13 +2440,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
 
             boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
-            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail()) {
+            // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
+            // remove it from the queue
+            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || (thisReq_.currentRetryCount >= prefHelper_.getNoConnectionRetryMax())) {
                 requestQueue_.remove(thisReq_);
             } else {
                 // failure has already been handled
                 // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
                 thisReq_.clearCallbacks();
             }
+
+            thisReq_.currentRetryCount++;
         }
     }
 

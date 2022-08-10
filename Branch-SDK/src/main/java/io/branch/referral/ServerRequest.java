@@ -63,7 +63,9 @@ public abstract class ServerRequest {
         V1_LATD,
         V2
     }
-    
+
+    public int currentRetryCount = 0;
+
     /**
      * <p>Creates an instance of ServerRequest.</p>
      *

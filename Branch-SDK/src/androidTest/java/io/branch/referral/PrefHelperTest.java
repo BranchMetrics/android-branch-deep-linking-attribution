@@ -174,6 +174,7 @@ public class PrefHelperTest extends BranchTest {
         prefHelper.setReferrerGclidValidForWindow(PrefHelper.DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
     }
 
+    @Test
     public void testSetRandomlyGeneratedUuid(){
         String uuid = UUID.randomUUID().toString();
 
@@ -181,5 +182,18 @@ public class PrefHelperTest extends BranchTest {
         String result = prefHelper.getRandomlyGeneratedUuid();
 
         Assert.assertEquals(uuid, result);
+    }
+
+    @Test
+    public void testSetNoConnectionRetryMaxReturnsDefault(){
+        Assert.assertEquals(prefHelper.getNoConnectionRetryMax(), PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX);
+    }
+
+    @Test
+    public void testSetNoConnectionRetryMax(){
+        int max = 10;
+        prefHelper.setNoConnectionRetryMax(max);
+
+        Assert.assertEquals(max, prefHelper.getNoConnectionRetryMax());
     }
 }
