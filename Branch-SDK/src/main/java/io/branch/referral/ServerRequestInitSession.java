@@ -170,13 +170,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
 
         String appStore = prefHelper_.getAppStoreSource();
-        if(!TextUtils.isEmpty(appStore) && !PrefHelper.NO_STRING_VALUE.equals(appStore)){
-            try{
-                getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
-            }
-            catch (JSONException ignore){
-
-            }
+        try{
+            getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
+        }
+        catch (JSONException ignore){
         }
 
         // Check for Conversion from instant app to full app

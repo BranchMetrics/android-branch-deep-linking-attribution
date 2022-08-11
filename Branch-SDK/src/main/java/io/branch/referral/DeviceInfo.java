@@ -183,9 +183,7 @@ class DeviceInfo {
                 }
 
                 String appStore = prefHelper.getAppStoreSource();
-                if(!isNullOrEmptyOrBlank(appStore)){
-                    userDataObj.put(Defines.Jsonkey.App_Store.getKey(), appStore);
-                }
+                userDataObj.put(Defines.Jsonkey.App_Store.getKey(), appStore);
             }
 
             userDataObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());

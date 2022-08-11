@@ -697,7 +697,9 @@ public class PrefHelper {
     }
 
     public void setAppStoreSource(String store){
-        setString(KEY_APP_STORE_SOURCE, store);
+        if(!DeviceInfo.isNullOrEmptyOrBlank(store)) {
+            setString(KEY_APP_STORE_SOURCE, store);
+        }
     }
 
     public String getAppStoreSource(){
