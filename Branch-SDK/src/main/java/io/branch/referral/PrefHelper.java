@@ -76,6 +76,7 @@ public class PrefHelper {
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
     private static final String KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER = "bnc_google_search_install_identifier";
     private static final String KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA = "bnc_google_play_install_referrer_extras";
+    private static final String KEY_APP_STORE_SOURCE = "bnc_app_store_source";
     private static final String KEY_GCLID_JSON_OBJECT = "bnc_gclid_json_object";
     private static final String KEY_GCLID_VALUE = "bnc_gclid_value";
     private static final String KEY_GCLID_EXPIRATION_DATE = "bnc_gclid_expiration_date";
@@ -693,6 +694,14 @@ public class PrefHelper {
      */
     public String getAppStoreReferrer() {
         return getString(KEY_GOOGLE_PLAY_INSTALL_REFERRER_EXTRA);
+    }
+
+    public void setAppStoreSource(String store){
+        setString(KEY_APP_STORE_SOURCE, store);
+    }
+
+    public String getAppStoreSource(){
+        return getString(KEY_APP_STORE_SOURCE);
     }
 
     /**

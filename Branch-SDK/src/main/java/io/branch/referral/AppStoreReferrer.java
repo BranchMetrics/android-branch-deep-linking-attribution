@@ -15,8 +15,11 @@ public abstract class AppStoreReferrer {
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
 
-    protected static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS) {
+    protected static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store) {
         PrefHelper prefHelper = PrefHelper.getInstance(context);
+        if(!TextUtils.isEmpty(store)){
+            prefHelper.setAppStoreSource(store);
+        }
         if (referrerClickTS > 0) {
             prefHelper.setLong(PrefHelper.KEY_REFERRER_CLICK_TS, referrerClickTS);
         }

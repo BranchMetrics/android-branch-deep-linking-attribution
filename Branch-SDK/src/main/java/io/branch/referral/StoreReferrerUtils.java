@@ -1,9 +1,9 @@
 package io.branch.referral;
 
-import static io.branch.referral.Defines.Jsonkey.GOOGLE_PLAY_STORE;
-import static io.branch.referral.Defines.Jsonkey.HUAWEI_APP_GALLERY;
-import static io.branch.referral.Defines.Jsonkey.SAMSUNG_GALAXY_STORE;
-import static io.branch.referral.Defines.Jsonkey.XIAOMI_GET_APPS;
+import static io.branch.referral.Defines.Jsonkey.Google_Play_Store;
+import static io.branch.referral.Defines.Jsonkey.Huawei_App_Gallery;
+import static io.branch.referral.Defines.Jsonkey.Samsung_Galaxy_Store;
+import static io.branch.referral.Defines.Jsonkey.Xiaomi_Get_Apps;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -17,46 +17,46 @@ public class StoreReferrerUtils {
      * Then iterate for first non-null string.
      * @return Name of the store
      */
-    public static String getLatestValidReferrerStore(){
+    public static String getLatestValidReferrerStore(Context context){
         String result = "";
-        Long latestTimeStamp = Long.MIN_VALUE;
+        Long latestTimeStamp = 0L;
 
         if(StoreReferrerGooglePlayStore.installBeginTimestamp > latestTimeStamp){
             latestTimeStamp = StoreReferrerGooglePlayStore.installBeginTimestamp;
-            result = GOOGLE_PLAY_STORE.getKey();
+            result = Google_Play_Store.getKey();
         }
 
         if(StoreReferrerHuaweiAppGallery.installBeginTimestamp > latestTimeStamp){
             latestTimeStamp = StoreReferrerHuaweiAppGallery.installBeginTimestamp;
-            result = HUAWEI_APP_GALLERY.getKey();
+            result = Huawei_App_Gallery.getKey();
         }
 
         if(StoreReferrerSamsungGalaxyStore.installBeginTimestamp > latestTimeStamp){
             latestTimeStamp = StoreReferrerSamsungGalaxyStore.installBeginTimestamp;
-            result = SAMSUNG_GALAXY_STORE.getKey();
+            result = Samsung_Galaxy_Store.getKey();
         }
 
         if(StoreReferrerXiaomiGetApps.installBeginTimestamp > latestTimeStamp){
-            result = XIAOMI_GET_APPS.getKey();
+            result = Xiaomi_Get_Apps.getKey();
         }
 
         // iterate through non-null strings for cases like Google Play returning
         // "utm_source=google-play&utm_medium=organic" for organic installs
         if(result.isEmpty()){
             if(!TextUtils.isEmpty(StoreReferrerGooglePlayStore.rawReferrer)){
-                result = GOOGLE_PLAY_STORE.getKey();
+                result = Google_Play_Store.getKey();
             }
 
             if(!TextUtils.isEmpty(StoreReferrerHuaweiAppGallery.rawReferrer)){
-                result = HUAWEI_APP_GALLERY.getKey();
+                result = Huawei_App_Gallery.getKey();
             }
 
             if(!TextUtils.isEmpty(StoreReferrerSamsungGalaxyStore.rawReferrer)){
-                result = SAMSUNG_GALAXY_STORE.getKey();
+                result = Samsung_Galaxy_Store.getKey();
             }
 
             if(!TextUtils.isEmpty(StoreReferrerXiaomiGetApps.rawReferrer)){
-                result = XIAOMI_GET_APPS.getKey();
+                result = Xiaomi_Get_Apps.getKey();
             }
         }
 
@@ -64,17 +64,17 @@ public class StoreReferrerUtils {
     }
 
     public static void writeLatestInstallReferrer(Context context_, String store) {
-        if(store.equals(Defines.Jsonkey.GOOGLE_PLAY_STORE.getKey())){
-            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerGooglePlayStore.rawReferrer, StoreReferrerGooglePlayStore.clickTimestamp, StoreReferrerGooglePlayStore.installBeginTimestamp);
+        if(store.equals(Defines.Jsonkey.Google_Play_Store.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerGooglePlayStore.rawReferrer, StoreReferrerGooglePlayStore.clickTimestamp, StoreReferrerGooglePlayStore.installBeginTimestamp, store);
         }
-        if(store.equals(Defines.Jsonkey.HUAWEI_APP_GALLERY.getKey())){
-            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerHuaweiAppGallery.rawReferrer, StoreReferrerHuaweiAppGallery.clickTimestamp, StoreReferrerHuaweiAppGallery.installBeginTimestamp);
+        if(store.equals(Defines.Jsonkey.Huawei_App_Gallery.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerHuaweiAppGallery.rawReferrer, StoreReferrerHuaweiAppGallery.clickTimestamp, StoreReferrerHuaweiAppGallery.installBeginTimestamp, store);
         }
-        if(store.equals(Defines.Jsonkey.SAMSUNG_GALAXY_STORE.getKey())){
-            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerSamsungGalaxyStore.rawReferrer, StoreReferrerSamsungGalaxyStore.clickTimestamp, StoreReferrerSamsungGalaxyStore.installBeginTimestamp);
+        if(store.equals(Defines.Jsonkey.Samsung_Galaxy_Store.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerSamsungGalaxyStore.rawReferrer, StoreReferrerSamsungGalaxyStore.clickTimestamp, StoreReferrerSamsungGalaxyStore.installBeginTimestamp, store);
         }
-        if(store.equals(Defines.Jsonkey.XIAOMI_GET_APPS.getKey())){
-            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerXiaomiGetApps.rawReferrer, StoreReferrerXiaomiGetApps.clickTimestamp, StoreReferrerXiaomiGetApps.installBeginTimestamp);
+        if(store.equals(Defines.Jsonkey.Xiaomi_Get_Apps.getKey())){
+            AppStoreReferrer.processReferrerInfo(context_, StoreReferrerXiaomiGetApps.rawReferrer, StoreReferrerXiaomiGetApps.clickTimestamp, StoreReferrerXiaomiGetApps.installBeginTimestamp, store);
         }
     }
 }
