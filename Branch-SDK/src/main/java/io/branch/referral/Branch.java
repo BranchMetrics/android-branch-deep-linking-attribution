@@ -1038,7 +1038,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private void tryProcessNextQueueItemAfterInstallReferrer() {
         if(!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)){
-            String store = StoreReferrerUtils.getLatestValidReferrerStore(context_);
+            String store = StoreReferrerUtils.getLatestValidReferrerStore();
             StoreReferrerUtils.writeLatestInstallReferrer(context_, store);
             processNextQueueItem();
         }

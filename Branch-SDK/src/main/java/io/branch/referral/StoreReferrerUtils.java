@@ -17,7 +17,7 @@ public class StoreReferrerUtils {
      * Then iterate for first non-null string.
      * @return Name of the store
      */
-    public static String getLatestValidReferrerStore(Context context){
+    public static String getLatestValidReferrerStore(){
         String result = "";
         Long latestTimeStamp = 0L;
 

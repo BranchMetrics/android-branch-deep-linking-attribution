@@ -42,7 +42,7 @@ public class StoreReferrerTests extends BranchTest {
         StoreReferrerXiaomiGetApps.clickTimestamp = Long.MAX_VALUE-3;
         StoreReferrerXiaomiGetApps.rawReferrer = "xiaomi";
 
-        String result = StoreReferrerUtils.getLatestValidReferrerStore(context);
+        String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
         Assert.assertEquals(Defines.Jsonkey.Huawei_App_Gallery.getKey(), result);
 
@@ -68,7 +68,7 @@ public class StoreReferrerTests extends BranchTest {
         StoreReferrerXiaomiGetApps.clickTimestamp = Long.MIN_VALUE;
         StoreReferrerXiaomiGetApps.rawReferrer = null;
 
-        String result = StoreReferrerUtils.getLatestValidReferrerStore(context);
+        String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
         Assert.assertEquals("", result);
 
@@ -94,7 +94,7 @@ public class StoreReferrerTests extends BranchTest {
         StoreReferrerXiaomiGetApps.clickTimestamp = 0L;
         StoreReferrerXiaomiGetApps.rawReferrer = null;
 
-        String result = StoreReferrerUtils.getLatestValidReferrerStore(context);
+        String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
         Assert.assertEquals(Defines.Jsonkey.Google_Play_Store.getKey(), result);
 
@@ -120,7 +120,7 @@ public class StoreReferrerTests extends BranchTest {
         StoreReferrerXiaomiGetApps.clickTimestamp = 0L;
         StoreReferrerXiaomiGetApps.rawReferrer = null;
 
-        String result = StoreReferrerUtils.getLatestValidReferrerStore(context);
+        String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
         StoreReferrerUtils.writeLatestInstallReferrer(context, result);
         Assert.assertEquals(StoreReferrerGooglePlayStore.rawReferrer, PrefHelper.getInstance(context).getAppStoreReferrer());
