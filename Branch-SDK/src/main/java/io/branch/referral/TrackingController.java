@@ -57,6 +57,7 @@ public class TrackingController {
         prefHelper.setAppLink(PrefHelper.NO_STRING_VALUE);
         prefHelper.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE);
+        prefHelper.setAppStoreSource(PrefHelper.NO_STRING_VALUE);
         prefHelper.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
         prefHelper.setInitialReferrer(PrefHelper.NO_STRING_VALUE);
         prefHelper.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);

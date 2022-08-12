@@ -168,6 +168,15 @@ abstract class ServerRequestInitSession extends ServerRequest {
             } catch (JSONException ignore) {
             }
         }
+
+        String appStore = prefHelper_.getAppStoreSource();
+        if(!PrefHelper.NO_STRING_VALUE.equals(appStore)) {
+            try {
+                getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
+            } catch (JSONException ignore) {
+            }
+        }
+
         // Check for Conversion from instant app to full app
         if (prefHelper_.isFullAppConversion()) {
             try {

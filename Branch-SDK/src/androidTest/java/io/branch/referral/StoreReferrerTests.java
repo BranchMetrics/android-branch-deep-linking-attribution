@@ -44,7 +44,10 @@ public class StoreReferrerTests extends BranchTest {
 
         String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
-        Assert.assertEquals(Defines.Jsonkey.HUAWEI_APP_GALLERY.getKey(), result);
+        Assert.assertEquals(Defines.Jsonkey.Huawei_App_Gallery.getKey(), result);
+
+        StoreReferrerUtils.writeLatestInstallReferrer(context, result);
+        Assert.assertEquals(Defines.Jsonkey.Huawei_App_Gallery.getKey(), prefHelper.getAppStoreSource());
     }
 
     @Test
@@ -68,6 +71,9 @@ public class StoreReferrerTests extends BranchTest {
         String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
         Assert.assertEquals("", result);
+
+        StoreReferrerUtils.writeLatestInstallReferrer(context, result);
+        Assert.assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.getAppStoreSource());
     }
 
     @Test
@@ -90,7 +96,10 @@ public class StoreReferrerTests extends BranchTest {
 
         String result = StoreReferrerUtils.getLatestValidReferrerStore();
 
-        Assert.assertEquals(Defines.Jsonkey.GOOGLE_PLAY_STORE.getKey(), result);
+        Assert.assertEquals(Defines.Jsonkey.Google_Play_Store.getKey(), result);
+
+        StoreReferrerUtils.writeLatestInstallReferrer(context, result);
+        Assert.assertEquals(Defines.Jsonkey.Google_Play_Store.getKey(), prefHelper.getAppStoreSource());
     }
 
     @Test
@@ -115,5 +124,6 @@ public class StoreReferrerTests extends BranchTest {
 
         StoreReferrerUtils.writeLatestInstallReferrer(context, result);
         Assert.assertEquals(StoreReferrerGooglePlayStore.rawReferrer, PrefHelper.getInstance(context).getAppStoreReferrer());
+        Assert.assertEquals(Defines.Jsonkey.Google_Play_Store.getKey(), prefHelper.getAppStoreSource());
     }
 }

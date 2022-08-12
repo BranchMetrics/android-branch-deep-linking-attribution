@@ -196,4 +196,12 @@ public class PrefHelperTest extends BranchTest {
 
         Assert.assertEquals(max, prefHelper.getNoConnectionRetryMax());
     }
+
+    @Test
+    public void testAppStoreSource(){
+        prefHelper.setAppStoreSource(Defines.Jsonkey.Google_Play_Store.getKey());
+
+        String result = prefHelper.getAppStoreSource();
+        Assert.assertEquals(Defines.Jsonkey.Google_Play_Store.getKey(), result);
+    }
 }

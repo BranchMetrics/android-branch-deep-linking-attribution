@@ -218,10 +218,11 @@ public class Defines {
         QRCodeBranchKey("branch_key"),
         QRCodeResponseString("QRCodeString"),
 
-        GOOGLE_PLAY_STORE("google_play_store"),
-        HUAWEI_APP_GALLERY("huawei_app_gallery"),
-        SAMSUNG_GALAXY_STORE("samsung_galaxy_store"),
-        XIAOMI_GET_APPS("xiaomi_get_apps");
+        App_Store("app_store"),
+        Google_Play_Store("PlayStore"),
+        Huawei_App_Gallery("AppGallery"),
+        Samsung_Galaxy_Store("GalaxyStore"),
+        Xiaomi_Get_Apps("GetApps");
 
         private final String key;
         
