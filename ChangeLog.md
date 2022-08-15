@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.2.2
+  * _*Master Release*_ - Aug 15, 2022
+  * Sending app_store install source on requests
+  * Added default retry cap for no-internet request queues 
+  
 - v5.2.1
   * _*Master Release*_ - Aug 8, 2022
   * Removed unused IMEI strings and references in the Java
