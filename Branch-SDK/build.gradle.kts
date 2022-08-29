@@ -176,11 +176,21 @@ publishing {
                         .forEach { dependency ->
                             val artifactId = dependency.getChild("artifactId")
                             if (artifactId.text() == "okhttp" || artifactId.text() == "firebase-appindexing") {
+                                // Ensure optional flag is set
                                 val optional = dependency.getChildOrNull("optional")
                                 if (optional != null) {
                                     optional.setValue("true")
                                 } else {
                                     dependency.appendNode("optional", "true")
+                                }
+
+                                // Ensure scope is set to 'compile'
+                                val scope = dependency.getChildOrNull("scope")
+                                if (scope != null) {
+                                    scope.setValue("compile")
+                                }
+                                else {
+                                    dependency.appendNode("scope", "compile")
                                 }
                             }
                         }
