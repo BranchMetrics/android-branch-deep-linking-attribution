@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.2.3
+  * _*Master Release*_ - Aug 29, 2022
+  * Updated compile and target API to 32
+  * Changed POM scope for firebase-appindexing from "runtime" to "compile"
+
 - v5.2.2
   * _*Master Release*_ - Aug 15, 2022
   * Sending app_store install source on requests
