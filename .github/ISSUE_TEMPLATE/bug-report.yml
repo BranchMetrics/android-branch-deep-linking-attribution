@@ -1,0 +1,74 @@
+--- 
+assignees: []
+body: 
+  - 
+    attributes: 
+      description: "What is the problem? A clear and concise description of what the bug is."
+      label: "Describe the bug"
+      placeholder: "Tell us what you see!"
+    id: description
+    type: textarea
+    validations: 
+      required: true
+  - 
+    attributes: 
+      description: "Please provide as much step-by-step detail as possible including logs, stacktraces, and uncaught exceptions."
+      label: "Steps to reproduce"
+      value: |
+          1.
+          2.
+          3.
+    id: steps
+    type: textarea
+    validations: 
+      required: true
+  - 
+    attributes: 
+      description: "What did you expect to happen?"
+      label: "Expected behavior"
+    id: expected
+    type: textarea
+    validations: 
+      required: true
+  - 
+    attributes: 
+      description: "What version of sdk are you seeing this issue on?"
+      label: "SDK Version"
+      placeholder: "5.2.3"
+    id: sdk-version
+    type: input
+    validations: 
+      required: true
+  - 
+    attributes: 
+      description: "What devices or emulators are you seeing this bug on?"
+      label: Environment
+      placeholder: "Samsung S21"
+    id: env
+    type: input
+    validations: 
+      required: true
+  - 
+    attributes: 
+      description: "What is the version of the Android OS?"
+      label: Environment
+      placeholder: "12"
+    id: env
+    type: input
+    validations: 
+      required: true
+  - 
+    attributes: 
+      description: "Anything else that might be relevant for troubleshooting this bug. Any screenshots or videos that show the issue are very helpful.\n"
+      label: "Additional Information/Context"
+    id: context
+    type: textarea
+    validations: 
+      required: false
+  
+description: "Found a bug in the Branch Android SDK? File it here."
+labels: 
+  - bug
+  - needs-triage
+name: "🐞 Bug report"
+title: "(short issue description)"
