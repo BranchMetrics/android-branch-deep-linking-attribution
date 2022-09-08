@@ -44,7 +44,7 @@ body:
       description: "What devices or emulators are you seeing this bug on?"
       label: Environment
       placeholder: "Samsung S21"
-    id: env
+    id: device
     type: input
     validations: 
       required: true
@@ -53,7 +53,7 @@ body:
       description: "What is the version of the Android OS?"
       label: Environment
       placeholder: "12"
-    id: env
+    id: os
     type: input
     validations: 
       required: true
