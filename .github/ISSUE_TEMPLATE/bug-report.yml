@@ -59,7 +59,7 @@ body:
       required: true
   - 
     attributes: 
-      description: "Anything else that might be relevant for troubleshooting this bug. Any screenshots or videos that show the issue are very helpful.\n"
+      description: "Anything else that might be relevant for troubleshooting this bug. Any screenshots or videos that show the issue are very helpful."
       label: "Additional Information/Context"
     id: context
     type: textarea
