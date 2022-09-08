@@ -42,7 +42,7 @@ body:
   - 
     attributes: 
       description: "What devices or emulators are you seeing this bug on?"
-      label: Environment
+      label: Make and Model
       placeholder: "Samsung S21"
     id: device
     type: input
@@ -51,7 +51,7 @@ body:
   - 
     attributes: 
       description: "What is the version of the Android OS?"
-      label: Environment
+      label: OS
       placeholder: "12"
     id: os
     type: input
