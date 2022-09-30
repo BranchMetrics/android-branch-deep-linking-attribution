@@ -7,6 +7,7 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.webkit.WebSettings;
+import android.webkit.WebView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -286,15 +287,41 @@ class DeviceInfo {
         return systemObserver_.getOS(context_);
     }
 
-    // PRS : User agent is checked only from api-17
+
+    /**
+     * Returns the browser's user agent string
+     * PRS : User agent is checked only from api-17
+     * @param context
+     * @return user agent string
+     */
     private String getDefaultBrowserAgent(Context context) {
         String userAgent = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             try {
-                userAgent = WebSettings.getDefaultUserAgent(context);
-            } catch (Exception ignore) {
-                // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
-                // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
+                // Some devices appear to crash when accessing chromium through the Android framework statics
+                // Suggested alternative is to use a webview instance
+                // https://bugs.chromium.org/p/chromium/issues/detail?id=1279562
+                // https://bugs.chromium.org/p/chromium/issues/detail?id=1271617
+                WebView w = new WebView(context);
+                if(w != null) {
+                    userAgent = w.getSettings().getUserAgentString();
+                    w.destroy();
+                }
+            }
+            // If the above fails because of no handler available, catch and fallback to the original method for static
+            catch (Exception e) {
+                PrefHelper.Debug(e.getMessage());
+                if(userAgent.isEmpty()){
+                    try {
+                        PrefHelper.Debug("Could not get user agent string from webview instance. Trying static.");
+                        userAgent = WebSettings.getDefaultUserAgent(context);
+                    }
+                    catch (Exception exception) {
+                        PrefHelper.Debug(exception.getMessage());
+                        // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
+                        // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
+                    }
+                }
             }
         }
         return userAgent;
