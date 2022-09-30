@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.2.4
+  * _*Master Release*_ - Sep 30, 2022
+  * Using alternative method to obtain user agent through WebView instance with static as fallback 
+
 - v5.2.3
   * _*Master Release*_ - Aug 29, 2022
   * Updated compile and target API to 32
