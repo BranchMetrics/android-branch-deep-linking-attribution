@@ -5,7 +5,10 @@ import android.hardware.display.DisplayManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 
+import androidx.test.annotation.UiThreadTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Assert;
@@ -93,5 +96,17 @@ public class DeviceInfoTest extends BranchTest {
         Assert.assertEquals(displayMetrics1.widthPixels, displayMetrics2.widthPixels);
         Assert.assertEquals(displayMetrics1.heightPixels, displayMetrics2.heightPixels);
         Assert.assertEquals(displayMetrics1.densityDpi, displayMetrics2.densityDpi);
+    }
+
+    @Test
+    @UiThreadTest //instantiating the webview requires a handler
+    public void userAgentStaticAndInstanceSameString(){
+
+        String getDefaultUserAgentString = WebSettings.getDefaultUserAgent(getTestContext());
+        WebView w = new WebView(getTestContext());
+        String getUserAgentString = w.getSettings().getUserAgentString();
+
+        // This is true assuming the webview package was not updated in between this test execution
+        Assert.assertEquals(getDefaultUserAgentString, getUserAgentString);
     }
 }
