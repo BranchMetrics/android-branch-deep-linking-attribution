@@ -4,6 +4,8 @@ import android.app.UiModeManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.webkit.WebSettings;
@@ -294,37 +296,54 @@ class DeviceInfo {
      * @param context
      * @return user agent string
      */
-    private String getDefaultBrowserAgent(Context context) {
-        String userAgent = "";
+    String getDefaultBrowserAgent(final Context context) {
+        if(!TextUtils.isEmpty(Branch._userAgentString)) {
+            return Branch._userAgentString;
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             try {
-                // Some devices appear to crash when accessing chromium through the Android framework statics
-                // Suggested alternative is to use a webview instance
-                // https://bugs.chromium.org/p/chromium/issues/detail?id=1279562
-                // https://bugs.chromium.org/p/chromium/issues/detail?id=1271617
-                WebView w = new WebView(context);
-                if(w != null) {
-                    userAgent = w.getSettings().getUserAgentString();
-                    w.destroy();
-                }
+                PrefHelper.Debug("Did not get user agent string from webview instance. Retrieving from static.");
+                Branch._userAgentString = WebSettings.getDefaultUserAgent(context);
             }
-            // If the above fails because of no handler available, catch and fallback to the original method for static
-            catch (Exception e) {
-                PrefHelper.Debug(e.getMessage());
-                if(userAgent.isEmpty()){
-                    try {
-                        PrefHelper.Debug("Could not get user agent string from webview instance. Trying static.");
-                        userAgent = WebSettings.getDefaultUserAgent(context);
-                    }
-                    catch (Exception exception) {
-                        PrefHelper.Debug(exception.getMessage());
-                        // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
-                        // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
-                    }
-                }
+            catch (Exception exception) {
+                PrefHelper.Debug(exception.getMessage());
+                // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
+                // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
             }
         }
-        return userAgent;
+        return Branch._userAgentString;
+    }
+
+    /**
+     * Must be called from the main thread
+     * Some devices appear to crash when accessing chromium through the Android framework statics
+     * Suggested alternative is to use a webview instance
+     * https://bugs.chromium.org/p/chromium/issues/detail?id=1279562
+     * https://bugs.chromium.org/p/chromium/issues/detail?id=1271617
+     **/
+    String getUserAgentStringSync(final Context context){
+        if(!TextUtils.isEmpty(Branch._userAgentString)) {
+            return Branch._userAgentString;
+        }
+
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    PrefHelper.Debug("Running WebView initialization on thread" + Thread.currentThread());
+                    WebView w = new WebView(context);
+                    Branch._userAgentString = w.getSettings().getUserAgentString();
+                    w.destroy();
+                }
+                catch (Exception e) {
+                    PrefHelper.Debug(e.getMessage());
+                }
+
+            }
+        });
+
+        return Branch._userAgentString;
     }
 
     /**
