@@ -303,7 +303,7 @@ class DeviceInfo {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             try {
-                PrefHelper.Debug("Unable to retrieve user agent string from WebView instance. Retrieving from WebSettings");
+                PrefHelper.Debug("Retrieving user agent string from WebSettings");
                 Branch._userAgentString = WebSettings.getDefaultUserAgent(context);
             }
             catch (Exception exception) {
