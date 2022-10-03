@@ -273,7 +273,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * once. After initial use, subsequent attempts will not validate.
      */
     public static final int LINK_TYPE_ONE_TIME_USE = 1;
-    
+
+    /**
+     * If true, instantiate a new webview instance ui thread to retrieve user agent string
+     */
+    static boolean userAgentSync;
+
+    /**
+     * Package private user agent string cached to save on repeated queries
+     */
+    static String _userAgentString = "";
+
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
     
@@ -446,6 +456,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         /* If {@link Application} is instantiated register for activity life cycle events. */
         if (context instanceof Application) {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
+        }
+
+        // Cache the user agent from a webview instance if needed
+        if(userAgentSync && DeviceInfo.getInstance() != null){
+            DeviceInfo.getInstance().getUserAgentStringSync(context);
         }
 
         return branchReferral_;
@@ -856,6 +871,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
         addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
         return this;
+    }
+
+    public static void setIsUserAgentSync(boolean sync){
+        userAgentSync = sync;
     }
     
     /*
