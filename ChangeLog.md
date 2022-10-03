@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.2.5
+  * _*Master Release*_ - Oct 3, 2022
+  * For user agent string, move webview instance to ui thread on init
+    * To use this method to obtain the user agent string, set `Branch.setIsUserAgentSync(true)`
+    * Static WebSettings is the default
+
 - v5.2.4
   * _*Master Release*_ - Sep 30, 2022
   * Using alternative method to obtain user agent through WebView instance with static as fallback 
