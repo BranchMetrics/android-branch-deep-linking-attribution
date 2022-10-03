@@ -303,7 +303,7 @@ class DeviceInfo {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             try {
-                PrefHelper.Debug("Did not get user agent string from webview instance. Retrieving from static.");
+                PrefHelper.Debug("Unable to retrieve user agent string from WebView instance. Retrieving from WebSettings");
                 Branch._userAgentString = WebSettings.getDefaultUserAgent(context);
             }
             catch (Exception exception) {
@@ -331,7 +331,7 @@ class DeviceInfo {
             @Override
             public void run() {
                 try {
-                    PrefHelper.Debug("Running WebView initialization on thread" + Thread.currentThread());
+                    PrefHelper.Debug("Running WebView initialization for user agent on thread " + Thread.currentThread());
                     WebView w = new WebView(context);
                     Branch._userAgentString = w.getSettings().getUserAgentString();
                     w.destroy();
