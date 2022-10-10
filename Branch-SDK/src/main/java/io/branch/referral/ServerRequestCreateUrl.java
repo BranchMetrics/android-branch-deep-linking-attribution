@@ -83,6 +83,7 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.putStage(stage);
             linkPost_.putCampaign(campaign);
             linkPost_.putParams(params);
+            linkPost_.putSource();
 
             setPost(linkPost_);
 

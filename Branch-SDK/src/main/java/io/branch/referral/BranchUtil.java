@@ -129,35 +129,6 @@ public class BranchUtil {
     /** @deprecated (see enableDebugMode for more information) */
     public static boolean isDebugEnabled() { return false; }
 
-    /**
-     * Converts a given link param as {@link JSONObject} to string after adding the source param and removes replaces any illegal characters.
-     *
-     * @param params Link param JSONObject.
-     * @return A {@link String} representation of link params.
-     */
-    static JSONObject formatLinkParam(JSONObject params) {
-        return addSource(params);
-    }
-
-    /**
-     * Convert the given JSONObject to string and adds source value as
-     *
-     * @param params JSONObject to convert to string
-     * @return A {@link String} value representing the JSONObject
-     */
-
-    static JSONObject addSource(JSONObject params) {
-        if (params == null) {
-            params = new JSONObject();
-        }
-        try {
-            params.put("source", "android");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return params;
-    }
-
     public static String decodeResourceId(Context context, int resourceId) {
         try {
             if (resourceId != -1) {
