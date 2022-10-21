@@ -56,7 +56,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
         }
         post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
-        post.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
