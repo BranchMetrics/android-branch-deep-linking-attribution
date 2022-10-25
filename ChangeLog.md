@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.2.6
+  * _*Master Release*_ - Oct 25, 2022
+  * `debug` field is now included in all events, previously only on init requests
+  * `source` field moved from `data` block to top level in v1 url requests
+    
 - v5.2.5
   * _*Master Release*_ - Oct 3, 2022
   * For user agent string, move webview instance to ui thread on init
