@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -83,6 +84,7 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.putStage(stage);
             linkPost_.putCampaign(campaign);
             linkPost_.putParams(params);
+            linkPost_.putSource();
 
             setPost(linkPost_);
 
@@ -235,12 +237,16 @@ class ServerRequestCreateUrl extends ServerRequest {
             long duration = linkPost_.getDuration();
             longUrl = longUrl + Defines.LinkParam.Duration + "=" + duration;
 
-            String params = linkPost_.getParams().toString();
+            String source = Defines.Jsonkey.URLSource.getKey();
+            longUrl = longUrl + "&source=" + source;
+
+            JSONObject params = linkPost_.getParams();
             if (params != null && params.length() > 0) {
-                byte[] data = params.getBytes();
+                String paramsString = params.toString();
+                byte[] data = paramsString.getBytes();
                 String base64Data = Base64.encodeToString(data, android.util.Base64.NO_WRAP);
                 String urlEncodedBase64Data = URLEncoder.encode(base64Data, "UTF8");
-                longUrl = longUrl + "&source=android&data=" + urlEncodedBase64Data;
+                longUrl = longUrl + "&data=" + urlEncodedBase64Data;
             }
         } catch (Exception ignore) {
             callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_BRANCH_INVALID_REQUEST));

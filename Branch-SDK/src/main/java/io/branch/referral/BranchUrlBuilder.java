@@ -118,7 +118,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,
-                    BranchUtil.formatLinkParam(params_), null, false, defaultToLongUrl_);
+                    params_, null, false, defaultToLongUrl_);
             shortUrl = branchReferral_.generateShortLinkInternal(req);
         }
         return shortUrl;
@@ -128,7 +128,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,
-                    BranchUtil.formatLinkParam(params_), callback, true, defaultToLongUrl_);
+                    params_, callback, true, defaultToLongUrl_);
             branchReferral_.generateShortLinkInternal(req);
         } else {
             if (callback != null) {

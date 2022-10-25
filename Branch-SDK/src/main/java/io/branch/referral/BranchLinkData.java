@@ -318,6 +318,21 @@ class BranchLinkData extends JSONObject {
     }
 
     /**
+     * <p>Adds Android as the source.</p>
+     *
+     * @throws JSONException The parameter value must be in valid JSON format, or a
+     *                       {@link JSONException} will be thrown.
+     */
+    public void putSource() throws JSONException {
+        this.put("source", Defines.Jsonkey.URLSource.getKey());
+    }
+
+    public String getSource() {
+        return Defines.Jsonkey.URLSource.getKey();
+    }
+
+
+    /**
      * <p>Compares a BranchLinkData object by instance
      * ("is the object the exact same one in memory") and by associated
      * attributes ("is this object identically configured?")</p>
