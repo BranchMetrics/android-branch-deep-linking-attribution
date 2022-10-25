@@ -220,6 +220,8 @@ class DeviceInfo {
                     requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
                 }
             }
+
+            requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
         }
         catch (JSONException ignore){
         }
