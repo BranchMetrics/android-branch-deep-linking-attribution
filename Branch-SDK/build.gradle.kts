@@ -45,11 +45,11 @@ fun isReleaseBuild(): Boolean {
 }
 
 android {
-    compileSdk = ANDROID_BUILD_SDK_VERSION.toInt()
+    compileSdkPreview = "TiramisuPrivacySandbox"
 
     defaultConfig {
-        minSdk = ANDROID_BUILD_TARGET_SDK_MINIMUM.toInt()
-        targetSdk = ANDROID_BUILD_TARGET_SDK_VERSION.toInt()
+        minSdkPreview = "TiramisuPrivacySandbox"
+        targetSdkPreview = "TiramisuPrivacySandbox"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

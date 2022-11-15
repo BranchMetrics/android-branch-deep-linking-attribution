@@ -4,5 +4,11 @@
       <!-- Trust user added CAs while debuggable only -->
       <certificates src="user" /> 
     </trust-anchors> 
-  </debug-overrides> 
+  </debug-overrides>
+
+  <!-- TODO: Remove this before committing/when server is ready! -->
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">localhost</domain>
+    <domain includeSubdomains="true">10.0.2.2</domain>
+  </domain-config>
 </network-security-config>

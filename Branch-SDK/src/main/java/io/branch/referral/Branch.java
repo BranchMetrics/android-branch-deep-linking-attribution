@@ -6,6 +6,9 @@ import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
 
+
+import android.adservices.exceptions.AdServicesException;
+import android.adservices.measurement.MeasurementManager;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -17,6 +20,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,7 +28,10 @@ import androidx.annotation.StyleRes;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.os.OutcomeReceiver;
 import android.text.TextUtils;
+import android.view.InputEvent;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
@@ -44,9 +51,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -58,6 +68,8 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
+
+
 
 /**
  * <p>
@@ -403,7 +415,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * us make data driven decisions. */
     private static String pluginVersion = null;
     private static String pluginName = null;
-    
+
+    public static MeasurementManager measurementManager = null;
+
+    //TODO: Replace with real url, this is an alias for host machine's localhost with test port
+    public static String measurementUrl = "http://10.0.0.2:4010";
+
+    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -423,6 +442,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
+
+        measurementManager = context.getSystemService(MeasurementManager.class);
     }
 
     /**
@@ -483,6 +504,85 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             getPreinstallSystemData(branchReferral_, context);
         }
         return branchReferral_;
+    }
+
+
+    /**
+     * Registers an attribution source via the Google Privacy Sandbox Attribution API
+     * Sources can either be a click on an ad, or viewing an ad
+     * @param inputEvent If null, the source is treated as View Ad
+     *                   Otherwise, if and only if it is MotionEvent.ACTION.DOWN, it is an ad Click
+     * @param callback
+     */
+    public void registerSource(InputEvent inputEvent, int adId, OutcomeReceiver callback){
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (callback == null) {
+                callback = new OutcomeReceiver<Object, AdServicesException>() {
+                    //TODO: Once server is up, should reply with destination, source event id, expiry, priority
+                    // And, make a request for each redirect uri
+                    @Override
+                    public void onResult(@NonNull Object result) {
+                        PrefHelper.Debug("Completed register source " + result);
+                    }
+
+                    @Override
+                    public void onError(@NonNull AdServicesException error) {
+                        // Handle error
+                        PrefHelper.Debug("Error executing register source: " + error);
+                    }
+                };
+            }
+
+            //TODO: need ad id
+            Uri registerSourceUri = Uri.parse(measurementUrl + "source?ad_id=" + adId);
+
+            if(inputEvent == null){
+                measurementManager.registerSource(registerSourceUri, null,
+                        CALLBACK_EXECUTOR, callback);
+            }
+            else if(inputEvent instanceof MotionEvent &&
+                    ((MotionEvent) inputEvent).getAction() == MotionEvent.ACTION_DOWN) {
+                measurementManager.registerSource(registerSourceUri, inputEvent,
+                        CALLBACK_EXECUTOR, callback);
+            }
+        }
+        else{
+            PrefHelper.Debug("Privacy Sandbox requires API level TiramisuPrivacySandbox");
+        }
+    }
+
+
+    /**
+     * Registers a trigger or conversion via the Google Privacy Sandbox Attribution API
+     * @param callback
+     */
+    public void registerTrigger(int conversionId, OutcomeReceiver callback){
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (callback == null) {
+                callback = new OutcomeReceiver<Object, AdServicesException>() {
+                    //TODO: Once server is up, should reply with trigger data, priority, dedupe key
+                    // And, make a request for each redirect uri
+                    @Override
+                    public void onResult(@NonNull Object result) {
+                        PrefHelper.Debug("Completed register trigger " + result);
+                    }
+
+                    @Override
+                    public void onError(@NonNull AdServicesException error) {
+                        // Handle error
+                        PrefHelper.Debug("Error executing register trigger: " + error);
+                    }
+                };
+            }
+
+            Uri registerTriggerUri = Uri.parse(measurementUrl + "trigger?conv_id=" + conversionId);
+
+            measurementManager.registerTrigger(registerTriggerUri,
+                    CALLBACK_EXECUTOR, callback);
+        }
+        else{
+            PrefHelper.Debug("Privacy Sandbox requires API level TiramisuPrivacySandbox");
+        }
     }
 
     /**

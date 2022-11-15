@@ -28,10 +28,11 @@ android {
     val VERSION_CODE: String by project
 
     compileSdk = ANDROID_BUILD_SDK_VERSION.toInt()
+    compileSdkPreview = "TiramisuPrivacySandbox"
     defaultConfig {
         applicationId = "io.branch.branchandroiddemo"
-        minSdk = ANDROID_BUILD_TARGET_SDK_MINIMUM.toInt()
-        targetSdk = ANDROID_BUILD_TARGET_SDK_VERSION.toInt()
+        minSdkPreview = "TiramisuPrivacySandbox"
+        targetSdkPreview = "TiramisuPrivacySandbox"
         versionName = VERSION_NAME
         versionCode = VERSION_CODE.toInt()
 

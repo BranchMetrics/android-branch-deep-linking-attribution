@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
@@ -428,6 +429,24 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        findViewById(R.id.registerSourceButton).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                int adId = Integer.parseInt(((EditText)findViewById(R.id.adIdText)).getText().toString());
+                Branch.getInstance().registerSource(motionEvent, adId, null);
+                return false;
+            }
+        });
+
+        findViewById(R.id.registerTriggerButton).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int convId = Integer.parseInt(((EditText)findViewById(R.id.convIdText)).getText().toString());
+
+                Branch.getInstance().registerTrigger(convId, null);
             }
         });
     }

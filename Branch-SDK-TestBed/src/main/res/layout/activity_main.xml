@@ -109,10 +109,44 @@
             android:textOff="Tracking Enabled"
             android:textOn="Tracking Disabled" />
 
+        <EditText
+            android:id="@+id/adIdText"
+            android:inputType="number"
+            android:text="1"
+            android:layout_below="@id/tracking_cntrl_btn"
+            android:hint="Advertising Id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+        <Button
+            android:text="Register Source"
+            android:id="@+id/registerSourceButton"
+            style="@style/testbed_button_style"
+            android:layout_below="@id/adIdText"
+            />
+
+        <EditText
+            android:id="@+id/convIdText"
+            android:inputType="number"
+            android:text="2"
+            android:layout_below="@id/registerSourceButton"
+            android:hint="Conversion Id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+        <Button
+            android:text="Register Trigger"
+            android:id="@+id/registerTriggerButton"
+            style="@style/testbed_button_style"
+            android:layout_below="@id/convIdText"
+            />
+
         <Button
             android:id="@+id/share_btn"
             style="@style/testbed_button_style"
-            android:layout_below="@id/tracking_cntrl_btn"
+            android:layout_below="@id/registerTriggerButton"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
             android:text="Share Link" />
