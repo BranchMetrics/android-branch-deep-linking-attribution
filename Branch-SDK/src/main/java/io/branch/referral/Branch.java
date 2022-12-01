@@ -1314,7 +1314,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 out. For example "registered" or "logged in".
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
+     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
+     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
+     *                 Content, Lifecycle and Custom Events</a> for additional information.
      */
+    @Deprecated
     public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
         userCompletedAction(action, metadata, null);
     }
@@ -1325,7 +1329,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * @param action A {@link String} value to be passed as an action that the user has carried
      *               out. For example "registered" or "logged in".
+     *               You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
+     *               Content, Lifecycle and Custom Events</a> for additional information.
      */
+    @Deprecated
     public void userCompletedAction(final String action) {
         userCompletedAction(action, null, null);
     }
@@ -1337,7 +1344,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param action   A {@link String} value to be passed as an action that the user has carried
      *                 out. For example "registered" or "logged in".
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
+     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
+     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
+     *                 Content, Lifecycle and Custom Events</a> for additional information.
      */
+    @Deprecated
     public void userCompletedAction(final String action, BranchViewHandler.
             IBranchViewEvents callback) {
         userCompletedAction(action, null, callback);
@@ -1352,9 +1363,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
+     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
+     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
+     *                 Content, Lifecycle and Custom Events</a> for additional information.
      */
+    @Deprecated
     public void userCompletedAction(@NonNull final String action, JSONObject metadata,
                                     BranchViewHandler.IBranchViewEvents callback) {
+        PrefHelper.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
         ServerRequest req = new ServerRequestActionCompleted(context_,
                 action, null, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -1362,8 +1378,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
+    /**
+     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
+     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
+     *              Content, Lifecycle and Custom Events</a> for additional information.
+     */
+    @Deprecated
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
                                   BranchViewHandler.IBranchViewEvents callback) {
+        PrefHelper.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
         ServerRequest req = new ServerRequestActionCompleted(context_,
                 BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -1371,6 +1394,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
     }
     
+    /**
+     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
+     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
+     *              Content, Lifecycle and Custom Events</a> for additional information.
+     */
+    @Deprecated
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
         sendCommerceEvent(commerceEvent, null, null);
     }
