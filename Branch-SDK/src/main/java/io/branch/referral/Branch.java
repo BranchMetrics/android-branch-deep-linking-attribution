@@ -1329,6 +1329,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * @param action A {@link String} value to be passed as an action that the user has carried
      *               out. For example "registered" or "logged in".
+     * @deprecated   Please use {@link BranchEvent} for your event tracking use cases.
      *               You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
      *               Content, Lifecycle and Custom Events</a> for additional information.
      */
