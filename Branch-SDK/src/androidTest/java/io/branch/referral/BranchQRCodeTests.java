@@ -38,7 +38,14 @@ public class BranchQRCodeTests extends BranchTest {
                         .setMargin(1)
                         .setWidth(512)
                         .setImageFormat(BranchQRCode.BranchImageFormat.PNG)
-                        .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png");
+                        .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png")
+                        .setPattern(BranchQRCode.BranchQRCodePattern.Circles)
+                        .setFinderPattern(BranchQRCode.BranchQRCodeFinderPattern.RoundedRectangle)
+                        .setFinderPatternColor("#a4c639")
+                        .setBackgroundImage("https://cdn.branch.io/branch-assets/1598575682753-og_image.png")
+                        .setBackgroundImageOpacity(20)
+                        .setPatternImage("https://cdn.branch.io/branch-assets/1598575682753-og_image.png")
+                        .setFinderEyeColor("#a4c639");
 
                 BranchUniversalObject buo = new BranchUniversalObject()
                         .setCanonicalIdentifier("test/123")

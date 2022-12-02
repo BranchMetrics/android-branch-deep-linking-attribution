@@ -213,10 +213,18 @@ public class Defines {
         Margin("margin"),
         ImageFormat("image_format"),
         CenterLogo("center_logo_url"),
+        CodePattern("code_pattern"),
+        FinderPattern("finder_pattern"),
+        FinderPatternColor("finder_pattern_color"),
+        BackgroundImage("background_image_url"),
+        BackgroundImageOpacity("background_image_opacity"),
+        PatternImage("code_pattern_url"),
+        FinderEyeColor("finder_eye_color"),
         QRCodeSettings("qr_code_settings"),
         QRCodeData("data"),
         QRCodeBranchKey("branch_key"),
         QRCodeResponseString("QRCodeString"),
+
 
         App_Store("app_store"),
         Google_Play_Store("PlayStore"),
@@ -262,7 +270,7 @@ public class Defines {
         TrackCustomEvent("v2/event/custom"),
         GetCPID("v1/cpid"),
         GetLATD("v1/cpid/latd"),
-        QRCode("v1/qr-code");
+        QRCode("v2/qr-code");
 
         private final String key;
         

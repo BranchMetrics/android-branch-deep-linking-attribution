@@ -37,10 +37,40 @@ public class BranchQRCode {
     private Integer margin_;
     /* Image Format of the returned QR code. Can be a JPEG or PNG. */
     private BranchImageFormat imageFormat_;
+    /* The style of code pattern used to generate the QR code. */
+    private BranchQRCodePattern pattern_;
+    /* The style of finder pattern used to generate the QR code. */
+    private BranchQRCodeFinderPattern finderPattern_;
+    /* Color of the QR code's finder pattern. */
+    private String finderPatternColor_;
+    /* A URL of an image that will be added to the background of the QR code. Must be a PNG or JPEG. */
+    private String backgroundImage_;
+    /* Adjusts the opacity of the background image from 1-99. */
+    private Integer backgroundImageOpacity_;
+    /* A URL of an image to be used as the code-pattern itself on the QR Code.. Must be a PNG or JPEG. */
+    private String patternImage_;
+    /* Color of the  interior part of a QR code’s finder pattern. */
+    private String finderEyeColor_;
 
     public enum BranchImageFormat {
         JPEG, /* QR code is returned as a JPEG */
         PNG /*QR code is returned as a PNG */
+    }
+
+    public enum BranchQRCodePattern {
+        Standard,
+        Squares,
+        Circles,
+        Triangles,
+        Diamonds,
+        Hexagons,
+        Octagons
+    }
+
+    public enum BranchQRCodeFinderPattern {
+        Square,
+        RoundedRectangle,
+        Circle
     }
 
     public BranchQRCode() {
@@ -50,6 +80,13 @@ public class BranchQRCode {
         width_ = null;
         margin_ = null;
         imageFormat_ = null;
+        pattern_ = null;
+        finderPattern_ = null;
+        finderPatternColor_ = null;
+        backgroundImage_ = null;
+        backgroundImageOpacity_ = null;
+        patternImage_ = null;
+        finderEyeColor_ = null;
     }
 
     /**
@@ -172,6 +209,133 @@ public class BranchQRCode {
         return this;
     }
 
+    /**
+     * <p>
+     * Set the pattern for this BranchQRCode.
+     * </p>
+     *
+     * @param pattern A {@link BranchQRCodePattern} with value for the pattern.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setPattern(@NonNull BranchQRCodePattern pattern) {
+        this.pattern_ = pattern;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the finder pattern for this BranchQRCode.
+     * </p>
+     *
+     * @param finderPattern A {@link BranchQRCodeFinderPattern} with value for the finder pattern.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setFinderPattern(@NonNull BranchQRCodeFinderPattern finderPattern) {
+        this.finderPattern_ = finderPattern;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the finder pattern color for this BranchQRCode.
+     * </p>
+     *
+     * @param finderPatternColor A {@link int} with value for the finder pattern color.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setFinderPatternColor(@NonNull int finderPatternColor) {
+        String finderPatternColorString = String.format("#%06X", 0xFFFFFF & finderPatternColor);
+        return setFinderPatternColor(finderPatternColorString);
+    }
+
+    /**
+     * <p>
+     * Set the finder pattern color for this BranchQRCode.
+     * </p>
+     *
+     * @param hexFinderPatternColor A {@link String} with value for the finder pattern color.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setFinderPatternColor(@NonNull String hexFinderPatternColor) {
+        this.finderPatternColor_ = hexFinderPatternColor;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the background image for this BranchQRCode.
+     * </p>
+     *
+     * @param backgroundImage A {@link String} with value for the background image.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setBackgroundImage(@NonNull String backgroundImage) {
+        this.backgroundImage_ = backgroundImage;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the background image opacity for this BranchQRCode.
+     * </p>
+     *
+     * @param backgroundImageOpacity An {@link Integer} with value for the background image opacity from 1-99.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setBackgroundImageOpacity(@NonNull Integer backgroundImageOpacity) {
+        if (backgroundImageOpacity > 99) {
+            PrefHelper.Debug("Background image opacity was reduced to the maximum of 99.");
+            this.backgroundImageOpacity_ = 99;
+        } else if (backgroundImageOpacity < 1) {
+            PrefHelper.Debug("Background image opacity was increased to the minimum of 1.");
+            this.backgroundImageOpacity_ = 1;
+        } else {
+            this.backgroundImageOpacity_ = backgroundImageOpacity;
+        }
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the pattern image for this BranchQRCode.
+     * </p>
+     *
+     * @param patternImage A {@link String} with value for the pattern image.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setPatternImage(@NonNull String patternImage) {
+        this.patternImage_ = patternImage;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set the finder eye color for this BranchQRCode.
+     * </p>
+     *
+     * @param finderEyeColor A {@link int} with value for the finder eye color.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setFinderEyeColor(@NonNull int finderEyeColor) {
+        String finderEyeColorString = String.format("#%06X", 0xFFFFFF & finderEyeColor);
+        return setFinderEyeColor(finderEyeColorString);
+    }
+
+    /**
+     * <p>
+     * Set the finder eye color for this BranchQRCode.
+     * </p>
+     *
+     * @param hexFinderEyeColor A {@link String} with value for the finder eye color.
+     * @return This instance to allow for chaining of calls to set methods
+     */
+    public BranchQRCode setFinderEyeColor(@NonNull String hexFinderEyeColor) {
+        this.finderEyeColor_ = hexFinderEyeColor;
+        return this;
+    }
+
+
+
     public interface BranchQRCodeDataHandler<T> {
         void onSuccess(byte[] qrCodeData);
 
@@ -211,6 +375,28 @@ public class BranchQRCode {
         }
         if (this.centerLogo_ != null) {
             settings.put(Defines.Jsonkey.CenterLogo.getKey(), centerLogo_);
+        }
+
+        if (this.pattern_ != null) {
+            settings.put(Defines.Jsonkey.CodePattern.getKey(), pattern_.ordinal() + 1);
+        }
+        if (this.finderPattern_ != null) {
+            settings.put(Defines.Jsonkey.FinderPattern.getKey(), finderPattern_.ordinal() + 1);
+        }
+        if (this.finderPatternColor_ != null) {
+            settings.put(Defines.Jsonkey.FinderPatternColor.getKey(), finderPatternColor_);
+        }
+        if (this.backgroundImage_ != null) {
+            settings.put(Defines.Jsonkey.BackgroundImage.getKey(), backgroundImage_);
+        }
+        if (this.backgroundImageOpacity_ != null) {
+            settings.put(Defines.Jsonkey.BackgroundImageOpacity.getKey(), backgroundImageOpacity_);
+        }
+        if (this.patternImage_ != null) {
+            settings.put(Defines.Jsonkey.PatternImage.getKey(), patternImage_);
+        }
+        if (this.finderEyeColor_ != null) {
+            settings.put(Defines.Jsonkey.FinderEyeColor.getKey(), finderEyeColor_);
         }
 
         final Map<String, Object> parameters = new HashMap<String, Object>();

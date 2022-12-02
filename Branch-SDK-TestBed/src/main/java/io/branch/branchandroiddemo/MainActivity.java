@@ -380,7 +380,12 @@ public class MainActivity extends Activity {
                         .setMargin(2)
                         .setWidth(512)
                         .setImageFormat(BranchQRCode.BranchImageFormat.PNG)
-                        .setCenterLogo("https://cdn.branch.io/branch-assets/1598575682753-og_image.png");
+                        .setPattern(BranchQRCode.BranchQRCodePattern.Circles)
+                        .setFinderPattern(BranchQRCode.BranchQRCodeFinderPattern.Circle)
+                        .setFinderPatternColor("#57dbe0")
+                        .setBackgroundImage("https://cdn.branch.io/branch-assets/1598575682753-og_image.png")
+                        .setBackgroundImageOpacity(20)
+                        .setFinderEyeColor("#2a2e2e");
 
                 BranchUniversalObject buo = new BranchUniversalObject()
                         .setCanonicalIdentifier("content/12345")
