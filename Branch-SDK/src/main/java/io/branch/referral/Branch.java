@@ -384,7 +384,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     };
 
     public static String installDeveloperId = null;
-    public static Boolean hasSleptTest = false;
 
     CountDownLatch getFirstReferringParamsLatch = null;
     CountDownLatch getLatestReferringParamsLatch = null;
