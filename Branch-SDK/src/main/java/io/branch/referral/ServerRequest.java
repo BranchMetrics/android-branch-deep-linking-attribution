@@ -518,17 +518,40 @@ public abstract class ServerRequest {
             }
             // Install metadata need to be send only with Install request
             if ((this instanceof ServerRequestRegisterInstall) && prefHelper_.getInstallMetadata().length() > 0) {
+                boolean omitPreinstallData = omitPreinstallData(prefHelper_.getInstallMetadata());
+
                 Iterator<String> postIterInstallMetaData = prefHelper_.getInstallMetadata().keys();
                 while (postIterInstallMetaData.hasNext()) {
                     String key = postIterInstallMetaData.next();
-                    // override keys from above
-                    params_.putOpt(key,  prefHelper_.getInstallMetadata().get(key));
+                    if (omitPreinstallData && isPreinstallKey(key)) {
+                        // ignore preinstall data
+                    } else {
+                        // override keys from above
+                        params_.putOpt(key, prefHelper_.getInstallMetadata().get(key));
+                    }
                 }
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
            PrefHelper.Debug("Could not merge metadata, ignoring user metadata.");
         }
+    }
+
+    private boolean isPreinstallKey(String key) {
+        if (key.equals(Defines.PreinstallKey.partner.getKey())
+                || key.equals(Defines.PreinstallKey.campaign.getKey())
+                || key.equals(Defines.Jsonkey.GooglePlayInstallReferrer.getKey())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean omitPreinstallData(JSONObject installMetadata) {
+        if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
+                && installMetadata.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
+            return true;
+        }
+        return false;
     }
     
     /*
