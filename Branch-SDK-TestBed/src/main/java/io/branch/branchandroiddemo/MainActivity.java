@@ -108,8 +108,6 @@ public class MainActivity extends Activity {
                         Log.e("BranchSDK_Tester", "install params = " + referringParams.toString());
                         if (error != null) {
                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
-                        } else {
-                            Log.e("BranchSDK_Tester", "install params = " + referringParams.toString());
                         }
                     }
                 });
@@ -472,6 +470,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+        Branch.getInstance().setIdentity("testDevID3");
+
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.e("BranchSDK_Tester", "initSession");

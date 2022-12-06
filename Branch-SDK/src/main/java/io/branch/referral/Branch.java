@@ -382,7 +382,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             "extra_launch_uri",   // Key for embedded uri in FB ads triggered intents
             "branch_intent"       // A boolean that specifies if this intent is originated by Branch
     };
-    
+
+    public static String installDeveloperId = null;
+    public static Boolean hasSleptTest = false;
+
     CountDownLatch getFirstReferringParamsLatch = null;
     CountDownLatch getLatestReferringParamsLatch = null;
 
@@ -1140,7 +1143,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
             callback) {
-        prefHelper_.setIdentity(userId);
+
+        installDeveloperId = userId;
 
         ServerRequestIdentifyUserRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
         if (!req.constructError_ && !req.handleErrors(context_)) {

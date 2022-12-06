@@ -60,7 +60,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
 
-        String identity = prefHelper_.getIdentity();
+        String identity = Branch.installDeveloperId;
 
         if(!TextUtils.isEmpty(identity) && !identity.equals(PrefHelper.NO_STRING_VALUE)){
             post.put(Defines.Jsonkey.Identity.getKey(), identity);

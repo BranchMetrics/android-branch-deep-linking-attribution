@@ -53,6 +53,10 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
 
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
+            if (getPost() != null && getPost().has(Defines.Jsonkey.Identity.getKey())) {
+                prefHelper_.setIdentity(Branch.installDeveloperId);
+            }
+
             prefHelper_.setRandomizedBundleToken(resp.getObject().getString(Defines.Jsonkey.RandomizedBundleToken.getKey()));
             prefHelper_.setUserURL(resp.getObject().getString(Defines.Jsonkey.Link.getKey()));
 
