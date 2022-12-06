@@ -474,8 +474,6 @@ public class MainActivity extends Activity {
         super.onStart();
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        Branch.getInstance().setPreinstallCampaign("TestCampaign");
-        Branch.getInstance().setPreinstallPartner("TestPartner");
         Log.e("BranchSDK_Tester", "initSession");
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
