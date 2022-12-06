@@ -518,40 +518,17 @@ public abstract class ServerRequest {
             }
             // Install metadata need to be send only with Install request
             if ((this instanceof ServerRequestRegisterInstall) && prefHelper_.getInstallMetadata().length() > 0) {
-                boolean omitPreinstallData = omitPreinstallData(prefHelper_.getInstallMetadata());
-
                 Iterator<String> postIterInstallMetaData = prefHelper_.getInstallMetadata().keys();
                 while (postIterInstallMetaData.hasNext()) {
                     String key = postIterInstallMetaData.next();
-                    if (omitPreinstallData && isPreinstallKey(key)) {
-                        // ignore preinstall data
-                    } else {
-                        // override keys from above
-                        params_.putOpt(key, prefHelper_.getInstallMetadata().get(key));
-                    }
+                    // override keys from above
+                    params_.putOpt(key, prefHelper_.getInstallMetadata().get(key));
                 }
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
            PrefHelper.Debug("Could not merge metadata, ignoring user metadata.");
         }
-    }
-
-    private boolean isPreinstallKey(String key) {
-        if (key.equals(Defines.PreinstallKey.partner.getKey())
-                || key.equals(Defines.PreinstallKey.campaign.getKey())
-                || key.equals(Defines.Jsonkey.GooglePlayInstallReferrer.getKey())) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean omitPreinstallData(JSONObject installMetadata) {
-        if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
-                && installMetadata.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
-            return true;
-        }
-        return false;
     }
     
     /*
@@ -582,6 +559,20 @@ public abstract class ServerRequest {
             }
         }
     }
+
+    private boolean shouldOmitPreinstallData(JSONObject params) {
+        if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
+                && params.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
+            return true;
+        }
+        return false;
+    }
+
+    private void removePreinstallData(JSONObject params) {
+        params.remove(Defines.PreinstallKey.partner.getKey());
+        params.remove(Defines.PreinstallKey.campaign.getKey());
+        params.remove(Defines.Jsonkey.GooglePlayInstallReferrer.getKey());
+    }
     
     void doFinalUpdateOnMainThread() {
         updateRequestMetadata();
@@ -593,6 +584,9 @@ public abstract class ServerRequest {
     void doFinalUpdateOnBackgroundThread() {
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
+            if (shouldOmitPreinstallData(this.params_)) {
+                removePreinstallData(this.params_);
+            }
         }
         
         // Update the dynamic device info params
