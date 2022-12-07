@@ -300,6 +300,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     static boolean checkInstallReferrer_ = true;
     private static long playStoreReferrerWaitTime = 1500;
     public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
+
+    static boolean referringLinkAttributionForPreinstalledAppsEnabled = false;
     
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -403,7 +405,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * us make data driven decisions. */
     private static String pluginVersion = null;
     private static String pluginName = null;
-    
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -871,6 +873,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
         addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
         return this;
+    }
+
+    /**
+     * Enables referring url attribution for preinstalled apps.
+     *
+     * By default, Branch prioritizes preinstall attribution on preinstalled apps.
+     * Some clients prefer the referring link, when present, to be prioritized over preinstall attribution.
+     */
+    public static void setReferringLinkAttributionForPreinstalledAppsEnabled() {
+        referringLinkAttributionForPreinstalledAppsEnabled = true;
+    }
+
+    public static boolean isReferringLinkAttributionForPreinstalledAppsEnabled() {
+        return referringLinkAttributionForPreinstalledAppsEnabled;
     }
 
     public static void setIsUserAgentSync(boolean sync){

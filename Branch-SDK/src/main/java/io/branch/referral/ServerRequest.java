@@ -522,7 +522,7 @@ public abstract class ServerRequest {
                 while (postIterInstallMetaData.hasNext()) {
                     String key = postIterInstallMetaData.next();
                     // override keys from above
-                    params_.putOpt(key,  prefHelper_.getInstallMetadata().get(key));
+                    params_.putOpt(key, prefHelper_.getInstallMetadata().get(key));
                 }
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
@@ -559,6 +559,20 @@ public abstract class ServerRequest {
             }
         }
     }
+
+    private boolean prioritizeLinkAttribution(JSONObject params) {
+        if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
+                && params.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
+            return true;
+        }
+        return false;
+    }
+
+    private void removePreinstallData(JSONObject params) {
+        params.remove(Defines.PreinstallKey.partner.getKey());
+        params.remove(Defines.PreinstallKey.campaign.getKey());
+        params.remove(Defines.Jsonkey.GooglePlayInstallReferrer.getKey());
+    }
     
     void doFinalUpdateOnMainThread() {
         updateRequestMetadata();
@@ -570,6 +584,9 @@ public abstract class ServerRequest {
     void doFinalUpdateOnBackgroundThread() {
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
+            if (prioritizeLinkAttribution(this.params_)) {
+                removePreinstallData(this.params_);
+            }
         }
         
         // Update the dynamic device info params
