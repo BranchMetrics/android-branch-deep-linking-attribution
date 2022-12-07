@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.2.7
+  * _*Master Release*_ - Dec 7, 2022
+  * Fixes a bug with setIdentity not consistently calling v1/profile
+  * Adds switch to prioritize referrer links for attribution over preinstall metadata
+    - To enable, call `setReferringLinkAttributionForPreinstalledAppsEnabled` before `Branch.getAutoInstance(this)`
+
 - v5.2.6
   * _*Master Release*_ - Oct 25, 2022
   * `debug` field is now included in all events, previously only on init requests
