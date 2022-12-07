@@ -560,7 +560,7 @@ public abstract class ServerRequest {
         }
     }
 
-    private boolean shouldOmitPreinstallData(JSONObject params) {
+    private boolean prioritizeLinkAttribution(JSONObject params) {
         if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
                 && params.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
             return true;
@@ -584,7 +584,7 @@ public abstract class ServerRequest {
     void doFinalUpdateOnBackgroundThread() {
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
-            if (shouldOmitPreinstallData(this.params_)) {
+            if (prioritizeLinkAttribution(this.params_)) {
                 removePreinstallData(this.params_);
             }
         }
