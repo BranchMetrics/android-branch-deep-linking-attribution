@@ -169,6 +169,30 @@ public class BranchPartnerParametersTest {
                 body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
     }
 
+    @Test public void testJsonSnapParameterExample() throws JSONException {
+        partnerParams.addSnapParameter("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        partnerParams.addSnapParameter("hashed_phone_number", "b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b");
+        JSONObject body = new JSONObject();
+        PrefHelper.loadPartnerParams(body, partnerParams);
+
+        JSONAssert.assertEquals(
+                "{\"snap\":{\"hashed_email_address\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\",\"hashed_phone_number\":\"b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b\"}}",
+                body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+    }
+
+    @Test public void testJsonMultipleParameterExample() throws JSONException {
+        partnerParams.addFacebookParameter("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        partnerParams.addFacebookParameter("ph", "b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b");
+        partnerParams.addSnapParameter("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        partnerParams.addSnapParameter("hashed_phone_number", "b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b");
+        JSONObject body = new JSONObject();
+        PrefHelper.loadPartnerParams(body, partnerParams);
+
+        JSONAssert.assertEquals(
+                "{\"fb\":{\"ph\":\"b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b\",\"em\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\"},\"snap\":{\"hashed_email_address\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\",\"hashed_phone_number\":\"b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b\"}}",
+                body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+    }
+
     @Test public void testJsonFBParameterClear() throws JSONException {
         partnerParams.addFacebookParameter("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
         partnerParams.addFacebookParameter("em", "b90598b67534f00b1e3e68e8006631a40d24fba37a3a34e2b84922f1f0b3b29b");

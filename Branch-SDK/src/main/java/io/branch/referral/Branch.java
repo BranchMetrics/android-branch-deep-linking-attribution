@@ -1529,6 +1529,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
+     * Add a Partner Parameter for Snap.
+     * Once set, this parameter is attached to installs, opens and events until cleared or the app restarts.
+     *
+     * See Snap's documentation for details on valid parameters
+     */
+    public void addSnapPartnerParameterWithName(@NonNull String key, @NonNull String value) {
+        prefHelper_.partnerParams_.addSnapParameter(key, value);
+    }
+
+    /**
      * Clears all Partner Parameters
      */
     public void clearPartnerParameters() {
