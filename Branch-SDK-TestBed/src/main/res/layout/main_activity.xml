@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#3700B3">
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+
+            android:gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/qrCode_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Create QR Code" />
+
+            <EditText
+                android:id="@+id/editReferralShortUrl"
+                android:layout_width="260dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:hint="short referral url"
+                android:maxLines="3"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/cmdRefreshShortURL"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Refresh Short URL" />
+
+            <TextView
+                android:id="@+id/txtInstallCount"
+                style="@style/testbed_text_view"
+                android:text="install count = " />
+
+
+            <Button
+                android:id="@+id/cmdIdentifyUser"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Identify User" />
+
+            <Button
+                android:id="@+id/cmdClearUser"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Clear User" />
+
+
+            <Button
+                android:id="@+id/cmdCommitBuyAction"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Execute Buy" />
+
+            <Button
+                android:id="@+id/cmdCommitBuyMetadataAction"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Buy with metadata" />
+
+            <Button
+                android:id="@+id/cmdPrintInstallParam"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Print Install Param" />
+
+
+
+            <Button
+                android:id="@+id/cmdTrackStandardEvent"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Track Standard Evt" />
+
+
+            <Button
+                android:id="@+id/report_view_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Report View" />
+
+            <Button
+                android:id="@+id/cmdTrackCustomEvent"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Track Custom Event"/>
+
+            <ToggleButton
+                android:id="@+id/tracking_cntrl_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:textOff="Tracking Enabled"
+                android:textOn="Tracking Disabled" />
+
+            <Button
+                android:id="@+id/share_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Share Link" />
+
+            <Button
+                android:id="@+id/notif_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Fire notif" />
+
+            <Button
+                android:id="@+id/settings_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:layout_marginBottom="20dp"
+                android:text="@string/settings" />
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

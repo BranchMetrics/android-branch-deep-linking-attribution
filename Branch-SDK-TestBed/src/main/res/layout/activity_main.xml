@@ -14,7 +14,6 @@
             android:layout_width="180dp"
             android:layout_height="wrap_content"
             android:layout_below="@id/cmdPrintInstallParam"
-            android:layout_alignParentRight="true"
             android:layout_marginTop="5dp"
             android:text="Create QR Code" />
 
@@ -46,7 +45,7 @@
         <Button
             android:id="@+id/cmdIdentifyUser"
             style="@style/testbed_button_style"
-            android:layout_below="@id/txtInstallCount"
+            android:layout_below="@id/cmdCommitBuyAction"
             android:layout_alignParentRight="true"
             android:text="Identify User" />
 
@@ -62,7 +61,6 @@
             android:id="@+id/cmdCommitBuyAction"
             style="@style/testbed_button_style"
             android:layout_below="@id/txtInstallCount"
-            android:layout_alignParentLeft="true"
             android:text="Execute Buy" />
 
         <Button
