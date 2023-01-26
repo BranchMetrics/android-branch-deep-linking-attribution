@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import io.branch.referral.Branch;
 import io.branch.referral.PrefHelper;
@@ -16,10 +17,16 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        setupVersionTextView();
         setupDisableAdNetworkCalloutsSwitch();
      }
 
-    void setupDisableAdNetworkCalloutsSwitch() {
+        void setupVersionTextView() {
+            final TextView versionTextView = findViewById(R.id.version_text_view);
+            versionTextView.setText(String.format("Branch SDK v%s", Branch.getSdkVersionNumber()));
+        }
+
+        void setupDisableAdNetworkCalloutsSwitch() {
         final Switch disableAdNetworkCalloutsSwitch = findViewById(R.id.disable_ad_network_callouts);
 
         /*

@@ -18,6 +18,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
@@ -52,8 +53,6 @@ import io.branch.referral.util.ShareSheetStyle;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
-    private TextView txtInstallCount;
-
     private BranchUniversalObject branchUniversalObject;
 
     private final static String branchChannelID = "BranchChannelID";
@@ -64,8 +63,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main_activity);
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
-        txtInstallCount = findViewById(R.id.txtInstallCount);
+
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
+
+        getActionBar().setTitle("Branch Testbed");
 
         createNotificationChannel();
 
@@ -109,6 +110,7 @@ public class MainActivity extends Activity {
                         if (error != null) {
                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                         }
+                        Toast.makeText(getApplicationContext(), "Set Identity to test_user_10", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -121,10 +123,10 @@ public class MainActivity extends Activity {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        Toast.makeText(getApplicationContext(), "Cleared Identity", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-                txtInstallCount.setText(R.string.install_count_empty);
             }
         });
 
@@ -133,6 +135,36 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getFirstReferringParams();
                 Log.e("BranchSDK_Tester", "install params = " + obj.toString());
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("First Referring Params");
+                builder.setMessage(obj.toString());
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
+
+        findViewById(R.id.cmdPrintLatestParam).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                JSONObject obj = Branch.getInstance().getLatestReferringParams();
+                Log.e("BranchSDK_Tester", "Latest params = " + obj.toString());
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Latest Referring Params");
+                builder.setMessage(obj.toString());
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 
@@ -166,57 +198,13 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Branch.getInstance().userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
-                    @Override
-                    public void onBranchViewVisible(String action, String branchViewID) {
-                        Log.e("BranchSDK_Tester", "onBranchViewVisible");
-                    }
-
-                    @Override
-                    public void onBranchViewAccepted(String action, String branchViewID) {
-                        Log.e("BranchSDK_Tester", "onBranchViewAccepted");
-                    }
-
-                    @Override
-                    public void onBranchViewCancelled(String action, String branchViewID) {
-                        Log.e("BranchSDK_Tester", "onBranchViewCancelled");
-                    }
-
-                    @Override
-                    public void onBranchViewError(int errorCode, String errorMsg, String action) {
-                        Log.e("BranchSDK_Tester", "onBranchViewError " + errorMsg);
-                    }
-                });
-            }
-        });
-
-        findViewById(R.id.cmdCommitBuyMetadataAction).setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-                JSONObject params = new JSONObject();
-                try {
-                    params.put("name", "Alex");
-                    params.put("boolean", true);
-                    params.put("int", 1);
-                    params.put("double", 0.13415512301);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                Branch.getInstance().userCompletedAction("buy", params);
-            }
-
-        });
-
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 branchUniversalObject.registerView();
                 // List on google search
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Registered View and Listed on Google", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -320,6 +308,7 @@ public class MainActivity extends Activity {
                         .setAutoCancel(true);
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(1, builder.build());
+                Log.d("BranchSDK_Tester", "Sent notification");
             }
         });
 
@@ -331,41 +320,15 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Tracking events
-        findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BranchEvent("Logged_In")
-                        .addCustomDataProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
-                        .addCustomDataProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
-                        .logEvent(MainActivity.this);
-            }
-        });
-
-        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
-                        .setAffiliation("test_affiliation")
-                        .setCoupon("test_coupon")
-                        .setCurrency(CurrencyType.USD)
-                        .setDescription("Event _description")
-                        .setShipping(10.2)
-                        .setTax(12.3)
-                        .setRevenue(1.5)
-                        .setTransactionID("12344555")
-                        .setSearchQuery("Test Search query")
-                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
-                        .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
-                        .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-            }
-        });
-
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Branch.getInstance().disableTracking(isChecked);
+                if (isChecked == true) {
+                    Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -426,6 +389,72 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        findViewById(R.id.cmdCommerceEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART)
+                        .setAffiliation("test_affiliation")
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setCoupon("Coupon Code")
+                        .setCurrency(CurrencyType.USD)
+                        .setDescription("Customer added item to cart")
+                        .setShipping(0.0)
+                        .setTax(9.75)
+                        .setRevenue(1.5)
+                        .setSearchQuery("Test Search query")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.cmdContentEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new BranchEvent(BRANCH_STANDARD_EVENT.SEARCH)
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setDescription("Product Search")
+                        .setSearchQuery("product name")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.cmdLifecycleEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new BranchEvent(BRANCH_STANDARD_EVENT.COMPLETE_REGISTRATION)
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setTransactionID("tx1234")
+                        .setDescription("User created an account")
+                        .addCustomDataProperty("registrationID", "12345")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
             }
         });
     }
