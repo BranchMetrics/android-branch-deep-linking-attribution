@@ -8,7 +8,6 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,7 +16,6 @@ import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -25,20 +23,18 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
-import java.util.Date;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
-import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -49,7 +45,6 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -103,27 +98,53 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.getInstance().setIdentity("test_user_10", new BranchReferralInitListener() {
-                    @Override
-                    public void onInitFinished(JSONObject referringParams, BranchError error) {
-                        Log.e("BranchSDK_Tester", "install params = " + referringParams.toString());
-                        if (error != null) {
-                            Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
-                        }
-                        Toast.makeText(getApplicationContext(), "Set Identity to test_user_10", Toast.LENGTH_SHORT).show();
-                    }
-                });
+
+                final EditText txtUrl = new EditText(MainActivity.this);
+                txtUrl.setPadding(60, 0, 60, 30);
+                txtUrl.setHint("Your_user_id");
+
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Set User ID")
+                        .setMessage("Sets the identity of a user for events, deep links, and referrals")
+                        .setView(txtUrl)
+                        .setPositiveButton("Set", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                String userID = txtUrl.getText().toString();
+
+                                Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
+                                    @Override
+                                    public void onInitFinished(JSONObject referringParams, BranchError error) {
+                                        Log.e("BranchSDK_Tester", "Identity set to " + userID +"\nInstall params = " + referringParams.toString());
+                                        if (error != null) {
+                                            Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
+                                        }
+                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
+
+
+
+                                    }
+                                });
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                            }
+                        })
+                        .show();
+
+
             }
         });
 
         findViewById(R.id.cmdClearUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
-                        Toast.makeText(getApplicationContext(), "Cleared Identity", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -214,7 +235,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-//                        .setAlias("mylinkName") // In case you need to white label your link
+//                      .setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -294,7 +315,7 @@ public class MainActivity extends Activity {
                     Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
                     return;
                 }
-//                intent.setData(Uri.parse(shortURL));
+
                 intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
                 intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
                 PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -324,7 +345,7 @@ public class MainActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Branch.getInstance().disableTracking(isChecked);
-                if (isChecked == true) {
+                if (isChecked) {
                     Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
