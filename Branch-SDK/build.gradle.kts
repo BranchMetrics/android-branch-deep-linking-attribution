@@ -19,6 +19,7 @@ dependencies {
     // but the library is *not* added to your app unless you do so yourself. Please check the code in gradle-mvn-push script to see how this works
 
     implementation("com.google.firebase:firebase-appindexing:19.0.0")
+    implementation("com.android.billingclient:billing:5.1.0")
 
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
 
