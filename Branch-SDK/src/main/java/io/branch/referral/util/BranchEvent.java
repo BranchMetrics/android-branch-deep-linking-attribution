@@ -2,6 +2,15 @@ package io.branch.referral.util;
 
 
 import android.content.Context;
+import android.util.Log;
+
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.ProductDetailsResponseListener;
+import com.android.billingclient.api.Purchase;
+
+import com.android.billingclient.api.QueryProductDetailsParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -254,6 +263,67 @@ public class BranchEvent {
             isReqQueued = true;
         }
         return isReqQueued;
+    }
+
+    /**
+     * Logs a Branch Commerce Event based on an in-app purchase
+     *
+     * @param context Current context
+     * @param purchase Respective purchase
+     */
+    public void logEventFromPurchase(Context context, Purchase purchase) {
+        List<String> productIds = purchase.getProducts();
+        BillingClient billingClient = BillingClient.newBuilder(context)
+                .build();
+
+        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+
+        for (String productId : productIds) {
+            QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(productId)
+                    .setProductType(BillingClient.ProductType.INAPP)
+                    .build();
+
+            productList.add(product);
+        }
+
+        QueryProductDetailsParams queryProductDetailsParams =
+                QueryProductDetailsParams.newBuilder()
+                        .setProductList(productList)
+                        .build();
+
+        List<BranchUniversalObject> buos = new ArrayList<>();
+        billingClient.queryProductDetailsAsync(
+                queryProductDetailsParams,
+                new ProductDetailsResponseListener() {
+                    public void onProductDetailsResponse(BillingResult billingResult,
+                                                         List<ProductDetails> productDetailsList) {
+
+                        for (ProductDetails product : productDetailsList) {
+
+                            BranchUniversalObject buo = new BranchUniversalObject()
+                                    .setCanonicalIdentifier(product.getProductId())
+                                    .setTitle(product.getTitle())
+                                    .setContentMetadata(
+                                            new ContentMetadata()
+                                                    .addCustomMetadata("custom_metadata_key1", "custom_metadata_val1")
+                                                    .setPrice((double) (product.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 100), CurrencyType.valueOf(product.getOneTimePurchaseOfferDetails().getPriceCurrencyCode()))
+                                                    .setProductName(product.getName())
+                                                    .setProductVariant(product.getProductType())
+                                                    .setQuantity((double) purchase.getQuantity())
+                                                    .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT));
+                            buos.add(buo);
+                        }
+
+                    }
+                }
+        );
+
+        new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                .addCustomDataProperty("package_name", purchase.getPackageName())
+                .addCustomDataProperty("order_id", purchase.getOrderId())
+                .addContentItems(buos)
+                .logEvent(context);
     }
 
     private class ServerRequestLogEvent extends ServerRequest {
