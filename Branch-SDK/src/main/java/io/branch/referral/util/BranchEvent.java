@@ -4,12 +4,15 @@ package io.branch.referral.util;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
 
+import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 
 import org.json.JSONArray;
@@ -271,9 +274,19 @@ public class BranchEvent {
      * @param context Current context
      * @param purchase Respective purchase
      */
-    public void logEventFromPurchase(Context context, Purchase purchase) {
+    public void logEventFromPurchase(Context context, @NonNull Purchase purchase) {
         List<String> productIds = purchase.getProducts();
+
+        PurchasesUpdatedListener purchasesUpdatedListener = new PurchasesUpdatedListener() {
+            @Override
+            public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> purchases) {
+                Log.d("BranchEvent", "purchasesUpdated");
+            }
+        };
+
         BillingClient billingClient = BillingClient.newBuilder(context)
+                .setListener(purchasesUpdatedListener)
+                .enablePendingPurchases()
                 .build();
 
         List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
@@ -295,35 +308,34 @@ public class BranchEvent {
         List<BranchUniversalObject> buos = new ArrayList<>();
         billingClient.queryProductDetailsAsync(
                 queryProductDetailsParams,
-                new ProductDetailsResponseListener() {
-                    public void onProductDetailsResponse(BillingResult billingResult,
-                                                         List<ProductDetails> productDetailsList) {
+                (billingResult, productDetailsList) -> {
 
-                        for (ProductDetails product : productDetailsList) {
+                    for (ProductDetails product : productDetailsList) {
 
-                            BranchUniversalObject buo = new BranchUniversalObject()
-                                    .setCanonicalIdentifier(product.getProductId())
-                                    .setTitle(product.getTitle())
-                                    .setContentMetadata(
-                                            new ContentMetadata()
-                                                    .addCustomMetadata("custom_metadata_key1", "custom_metadata_val1")
-                                                    .setPrice((double) (product.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 100), CurrencyType.valueOf(product.getOneTimePurchaseOfferDetails().getPriceCurrencyCode()))
-                                                    .setProductName(product.getName())
-                                                    .setProductVariant(product.getProductType())
-                                                    .setQuantity((double) purchase.getQuantity())
-                                                    .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT));
-                            buos.add(buo);
-                        }
-
+                        BranchUniversalObject buo = new BranchUniversalObject()
+                                .setCanonicalIdentifier(product.getProductId())
+                                .setTitle(product.getTitle())
+                                .setContentMetadata(
+                                        new ContentMetadata()
+                                                .addCustomMetadata("custom_metadata_key1", "custom_metadata_val1")
+                                                .setPrice((double) (product.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 100), CurrencyType.valueOf(product.getOneTimePurchaseOfferDetails().getPriceCurrencyCode()))
+                                                .setProductName(product.getName())
+                                                .setProductVariant(product.getProductType())
+                                                .setQuantity((double) purchase.getQuantity())
+                                                .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT));
+                        buos.add(buo);
                     }
+
+                    new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                            .addCustomDataProperty("package_name", purchase.getPackageName())
+                            .addCustomDataProperty("order_id", purchase.getOrderId())
+                            .addCustomDataProperty("loggedFromIAP", "true")
+                            .addContentItems(buos)
+                            .logEvent(context);
                 }
         );
 
-        new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
-                .addCustomDataProperty("package_name", purchase.getPackageName())
-                .addCustomDataProperty("order_id", purchase.getOrderId())
-                .addContentItems(buos)
-                .logEvent(context);
+
     }
 
     private class ServerRequestLogEvent extends ServerRequest {
