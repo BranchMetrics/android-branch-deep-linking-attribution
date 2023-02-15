@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
                                 Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
                                     @Override
                                     public void onInitFinished(JSONObject referringParams, BranchError error) {
-                                        Log.e("BranchSDK_Tester", "Identity set to " + userID +"\nInstall params = " + referringParams.toString());
+                                        Log.d("BranchSDK_Tester", "Identity set to " + userID +"\nInstall params = " + referringParams.toString());
                                         if (error != null) {
                                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                                         }
@@ -143,8 +143,14 @@ public class MainActivity extends Activity {
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
-                        Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                        if (error != null) {
+                            Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
+                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
+                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
 
@@ -155,7 +161,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getFirstReferringParams();
-                Log.e("BranchSDK_Tester", "install params = " + obj.toString());
+                Log.d("BranchSDK_Tester", "install params = " + obj.toString());
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("First Referring Params");
@@ -174,7 +180,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getLatestReferringParams();
-                Log.e("BranchSDK_Tester", "Latest params = " + obj.toString());
+                Log.d("BranchSDK_Tester", "Latest params = " + obj.toString());
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Latest Referring Params");
@@ -318,7 +324,7 @@ public class MainActivity extends Activity {
 
                 intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
                 intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-                PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -471,7 +477,7 @@ public class MainActivity extends Activity {
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
                         Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -524,23 +530,23 @@ public class MainActivity extends Activity {
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        Log.e("BranchSDK_Tester", "initSession");
+        Log.d("BranchSDK_Tester", "initSession");
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
-                    Log.e("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
                 } else {
-                    Log.e("BranchSDK_Tester", "branch init complete!");
+                    Log.d("BranchSDK_Tester", "branch init complete!");
                     if (branchUniversalObject != null) {
-                        Log.e("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                        Log.e("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.e("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
 
                     if (linkProperties != null) {
-                        Log.e("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                        Log.e("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
                     }
                 }
 
@@ -571,7 +577,7 @@ public class MainActivity extends Activity {
                 if (error != null) {
                     Log.e("BranchSDK_Tester", error.getMessage());
                 } else if (referringParams != null) {
-                    Log.e("BranchSDK_Tester", referringParams.toString());
+                    Log.d("BranchSDK_Tester", referringParams.toString());
                 }
             }
         }).reInit();
