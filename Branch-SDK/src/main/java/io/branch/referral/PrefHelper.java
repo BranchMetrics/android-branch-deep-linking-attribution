@@ -115,7 +115,8 @@ public class PrefHelper {
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
-    
+    private static final String KEY_LOG_IAP_AS_EVENTS = "bnc_log_iap_as_events";
+
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
     static final String KEY_LAST_KNOWN_UPDATE_TIME = "bnc_last_known_update_time";
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
@@ -1404,5 +1405,20 @@ public class PrefHelper {
             partnerData.put(e.getKey(), individualPartnerParams);
         }
         body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
+    }
+
+    /*
+     * Enables or disables the automatic logging of in-app purchases or subscriptions as events.
+     * @param autoLogEvents {@code true} to enable the automatic logging of in-app purchases as events.
+     */
+    void setAutoLogInAppPurchasesAsEvents(boolean autoLogEvents) {
+        setBool(KEY_LOG_IAP_AS_EVENTS, autoLogEvents);
+    }
+
+    /*
+       Returns true if automatic logging of in-app purchases as events. is enabled.
+     */
+    boolean isAutoLogInAppPurchasesAsEventsEnabled() {
+        return getBool(KEY_LOG_IAP_AS_EVENTS);
     }
 }

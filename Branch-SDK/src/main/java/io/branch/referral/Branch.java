@@ -25,9 +25,17 @@ import androidx.annotation.StyleRes;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
+
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
@@ -42,7 +50,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -325,6 +332,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
 
+    private BillingClient billingClient;
+
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
 
@@ -427,6 +436,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
+        billingClient = BillingClient.newBuilder(this.context_)
+                .setListener(purchasesUpdatedListener)
+                .enablePendingPurchases()
+                .build();
+
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(BillingResult billingResult) {}
+            @Override
+            public void onBillingServiceDisconnected() {}
+        });
     }
 
     /**
@@ -836,6 +856,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
         prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
+    }
+
+    /**
+     * Enables or disables the automatic logging of in-app purchases or subscriptions as events.
+     *
+     * @param isAutoLogEnabled {@code true} to automatically log IAP as events.
+     */
+    public void setAutoLogInAppPurchasesAsEvents(boolean isAutoLogEnabled) {
+        prefHelper_.setAutoLogInAppPurchasesAsEvents(isAutoLogEnabled);
     }
     
     /**
@@ -3239,6 +3268,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static String getSdkVersionNumber() {
         return io.branch.referral.BuildConfig.VERSION_NAME;
     }
+
+    private final PurchasesUpdatedListener purchasesUpdatedListener = new PurchasesUpdatedListener() {
+        @Override
+        public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> purchases) {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+                for (Purchase purchase : purchases) {
+                    if (prefHelper_.isAutoLogInAppPurchasesAsEventsEnabled()) {
+                        BranchEvent event = new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE);
+                        event.logEventFromPurchase(Branch.getInstance().context_, purchase);
+                    }
+                }
+            }
+        }
+    };
 
     //-------------------------- DEPRECATED --------------------------------------//
 

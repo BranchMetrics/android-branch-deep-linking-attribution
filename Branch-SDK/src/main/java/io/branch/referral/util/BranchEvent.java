@@ -276,9 +276,9 @@ public class BranchEvent {
      * @param purchase Respective purchase
      */
     public void logEventFromPurchase(Context context, @NonNull Purchase purchase) {
-        //Prepare the product details query
         List<String> productIds = purchase.getProducts();
         List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+        List<QueryProductDetailsParams.Product> subsList = new ArrayList<>();
 
         for (String productId : productIds) {
             QueryProductDetailsParams.Product inAppProduct = QueryProductDetailsParams.Product.newBuilder()
@@ -286,13 +286,13 @@ public class BranchEvent {
                     .setProductType(BillingClient.ProductType.INAPP)
                     .build();
 
-//            QueryProductDetailsParams.Product subsProduct = QueryProductDetailsParams.Product.newBuilder()
-//                    .setProductId(productId)
-//                    .setProductType(BillingClient.ProductType.SUBS)
-//                    .build();
+            QueryProductDetailsParams.Product subsProduct = QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(productId)
+                    .setProductType(BillingClient.ProductType.SUBS)
+                    .build();
 
             productList.add(inAppProduct);
-            //productList.add(subsProduct);
+            subsList.add(subsProduct);
         }
 
         QueryProductDetailsParams queryProductDetailsParams =
@@ -300,11 +300,15 @@ public class BranchEvent {
                         .setProductList(productList)
                         .build();
 
-        //Prepare the billing client
+        QueryProductDetailsParams querySubsProductDetailsParams =
+                QueryProductDetailsParams.newBuilder()
+                        .setProductList(subsList)
+                        .build();
+
         PurchasesUpdatedListener purchasesUpdatedListener = new PurchasesUpdatedListener() {
             @Override
             public void onPurchasesUpdated(BillingResult billingResults, List<Purchase> purchases) {
-                Log.d("BranchEvent", "purchasesUpdated");
+
             }
         };
 
@@ -313,22 +317,69 @@ public class BranchEvent {
                 .enablePendingPurchases()
                 .build();
 
-        //Use the billingClient to make the product query
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
 
-                    billingClient.queryProductDetailsAsync(queryProductDetailsParams, (billingQueryResult, productDetailsList) -> {
+
+                    billingClient.queryProductDetailsAsync(querySubsProductDetailsParams, (billingQueryResult, productDetailsList) -> {
                         if (billingQueryResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                            // Use the product details and purchase to create the BUO and BranchEvent.
                             List<BranchUniversalObject> buos = new ArrayList<>();
                             CurrencyType currency = null;
                             double revenue = 0.00;
                             String purchasedProductType = "";
 
                             for (ProductDetails product : productDetailsList) {
-                                Log.d("BranchEvent", "Got product details!" + product.toString());
+                                double price;
+                                int quantity;
+
+                                purchasedProductType = "Subscription";
+                                currency = CurrencyType.valueOf(product.getSubscriptionOfferDetails().get(0).getPricingPhases().getPricingPhaseList().get(0).getPriceCurrencyCode());
+                                price = product.getSubscriptionOfferDetails().get(0).getPricingPhases().getPricingPhaseList().get(0).getPriceAmountMicros() / 1_000_000;
+                                quantity = 1;
+                                revenue += price * quantity;
+
+
+                                BranchUniversalObject buo = new BranchUniversalObject()
+                                        .setCanonicalIdentifier(product.getProductId())
+                                        .setTitle(product.getTitle())
+                                        .setContentMetadata(
+                                                new ContentMetadata()
+                                                        .addCustomMetadata("product_type", product.getProductType())
+                                                        .setPrice(price, currency)
+                                                        .setProductName(product.getName())
+                                                        .setQuantity((double) quantity)
+                                                        .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT));
+                                buos.add(buo);
+                            }
+
+                            new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                                    .setCurrency(currency)
+                                    .setDescription(purchase.getOrderId())
+                                    .setCustomerEventAlias(purchasedProductType)
+                                    .setRevenue(revenue)
+                                    .addCustomDataProperty("package_name", purchase.getPackageName())
+                                    .addCustomDataProperty("order_id", purchase.getOrderId())
+                                    .addCustomDataProperty("loggedFromIAP", "true")
+                                    .addCustomDataProperty("is_auto_renewing", String.valueOf(purchase.isAutoRenewing()))
+                                    .addCustomDataProperty("purchase_token", purchase.getPurchaseToken())
+                                    .addContentItems(buos)
+                                    .logEvent(context);
+                        } else {
+                            Log.e("BranchEvent", "Failed to query product details. Error code: " + billingResult.getResponseCode());
+                        }
+                    });
+
+
+                    billingClient.queryProductDetailsAsync(queryProductDetailsParams, (billingQueryResult, productDetailsList) -> {
+                        if (billingQueryResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                            List<BranchUniversalObject> buos = new ArrayList<>();
+                            CurrencyType currency = null;
+                            double revenue = 0.00;
+                            String purchasedProductType = "";
+
+                            for (ProductDetails product : productDetailsList) {
                                 double price;
                                 int quantity;
 
@@ -371,22 +422,17 @@ public class BranchEvent {
                                     .addCustomDataProperty("purchase_token", purchase.getPurchaseToken())
                                     .addContentItems(buos)
                                     .logEvent(context);
-
-                            Log.d("BranchEvent", "Added product details, created event, and logged event.");
                         } else {
-                            // Handle query error
                             Log.e("BranchEvent", "Failed to query product details. Error code: " + billingResult.getResponseCode());
                         }
                     });
                 } else {
-                    // Handle connection error
                     Log.e("BranchEvent", "Failed to connect to billing service. Error code: " + billingResult.getResponseCode());
                 }
             }
 
             @Override
             public void onBillingServiceDisconnected() {
-                // Handle service disconnected
                 Log.e("BranchEvent", "Billing service disconnected.");
             }
         });
