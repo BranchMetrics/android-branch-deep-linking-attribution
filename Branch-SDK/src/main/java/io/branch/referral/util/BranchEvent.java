@@ -275,7 +275,7 @@ public class BranchEvent {
      * @param context  Current context
      * @param purchase Respective purchase
      */
-    public void logEventFromPurchase(Context context, @NonNull Purchase purchase) {
+    public void logEventWithPurchase(Context context, @NonNull Purchase purchase) {
         List<String> productIds = purchase.getProducts();
         List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
         List<QueryProductDetailsParams.Product> subsList = new ArrayList<>();

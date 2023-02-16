@@ -3276,7 +3276,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 for (Purchase purchase : purchases) {
                     if (prefHelper_.isAutoLogInAppPurchasesAsEventsEnabled()) {
                         BranchEvent event = new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE);
-                        event.logEventFromPurchase(Branch.getInstance().context_, purchase);
+                        event.logEventWithPurchase(Branch.getInstance().context_, purchase);
                     }
                 }
             }
