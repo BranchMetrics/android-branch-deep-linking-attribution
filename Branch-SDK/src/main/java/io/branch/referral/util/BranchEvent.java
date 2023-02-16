@@ -272,7 +272,7 @@ public class BranchEvent {
     /**
      * Logs a Branch Commerce Event based on an in-app purchase
      *
-     * @param context Current context
+     * @param context  Current context
      * @param purchase Respective purchase
      */
     public void logEventFromPurchase(Context context, @NonNull Purchase purchase) {
