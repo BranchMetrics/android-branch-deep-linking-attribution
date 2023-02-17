@@ -305,25 +305,50 @@ public class BranchEvent {
                         .setProductList(subsList)
                         .build();
 
-        PurchasesUpdatedListener purchasesUpdatedListener = new PurchasesUpdatedListener() {
-            @Override
-            public void onPurchasesUpdated(BillingResult billingResults, List<Purchase> purchases) {
+        Branch.getInstance().billingClient.queryProductDetailsAsync(querySubsProductDetailsParams, ((billingResult, subsProductDetailsList) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
 
+                List<BranchUniversalObject> contentItemBUOs = new ArrayList<>();
+                CurrencyType currency = null;
+                double revenue = 0.00;
+
+                for (ProductDetails product : subsProductDetailsList) {
+                    BranchUniversalObject buo = createBUOWithSubsProductDetails(product);
+                    contentItemBUOs.add(buo);
+                }
+
+                createAndLongEventForPurchase(context, purchase, contentItemBUOs, currency, revenue, "Subscription");
+
+            } else {
+                Log.e("BranchEvent", "Failed to query subscriptions. Error code: " + billingResult.getResponseCode());
             }
-        };
+        }));
 
-        BillingClient billingClient = BillingClient.newBuilder(context)
-                .setListener(purchasesUpdatedListener)
-                .enablePendingPurchases()
-                .build();
+        Branch.getInstance().billingClient.queryProductDetailsAsync(queryProductDetailsParams, ((billingResult, productDetailsList) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
 
-        billingClient.startConnection(new BillingClientStateListener() {
+                List<BranchUniversalObject> contentItemBUOs = new ArrayList<>();
+                CurrencyType currency = null;
+                double revenue = 0.00;
+
+                for (ProductDetails product : productDetailsList) {
+                    BranchUniversalObject buo = createBUOWithInAppProductDetails(product);
+                    contentItemBUOs.add(buo);
+                }
+                createAndLongEventForPurchase(context, purchase, contentItemBUOs, currency, revenue, "In-App Purchase");
+
+            } else {
+                Log.e("BranchEvent", "Failed to query products. Error code: " + billingResult.getResponseCode());
+            }
+        }));
+
+        Branch.getInstance().billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
 
 
-                    billingClient.queryProductDetailsAsync(querySubsProductDetailsParams, (billingQueryResult, productDetailsList) -> {
+                    Branch.getInstance().billingClient.queryProductDetailsAsync(querySubsProductDetailsParams, (billingQueryResult, productDetailsList) -> {
                         if (billingQueryResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                             List<BranchUniversalObject> buos = new ArrayList<>();
                             CurrencyType currency = null;
@@ -372,7 +397,7 @@ public class BranchEvent {
                     });
 
 
-                    billingClient.queryProductDetailsAsync(queryProductDetailsParams, (billingQueryResult, productDetailsList) -> {
+                    Branch.getInstance().billingClient.queryProductDetailsAsync(queryProductDetailsParams, (billingQueryResult, productDetailsList) -> {
                         if (billingQueryResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                             List<BranchUniversalObject> buos = new ArrayList<>();
                             CurrencyType currency = null;
@@ -436,6 +461,31 @@ public class BranchEvent {
                 Log.e("BranchEvent", "Billing service disconnected.");
             }
         });
+    }
+
+    private BranchUniversalObject createBUOWithInAppProductDetails( @NonNull ProductDetails product) {
+
+        return null;
+    }
+
+    private BranchUniversalObject createBUOWithSubsProductDetails( @NonNull ProductDetails product) {
+
+        return null;
+    }
+
+    private void createAndLongEventForPurchase(Context context, Purchase purchase,  List<BranchUniversalObject> contentItems, CurrencyType currency, Double revenue, String productType) {
+        new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
+                .setCurrency(currency)
+                .setDescription(purchase.getOrderId())
+                .setCustomerEventAlias(productType)
+                .setRevenue(revenue)
+                .addCustomDataProperty("package_name", purchase.getPackageName())
+                .addCustomDataProperty("order_id", purchase.getOrderId())
+                .addCustomDataProperty("loggedFromIAP", "true")
+                .addCustomDataProperty("is_auto_renewing", String.valueOf(purchase.isAutoRenewing()))
+                .addCustomDataProperty("purchase_token", purchase.getPurchaseToken())
+                .addContentItems(contentItems)
+                .logEvent(context);
     }
 
     private class ServerRequestLogEvent extends ServerRequest {

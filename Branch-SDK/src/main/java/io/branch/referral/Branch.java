@@ -332,7 +332,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
 
-    private BillingClient billingClient;
+    public BillingClient billingClient;
 
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
@@ -436,6 +436,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
+
         billingClient = BillingClient.newBuilder(this.context_)
                 .setListener(purchasesUpdatedListener)
                 .enablePendingPurchases()
@@ -443,9 +444,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
-            public void onBillingSetupFinished(BillingResult billingResult) {}
+            public void onBillingSetupFinished(BillingResult billingResult) {
+                Log.d("BranchSDK", "Branch billingClient setup finished.");
+            }
             @Override
-            public void onBillingServiceDisconnected() {}
+            public void onBillingServiceDisconnected() {
+                Log.w("BranchSDK", "Branch billingClient disconnected.");
+            }
         });
     }
 
