@@ -6,12 +6,12 @@ import com.android.billingclient.api.*
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.util.*
 
-public class BillingGooglePlay {
+class BillingGooglePlay {
 
     private lateinit var context_: Context
     var billingClient: BillingClient? = null
 
-    public fun createBillingClient(context: Context) {
+    fun createBillingClient(context: Context, callback: (Boolean) -> Unit) {
         context_ = context
 
         billingClient = BillingClient.newBuilder(context)
@@ -21,11 +21,19 @@ public class BillingGooglePlay {
 
         billingClient!!.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
-                Log.d("BranchSDK", "Branch billingClient setup finished.")
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Log.d("BranchSDK", "Branch billingClient setup finished.")
+                    callback(true)
+                } else {
+                    val errorMessage = "Billing client setup failed with error code: ${billingResult.responseCode}"
+                    Log.w("BranchSDK", errorMessage)
+                    callback(false)
+                }
             }
 
             override fun onBillingServiceDisconnected() {
-                Log.w("BranchSDK", "Branch billingClient disconnected.")
+                Log.w("BranchSDK", "Billing client disconnected")
+                callback(false)
             }
         })
     }
@@ -34,12 +42,8 @@ public class BillingGooglePlay {
         PurchasesUpdatedListener { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
-                    if (PrefHelper.getInstance(context_).isAutoLogInAppPurchasesAsEventsEnabled()) {
-//                        val event = BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
-//                        event.logEventWithPurchase(
-//                            Branch.getInstance().applicationContext,
-//                            purchase!!
-//                        )
+                    if (PrefHelper.getInstance(context_).isAutoLogInAppPurchasesAsEventsEnabled) {
+                        logEventWithPurchase(context_, purchase)
                     }
                 }
             }
@@ -51,11 +55,11 @@ public class BillingGooglePlay {
      * @param context  Current context
      * @param purchase Respective purchase
      */
-    fun logEventWithPurchase(context: Context?, purchase: Purchase) {
+    fun logEventWithPurchase(context: Context, purchase: Purchase) {
         val productIds = purchase.products
         val productList: MutableList<QueryProductDetailsParams.Product> = ArrayList()
         val subsList: MutableList<QueryProductDetailsParams.Product> = ArrayList()
-        Log.d("BranchSDK","Creating event for purchase with products: $productIds");
+        Log.d("BranchSDK", "Creating event for purchase with products: $productIds");
 
         for (productId: String? in productIds) {
             val inAppProduct = QueryProductDetailsParams.Product.newBuilder()
@@ -79,110 +83,136 @@ public class BillingGooglePlay {
             .setProductList(subsList)
             .build()
 
-        Branch.getInstance().billingClient.queryProductDetailsAsync(querySubsProductDetailsParams,
-            ProductDetailsResponseListener { billingResult: BillingResult, subsProductDetailsList: List<ProductDetails?> ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    val contentItemBUOs: MutableList<BranchUniversalObject> =
-                        ArrayList()
-                    val currency: CurrencyType = CurrencyType.USD
-                    val revenue: Double = 0.00
+        billingClient?.queryProductDetailsAsync(
+            querySubsProductDetailsParams
+        ) { billingResult: BillingResult, subsProductDetailsList: List<ProductDetails?> ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                var contentItemBUOs: MutableList<BranchUniversalObject> =
+                    ArrayList()
+                var currency: CurrencyType = CurrencyType.USD
+                var revenue = 0.00
 
-                    for (product: ProductDetails? in subsProductDetailsList) {
-                        val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
-                        contentItemBUOs.add(buo)
-                    }
+                for (product: ProductDetails? in subsProductDetailsList) {
+                    val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
+
+                    contentItemBUOs.add(buo)
+                    revenue += buo.contentMetadata.price
+                    currency = buo.contentMetadata.currencyType
+                }
+
+                if (contentItemBUOs.isNotEmpty()) {
                     createAndLongEventForPurchase(
-                        context_,
+                        context,
                         purchase,
                         contentItemBUOs,
                         currency,
                         revenue,
                         "Subscription"
                     )
-                } else {
-                    Log.e(
-                        "BranchEvent",
-                        "Failed to query subscriptions. Error code: " + billingResult.responseCode
-                    )
                 }
-            })
+            } else {
+                Log.e(
+                    "BranchEvent",
+                    "Failed to query subscriptions. Error code: " + billingResult.responseCode
+                )
+            }
+        }
 
-        Branch.getInstance().billingClient.queryProductDetailsAsync(
-            queryProductDetailsParams,
-            (ProductDetailsResponseListener { billingResult: BillingResult, productDetailsList: List<ProductDetails?> ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    val contentItemBUOs: MutableList<BranchUniversalObject> =
-                        ArrayList()
-                    val currency: CurrencyType = CurrencyType.USD
-                    val revenue: Double = 0.00
+        billingClient?.queryProductDetailsAsync(
+            queryProductDetailsParams
+        ) { billingResult: BillingResult, productDetailsList: List<ProductDetails?> ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 
-                    for (product: ProductDetails? in productDetailsList) {
-                        val buo: BranchUniversalObject = createBUOWithInAppProductDetails(product)
-                        contentItemBUOs.add(buo)
-                    }
+                var contentItemBUOs: MutableList<BranchUniversalObject> =
+                    ArrayList()
+                var currency: CurrencyType = CurrencyType.USD
+                var revenue = 0.00
+                var quantity: Int = purchase.quantity
+
+                for (product: ProductDetails? in productDetailsList) {
+                    val buo: BranchUniversalObject =
+                        createBUOWithInAppProductDetails(product, quantity)
+                    contentItemBUOs.add(buo)
+                    revenue += (buo.contentMetadata.price * quantity)
+                    currency = buo.contentMetadata.currencyType
+                }
+
+                if (contentItemBUOs.isNotEmpty()) {
                     createAndLongEventForPurchase(
-                        context_,
+                        context,
                         purchase,
                         contentItemBUOs,
                         currency,
                         revenue,
                         "In-App Purchase"
                     )
-                } else {
-                    Log.e(
-                        "BranchEvent",
-                        "Failed to query products. Error code: " + billingResult.responseCode
-                    )
                 }
-            })
-        )
-    }
-
-
-    private fun createBUOWithInAppProductDetails(product: ProductDetails, quantity: Double): BranchUniversalObject {
-
-        val currency = CurrencyType.valueOf(product.oneTimePurchaseOfferDetails!!.priceCurrencyCode)
-        val price = (product.oneTimePurchaseOfferDetails!!.priceAmountMicros / 1000000).toDouble()
-        val revenue = price * quantity
-
-        return BranchUniversalObject()
-            .setCanonicalIdentifier(product.productId)
-            .setTitle(product.title)
-            .setContentMetadata(
-                ContentMetadata()
-                    .addCustomMetadata("product_type", product.productType)
-                    .setPrice(price, currency)
-                    .setProductName(product.name)
-                    .setQuantity(quantity)
-                    .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-            )
-    }
-
-    private fun createBUOWithSubsProductDetails(product: ProductDetails): BranchUniversalObject {
-
-        val purchasedProductType = "Subscription"
-        val pricingPhaseList = product.subscriptionOfferDetails?.get(0)?.pricingPhases?.pricingPhaseList?.get(0)
-
-        val currency = pricingPhaseList?.let {
-            CurrencyType.valueOf(
-                it.priceCurrencyCode
-            )
+            } else {
+                Log.e(
+                    "BranchEvent",
+                    "Failed to query products. Error code: " + billingResult.responseCode
+                )
+            }
         }
-        val price = ((pricingPhaseList?.priceAmountMicros ?: 0) / 1000000).toDouble()
-        val quantity = 1
-        val revenue = price * quantity
+    }
 
-        return BranchUniversalObject()
-            .setCanonicalIdentifier(product.productId)
-            .setTitle(product.title)
-            .setContentMetadata(
-                ContentMetadata()
-                    .addCustomMetadata("product_type", product.productType)
-                    .setPrice(price, currency)
-                    .setProductName(product.name)
-                    .setQuantity(quantity.toDouble())
-                    .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-            )
+    private fun createBUOWithSubsProductDetails(product: ProductDetails?): BranchUniversalObject {
+        if (product != null) {
+
+            val pricingPhaseList =
+                product.subscriptionOfferDetails?.get(0)?.pricingPhases?.pricingPhaseList?.get(0)
+
+            val currency = pricingPhaseList?.let {
+                CurrencyType.valueOf(
+                    it.priceCurrencyCode
+                )
+            }
+
+            val price = ((pricingPhaseList?.priceAmountMicros ?: 0) / 1000000).toDouble()
+
+            return BranchUniversalObject()
+                .setCanonicalIdentifier(product.productId)
+                .setTitle(product.title)
+                .setContentMetadata(
+                    ContentMetadata()
+                        .addCustomMetadata("product_type", product.productType)
+                        .setPrice(price, currency)
+                        .setProductName(product.name)
+                        .setQuantity(1.0)
+                        .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
+
+                )
+        } else {
+            return BranchUniversalObject()
+        }
+    }
+
+
+    private fun createBUOWithInAppProductDetails(
+        product: ProductDetails?,
+        quantity: Int
+    ): BranchUniversalObject {
+        if (product != null) {
+
+            val currency =
+                CurrencyType.valueOf(product.oneTimePurchaseOfferDetails!!.priceCurrencyCode)
+            val price =
+                (product.oneTimePurchaseOfferDetails!!.priceAmountMicros / 1000000).toDouble()
+
+            return BranchUniversalObject()
+                .setCanonicalIdentifier(product.productId)
+                .setTitle(product.title)
+                .setContentMetadata(
+                    ContentMetadata()
+                        .addCustomMetadata("product_type", product.productType)
+                        .setPrice(price, currency)
+                        .setProductName(product.name)
+                        .setQuantity(quantity.toDouble())
+                        .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
+                )
+        } else {
+            return BranchUniversalObject()
+        }
     }
 
     private fun createAndLongEventForPurchase(
@@ -200,11 +230,13 @@ public class BillingGooglePlay {
             .setRevenue(revenue)
             .addCustomDataProperty("package_name", purchase.packageName)
             .addCustomDataProperty("order_id", purchase.orderId)
-            .addCustomDataProperty("loggedFromIAP", "true")
+            .addCustomDataProperty("logged_from_IAP", "true")
             .addCustomDataProperty("is_auto_renewing", purchase.isAutoRenewing.toString())
             .addCustomDataProperty("purchase_token", purchase.purchaseToken)
             .addContentItems(contentItems)
             .logEvent(context)
+
+        Log.d("BranchSDK", "Automatically logged IAP as Branch Event")
     }
 
 
