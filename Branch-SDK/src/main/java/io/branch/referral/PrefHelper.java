@@ -1363,6 +1363,12 @@ public class PrefHelper {
         }
     }
 
+    public static void Warning(String message) {
+        if (!TextUtils.isEmpty(message)) {
+            Log.w(TAG, message);
+        }
+    }
+
     public static void LogException(String message, Exception t) {
         if (!TextUtils.isEmpty(message)) {
             Log.e(TAG, message, t);

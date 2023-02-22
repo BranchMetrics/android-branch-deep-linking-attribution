@@ -433,7 +433,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
         if (prefHelper_.isAutoLogInAppPurchasesAsEventsEnabled()) {
-            new BillingGooglePlay().createBillingClient(context_, aBoolean -> null);
+            BillingGooglePlay.Companion.getInstance().startBillingClient(aBoolean -> null);
         }
     }
 
@@ -853,9 +853,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void setAutoLogInAppPurchasesAsEvents(boolean isAutoLogEnabled) {
         prefHelper_.setAutoLogInAppPurchasesAsEvents(isAutoLogEnabled);
-        if (isAutoLogEnabled) {
-            new BillingGooglePlay().createBillingClient(context_, aBoolean -> null);
-        }
     }
     
     /**
@@ -3426,13 +3423,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
         if (prefHelper_.isAutoLogInAppPurchasesAsEventsEnabled()) {
-            Log.e("BranchSDK", "logEventWithPurchase() will already be called automatically when autoLogInAppPurchasesAsEvents is enabled.");
+            PrefHelper.Warning("logEventWithPurchase() will already be called automatically when autoLogInAppPurchasesAsEvents is enabled.");
         } else {
-            BillingGooglePlay billingGooglePlay = new BillingGooglePlay();
-            billingGooglePlay.createBillingClient(context, aBoolean -> {
-                billingGooglePlay.logEventWithPurchase(context, purchase);
-                return null;
-            });
+            BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
         }
     }
 }

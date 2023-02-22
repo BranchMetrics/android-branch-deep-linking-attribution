@@ -1,20 +1,6 @@
 package io.branch.referral.util;
 
-
 import android.content.Context;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingClientStateListener;
-import com.android.billingclient.api.BillingResult;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.ProductDetailsResponseListener;
-import com.android.billingclient.api.Purchase;
-
-import com.android.billingclient.api.PurchasesUpdatedListener;
-import com.android.billingclient.api.QueryProductDetailsParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
