@@ -246,7 +246,7 @@ class BillingGooglePlay private constructor() {
         }
     }
 
-    private fun createAndLogEventForPurchase(
+    fun createAndLogEventForPurchase(
         context: Context,
         purchase: Purchase,
         contentItems: List<BranchUniversalObject>,
