@@ -111,6 +111,18 @@ public class BranchUtil {
         return branchKey;
     }
 
+    public static boolean getEnableLoggingConfig(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        boolean enableLogging = false;
+
+        if(jsonConfig.isValid()){
+            // Safely coerce nullable json result to boolean
+            enableLogging = Boolean.TRUE.equals(jsonConfig.getEnableLogging());
+        }
+
+        return enableLogging;
+    }
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
      * This value can be overridden via. {@link Branch#enableTestMode()}
@@ -125,9 +137,6 @@ public class BranchUtil {
     static void setTestMode(boolean testMode) {
         isTestModeEnabled_ = testMode;
     }
-
-    /** @deprecated (see enableDebugMode for more information) */
-    public static boolean isDebugEnabled() { return false; }
 
     public static String decodeResourceId(Context context, int resourceId) {
         try {

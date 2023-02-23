@@ -482,6 +482,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     synchronized public static Branch getAutoInstance(@NonNull Context context) {
         if (branchReferral_ == null) {
+            if(BranchUtil.getEnableLoggingConfig(context)){
+                enableLogging();
+            }
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -502,6 +506,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         if (branchReferral_ == null) {
+            if(BranchUtil.getEnableLoggingConfig(context)){
+                enableLogging();
+            }
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {

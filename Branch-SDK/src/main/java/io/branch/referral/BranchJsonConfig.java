@@ -28,7 +28,6 @@ public class BranchJsonConfig {
         testKey,
         liveKey,
         useTestInstance,
-        enableFacebookLinkCheck,
         enableLogging
     }
 
@@ -43,7 +42,6 @@ public class BranchJsonConfig {
             "testKey":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc",
             "liveKey":"key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv",
             "useTestInstance": true,
-            "enableFacebookLinkCheck": true,
             "enableLogging": true
        }
     */
@@ -100,7 +98,7 @@ public class BranchJsonConfig {
         }
     }
 
-    public @Nullable Boolean getLoggingMode() {
+    public @Nullable Boolean getEnableLogging() {
         if (!isValid(BranchJsonKey.enableLogging)) return null;
 
         try {
@@ -162,17 +160,6 @@ public class BranchJsonConfig {
 
         try {
             return mConfiguration.getBoolean(BranchJsonKey.useTestInstance.toString());
-        } catch (JSONException exception) {
-            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
-            return false;
-        }
-    }
-
-    public @Nullable Boolean getEnableFacebookLinkCheck() {
-        if (!isValid(BranchJsonKey.enableFacebookLinkCheck)) return null;
-
-        try {
-            return mConfiguration.getBoolean(BranchJsonKey.enableFacebookLinkCheck.toString());
         } catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
             return false;
