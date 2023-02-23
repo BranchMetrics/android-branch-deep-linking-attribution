@@ -123,6 +123,19 @@ public class BranchUtil {
         return enableLogging;
     }
 
+    public static boolean getDeferInitForPluginRuntimeConfig(Context context){
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+
+        boolean deferInitForPluginRuntime = false;
+
+        if(jsonConfig.isValid()){
+            // Safely coerce nullable json result to boolean
+            deferInitForPluginRuntime = Boolean.TRUE.equals(jsonConfig.getDeferInitForPluginRuntime());
+        }
+
+        return deferInitForPluginRuntime;
+    }
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
      * This value can be overridden via. {@link Branch#enableTestMode()}

@@ -346,6 +346,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
+    /* */
+    static boolean deferInitForPluginRuntime = false;
+
     /* Flag to indicate if the `v1/close` is expected by the server at the end of this session. */
     public boolean closeRequestNeeded = false;
 
@@ -407,6 +410,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * us make data driven decisions. */
     private static String pluginVersion = null;
     private static String pluginName = null;
+
+    private BranchReferralInitListener deferredCallback;
+    private Uri deferredUri;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -486,6 +492,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 enableLogging();
             }
 
+            // Should only be set in json config
+            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -509,6 +518,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if(BranchUtil.getEnableLoggingConfig(context)){
                 enableLogging();
             }
+
+            // Should only be set in json config
+            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
@@ -3154,6 +3166,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
+            PrefHelper.Debug("init uri is " + uri);
+            // defer init until this has been signaled by plugin
+            if(deferInitForPluginRuntime){
+                PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit(). uri "
+                        + uri
+                + " callback " + callback);
+                Branch.getInstance().deferredUri = uri;
+                Branch.getInstance().deferredCallback = callback;
+                return;
+            }
+
+            PrefHelper.Debug("Proceeding with init");
+
             final Branch branch = Branch.getInstance();
             if (branch == null) {
                 PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
@@ -3246,6 +3271,45 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static String getSdkVersionNumber() {
         return io.branch.referral.BuildConfig.VERSION_NAME;
+    }
+
+
+    /**
+     * Scenario: Integrations using our plugin SDKs (React-Native, Capacitor, Unity, etc),
+     * it is possible to have a race condition wherein the native layers finish their initialization
+     * before the JS/C# layers have finished loaded and registering their receivers- dropping the
+     * Branch parameters.
+     *
+     * Because these plugin delays are not deterministic, or consistent, a constant
+     * offset to delay is not guaranteed to work in all cases, and possibly penalizes performant
+     * devices.
+     *
+     * To solve, we wait for the plugin to signal when it is ready, and then begin native init
+     *
+     * Reusing disable autoinitialization to prevent uninitialization errors
+     * @param isDeferred
+     */
+    static void deferInitForPluginRuntime(boolean isDeferred){
+        PrefHelper.Debug("deferInitForPluginRuntime " + isDeferred);
+
+        deferInitForPluginRuntime = isDeferred;
+        if(isDeferred){
+            expectDelayedSessionInitialization(isDeferred);
+        }
+    }
+
+    /**
+     * Method to be invoked from plugin t
+     */
+    public static void notifyNativeToInit(){
+        PrefHelper.Debug("notifyNativeToInit uri " + Branch.getInstance().deferredUri + " callback "
+                + Branch.getInstance().deferredCallback);
+
+        deferInitForPluginRuntime = false;
+        new InitSessionBuilder(Branch.getInstance().getCurrentActivity())
+                .withCallback(getInstance().deferredCallback)
+                .withData(Branch.getInstance().deferredUri)
+                .init();
     }
 
     //-------------------------- DEPRECATED --------------------------------------//
