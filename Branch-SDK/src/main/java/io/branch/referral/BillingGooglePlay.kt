@@ -7,7 +7,7 @@ import io.branch.referral.util.*
 
 class BillingGooglePlay private constructor() {
 
-    private lateinit var billingClient: BillingClient
+    lateinit var billingClient: BillingClient
 
     companion object {
         @Volatile
@@ -22,8 +22,6 @@ class BillingGooglePlay private constructor() {
                         .setListener(instance.purchasesUpdatedListener)
                         .enablePendingPurchases()
                         .build()
-
-                    instance.startBillingClient{}
                 }
                 return instance
             }
@@ -35,17 +33,17 @@ class BillingGooglePlay private constructor() {
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    PrefHelper.Debug("Branch billingClient setup finished.")
+                    PrefHelper.Debug("Billing Client setup finished.")
                     callback(true)
                 } else {
-                    val errorMessage = "Billing client setup failed with error code: ${billingResult.responseCode}"
+                    val errorMessage = "Billing Client setup failed with error: ${billingResult.debugMessage}"
                     PrefHelper.LogException(errorMessage, Exception())
                     callback(false)
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                PrefHelper.Warning("Billing client disconnected")
+                PrefHelper.Warning("Billing Client disconnected")
                 callback(false)
             }
         })
@@ -55,7 +53,7 @@ class BillingGooglePlay private constructor() {
         PurchasesUpdatedListener { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
-                    if (PrefHelper.getInstance(Branch.getInstance().applicationContext).isAutoLogInAppPurchasesAsEventsEnabled) {
+                    if (PrefHelper.autoLogIAPEvents_) {
                         logEventWithPurchase(Branch.getInstance().applicationContext, purchase)
                     }
                 }
@@ -123,7 +121,7 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                PrefHelper.LogException("Failed to query subscriptions. Error code: " + billingResult.responseCode, Exception())
+                PrefHelper.LogException("Failed to query subscriptions. Error: " + billingResult.debugMessage, Exception())
             }
         }
 
@@ -157,8 +155,7 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                PrefHelper.LogException("Failed to query products. Error code: " + billingResult.responseCode, Exception())
-
+                PrefHelper.LogException("Failed to query subscriptions. Error: " + billingResult.debugMessage, Exception())
             }
         }
     }
@@ -171,7 +168,7 @@ class BillingGooglePlay private constructor() {
 
             val currency = pricingPhaseList?.let {
                 CurrencyType.valueOf(
-                    it.priceCurrencyCode ?: return@let null
+                    it.priceCurrencyCode
                 )
             }
 
@@ -207,7 +204,6 @@ class BillingGooglePlay private constructor() {
             return BranchUniversalObject()
         }
     }
-
 
     private fun createBUOWithInAppProductDetails(
         product: ProductDetails?,
@@ -271,8 +267,7 @@ class BillingGooglePlay private constructor() {
             .addContentItems(contentItems)
             .logEvent(context)
 
-        PrefHelper.Debug("Automatically logged IAP as Branch Event")
+        PrefHelper.Debug("Successfully logged in-app purchase as Branch Event")
     }
-
 
 }

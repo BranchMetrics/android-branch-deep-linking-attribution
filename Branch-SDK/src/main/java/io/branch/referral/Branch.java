@@ -432,7 +432,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
         }
-        if (prefHelper_.isAutoLogInAppPurchasesAsEventsEnabled()) {
+        if (PrefHelper.autoLogIAPEvents_) {
             BillingGooglePlay.Companion.getInstance().startBillingClient(aBoolean -> null);
         }
     }
@@ -848,11 +848,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /**
      * Enables or disables the automatic logging of in-app purchases or subscriptions as events.
+     * Can be called anytime after the Branch session is initialized.
      *
-     * @param isAutoLogEnabled {@code true} to automatically log IAP as events.
      */
-    public void setAutoLogInAppPurchasesAsEvents(boolean isAutoLogEnabled) {
-        prefHelper_.setAutoLogInAppPurchasesAsEvents(isAutoLogEnabled);
+    public void enableAutoLogInAppPurchasesAsEvents() {
+        prefHelper_.setAutoLogInAppPurchasesAsEvents(true);
     }
     
     /**
@@ -3422,10 +3422,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        if (prefHelper_.isAutoLogInAppPurchasesAsEventsEnabled()) {
+        if (PrefHelper.autoLogIAPEvents_) {
             PrefHelper.Warning("logEventWithPurchase() will already be called automatically when autoLogInAppPurchasesAsEvents is enabled.");
         } else {
-            BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+                if (succeeded) {
+                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+                } else {
+                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                }
+                return null;
+            });
         }
     }
 }

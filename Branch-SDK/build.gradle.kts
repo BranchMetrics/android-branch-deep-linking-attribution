@@ -20,6 +20,7 @@ dependencies {
 
     implementation("com.google.firebase:firebase-appindexing:19.0.0")
     implementation("com.android.billingclient:billing:5.1.0")
+    implementation("androidx.test.ext:junit-ktx:1.1.5")
 
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
 

@@ -214,6 +214,7 @@ public class PrefHelper {
         prefHelper_ = null;
         customServerURL_ = null;
         customCDNBaseURL_ = null;
+        autoLogIAPEvents_ = false;
     }
 
     /**
@@ -1417,14 +1418,17 @@ public class PrefHelper {
      * Enables or disables the automatic logging of in-app purchases or subscriptions as events.
      * @param autoLogEvents {@code true} to enable the automatic logging of in-app purchases as events.
      */
-    void setAutoLogInAppPurchasesAsEvents(boolean autoLogEvents) {
-        setBool(KEY_LOG_IAP_AS_EVENTS, autoLogEvents);
+    public static boolean autoLogIAPEvents_ = false;
+
+    public void setAutoLogInAppPurchasesAsEvents(boolean autoLogEvents) {
+        autoLogIAPEvents_ = autoLogEvents;
+        BillingGooglePlay.Companion.getInstance().startBillingClient(aBoolean -> null);
     }
 
     /*
        Returns true if automatic logging of in-app purchases as events. is enabled.
      */
     boolean isAutoLogInAppPurchasesAsEventsEnabled() {
-        return getBool(KEY_LOG_IAP_AS_EVENTS);
+        return autoLogIAPEvents_;
     }
 }
