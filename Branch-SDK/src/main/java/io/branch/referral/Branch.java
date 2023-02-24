@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -413,6 +412,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     private BranchReferralInitListener deferredCallback;
     private Uri deferredUri;
+    private InitSessionBuilder deferredSessionBuilder;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -3166,18 +3166,14 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
-            PrefHelper.Debug("init uri is " + uri);
-            // defer init until this has been signaled by plugin
+            PrefHelper.Debug("Beginning session initialization");
+            PrefHelper.Debug("Session uri is " + uri);
+
             if(deferInitForPluginRuntime){
-                PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit(). uri "
-                        + uri
-                + " callback " + callback);
-                Branch.getInstance().deferredUri = uri;
-                Branch.getInstance().deferredCallback = callback;
+                PrefHelper.Debug("Session init is deferred until signaled by plugin.");
+                cacheSessionBuilder(this);
                 return;
             }
-
-            PrefHelper.Debug("Proceeding with init");
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
@@ -3198,12 +3194,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
-            } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
+            }
+            else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
                 branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
-            } else if (isReInitializing) {
+            }
+            else if (isReInitializing) {
                 // User called reInit but isRestartSessionRequested = false, meaning the new intent was
                 // not initiated by Branch and should not be considered a "new session", return early
-                if (callback != null) callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
+                if (callback != null) {
+                    callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
+                }
                 return;
             }
 
@@ -3229,6 +3229,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
             branch.initializeSession(initRequest, delay);
+        }
+
+        private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
+            Branch.getInstance().deferredSessionBuilder = this;
+            PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit()" +
+                    "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
+                    "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
+                    "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
+                    "\nisReInitializing: " + Branch.getInstance().deferredSessionBuilder.isReInitializing +
+                    "\ndelay: " + Branch.getInstance().deferredSessionBuilder.delay +
+                    "\nisAutoInitialization: " + Branch.getInstance().deferredSessionBuilder.isAutoInitialization +
+                    "\nignoreIntent: " + Branch.getInstance().deferredSessionBuilder.ignoreIntent
+            );
         }
 
         /**
@@ -3299,17 +3312,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * Method to be invoked from plugin t
+     * Method to be invoked from plugin to initialize the session originally built by the user
+     * Only invokes the last session built
      */
     public static void notifyNativeToInit(){
         PrefHelper.Debug("notifyNativeToInit uri " + Branch.getInstance().deferredUri + " callback "
                 + Branch.getInstance().deferredCallback);
 
         deferInitForPluginRuntime = false;
-        new InitSessionBuilder(Branch.getInstance().getCurrentActivity())
-                .withCallback(getInstance().deferredCallback)
-                .withData(Branch.getInstance().deferredUri)
-                .init();
+        if(Branch.getInstance().deferredSessionBuilder != null){
+            Branch.getInstance().deferredSessionBuilder.init();
+        }
     }
 
     //-------------------------- DEPRECATED --------------------------------------//
