@@ -20,14 +20,25 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.QueryProductDetailsParams;
 
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -114,12 +125,11 @@ public class MainActivity extends Activity {
                                 Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
                                     @Override
                                     public void onInitFinished(JSONObject referringParams, BranchError error) {
-                                        Log.d("BranchSDK_Tester", "Identity set to " + userID +"\nInstall params = " + referringParams.toString());
+                                        Log.d("BranchSDK_Tester", "Identity set to " + userID + "\nInstall params = " + referringParams.toString());
                                         if (error != null) {
                                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                                         }
                                         Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
-
 
 
                                     }
@@ -146,8 +156,7 @@ public class MainActivity extends Activity {
                         if (error != null) {
                             Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
                             Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                        else {
+                        } else {
                             Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
                             Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
                         }
@@ -232,6 +241,85 @@ public class MainActivity extends Activity {
                 // List on google search
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
                 Toast.makeText(getApplicationContext(), "Registered View and Listed on Google", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.cmdInAppPurchase).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                findViewById(R.id.cmdInAppPurchase).setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String productId = "credits";
+
+                        BillingClient billingClient = BillingClient.newBuilder(MainActivity.this)
+                                .enablePendingPurchases()
+                                .setListener(
+                                        new PurchasesUpdatedListener() {
+                                            @Override
+                                            public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List list) {
+                                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
+                                                    Log.d("BillingClient", "Purchase was successful. Logging event");
+                                                    for (Object purchase : list) {
+                                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                ).build();
+
+                        billingClient.startConnection(new BillingClientStateListener() {
+                            @Override
+                            public void onBillingSetupFinished(BillingResult billingResult) {
+                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+
+                                    List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+
+                                    QueryProductDetailsParams.Product inAppProduct = QueryProductDetailsParams.Product.newBuilder()
+                                            .setProductId(productId)
+                                            .setProductType("INAPP")
+                                            .build();
+                                    productList.add(inAppProduct);
+
+                                    QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
+                                            .setProductList(productList)
+                                            .build();
+
+                                    billingClient.queryProductDetailsAsync(
+                                            params,
+                                            (billingQueryResult, productDetailsList) -> {
+                                                List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
+
+                                                BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+                                                        .setProductDetails(productDetailsList.get(0))
+                                                        .build();
+
+                                                productDetailsParamsList.add(productDetailsParams);
+
+                                                BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                                                        .setProductDetailsParamsList(productDetailsParamsList)
+                                                        .build();
+
+                                                billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
+
+                                            }
+
+                                    );
+
+                                } else {
+                                    // handle error
+                                    Log.e("Billing Error", "Error setting up billing client" + billingResult);
+                                }
+                            }
+
+                            @Override
+                            public void onBillingServiceDisconnected() {
+                                // handle disconnected
+                            }
+                        });
+                    }
+                });
+
             }
         });
 
@@ -324,7 +412,7 @@ public class MainActivity extends Activity {
 
                 intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
                 intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-                PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -562,7 +650,7 @@ public class MainActivity extends Activity {
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
         // Please look for "BranchSDK_Doctor" in the logcat to see the results.
         // IMP : Do not make this call in your production app
-        
+
         //IntegrationValidator.validate(MainActivity.this);
 
     }
@@ -582,7 +670,7 @@ public class MainActivity extends Activity {
             }
         }).reInit();
 
-        
+
     }
 
     @Override

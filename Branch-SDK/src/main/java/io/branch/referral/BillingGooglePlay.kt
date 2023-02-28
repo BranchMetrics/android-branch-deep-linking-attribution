@@ -18,10 +18,11 @@ class BillingGooglePlay private constructor() {
                 if (!::instance.isInitialized) {
                     instance = BillingGooglePlay()
 
-                    instance.billingClient = BillingClient.newBuilder(Branch.getInstance().applicationContext)
-                        .setListener(instance.purchasesUpdatedListener)
-                        .enablePendingPurchases()
-                        .build()
+                    instance.billingClient =
+                        BillingClient.newBuilder(Branch.getInstance().applicationContext)
+                            .setListener(instance.purchasesUpdatedListener)
+                            .enablePendingPurchases()
+                            .build()
                 }
                 return instance
             }
@@ -29,24 +30,29 @@ class BillingGooglePlay private constructor() {
     }
 
     fun startBillingClient(callback: (Boolean) -> Unit) {
+        if (billingClient.isReady) {
+            PrefHelper.Debug("Billing Client has already been started..")
+            callback(true)
+        } else {
+            billingClient.startConnection(object : BillingClientStateListener {
+                override fun onBillingSetupFinished(billingResult: BillingResult) {
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        PrefHelper.Debug("Billing Client setup finished.")
+                        callback(true)
+                    } else {
+                        val errorMessage =
+                            "Billing Client setup failed with error: ${billingResult.debugMessage}"
+                        PrefHelper.LogException(errorMessage, Exception())
+                        callback(false)
+                    }
+                }
 
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    PrefHelper.Debug("Billing Client setup finished.")
-                    callback(true)
-                } else {
-                    val errorMessage = "Billing Client setup failed with error: ${billingResult.debugMessage}"
-                    PrefHelper.LogException(errorMessage, Exception())
+                override fun onBillingServiceDisconnected() {
+                    PrefHelper.Warning("Billing Client disconnected")
                     callback(false)
                 }
-            }
-
-            override fun onBillingServiceDisconnected() {
-                PrefHelper.Warning("Billing Client disconnected")
-                callback(false)
-            }
-        })
+            })
+        }
     }
 
     private val purchasesUpdatedListener =
@@ -121,7 +127,10 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                PrefHelper.LogException("Failed to query subscriptions. Error: " + billingResult.debugMessage, Exception())
+                PrefHelper.LogException(
+                    "Failed to query subscriptions. Error: " + billingResult.debugMessage,
+                    Exception()
+                )
             }
         }
 
@@ -155,7 +164,10 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                PrefHelper.LogException("Failed to query subscriptions. Error: " + billingResult.debugMessage, Exception())
+                PrefHelper.LogException(
+                    "Failed to query subscriptions. Error: " + billingResult.debugMessage,
+                    Exception()
+                )
             }
         }
     }

@@ -13,6 +13,7 @@ dependencies {
     implementation("androidx.browser:browser:1.0.0") {
         exclude(module = "support-v4")
     }
+    implementation("com.android.billingclient:billing:5.1.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test:runner:1.4.0")
