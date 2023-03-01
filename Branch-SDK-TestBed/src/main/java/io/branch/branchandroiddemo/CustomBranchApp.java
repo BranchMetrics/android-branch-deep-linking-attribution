@@ -9,7 +9,7 @@ import io.branch.referral.BranchApp;
 public final class CustomBranchApp extends BranchApp {
     @Override
     public void onCreate() {
-        //Branch.enableLogging();
+        Branch.enableLogging();
         super.onCreate();
         // Uncomment to test memory leak
         // LeakCanary.install(this);
