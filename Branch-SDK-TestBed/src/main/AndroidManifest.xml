@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.branch.branchandroiddemo"
+    package="io.branch.branchandroidtestbed"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -12,9 +12,9 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:name="io.branch.branchandroiddemo.CustomBranchApp" >
+        android:name="io.branch.branchandroidtestbed.CustomBranchApp" >
         <activity
-            android:name="io.branch.branchandroiddemo.MainActivity"
+            android:name="io.branch.branchandroidtestbed.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:exported="true">
@@ -53,9 +53,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SettingsActivity"/>
+        <activity android:name="io.branch.io.branch.branchandroidtestbed.SettingsActivity"/>
 
-        <activity android:name=".AutoDeepLinkTestActivity">
+        <activity android:name="io.branch.io.branch.branchandroidtestbed.AutoDeepLinkTestActivity">
             <!-- Keys for auto deep linking this activity -->
             <meta-data android:name="io.branch.sdk.auto_link_keys" android:value="auto_deeplink_key_1,auto_deeplink_key_2" />
 

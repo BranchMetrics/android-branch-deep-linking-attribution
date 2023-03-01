@@ -1,4 +1,4 @@
-package io.branch.branchandroiddemo;
+package io.branch.branchandroidtestbed;
 
 import android.app.Activity;
 

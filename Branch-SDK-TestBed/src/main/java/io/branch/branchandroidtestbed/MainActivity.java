@@ -1,4 +1,4 @@
-package io.branch.branchandroiddemo;
+package io.branch.branchandroidtestbed;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -40,6 +40,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.branch.branchandroidtestbed.R;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
@@ -244,83 +245,70 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.cmdInAppPurchase).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                findViewById(R.id.cmdInAppPurchase).setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String productId = "credits";
 
-                        BillingClient billingClient = BillingClient.newBuilder(MainActivity.this)
-                                .enablePendingPurchases()
-                                .setListener(
-                                        new PurchasesUpdatedListener() {
-                                            @Override
-                                            public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List list) {
-                                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
-                                                    Log.d("BillingClient", "Purchase was successful. Logging event");
-                                                    for (Object purchase : list) {
-                                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                ).build();
+        findViewById(R.id.cmdInAppPurchase).setOnClickListener(v -> {
+            String productId = "credits";
 
-                        billingClient.startConnection(new BillingClientStateListener() {
-                            @Override
-                            public void onBillingSetupFinished(BillingResult billingResult) {
-                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-
-                                    List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
-
-                                    QueryProductDetailsParams.Product inAppProduct = QueryProductDetailsParams.Product.newBuilder()
-                                            .setProductId(productId)
-                                            .setProductType("INAPP")
-                                            .build();
-                                    productList.add(inAppProduct);
-
-                                    QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
-                                            .setProductList(productList)
-                                            .build();
-
-                                    billingClient.queryProductDetailsAsync(
-                                            params,
-                                            (billingQueryResult, productDetailsList) -> {
-                                                List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
-
-                                                BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
-                                                        .setProductDetails(productDetailsList.get(0))
-                                                        .build();
-
-                                                productDetailsParamsList.add(productDetailsParams);
-
-                                                BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                                                        .setProductDetailsParamsList(productDetailsParamsList)
-                                                        .build();
-
-                                                billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
-
-                                            }
-
-                                    );
-
-                                } else {
-                                    // handle error
-                                    Log.e("Billing Error", "Error setting up billing client" + billingResult);
+            BillingClient billingClient = BillingClient.newBuilder(MainActivity.this)
+                    .enablePendingPurchases()
+                    .setListener(
+                            (billingResult, list) -> {
+                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
+                                    Log.d("BillingClient", "Purchase was successful. Logging event");
+                                    for (Object purchase : list) {
+                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
+                                    }
                                 }
                             }
+                    ).build();
 
-                            @Override
-                            public void onBillingServiceDisconnected() {
-                                // handle disconnected
-                            }
-                        });
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingSetupFinished(BillingResult billingResult) {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+
+                        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+
+                        QueryProductDetailsParams.Product inAppProduct = QueryProductDetailsParams.Product.newBuilder()
+                                .setProductId(productId)
+                                .setProductType(BillingClient.ProductType.INAPP)
+                                .build();
+                        productList.add(inAppProduct);
+
+                        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
+                                .setProductList(productList)
+                                .build();
+
+                        billingClient.queryProductDetailsAsync(
+                                params,
+                                (billingQueryResult, productDetailsList) -> {
+                                    Log.d("Billing", "Billing Query Result: " + billingQueryResult);
+                                    List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
+
+                                    BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+                                            .setProductDetails(productDetailsList.get(0))
+                                            .build();
+
+                                    productDetailsParamsList.add(productDetailsParams);
+
+                                    BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                                            .setProductDetailsParamsList(productDetailsParamsList)
+                                            .build();
+
+                                    billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
+                                }
+                        );
+
+                    } else {
+                        Log.e("Billing Error", "Error setting up billing client" + billingResult);
                     }
-                });
+                }
 
-            }
+                @Override
+                public void onBillingServiceDisconnected() {
+                    Log.e("Billing Error", "Billing client disconnected");
+                }
+            });
         });
 
         findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {

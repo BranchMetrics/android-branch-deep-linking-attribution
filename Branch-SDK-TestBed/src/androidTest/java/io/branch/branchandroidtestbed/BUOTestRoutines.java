@@ -1,4 +1,4 @@
-package io.branch.branchandroiddemo;
+package io.branch.branchandroidtestbed;
 
 import android.content.Context;
 import android.os.Parcel;
@@ -19,7 +19,6 @@ import javax.net.ssl.HttpsURLConnection;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.BranchAsyncTask;
 import io.branch.referral.BranchUtil;
-import io.branch.referral.PrefHelper;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;

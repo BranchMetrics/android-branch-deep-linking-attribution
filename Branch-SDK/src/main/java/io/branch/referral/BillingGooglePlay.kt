@@ -186,32 +186,23 @@ class BillingGooglePlay private constructor() {
 
             val price = pricingPhaseList?.priceAmountMicros?.div(1000000.0)
 
+            val buo = BranchUniversalObject()
+                .setCanonicalIdentifier(product.productId)
+                .setTitle(product.title)
+
+            val contentMetadata = ContentMetadata()
+                .addCustomMetadata("product_type", product.productType)
+                .setProductName(product.name)
+                .setQuantity(1.0)
+                .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
+
             if (price != null && currency != null) {
-
-                return BranchUniversalObject()
-                    .setCanonicalIdentifier(product.productId)
-                    .setTitle(product.title)
-                    .setContentMetadata(
-                        ContentMetadata()
-                            .addCustomMetadata("product_type", product.productType)
-                            .setPrice(price, currency)
-                            .setProductName(product.name)
-                            .setQuantity(1.0)
-                            .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-
-                    )
-            } else {
-                return BranchUniversalObject()
-                    .setCanonicalIdentifier(product.productId)
-                    .setTitle(product.title)
-                    .setContentMetadata(
-                        ContentMetadata()
-                            .addCustomMetadata("product_type", product.productType)
-                            .setProductName(product.name)
-                            .setQuantity(1.0)
-                            .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-                    )
+                contentMetadata.setPrice(price, currency);
             }
+
+            buo.contentMetadata = contentMetadata;
+
+            return buo;
         } else {
             return BranchUniversalObject()
         }
@@ -228,31 +219,23 @@ class BillingGooglePlay private constructor() {
             }
             val price = product.oneTimePurchaseOfferDetails?.priceAmountMicros?.div(1000000.0)
 
+            val buo = BranchUniversalObject()
+                .setCanonicalIdentifier(product.productId)
+                .setTitle(product.title)
+
+            val contentMetadata = ContentMetadata()
+                .addCustomMetadata("product_type", product.productType)
+                .setProductName(product.name)
+                .setQuantity(quantity.toDouble())
+                .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
+
             if (price != null && currency != null) {
-                return BranchUniversalObject()
-                    .setCanonicalIdentifier(product.productId)
-                    .setTitle(product.title)
-                    .setContentMetadata(
-                        ContentMetadata()
-                            .addCustomMetadata("product_type", product.productType)
-                            .setPrice(price, currency)
-                            .setProductName(product.name)
-                            .setQuantity(quantity.toDouble())
-                            .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-                    )
-            } else {
-                return BranchUniversalObject()
-                    .setCanonicalIdentifier(product.productId)
-                    .setTitle(product.title)
-                    .setContentMetadata(
-                        ContentMetadata()
-                            .addCustomMetadata("product_type", product.productType)
-                            .setProductName(product.name)
-                            .setQuantity(quantity.toDouble())
-                            .setContentSchema(BranchContentSchema.COMMERCE_PRODUCT)
-                    )
+                contentMetadata.setPrice(price, currency);
             }
 
+            buo.contentMetadata = contentMetadata;
+
+            return buo;
         } else {
             return BranchUniversalObject()
         }
