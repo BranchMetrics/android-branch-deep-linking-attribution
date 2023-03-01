@@ -123,7 +123,7 @@ class BillingGooglePlay private constructor() {
                         contentItemBUOs,
                         currency,
                         revenue,
-                        "Subscription"
+                        BillingClient.ProductType.SUBS
                     )
                 }
             } else {
@@ -160,7 +160,7 @@ class BillingGooglePlay private constructor() {
                         contentItemBUOs,
                         currency,
                         revenue,
-                        "In-App Purchase"
+                        BillingClient.ProductType.INAPP
                     )
                 }
             } else {
