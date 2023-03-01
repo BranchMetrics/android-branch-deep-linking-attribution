@@ -3316,8 +3316,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Only invokes the last session built
      */
     public static void notifyNativeToInit(){
-        PrefHelper.Debug("notifyNativeToInit uri " + Branch.getInstance().deferredUri + " callback "
-                + Branch.getInstance().deferredCallback);
+        PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
         deferInitForPluginRuntime = false;
         if(Branch.getInstance().deferredSessionBuilder != null){
