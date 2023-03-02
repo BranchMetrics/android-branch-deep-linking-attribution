@@ -3318,9 +3318,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static void notifyNativeToInit(){
         PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
-        deferInitForPluginRuntime = false;
-        if(Branch.getInstance().deferredSessionBuilder != null){
-            Branch.getInstance().deferredSessionBuilder.init();
+        SESSION_STATE sessionState = Branch.getInstance().getInitState();
+        if(sessionState == SESSION_STATE.UNINITIALISED) {
+            deferInitForPluginRuntime = false;
+            if (Branch.getInstance().deferredSessionBuilder != null) {
+                Branch.getInstance().deferredSessionBuilder.init();
+            }
+        }
+        else {
+            PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
         }
     }
 
