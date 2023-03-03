@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -346,6 +345,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
+    /* */
+    static boolean deferInitForPluginRuntime = false;
+
     /* Flag to indicate if the `v1/close` is expected by the server at the end of this session. */
     public boolean closeRequestNeeded = false;
 
@@ -407,6 +409,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * us make data driven decisions. */
     private static String pluginVersion = null;
     private static String pluginName = null;
+
+    private BranchReferralInitListener deferredCallback;
+    private Uri deferredUri;
+    private InitSessionBuilder deferredSessionBuilder;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -482,6 +488,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     synchronized public static Branch getAutoInstance(@NonNull Context context) {
         if (branchReferral_ == null) {
+            if(BranchUtil.getEnableLoggingConfig(context)){
+                enableLogging();
+            }
+
+            // Should only be set in json config
+            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -502,6 +515,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
         if (branchReferral_ == null) {
+            if(BranchUtil.getEnableLoggingConfig(context)){
+                enableLogging();
+            }
+
+            // Should only be set in json config
+            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
@@ -3146,6 +3166,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
+            PrefHelper.Debug("Beginning session initialization");
+            PrefHelper.Debug("Session uri is " + uri);
+
+            if(deferInitForPluginRuntime){
+                PrefHelper.Debug("Session init is deferred until signaled by plugin.");
+                cacheSessionBuilder(this);
+                return;
+            }
+
             final Branch branch = Branch.getInstance();
             if (branch == null) {
                 PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
@@ -3165,12 +3194,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
-            } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
+            }
+            else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
                 branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
-            } else if (isReInitializing) {
+            }
+            else if (isReInitializing) {
                 // User called reInit but isRestartSessionRequested = false, meaning the new intent was
                 // not initiated by Branch and should not be considered a "new session", return early
-                if (callback != null) callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
+                if (callback != null) {
+                    callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
+                }
                 return;
             }
 
@@ -3196,6 +3229,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
             branch.initializeSession(initRequest, delay);
+        }
+
+        private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
+            Branch.getInstance().deferredSessionBuilder = this;
+            PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit()" +
+                    "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
+                    "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
+                    "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
+                    "\nisReInitializing: " + Branch.getInstance().deferredSessionBuilder.isReInitializing +
+                    "\ndelay: " + Branch.getInstance().deferredSessionBuilder.delay +
+                    "\nisAutoInitialization: " + Branch.getInstance().deferredSessionBuilder.isAutoInitialization +
+                    "\nignoreIntent: " + Branch.getInstance().deferredSessionBuilder.ignoreIntent
+            );
         }
 
         /**
@@ -3238,6 +3284,50 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static String getSdkVersionNumber() {
         return io.branch.referral.BuildConfig.VERSION_NAME;
+    }
+
+
+    /**
+     * Scenario: Integrations using our plugin SDKs (React-Native, Capacitor, Unity, etc),
+     * it is possible to have a race condition wherein the native layers finish their initialization
+     * before the JS/C# layers have finished loaded and registering their receivers- dropping the
+     * Branch parameters.
+     *
+     * Because these plugin delays are not deterministic, or consistent, a constant
+     * offset to delay is not guaranteed to work in all cases, and possibly penalizes performant
+     * devices.
+     *
+     * To solve, we wait for the plugin to signal when it is ready, and then begin native init
+     *
+     * Reusing disable autoinitialization to prevent uninitialization errors
+     * @param isDeferred
+     */
+    static void deferInitForPluginRuntime(boolean isDeferred){
+        PrefHelper.Debug("deferInitForPluginRuntime " + isDeferred);
+
+        deferInitForPluginRuntime = isDeferred;
+        if(isDeferred){
+            expectDelayedSessionInitialization(isDeferred);
+        }
+    }
+
+    /**
+     * Method to be invoked from plugin to initialize the session originally built by the user
+     * Only invokes the last session built
+     */
+    public static void notifyNativeToInit(){
+        PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
+
+        SESSION_STATE sessionState = Branch.getInstance().getInitState();
+        if(sessionState == SESSION_STATE.UNINITIALISED) {
+            deferInitForPluginRuntime = false;
+            if (Branch.getInstance().deferredSessionBuilder != null) {
+                Branch.getInstance().deferredSessionBuilder.init();
+            }
+        }
+        else {
+            PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
+        }
     }
 
     //-------------------------- DEPRECATED --------------------------------------//
