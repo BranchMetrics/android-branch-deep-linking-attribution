@@ -8,7 +8,6 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,27 +16,25 @@ import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
-import java.util.Date;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
-import io.branch.referral.BranchViewHandler;
 import io.branch.referral.Defines;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -49,11 +46,8 @@ import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
 
-
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
-    private TextView txtInstallCount;
-
     private BranchUniversalObject branchUniversalObject;
 
     private final static String branchChannelID = "BranchChannelID";
@@ -61,11 +55,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.main_activity);
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
-        txtInstallCount = findViewById(R.id.txtInstallCount);
+
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
+
+        getActionBar().setTitle("Branch Testbed");
 
         createNotificationChannel();
 
@@ -102,29 +98,62 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdIdentifyUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.getInstance().setIdentity("test_user_10", new BranchReferralInitListener() {
-                    @Override
-                    public void onInitFinished(JSONObject referringParams, BranchError error) {
-                        Log.e("BranchSDK_Tester", "install params = " + referringParams.toString());
-                        if (error != null) {
-                            Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
-                        }
-                    }
-                });
+
+                final EditText txtUrl = new EditText(MainActivity.this);
+                txtUrl.setPadding(60, 0, 60, 30);
+                txtUrl.setHint("Your_user_id");
+
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Set User ID")
+                        .setMessage("Sets the identity of a user for events, deep links, and referrals")
+                        .setView(txtUrl)
+                        .setPositiveButton("Set", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                String userID = txtUrl.getText().toString();
+
+                                Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
+                                    @Override
+                                    public void onInitFinished(JSONObject referringParams, BranchError error) {
+                                        Log.d("BranchSDK_Tester", "Identity set to " + userID +"\nInstall params = " + referringParams.toString());
+                                        if (error != null) {
+                                            Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
+                                        }
+                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
+
+
+
+                                    }
+                                });
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                            }
+                        })
+                        .show();
+
+
             }
         });
 
         findViewById(R.id.cmdClearUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        Log.e("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        if (error != null) {
+                            Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
+                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
+                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
 
-                txtInstallCount.setText(R.string.install_count_empty);
             }
         });
 
@@ -132,7 +161,37 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getFirstReferringParams();
-                Log.e("BranchSDK_Tester", "install params = " + obj.toString());
+                Log.d("BranchSDK_Tester", "install params = " + obj.toString());
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("First Referring Params");
+                builder.setMessage(obj.toString());
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
+
+        findViewById(R.id.cmdPrintLatestParam).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                JSONObject obj = Branch.getInstance().getLatestReferringParams();
+                Log.d("BranchSDK_Tester", "Latest params = " + obj.toString());
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Latest Referring Params");
+                builder.setMessage(obj.toString());
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 
@@ -166,57 +225,13 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.cmdCommitBuyAction).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Branch.getInstance().userCompletedAction("buy", new BranchViewHandler.IBranchViewEvents() {
-                    @Override
-                    public void onBranchViewVisible(String action, String branchViewID) {
-                        Log.e("BranchSDK_Tester", "onBranchViewVisible");
-                    }
-
-                    @Override
-                    public void onBranchViewAccepted(String action, String branchViewID) {
-                        Log.e("BranchSDK_Tester", "onBranchViewAccepted");
-                    }
-
-                    @Override
-                    public void onBranchViewCancelled(String action, String branchViewID) {
-                        Log.e("BranchSDK_Tester", "onBranchViewCancelled");
-                    }
-
-                    @Override
-                    public void onBranchViewError(int errorCode, String errorMsg, String action) {
-                        Log.e("BranchSDK_Tester", "onBranchViewError " + errorMsg);
-                    }
-                });
-            }
-        });
-
-        findViewById(R.id.cmdCommitBuyMetadataAction).setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-                JSONObject params = new JSONObject();
-                try {
-                    params.put("name", "Alex");
-                    params.put("boolean", true);
-                    params.put("int", 1);
-                    params.put("double", 0.13415512301);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                Branch.getInstance().userCompletedAction("buy", params);
-            }
-
-        });
-
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 branchUniversalObject.registerView();
                 // List on google search
                 branchUniversalObject.listOnGoogleSearch(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Registered View and Listed on Google", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -226,7 +241,7 @@ public class MainActivity extends Activity {
                 LinkProperties linkProperties = new LinkProperties()
                         .addTag("myShareTag1")
                         .addTag("myShareTag2")
-//                        .setAlias("mylinkName") // In case you need to white label your link
+//                      .setAlias("mylinkName") // In case you need to white label your link
                         .setChannel("myShareChannel2")
                         .setFeature("mySharefeature2")
                         .setStage("10")
@@ -306,10 +321,10 @@ public class MainActivity extends Activity {
                     Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
                     return;
                 }
-//                intent.setData(Uri.parse(shortURL));
+
                 intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
                 intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-                PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent pendingIntent =  PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -320,6 +335,7 @@ public class MainActivity extends Activity {
                         .setAutoCancel(true);
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(1, builder.build());
+                Log.d("BranchSDK_Tester", "Sent notification");
             }
         });
 
@@ -331,41 +347,15 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Tracking events
-        findViewById(R.id.cmdTrackCustomEvent).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BranchEvent("Logged_In")
-                        .addCustomDataProperty("Custom_Event_Property_Key11", "Custom_Event_Property_val11")
-                        .addCustomDataProperty("Custom_Event_Property_Key22", "Custom_Event_Property_val22")
-                        .logEvent(MainActivity.this);
-            }
-        });
-
-        findViewById(R.id.cmdTrackStandardEvent).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
-                        .setAffiliation("test_affiliation")
-                        .setCoupon("test_coupon")
-                        .setCurrency(CurrencyType.USD)
-                        .setDescription("Event _description")
-                        .setShipping(10.2)
-                        .setTax(12.3)
-                        .setRevenue(1.5)
-                        .setTransactionID("12344555")
-                        .setSearchQuery("Test Search query")
-                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
-                        .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
-                        .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-            }
-        });
-
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Branch.getInstance().disableTracking(isChecked);
+                if (isChecked) {
+                    Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -428,6 +418,79 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+        findViewById(R.id.cmdCommerceEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART)
+                        .setAffiliation("test_affiliation")
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setCoupon("Coupon Code")
+                        .setCurrency(CurrencyType.USD)
+                        .setDescription("Customer added item to cart")
+                        .setShipping(0.0)
+                        .setTax(9.75)
+                        .setRevenue(1.5)
+                        .setSearchQuery("Test Search query")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.cmdContentEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new BranchEvent(BRANCH_STANDARD_EVENT.SEARCH)
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setDescription("Product Search")
+                        .setSearchQuery("product name")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.cmdLifecycleEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new BranchEvent(BRANCH_STANDARD_EVENT.COMPLETE_REGISTRATION)
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setTransactionID("tx1234")
+                        .setDescription("User created an account")
+                        .addCustomDataProperty("registrationID", "12345")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this);
+                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            }
+        });
+
+        findViewById(R.id.notifyInit_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Branch.notifyNativeToInit();
+            }
+        });
     }
 
     private void createNotificationChannel() {
@@ -474,23 +537,23 @@ public class MainActivity extends Activity {
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        Log.e("BranchSDK_Tester", "initSession");
+        Log.d("BranchSDK_Tester", "initSession");
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
-                    Log.e("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
                 } else {
-                    Log.e("BranchSDK_Tester", "branch init complete!");
+                    Log.d("BranchSDK_Tester", "branch init complete!");
                     if (branchUniversalObject != null) {
-                        Log.e("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                        Log.e("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.e("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
 
                     if (linkProperties != null) {
-                        Log.e("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                        Log.e("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
                     }
                 }
 
@@ -521,7 +584,7 @@ public class MainActivity extends Activity {
                 if (error != null) {
                     Log.e("BranchSDK_Tester", error.getMessage());
                 } else if (referringParams != null) {
-                    Log.e("BranchSDK_Tester", referringParams.toString());
+                    Log.d("BranchSDK_Tester", referringParams.toString());
                 }
             }
         }).reInit();
