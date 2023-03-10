@@ -1,11 +1,17 @@
 package io.branch.referral;
 
+import static io.branch.referral.Defines.Jsonkey.PartnerData;
+
 import android.content.Context;
 import android.os.Build;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.UUID;
 
@@ -27,6 +33,13 @@ public class PrefHelperTest extends BranchTest {
     public void init(){
         context = getTestContext();
         prefHelper = PrefHelper.getInstance(context);
+    }
+
+    @Before
+    public void setUp() {
+        super.setUp();
+        initBranchInstance();
+        Branch.getInstance().disableTracking(false);
     }
 
     @Test
@@ -203,5 +216,102 @@ public class PrefHelperTest extends BranchTest {
 
         String result = prefHelper.getAppStoreSource();
         Assert.assertEquals(Defines.Jsonkey.Google_Play_Store.getKey(), result);
+    }
+
+    @Test
+    public void testFBPartnerParameters(){
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+
+        JSONObject body = new JSONObject();
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{\"fb\":{\"em\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\"}}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testFBPartnerParametersTrackingDisabled(){
+        Branch.getInstance().disableTracking(true);
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");
+
+        JSONObject body = new JSONObject();
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testFBPartnerParametersTrackingDisabledClearsExistingParams(){
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+
+        JSONObject body = new JSONObject();
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{\"fb\":{\"em\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\"}}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+
+        body = new JSONObject();
+        Branch.getInstance().disableTracking(true);
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+    @Test
+    public void testSnapPartnerParameters(){
+        Branch.getInstance().addSnapPartnerParameterWithName("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+
+        JSONObject body = new JSONObject();
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{\"snap\":{\"hashed_email_address\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\"}}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testSnapPartnerParametersTrackingDisabled(){
+        Branch.getInstance().disableTracking(true);
+        Branch.getInstance().addSnapPartnerParameterWithName("hashed_email_address", "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");
+
+        JSONObject body = new JSONObject();
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testSnapPartnerParametersTrackingDisabledClearsExistingParams(){
+        Branch.getInstance().addSnapPartnerParameterWithName("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+
+        JSONObject body = new JSONObject();
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{\"snap\":{\"hashed_email_address\":\"11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088\"}}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+
+        body = new JSONObject();
+        Branch.getInstance().disableTracking(true);
+        try {
+            prefHelper.loadPartnerParams(body);
+            JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            Assert.fail();
+        }
     }
 }

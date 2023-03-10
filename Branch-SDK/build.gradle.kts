@@ -28,6 +28,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     // assume partner has it
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:17.0.0")
+    androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.json:json:20201115")

@@ -1545,7 +1545,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * See Facebook's documentation for details on valid parameters
      */
     public void addFacebookPartnerParameterWithName(@NonNull String key, @NonNull String value) {
-        prefHelper_.partnerParams_.addFacebookParameter(key, value);
+        if (!trackingController.isTrackingDisabled()) {
+            prefHelper_.partnerParams_.addFacebookParameter(key, value);
+        }
     }
 
     /**
@@ -1555,7 +1557,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * See Snap's documentation for details on valid parameters
      */
     public void addSnapPartnerParameterWithName(@NonNull String key, @NonNull String value) {
-        prefHelper_.partnerParams_.addSnapParameter(key, value);
+        if (!trackingController.isTrackingDisabled()) {
+            prefHelper_.partnerParams_.addSnapParameter(key, value);
+        }
     }
 
     /**
