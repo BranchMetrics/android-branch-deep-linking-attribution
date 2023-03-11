@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.4.0
+  * _*Master Release*_ - Mar 10, 2023
+    - Added support for Snap partner parameters with `addSnapPartnerParameter`
+    - For more info see: https://help.branch.io/using-branch/docs/snap-advanced-conversions#enabling-snap-advanced-conversions
+
 - v5.3.0
   * _*Master Release*_ - Mar 3, 2023
   * New feature for plugin SDK developers to defer native Branch Android SDK until plugin notifies when ready 
