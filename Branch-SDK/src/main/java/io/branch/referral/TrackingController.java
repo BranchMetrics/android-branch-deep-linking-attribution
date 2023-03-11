@@ -64,6 +64,7 @@ public class TrackingController {
         prefHelper.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
         prefHelper.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.saveLastStrongMatchTime(0);
+        Branch.getInstance().clearPartnerParameters();
     }
     
     private void onTrackingEnabled() {
