@@ -4,6 +4,7 @@ import android.content.Context
 import com.android.billingclient.api.*
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.util.*
+import java.math.BigDecimal
 
 class BillingGooglePlay private constructor() {
 
@@ -149,7 +150,7 @@ class BillingGooglePlay private constructor() {
                     val buo: BranchUniversalObject =
                         createBUOWithInAppProductDetails(product, quantity)
                     contentItemBUOs.add(buo)
-                    revenue += (buo.contentMetadata.price * quantity)
+                    revenue += (BigDecimal(buo.contentMetadata.price) * BigDecimal(quantity)).toDouble()
                     currency = buo.contentMetadata.currencyType
                 }
 
