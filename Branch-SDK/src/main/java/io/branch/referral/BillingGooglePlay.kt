@@ -150,7 +150,7 @@ class BillingGooglePlay private constructor() {
                     val buo: BranchUniversalObject =
                         createBUOWithInAppProductDetails(product, quantity)
                     contentItemBUOs.add(buo)
-                    revenue += (BigDecimal(buo.contentMetadata.price) * BigDecimal(quantity)).toDouble()
+                    revenue += (BigDecimal(buo.contentMetadata.price.toString()) * BigDecimal(quantity.toString())).toDouble()
                     currency = buo.contentMetadata.currencyType
                 }
 
