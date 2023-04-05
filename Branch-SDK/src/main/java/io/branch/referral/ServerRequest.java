@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;

@@ -707,6 +707,33 @@ public class PrefHelper {
     }
 
     /**
+     * Sets the referring URL query parameters.
+     * @param referringUrlQueryParameters
+     */
+    public void setReferringUrlQueryParameters(JSONObject referringUrlQueryParameters) {
+        setString("bnc_referringUrlQueryParameters", String.valueOf(referringUrlQueryParameters));
+    }
+
+    /**
+     * Returns the referring URL query parameters.
+     * @return
+     */
+    public JSONObject getReferringURLQueryParameters()  {
+
+        String string = getString("bnc_referringUrlQueryParameters");
+        JSONObject params = new JSONObject();
+        try {
+            params = new JSONObject(string);
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+            //TODO: Log e with Prefhelper.Error
+        }
+
+        return params;
+    }
+
+    /**
      * Sets the referrer Google Click ID with an expiration date computed by time set + expiration window
      * @param referrerGclid
      */

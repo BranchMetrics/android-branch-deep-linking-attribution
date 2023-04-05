@@ -3051,6 +3051,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     if (extrasJson.length() > 0) {
                         prefHelper_.setExternalIntentExtra(extrasJson.toString());
                     }
+
+                    new ReferringUrlUtility(prefHelper_).parseReferringURL(strippedUrl);
                 }
             }
         } catch (Exception ignore) {

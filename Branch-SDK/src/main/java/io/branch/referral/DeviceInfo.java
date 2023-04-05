@@ -17,6 +17,8 @@ import org.json.JSONObject;
 import static android.content.Context.UI_MODE_SERVICE;
 import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 
+import java.util.Iterator;
+
 /**
  * <p>
  * Class for handling the device params with Branch server requests. responsible for capturing device info and updating
@@ -214,12 +216,19 @@ class DeviceInfo {
         try {
             // For install events, referrer GCLID is already contained in `install_referrer_extras`
             // Otherwise, for all other v1 and v2 events, add referrer_gclid to top level
-            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
-                String gclid = prefHelper.getReferrerGclid();
-                if (gclid != null && !gclid.equals(NO_STRING_VALUE)) {
-                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
-                }
+//            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
+//                String gclid = prefHelper.getReferrerGclid();
+//                if (gclid != null && !gclid.equals(NO_STRING_VALUE)) {
+//                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
+//                }
+//            }
+
+            JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper).getURLQueryParamsForRequest(serverRequest);
+            for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
+                String key = it.next();
+                requestObj.put(key, urlQueryParams.get(key));
             }
+
 
             requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
         }
