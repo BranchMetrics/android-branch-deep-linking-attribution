@@ -45,6 +45,8 @@ class SkipListRegex {
         skipURLFormats = getV2SkipList();
     }
 
+    // v0 list - hard coded into SDKs
+    // https://cdn.branch.io/sdk/uriskiplist_v0.json
     @NonNull
     private JSONObject getV0SkipList() {
         JSONObject skiplist = new JSONObject();
@@ -64,6 +66,8 @@ class SkipListRegex {
         return skiplist;
     }
 
+    // v1 list - is exactly the same as the v0 list
+    // https://cdn.branch.io/sdk/uriskiplist_v1.json
     @NonNull
     private JSONObject getV1SkipList() {
         JSONObject skiplist = new JSONObject();
@@ -83,6 +87,8 @@ class SkipListRegex {
         return skiplist;
     }
 
+    // v2 list - proposed v2 list for Meta AEM support
+    // https://cdn.branch.io/sdk/uriskiplist_v2.json
     @NonNull
     private JSONObject getV2SkipList() {
         JSONObject skiplist = new JSONObject();
@@ -102,15 +108,12 @@ class SkipListRegex {
         return skiplist;
     }
 
-    /**
+    /*
      * Copy pasted from UniversalResourceAnalyser
      *
      * This is an odd design.
      * When a url matches, it returns the regex string that matched the url
      * When a url does not match, it returns the url as is
-     *
-     * @param url
-     * @return
      */
     public String getStrippedURL(String url) {
         String strippedURL = null;
