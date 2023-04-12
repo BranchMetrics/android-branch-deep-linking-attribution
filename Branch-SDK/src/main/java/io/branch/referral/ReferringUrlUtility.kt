@@ -47,22 +47,19 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
         val returnedParams = mutableMapOf<String, Any>()
 
         val gclid = addGclidValueFor(request)
-        if (gclid != null) {
+        if (gclid.length() > 0) {
             val keys = gclid.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
                 returnedParams[key] = gclid.get(key)
             }
-
         }
-
-        return JSONObject(returnedParams as Map<*, *>?)
+        return JSONObject(returnedParams as Map<*, *>)
     }
 
     @VisibleForTesting
     private fun addGclidValueFor(request: ServerRequest): JSONObject {
         val returnParams = JSONObject()
-
 
         if (request !is ServerRequestRegisterInstall) {
             val gclid = urlQueryParameters["gclid"]
@@ -182,8 +179,6 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
             }
         }
     }
-
-
 }
 
 

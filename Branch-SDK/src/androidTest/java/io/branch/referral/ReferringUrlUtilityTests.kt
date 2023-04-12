@@ -1,6 +1,5 @@
 package io.branch.referral
 
-import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import org.json.JSONObject
@@ -158,7 +157,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidIgnoredParam() {
         val url = "https://bnctestbed.app.link?gclid=12345&other=abcde"
-        val expected = JSONObject("""{"referrer_gclid": "aAbBcC", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -186,6 +185,23 @@ class ReferringUrlUtilityTests : BranchTest() {
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
 
         assertTrue(areJSONObjectsEqual(expected, params))
+    }
+
+    @Test
+    fun testReferringURLWithGclidOverwritesValue() {
+        val url1 = "https://bnctestbed.app.link?gclid=12345"
+        val expected1 = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+
+        val url2 = "https://bnctestbed.app.link?gclid=abcde"
+        val expected2 = JSONObject("""{"referrer_gclid": "abcde", "is_deeplink_gclid": true}""")
+
+        referringUrlUtility.parseReferringURL(url1)
+        val params1 = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+        assertTrue(areJSONObjectsEqual(expected1, params1))
+
+        referringUrlUtility.parseReferringURL(url2)
+        val params2 = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+        assertTrue(areJSONObjectsEqual(expected2, params2))
     }
 
     //Helper functions
