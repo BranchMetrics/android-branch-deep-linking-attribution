@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -214,21 +215,12 @@ class DeviceInfo {
      */
     void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
-            // For install events, referrer GCLID is already contained in `install_referrer_extras`
-            // Otherwise, for all other v1 and v2 events, add referrer_gclid to top level
-//            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
-//                String gclid = prefHelper.getReferrerGclid();
-//                if (gclid != null && !gclid.equals(NO_STRING_VALUE)) {
-//                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
-//                }
-//            }
 
             JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper).getURLQueryParamsForRequest(serverRequest);
             for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
                 String key = it.next();
                 requestObj.put(key, urlQueryParams.get(key));
             }
-
 
             requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
         }

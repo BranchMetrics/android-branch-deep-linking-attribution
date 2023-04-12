@@ -91,7 +91,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclid() {
         val url = "https://bnctestbed.app.link?gclid=12345"
-        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -102,7 +102,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithURISchemeSanityCheck() {
         val url = "branchtest://?gclid=12345"
-        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -113,7 +113,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidCapitalized() {
         val url = "https://bnctestbed.app.link?GCLID=12345"
-        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -124,7 +124,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidMixedCase() {
         val url = "https://bnctestbed.app.link?GcLiD=12345"
-        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -135,7 +135,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidNoValue() {
         val url = "https://bnctestbed.app.link?gclid="
-        val expected = JSONObject("""{"referrer_gclid": "", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -146,7 +146,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidValueCasePreserved() {
         val url = "https://bnctestbed.app.link?gclid=aAbBcC"
-        val expected = JSONObject("""{"referrer_gclid": "aAbBcC", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "aAbBcC", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -157,7 +157,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidIgnoredParam() {
         val url = "https://bnctestbed.app.link?gclid=12345&other=abcde"
-        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -168,7 +168,7 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidFragment() {
         val url = "https://bnctestbed.app.link?gclid=12345#header"
-        val expected = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -190,10 +190,10 @@ class ReferringUrlUtilityTests : BranchTest() {
     @Test
     fun testReferringURLWithGclidOverwritesValue() {
         val url1 = "https://bnctestbed.app.link?gclid=12345"
-        val expected1 = JSONObject("""{"referrer_gclid": "12345", "is_deeplink_gclid": true}""")
+        val expected1 = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
 
         val url2 = "https://bnctestbed.app.link?gclid=abcde"
-        val expected2 = JSONObject("""{"referrer_gclid": "abcde", "is_deeplink_gclid": true}""")
+        val expected2 = JSONObject("""{"gclid": "abcde", "is_deeplink_gclid": true}""")
 
         referringUrlUtility.parseReferringURL(url1)
         val params1 = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
@@ -202,6 +202,20 @@ class ReferringUrlUtilityTests : BranchTest() {
         referringUrlUtility.parseReferringURL(url2)
         val params2 = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
         assertTrue(areJSONObjectsEqual(expected2, params2))
+    }
+
+    @Test
+    fun testCheckForAndMigrateOldGclid() {
+        PrefHelper.getInstance(Branch.getInstance().applicationContext).setReferringUrlQueryParameters(null);
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": false}""")
+
+        PrefHelper.getInstance(Branch.getInstance().applicationContext).referrerGclid = "12345"
+        PrefHelper.getInstance(Branch.getInstance().applicationContext).referrerGclidValidForWindow = 2592000;
+
+        val utility = ReferringUrlUtility(PrefHelper.getInstance(Branch.getInstance().applicationContext))
+        val params = utility.getURLQueryParamsForRequest(openServerRequest())
+
+        assertTrue(areJSONObjectsEqual(expected, params))
     }
 
     //Helper functions
