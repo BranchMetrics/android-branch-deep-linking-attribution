@@ -16,7 +16,8 @@ public class Defines {
         GoogleSearchInstallReferrer("google_search_install_referrer"),
         GooglePlayInstallReferrer("install_referrer_extras"),
         ClickedReferrerTimeStamp("clicked_referrer_ts"),
-        ReferrerExtraGclidParam("gclid"), //The parameter that is passed in the url
+        Gclid("gclid"), //The parameter that is passed in the url
+        IsDeeplinkGclid("is_deeplink_gclid"),
         ReferrerGclid("referrer_gclid"), //Key APIOpen expects for gclid in event
         InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),

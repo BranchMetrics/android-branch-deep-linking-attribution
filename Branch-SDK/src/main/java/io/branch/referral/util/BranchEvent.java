@@ -256,7 +256,7 @@ public class BranchEvent {
         return isReqQueued;
     }
 
-    private class ServerRequestLogEvent extends ServerRequest {
+    public class ServerRequestLogEvent extends ServerRequest {
         ServerRequestLogEvent(Context context, Defines.RequestPath requestPath) {
             super(context, requestPath);
             JSONObject reqBody = new JSONObject();

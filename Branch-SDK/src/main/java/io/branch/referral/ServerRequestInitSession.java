@@ -188,6 +188,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
     @Override
     public void onPreExecute() {
+        super.onPreExecute();
         JSONObject post = getPost();
         try {
             if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {

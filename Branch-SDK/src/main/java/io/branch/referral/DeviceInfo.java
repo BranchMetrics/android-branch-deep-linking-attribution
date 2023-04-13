@@ -215,7 +215,7 @@ class DeviceInfo {
      */
     void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
-
+            Log.d("Testing", "updateRequestWithParamsAllEvents");
             JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper).getURLQueryParamsForRequest(serverRequest);
             for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
                 String key = it.next();

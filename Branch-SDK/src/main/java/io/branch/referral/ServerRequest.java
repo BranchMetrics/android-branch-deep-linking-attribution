@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
 
+import io.branch.referral.util.BranchEvent;
+
 /**
  * Abstract class defining the structure of a Branch Server request.
  */
@@ -676,7 +678,22 @@ public abstract class ServerRequest {
      * Called on UI thread just before executing a request. Do any final updates to the request here
      */
     public void onPreExecute() {
-    
+        Log.e("Testing", "onPreExecute" + this + "" + (this instanceof ServerRequestRegisterOpen || this instanceof BranchEvent.ServerRequestLogEvent));
+        if (this instanceof ServerRequestRegisterOpen || this instanceof BranchEvent.ServerRequestLogEvent) {
+            PrefHelper.Debug("Parsing URL for query parameters: " + prefHelper_.getExternalIntentUri());
+            new ReferringUrlUtility(prefHelper_).parseReferringURL(prefHelper_.getExternalIntentUri());
+
+            JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper_).getURLQueryParamsForRequest(this);
+
+            for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
+                String key = it.next();
+                try {
+                    this.params_.put(key, urlQueryParams.get(key));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     protected void updateEnvironment(Context context, JSONObject post) {
