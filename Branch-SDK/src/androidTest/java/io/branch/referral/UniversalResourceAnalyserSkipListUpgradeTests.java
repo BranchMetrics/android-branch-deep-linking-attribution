@@ -45,7 +45,7 @@ class SkipListRegex {
         skipURLFormats = getV2SkipList();
     }
 
-    // v0 list - hard coded into SDKs
+    // v0 list
     // https://cdn.branch.io/sdk/uriskiplist_v0.json
     @NonNull
     private JSONObject getV0SkipList() {
@@ -66,7 +66,7 @@ class SkipListRegex {
         return skiplist;
     }
 
-    // v1 list - is exactly the same as the v0 list
+    // v1 list
     // https://cdn.branch.io/sdk/uriskiplist_v1.json
     @NonNull
     private JSONObject getV1SkipList() {
@@ -87,7 +87,7 @@ class SkipListRegex {
         return skiplist;
     }
 
-    // v2 list - proposed v2 list for Meta AEM support
+    // v2 list
     // https://cdn.branch.io/sdk/uriskiplist_v2.json
     @NonNull
     private JSONObject getV2SkipList() {
