@@ -1,9 +1,5 @@
 name: unit-and-instrumented-tests
-on:
-  push:
-  pull_request:
-    branches:
-      - master
+on: [push]
 jobs:
   test:
     runs-on: macos-latest
