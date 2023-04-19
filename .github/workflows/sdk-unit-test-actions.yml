@@ -1,0 +1,44 @@
+name: sdk-unit-test-actions
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  android-tests:
+    runs-on: [ sdk-runner ]
+    needs: [ build-and-unit-tests ]
+    strategy:
+      matrix:
+        android: [ 31 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Android Tests
+        timeout-minutes: 15
+        run: |
+          echo  "INITIAL SETUP:"
+          adb kill-server
+          adb start-server
+          adb devices
+          echo  "START EMU:"
+          export QEMU_AUDIO_DRV=none
+          echo $QEMU_AUDIO_DRV
+          export QT_DEBUG_PLUGINS=1
+          echo "Listing avds:"
+          emulator -list-avds
+          nohup emulator @android-${{ matrix.android }} -no-window -noaudio -camera-front none -camera-back none -wipe-data -no-snapshot -gpu swiftshader_indirect -port ${{ env.EMULATOR_PORT }} &
+          echo "Emulator started"
+          export ANDROID_SERIAL=emulator-${{ env.EMULATOR_PORT }}
+          adb wait-for-device
+          adb devices
+          echo  "PS EMU:"
+          ps aux | grep emulator
+          echo "WAIT EMU:"
+          while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do sleep 2; done
+          echo "AFTER LOOP"
+          adb shell input keyevent 82 &
+          ./gradlew :Branch-SDK:connectedDebugAndroidTest --info 
+        env:
+          EMULATOR_PORT: 5556
+      - name: Kill emulator
+        if: always()
+        run: adb emu kill
