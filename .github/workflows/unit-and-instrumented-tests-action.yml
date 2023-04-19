@@ -22,4 +22,4 @@ jobs:
           target: ${{ matrix.target }}
           arch: x86_64
           profile: Nexus 5
-          script: ./gradlew connectedCheck
+          script: ./gradlew connectedCheck --info
