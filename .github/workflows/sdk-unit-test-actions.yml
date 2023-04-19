@@ -5,7 +5,6 @@ on:
 jobs:
   android-tests:
     runs-on: [ sdk-runner ]
-    needs: [ build-and-unit-tests ]
     strategy:
       matrix:
         android: [ 31 ]
