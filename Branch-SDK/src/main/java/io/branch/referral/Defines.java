@@ -19,6 +19,7 @@ public class Defines {
         Gclid("gclid"), //The parameter that is passed in the url
         IsDeeplinkGclid("is_deeplink_gclid"),
         ReferrerGclid("referrer_gclid"), //Key APIOpen expects for gclid in event
+        ReferringUrlQueryParameters("bnc_referringUrlQueryParameters"),
         InstallBeginTimeStamp("install_begin_ts"),
         FaceBookAppLinkChecked("facebook_app_link_checked"),
         @Deprecated BranchLinkUsed("branch_used"),          //use Defines.IntentKeys.BranchLinkUsed

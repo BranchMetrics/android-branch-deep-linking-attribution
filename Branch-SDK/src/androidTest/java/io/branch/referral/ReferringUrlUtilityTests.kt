@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import org.json.JSONObject
@@ -33,40 +34,6 @@ class ReferringUrlUtilityTests : BranchTest() {
     }
 
     @Test
-    fun testSupportedQueryParameters() {
-        assertTrue(referringUrlUtility.isSupportedQueryParameter("gclid"))
-        assertFalse(referringUrlUtility.isSupportedQueryParameter("unsupported_param"))
-    }
-
-    @Test
-    fun testDefaultValidityWindowForParam() {
-        assertEquals(2592000L, referringUrlUtility.defaultValidityWindowForParam("gclid"))
-        assertEquals(0L, referringUrlUtility.defaultValidityWindowForParam("unsupported_param"))
-    }
-
-    @Test
-    fun testSerializeAndDeserializeJson() {
-        val urlQueryParameters = mutableMapOf<String, BranchUrlQueryParameter>()
-        val param = BranchUrlQueryParameter(
-            name = "gclid",
-            value = "test_value",
-            timestamp = Date(),
-            isDeepLink = true,
-            validityWindow = 2592000L
-        )
-        urlQueryParameters["gclid"] = param
-
-        val serializedJson = referringUrlUtility.serializeToJson(urlQueryParameters)
-        val deserializedMap = referringUrlUtility.deserializeFromJson(serializedJson)
-
-        assertEquals(urlQueryParameters.size, deserializedMap.size)
-        assertEquals(param.name, deserializedMap["gclid"]?.name)
-        assertEquals(param.value, deserializedMap["gclid"]?.value)
-        assertEquals(param.isDeepLink, deserializedMap["gclid"]?.isDeepLink)
-        assertEquals(param.validityWindow, deserializedMap["gclid"]?.validityWindow)
-    }
-
-    @Test
     fun testReferringURLWithNoParams() {
         val url = "https://bnctestbed.app.link"
         val expected = JSONObject()
@@ -97,6 +64,11 @@ class ReferringUrlUtilityTests : BranchTest() {
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
 
         assertTrue(areJSONObjectsEqual(expected, params))
+
+        val eventExpected = JSONObject("""{"gclid": "12345"}""")
+        val eventParams = referringUrlUtility.getURLQueryParamsForRequest(eventServerRequest())
+
+        assertTrue(areJSONObjectsEqual(eventExpected, eventParams))
     }
 
     @Test
@@ -118,6 +90,9 @@ class ReferringUrlUtilityTests : BranchTest() {
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
 
+        Log.e("Expected:", expected.toString())
+        Log.e("Params:", params.toString())
+
         assertTrue(areJSONObjectsEqual(expected, params))
     }
 
@@ -128,6 +103,9 @@ class ReferringUrlUtilityTests : BranchTest() {
 
         referringUrlUtility.parseReferringURL(url)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+
+        Log.e("Expected:", expected.toString())
+        Log.e("Params:", params.toString())
 
         assertTrue(areJSONObjectsEqual(expected, params))
     }

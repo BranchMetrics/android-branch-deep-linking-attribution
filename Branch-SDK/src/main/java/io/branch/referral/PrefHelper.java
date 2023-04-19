@@ -125,7 +125,9 @@ public class PrefHelper {
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
-    
+
+    static final String KEY_REFERRING_URL_QUERY_PARAMETERS = "bnc_referringUrlQueryParameters";
+
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -711,7 +713,7 @@ public class PrefHelper {
      * @param referringUrlQueryParameters
      */
     public void setReferringUrlQueryParameters(JSONObject referringUrlQueryParameters) {
-        setString("bnc_referringUrlQueryParameters", String.valueOf(referringUrlQueryParameters));
+        setString(KEY_REFERRING_URL_QUERY_PARAMETERS, String.valueOf(referringUrlQueryParameters));
     }
 
     /**
@@ -720,7 +722,7 @@ public class PrefHelper {
      */
     public JSONObject getReferringURLQueryParameters()  {
 
-        String string = getString("bnc_referringUrlQueryParameters");
+        String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
         JSONObject params = new JSONObject();
         try {
             params = new JSONObject(string);
@@ -782,6 +784,10 @@ public class PrefHelper {
         }
 
         return gclid;
+    }
+
+    public void clearGclid() {
+        removePrefValue(KEY_GCLID_JSON_OBJECT);
     }
 
     /**

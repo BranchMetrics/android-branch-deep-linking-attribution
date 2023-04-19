@@ -675,12 +675,11 @@ public abstract class ServerRequest {
     }
     
     /**
-     * Called on UI thread just before executing a request. Do any final updates to the request here
+     * Called on UI thread just before executing a request. Do any final updates to the request here.
+     * Also attaches any required URL query parameters based on the request type.
      */
     public void onPreExecute() {
-        Log.e("Testing", "onPreExecute" + this + "" + (this instanceof ServerRequestRegisterOpen || this instanceof BranchEvent.ServerRequestLogEvent));
-        if (this instanceof ServerRequestRegisterOpen || this instanceof BranchEvent.ServerRequestLogEvent) {
-            PrefHelper.Debug("Parsing URL for query parameters: " + prefHelper_.getExternalIntentUri());
+        if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
             new ReferringUrlUtility(prefHelper_).parseReferringURL(prefHelper_.getExternalIntentUri());
 
             JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper_).getURLQueryParamsForRequest(this);
