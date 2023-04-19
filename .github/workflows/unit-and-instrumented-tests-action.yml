@@ -6,11 +6,15 @@ jobs:
     strategy:
       matrix:
         api-level: [21, 33]
-        target: [google_apis]
+        target: [playstore]
     steps:
       - name: checkout
         uses: actions/checkout@v3
-
+      - name: setup java  
+        uses: actions/setup-java@v3
+            with:
+              distribution: 'temurin'
+              java-version: '11'
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
