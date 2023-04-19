@@ -215,12 +215,6 @@ class DeviceInfo {
      */
     void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
-            JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper).getURLQueryParamsForRequest(serverRequest);
-            for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
-                String key = it.next();
-                requestObj.put(key, urlQueryParams.get(key));
-            }
-
             requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
         }
         catch (JSONException ignore){
