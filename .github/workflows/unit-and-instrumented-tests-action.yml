@@ -1,3 +1,5 @@
+name: unit-and-instrumented-tests
+on: [push]
 jobs:
   test:
     runs-on: macos-latest
