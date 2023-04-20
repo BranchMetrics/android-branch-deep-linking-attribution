@@ -34,9 +34,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Run unit and instrumented tests
+      - name: Run unit tests
         run: |
-          ./gradlew :Branch-SDK:testDebugUnitTest && ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --stacktrace
+          ./gradlew :Branch-SDK:testDebugUnitTest 
+      - name: Run instrumented tests
+        run: |
+          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --stacktrace
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
