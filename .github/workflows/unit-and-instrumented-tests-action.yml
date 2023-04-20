@@ -32,4 +32,4 @@ jobs:
           java-version: '11'
       - name: Run test
         run: |
-          ./gradlew :Branch-SDK:connectedDebugAndroidTest --info
+          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --stacktrace
