@@ -39,7 +39,7 @@ jobs:
           ./gradlew :Branch-SDK:testDebugUnitTest 
       - name: Run instrumented tests
         run: |
-          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --stacktrace
+          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --info
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
