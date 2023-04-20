@@ -3,33 +3,44 @@ on: [push]
 jobs:
   test:
     runs-on: macos-latest
+    env:
+      IMAGE_CONFIGURATION: "system-images;android-27;google_apis_playstore;x86"
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      # the tools on the runner require java 8
       - name: setup java 8 for android sdk tools 
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '8'
+      # create an emulator with google apis and store
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-27;google_apis_playstore;x86"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package 'system-images;android-27;google_apis_playstore;x86'
+          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install $IMAGE_CONFIGURATION
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package $IMAGE_CONFIGURATION
+      # boots and waits for the emulator to be ready
       - name: Launch Emulator
         run: |
-          ln -s ~/Library/Android/sdk/emulator/lib64 ~/Library/Android/sdk/emulator/qemu/darwin-x86_64/lib64
           echo "Starting emulator and waiting for boot to complete...."
           ls -la $ANDROID_HOME/emulator
-          nohup $ANDROID_HOME/tools/emulator -avd test -gpu host -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
-
+      # repo's gradle is configured to run on java 11
       - name: setup java 11 for gradle
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Run test
+      - name: Run unit and instrumented tests
         run: |
-          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --stacktrace
+          ./gradlew :Branch-SDK:testDebugUnitTest && ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --stacktrace
+      # contains the reports and apk
+      - name: Save test artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: ./Branch-SDK/build/
