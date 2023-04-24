@@ -1,7 +1,7 @@
 name: unit-and-instrumented-tests
 on: [push]
 jobs:
-  test:
+  test-api-level:
     runs-on: macos-latest
     strategy:
       # min api and latest
