@@ -44,7 +44,7 @@ jobs:
     strategy:
       # min api and latest
       matrix:
-        androidSDK: ["21", "33"]
+        androidSDK: [21, 33]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
