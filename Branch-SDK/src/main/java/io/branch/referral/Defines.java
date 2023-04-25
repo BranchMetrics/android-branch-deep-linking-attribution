@@ -63,6 +63,7 @@ public class Defines {
         HardwareIDTypeVendor("vendor_id"),
         HardwareIDTypeRandom("random"),
         IsHardwareIDReal("is_hardware_id_real"),
+        AnonID("anon_id"),
         AppVersion("app_version"),
         APILevel("os_version"),
         Country("country"),

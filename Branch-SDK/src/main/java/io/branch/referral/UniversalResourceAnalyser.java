@@ -53,7 +53,7 @@ class UniversalResourceAnalyser {
             DEFAULT_SKIP_URL_LIST.putOpt("version", 0);
             JSONArray skipURIArray = new JSONArray();
             DEFAULT_SKIP_URL_LIST.putOpt("uri_skip_list", skipURIArray);
-            skipURIArray.put("^fb\\d+:");
+            skipURIArray.put("^fb\\d+:((?!campaign_ids).)*$");
             skipURIArray.put("^li\\d+:");
             skipURIArray.put("^pdk\\d+:");
             skipURIArray.put("^twitterkit-.*:");

@@ -1,4 +1,4 @@
-import java.util.Properties
+import org.gradle.api.tasks.testing.logging.*
 
 plugins {
     id("com.android.library")
@@ -226,6 +226,22 @@ publishing {
                     password = getRepositoryPassword()
                 }
             }
+        }
+    }
+}
+
+tasks {
+    withType<Test> {
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            events = setOf(
+                TestLogEvent.STARTED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.PASSED,
+                TestLogEvent.FAILED,
+            )
+            showStandardStreams = true
+            showExceptions = true
         }
     }
 }

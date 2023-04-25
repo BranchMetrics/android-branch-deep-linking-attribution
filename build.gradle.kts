@@ -45,6 +45,7 @@ tasks {
                 TestLogEvent.FAILED,
             )
             showStandardStreams = true
+            showExceptions = true
         }
     }
 }

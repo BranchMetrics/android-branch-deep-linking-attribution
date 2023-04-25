@@ -127,6 +127,7 @@ public class PrefHelper {
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
 
     static final String KEY_REFERRING_URL_QUERY_PARAMETERS = "bnc_referringUrlQueryParameters";
+    static final String KEY_ANON_ID = "bnc_anon_id";
 
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
@@ -558,6 +559,21 @@ public class PrefHelper {
      */
     public String getRandomlyGeneratedUuid() {
         return getString(KEY_RANDOMLY_GENERATED_UUID);
+    }
+
+    /**
+     * Sets a new randomly generated UUID for some SAN APIs.
+     * @param uuid
+     */
+    public void setAnonID(String uuid){
+        setString(KEY_ANON_ID, uuid);
+    }
+
+    /**
+     * Returns our own randomly generated UUID for some SAN APIs.
+     */
+    public String getAnonID() {
+        return getString(KEY_ANON_ID);
     }
     
     /**
