@@ -10,7 +10,7 @@
         <activity android:name=".mock.MockActivity" />
 
         <!-- The Branch Key for testing.  Do not use these keys for production applications. -->
-        <meta-data android:name="io.branch.sdk.TestMode" android:value="true" />
+        <meta-data android:name="io.branch.sdk.TestMode" android:value="false" />
         <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_testing_only" />
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_testing_only" />
     </application>

@@ -168,7 +168,7 @@ public class BranchQRCodeTests extends BranchTest {
                         @Override
                         public void onSuccess(byte[] qrCodeData) {
                             try {
-                                JSONObject expectedCachedParams = new JSONObject("{\"feature\":\"Share\",\"stage\":\"\",\"data\":{\"$publicly_indexable\":true,\"$locally_indexable\":true},\"channel\":\"\",\"qr_code_settings\":{\"image_format\":\"PNG\"},\"campaign\":\"\",\"branch_key\":\"key_test_testing_only\",\"tags\":[]}");
+                                JSONObject expectedCachedParams = new JSONObject("{\"feature\":\"Share\",\"stage\":\"\",\"data\":{\"$publicly_indexable\":true,\"$locally_indexable\":true},\"channel\":\"\",\"qr_code_settings\":{\"image_format\":\"PNG\"},\"campaign\":\"\",\"branch_key\":\"key_live_testing_only\",\"tags\":[]}");
                                 byte[] cachedQRCodeData = BranchQRCodeCache.getInstance().checkQRCodeCache(expectedCachedParams);
 
                                 Assert.assertEquals(qrCodeData, cachedQRCodeData);
