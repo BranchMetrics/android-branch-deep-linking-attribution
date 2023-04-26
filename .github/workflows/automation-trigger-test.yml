@@ -42,7 +42,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: app_debug_apk
-          path: ${{ env.main_project_module }}/build/outputs/apk/debug/
+          path: |
+                ./build/outputs/apk/debug/app-debug.apk
   build-And-Run-AutomationTestSuite:
     runs-on: macos-latest
     needs: [build-Automation-testbed-App]
