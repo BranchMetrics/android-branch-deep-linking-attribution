@@ -39,11 +39,11 @@ jobs:
       # Upload Artifact Build
       # Noted For Output [main_project_module]/build/outputs/apk/debug/
       - name: Upload APK Debug
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: app_debug_apk
           path: |
-                ./build/outputs/apk/debug/app-debug.apk
+                ./build/outputs/apk/debug/*.apk
   build-And-Run-AutomationTestSuite:
     runs-on: macos-latest
     needs: [build-Automation-testbed-App]
