@@ -43,7 +43,7 @@ jobs:
         with:
           name: app_debug_apk
           path: |
-                ${{ env.main_project_module }}/build/outputs/apk/debug/*.apk
+                ./app/build/outputs/apk/debug/*.apk
   build-And-Run-AutomationTestSuite:
     runs-on: macos-latest
     needs: [build-Automation-testbed-App]
