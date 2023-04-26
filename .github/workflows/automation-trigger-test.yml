@@ -1,17 +1,84 @@
+name: SaaS SDK Automation Tests
 on:
  workflow_dispatch:
-
+ pull_request:
+ 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+
+            
+  # This job
+  # 1.Downloads static framework build in job build-Brach-Static-framework and copies it to framework directory of qentelli-saas-sdk-testing-ios-testbed repo
+  # 2.Builds testbed app.
+  # 3.Installs Certificates and Provisioning profile for signing App and creating IPA. Final IPA is uploaded as an artifact.
+  build-Automation-testbed-App:
+    runs-on: macos-latest
     steps:
-    - uses: actions/github-script@v6
-      with:
-        github-token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC  }}
-        script: |
-          await github.rest.actions.createWorkflowDispatch({
-            owner: 'BranchMetrics',
-            repo: 'qentelli-saas-sdk-testing-automation',
-            workflow_id: 'android-maven.yml',
-            ref: 'master'
-          })
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          repository: BranchMetrics/qentelli-saas-sdk-testing-android-testbed
+          ref: main
+          token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
+      - name: Set Up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      # Run Tests Build
+      - name: Run gradle tests
+        run: ./gradlew test
+
+      # Create APK Debug
+      - name: Build apk debug project (APK)
+        run: ./gradlew assembleDebug
+        
+        
+      # Upload Artifact Build
+      # Noted For Output [main_project_module]/build/outputs/apk/debug/
+      - name: Upload APK Debug
+        uses: actions/upload-artifact@v2
+        with:
+          name: app_debug_apk
+          path: ${{ env.main_project_module }}/build/outputs/apk/debug/
+  build-And-Run-AutomationTestSuite:
+    runs-on: macos-latest
+    needs: [build-Automation-testbed-App]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: BranchMetrics/qentelli-saas-sdk-testing-automation
+          ref: dev-iOS
+          token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.3.0
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+      - name : Unzip and copy folder
+        run: |
+            ls -la ./
+            cp -R app-debug.apk testdata/builds/SaaS_SDK_TestAppDebug_22_06_22.apk
+      - name: Build with Maven
+        id: build_maven
+        run: |
+           mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DAccessKey="${{ secrets.S3_ACCESS_KEY }}" -DSecretKey="${{ secrets.S3_SECRET_KEY }}" --log-file output.txt
+      - name: Print output
+        if: always()        # run this step even if previous step failed
+        run: cat ${{ github.workspace }}/output.txt
+      - name: Publishing test report
+        if: always()        # run this step even if previous step failed
+        uses: actions/upload-artifact@v3  # upload test results
+        with:
+          name: test-results
+          path: ${{ github.workspace }}/output.txt
+      - name: Display test report S3 url
+        if: always()
+        run: grep 'Test report file link' output.txt
