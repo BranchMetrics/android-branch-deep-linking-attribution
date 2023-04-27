@@ -1,7 +1,7 @@
 name: appium-automation
 on: push
-runs-on: macos-latest
 jobs:  
+  runs-on: macos-latest
   build-and-run-automation:
     steps:
       - name: Checkout SDK repo with testbed app
