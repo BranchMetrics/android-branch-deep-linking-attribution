@@ -17,7 +17,7 @@ jobs:
       - name: Build testbed app
         run: |
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
-          ls /Branch-SDK-Automation-TestBed/build/outputs/apk/debug/
+          ls ./Branch-SDK-Automation-TestBed/build/outputs/apk/debug/
       # checkout qa automation
       - name: Checkout qa repository
         uses: actions/checkout@v3
