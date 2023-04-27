@@ -1,8 +1,9 @@
 name: appium-automation
 on: push
 jobs:  
-  runs-on: macos-latest
-  build-and-run-automation:
+  appium-automation-tests:
+    name: appium-automation-tests
+    runs-on: macos-latest
     steps:
       - name: Checkout SDK repo with testbed app
         uses: actions/checkout@v3
