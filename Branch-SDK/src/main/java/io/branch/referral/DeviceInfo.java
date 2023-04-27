@@ -56,6 +56,11 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), hardwareID.isReal());
             }
 
+            String anonID = SystemObserver.getAnonID(context_);
+            if (!isNullOrEmptyOrBlank(anonID)) {
+                requestObj.put(Defines.Jsonkey.AnonID.getKey(), anonID);
+            }
+
             String brandName = SystemObserver.getPhoneBrand();
             if (!isNullOrEmptyOrBlank(brandName)) {
                 requestObj.put(Defines.Jsonkey.Brand.getKey(), brandName);
@@ -129,6 +134,11 @@ class DeviceInfo {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
                 userDataObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
+            }
+
+            String anonID = SystemObserver.getAnonID(context_);
+            if (!isNullOrEmptyOrBlank(anonID)) {
+                userDataObj.put(Defines.Jsonkey.AnonID.getKey(), anonID);
             }
 
             String brandName = SystemObserver.getPhoneBrand();
