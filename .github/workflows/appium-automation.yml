@@ -4,14 +4,13 @@ jobs:
   retrieveAutomationJar:
     runs-on: macos-latest
     steps:
-      - name: List Releases
-        #expecting this to be empty
-        run: gh release list --repo BranchMetrics/qentelli-saas-sdk-testing-automation
-        env:
-          GITHUB_TOKEN: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
-      - name: Fetch asset
-        run: gh release download --repo BranchMetrics/qentelli-saas-sdk-testing-automation 0.0.1-SNAPSHOT
-        env:
-          GITHUB_TOKEN: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
-      - name: List content
-        run: ls
+      - name: Checkout qa repository
+        uses: actions/checkout@v3
+        with:
+          repository: BranchMetrics/qentelli-saas-sdk-testing-automation
+          token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
+          path: qa-repo
+      - name: Execute automation
+        run: |
+          cd qa-repo
+          ls
