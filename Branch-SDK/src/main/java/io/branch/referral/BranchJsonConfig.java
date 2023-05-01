@@ -28,8 +28,8 @@ public class BranchJsonConfig {
         testKey,
         liveKey,
         useTestInstance,
-        enableFacebookLinkCheck,
-        enableLogging
+        enableLogging,
+        deferInitForPluginRuntime
     }
 
     /*
@@ -43,8 +43,8 @@ public class BranchJsonConfig {
             "testKey":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc",
             "liveKey":"key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv",
             "useTestInstance": true,
-            "enableFacebookLinkCheck": true,
-            "enableLogging": true
+            "enableLogging": true,
+            "deferInitForPluginRuntime": true
        }
     */
 
@@ -100,12 +100,31 @@ public class BranchJsonConfig {
         }
     }
 
-    public @Nullable Boolean getLoggingMode() {
-        if (!isValid(BranchJsonKey.enableLogging)) return null;
+    @Nullable
+    public Boolean getEnableLogging() {
+        if (!isValid(BranchJsonKey.enableLogging)) {
+            return null;
+        }
 
         try {
             return mConfiguration.getBoolean(BranchJsonKey.enableLogging.toString());
-        } catch (JSONException exception) {
+        }
+        catch (JSONException exception) {
+            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
+            return false;
+        }
+    }
+
+    @Nullable
+    public Boolean getDeferInitForPluginRuntime(){
+        if (!isValid(BranchJsonKey.deferInitForPluginRuntime)) {
+            return null;
+        }
+
+        try {
+            return mConfiguration.getBoolean(BranchJsonKey.deferInitForPluginRuntime.toString());
+        }
+        catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
             return false;
         }
@@ -162,17 +181,6 @@ public class BranchJsonConfig {
 
         try {
             return mConfiguration.getBoolean(BranchJsonKey.useTestInstance.toString());
-        } catch (JSONException exception) {
-            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
-            return false;
-        }
-    }
-
-    public @Nullable Boolean getEnableFacebookLinkCheck() {
-        if (!isValid(BranchJsonKey.enableFacebookLinkCheck)) return null;
-
-        try {
-            return mConfiguration.getBoolean(BranchJsonKey.enableFacebookLinkCheck.toString());
         } catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
             return false;

@@ -1,4 +1,4 @@
-import java.util.Properties
+import org.gradle.api.tasks.testing.logging.*
 
 plugins {
     id("com.android.library")
@@ -30,6 +30,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     // assume partner has it
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:17.0.0")
+    androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.json:json:20201115")
@@ -227,6 +228,22 @@ publishing {
                     password = getRepositoryPassword()
                 }
             }
+        }
+    }
+}
+
+tasks {
+    withType<Test> {
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            events = setOf(
+                TestLogEvent.STARTED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.PASSED,
+                TestLogEvent.FAILED,
+            )
+            showStandardStreams = true
+            showExceptions = true
         }
     }
 }

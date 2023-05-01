@@ -1,4 +1,19 @@
 # Branch Android SDK change log
+- v5.4.0
+  * _*Master Release*_ - Mar 10, 2023
+    - Added support for Snap partner parameters with `addSnapPartnerParameter`
+    - For more info see: https://help.branch.io/using-branch/docs/snap-advanced-conversions#enabling-snap-advanced-conversions
+
+- v5.3.0
+  * _*Master Release*_ - Mar 3, 2023
+  * New feature for plugin SDK developers to defer native Branch Android SDK until plugin notifies when ready 
+    - To enable, enter this key value pair in your `branch.json` file inside of your `/src/main/assets/`
+    - `"deferInitForPluginRuntime": true`
+    - This feature is opt in only for now.
+    - Requires plugin SDK to implement notification to native modules.
+  * Fixes `enableLogging` feature if set in `branch.json`
+    - `"enableLogging": true`
+
 - v5.2.7
   * _*Master Release*_ - Dec 7, 2022
   * Fixes a bug with setIdentity not consistently calling v1/profile

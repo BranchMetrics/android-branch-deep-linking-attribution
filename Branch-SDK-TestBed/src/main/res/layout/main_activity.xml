@@ -134,6 +134,11 @@
                 android:text="Simulate Logout" />
 
             <Button
+                android:id="@+id/notifyInit_btn"
+                style="@style/testbed_button_style"
+                android:text="Simulate Plugin Notify Init" />
+
+            <Button
                 android:id="@+id/settings_btn"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/ic_baseline_settings_24"

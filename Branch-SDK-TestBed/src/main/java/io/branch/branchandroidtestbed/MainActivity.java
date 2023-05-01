@@ -560,6 +560,13 @@ public class MainActivity extends Activity {
 
             }
         });
+
+        findViewById(R.id.notifyInit_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Branch.notifyNativeToInit();
+            }
+        });
     }
 
     private void createNotificationChannel() {
