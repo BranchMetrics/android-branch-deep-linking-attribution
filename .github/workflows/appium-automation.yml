@@ -7,6 +7,8 @@ jobs:
     steps:
       - name: Checkout SDK repo with testbed app
         uses: actions/checkout@v3
+        with: 
+          ref: SDK-1935-Remove-Plain-Text-Credentials
         # repo's gradle is configured to run on java 11
       - name: Setup java 11 for gradle
         uses: actions/setup-java@v3
