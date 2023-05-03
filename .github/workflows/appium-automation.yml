@@ -48,7 +48,7 @@ jobs:
           echo "$PWD"
           cd qa
           ls
-          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DAccessKey="${ACCESS_KEY}" -DSecretKey="${SECRET_KEY}" -DBROWSERSTACK_USER="${BROWSERSTACK_USER}" -DBROWSERSTACK_KEY="${BROWSERSTACK_KEY}" -DUploadNewBuild="Yes" --log-file output.txt
+          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DUploadNewBuild="Yes" --log-file output.txt
       - name: Print output
         if: success() || failure()        # run this step even if previous step failed
         run: cat output.txt
