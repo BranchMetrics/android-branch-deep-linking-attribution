@@ -26,20 +26,22 @@ jobs:
       - name: Build testbed app
         run: |
           echo "$PWD"
+          ls
+          cd sdk
+          ls
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
           ls ./Branch-SDK-Automation-TestBed/build/outputs/apk/debug/
       # copy over test bed apk with sdk
       - name: Copy testbed apk
         run: |
           echo "$PWD"
-          cd ..
           ls
           mkdir -p qa/qentelli-saas-sdk-testing-automation/testdata/builds_new/
           cp sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk qa/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
       - name: Execute automation
         run: |
           echo "$PWD"
-          cd qentelli-saas-sdk-testing-automation
+          cd qa
           ls
           mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DAccessKey="${ACCESS_KEY}" -DSecretKey="${SECRET_KEY}" -DBROWSERSTACK_USER="${BROWSERSTACK_USER}" -DBROWSERSTACK_KEY="${BROWSERSTACK_KEY}" -DUploadNewBuild="Yes" --log-file output.txt
       - name: Print output
