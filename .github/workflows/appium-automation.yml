@@ -7,8 +7,6 @@ jobs:
     steps:
       - name: Checkout SDK repo with testbed app
         uses: actions/checkout@v3
-        with:
-          path: sdk-repo
         # repo's gradle is configured to run on java 11
       - name: Setup java 11 for gradle
         uses: actions/setup-java@v3
@@ -29,17 +27,16 @@ jobs:
           ref: SDK-1935-Remove-Plain-Text-Credentials
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
-          path: qa-repo
       # copy over test bed apk with sdk
       - name: Copy testbed apk
         run: |
           echo "$PWD"
-          mkdir -p ${{ github.workspace }}/qa-repo/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-release-unsigned.apk
-          cp ${{ github.workspace }}/sdk-repo/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk ${{ github.workspace }}/qa-repo/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-release-unsigned.apk
+          mkdir -p ${{ github.workspace }}/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
+          cp ${{ github.workspace }}/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk ${{ github.workspace }}/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
       - name: Execute automation
         run: |
           echo "$PWD"
-          cd qa-repo
+          cd qentelli-saas-sdk-testing-automation
           ls
           mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DAccessKey="${ACCESS_KEY}" -DSecretKey="${SECRET_KEY}" -DBROWSERSTACK_USER="${BROWSERSTACK_USER}" -DBROWSERSTACK_KEY="${BROWSERSTACK_KEY}" -DUploadNewBuild="Yes" --log-file output.txt
       - name: Print output
