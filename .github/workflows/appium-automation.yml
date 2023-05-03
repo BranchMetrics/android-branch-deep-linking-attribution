@@ -43,4 +43,12 @@ jobs:
           cd qa
           ls
           mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DAccessKey="${ACCESS_KEY}" -DSecretKey="${SECRET_KEY}" -DBROWSERSTACK_USER="${BROWSERSTACK_USER}" -DBROWSERSTACK_KEY="${BROWSERSTACK_KEY}" -DUploadNewBuild="Yes"
-    
+      - name: Print output
+        if: success() || failure()        # run this step even if previous step failed
+        run: cat output.txt
+      - name: Publishing test report
+        if: success() || failure()        # run this step even if previous step failed
+        uses: actions/upload-artifact@v3  # upload test results
+        with:
+          name: test-results
+          path: output.txt
