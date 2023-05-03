@@ -30,6 +30,7 @@ jobs:
       - name: Copy testbed apk
         run: |
           echo "$PWD"
+          cd ..
           ls
           mkdir -p ./qentelli-saas-sdk-testing-automation/testdata/builds_new/
           cp ./Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk ${{ github.workspace }}/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
