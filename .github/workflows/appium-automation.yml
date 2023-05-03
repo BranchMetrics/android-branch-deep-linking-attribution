@@ -36,8 +36,8 @@ jobs:
         run: |
           echo "$PWD"
           ls
-          mkdir -p qa/qentelli-saas-sdk-testing-automation/testdata/builds_new/
-          cp sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk qa/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
+          mkdir -p qa/testdata/builds_new/
+          cp sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk qa/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
       - name: Execute automation
         run: |
           echo "$PWD"
