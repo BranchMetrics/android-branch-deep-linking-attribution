@@ -7,8 +7,8 @@ jobs:
     steps:
       - name: Checkout SDK repo with testbed app
         uses: actions/checkout@v3
-        with: 
-          ref: SDK-1935-Remove-Plain-Text-Credentials
+        with:
+          path: sdk-repo
         # repo's gradle is configured to run on java 11
       - name: Setup java 11 for gradle
         uses: actions/setup-java@v3
@@ -18,16 +18,37 @@ jobs:
       # to reduce complexity, testbed app uses sdk as a project reference
       - name: Build testbed app
         run: |
+          echo "$PWD"
+          cd sdk-repo
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
           ls ./Branch-SDK-Automation-TestBed/build/outputs/apk/debug/
       # checkout qa automation
       - name: Checkout qa repository
         uses: actions/checkout@v3
         with:
+          ref: SDK-1935-Remove-Plain-Text-Credentials
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
           path: qa-repo
+      # copy over test bed apk with sdk
+      - name: Copy testbed apk
+        run: |
+          echo "$PWD"
+          mkdir -p ${{ github.workspace }}/qa-repo/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-release-unsigned.apk
+          cp ${{ github.workspace }}/sdk-repo/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk ${{ github.workspace }}/qa-repo/qentelli-saas-sdk-testing-automation/testdata/builds_new/Branch-SDK-Automation-TestBed-release-unsigned.apk
       - name: Execute automation
         run: |
+          echo "$PWD"
           cd qa-repo
           ls
+          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DAccessKey="${ACCESS_KEY}" -DSecretKey="${SECRET_KEY}" -DBROWSERSTACK_USER="${BROWSERSTACK_USER}" -DBROWSERSTACK_KEY="${BROWSERSTACK_KEY}" -DUploadNewBuild="Yes" --log-file output.txt
+      - name: Print output
+        if: success() || failure()        # run this step even if previous step failed
+        run: cat ${{ github.workspace }}/output.txt
+
+      - name: Publishing test report
+        if: success() || failure()        # run this step even if previous step failed
+        uses: actions/upload-artifact@v3  # upload test results
+        with:
+          name: test-results
+          path: ${{ github.workspace }}/output.txt
