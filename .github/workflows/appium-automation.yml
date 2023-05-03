@@ -33,7 +33,7 @@ jobs:
           cd sdk
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
       # copy over testbed apk to the automation input apk folder
-      - name: Copy APK
+      - name: Copy APK to QA
         run: |
           mkdir -p qa/testdata/builds_new/
           cp sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk qa/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
