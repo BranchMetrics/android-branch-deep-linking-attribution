@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: sdk 
-      - name: Checkout qa repository
+      - name: Checkout qa automation
         uses: actions/checkout@v3
         with:
           path: qa
@@ -32,8 +32,8 @@ jobs:
         run: |
           cd sdk
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
-      # copy over test bed apk with sdk
-      - name: Copy testbed apk
+      # copy over testbed apk to the automation input apk folder
+      - name: Copy APK
         run: |
           mkdir -p qa/testdata/builds_new/
           cp sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk qa/testdata/builds_new/Branch-SDK-Automation-TestBed-debug.apk
