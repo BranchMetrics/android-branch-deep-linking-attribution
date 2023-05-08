@@ -19,7 +19,7 @@ jobs:
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
-          ref: gdeluna-branch/FixBrace
+          ref: gdeluna-branch/RemoveLoggingAppUrl
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
         # repo's gradle is configured to run on java 11
       - name: Setup java 11 for gradle
