@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -491,6 +492,13 @@ public class MainActivity extends Activity {
                 Branch.notifyNativeToInit();
             }
         });
+
+        findViewById(R.id.customReferrer_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onCustomReferrerIntentStart();
+            }
+        });
     }
 
     private void createNotificationChannel() {
@@ -605,5 +613,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void onCustomReferrerIntentStart(){
+        final String appPackageName = "io.branch.deviceid";
+        final String referrer = "_branch_link=https%3A%2F%2Fapp.deviceidfinder.com%2FQR%3F~campaign%3Dcom.music.spotify";
 
+        try {
+            Uri uri = Uri.parse("market://details")
+                    .buildUpon()
+                    .appendQueryParameter("id", appPackageName)
+                    .appendQueryParameter("referrer", referrer)
+                    .build();
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (android.content.ActivityNotFoundException ignored) {
+            Uri uri = Uri.parse("https://play.google.com/store/apps/details")
+                    .buildUpon()
+                    .appendQueryParameter("id", appPackageName)
+                    .appendQueryParameter("referrer", referrer)
+                    .build();
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        }
+    }
 }

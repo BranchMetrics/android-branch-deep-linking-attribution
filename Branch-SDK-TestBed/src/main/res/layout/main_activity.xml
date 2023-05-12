@@ -133,6 +133,12 @@
                 android:text="Simulate Plugin Notify Init" />
 
             <Button
+                android:id="@+id/customReferrer_btn"
+                style="@style/testbed_button_style"
+                android:text="Open DIF with Spotify campaign" />
+
+
+            <Button
                 android:id="@+id/settings_btn"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/ic_baseline_settings_24"
