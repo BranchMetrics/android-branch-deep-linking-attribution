@@ -1,5 +1,7 @@
 name: appium-automation
-on: push
+on: 
+  pull_request:
+    types: [ opened, synchronize, reopened ]
 env:
   ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
   SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
@@ -13,13 +15,13 @@ jobs:
       - name: Checkout SDK repo with testbed app
         uses: actions/checkout@v3
         with:
-          path: sdk 
+          path: sdk
+      # point to automation master branch by default
       - name: Checkout qa automation
         uses: actions/checkout@v3
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
-          ref: gdeluna-branch/RemoveLoggingAppUrl
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
         # repo's gradle is configured to run on java 11
       - name: Setup java 11 for gradle
