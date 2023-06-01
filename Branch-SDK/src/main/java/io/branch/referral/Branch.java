@@ -25,7 +25,6 @@ import androidx.annotation.StyleRes;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
@@ -61,8 +60,6 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 
 /**
  * <p>
@@ -438,9 +435,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         requestQueue_ = ServerRequestQueue.getInstance(context);
         if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
             isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
-        }
-        if (PrefHelper.autoLogIAPEvents_) {
-            BillingGooglePlay.Companion.getInstance().startBillingClient(aBoolean -> null);
         }
     }
 
@@ -867,15 +861,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
     }
 
-    /**
-     * Enables or disables the automatic logging of in-app purchases or subscriptions as events.
-     * Can be called anytime after the Branch session is initialized.
-     *
-     */
-    public void enableAutoLogInAppPurchasesAsEvents() {
-        prefHelper_.setAutoLogInAppPurchasesAsEvents(true);
-    }
-    
     /**
      * <p>Add key value pairs to all requests</p>
      */
@@ -3527,17 +3512,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        if (PrefHelper.autoLogIAPEvents_) {
-            PrefHelper.Warning("logEventWithPurchase() will already be called automatically when autoLogInAppPurchasesAsEvents is enabled.");
-        } else {
-            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-                if (succeeded) {
-                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-                } else {
-                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
-                }
-                return null;
-            });
-        }
+        BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+            if (succeeded) {
+                BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+            } else {
+                PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+            }
+            return null;
+        });
     }
 }

@@ -56,16 +56,7 @@ class BillingGooglePlay private constructor() {
         }
     }
 
-    private val purchasesUpdatedListener =
-        PurchasesUpdatedListener { billingResult, purchases ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-                for (purchase in purchases) {
-                    if (PrefHelper.autoLogIAPEvents_) {
-                        logEventWithPurchase(Branch.getInstance().applicationContext, purchase)
-                    }
-                }
-            }
-        }
+    private val purchasesUpdatedListener = PurchasesUpdatedListener { _, _ -> }
 
     /**
      * Logs a Branch Commerce Event based on an in-app purchase
@@ -110,13 +101,11 @@ class BillingGooglePlay private constructor() {
                 var revenue = 0.00
 
                 for (product: ProductDetails? in subsProductDetailsList) {
-                    if (isPurchaseValid(purchase, product)) {
-                        val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
+                    val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
+                    contentItemBUOs.add(buo)
 
-                        contentItemBUOs.add(buo)
-                        revenue += buo.contentMetadata.price
-                        currency = buo.contentMetadata.currencyType
-                    }
+                    revenue += buo.contentMetadata.price
+                    currency = buo.contentMetadata.currencyType
                 }
 
                 if (contentItemBUOs.isNotEmpty()) {
@@ -149,17 +138,14 @@ class BillingGooglePlay private constructor() {
                 val quantity: Int = purchase.quantity
 
                 for (product: ProductDetails? in productDetailsList) {
+                    val buo: BranchUniversalObject =
+                        createBUOWithInAppProductDetails(product, quantity)
+                    contentItemBUOs.add(buo)
 
-                    if (isPurchaseValid(purchase, product)) {
-
-                        val buo: BranchUniversalObject =
-                            createBUOWithInAppProductDetails(product, quantity)
-                        contentItemBUOs.add(buo)
-                        revenue += (BigDecimal(buo.contentMetadata.price.toString()) * BigDecimal(
-                            quantity.toString()
-                        )).toDouble()
-                        currency = buo.contentMetadata.currencyType
-                    }
+                    revenue += (BigDecimal(buo.contentMetadata.price.toString()) * BigDecimal(
+                        quantity.toString()
+                    )).toDouble()
+                    currency = buo.contentMetadata.currencyType
                 }
 
                 if (contentItemBUOs.isNotEmpty()) {
@@ -273,25 +259,4 @@ class BillingGooglePlay private constructor() {
 
         PrefHelper.Debug("Successfully logged in-app purchase as Branch Event")
     }
-
-    private fun isPurchaseValid(purchase: Purchase, product: ProductDetails?): Boolean {
-        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) {
-            PrefHelper.Warning("In-app purchase is invalid: Purchase state is ${purchase.purchaseState}")
-            return false
-        }
-
-        if (product != null) {
-            if (!purchase.products.contains(product.productId)) {
-                PrefHelper.Warning("In-app purchase is invalid: Purchase does not contain product ID (${product.productId})")
-                return false
-            }
-        } else {
-            PrefHelper.Warning("In-app purchase is invalid: product is null")
-            return false
-        }
-
-        PrefHelper.Debug("In-app purchase is valid")
-        return true
-    }
-
 }
