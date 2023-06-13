@@ -1,0 +1,26 @@
+<resources>
+    <style name="Share_Sheet_Style" parent="android:style/Widget.ListView">
+        <item name="android:divider">@android:color/holo_red_dark</item>
+        <item name="android:dividerHeight">1dp</item>
+        <item name="android:listSelector">@android:drawable/ic_menu_share</item>
+        <item name="android:drawSelectorOnTop">false</item>
+        <item name="android:cacheColorHint">#FF00FF00</item>
+    </style>
+
+    <style name="testbed_button_style">
+        <item name="android:layout_width">150dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="backgroundColor">@color/black</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:textAppearance">@android:style/TextAppearance.Small</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="testbed_text_view">
+        <item name="android:layout_width">150dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:padding">5dp</item>
+    </style>
+
+</resources>
