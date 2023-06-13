@@ -110,6 +110,12 @@
                 android:drawableStart="@drawable/ic_baseline_pageview_24"
                 android:text="Register View" />
 
+            <Button
+                android:id="@+id/cmdInAppPurchase"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_monetization_on_24"
+                android:text="Test In-App Purchase" />
+
             <TextView
                 style="@style/testbed_text_view"
                 android:text="Misc."

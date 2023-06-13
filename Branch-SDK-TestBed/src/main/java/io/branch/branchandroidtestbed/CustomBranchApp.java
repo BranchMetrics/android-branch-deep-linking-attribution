@@ -1,5 +1,5 @@
 
-package io.branch.branchandroiddemo;
+package io.branch.branchandroidtestbed;
 
 //import com.squareup.leakcanary.LeakCanary;
 

@@ -28,6 +28,9 @@ import android.text.TextUtils;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
+
+import com.android.billingclient.api.Purchase;
+
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
@@ -857,7 +860,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
         prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
     }
-    
+
     /**
      * <p>Add key value pairs to all requests</p>
      */
@@ -3506,5 +3509,16 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
         Branch.enableTestMode();
         return getAutoInstance(context, null);
+    }
+
+    public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
+        BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+            if (succeeded) {
+                BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+            } else {
+                PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+            }
+            return null;
+        });
     }
 }

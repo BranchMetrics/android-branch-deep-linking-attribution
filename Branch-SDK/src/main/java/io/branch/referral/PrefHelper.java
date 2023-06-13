@@ -115,7 +115,8 @@ public class PrefHelper {
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
-    
+    private static final String KEY_LOG_IAP_AS_EVENTS = "bnc_log_iap_as_events";
+
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
     static final String KEY_LAST_KNOWN_UPDATE_TIME = "bnc_last_known_update_time";
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
@@ -1375,6 +1376,12 @@ public class PrefHelper {
     public static void Debug(String message) {
         if (enableLogging_ && !TextUtils.isEmpty(message)) {
             Log.i(TAG, message);
+        }
+    }
+
+    public static void Warning(String message) {
+        if (!TextUtils.isEmpty(message)) {
+            Log.w(TAG, message);
         }
     }
 
