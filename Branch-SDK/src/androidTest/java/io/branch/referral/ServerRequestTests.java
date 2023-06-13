@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -121,7 +120,7 @@ public class ServerRequestTests extends BranchTest {
                         .addControlParameter("$desktop_url", "http://example.com/home")
                         .addControlParameter("custom", "data")
                         .addControlParameter("custom_random", java.lang.Long.toString(Calendar.getInstance().getTimeInMillis()));
-                buo.generateShortUrl(getTestContext(), linkProperties, new Branch.BranchLinkCreateListener() {
+                buo.generateShortUrl(getTestContext(), linkProperties, new BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         PrefHelper.Debug("error is " + error);

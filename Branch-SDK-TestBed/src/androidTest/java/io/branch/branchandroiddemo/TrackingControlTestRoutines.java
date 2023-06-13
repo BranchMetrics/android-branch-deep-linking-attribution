@@ -13,6 +13,8 @@ import java.util.UUID;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchReferralInitListener;
+import io.branch.referral.BranchUniversalReferralInitListener;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -20,7 +22,7 @@ import io.branch.referral.util.LinkProperties;
  * <p>
  * Class for testing the overall Tracking control behaviour.
  * This is not unit test. This test need to be run on a device or simuluator.
- * To run this tests call  {@link #testLinkCreation(boolean)} )} from {@link Branch.BranchReferralInitListener} callback.
+ * To run this tests call  {@link #testLinkCreation(boolean)} )} from {@link BranchReferralInitListener} callback.
  * </p>
  */
 
@@ -141,7 +143,7 @@ public class TrackingControlTestRoutines {
     }
     
     private void testBranchEvent(final int stateCnt) {
-        Branch.getInstance().setIdentity(UUID.randomUUID().toString(), new Branch.BranchReferralInitListener() {
+        Branch.getInstance().setIdentity(UUID.randomUUID().toString(), new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 boolean passed;
@@ -206,7 +208,7 @@ public class TrackingControlTestRoutines {
     
     
     private void waitForBranchInitAndExecuteNext(final int testCnt) {
-        Branch.sessionBuilder(null).withCallback(new Branch.BranchUniversalReferralInitListener() {
+        Branch.sessionBuilder(null).withCallback(new BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {

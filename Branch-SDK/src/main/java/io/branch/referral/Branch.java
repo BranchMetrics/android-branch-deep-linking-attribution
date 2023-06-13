@@ -14,7 +14,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +24,7 @@ import android.text.TextUtils;
 
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
-import org.json.JSONArray;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -208,7 +207,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public static Branch branchReferral_;
 
-    private BranchRemoteInterface branchRemoteInterface_;
+    BranchRemoteInterface branchRemoteInterface_;
     final PrefHelper prefHelper_;
     private final DeviceInfo deviceInfo_;
     private final BranchPluginSupport branchPluginSupport_;
@@ -1144,7 +1143,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      *
-     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
+     * @param callback An instance of {@link LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
         ServerRequest req = new ServerRequestLogout(context_, callback);
@@ -1474,7 +1473,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             ServerResponse response = null;
             try {
                 int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-                response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
+                response = new GetShortLinkTask(this).execute(req).get(timeOut, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             }
             String url = null;
@@ -1997,160 +1996,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         return hasUnusedBranchLink;
     }
-    
-    /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchReferralInitListener}, defining a single method that takes a list of params in
-     * {@link JSONObject} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
-     *
-     * @see JSONObject
-     * @see BranchError
-     */
-    public interface BranchReferralInitListener {
-        void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error);
-    }
-    
-    /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchUniversalReferralInitListener}, defining a single method that provides
-     * {@link BranchUniversalObject}, {@link LinkProperties} and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.
-     * In case of an error the value for {@link BranchUniversalObject} and {@link LinkProperties} are set to null.</p>
-     *
-     * @see BranchUniversalObject
-     * @see LinkProperties
-     * @see BranchError
-     */
-    public interface BranchUniversalReferralInitListener {
-        void onInitFinished(@Nullable BranchUniversalObject branchUniversalObject, @Nullable LinkProperties linkProperties, @Nullable BranchError error);
-    }
-    
-    /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchLinkCreateListener}, defining a single method that takes a URL
-     * {@link String} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
-     *
-     * @see String
-     * @see BranchError
-     */
-    public interface BranchLinkCreateListener {
-        void onLinkCreate(String url, BranchError error);
-    }
-    
-    /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
-     */
-    public interface BranchLinkShareListener {
-        /**
-         * <p> Callback method to update when share link dialog is launched.</p>
-         */
-        void onShareLinkDialogLaunched();
-        
-        /**
-         * <p> Callback method to update when sharing dialog is dismissed.</p>
-         */
-        void onShareLinkDialogDismissed();
-        
-        /**
-         * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
-         *
-         * @param sharedLink    The link shared to the channel.
-         * @param sharedChannel Channel selected for sharing.
-         * @param error         A {@link BranchError} to update errors, if there is any.
-         */
-        void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
-        
-        /**
-         * <p>Called when user select a channel for sharing a deep link.
-         * Branch will create a deep link for the selected channel and share with it after calling this
-         * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
-         * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
-         * and sharing complete.</p>
-         *
-         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
-         */
-        void onChannelSelected(String channelName);
-    }
-    
-    /**
-     * <p>An extended version of {@link BranchLinkShareListener} with callback that supports updating link data or properties after user select a channel to share
-     * This will provide the extended callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} only when sharing a link using Branch Universal Object.</p>
-     */
-    public interface ExtendedBranchLinkShareListener extends BranchLinkShareListener {
-        /**
-         * <p>
-         * Called when user select a channel for sharing a deep link.
-         * This method allows modifying the link data and properties by providing the params  {@link BranchUniversalObject} and {@link LinkProperties}
-         * </p>
-         *
-         * @param channelName    The name of the channel user selected for sharing a link
-         * @param buo            {@link BranchUniversalObject} BUO used for sharing link for updating any params
-         * @param linkProperties {@link LinkProperties} associated with the sharing link for updating the properties
-         * @return Return {@code true} to create link with any updates added to the data ({@link BranchUniversalObject}) or to the properties ({@link LinkProperties}).
-         * Return {@code false} otherwise.
-         */
-        boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
-    }
-    
-    /**
-     * <p>An interface class for customizing sharing properties with selected channel.</p>
-     */
-    public interface IChannelProperties {
-        /**
-         * @param channel The name of the channel selected for sharing.
-         * @return {@link String} with value for the message title for sharing the link with the selected channel
-         */
-        String getSharingTitleForChannel(String channel);
-        
-        /**
-         * @param channel The name of the channel selected for sharing.
-         * @return {@link String} with value for the message body for sharing the link with the selected channel
-         */
-        String getSharingMessageForChannel(String channel);
-    }
-    
-    /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchListResponseListener}, defining a single method that takes a list of
-     * {@link JSONArray} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
-     *
-     * @see JSONArray
-     * @see BranchError
-     */
-    public interface BranchListResponseListener {
-        void onReceivingResponse(JSONArray list, BranchError error);
-    }
-    
-    /**
-     * <p>
-     * Callback interface for listening logout status
-     * </p>
-     */
-    public interface LogoutStatusListener {
-        /**
-         * Called on finishing the the logout process
-         *
-         * @param loggedOut A {@link Boolean} which is set to true if logout succeeded
-         * @param error     An instance of {@link BranchError} to notify any error occurred during logout.
-         *                  A null value is set if logout succeeded.
-         */
-        void onLogoutFinished(boolean loggedOut, BranchError error);
-    }
-    
-    /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
 
     //-------------------Auto deep link feature-------------------------------------------//
     
@@ -2396,22 +2241,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             checkForAutoDeepLinkConfiguration();
         }
     }
-    
-    /**
-     * Interface for defining optional Branch view behaviour for Activities
-     */
-    public interface IBranchViewControl {
-        /**
-         * Defines if an activity is interested to show Branch views or not.
-         * By default activities are considered as Branch view enabled. In case of activities which are not interested to show a Branch view (Splash screen for example)
-         * should implement this and return false. The pending Branch view will be shown with the very next Branch view enabled activity
-         *
-         * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
-         */
-        boolean skipBranchViewsOnThisActivity();
-    }
-    
-    
+
+
     ///----------------- Instant App  support--------------------------//
     
     /**

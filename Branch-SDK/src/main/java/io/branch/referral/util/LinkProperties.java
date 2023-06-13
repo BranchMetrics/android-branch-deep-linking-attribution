@@ -14,6 +14,8 @@ import java.util.Iterator;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLinkCreateListener;
+import io.branch.referral.BranchLinkShareListener;
 
 /**
  * <p>
@@ -21,8 +23,8 @@ import io.branch.referral.Branch;
  * Use this class to specify the properties of a deep link such as channel, feature etc and any control params associated with the link.
  *
  * @see BranchUniversalObject#getShortUrl(Context, LinkProperties)
- * @see BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
- * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+ * @see BranchUniversalObject#generateShortUrl(Context, LinkProperties, BranchLinkCreateListener)
+ * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, BranchLinkShareListener)
  * </p>
  */
 public class LinkProperties implements Parcelable {

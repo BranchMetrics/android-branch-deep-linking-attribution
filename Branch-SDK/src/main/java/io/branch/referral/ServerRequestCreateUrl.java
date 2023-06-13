@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,7 +19,7 @@ class ServerRequestCreateUrl extends ServerRequest {
 
     private BranchLinkData linkPost_;
     private boolean isAsync_ = true;
-    private Branch.BranchLinkCreateListener callback_;
+    private BranchLinkCreateListener callback_;
     /* Default long link base url*/
     private static final String DEF_BASE_URL = "https://bnc.lt/a/";
     private boolean defaultToLongUrl_ = true;
@@ -52,14 +51,14 @@ class ServerRequestCreateUrl extends ServerRequest {
      *                 exceed 128 characters.
      * @param params   A {@link JSONObject} value containing the deep linked params associated with
      *                 the link that will be passed into a new app session when clicked
-     * @param callback A {@link Branch.BranchLinkCreateListener} callback instance that will trigger
+     * @param callback A {@link BranchLinkCreateListener} callback instance that will trigger
      *                 actions defined therein upon receipt of a response to a create link request.
      * @param async    {@link Boolean} value specifying whether to get the url asynchronously or not.
      */
     public ServerRequestCreateUrl(Context context, final String alias, final int type, final int duration,
                                   final Collection<String> tags, final String channel, final String feature,
                                   final String stage, final String campaign, final JSONObject params,
-                                  Branch.BranchLinkCreateListener callback, boolean async, boolean defaultToLongUrl) {
+                                  BranchLinkCreateListener callback, boolean async, boolean defaultToLongUrl) {
         super(context, Defines.RequestPath.GetURL);
 
         callback_ = callback;

@@ -17,10 +17,10 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on a new install.</p>
      *
      * @param context     Current {@link Application} context
-     * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
+     * @param callback    A {@link BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      */
-    ServerRequestRegisterInstall(Context context, Branch.BranchReferralInitListener callback, boolean isAutoInitialization) {
+    ServerRequestRegisterInstall(Context context, BranchReferralInitListener callback, boolean isAutoInitialization) {
         super(context, Defines.RequestPath.RegisterInstall, isAutoInitialization);
         callback_ = callback;
         try {

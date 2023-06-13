@@ -103,7 +103,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
             @Override
             public void perform(final MockActivity activity) {
-                Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
+                Branch.sessionBuilder(activity).withCallback(new BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses

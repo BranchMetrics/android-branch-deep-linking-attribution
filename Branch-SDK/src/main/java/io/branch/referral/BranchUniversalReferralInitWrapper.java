@@ -6,12 +6,12 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.LinkProperties;
 
 /**
- * Class for converting init session callback with {@link Branch.BranchReferralInitListener} to {@link Branch.BranchUniversalReferralInitListener}
+ * Class for converting init session callback with {@link BranchReferralInitListener} to {@link BranchUniversalReferralInitListener}
  */
-class BranchUniversalReferralInitWrapper implements Branch.BranchReferralInitListener {
-    private final Branch.BranchUniversalReferralInitListener universalReferralInitListener_;
+class BranchUniversalReferralInitWrapper implements BranchReferralInitListener {
+    private final BranchUniversalReferralInitListener universalReferralInitListener_;
 
-    public BranchUniversalReferralInitWrapper(Branch.BranchUniversalReferralInitListener universalReferralInitListener) {
+    public BranchUniversalReferralInitWrapper(BranchUniversalReferralInitListener universalReferralInitListener) {
         this.universalReferralInitListener_ = universalReferralInitListener;
     }
 

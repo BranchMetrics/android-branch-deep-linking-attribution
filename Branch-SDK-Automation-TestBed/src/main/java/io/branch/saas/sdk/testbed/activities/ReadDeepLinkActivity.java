@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchReferralInitListener;
 import io.branch.referral.InitSessionBuilder;
 import io.branch.saas.sdk.testbed.Common;
 import io.branch.saas.sdk.testbed.Constants;
@@ -88,7 +89,7 @@ public class ReadDeepLinkActivity extends AppCompatActivity implements AdvancedW
             return;
         }
         Common.getInstance().clearLog();
-        InitSessionBuilder initSessionBuilder = Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
+        InitSessionBuilder initSessionBuilder = Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error == null) {

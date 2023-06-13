@@ -124,7 +124,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         return shortUrl;
     }
 
-    protected void generateUrlInternal(Branch.BranchLinkCreateListener callback) {
+    protected void generateUrlInternal(BranchLinkCreateListener callback) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,

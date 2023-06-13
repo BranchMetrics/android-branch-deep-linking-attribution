@@ -28,7 +28,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
     static final String INITIATED_BY_CLIENT = "INITIATED_BY_CLIENT";
 
-    Branch.BranchReferralInitListener callback_;
+    BranchReferralInitListener callback_;
     boolean initiatedByClient;
 
     ServerRequestInitSession(Context context, Defines.RequestPath requestPath, boolean isAutoInitialization) {
@@ -91,8 +91,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 if ((Branch.getInstance().getCurrentActivity() != null)) {
                     Activity currentActivity = Branch.getInstance().getCurrentActivity();
                     boolean isActivityEnabledForBranchView = true;
-                    if (currentActivity instanceof Branch.IBranchViewControl) {
-                        isActivityEnabledForBranchView = !((Branch.IBranchViewControl) currentActivity).skipBranchViewsOnThisActivity();
+                    if (currentActivity instanceof IBranchViewControl) {
+                        isActivityEnabledForBranchView = !((IBranchViewControl) currentActivity).skipBranchViewsOnThisActivity();
                     }
                     if (isActivityEnabledForBranchView) {
                         isBranchViewShowing = BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, Branch.getInstance());

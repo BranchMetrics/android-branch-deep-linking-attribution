@@ -11,7 +11,7 @@ import androidx.core.app.ActivityCompat;
 import java.lang.ref.WeakReference;
 
 public class InitSessionBuilder {
-    private Branch.BranchReferralInitListener callback;
+    private BranchReferralInitListener callback;
     private boolean isAutoInitialization;
     private int delay;
     private Uri uri;
@@ -43,12 +43,12 @@ public class InitSessionBuilder {
      * they are primarily meant to be used for navigating to specific content within the app.
      * Use only one withCallback() method.</p>
      *
-     * @param callback A {@link Branch.BranchUniversalReferralInitListener} instance that will be called
+     * @param callback A {@link BranchUniversalReferralInitListener} instance that will be called
      *                 following successful (or unsuccessful) initialisation of the session
      *                 with the Branch API.
      */
     @SuppressWarnings("WeakerAccess")
-    public InitSessionBuilder withCallback(Branch.BranchUniversalReferralInitListener callback) {
+    public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
         this.callback = new BranchUniversalReferralInitWrapper(callback);
         return this;
     }
@@ -71,12 +71,12 @@ public class InitSessionBuilder {
      * they are primarily meant to be used for navigating to specific content within the app.
      * Use only one withCallback() method.</p>
      *
-     * @param callback A {@link Branch.BranchReferralInitListener} instance that will be called
+     * @param callback A {@link BranchReferralInitListener} instance that will be called
      *                 following successful (or unsuccessful) initialisation of the session
      *                 with the Branch API.
      */
     @SuppressWarnings("WeakerAccess")
-    public InitSessionBuilder withCallback(Branch.BranchReferralInitListener callback) {
+    public InitSessionBuilder withCallback(BranchReferralInitListener callback) {
         this.callback = callback;
         return this;
     }

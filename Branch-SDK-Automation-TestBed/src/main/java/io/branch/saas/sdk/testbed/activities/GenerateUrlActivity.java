@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.util.Calendar;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.ExtendedBranchLinkShareListener;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.LinkProperties;
@@ -121,7 +121,7 @@ public class GenerateUrlActivity extends AppCompatActivity implements View.OnCli
             Common.branchUniversalObject.showShareSheet(this,
                     Common.lp,
                     shareSheetStyle,
-                    new Branch.ExtendedBranchLinkShareListener() {
+                    new ExtendedBranchLinkShareListener() {
                         @Override
                         public void onShareLinkDialogLaunched() {
                         }

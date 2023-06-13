@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -15,14 +14,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.branch.referral.Branch.BranchLinkCreateListener;
 import io.branch.referral.util.BranchCPID;
 
 @RunWith(AndroidJUnit4.class)
@@ -278,7 +274,7 @@ public class BranchApiTests extends BranchTest {
             public void run() {
                 final CountDownLatch signal = new CountDownLatch(1);
                 prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
-                branch.setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
+                branch.setIdentity("test_user_1", new BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(JSONObject referringParams, BranchError error) {
                         Assert.assertNull(error);

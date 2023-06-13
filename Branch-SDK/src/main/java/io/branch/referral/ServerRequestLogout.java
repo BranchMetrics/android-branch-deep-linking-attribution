@@ -13,7 +13,7 @@ import org.json.JSONObject;
  */
 class ServerRequestLogout extends ServerRequest {
 
-    private Branch.LogoutStatusListener callback_;
+    private LogoutStatusListener callback_;
 
     /**
      * <p>Create an instance of {@link ServerRequestLogout} to signal when  different person is about to use the app. For example,
@@ -21,9 +21,9 @@ class ServerRequestLogout extends ServerRequest {
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      *
      * @param context  Current {@link Application} context
-     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
+     * @param callback An instance of {@link LogoutStatusListener} to callback with the logout operation status.
      */
-    public ServerRequestLogout(Context context, Branch.LogoutStatusListener callback) {
+    public ServerRequestLogout(Context context, LogoutStatusListener callback) {
         super(context, Defines.RequestPath.Logout);
         callback_ = callback;
         JSONObject post = new JSONObject();

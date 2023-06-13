@@ -7,7 +7,6 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.text.TextUtils;
-import android.webkit.TracingController;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,10 +19,14 @@ import java.util.Iterator;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchLinkCreateListener;
+import io.branch.referral.BranchLinkShareListener;
 import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
+import io.branch.referral.ExtendedBranchLinkShareListener;
+import io.branch.referral.IChannelProperties;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.TrackingController;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -619,9 +622,9 @@ public class BranchUniversalObject implements Parcelable {
      *
      * @param context        {@link Context} instance
      * @param linkProperties An object of {@link LinkProperties} specifying the properties of this link
-     * @param callback       An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
+     * @param callback       An instance of {@link BranchLinkCreateListener} to receive the results
      */
-    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback) {
+    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable BranchLinkCreateListener callback) {
         if (TrackingController.isTrackingDisabled(context) && callback != null) {
             callback.onLinkCreate(getLinkBuilder(context, linkProperties).getShortUrl(), null);
         } else {
@@ -634,22 +637,22 @@ public class BranchUniversalObject implements Parcelable {
      *
      * @param context          {@link Context} instance
      * @param linkProperties   An object of {@link LinkProperties} specifying the properties of this link
-     * @param callback         An instance of {@link io.branch.referral.Branch.BranchLinkCreateListener} to receive the results
+     * @param callback         An instance of {@link BranchLinkCreateListener} to receive the results
      * @param defaultToLongUrl A {@link boolean} specifies if a long url should be returned in case of link creation error
      *                         If set to false, NULL is returned in case of link creation error
      */
-    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
+    public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable BranchLinkCreateListener callback, boolean defaultToLongUrl) {
         getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).generateShortUrl(callback);
     }
     
     
     //------------------ Share sheet -------------------------------------//
     
-    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
+    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable BranchLinkShareListener callback) {
         showShareSheet(activity, linkProperties, style, callback, null);
     }
     
-    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback, Branch.IChannelProperties channelProperties) {
+    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable BranchLinkShareListener callback, IChannelProperties channelProperties) {
         if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
             if (callback != null) {
                 callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
@@ -948,12 +951,12 @@ public class BranchUniversalObject implements Parcelable {
     /**
      * Class for intercepting share sheet events to report auto events on BUO
      */
-    private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
-        private final Branch.BranchLinkShareListener originalCallback_;
+    private class LinkShareListenerWrapper implements BranchLinkShareListener {
+        private final BranchLinkShareListener originalCallback_;
         private final BranchShareSheetBuilder shareSheetBuilder_;
         private final LinkProperties linkProperties_;
         
-        LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback, BranchShareSheetBuilder shareLinkBuilder, LinkProperties linkProperties) {
+        LinkShareListenerWrapper(BranchLinkShareListener originalCallback, BranchShareSheetBuilder shareLinkBuilder, LinkProperties linkProperties) {
             originalCallback_ = originalCallback;
             shareSheetBuilder_ = shareLinkBuilder;
             linkProperties_ = linkProperties;
@@ -993,8 +996,8 @@ public class BranchUniversalObject implements Parcelable {
             if (originalCallback_ != null) {
                 originalCallback_.onChannelSelected(channelName);
             }
-            if (originalCallback_ instanceof Branch.ExtendedBranchLinkShareListener) {
-                if (((Branch.ExtendedBranchLinkShareListener) originalCallback_).onChannelSelected(channelName, BranchUniversalObject.this, linkProperties_)) {
+            if (originalCallback_ instanceof ExtendedBranchLinkShareListener) {
+                if (((ExtendedBranchLinkShareListener) originalCallback_).onChannelSelected(channelName, BranchUniversalObject.this, linkProperties_)) {
                     shareSheetBuilder_.setShortLinkBuilderInternal(getLinkBuilder(shareSheetBuilder_.getShortLinkBuilder(), linkProperties_));
                 }
             }

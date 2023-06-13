@@ -26,8 +26,8 @@ public class BranchShareSheetBuilder {
 
     private String shareMsg_;
     private String shareSub_;
-    private Branch.BranchLinkShareListener callback_;
-    private Branch.IChannelProperties channelPropertiesCallback_;
+    private BranchLinkShareListener callback_;
+    private IChannelProperties channelPropertiesCallback_;
 
     private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
     private String defaultURL_;
@@ -175,19 +175,19 @@ public class BranchShareSheetBuilder {
     /**
      * <p>Adds a callback to get the sharing status.</p>
      *
-     * @param callback A {@link Branch.BranchLinkShareListener} instance for getting sharing status.
+     * @param callback A {@link BranchLinkShareListener} instance for getting sharing status.
      * @return A {@link BranchShareSheetBuilder} instance.
      */
-    public BranchShareSheetBuilder setCallback(Branch.BranchLinkShareListener callback) {
+    public BranchShareSheetBuilder setCallback(BranchLinkShareListener callback) {
         this.callback_ = callback;
         return this;
     }
 
     /**
-     * @param channelPropertiesCallback A {@link io.branch.referral.Branch.IChannelProperties} instance for customizing sharing properties for channels.
+     * @param channelPropertiesCallback A {@link IChannelProperties} instance for customizing sharing properties for channels.
      * @return A {@link BranchShareSheetBuilder} instance.
      */
-    public BranchShareSheetBuilder setChannelProperties(Branch.IChannelProperties channelPropertiesCallback) {
+    public BranchShareSheetBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) {
         this.channelPropertiesCallback_ = channelPropertiesCallback;
         return this;
     }
@@ -525,11 +525,11 @@ public class BranchShareSheetBuilder {
         return shareSub_;
     }
 
-    public Branch.BranchLinkShareListener getCallback() {
+    public BranchLinkShareListener getCallback() {
         return callback_;
     }
 
-    public Branch.IChannelProperties getChannelPropertiesCallback() {
+    public IChannelProperties getChannelPropertiesCallback() {
         return channelPropertiesCallback_;
     }
 

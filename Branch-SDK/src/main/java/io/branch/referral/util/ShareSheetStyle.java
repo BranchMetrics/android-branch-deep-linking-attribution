@@ -15,14 +15,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.Branch;
+import io.branch.referral.BranchLinkShareListener;
 import io.branch.referral.SharingHelper;
 
 /**
  * Class for defining the share sheet properties.
  * Defines the properties of share sheet. Use this class customise the share sheet style.
  *
- * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+ * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, BranchLinkShareListener)
  */
 public class ShareSheetStyle {
     //Customise more and copy url option

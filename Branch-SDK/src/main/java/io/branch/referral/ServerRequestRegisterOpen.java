@@ -17,10 +17,10 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
      * <p>Create an instance of {@link ServerRequestRegisterInstall} to notify Branch API on app open event.</p>
      *
      * @param context     Current {@link Application} context
-     * @param callback    A {@link Branch.BranchReferralInitListener} callback instance that will return
+     * @param callback    A {@link BranchReferralInitListener} callback instance that will return
      *                    the data associated with new install registration.
      */
-    ServerRequestRegisterOpen(Context context, Branch.BranchReferralInitListener callback, boolean isAutoInitialization) {
+    ServerRequestRegisterOpen(Context context, BranchReferralInitListener callback, boolean isAutoInitialization) {
         super(context, Defines.RequestPath.RegisterOpen, isAutoInitialization);
         callback_ = callback;
         JSONObject openPost = new JSONObject();

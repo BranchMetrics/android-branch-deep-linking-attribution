@@ -33,8 +33,8 @@ import java.util.List;
 class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
     AnimatedDialog shareDlg_;
-    Branch.BranchLinkShareListener callback_;
-    Branch.IChannelProperties channelPropertiesCallback_;
+    BranchLinkShareListener callback_;
+    IChannelProperties channelPropertiesCallback_;
     
     /* List of apps available for sharing. */
     private List<ResolveInfo> displayedAppList_;
@@ -329,7 +329,7 @@ class ShareLinkManager {
         final String channelName = selectedResolveInfo.loadLabel(context_.getPackageManager()).toString();
         BranchShortLinkBuilder shortLinkBuilder = builder_.getShortLinkBuilder();
         
-        shortLinkBuilder.generateShortUrl(new Branch.BranchLinkCreateListener() {
+        shortLinkBuilder.generateShortUrl(new BranchLinkCreateListener() {
             @Override
             public void onLinkCreate(String url, BranchError error) {
                 if (error == null) {

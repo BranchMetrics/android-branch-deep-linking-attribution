@@ -12,7 +12,7 @@ import org.json.JSONObject;
  * </p>
  */
 class ServerRequestIdentifyUserRequest extends ServerRequest {
-    Branch.BranchReferralInitListener callback_;
+    BranchReferralInitListener callback_;
     String userId_ = null;
 
     /**
@@ -22,10 +22,10 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
      *
      * @param context  Current {@link Application} context
      * @param userId   A {@link String} value containing the unique identifier of the user.
-     * @param callback A {@link Branch.BranchReferralInitListener} callback instance that will return
+     * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public ServerRequestIdentifyUserRequest(Context context, Branch.BranchReferralInitListener callback, String userId) {
+    public ServerRequestIdentifyUserRequest(Context context, BranchReferralInitListener callback, String userId) {
         super(context, Defines.RequestPath.IdentifyUser);
 
         callback_ = callback;

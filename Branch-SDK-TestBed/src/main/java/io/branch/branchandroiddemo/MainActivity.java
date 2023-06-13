@@ -31,8 +31,13 @@ import java.security.MessageDigest;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
-import io.branch.referral.Branch.BranchReferralInitListener;
+import io.branch.referral.BranchLinkCreateListener;
+import io.branch.referral.BranchLinkShareListener;
+import io.branch.referral.BranchReferralInitListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchUniversalReferralInitListener;
+import io.branch.referral.IChannelProperties;
+import io.branch.referral.LogoutStatusListener;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.Defines;
@@ -140,7 +145,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
-                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
+                Branch.getInstance().logout(new LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         if (error != null) {
@@ -212,7 +217,7 @@ public class MainActivity extends Activity {
                 // txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
 
                 // Async Link creation example
-                branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
+                branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         if (error != null) {
@@ -263,7 +268,7 @@ public class MainActivity extends Activity {
                 // Define custom style for the share sheet list view
                 //.setStyleResourceID(R.style.Share_Sheet_Style);
 
-                branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
+                branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new BranchLinkShareListener() {
 
                             @Override
                             public void onShareLinkDialogLaunched() {
@@ -293,7 +298,7 @@ public class MainActivity extends Activity {
 //                            }
 
                         },
-                        new Branch.IChannelProperties() {
+                        new IChannelProperties() {
                             @Override
                             public String getSharingTitleForChannel(String channel) {
                                 return channel.contains("Messaging") ? "title for SMS" :
@@ -474,7 +479,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
+                Branch.getInstance().logout(new LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
@@ -538,7 +543,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
-        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+        Branch.sessionBuilder(this).withCallback(new BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
