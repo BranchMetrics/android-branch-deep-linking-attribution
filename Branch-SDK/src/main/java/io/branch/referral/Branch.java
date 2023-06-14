@@ -22,8 +22,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 
-import androidx.core.app.ActivityCompat;
-
 import com.android.billingclient.api.Purchase;
 
 import io.branch.referral.Defines.PreinstallKey;
