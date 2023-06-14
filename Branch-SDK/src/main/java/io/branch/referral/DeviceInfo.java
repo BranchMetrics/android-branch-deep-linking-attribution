@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -16,6 +17,8 @@ import org.json.JSONObject;
 
 import static android.content.Context.UI_MODE_SERVICE;
 import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
+
+import java.util.Iterator;
 
 /**
  * <p>
@@ -222,15 +225,6 @@ class DeviceInfo {
      */
     void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
-            // For install events, referrer GCLID is already contained in `install_referrer_extras`
-            // Otherwise, for all other v1 and v2 events, add referrer_gclid to top level
-            if (!(serverRequest instanceof ServerRequestRegisterInstall)) {
-                String gclid = prefHelper.getReferrerGclid();
-                if (gclid != null && !gclid.equals(NO_STRING_VALUE)) {
-                    requestObj.put(Defines.Jsonkey.ReferrerGclid.getKey(), gclid);
-                }
-            }
-
             requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
         }
         catch (JSONException ignore){

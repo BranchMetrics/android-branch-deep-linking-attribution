@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
@@ -18,6 +19,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
+
+import io.branch.referral.util.BranchEvent;
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -672,10 +675,24 @@ public abstract class ServerRequest {
     }
     
     /**
-     * Called on UI thread just before executing a request. Do any final updates to the request here
+     * Called on UI thread just before executing a request. Do any final updates to the request here.
+     * Also attaches any required URL query parameters based on the request type.
      */
     public void onPreExecute() {
-    
+        if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
+            new ReferringUrlUtility(prefHelper_).parseReferringURL(prefHelper_.getExternalIntentUri());
+
+            JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper_).getURLQueryParamsForRequest(this);
+
+            for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
+                String key = it.next();
+                try {
+                    this.params_.put(key, urlQueryParams.get(key));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     protected void updateEnvironment(Context context, JSONObject post) {
