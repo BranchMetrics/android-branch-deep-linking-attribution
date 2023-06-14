@@ -1,6 +1,5 @@
 package io.branch.referral.util;
 
-
 import android.content.Context;
 
 import org.json.JSONArray;
