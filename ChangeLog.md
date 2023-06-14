@@ -1,4 +1,11 @@
 # Branch Android SDK change log
+
+- v5.5.0
+  * _*Master Release*_ - Jun 14, 2023
+    - Added support for easily logging Play Store transactions as Branch Events with `logEventWithPurchase`.
+    - Updated handling of URL query parameters.
+    - Updated URI skiplist.
+
 - v5.4.0
   * _*Master Release*_ - Mar 10, 2023
     - Added support for Snap partner parameters with `addSnapPartnerParameter`
