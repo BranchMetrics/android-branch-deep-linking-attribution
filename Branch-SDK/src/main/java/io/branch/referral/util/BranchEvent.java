@@ -16,6 +16,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Defines;
 import io.branch.referral.ServerRequest;
+import io.branch.referral.ServerRequestLogEvent;
 import io.branch.referral.ServerResponse;
 
 /**
@@ -249,86 +250,10 @@ public class BranchEvent {
         boolean isReqQueued = false;
         Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
         if (Branch.getInstance() != null) {
-            Branch.getInstance().handleNewRequest(new ServerRequestLogEvent(context, reqPath));
+            Branch.getInstance().handleNewRequest(new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList));
             isReqQueued = true;
         }
         return isReqQueued;
     }
 
-    private class ServerRequestLogEvent extends ServerRequest {
-        ServerRequestLogEvent(Context context, Defines.RequestPath requestPath) {
-            super(context, requestPath);
-            JSONObject reqBody = new JSONObject();
-            try {
-                reqBody.put(Defines.Jsonkey.Name.getKey(), eventName);
-                if (customProperties.length() > 0) {
-                    reqBody.put(Defines.Jsonkey.CustomData.getKey(), customProperties);
-                }
-
-                if (standardProperties.length() > 0) {
-                    reqBody.put(Defines.Jsonkey.EventData.getKey(), standardProperties);
-                }
-
-                if (topLevelProperties.size() > 0) {
-                    for (Map.Entry<String, Object> entry : topLevelProperties.entrySet()) {
-                        reqBody.put(entry.getKey(), entry.getValue());
-                    }
-                }
-
-                if (buoList.size() > 0) {
-                    JSONArray contentItemsArray = new JSONArray();
-                    reqBody.put(Defines.Jsonkey.ContentItems.getKey(), contentItemsArray);
-                    for (BranchUniversalObject buo : buoList) {
-                        contentItemsArray.put(buo.convertToJson());
-                    }
-                }
-                setPost(reqBody);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            updateEnvironment(context, reqBody);
-        }
-
-        @Override
-        protected void setPost(JSONObject post) throws JSONException {
-            super.setPost(post);
-            prefHelper_.loadPartnerParams(post);
-        }
-
-        @Override
-        public boolean handleErrors(Context context) {
-            return false;
-        }
-
-        @Override
-        public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        }
-
-        @Override
-        public void handleFailure(int statusCode, String causeMsg) {
-        }
-
-        @Override
-        public boolean isGetRequest() {
-            return false;
-        }
-
-        @Override
-        public void clearCallbacks() {
-        }
-
-        @Override
-        public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
-            return BRANCH_API_VERSION.V2; //This is a v2 event
-        }
-
-        @Override
-        protected boolean shouldUpdateLimitFacebookTracking() {
-            return true;
-        }
-
-        public boolean shouldRetryOnFail() {
-            return true; // Branch event need to be retried on failure.
-        }
-    }
 }
