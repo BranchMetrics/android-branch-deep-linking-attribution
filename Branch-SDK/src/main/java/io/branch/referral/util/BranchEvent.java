@@ -288,7 +288,7 @@ public class BranchEvent {
                     }
             );
         } else if (callback != null) {
-            callback.onEventLogged(false);
+            callback.onFailure(0, "Error logging event because the Branch instance was not available");
         }
     }
 
