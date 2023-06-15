@@ -1357,7 +1357,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
      *                 user action that has just been completed.
      * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
      *                 Content, Lifecycle and Custom Events</a> for additional information.
      */
     @Deprecated
@@ -1372,7 +1371,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param action A {@link String} value to be passed as an action that the user has carried
      *               out. For example "registered" or "logged in".
      * @deprecated   Please use {@link BranchEvent} for your event tracking use cases.
-     *               You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
      *               Content, Lifecycle and Custom Events</a> for additional information.
      */
     @Deprecated
@@ -1388,7 +1386,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 out. For example "registered" or "logged in".
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
      *                 Content, Lifecycle and Custom Events</a> for additional information.
      */
     @Deprecated
@@ -1407,7 +1404,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *                 user action that has just been completed.
      * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
      * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
      *                 Content, Lifecycle and Custom Events</a> for additional information.
      */
     @Deprecated
@@ -1423,7 +1419,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
      *              Content, Lifecycle and Custom Events</a> for additional information.
      */
     @Deprecated
@@ -1439,7 +1434,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     /**
      * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
      *              Content, Lifecycle and Custom Events</a> for additional information.
      */
     @Deprecated
