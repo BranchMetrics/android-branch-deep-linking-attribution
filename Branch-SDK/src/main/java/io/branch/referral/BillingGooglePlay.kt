@@ -20,10 +20,12 @@ class BillingGooglePlay private constructor() {
                     instance = BillingGooglePlay()
 
                     instance.billingClient =
-                        BillingClient.newBuilder(Branch.instance.applicationContext)
-                            .setListener(instance.purchasesUpdatedListener)
-                            .enablePendingPurchases()
-                            .build()
+                        Branch.instance?.applicationContext?.let {
+                            BillingClient.newBuilder(it)
+                                .setListener(instance.purchasesUpdatedListener)
+                                .enablePendingPurchases()
+                                .build()
+                        }!!
                 }
                 return instance
             }

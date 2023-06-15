@@ -16,7 +16,7 @@ import java.util.Collection;
  * The server request for creating a synchronous or asynchronous short url. Handles request creation and execution.
  * </p>
  */
-class ServerRequestCreateUrl extends ServerRequest {
+public class ServerRequestCreateUrl extends ServerRequest {
 
     private BranchLinkData linkPost_;
     private boolean isAsync_ = true;

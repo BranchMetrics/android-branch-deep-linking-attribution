@@ -21,7 +21,7 @@ import java.util.NoSuchElementException;
  * complete. This allows you to start sending requests to the Branch API as soon as your app is
  * opened.</p>
  */
-class ServerRequestQueue {
+public class ServerRequestQueue {
     private static final String PREF_KEY = "BNCServerRequestQueue";
     private static final int MAX_ITEMS = 25;
     private static ServerRequestQueue SharedInstance;

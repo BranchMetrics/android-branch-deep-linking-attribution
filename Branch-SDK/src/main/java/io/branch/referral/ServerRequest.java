@@ -564,7 +564,7 @@ public abstract class ServerRequest {
     }
 
     private boolean prioritizeLinkAttribution(JSONObject params) {
-        if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
+        if (Branch.Companion.isReferringLinkAttributionForPreinstalledAppsEnabled()
                 && params.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
             return true;
         }

@@ -12,9 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
 import androidx.core.app.ActivityCompat
-import io.branch.referral.BillingGooglePlay.Companion.getInstance
-import io.branch.referral.BillingGooglePlay.startBillingClient
-import io.branch.referral.BillingGooglePlay.logEventWithPurchase
+import io.branch.referral.BillingGooglePlay.*
 import io.branch.referral.BranchViewHandler.IBranchViewEvents
 import io.branch.referral.SystemObserver.AdsParamsFetchEvents
 import io.branch.referral.StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents
@@ -79,6 +77,7 @@ import io.branch.referral.Branch.BranchUniversalReferralInitListener
 import io.branch.referral.BranchUniversalReferralInitWrapper
 import com.android.billingclient.api.Purchase
 import io.branch.referral.BillingGooglePlay
+import io.branch.referral.BillingGooglePlay.Companion.getInstance
 import io.branch.referral.BranchPreinstall
 import io.branch.referral.InstantAppUtil
 import io.branch.referral.util.LinkProperties
@@ -1763,9 +1762,9 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
      * Async Task to create  a short link for synchronous methods
      */
     private inner class GetShortLinkTask : AsyncTask<ServerRequest?, Void?, ServerResponse>() {
-        protected override fun doInBackground(vararg serverRequests: ServerRequest): ServerResponse {
+        override fun doInBackground(vararg serverRequests: ServerRequest?): ServerResponse {
             return branchRemoteInterface_.make_restful_post(
-                serverRequests[0].post,
+                serverRequests[0]!!.post,
                 prefHelper!!.apiBaseUrl + Defines.RequestPath.GetURL.path,
                 Defines.RequestPath.GetURL.path, prefHelper.branchKey
             )
@@ -1786,7 +1785,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
             thisReq_.doFinalUpdateOnMainThread()
         }
 
-        protected override fun doInBackground(vararg voids: Void): ServerResponse {
+        override fun doInBackground(vararg voids: Void?): ServerResponse {
             // update queue wait time
             addExtraInstrumentationData(
                 thisReq_.requestPath + "-" + Defines.Jsonkey.Queue_Wait_Time.key,
@@ -1820,7 +1819,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
             return result
         }
 
-        protected override fun onPostExecute(serverResponse: ServerResponse) {
+        override fun onPostExecute(serverResponse: ServerResponse?) {
             super.onPostExecute(serverResponse)
             onPostExecuteInner(serverResponse)
         }

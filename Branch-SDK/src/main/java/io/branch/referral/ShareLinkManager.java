@@ -30,7 +30,7 @@ import java.util.List;
  * <p>Class that provides a chooser dialog with customised share options to share a link.
  * Class provides customised and easy way of sharing a deep link with other applications. </p>
  */
-class ShareLinkManager {
+public class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
     AnimatedDialog shareDlg_;
     Branch.BranchLinkShareListener callback_;

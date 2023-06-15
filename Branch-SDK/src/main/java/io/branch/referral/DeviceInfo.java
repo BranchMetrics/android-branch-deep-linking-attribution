@@ -26,7 +26,7 @@ import java.util.Iterator;
  * device info to Branch requests
  * </p>
  */
-class DeviceInfo {
+public class DeviceInfo {
     private final SystemObserver systemObserver_;
     private final Context context_;
 
@@ -225,7 +225,7 @@ class DeviceInfo {
      */
     void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
-            requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
+            requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.Companion.isDeviceIDFetchDisabled());
         }
         catch (JSONException ignore){
         }
@@ -288,7 +288,7 @@ class DeviceInfo {
      * Note that if either Debug is enabled or Fetch has been disabled, then return a "fake" ID.
      */
     public SystemObserver.UniqueId getHardwareID() {
-        return getSystemObserver().getUniqueID(context_, Branch.isDeviceIDFetchDisabled());
+        return getSystemObserver().getUniqueID(context_, Branch.Companion.isDeviceIDFetchDisabled());
     }
 
     public String getOsName() {
