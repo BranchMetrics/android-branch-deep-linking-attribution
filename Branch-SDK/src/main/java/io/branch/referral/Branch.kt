@@ -642,7 +642,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
      * @param callback An instance of [io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener]
      * to callback with cross platform ids
      */
-    fun getCrossPlatformIds(callback: BranchCrossPlatformIdListener) {
+    fun getCrossPlatformIds(callback: BranchCrossPlatformIdListener?) {
         if (applicationContext != null) {
             handleNewRequest(ServerRequestGetCPID(applicationContext, callback))
         }
@@ -656,7 +656,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
      * @param callback An instance of [io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener]
      * to callback with last attributed touch data
      */
-    fun getLastAttributedTouchData(callback: BranchLastAttributedTouchDataListener) {
+    fun getLastAttributedTouchData(callback: BranchLastAttributedTouchDataListener?) {
         if (applicationContext != null) {
             handleNewRequest(
                 ServerRequestGetLATD(

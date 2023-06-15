@@ -86,7 +86,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         Branch.expectDelayedSessionInitialization(true);
 
         if (branchKey == null) {
-            branch = Branch.getAutoInstance(getTestContext());
+            branch = Branch.Companion.getAutoInstance(getTestContext());
         } else {
             branch = Branch.getAutoInstance(getTestContext(), branchKey);
         }
