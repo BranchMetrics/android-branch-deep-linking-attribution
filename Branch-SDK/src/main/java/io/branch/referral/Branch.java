@@ -92,54 +92,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * with a referral program, incentivized or not.
      */
     public static final String FEATURE_TAG_REFERRAL = "referral";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_INVITE = "invite";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_DEAL = "deal";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_GIFT = "gift";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REDEEM_CODE = "$redeem_code";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_BUCKET_DEFAULT = "default";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_CODE_TYPE = "credit";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_CODE = "referral_code";
     
     /**
      * The redirect URL provided when the link is handled by a desktop client.
@@ -166,16 +118,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * The redirect URL provided when the link is handled by an Amazon Fire device.
      */
     public static final String REDIRECT_FIRE_URL = "$fire_url";
-    
-    /**
-     * The redirect URL provided when the link is handled by a Blackberry device.
-     */
-    public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
-    
-    /**
-     * The redirect URL provided when the link is handled by a Windows Phone device.
-     */
-    public static final String REDIRECT_WINDOWS_PHONE_URL = "$windows_phone_url";
     
     /**
      * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
@@ -650,16 +592,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public boolean isTrackingDisabled() {
         return trackingController.isTrackingDisabled();
     }
-    
-    /**
-     * @deprecated This method is deprecated since INSTALL_REFERRER broadcasts were discontinued on 3/2020.
-     * And Branch SDK bundles Play Store Referrer library since v4.2.2
-     * Please use {@link #setPlayStoreReferrerCheckTimeout(long)} instead.
-     */
-    public static void enablePlayStoreReferrer(long delay) {
-        setPlayStoreReferrerCheckTimeout(delay);
-    }
-    
+
     /**
      * Set timeout for Play Store Referrer library. Play Store Referrer library allows Branch to provide
      * more accurate tracking and attribution. This delays Branch initialization only the first time user opens the app.
@@ -834,13 +767,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void setDeepLinkDebugMode(JSONObject debugParams) {
         deeplinkDebugParams_ = debugParams;
-    }
-    
-    /**
-     * @deprecated Branch is not listing external apps any more from v2.11.0
-     */
-    public void disableAppList() {
-        // Do nothing
     }
     
     /**
@@ -1271,83 +1197,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-    
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void loadRewards() { /* no-op */ }
 
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void loadRewards(BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCredits() { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCreditsForBucket(String bucket) { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(int count, BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(@NonNull final String bucket, final int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(@NonNull final String bucket,
-                              final int count, BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(BranchListResponseListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener
-            callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(@NonNull final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(final String bucket, final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
-    
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
      * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
@@ -2700,13 +2550,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     /**
-     * @deprecated use Branch.bypassWaitingForIntent(true)
-     */
-    @Deprecated
-    public static void enableForcedSession() { bypassWaitingForIntent(true); }
-
-
-    /**
      * <p> Use this method cautiously, it is meant to enable the ability to start a session before
      * the user opens the app.
      *
@@ -2726,21 +2569,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     @SuppressWarnings("WeakerAccess")
     public static void bypassWaitingForIntent(boolean bypassIntent) { bypassWaitingForIntent_ = bypassIntent; }
 
-    /**
-     * @deprecated use Branch.bypassWaitingForIntent(false)
-     */
-    @Deprecated
-    public static void disableForcedSession() { bypassWaitingForIntent(false); }
 
     /**
      * Returns true if session initialization should bypass waiting for intent (retrieved after onResume).
      *
      * @return {@link Boolean} with value true to enable forced session
      *
-     * @deprecated use Branch.isWaitingForIntent()
      */
-    @Deprecated
-    public static boolean isForceSessionEnabled() { return isWaitingForIntent(); }
     @SuppressWarnings("WeakerAccess")
     public static boolean isWaitingForIntent() { return !bypassWaitingForIntent_; }
     
@@ -3340,170 +3175,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         else {
             PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
         }
-    }
-
-    //-------------------------- DEPRECATED --------------------------------------//
-
-    /**
-     * <p> Legacy class for building a share link dialog. Use {@link BranchShareSheetBuilder} instead. </p>
-     */
-    @Deprecated public static class ShareLinkBuilder extends BranchShareSheetBuilder {
-        @Deprecated public ShareLinkBuilder(Activity activity, JSONObject parameters) { super(activity, parameters); }
-        @Deprecated public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) { super(activity, shortLinkBuilder); }
-        public ShareLinkBuilder setMessage(String message) { super.setMessage(message); return this; }
-        public ShareLinkBuilder setSubject(String subject) { super.setSubject(subject); return this; }
-        public ShareLinkBuilder addTag(String tag) { super.addTag(tag); return this; }
-        public ShareLinkBuilder addTags(ArrayList<String> tags) { super.addTags(tags); return this; }
-        public ShareLinkBuilder setFeature(String feature) { super.setFeature(feature); return this; }
-        public ShareLinkBuilder setStage(String stage) { super.setStage(stage); return this; }
-        public ShareLinkBuilder setCallback(BranchLinkShareListener callback) { super.setCallback(callback); return this; }
-        public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) { super.setChannelProperties(channelPropertiesCallback); return this; }
-        public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) { super.addPreferredSharingOption(preferredOption); return this; }
-        public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) { super.addPreferredSharingOptions(preferredOptions); return this; }
-        public ShareLinkBuilder addParam(String key, String value) { super.addParam(key, value); return this; }
-        public ShareLinkBuilder setDefaultURL(String url) { super.setDefaultURL(url); return this; }
-        public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) { super.setMoreOptionStyle(icon, label); return this; }
-        public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) { super.setMoreOptionStyle(drawableIconID, stringLabelID); return this; }
-        public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) { super.setCopyUrlStyle(icon, label, message); return this; }
-        public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) { super.setCopyUrlStyle(drawableIconID, stringLabelID, stringMessageID); return this; }
-        public ShareLinkBuilder setAlias(String alias) { super.setAlias(alias); return this; }
-        public ShareLinkBuilder setMatchDuration(int matchDuration) { super.setMatchDuration(matchDuration); return this; }
-        public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) { super.setAsFullWidthStyle(setFullWidthStyle); return this; }
-        public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) { super.setDialogThemeResourceID(styleResourceID); return this; }
-        public ShareLinkBuilder setDividerHeight(int height) { super.setDividerHeight(height); return this; }
-        public ShareLinkBuilder setSharingTitle(String title) { super.setSharingTitle(title); return this; }
-        public ShareLinkBuilder setSharingTitle(View titleView) { super.setSharingTitle(titleView); return this; }
-        public ShareLinkBuilder setIconSize(int iconSize) { super.setIconSize(iconSize); return this; }
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) { super.excludeFromShareSheet(packageName); return this; }
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) { super.excludeFromShareSheet(packageName); return this; }
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) { super.excludeFromShareSheet(packageNames); return this; }
-        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) { super.includeInShareSheet(packageName); return this; }
-        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) { super.includeInShareSheet(packageName); return this; }
-        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) { super.includeInShareSheet(packageNames); return this; }
-    }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback) { Branch.sessionBuilder(null).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).init(); */
-    public boolean initSession(BranchReferralInitListener callback) { Branch.sessionBuilder(null).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).init(); */
-    public boolean initSession(BranchReferralInitListener callback, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {Branch.sessionBuilder(null).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, Uri data) {Branch.sessionBuilder(null).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).init(); */
-    public boolean initSession() {Branch.sessionBuilder(null).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).init(); */
-    public boolean initSession(Activity activity) {Branch.sessionBuilder(activity).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init(); */
-    public boolean initSessionForced(BranchReferralInitListener callback) { Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withData(data).init(); */
-    public boolean initSessionWithData(Uri data) {Branch.sessionBuilder(null).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withData(data).init(); */
-    public boolean initSessionWithData(Uri data, Activity activity) {Branch.sessionBuilder(activity).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).isReferrable(isReferrable).init(); */
-    public boolean initSession(boolean isReferrable) {Branch.sessionBuilder(null).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).isReferrable(isReferrable).init(); */
-    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {Branch.sessionBuilder(activity).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) { Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit(); */
-    public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit();*/
-    public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
-
-    /**
-     * @deprecated setDebug is deprecated and all functionality has been disabled. If you wish to enable
-     * logging, please invoke enableLogging. If you wish to simulate installs, please see add a Test Device
-     * (https://help.branch.io/using-branch/docs/adding-test-devices) then reset your test device's data
-     * (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * If you wish to use the test key rather than the live key, please invoke enableTestMode.
-     */
-    public void setDebug() {
-        PrefHelper.LogAlways("setDebug is deprecated and all functionality has been disabled. " +
-                "If you wish to enable logging, please invoke enableLogging. If you wish to simulate installs," +
-                " please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
-                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data). " +
-                "If you wish to use the test key rather than the live key, please invoke enableTestMode.");
-    }
-
-    /**
-     * @deprecated enableDebugMode is deprecated and all functionality has been disabled. If you wish to enable
-     * logging, please invoke enableLogging. If you wish to simulate installs, please see add a Test Device
-     * (https://help.branch.io/using-branch/docs/adding-test-devices) then reset your test device's data
-     * (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * If you wish to use the test key rather than the live key, please invoke enableTestMode.
-     */
-    public static void enableDebugMode() {
-        PrefHelper.LogAlways("enableDebugMode is deprecated and all functionality has been disabled. " +
-                "If you wish to enable logging, please invoke enableLogging. If you wish to simulate installs," +
-                " please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
-                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data). " +
-                "If you wish to use the test key rather than the live key, please invoke enableTestMode.");
-    }
-
-    /** @deprecated (deprecated and all functionality has been disabled, see enableDebugMode for more information) */
-    public static void disableDebugMode() {}
-
-    /**
-     * @deprecated enableSimulateInstalls is deprecated and all functionality has been disabled. If
-     * you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
-     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * */
-    public static void enableSimulateInstalls() {
-        PrefHelper.LogAlways("enableSimulateInstalls is deprecated and all functionality has been disabled. " +
-                "If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
-                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
-    }
-
-    /** @deprecated see enableSimulateInstalls() for more information */
-    public static void disableSimulateInstalls() { }
-
-    /** @deprecated use getAutoInstance(context) and the set <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> in your manifest */
-    public static Branch getInstance(@NonNull Context context) { return getAutoInstance(context); }
-
-    /** @deprecated use getAutoInstance(context) and the set <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in your manifest */
-    public static Branch getTestInstance(@NonNull Context context) {
-        Branch.enableTestMode();
-        return getAutoInstance(context);
-    }
-
-    /** @deprecated use getAutoInstance(Context), isReferrable functionality (i.e. treating opens as installs) is discontinued. */
-    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) { return getAutoInstance(context); }
-
-    /** @deprecated use Branch.enableTestMode() together with getAutoInstance(Context) */
-    public static Branch getAutoTestInstance(@NonNull Context context) {
-        Branch.enableTestMode();
-        return getAutoInstance(context);
-    }
-
-    /** @deprecated use getAutoInstance(Context, String) */
-    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) { return getAutoInstance(context, branchKey); }
-
-    /** @deprecated use Branch.enableTestMode() together with getAutoInstance(Context), isReferrable functionality (i.e. treating opens as installs) is discontinued. */
-    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
-        Branch.enableTestMode();
-        return getAutoInstance(context, null);
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
