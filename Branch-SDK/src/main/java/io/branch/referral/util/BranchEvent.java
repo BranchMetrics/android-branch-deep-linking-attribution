@@ -244,16 +244,11 @@ public class BranchEvent {
      * Logs this BranchEvent to Branch for tracking and analytics
      *
      * @param context Current context
-     * @return {@code true} if the event is logged to Branch
+     * @return {@code true}
      */
     public boolean logEvent(Context context) {
-        boolean isReqQueued = false;
-        Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().handleNewRequest(new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList));
-            isReqQueued = true;
-        }
-        return isReqQueued;
+        logEvent(context, null);
+        return true;
     }
 
     public interface BranchLogEventCallback {
