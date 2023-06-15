@@ -745,8 +745,7 @@ public class PrefHelper {
             params = new JSONObject(string);
         }
         catch (JSONException e) {
-            e.printStackTrace();
-            //TODO: Log e with Prefhelper.Error
+            PrefHelper.LogException("Unable to get URL query parameters as string: ", e);
         }
 
         return params;

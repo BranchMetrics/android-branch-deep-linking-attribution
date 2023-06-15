@@ -256,4 +256,41 @@ public class BranchEvent {
         return isReqQueued;
     }
 
+    public interface BranchLogEventCallback {
+        void onEventLogged(boolean success);
+        void onFailure(int errorCode, String errorMessage);
+    }
+
+    /**
+     * Logs this BranchEvent to Branch for tracking and analytics and provides a callback once the event is logged
+     *
+     * @param context  Current context
+     * @param callback A {@link BranchLogEventCallback} callback that gets triggered once the event is logged
+     */
+    public void logEvent(Context context, final BranchLogEventCallback callback) {
+        Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().handleNewRequest(
+                    new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
+                        @Override
+                        public void onRequestSucceeded(ServerResponse response, Branch branch) {
+                            if (callback != null) {
+                                callback.onEventLogged(true);
+                            }
+                        }
+
+                        @Override
+                        public void handleFailure(int statusCode, String causeMsg) {
+                            if (callback != null) {
+                                callback.onFailure(statusCode, causeMsg);
+                            }
+                        }
+                    }
+            );
+        } else if (callback != null) {
+            callback.onEventLogged(false);
+        }
+    }
+
+
 }
