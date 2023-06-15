@@ -1,712 +1,299 @@
-package io.branch.referral;
+package io.branch.referral
 
-import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
-import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
-import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
-import static io.branch.referral.BranchUtil.isTestModeEnabled;
-import static io.branch.referral.PrefHelper.isValidBranchKey;
-
-import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StyleRes;
-
-import android.os.Handler;
-import android.os.Looper;
-import android.text.TextUtils;
-import android.view.View;
-
-import androidx.core.app.ActivityCompat;
-
-import com.android.billingclient.api.Purchase;
-
-import io.branch.referral.Defines.PreinstallKey;
-import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.network.BranchRemoteInterface;
-import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
-import io.branch.referral.util.BRANCH_STANDARD_EVENT;
-import io.branch.referral.util.BranchEvent;
-import io.branch.referral.util.CommerceEvent;
-import io.branch.referral.util.LinkProperties;
+import android.app.Activity
+import android.app.Application
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.AsyncTask
+import android.os.Handler
+import android.os.Looper
+import android.text.TextUtils
+import androidx.core.app.ActivityCompat
+import io.branch.referral.BillingGooglePlay.Companion.getInstance
+import io.branch.referral.BillingGooglePlay.startBillingClient
+import io.branch.referral.BillingGooglePlay.logEventWithPurchase
+import io.branch.referral.BranchViewHandler.IBranchViewEvents
+import io.branch.referral.SystemObserver.AdsParamsFetchEvents
+import io.branch.referral.StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents
+import io.branch.referral.StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents
+import io.branch.referral.StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents
+import io.branch.referral.StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents
+import io.branch.referral.network.BranchRemoteInterface
+import io.branch.referral.PrefHelper
+import io.branch.referral.DeviceInfo
+import io.branch.referral.BranchPluginSupport
+import io.branch.referral.BranchQRCodeCache
+import io.branch.referral.ServerRequestQueue
+import io.branch.referral.BranchLinkData
+import io.branch.referral.Branch.INTENT_STATE
+import io.branch.referral.Branch.SESSION_STATE
+import io.branch.referral.ShareLinkManager
+import io.branch.referral.BranchActivityLifecycleObserver
+import io.branch.referral.TrackingController
+import io.branch.referral.Branch.BranchReferralInitListener
+import io.branch.referral.Branch.InitSessionBuilder
+import io.branch.referral.network.BranchRemoteInterfaceUrlConnection
+import io.branch.referral.Defines.PreinstallKey
+import io.branch.referral.ServerRequest
+import io.branch.referral.ServerRequestRegisterClose
+import io.branch.referral.Defines
+import io.branch.referral.StoreReferrerUtils
+import io.branch.referral.UniversalResourceAnalyser
+import io.branch.referral.ServerRequestIdentifyUserRequest
+import io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener
+import io.branch.referral.ServerRequestGetCPID
+import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener
+import io.branch.referral.ServerRequestGetLATD
+import io.branch.referral.Branch.LogoutStatusListener
+import io.branch.referral.ServerRequestLogout
+import io.branch.referral.ServerRequestActionCompleted
+import io.branch.referral.util.CommerceEvent
+import io.branch.referral.util.BRANCH_STANDARD_EVENT
+import io.branch.referral.ServerRequestCreateUrl
+import io.branch.referral.BranchShareSheetBuilder
+import io.branch.referral.ServerResponse
+import io.branch.referral.Branch.GetShortLinkTask
+import io.branch.referral.ServerRequestRegisterInstall
+import io.branch.referral.BranchError
+import io.branch.referral.Branch.BranchPostTask
+import io.branch.referral.ServerRequestInitSession
+import io.branch.referral.BranchUtil
+import io.branch.referral.DeferredAppLinkDataHandler
+import io.branch.referral.DeferredAppLinkDataHandler.AppLinkFetchEvents
+import io.branch.referral.StoreReferrerGooglePlayStore
+import io.branch.referral.StoreReferrerHuaweiAppGallery
+import io.branch.referral.StoreReferrerSamsungGalaxyStore
+import io.branch.referral.StoreReferrerXiaomiGetApps
+import io.branch.referral.ServerRequestRegisterOpen
+import io.branch.referral.BranchStrongMatchHelper
+import io.branch.referral.BranchStrongMatchHelper.StrongMatchCheckEvents
+import io.branch.indexing.BranchUniversalObject
+import io.branch.referral.Branch.BranchLinkShareListener
+import io.branch.referral.BranchAsyncTask
+import io.branch.indexing.BranchUniversalObject.RegisterViewStatusListener
+import io.branch.referral.util.BranchEvent
+import io.branch.referral.Branch.BranchUniversalReferralInitListener
+import io.branch.referral.BranchUniversalReferralInitWrapper
+import com.android.billingclient.api.Purchase
+import io.branch.referral.BillingGooglePlay
+import io.branch.referral.BranchPreinstall
+import io.branch.referral.InstantAppUtil
+import io.branch.referral.util.LinkProperties
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.UnsupportedEncodingException
+import java.lang.Exception
+import java.lang.ref.WeakReference
+import java.net.HttpURLConnection
+import java.net.URLEncoder
+import java.util.HashMap
+import java.util.concurrent.*
 
 /**
- * <p>
+ *
+ *
  * The core object required when using Branch SDK. You should declare an object of this type at
  * the class-level of each Activity or Fragment that you wish to use Branch functionality within.
- * </p>
- * <p>
+ *
+ *
+ *
  * Normal instantiation of this object would look like this:
- * </p>
- * <!--
- * <pre style="background:#fff;padding:10px;border:2px solid silver;">
- * Branch.getInstance(this.getApplicationContext()) // from an Activity
- * Branch.getInstance(getActivity().getApplicationContext())    // from a Fragment
- * </pre>
- * -->
+ *
+ *
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
-
-    private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
-    private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
-
-    /**
-     * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that
-     * are shared with others directly as a user action, via social media for instance.
-     */
-    public static final String FEATURE_TAG_SHARE = "share";
-    
-    /**
-     * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are associated
-     * with a referral program, incentivized or not.
-     */
-    public static final String FEATURE_TAG_REFERRAL = "referral";
-    
-    /**
-     * The redirect URL provided when the link is handled by a desktop client.
-     */
-    public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
-    
-    /**
-     * The redirect URL provided when the link is handled by an Android device.
-     */
-    public static final String REDIRECT_ANDROID_URL = "$android_url";
-    
-    /**
-     * The redirect URL provided when the link is handled by an iOS device.
-     */
-    public static final String REDIRECT_IOS_URL = "$ios_url";
-    
-    /**
-     * The redirect URL provided when the link is handled by a large form-factor iOS device such as
-     * an iPad.
-     */
-    public static final String REDIRECT_IPAD_URL = "$ipad_url";
-    
-    /**
-     * The redirect URL provided when the link is handled by an Amazon Fire device.
-     */
-    public static final String REDIRECT_FIRE_URL = "$fire_url";
-    
-    /**
-     * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
-     *
-     * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
-     */
-    public static final String OG_TITLE = "$og_title";
-    
-    /**
-     * The description of the object to appear in social media feeds that use
-     * Facebook's Open Graph specification.
-     *
-     * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
-     */
-    public static final String OG_DESC = "$og_description";
-    
-    /**
-     * An image URL which should represent your object to appear in social media feeds that use
-     * Facebook's Open Graph specification.
-     *
-     * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
-     */
-    public static final String OG_IMAGE_URL = "$og_image_url";
-    
-    /**
-     * A URL to a video file that complements this object.
-     *
-     * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
-     */
-    public static final String OG_VIDEO = "$og_video";
-    
-    /**
-     * The canonical URL of your object that will be used as its permanent ID in the graph.
-     *
-     * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
-     */
-    public static final String OG_URL = "$og_url";
-    
-    /**
-     * Unique identifier for the app in use.
-     */
-    public static final String OG_APP_ID = "$og_app_id";
-    
-    /**
-     * {@link String} value denoting the deep link path to override Branch's default one. By
-     * default, Branch will use yourapp://open?link_click_id=12345. If you specify this key/value,
-     * Branch will use yourapp://'$deeplink_path'?link_click_id=12345
-     */
-    public static final String DEEPLINK_PATH = "$deeplink_path";
-    
-    /**
-     * {@link String} value indicating whether the link should always initiate a deep link action.
-     * By default, unless overridden on the dashboard, Branch will only open the app if they are
-     * 100% sure the app is installed. This setting will cause the link to always open the app.
-     * Possible values are "true" or "false"
-     */
-    public static final String ALWAYS_DEEPLINK = "$always_deeplink";
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, the user applying the referral code receives credit.
-     */
-    public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, the user who created the referral code receives credit.
-     */
-    public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, both the creator and applicant receive credit
-     */
-    public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
-    
-    /**
-     * An {@link Integer} value indicating the calculation type of the referral code. In this case,
-     * the referral code can be applied continually.
-     */
-    public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
-    
-    /**
-     * An {@link Integer} value indicating the calculation type of the referral code. In this case,
-     * a user can only apply a specific referral code once.
-     */
-    public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
-    
-    /**
-     * An {@link Integer} value indicating the link type. In this case, the link can be used an
-     * unlimited number of times.
-     */
-    public static final int LINK_TYPE_UNLIMITED_USE = 0;
-    
-    /**
-     * An {@link Integer} value indicating the link type. In this case, the link can be used only
-     * once. After initial use, subsequent attempts will not validate.
-     */
-    public static final int LINK_TYPE_ONE_TIME_USE = 1;
-
-    /**
-     * If true, instantiate a new webview instance ui thread to retrieve user agent string
-     */
-    static boolean userAgentSync;
-
-    /**
-     * Package private user agent string cached to save on repeated queries
-     */
-    static String _userAgentString = "";
-
+class Branch private constructor(context: Context) : IBranchViewEvents, AdsParamsFetchEvents,
+    IGoogleInstallReferrerEvents, IHuaweiInstallReferrerEvents, ISamsungInstallReferrerEvents,
+    IXiaomiInstallReferrerEvents {
     /* Json object containing key-value pairs for debugging deep linking */
-    private JSONObject deeplinkDebugParams_;
-    
-    private static boolean disableDeviceIDFetch_;
-    
-    private boolean enableFacebookAppLinkCheck_ = false;
-    
-    static boolean bypassWaitingForIntent_ = false;
-    
-    private static boolean bypassCurrentActivityIntentState_ = false;
-
-    static boolean disableAutoSessionInitialization;
-
-    static boolean checkInstallReferrer_ = true;
-    private static long playStoreReferrerWaitTime = 1500;
-    public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
-
-    static boolean referringLinkAttributionForPreinstalledAppsEnabled = false;
-    
-    /**
-     * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
-     * the class during application runtime.</p>
-     */
-    private static Branch branchReferral_;
-
-    private BranchRemoteInterface branchRemoteInterface_;
-    final PrefHelper prefHelper_;
-    private final DeviceInfo deviceInfo_;
-    private final BranchPluginSupport branchPluginSupport_;
-    private final Context context_;
-
-    private final BranchQRCodeCache branchQRCodeCache_;
-
-    private final Semaphore serverSema_ = new Semaphore(1);
-
-    final ServerRequestQueue requestQueue_;
-    
-    int networkCount_ = 0;
-
-    final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
-
-    /* Set to true when {@link Activity} life cycle callbacks are registered. */
-    private static boolean isActivityLifeCycleCallbackRegistered_ = false;
-
+    private var deeplinkDebugParams_: JSONObject? = null
+    private var enableFacebookAppLinkCheck_ = false
+    private var branchRemoteInterface_: BranchRemoteInterface
+    val prefHelper: PrefHelper?
+    val deviceInfo: DeviceInfo
+    val branchPluginSupport: BranchPluginSupport
+    val applicationContext: Context?
+    val branchQRCodeCache: BranchQRCodeCache
+    private val serverSema_ = Semaphore(1)
+    @JvmField
+    val requestQueue_: ServerRequestQueue?
+    var networkCount_ = 0
+    @JvmField
+    val linkCache_ = ConcurrentHashMap<BranchLinkData, String?>()
 
     /* Enumeration for defining session initialisation state. */
-    enum SESSION_STATE {
+    enum class SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
     }
-    
-    
-    enum INTENT_STATE {
-        PENDING,
-        READY
+
+    enum class INTENT_STATE {
+        PENDING, READY
     }
 
     /* Holds the current intent state. Default is set to PENDING. */
-    private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
-    
-    /* Holds the current Session state. Default is set to UNINITIALISED. */
-    SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
+    private var intentState_ = INTENT_STATE.PENDING
 
-    /* */
-    static boolean deferInitForPluginRuntime = false;
+    /* Holds the current Session state. Default is set to UNINITIALISED. */
+    var initState = SESSION_STATE.UNINITIALISED
 
     /* Flag to indicate if the `v1/close` is expected by the server at the end of this session. */
-    public boolean closeRequestNeeded = false;
+    @JvmField
+    var closeRequestNeeded = false
 
     /* Instance  of share link manager to share links automatically with third party applications. */
-    private ShareLinkManager shareLinkManager_;
-    
+    var shareLinkManager: ShareLinkManager? = null
+        private set
+
     /* The current activity instance for the application.*/
-    WeakReference<Activity> currentActivityReference_;
-    
-    /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
-    private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
-    
-    /* Path for $deeplink_path or $android_deeplink_path to auto deep link. The activities which need to automatically deep linked should define in this in the activity metadata. */
-    private static final String AUTO_DEEP_LINK_PATH = "io.branch.sdk.auto_link_path";
-    
-    /* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
-    private static final String AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable";
-    
-    /*Key for defining a request code for an activity. should be added as a metadata for an activity. This is used as a request code for launching a an activity on auto deep link. */
-    private static final String AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code";
-    
-    /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
-    private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
-    
-    final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
+    @JvmField
+    var currentActivityReference_: WeakReference<Activity>? = null
+    val instrumentationExtraData_ = ConcurrentHashMap<String, String>()
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
-    private boolean isGAParamsFetchInProgress_ = false;
-
-    private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
-    
-    private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
-    
-    /* List of keys whose values are collected from the Intent Extra.*/
-    private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[]{
-            "extra_launch_uri",   // Key for embedded uri in FB ads triggered intents
-            "branch_intent"       // A boolean that specifies if this intent is originated by Branch
-    };
-
-    public static String installDeveloperId = null;
-
-    CountDownLatch getFirstReferringParamsLatch = null;
-    CountDownLatch getLatestReferringParamsLatch = null;
-
-    private boolean waitingForHuaweiInstallReferrer = false;
-    private boolean waitingForGoogleInstallReferrer = false;
-    private boolean waitingForSamsungInstallReferrer = false;
-    private boolean waitingForXiaomiInstallReferrer = false;
+    var isGAParamsFetchInProgress = false
+    var getFirstReferringParamsLatch: CountDownLatch? = null
+    var getLatestReferringParamsLatch: CountDownLatch? = null
+    private var waitingForHuaweiInstallReferrer = false
+    private var waitingForGoogleInstallReferrer = false
+    private var waitingForSamsungInstallReferrer = false
+    private var waitingForXiaomiInstallReferrer = false
 
     /* Flag for checking of Strong matching is waiting on GAID fetch */
-    private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
-    private boolean isInstantDeepLinkPossible = false;
-    private BranchActivityLifecycleObserver activityLifeCycleObserver;
-    /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
-    private static boolean enableInstantDeepLinking = false;
-    private final TrackingController trackingController;
-
-    /** Variables for reporting plugin type and version (some TUNE customers do that), plus helps
-     * us make data driven decisions. */
-    private static String pluginVersion = null;
-    private static String pluginName = null;
-
-    private BranchReferralInitListener deferredCallback;
-    private Uri deferredUri;
-    private InitSessionBuilder deferredSessionBuilder;
+    private var performCookieBasedStrongMatchingOnGAIDAvailable = false
+    private var isInstantDeepLinkPossible = false
+    private var activityLifeCycleObserver: BranchActivityLifecycleObserver? = null
+    val trackingController: TrackingController
+    private val deferredCallback: BranchReferralInitListener? = null
+    private val deferredUri: Uri? = null
+    private var deferredSessionBuilder: InitSessionBuilder? = null
 
     /**
-     * <p>The main constructor of the Branch class is private because the class uses the Singleton
-     * pattern.</p>
-     * <p>Use {@link #getAutoInstance(Context)} method when instantiating.</p>
      *
-     * @param context A {@link Context} from which this call was made.
-     */
-    private Branch(@NonNull Context context) {
-        context_ = context;
-        prefHelper_ = PrefHelper.getInstance(context);
-        trackingController = new TrackingController(context);
-        branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
-        deviceInfo_ = new DeviceInfo(context);
-        branchPluginSupport_ = new BranchPluginSupport(context);
-        branchQRCodeCache_ = new BranchQRCodeCache(context);
-        requestQueue_ = ServerRequestQueue.getInstance(context);
-        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
-        }
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-     * Make sure your app is instantiating {@link BranchApp} before calling this method
-     * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
+     * The main constructor of the Branch class is private because the class uses the Singleton
+     * pattern.
      *
-     * @return An initialised singleton {@link Branch} object
-     */
-    synchronized public static Branch getInstance() {
-        if (branchReferral_ == null) {
-            PrefHelper.Debug("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
-        }
-        return branchReferral_;
-    }
-
-    synchronized private static Branch initBranchSDK(@NonNull Context context, String branchKey) {
-        if (branchReferral_ != null) {
-            PrefHelper.Debug("Warning, attempted to reinitialize Branch SDK singleton!");
-            return branchReferral_;
-        }
-        branchReferral_ = new Branch(context.getApplicationContext());
-
-        if (TextUtils.isEmpty(branchKey)) {
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
-            branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
-        } else {
-            branchReferral_.prefHelper_.setBranchKey(branchKey);
-        }
-
-        /* If {@link Application} is instantiated register for activity life cycle events. */
-        if (context instanceof Application) {
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
-        }
-
-        // Cache the user agent from a webview instance if needed
-        if(userAgentSync && DeviceInfo.getInstance() != null){
-            DeviceInfo.getInstance().getUserAgentStringSync(context);
-        }
-
-        return branchReferral_;
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+     * Use [.getAutoInstance] method when instantiating.
      *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
+     * @param context A [Context] from which this call was made.
      */
-    synchronized public static Branch getAutoInstance(@NonNull Context context) {
-        if (branchReferral_ == null) {
-            if(BranchUtil.getEnableLoggingConfig(context)){
-                enableLogging();
-            }
-
-            // Should only be set in json config
-            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
-
-            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
-            branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
-            getPreinstallSystemData(branchReferral_, context);
+    init {
+        applicationContext = context
+        prefHelper = PrefHelper.getInstance(context)
+        trackingController = TrackingController(context)
+        branchRemoteInterface_ = BranchRemoteInterfaceUrlConnection(this)
+        deviceInfo = DeviceInfo(context)
+        branchPluginSupport = BranchPluginSupport(context)
+        branchQRCodeCache = BranchQRCodeCache(context)
+        requestQueue_ = ServerRequestQueue.getInstance(context)
+        if (!trackingController.isTrackingDisabled) { // Do not get GAID when tracking is disabled
+            isGAParamsFetchInProgress = deviceInfo.systemObserver.prefetchAdsParams(context, this)
         }
-        return branchReferral_;
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey A {@link String} value used to initialize Branch.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
-        if (branchReferral_ == null) {
-            if(BranchUtil.getEnableLoggingConfig(context)){
-                enableLogging();
-            }
-
-            // Should only be set in json config
-            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
-
-            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
-            // If a Branch key is passed already use it. Else read the key
-            if (!isValidBranchKey(branchKey)) {
-                PrefHelper.Debug("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
-                branchKey = BranchUtil.readBranchKey(context);
-            }
-            branchReferral_ = initBranchSDK(context, branchKey);
-            getPreinstallSystemData(branchReferral_, context);
-        }
-        return branchReferral_;
-    }
-
-    public Context getApplicationContext() {
-        return context_;
     }
 
     /**
      * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
      * Branch SDK and remote Branch server
      *
-     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with
-     *                        implementation for abstract RESTful GET or POST methods, if null
-     *                        is passed, the SDK will use its default.
+     * @param remoteInterface A instance of class extending [BranchRemoteInterface] with
+     * implementation for abstract RESTful GET or POST methods, if null
+     * is passed, the SDK will use its default.
      */
-    public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
-        if (remoteInterface == null) {
-            branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
-        } else {
-            branchRemoteInterface_ = remoteInterface;
+    var branchRemoteInterface: BranchRemoteInterface?
+        get() = branchRemoteInterface_
+        set(remoteInterface) {
+            branchRemoteInterface_ = remoteInterface ?: BranchRemoteInterfaceUrlConnection(this)
         }
-    }
-
-    public BranchRemoteInterface getBranchRemoteInterface() {
-        return branchRemoteInterface_;
-    }
-    
-    /**
-     * <p>
-     * Enables the test mode for the SDK. This will use the Branch Test Keys. This is same as setting
-     * "io.branch.sdk.TestMode" to "True" in Manifest file.
-     *
-     * Note: As of v5.0.1, enableTestMode has been changed. It now uses the test key but will not log or randomize
-     * the device IDs. If you wish to enable logging, please invoke enableLogging. If you wish to simulate
-     * installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
-     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * </p>
-     */
-    public static void enableTestMode() {
-        BranchUtil.setTestMode(true);
-        PrefHelper.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
-                " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
-                " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
-                " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
-    }
-
-    /**
-     * <p>
-     * Disables the test mode for the SDK.
-     * </p>
-     */
-    public static void disableTestMode() {
-        BranchUtil.setTestMode(false);
-    }
 
     /**
      * Disable (or re-enable) ad network callouts. This setting is persistent.
      *
      * @param disabled (@link Boolean) whether ad network callouts should be disabled.
      */
-    public void disableAdNetworkCallouts(boolean disabled) {
-        PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
-    }
-
-    /**
-     * Temporarily disables auto session initialization until user initializes themselves.
-     *
-     * Context: Branch expects session initialization to be started in LauncherActivity.onStart(),
-     * if session initialization has not been started/completed by the time ANY Activity resumes,
-     * Branch will auto-initialize. This allows Branch to keep an accurate count of all app sessions,
-     * including instances when app is launched from a recent apps list and the first visible Activity
-     * is not LauncherActivity.
-     *
-     * However, in certain scenarios users may need to delay session initialization (e.g. to asynchronously
-     * retrieve some data that needs to be passed to Branch prior to session initialization). In those
-     * cases, use expectDelayedSessionInitialization() to temporarily disable auto self initialization.
-     * Once the user initializes the session themselves, the flag will be reset and auto session initialization
-     * will be re-enabled.
-     *
-     * @param expectDelayedInit A {@link Boolean} to set the expectation flag.
-     */
-    public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
-        disableAutoSessionInitialization = expectDelayedInit;
-    }
-
-    /**
-     * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
-     * @param url The {@link String} URL base URL that the Branch API uses.
-     */
-    public static void setAPIUrl(String url) {
-        PrefHelper.setAPIUrl(url);
-    }
-
-    /**
-     * <p>Sets a custom CDN base URL.</p>
-     * @param url The {@link String} base URL for CDN endpoints.
-     */
-    public static void setCDNBaseUrl(String url) {
-        PrefHelper.setCDNBaseUrl(url);
+    fun disableAdNetworkCallouts(disabled: Boolean) {
+        PrefHelper.getInstance(applicationContext).adNetworkCalloutsDisabled = disabled
     }
 
     /**
      * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      */
-    public void disableTracking(boolean disableTracking) {
-        trackingController.disableTracking(context_, disableTracking);
+    fun disableTracking(disableTracking: Boolean) {
+        trackingController.disableTracking(applicationContext, disableTracking)
     }
-    
+
     /**
-     * Checks if tracking is disabled. See {@link #disableTracking(boolean)}
+     * Checks if tracking is disabled. See [.disableTracking]
      *
-     * @return {@code true} if tracking is disabled
+     * @return `true` if tracking is disabled
      */
-    public boolean isTrackingDisabled() {
-        return trackingController.isTrackingDisabled();
-    }
+    val isTrackingDisabled: Boolean
+        get() = trackingController.isTrackingDisabled
 
     /**
-     * Set timeout for Play Store Referrer library. Play Store Referrer library allows Branch to provide
-     * more accurate tracking and attribution. This delays Branch initialization only the first time user opens the app.
-     * This method allows to override the maximum wait time for play store referrer to arrive.
-     * <p>
      *
-     * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds. Set to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
+     * Manually sets the [Boolean] value, that indicates that the Branch API connection has
+     * been initialised, to false - forcing re-initialisation.
      */
-    public static void setPlayStoreReferrerCheckTimeout(long delay) {
-        checkInstallReferrer_ = delay > 0;
-        playStoreReferrerWaitTime = delay;
-    }
-    
-    /**
-     * <p>
-     * Disables or enables the instant deep link functionality.
-     * </p>
-     *
-     * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
-     */
-    public static void disableInstantDeepLinking(boolean disableIDL) {
-        enableInstantDeepLinking = !disableIDL;
+    fun resetUserSession() {
+        initState = SESSION_STATE.UNINITIALISED
     }
 
-    // Package Private
-    // For Unit Testing, we need to reset the Branch state
-    static void shutDown() {
-        ServerRequestQueue.shutDown();
-        PrefHelper.shutDown();
-        BranchUtil.shutDown();
-
-        // BranchStrongMatchHelper.shutDown();
-        // BranchViewHandler.shutDown();
-        // DeepLinkRoutingValidator.shutDown();
-        // GooglePlayStoreAttribution.shutDown();
-        // InstantAppUtil.shutDown();
-        // IntegrationValidator.shutDown();
-        // ShareLinkManager.shutDown();
-        // UniversalResourceAnalyser.shutDown();
-
-        // Release these contexts immediately.
-
-        // Reset all of the statics.
-        branchReferral_ = null;
-        bypassCurrentActivityIntentState_ = false;
-        enableInstantDeepLinking = false;
-        isActivityLifeCycleCallbackRegistered_ = false;
-
-        bypassWaitingForIntent_ = false;
-
-        checkInstallReferrer_ = true;
-    }
-
-
-    /**
-     * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has
-     * been initialised, to false - forcing re-initialisation.</p>
-     */
-    public void resetUserSession() {
-        setInitState(SESSION_STATE.UNINITIALISED);
-    }
-    
     /**
      * Sets the max number of times to re-attempt a timed-out request to the Branch API, before
      * considering the request to have failed entirely. Default to 3. Note that the the network
-     * timeout, as set in {@link #setNetworkTimeout(int)}, together with the retry interval value from
-     * {@link #setRetryInterval(int)} will determine if the max retry count will be attempted.
+     * timeout, as set in [.setNetworkTimeout], together with the retry interval value from
+     * [.setRetryInterval] will determine if the max retry count will be attempted.
      *
-     * @param retryCount An {@link Integer} specifying the number of times to retry before giving
-     *                   up and declaring defeat.
+     * @param retryCount An [Integer] specifying the number of times to retry before giving
+     * up and declaring defeat.
      */
-    public void setRetryCount(int retryCount) {
-        if (prefHelper_ != null && retryCount >= 0) {
-            prefHelper_.setRetryCount(retryCount);
+    fun setRetryCount(retryCount: Int) {
+        if (prefHelper != null && retryCount >= 0) {
+            prefHelper.retryCount = retryCount
         }
     }
-    
+
     /**
      * Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
      * to the Branch API. Default 1000 ms.
      *
-     * @param retryInterval An {@link Integer} value specifying the number of milliseconds to
-     *                      wait before re-attempting a timed-out request.
+     * @param retryInterval An [Integer] value specifying the number of milliseconds to
+     * wait before re-attempting a timed-out request.
      */
-    public void setRetryInterval(int retryInterval) {
-        if (prefHelper_ != null && retryInterval > 0) {
-            prefHelper_.setRetryInterval(retryInterval);
-        }
-    }
-    
-    /**
-     * <p>Sets the duration in milliseconds that the system should wait for a response before timing
-     * out any Branch API. Default 5500 ms. Note that this is the total time allocated for all request
-     * retries as set in {@link #setRetryCount(int)}.
-     *
-     * @param timeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the request to have timed out.
-     */
-    public void setNetworkTimeout(int timeout) {
-        if (prefHelper_ != null && timeout > 0) {
-            prefHelper_.setTimeout(timeout);
+    fun setRetryInterval(retryInterval: Int) {
+        if (prefHelper != null && retryInterval > 0) {
+            prefHelper.retryInterval = retryInterval
         }
     }
 
     /**
-     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
-     * * request.</p>
      *
-     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the initialization to have timed out.
+     * Sets the duration in milliseconds that the system should wait for a response before timing
+     * out any Branch API. Default 5500 ms. Note that this is the total time allocated for all request
+     * retries as set in [.setRetryCount].
+     *
+     * @param timeout An [Integer] value specifying the number of milliseconds to wait before
+     * considering the request to have timed out.
      */
-    public void setNetworkConnectTimeout(int connectTimeout) {
-        if (prefHelper_ != null && connectTimeout > 0) {
-            prefHelper_.setConnectTimeout(connectTimeout);
+    fun setNetworkTimeout(timeout: Int) {
+        if (prefHelper != null && timeout > 0) {
+            prefHelper.timeout = timeout
+        }
+    }
+
+    /**
+     *
+     * Sets the duration in milliseconds that the system should wait for initializing a network
+     * * request.
+     *
+     * @param connectTimeout An [Integer] value specifying the number of milliseconds to wait before
+     * considering the initialization to have timed out.
+     */
+    fun setNetworkConnectTimeout(connectTimeout: Int) {
+        if (prefHelper != null && connectTimeout > 0) {
+            prefHelper.connectTimeout = connectTimeout
         }
     }
 
@@ -718,9 +305,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Defaults to 3
      * @param retryMax
      */
-    public void setNoConnectionRetryMax(int retryMax){
-        if(prefHelper_ != null && retryMax > 0){
-            prefHelper_.setNoConnectionRetryMax(retryMax);
+    fun setNoConnectionRetryMax(retryMax: Int) {
+        if (prefHelper != null && retryMax > 0) {
+            prefHelper.noConnectionRetryMax = retryMax
         }
     }
 
@@ -731,302 +318,225 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * By default, the window is set to 30 days, or 2592000000L in millseconds
      * Minimum of 0 milliseconds
      * Maximum of 3 years
-     * @param window A {@link Long} value specifying the number of milliseconds to wait before
-     *               deleting the locally persisted GCLID value.
+     * @param window A [Long] value specifying the number of milliseconds to wait before
+     * deleting the locally persisted GCLID value.
      */
-    public void setReferrerGclidValidForWindow(long window){
-        if(prefHelper_ != null){
-            prefHelper_.setReferrerGclidValidForWindow(window);
+    fun setReferrerGclidValidForWindow(window: Long) {
+        if (prefHelper != null) {
+            prefHelper.referrerGclidValidForWindow = window
         }
     }
-    
-    /**
-     * Method to control reading Android ID from device. Set this to true to disable reading the device id.
-     * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getAutoInstance(Context)}
-     *
-     * @param deviceIdFetch {@link Boolean with value true to disable reading the Android id from device}
-     */
-    public static void disableDeviceIDFetch(Boolean deviceIdFetch) {
-        disableDeviceIDFetch_ = deviceIdFetch;
-    }
-    
-    /**
-     * Returns true if reading device id is disabled
-     *
-     * @return {@link Boolean} with value true to disable reading Andoid ID
-     */
-    public static boolean isDeviceIDFetchDisabled() {
-        return disableDeviceIDFetch_;
-    }
-    
+
     /**
      * Sets the key-value pairs for debugging the deep link. The key-value set in debug mode is given back with other deep link data on branch init session.
      * This method should be called from onCreate() of activity which listens to Branch Init Session callbacks
      *
-     * @param debugParams A {@link JSONObject} containing key-value pairs for debugging branch deep linking
+     * @param debugParams A [JSONObject] containing key-value pairs for debugging branch deep linking
      */
-    public void setDeepLinkDebugMode(JSONObject debugParams) {
-        deeplinkDebugParams_ = debugParams;
+    fun setDeepLinkDebugMode(debugParams: JSONObject?) {
+        deeplinkDebugParams_ = debugParams
     }
-    
+
     /**
-     * <p>
+     *
+     *
      * Enable Facebook app link check operation during Branch initialisation.
-     * </p>
+     *
      */
-    public void enableFacebookAppLinkCheck() {
-        enableFacebookAppLinkCheck_ = true;
+    fun enableFacebookAppLinkCheck() {
+        enableFacebookAppLinkCheck_ = true
     }
-    
+
     /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
      *
-     * @param isLimitFacebookTracking {@code true} to limit app tracking
+     * @param isLimitFacebookTracking `true` to limit app tracking
      */
-    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
-        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
+    fun setLimitFacebookTracking(isLimitFacebookTracking: Boolean) {
+        prefHelper!!.setLimitFacebookTracking(isLimitFacebookTracking)
     }
 
     /**
-     * <p>Add key value pairs to all requests</p>
+     *
+     * Add key value pairs to all requests
      */
-    public void setRequestMetadata(@NonNull String key, @NonNull String value) {
-        prefHelper_.setRequestMetadata(key, value);
+    fun setRequestMetadata(key: String, value: String) {
+        prefHelper!!.setRequestMetadata(key, value)
     }
 
     /**
-     * <p>
+     *
+     *
      * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
      * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
      * A better place to call this  method is right after Branch#getAutoInstance()
-     * </p>
-     */
-    public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
-        prefHelper_.addInstallMetadata(key, value);
-        return this;
-    }
-
-    /**
-     * <p>
-     *   wrapper method to add the pre-install campaign analytics
-     * </p>
-     */
-    public Branch setPreinstallCampaign(@NonNull String preInstallCampaign) {
-        addInstallMetadata(PreinstallKey.campaign.getKey(), preInstallCampaign);
-        return this;
-    }
-
-    /**
-     * <p>
-     *   wrapper method to add the pre-install campaign analytics
-     * </p>
-     */
-    public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
-        addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
-        return this;
-    }
-
-    /**
-     * Enables referring url attribution for preinstalled apps.
      *
-     * By default, Branch prioritizes preinstall attribution on preinstalled apps.
-     * Some clients prefer the referring link, when present, to be prioritized over preinstall attribution.
      */
-    public static void setReferringLinkAttributionForPreinstalledAppsEnabled() {
-        referringLinkAttributionForPreinstalledAppsEnabled = true;
+    fun addInstallMetadata(key: String, value: String): Branch {
+        prefHelper!!.addInstallMetadata(key, value)
+        return this
     }
 
-    public static boolean isReferringLinkAttributionForPreinstalledAppsEnabled() {
-        return referringLinkAttributionForPreinstalledAppsEnabled;
+    /**
+     *
+     *
+     * wrapper method to add the pre-install campaign analytics
+     *
+     */
+    fun setPreinstallCampaign(preInstallCampaign: String): Branch {
+        addInstallMetadata(PreinstallKey.campaign.key, preInstallCampaign)
+        return this
     }
 
-    public static void setIsUserAgentSync(boolean sync){
-        userAgentSync = sync;
+    /**
+     *
+     *
+     * wrapper method to add the pre-install campaign analytics
+     *
+     */
+    fun setPreinstallPartner(preInstallPartner: String): Branch {
+        addInstallMetadata(PreinstallKey.partner.key, preInstallPartner)
+        return this
     }
-    
+
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
      */
-    void closeSessionInternal() {
-        clearPartnerParameters();
-        executeClose();
-        prefHelper_.setExternalIntentUri(null);
-        trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
+    fun closeSessionInternal() {
+        clearPartnerParameters()
+        executeClose()
+        prefHelper!!.externalIntentUri = null
+        trackingController.updateTrackingState(applicationContext) // Update the tracking state for next cold start
     }
-    
+
     /**
      * Clears all pending requests in the queue
      */
-    void clearPendingRequests() {
-        requestQueue_.clear();
+    fun clearPendingRequests() {
+        requestQueue_!!.clear()
     }
-    
+
     /**
-     * <p>
-     * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).</p>
      *
-     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
+     * Perform the state-safe actions required to terminate any open session, and report the
+     * closed application event to the Branch API.
      */
-    public static void enableCookieBasedMatching(String cookieMatchDomain) {
-        cookieBasedMatchDomain_ = cookieMatchDomain;
-    }
-    
-    /**
-     * <p>
-     * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).</p>
-     *
-     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     * @param delay             Time in millisecond to wait for the strong match to check to finish before Branch init session is called.
-     *                          Default time is 750 msec.
-     */
-    public static void enableCookieBasedMatching(String cookieMatchDomain, int delay) {
-        cookieBasedMatchDomain_ = cookieMatchDomain;
-        BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay);
-    }
-    
-    /**
-     * <p>Perform the state-safe actions required to terminate any open session, and report the
-     * closed application event to the Branch API.</p>
-     */
-    private void executeClose() {
-        if (initState_ != SESSION_STATE.UNINITIALISED) {
-            ServerRequest req = new ServerRequestRegisterClose(context_);
+    private fun executeClose() {
+        if (initState != SESSION_STATE.UNINITIALISED) {
+            val req: ServerRequest = ServerRequestRegisterClose(applicationContext)
             if (closeRequestNeeded) {
-                handleNewRequest(req);
+                handleNewRequest(req)
             } else {
-                req.onRequestSucceeded(null, null);
+                req.onRequestSucceeded(null, null)
             }
-            setInitState(SESSION_STATE.UNINITIALISED);
+            initState = SESSION_STATE.UNINITIALISED
         }
-        closeRequestNeeded = false;
+        closeRequestNeeded = false
     }
 
-    public static void registerPlugin(String name, String version) {
-        pluginName = name;
-        pluginVersion = version;
-    }
-
-    public static String getPluginVersion() {
-        return pluginVersion;
-    }
-
-    static String getPluginName() {
-        return pluginName;
-    }
-
-    private void readAndStripParam(Uri data, Activity activity) {
+    private fun readAndStripParam(data: Uri?, activity: Activity?) {
         if (enableInstantDeepLinking) {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
             // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
             // In the latter case, IDL works only partially because the callback is delayed until onResume.
-            boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
-                    !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
+            val activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
+                    !activityLifeCycleObserver!!.isCurrentActivityLaunchedFromStack
 
             // Skip IDL if intent contains an unused Branch link.
-            boolean noUnusedBranchLinkInIntent = !isRestartSessionRequested(activity != null ? activity.getIntent() : null);
-
+            val noUnusedBranchLinkInIntent = !isRestartSessionRequested(activity?.intent)
             if (activityHasValidIntent && noUnusedBranchLinkInIntent) {
-                extractSessionParamsForIDL(data, activity);
+                extractSessionParamsForIDL(data, activity)
             }
         }
-
         if (bypassCurrentActivityIntentState_) {
-            intentState_ = INTENT_STATE.READY;
+            intentState_ = INTENT_STATE.READY
         }
-
         if (intentState_ == INTENT_STATE.READY) {
 
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
-            extractExternalUriAndIntentExtras(data, activity);
+            extractExternalUriAndIntentExtras(data, activity)
 
             // if branch link is detected we don't need to look for click ID or app link anymore and can terminate early
-            if (extractBranchLinkFromIntentExtra(activity)) return;
+            if (extractBranchLinkFromIntentExtra(activity)) return
 
             // Check for link click id or app link
             if (!isActivityLaunchedFromHistory(activity)) {
                 // if click ID is detected we don't need to look for app link anymore and can terminate early
-                if (extractClickID(data, activity)) return;
+                if (extractClickID(data, activity)) return
 
                 // Check if the clicked url is an app link pointing to this app
-                extractAppLink(data, activity);
+                extractAppLink(data, activity)
             }
         }
     }
 
-    void unlockSDKInitWaitLock() {
-        if (requestQueue_ == null) return;
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        processNextQueueItem();
+    fun unlockSDKInitWaitLock() {
+        if (requestQueue_ == null) return
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
+        processNextQueueItem()
     }
-    
-    private boolean isIntentParamsAlreadyConsumed(Activity activity) {
-        return activity != null && activity.getIntent() != null &&
-                activity.getIntent().getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
+
+    private fun isIntentParamsAlreadyConsumed(activity: Activity?): Boolean {
+        return activity != null && activity.intent != null &&
+                activity.intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.key, false)
     }
-    
-    private boolean isActivityLaunchedFromHistory(Activity activity) {
-        return activity != null && activity.getIntent() != null &&
-                (activity.getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
+
+    private fun isActivityLaunchedFromHistory(activity: Activity?): Boolean {
+        return activity != null && activity.intent != null && activity.intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
     }
 
     /**
      * Package Private.
      * @return the link which opened this application session if opened by a link click.
      */
-    String getSessionReferredLink() {
-        String link = prefHelper_.getExternalIntentUri();
-        return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
-    }
-    
-    @Override
-    public void onAdsParamsFetchFinished() {
-        isGAParamsFetchInProgress_ = false;
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+    val sessionReferredLink: String?
+        get() {
+            val link = prefHelper!!.externalIntentUri
+            return if (link == PrefHelper.NO_STRING_VALUE) null else link
+        }
+
+    override fun onAdsParamsFetchFinished() {
+        isGAParamsFetchInProgress = false
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK)
         if (performCookieBasedStrongMatchingOnGAIDAvailable) {
-            performCookieBasedStrongMatch();
-            performCookieBasedStrongMatchingOnGAIDAvailable = false;
+            performCookieBasedStrongMatch()
+            performCookieBasedStrongMatchingOnGAIDAvailable = false
         } else {
-            processNextQueueItem();
+            processNextQueueItem()
         }
     }
-    
-    @Override
-    public void onGoogleInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForGoogleInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
+
+    override fun onGoogleInstallReferrerEventsFinished() {
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK)
+        waitingForGoogleInstallReferrer = false
+        tryProcessNextQueueItemAfterInstallReferrer()
     }
 
-    @Override
-    public void onHuaweiInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForHuaweiInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
+    override fun onHuaweiInstallReferrerEventsFinished() {
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK)
+        waitingForHuaweiInstallReferrer = false
+        tryProcessNextQueueItemAfterInstallReferrer()
     }
 
-    @Override
-    public void onSamsungInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForSamsungInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
+    override fun onSamsungInstallReferrerEventsFinished() {
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK)
+        waitingForSamsungInstallReferrer = false
+        tryProcessNextQueueItemAfterInstallReferrer()
     }
 
-    @Override
-    public void onXiaomiInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForXiaomiInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
+    override fun onXiaomiInstallReferrerEventsFinished() {
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK)
+        waitingForXiaomiInstallReferrer = false
+        tryProcessNextQueueItemAfterInstallReferrer()
     }
 
-    private void tryProcessNextQueueItemAfterInstallReferrer() {
-        if(!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)){
-            String store = StoreReferrerUtils.getLatestValidReferrerStore();
-            StoreReferrerUtils.writeLatestInstallReferrer(context_, store);
-            processNextQueueItem();
+    private fun tryProcessNextQueueItemAfterInstallReferrer() {
+        if (!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)) {
+            val store = StoreReferrerUtils.getLatestValidReferrerStore()
+            StoreReferrerUtils.writeLatestInstallReferrer(applicationContext, store)
+            processNextQueueItem()
         }
     }
 
@@ -1034,88 +544,95 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
-     * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     *
+     *
+     * This method should be called immediately after calling [Branch.getAutoInstance]
      *
      * @param urlWhiteListPattern A regular expression with a URI white listing pattern
-     * @return {@link Branch} instance for successive method calls
+     * @return [Branch] instance for successive method calls
      */
-    public Branch addWhiteListedScheme(String urlWhiteListPattern) {
+    fun addWhiteListedScheme(urlWhiteListPattern: String?): Branch {
         if (urlWhiteListPattern != null) {
-            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPattern);
+            UniversalResourceAnalyser.getInstance(applicationContext)
+                .addToAcceptURLFormats(urlWhiteListPattern)
         }
-        return this;
+        return this
     }
-    
+
     /**
      * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
-     * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
-     * @return {@link Branch} instance for successive method calls
+     *
+     * This method should be called immediately after calling [Branch.getAutoInstance]
+     *
+     * @param urlWhiteListPatternList [List] of regular expressions with URI white listing pattern
+     * @return [Branch] instance for successive method calls
      */
-    public Branch setWhiteListedSchemes(List<String> urlWhiteListPatternList) {
+    fun setWhiteListedSchemes(urlWhiteListPatternList: List<String?>?): Branch {
         if (urlWhiteListPatternList != null) {
-            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPatternList);
+            UniversalResourceAnalyser.getInstance(applicationContext)
+                .addToAcceptURLFormats(urlWhiteListPatternList)
         }
-        return this;
+        return this
     }
-    
+
     /**
      * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
      * This method allows applications specify SDK to skip any additional URL patterns to be skipped
-     * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
      *
-     * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
-     * @return {@link Branch} instance for successive method calls
+     *
+     * This method should be called immediately after calling [Branch.getAutoInstance]
+     *
+     * @param urlSkipPattern [String] A URL pattern that Branch SDK should skip from collecting data
+     * @return [Branch] instance for successive method calls
      */
-    public Branch addUriHostsToSkip(String urlSkipPattern) {
-        if (!TextUtils.isEmpty(urlSkipPattern))
-            UniversalResourceAnalyser.getInstance(context_).addToSkipURLFormats(urlSkipPattern);
-        return this;
+    fun addUriHostsToSkip(urlSkipPattern: String?): Branch {
+        if (!TextUtils.isEmpty(urlSkipPattern)) UniversalResourceAnalyser.getInstance(
+            applicationContext
+        ).addToSkipURLFormats(urlSkipPattern)
+        return this
     }
-    
+
     /**
      * Check and update the URL / URI Skip list in case an update is available.
      */
-    void updateSkipURLFormats() {
-        UniversalResourceAnalyser.getInstance(context_).checkAndUpdateSkipURLFormats(context_);
+    fun updateSkipURLFormats() {
+        UniversalResourceAnalyser.getInstance(applicationContext).checkAndUpdateSkipURLFormats(
+            applicationContext
+        )
     }
-    
+
     /**
-     * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
-     * {@link String} value. No callback.</p>
      *
-     * @param userId A {@link String} value containing the unique identifier of the user.
+     * Identifies the current user to the Branch API by supplying a unique identifier as a
+     * [String] value. No callback.
+     *
+     * @param userId A [String] value containing the unique identifier of the user.
      */
-    public void setIdentity(@NonNull String userId) {
-        setIdentity(userId, null);
+    fun setIdentity(userId: String) {
+        setIdentity(userId, null)
     }
-    
+
     /**
-     * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
-     * {@link String} value, with a callback specified to perform a defined action upon successful
-     * response to request.</p>
      *
-     * @param userId   A {@link String} value containing the unique identifier of the user.
-     * @param callback A {@link BranchReferralInitListener} callback instance that will return
-     *                 the data associated with the user id being assigned, if available.
+     * Identifies the current user to the Branch API by supplying a unique identifier as a
+     * [String] value, with a callback specified to perform a defined action upon successful
+     * response to request.
+     *
+     * @param userId   A [String] value containing the unique identifier of the user.
+     * @param callback A [BranchReferralInitListener] callback instance that will return
+     * the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
-            callback) {
-
-        installDeveloperId = userId;
-
-        ServerRequestIdentifyUserRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
+    fun setIdentity(userId: String, callback: BranchReferralInitListener?) {
+        installDeveloperId = userId
+        val req = ServerRequestIdentifyUserRequest(applicationContext, callback, userId)
+        if (!req.constructError_ && !req.handleErrors(applicationContext)) {
+            handleNewRequest(req)
         } else {
-            if (req.isExistingID()) {
-                req.handleUserExist(branchReferral_);
+            if (req.isExistingID) {
+                req.handleUserExist(branchReferral_)
             }
         }
     }
@@ -1123,13 +640,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     /**
      * Gets all available cross platform ids.
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener}
-     *                to callback with cross platform ids
-     *
+     * @param callback An instance of [io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener]
+     * to callback with cross platform ids
      */
-    public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
-        if (context_ != null) {
-            handleNewRequest(new ServerRequestGetCPID(context_, callback));
+    fun getCrossPlatformIds(callback: BranchCrossPlatformIdListener) {
+        if (applicationContext != null) {
+            handleNewRequest(ServerRequestGetCPID(applicationContext, callback))
         }
     }
 
@@ -1138,29 +654,43 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
      * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
-     *                 to callback with last attributed touch data
-     *
+     * @param callback An instance of [io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener]
+     * to callback with last attributed touch data
      */
-    public void getLastAttributedTouchData(@NonNull BranchLastAttributedTouchDataListener callback) {
-        if (context_ != null) {
-            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback));
+    fun getLastAttributedTouchData(callback: BranchLastAttributedTouchDataListener) {
+        if (applicationContext != null) {
+            handleNewRequest(
+                ServerRequestGetLATD(
+                    applicationContext,
+                    Defines.RequestPath.GetLATD,
+                    callback
+                )
+            )
         }
     }
 
     /**
      * Gets the available last attributed touch data with a custom set attribution window.
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
-     *                to callback with last attributed touch data
-     * @param attributionWindow An {@link int} to bound the the window of time in days during which
-     *                          the attribution data is considered valid. Note that, server side, the
-     *                          maximum value is 90.
-     *
+     * @param callback An instance of [io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener]
+     * to callback with last attributed touch data
+     * @param attributionWindow An [int] to bound the the window of time in days during which
+     * the attribution data is considered valid. Note that, server side, the
+     * maximum value is 90.
      */
-    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
-        if (context_ != null) {
-            handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback, attributionWindow));
+    fun getLastAttributedTouchData(
+        callback: BranchLastAttributedTouchDataListener?,
+        attributionWindow: Int
+    ) {
+        if (applicationContext != null) {
+            handleNewRequest(
+                ServerRequestGetLATD(
+                    applicationContext,
+                    Defines.RequestPath.GetLATD,
+                    callback,
+                    attributionWindow
+                )
+            )
         }
     }
 
@@ -1169,221 +699,244 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * If you call setIdentity, this device will have that identity associated with this user until logout is called.
      * This includes persisting through uninstalls, as we track device id.
      *
-     * @return A {@link Boolean} value that will return <i>true</i> only if user already has an identity.
+     * @return A [Boolean] value that will return *true* only if user already has an identity.
      */
-    public boolean isUserIdentified() {
-        return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
-    }
-    
+    val isUserIdentified: Boolean
+        get() = prefHelper!!.identity != PrefHelper.NO_STRING_VALUE
     /**
-     * <p>This method should be called if you know that a different person is about to use the app. For example,
-     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
-     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
-     */
-    public void logout() {
-        logout(null);
-    }
-    
-    /**
-     * <p>This method should be called if you know that a different person is about to use the app. For example,
-     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
-     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      *
-     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
+     * This method should be called if you know that a different person is about to use the app. For example,
+     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+     * to create a new user for this device. This will clear the first and latest params, as a new session is created.
+     *
+     * @param callback An instance of [io.branch.referral.Branch.LogoutStatusListener] to callback with the logout operation status.
      */
-    public void logout(LogoutStatusListener callback) {
-        ServerRequest req = new ServerRequestLogout(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
+    /**
+     *
+     * This method should be called if you know that a different person is about to use the app. For example,
+     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+     * to create a new user for this device. This will clear the first and latest params, as a new session is created.
+     */
+    @JvmOverloads
+    fun logout(callback: LogoutStatusListener? = null) {
+        val req: ServerRequest = ServerRequestLogout(applicationContext, callback)
+        if (!req.constructError_ && !req.handleErrors(applicationContext)) {
+            handleNewRequest(req)
         }
     }
 
     /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
      *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
-     *                 user action that has just been completed.
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
+     * A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API, with additional app-defined meta data to go along with that action.
+     *
+     * @param action   A [String] value to be passed as an action that the user has carried
+     * out. For example "registered" or "logged in".
+     * @param metadata A [JSONObject] containing app-defined meta-data to be attached to a
+     * user action that has just been completed.
      */
-    @Deprecated
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
-        userCompletedAction(action, metadata, null);
+    @Deprecated(
+        """Please use {@link BranchEvent} for your event tracking use cases.
+                      Content, Lifecycle and Custom Events</a> for additional information."""
+    )
+    fun userCompletedAction(action: String, metadata: JSONObject?) {
+        userCompletedAction(action, metadata, null)
     }
-    
+
     /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API.</p>
      *
-     * @param action A {@link String} value to be passed as an action that the user has carried
-     *               out. For example "registered" or "logged in".
-     * @deprecated   Please use {@link BranchEvent} for your event tracking use cases.
-     *               Content, Lifecycle and Custom Events</a> for additional information.
+     * A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API.
+     *
+     * @param action A [String] value to be passed as an action that the user has carried
+     * out. For example "registered" or "logged in".
      */
-    @Deprecated
-    public void userCompletedAction(final String action) {
-        userCompletedAction(action, null, null);
+    @Deprecated(
+        """Please use {@link BranchEvent} for your event tracking use cases.
+                    Content, Lifecycle and Custom Events</a> for additional information."""
+    )
+    fun userCompletedAction(action: String) {
+        userCompletedAction(action, null, null)
     }
-    
+
     /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API.</p>
      *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
+     * A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API.
+     *
+     * @param action   A [String] value to be passed as an action that the user has carried
+     * out. For example "registered" or "logged in".
+     * @param callback instance of [BranchViewHandler.IBranchViewEvents] to listen Branch view events
      */
-    @Deprecated
-    public void userCompletedAction(final String action, BranchViewHandler.
-            IBranchViewEvents callback) {
-        userCompletedAction(action, null, callback);
+    @Deprecated(
+        """Please use {@link BranchEvent} for your event tracking use cases.
+                      Content, Lifecycle and Custom Events</a> for additional information."""
+    )
+    fun userCompletedAction(action: String, callback: IBranchViewEvents?) {
+        userCompletedAction(action, null, callback)
     }
-    
+
     /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
      *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
-     *                 user action that has just been completed.
-     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
+     * A void call to indicate that the user has performed a specific action and for that to be
+     * reported to the Branch API, with additional app-defined meta data to go along with that action.
+     *
+     * @param action   A [String] value to be passed as an action that the user has carried
+     * out. For example "registered" or "logged in".
+     * @param metadata A [JSONObject] containing app-defined meta-data to be attached to a
+     * user action that has just been completed.
+     * @param callback instance of [BranchViewHandler.IBranchViewEvents] to listen Branch view events
      */
-    @Deprecated
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata,
-                                    BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
-        ServerRequest req = new ServerRequestActionCompleted(context_,
-                action, null, metadata, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
+    @Deprecated(
+        """Please use {@link BranchEvent} for your event tracking use cases.
+                      Content, Lifecycle and Custom Events</a> for additional information."""
+    )
+    fun userCompletedAction(
+        action: String, metadata: JSONObject?,
+        callback: IBranchViewEvents?
+    ) {
+        PrefHelper.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.")
+        val req: ServerRequest = ServerRequestActionCompleted(
+            applicationContext,
+            action, null, metadata, callback
+        )
+        if (!req.constructError_ && !req.handleErrors(applicationContext)) {
+            handleNewRequest(req)
         }
     }
-    
-    /**
-     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
-                                  BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
-        ServerRequest req = new ServerRequestActionCompleted(context_,
-                BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
+
+    @Deprecated(
+        """Please use {@link BranchEvent} for your event tracking use cases.You can refer to
+                   Content, Lifecycle and Custom Events</a> for additional information."""
+    )
+    fun sendCommerceEvent(
+        commerceEvent: CommerceEvent, metadata: JSONObject?,
+        callback: IBranchViewEvents?
+    ) {
+        PrefHelper.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.")
+        val req: ServerRequest = ServerRequestActionCompleted(
+            applicationContext,
+            BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback
+        )
+        if (!req.constructError_ && !req.handleErrors(applicationContext)) {
+            handleNewRequest(req)
         }
     }
-    
-    /**
-     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
-        sendCommerceEvent(commerceEvent, null, null);
+
+    @Deprecated(
+        """Please use {@link BranchEvent} for your event tracking use cases.You can refer to
+                   Content, Lifecycle and Custom Events</a> for additional information."""
+    )
+    fun sendCommerceEvent(commerceEvent: CommerceEvent) {
+        sendCommerceEvent(commerceEvent, null, null)
     }
-    
+
     /**
-     * <p>Returns the parameters associated with the link that referred the user. This is only set once,
+     *
+     * Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
      * It is also only set if isReferrable is equal to true, which by default is only true
      * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
-     * user already exists from a previous device) and logout.</p>
+     * user already exists from a previous device) and logout.
      *
-     * @return A {@link JSONObject} containing the install-time parameters as configured
+     * @return A [JSONObject] containing the install-time parameters as configured
      * locally.
      */
-    public JSONObject getFirstReferringParams() {
-        String storedParam = prefHelper_.getInstallParams();
-        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
-        firstReferringParams = appendDebugParams(firstReferringParams);
-        return firstReferringParams;
+    val firstReferringParams: JSONObject?
+        get() {
+            val storedParam = prefHelper!!.installParams
+            var firstReferringParams: JSONObject? = convertParamsStringToDictionary(storedParam)
+            firstReferringParams = appendDebugParams(firstReferringParams)
+            return firstReferringParams
+        }
+
+    fun removeSessionInitializationDelay() {
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK)
+        processNextQueueItem()
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void removeSessionInitializationDelay() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-        processNextQueueItem();
-    }
-    
     /**
-     * <p>This function must be called from a non-UI thread! If Branch has no install link data,
+     *
+     * This function must be called from a non-UI thread! If Branch has no install link data,
      * and this func is called, it will return data upon initializing, or until LATCH_WAIT_UNTIL.
      * Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
      * It is also only set if isReferrable is equal to true, which by default is only true
      * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
-     * user already exists from a previous device) and logout.</p>
+     * user already exists from a previous device) and logout.
      *
-     * @return A {@link JSONObject} containing the install-time parameters as configured
+     * @return A [JSONObject] containing the install-time parameters as configured
      * locally.
      */
-    public JSONObject getFirstReferringParamsSync() {
-        getFirstReferringParamsLatch = new CountDownLatch(1);
-        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-            try {
-                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
+    val firstReferringParamsSync: JSONObject?
+        get() {
+            getFirstReferringParamsLatch = CountDownLatch(1)
+            if (prefHelper!!.installParams == PrefHelper.NO_STRING_VALUE) {
+                try {
+                    getFirstReferringParamsLatch!!.await(
+                        LATCH_WAIT_UNTIL.toLong(),
+                        TimeUnit.MILLISECONDS
+                    )
+                } catch (e: InterruptedException) {
+                }
             }
+            val storedParam = prefHelper.installParams
+            var firstReferringParams: JSONObject? = convertParamsStringToDictionary(storedParam)
+            firstReferringParams = appendDebugParams(firstReferringParams)
+            getFirstReferringParamsLatch = null
+            return firstReferringParams
         }
-        String storedParam = prefHelper_.getInstallParams();
-        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
-        firstReferringParams = appendDebugParams(firstReferringParams);
-        getFirstReferringParamsLatch = null;
-        return firstReferringParams;
-    }
-    
+
     /**
-     * <p>Returns the parameters associated with the link that referred the session. If a user
+     *
+     * Returns the parameters associated with the link that referred the session. If a user
      * clicks a link, and then opens the app, initSession will return the parameters of the link
      * and then set them in as the latest parameters to be retrieved by this method. By default,
      * sessions persist for the duration of time that the app is in focus. For example, if you
-     * minimize the app, these parameters will be cleared when closeSession is called.</p>
+     * minimize the app, these parameters will be cleared when closeSession is called.
      *
-     * @return A {@link JSONObject} containing the latest referring parameters as
+     * @return A [JSONObject] containing the latest referring parameters as
      * configured locally.
      */
-    public JSONObject getLatestReferringParams() {
-        String storedParam = prefHelper_.getSessionParams();
-        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
-        latestParams = appendDebugParams(latestParams);
-        return latestParams;
-    }
-    
+    val latestReferringParams: JSONObject?
+        get() {
+            val storedParam = prefHelper!!.sessionParams
+            var latestParams: JSONObject? = convertParamsStringToDictionary(storedParam)
+            latestParams = appendDebugParams(latestParams)
+            return latestParams
+        }
+
     /**
-     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
+     *
+     * This function must be called from a non-UI thread! If Branch has not been initialized
      * and this func is called, it will return data upon initialization, or until LATCH_WAIT_UNTIL.
      * Returns the parameters associated with the link that referred the session. If a user
      * clicks a link, and then opens the app, initSession will return the parameters of the link
      * and then set them in as the latest parameters to be retrieved by this method. By default,
      * sessions persist for the duration of time that the app is in focus. For example, if you
-     * minimize the app, these parameters will be cleared when closeSession is called.</p>
+     * minimize the app, these parameters will be cleared when closeSession is called.
      *
-     * @return A {@link JSONObject} containing the latest referring parameters as
+     * @return A [JSONObject] containing the latest referring parameters as
      * configured locally.
      */
-    public JSONObject getLatestReferringParamsSync() {
-        getLatestReferringParamsLatch = new CountDownLatch(1);
-        try {
-            if (initState_ != SESSION_STATE.INITIALISED) {
-                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+    val latestReferringParamsSync: JSONObject?
+        get() {
+            getLatestReferringParamsLatch = CountDownLatch(1)
+            try {
+                if (initState != SESSION_STATE.INITIALISED) {
+                    getLatestReferringParamsLatch!!.await(
+                        LATCH_WAIT_UNTIL.toLong(),
+                        TimeUnit.MILLISECONDS
+                    )
+                }
+            } catch (e: InterruptedException) {
             }
-        } catch (InterruptedException e) {
+            val storedParam = prefHelper!!.sessionParams
+            var latestParams: JSONObject? = convertParamsStringToDictionary(storedParam)
+            latestParams = appendDebugParams(latestParams)
+            getLatestReferringParamsLatch = null
+            return latestParams
         }
-        String storedParam = prefHelper_.getSessionParams();
-        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
-        latestParams = appendDebugParams(latestParams);
-        getLatestReferringParamsLatch = null;
-        return latestParams;
-    }
 
     /**
      * Add a Partner Parameter for Facebook.
@@ -1391,9 +944,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * See Facebook's documentation for details on valid parameters
      */
-    public void addFacebookPartnerParameterWithName(@NonNull String key, @NonNull String value) {
-        if (!trackingController.isTrackingDisabled()) {
-            prefHelper_.partnerParams_.addFacebookParameter(key, value);
+    fun addFacebookPartnerParameterWithName(key: String, value: String) {
+        if (!trackingController.isTrackingDisabled) {
+            prefHelper!!.partnerParams_.addFacebookParameter(key, value)
         }
     }
 
@@ -1403,380 +956,355 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      *
      * See Snap's documentation for details on valid parameters
      */
-    public void addSnapPartnerParameterWithName(@NonNull String key, @NonNull String value) {
-        if (!trackingController.isTrackingDisabled()) {
-            prefHelper_.partnerParams_.addSnapParameter(key, value);
+    fun addSnapPartnerParameterWithName(key: String, value: String) {
+        if (!trackingController.isTrackingDisabled) {
+            prefHelper!!.partnerParams_.addSnapParameter(key, value)
         }
     }
 
     /**
      * Clears all Partner Parameters
      */
-    public void clearPartnerParameters() {
-        prefHelper_.partnerParams_.clearAllParameters();
+    fun clearPartnerParameters() {
+        prefHelper!!.partnerParams_.clearAllParameters()
     }
-    
+
     /**
      * Append the deep link debug params to the original params
      *
-     * @param originalParams A {@link JSONObject} original referrer parameters
-     * @return A new {@link JSONObject} with debug params appended.
+     * @param originalParams A [JSONObject] original referrer parameters
+     * @return A new [JSONObject] with debug params appended.
      */
-    private JSONObject appendDebugParams(JSONObject originalParams) {
+    private fun appendDebugParams(originalParams: JSONObject?): JSONObject? {
         try {
             if (originalParams != null && deeplinkDebugParams_ != null) {
-                if (deeplinkDebugParams_.length() > 0) {
-                    PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+                if (deeplinkDebugParams_!!.length() > 0) {
+                    PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link")
                 }
-                Iterator<String> keys = deeplinkDebugParams_.keys();
+                val keys = deeplinkDebugParams_!!.keys()
                 while (keys.hasNext()) {
-                    String key = keys.next();
-                    originalParams.put(key, deeplinkDebugParams_.get(key));
+                    val key = keys.next()
+                    originalParams.put(key, deeplinkDebugParams_!![key])
                 }
             }
-        } catch (Exception ignore) {
+        } catch (ignore: Exception) {
         }
-        return originalParams;
+        return originalParams
     }
-    
-    public JSONObject getDeeplinkDebugParams() {
-        if (deeplinkDebugParams_ != null && deeplinkDebugParams_.length() > 0) {
-            PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+
+    val deeplinkDebugParams: JSONObject?
+        get() {
+            if (deeplinkDebugParams_ != null && deeplinkDebugParams_!!.length() > 0) {
+                PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link")
+            }
+            return deeplinkDebugParams_
         }
-        return deeplinkDebugParams_;
-    }
-    
-    
     //-----------------Generate Short URL      -------------------------------------------//
-    
     /**
-     * <p> Generates a shorl url for the given {@link ServerRequestCreateUrl} object </p>
      *
-     * @param req An instance  of {@link ServerRequestCreateUrl} with parameters create the short link.
+     *  Generates a shorl url for the given [ServerRequestCreateUrl] object
+     *
+     * @param req An instance  of [ServerRequestCreateUrl] with parameters create the short link.
      * @return A url created with the given request if the request is synchronous else null.
-     * Note : This method can be used only internally. Use {@link BranchUrlBuilder} for creating short urls.
+     * Note : This method can be used only internally. Use [BranchUrlBuilder] for creating short urls.
      */
-    String generateShortLinkInternal(ServerRequestCreateUrl req) {
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            if (linkCache_.containsKey(req.getLinkPost())) {
-                String url = linkCache_.get(req.getLinkPost());
-                req.onUrlAvailable(url);
-                return url;
+    fun generateShortLinkInternal(req: ServerRequestCreateUrl): String? {
+        if (!req.constructError_ && !req.handleErrors(applicationContext)) {
+            if (linkCache_.containsKey(req.linkPost)) {
+                val url = linkCache_[req.linkPost]
+                req.onUrlAvailable(url)
+                return url
             }
-            if (req.isAsync()) {
-                handleNewRequest(req);
+            if (req.isAsync) {
+                handleNewRequest(req)
             } else {
-                return generateShortLinkSync(req);
+                return generateShortLinkSync(req)
             }
         }
-        return null;
+        return null
     }
 
-
-
     /**
-     * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
-     * user selected clients.</p>
      *
-     * @param builder A {@link BranchShareSheetBuilder} instance to build share link.
+     * Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
+     * user selected clients.
+     *
+     * @param builder A [BranchShareSheetBuilder] instance to build share link.
      */
-    void shareLink(BranchShareSheetBuilder builder) {
+    fun shareLink(builder: BranchShareSheetBuilder?) {
         //Cancel any existing sharing in progress.
-        if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog(true);
+        if (shareLinkManager != null) {
+            shareLinkManager!!.cancelShareLinkDialog(true)
         }
-        shareLinkManager_ = new ShareLinkManager();
-        shareLinkManager_.shareLink(builder);
+        shareLinkManager = ShareLinkManager()
+        shareLinkManager!!.shareLink(builder)
     }
-    
+
     /**
-     * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
-     * calling this method before your activity finishes inorder to prevent any window leak. </p>
      *
-     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
-     *                     A value of true will close the dialog with an animation. Setting this value
-     *                     to false will close the Dialog immediately.
+     * Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
+     * calling this method before your activity finishes inorder to prevent any window leak.
+     *
+     * @param animateClose A [Boolean] to specify whether to close the dialog with an animation.
+     * A value of true will close the dialog with an animation. Setting this value
+     * to false will close the Dialog immediately.
      */
-    public void cancelShareLinkDialog(boolean animateClose) {
-        if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog(animateClose);
+    fun cancelShareLinkDialog(animateClose: Boolean) {
+        if (shareLinkManager != null) {
+            shareLinkManager!!.cancelShareLinkDialog(animateClose)
         }
     }
-    
+
     // PRIVATE FUNCTIONS
-    
-    private String generateShortLinkSync(ServerRequestCreateUrl req) {
-        if (trackingController.isTrackingDisabled()) {
-            return req.getLongUrl();
+    private fun generateShortLinkSync(req: ServerRequestCreateUrl): String? {
+        if (trackingController.isTrackingDisabled) {
+            return req.longUrl
         }
-        if (initState_ == SESSION_STATE.INITIALISED) {
-            ServerResponse response = null;
+        if (initState == SESSION_STATE.INITIALISED) {
+            var response: ServerResponse? = null
             try {
-                int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-                response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
+                val timeOut =
+                    prefHelper!!.timeout + 2000 // Time out is set to slightly more than link creation time to prevent any edge case
+                response = GetShortLinkTask().execute(req)[timeOut.toLong(), TimeUnit.MILLISECONDS]
+            } catch (ignore: InterruptedException) {
+            } catch (ignore: ExecutionException) {
+            } catch (ignore: TimeoutException) {
             }
-            String url = null;
-            if (req.isDefaultToLongUrl()) {
-                url = req.getLongUrl();
+            var url: String? = null
+            if (req.isDefaultToLongUrl) {
+                url = req.longUrl
             }
-            if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+            if (response != null && response.statusCode == HttpURLConnection.HTTP_OK) {
                 try {
-                    url = response.getObject().getString("url");
-                    if (req.getLinkPost() != null) {
-                        linkCache_.put(req.getLinkPost(), url);
+                    url = response.getObject().getString("url")
+                    if (req.linkPost != null) {
+                        linkCache_[req.linkPost] = url
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                } catch (e: JSONException) {
+                    e.printStackTrace()
                 }
             }
-            return url;
+            return url
         } else {
-            PrefHelper.Debug("Warning: User session has not been initialized");
+            PrefHelper.Debug("Warning: User session has not been initialized")
         }
-        return null;
+        return null
     }
-    
-    private JSONObject convertParamsStringToDictionary(String paramString) {
-        if (paramString.equals(PrefHelper.NO_STRING_VALUE)) {
-            return new JSONObject();
+
+    private fun convertParamsStringToDictionary(paramString: String): JSONObject {
+        return if (paramString == PrefHelper.NO_STRING_VALUE) {
+            JSONObject()
         } else {
             try {
-                return new JSONObject(paramString);
-            } catch (JSONException e) {
-                byte[] encodedArray = Base64.decode(paramString.getBytes(), Base64.NO_WRAP);
+                JSONObject(paramString)
+            } catch (e: JSONException) {
+                val encodedArray = Base64.decode(paramString.toByteArray(), Base64.NO_WRAP)
                 try {
-                    return new JSONObject(new String(encodedArray));
-                } catch (JSONException ex) {
-                    ex.printStackTrace();
-                    return new JSONObject();
+                    JSONObject(String(encodedArray))
+                } catch (ex: JSONException) {
+                    ex.printStackTrace()
+                    JSONObject()
                 }
             }
         }
     }
-    
-    void processNextQueueItem() {
+
+    fun processNextQueueItem() {
         try {
-            serverSema_.acquire();
-            if (networkCount_ == 0 && requestQueue_.getSize() > 0) {
-                networkCount_ = 1;
-                ServerRequest req = requestQueue_.peek();
-                
-                serverSema_.release();
+            serverSema_.acquire()
+            if (networkCount_ == 0 && requestQueue_!!.size > 0) {
+                networkCount_ = 1
+                val req = requestQueue_.peek()
+                serverSema_.release()
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
-                    if (!req.isWaitingOnProcessToFinish()) {
+                    PrefHelper.Debug("processNextQueueItem, req " + req.javaClass.simpleName)
+                    if (!req.isWaitingOnProcessToFinish) {
                         // All request except Install request need a valid RandomizedBundleToken
-                        if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            PrefHelper.Debug("Branch Error: User session has not been initialized!");
-                            networkCount_ = 0;
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                        }
-                        // Determine if a session is needed to execute (SDK-271)
-                        else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
-                            networkCount_ = 0;
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
+                        if (req !is ServerRequestRegisterInstall && !hasUser()) {
+                            PrefHelper.Debug("Branch Error: User session has not been initialized!")
+                            networkCount_ = 0
+                            req.handleFailure(BranchError.ERR_NO_SESSION, "")
+                        } else if (requestNeedsSession(req) && !isSessionAvailableForRequest) {
+                            networkCount_ = 0
+                            req.handleFailure(BranchError.ERR_NO_SESSION, "")
                         } else {
-                            executeTimedBranchPostTask(req, prefHelper_.getTaskTimeout());
+                            executeTimedBranchPostTask(req, prefHelper!!.taskTimeout)
                         }
                     } else {
-                        networkCount_ = 0;
+                        networkCount_ = 0
                     }
                 } else {
-                    requestQueue_.remove(null); //In case there is any request nullified remove it.
+                    requestQueue_.remove(null) //In case there is any request nullified remove it.
                 }
             } else {
-                serverSema_.release();
+                serverSema_.release()
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final BranchPostTask postTask = new BranchPostTask(req, latch);
-
-        postTask.executeTask();
+    private fun executeTimedBranchPostTask(req: ServerRequest, timeout: Int) {
+        val latch = CountDownLatch(1)
+        val postTask = BranchPostTask(req, latch)
+        postTask.executeTask()
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            new Thread(new Runnable() {
-                @Override public void run() {
-                    awaitTimedBranchPostTask(latch, timeout, postTask);
-                }
-            }).start();
+            Thread { awaitTimedBranchPostTask(latch, timeout, postTask) }.start()
         } else {
-            awaitTimedBranchPostTask(latch, timeout, postTask);
+            awaitTimedBranchPostTask(latch, timeout, postTask)
         }
     }
 
-    private void awaitTimedBranchPostTask(CountDownLatch latch, int timeout, BranchPostTask postTask) {
+    private fun awaitTimedBranchPostTask(
+        latch: CountDownLatch,
+        timeout: Int,
+        postTask: BranchPostTask
+    ) {
         try {
-            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
+            if (!latch.await(timeout.toLong(), TimeUnit.MILLISECONDS)) {
+                postTask.cancel(true)
+                postTask.onPostExecuteInner(
+                    ServerResponse(
+                        postTask.thisReq_.requestPath,
+                        BranchError.ERR_BRANCH_TASK_TIMEOUT,
+                        ""
+                    )
+                )
             }
-        } catch (InterruptedException e) {
-            postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
+        } catch (e: InterruptedException) {
+            postTask.cancel(true)
+            postTask.onPostExecuteInner(
+                ServerResponse(
+                    postTask.thisReq_.requestPath,
+                    BranchError.ERR_BRANCH_TASK_TIMEOUT,
+                    ""
+                )
+            )
         }
     }
 
     // Determine if a Request needs a Session to proceed.
-    private boolean requestNeedsSession(ServerRequest request) {
-        if (request instanceof ServerRequestInitSession) {
-            return false;
-        } else if (request instanceof ServerRequestCreateUrl) {
-            return false;
+    private fun requestNeedsSession(request: ServerRequest): Boolean {
+        if (request is ServerRequestInitSession) {
+            return false
+        } else if (request is ServerRequestCreateUrl) {
+            return false
         }
 
         // All other Request Types need a session.
-        return true;
+        return true
     }
 
     // Determine if a Session is available for a Request to proceed.
-    private boolean isSessionAvailableForRequest() {
-        return (hasSession() && hasRandomizedDeviceToken());
-    }
-    
-    void updateAllRequestsInQueue() {
+    private val isSessionAvailableForRequest: Boolean
+        private get() = hasSession() && hasRandomizedDeviceToken()
+
+    fun updateAllRequestsInQueue() {
         try {
-            for (int i = 0; i < requestQueue_.getSize(); i++) {
-                ServerRequest req = requestQueue_.peekAt(i);
+            for (i in 0 until requestQueue_!!.size) {
+                val req = requestQueue_.peekAt(i)
                 if (req != null) {
-                    JSONObject reqJson = req.getPost();
+                    val reqJson = req.post
                     if (reqJson != null) {
-                        if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
+                        if (reqJson.has(Defines.Jsonkey.SessionID.key)) {
+                            req.post.put(Defines.Jsonkey.SessionID.key, prefHelper!!.sessionID)
                         }
-                        if (reqJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
+                        if (reqJson.has(Defines.Jsonkey.RandomizedBundleToken.key)) {
+                            req.post.put(
+                                Defines.Jsonkey.RandomizedBundleToken.key,
+                                prefHelper!!.randomizedBundleToken
+                            )
                         }
-                        if (reqJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
+                        if (reqJson.has(Defines.Jsonkey.RandomizedDeviceToken.key)) {
+                            req.post.put(
+                                Defines.Jsonkey.RandomizedDeviceToken.key,
+                                prefHelper!!.randomizedDeviceToken
+                            )
                         }
                     }
                 }
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public TrackingController getTrackingController() {
-        return trackingController;
+    fun setIntentState(intentState: INTENT_STATE) {
+        intentState_ = intentState
     }
 
-    public DeviceInfo getDeviceInfo() {
-        return deviceInfo_;
+    private fun hasSession(): Boolean {
+        return prefHelper!!.sessionID != PrefHelper.NO_STRING_VALUE
     }
 
-    public BranchPluginSupport getBranchPluginSupport() {
-        return branchPluginSupport_;
+    fun setInstantDeepLinkPossible(instantDeepLinkPossible: Boolean) {
+        isInstantDeepLinkPossible = instantDeepLinkPossible
     }
 
-    public BranchQRCodeCache getBranchQRCodeCache() {
-        return branchQRCodeCache_;
+    fun isInstantDeepLinkPossible(): Boolean {
+        return isInstantDeepLinkPossible
     }
 
-    PrefHelper getPrefHelper() {
-        return prefHelper_;
+    private fun hasRandomizedDeviceToken(): Boolean {
+        return prefHelper!!.randomizedDeviceToken != PrefHelper.NO_STRING_VALUE
     }
 
-    boolean isGAParamsFetchInProgress() {
-        return isGAParamsFetchInProgress_;
+    private fun hasUser(): Boolean {
+        return prefHelper!!.randomizedBundleToken != PrefHelper.NO_STRING_VALUE
     }
 
-    void setGAParamsFetchInProgress(boolean GAParamsFetchInProgress) {
-        isGAParamsFetchInProgress_ = GAParamsFetchInProgress;
-    }
-
-    ShareLinkManager getShareLinkManager() {
-        return shareLinkManager_;
-    }
-
-    void setIntentState(INTENT_STATE intentState) {
-        this.intentState_ = intentState;
-    }
-
-    void setInitState(SESSION_STATE initState) {
-        this.initState_ = initState;
-    }
-
-    SESSION_STATE getInitState() {
-        return initState_;
-    }
-    
-    private boolean hasSession() {
-        return !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
-    }
-
-    public void setInstantDeepLinkPossible(boolean instantDeepLinkPossible) {
-        isInstantDeepLinkPossible = instantDeepLinkPossible;
-    }
-
-    public boolean isInstantDeepLinkPossible() {
-        return isInstantDeepLinkPossible;
-    }
-    
-    private boolean hasRandomizedDeviceToken() {
-        return !prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE);
-    }
-    
-    private boolean hasUser() {
-        return !prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE);
-    }
-    
-    private void insertRequestAtFront(ServerRequest req) {
+    private fun insertRequestAtFront(req: ServerRequest) {
         if (networkCount_ == 0) {
-            requestQueue_.insert(req, 0);
+            requestQueue_!!.insert(req, 0)
         } else {
-            requestQueue_.insert(req, 1);
+            requestQueue_!!.insert(req, 1)
         }
     }
 
-    private void initializeSession(ServerRequestInitSession initRequest, int delay) {
-        if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
-            setInitState(SESSION_STATE.UNINITIALISED);
+    private fun initializeSession(initRequest: ServerRequestInitSession, delay: Int) {
+        if (prefHelper!!.branchKey == null || prefHelper.branchKey.equals(
+                PrefHelper.NO_STRING_VALUE,
+                ignoreCase = true
+            )
+        ) {
+            initState = SESSION_STATE.UNINITIALISED
             //Report Key error on callback
             if (initRequest.callback_ != null) {
-                initRequest.callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
+                initRequest.callback_.onInitFinished(
+                    null,
+                    BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID)
+                )
             }
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's manifest");
-            return;
-        } else if (isTestModeEnabled()) {
-            PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+            PrefHelper.Debug("Warning: Please enter your branch_key in your project's manifest")
+            return
+        } else if (BranchUtil.isTestModeEnabled()) {
+            PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.")
         }
-
-        if (initState_ == SESSION_STATE.UNINITIALISED && getSessionReferredLink() == null && enableFacebookAppLinkCheck_) {
+        if (initState == SESSION_STATE.UNINITIALISED && sessionReferredLink == null && enableFacebookAppLinkCheck_) {
             // Check if opened by facebook with deferred install data
-            boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
-                    context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
-                @Override
-                public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
-                    prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
-                    if (nativeAppLinkUrl != null) {
-                        Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
-                        String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                        if (!TextUtils.isEmpty(bncLinkClickId)) {
-                            prefHelper_.setLinkClickIdentifier(bncLinkClickId);
-                        }
+            val appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
+                applicationContext
+            ) { nativeAppLinkUrl ->
+                prefHelper.isAppLinkTriggeredInit =
+                    true // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
+                if (nativeAppLinkUrl != null) {
+                    val appLinkUri = Uri.parse(nativeAppLinkUrl)
+                    val bncLinkClickId =
+                        appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.key)
+                    if (!TextUtils.isEmpty(bncLinkClickId)) {
+                        prefHelper.linkClickIdentifier = bncLinkClickId
                     }
-                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
-                    processNextQueueItem();
                 }
-            });
+                requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK)
+                processNextQueueItem()
+            }
             if (appLinkRqSucceeded) {
-                initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
+                initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK)
             }
         }
-
         if (delay > 0) {
-            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-            new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    removeSessionInitializationDelay();
-                }
-            }, delay);
+            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK)
+            Handler().postDelayed({ removeSessionInitializationDelay() }, delay.toLong())
         }
 
         // Re 'forceBranchSession':
@@ -1787,227 +1315,227 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         // todo: this is tricky for users, get rid of ForceNewBranchSession if possible. (if flag is not set, the content from Branch link is lost)
         // 2. Some users navigate their apps via Branch links so they would have to set ForceNewBranchSession to true
         // which will blow up the session count in analytics but does the job.
-        Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
-        boolean forceBranchSession = isRestartSessionRequested(intent);
-
-        if (getInitState() == SESSION_STATE.UNINITIALISED || forceBranchSession) {
+        val intent = if (currentActivity != null) currentActivity!!.intent else null
+        val forceBranchSession = isRestartSessionRequested(intent)
+        if (initState == SESSION_STATE.UNINITIALISED || forceBranchSession) {
             if (forceBranchSession && intent != null) {
-                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
+                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.key) // SDK-881, avoid double initialization
             }
-            registerAppInit(initRequest, false);
+            registerAppInit(initRequest, false)
         } else if (initRequest.callback_ != null) {
             // Else, let the user know session initialization failed because it's already initialized.
-            initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
+            initRequest.callback_.onInitFinished(
+                null,
+                BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED)
+            )
         }
     }
-    
+
     /**
      * Registers app init with params filtered from the intent. Unless ignoreIntent = true, this
      * will wait on the wait locks to complete any pending operations
      */
-     void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
-        setInitState(SESSION_STATE.INITIALISING);
-
+    fun registerAppInit(request: ServerRequestInitSession, ignoreWaitLocks: Boolean) {
+        initState = SESSION_STATE.INITIALISING
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
-            if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+            if (intentState_ != INTENT_STATE.READY && isWaitingForIntent) {
+                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK)
             }
 
             // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
             // just in case user accidentally queues up a couple install requests at the same time. During later sessions
             // request instanceof ServerRequestRegisterInstall = false
-            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
+            if (checkInstallReferrer_ && request is ServerRequestRegisterInstall) {
 
                 // We may need to check if play store services exist, in the future
                 // Obtain all needed locks before executing any fetches
-                if(!StoreReferrerGooglePlayStore.hasBeenUsed) {
-                    waitingForGoogleInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                if (!StoreReferrerGooglePlayStore.hasBeenUsed) {
+                    waitingForGoogleInstallReferrer = true
+                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
-
                 if (classExists("com.huawei.hms.ads.installreferrer.api.InstallReferrerClient")
-                && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
-                    waitingForHuaweiInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    && !StoreReferrerHuaweiAppGallery.hasBeenUsed
+                ) {
+                    waitingForHuaweiInstallReferrer = true
+                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
-
                 if (classExists("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient")
-                && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
-                    waitingForSamsungInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    && !StoreReferrerSamsungGalaxyStore.hasBeenUsed
+                ) {
+                    waitingForSamsungInstallReferrer = true
+                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
-
                 if (classExists("com.miui.referrer.api.GetAppsReferrerClient")
-                && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
-                    waitingForXiaomiInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    && !StoreReferrerXiaomiGetApps.hasBeenUsed
+                ) {
+                    waitingForXiaomiInstallReferrer = true
+                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
-
-                if(waitingForGoogleInstallReferrer){
-                    StoreReferrerGooglePlayStore.fetch(context_, this);
+                if (waitingForGoogleInstallReferrer) {
+                    StoreReferrerGooglePlayStore.fetch(applicationContext, this)
                 }
-
-                if(waitingForHuaweiInstallReferrer){
-                    StoreReferrerHuaweiAppGallery.fetch(context_, this);
+                if (waitingForHuaweiInstallReferrer) {
+                    StoreReferrerHuaweiAppGallery.fetch(applicationContext, this)
                 }
-
-                if(waitingForSamsungInstallReferrer){
-                    StoreReferrerSamsungGalaxyStore.fetch(context_, this);
+                if (waitingForSamsungInstallReferrer) {
+                    StoreReferrerSamsungGalaxyStore.fetch(applicationContext, this)
                 }
-
-                if(waitingForXiaomiInstallReferrer){
-                    StoreReferrerXiaomiGetApps.fetch(context_, this);
+                if (waitingForXiaomiInstallReferrer) {
+                    StoreReferrerXiaomiGetApps.fetch(applicationContext, this)
                 }
 
                 // StoreReferrer error are thrown synchronously, so we remove
                 // *_INSTALL_REFERRER_FETCH_WAIT_LOCK manually
                 if (StoreReferrerGooglePlayStore.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
                 if (StoreReferrerHuaweiAppGallery.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
                 if (StoreReferrerSamsungGalaxyStore.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
                 if (StoreReferrerXiaomiGetApps.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK)
                 }
             }
         }
-
-        if (isGAParamsFetchInProgress_) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        if (isGAParamsFetchInProgress) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK)
         }
-
-        ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+        val r = requestQueue_!!.selfInitRequest
         if (r == null) {
-            insertRequestAtFront(request);
-            processNextQueueItem();
+            insertRequestAtFront(request)
+            processNextQueueItem()
         } else {
-            r.callback_ = request.callback_;
+            r.callback_ = request.callback_
         }
     }
 
-    private boolean classExists(String className) {
-        try  {
-            Class.forName(className);
-            return true;
-        }  catch (ClassNotFoundException e) {
-            PrefHelper.Debug("Could not find " + className + ". If expected, import the dependency into your app.");
-            return false;
+    private fun classExists(className: String): Boolean {
+        return try {
+            Class.forName(className)
+            true
+        } catch (e: ClassNotFoundException) {
+            PrefHelper.Debug("Could not find $className. If expected, import the dependency into your app.")
+            false
         }
     }
-    
-    ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
-        ServerRequestInitSession request;
-        if (hasUser()) {
+
+    fun getInstallOrOpenRequest(
+        callback: BranchReferralInitListener?,
+        isAutoInitialization: Boolean
+    ): ServerRequestInitSession {
+        val request: ServerRequestInitSession
+        request = if (hasUser()) {
             // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback, isAutoInitialization);
+            ServerRequestRegisterOpen(applicationContext, callback, isAutoInitialization)
         } else {
             // If no user this is an Install
-            request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
+            ServerRequestRegisterInstall(applicationContext, callback, isAutoInitialization)
         }
-        return request;
+        return request
     }
-    
-    void onIntentReady(@NonNull Activity activity) {
-        setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
-        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
-
+    fun onIntentReady(activity: Activity) {
+        setIntentState(INTENT_STATE.READY)
+        requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK)
+        val grabIntentParams = activity.intent != null && initState != SESSION_STATE.INITIALISED
         if (grabIntentParams) {
-            Uri intentData = activity.getIntent().getData();
-            readAndStripParam(intentData, activity);
+            val intentData = activity.intent.data
+            readAndStripParam(intentData, activity)
             // Check for cookie based matching only if Tracking is enabled
-            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null &&
-                    prefHelper_.getBranchKey() != null &&
-                    !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-                if (isGAParamsFetchInProgress_) {
+            if (!isTrackingDisabled && cookieBasedMatchDomain_ != null && prefHelper!!.branchKey != null &&
+                !prefHelper.branchKey.equals(PrefHelper.NO_STRING_VALUE, ignoreCase = true)
+            ) {
+                if (isGAParamsFetchInProgress) {
                     // Wait for GAID to Available
-                    performCookieBasedStrongMatchingOnGAIDAvailable = true;
+                    performCookieBasedStrongMatchingOnGAIDAvailable = true
                 } else {
-                    performCookieBasedStrongMatch();
+                    performCookieBasedStrongMatch()
                 }
             }
         }
-        processNextQueueItem();
+        processNextQueueItem()
     }
 
-    private void performCookieBasedStrongMatch() {
-        if (!trackingController.isTrackingDisabled()) {
-            if (context_ != null) {
-                requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context_, cookieBasedMatchDomain_,
-                        deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
-                    @Override
-                    public void onStrongMatchCheckFinished() {
-                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
-                        processNextQueueItem();
-                    }
-                });
+    private fun performCookieBasedStrongMatch() {
+        if (!trackingController.isTrackingDisabled) {
+            if (applicationContext != null) {
+                requestQueue_!!.setStrongMatchWaitLock()
+                BranchStrongMatchHelper.getInstance().checkForStrongMatch(
+                    applicationContext, cookieBasedMatchDomain_,
+                    deviceInfo, prefHelper
+                ) {
+                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK)
+                    processNextQueueItem()
+                }
             }
         }
     }
-    
+
     /**
      * Handles execution of a new request other than open or install.
      * Checks for the session initialisation and adds a install/Open request in front of this request
      * if the request need session to execute.
      *
-     * @param req The {@link ServerRequest} to execute
+     * @param req The [ServerRequest] to execute
      */
-    public void handleNewRequest(ServerRequest req) {
+    fun handleNewRequest(req: ServerRequest) {
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
-        if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
-            PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
-            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
-            return;
+        if (trackingController.isTrackingDisabled && !req.prepareExecuteWithoutTracking()) {
+            PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.path + "]")
+            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "")
+            return
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            if ((req instanceof ServerRequestLogout)) {
-                req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                PrefHelper.Debug("Branch is not initialized, cannot logout");
-                return;
+        if (initState != SESSION_STATE.INITIALISED && req !is ServerRequestInitSession) {
+            if (req is ServerRequestLogout) {
+                req.handleFailure(BranchError.ERR_NO_SESSION, "")
+                PrefHelper.Debug("Branch is not initialized, cannot logout")
+                return
             }
-            if ((req instanceof ServerRequestRegisterClose)) {
-                PrefHelper.Debug("Branch is not initialized, cannot close session");
-                return;
+            if (req is ServerRequestRegisterClose) {
+                PrefHelper.Debug("Branch is not initialized, cannot close session")
+                return
             }
             if (requestNeedsSession(req)) {
-                req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
+                req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
             }
         }
-
-        requestQueue_.enqueue(req);
-        req.onRequestQueued();
-
-        processNextQueueItem();
+        requestQueue_!!.enqueue(req)
+        req.onRequestQueued()
+        processNextQueueItem()
     }
 
     /**
      * Notify Branch when network is available in order to process the next request in the queue.
      */
-    public void notifyNetworkAvailable() {
-        processNextQueueItem();
+    fun notifyNetworkAvailable() {
+        processNextQueueItem()
     }
 
-    private void setActivityLifeCycleObserver(Application application) {
+    private fun setActivityLifeCycleObserver(application: Application) {
         try {
-            activityLifeCycleObserver = new BranchActivityLifecycleObserver();
-            /* Set an observer for activity life cycle events. */
-            application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
-            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
-            isActivityLifeCycleCallbackRegistered_ = true;
-            
-        } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
-            isActivityLifeCycleCallbackRegistered_ = false;
-            /* LifeCycleEvents are  available only from API level 14. */
-            PrefHelper.Debug(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+            activityLifeCycleObserver = BranchActivityLifecycleObserver()
+            /* Set an observer for activity life cycle events. */application.unregisterActivityLifecycleCallbacks(
+                activityLifeCycleObserver
+            )
+            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver)
+            isActivityLifeCycleCallbackRegistered_ = true
+        } catch (Ex: NoSuchMethodError) {
+            isActivityLifeCycleCallbackRegistered_ = false
+            /* LifeCycleEvents are  available only from API level 14. */PrefHelper.Debug(
+                BranchError(
+                    "",
+                    BranchError.ERR_API_LVL_14_NEEDED
+                ).message
+            )
+        } catch (Ex: NoClassDefFoundError) {
+            isActivityLifeCycleCallbackRegistered_ = false
+            PrefHelper.Debug(BranchError("", BranchError.ERR_API_LVL_14_NEEDED).message)
         }
     }
 
@@ -2015,200 +1543,232 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
      * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app (namely, LauncherActivity) is in foreground.
      */
-    boolean isRestartSessionRequested(Intent intent) {
-        return checkIntentForSessionRestart(intent) || checkIntentForUnusedBranchLink(intent);
+    fun isRestartSessionRequested(intent: Intent?): Boolean {
+        return checkIntentForSessionRestart(intent) || checkIntentForUnusedBranchLink(intent)
     }
 
-    private boolean checkIntentForSessionRestart(Intent intent) {
-        boolean forceSessionIntentKeyPresent = false;
+    private fun checkIntentForSessionRestart(intent: Intent?): Boolean {
+        var forceSessionIntentKeyPresent = false
         if (intent != null) {
-            forceSessionIntentKeyPresent = intent.getBooleanExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), false);
+            forceSessionIntentKeyPresent =
+                intent.getBooleanExtra(Defines.IntentKeys.ForceNewBranchSession.key, false)
         }
-        return forceSessionIntentKeyPresent;
+        return forceSessionIntentKeyPresent
     }
 
-    private boolean checkIntentForUnusedBranchLink(Intent intent) {
-        boolean hasUnusedBranchLink = false;
+    private fun checkIntentForUnusedBranchLink(intent: Intent?): Boolean {
+        var hasUnusedBranchLink = false
         if (intent != null) {
-            boolean hasBranchLink = intent.getStringExtra(Defines.IntentKeys.BranchURI.getKey()) != null;
-            boolean branchLinkNotConsumedYet = !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
-            hasUnusedBranchLink = hasBranchLink && branchLinkNotConsumedYet;
+            val hasBranchLink = intent.getStringExtra(Defines.IntentKeys.BranchURI.key) != null
+            val branchLinkNotConsumedYet =
+                !intent.getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.key, false)
+            hasUnusedBranchLink = hasBranchLink && branchLinkNotConsumedYet
         }
-        return hasUnusedBranchLink;
+        return hasUnusedBranchLink
     }
-    
+
     /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchReferralInitListener}, defining a single method that takes a list of params in
-     * {@link JSONObject} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
+     *
+     * An Interface class that is implemented by all classes that make use of
+     * [BranchReferralInitListener], defining a single method that takes a list of params in
+     * [JSONObject] format, and an error message of [BranchError] format that will be
+     * returned on failure of the request response.
      *
      * @see JSONObject
+     *
      * @see BranchError
      */
-    public interface BranchReferralInitListener {
-        void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error);
+    interface BranchReferralInitListener {
+        fun onInitFinished(referringParams: JSONObject?, error: BranchError?)
     }
-    
+
     /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchUniversalReferralInitListener}, defining a single method that provides
-     * {@link BranchUniversalObject}, {@link LinkProperties} and an error message of {@link BranchError} format that will be
+     *
+     * An Interface class that is implemented by all classes that make use of
+     * [BranchUniversalReferralInitListener], defining a single method that provides
+     * [BranchUniversalObject], [LinkProperties] and an error message of [BranchError] format that will be
      * returned on failure of the request response.
-     * In case of an error the value for {@link BranchUniversalObject} and {@link LinkProperties} are set to null.</p>
+     * In case of an error the value for [BranchUniversalObject] and [LinkProperties] are set to null.
      *
      * @see BranchUniversalObject
+     *
      * @see LinkProperties
+     *
      * @see BranchError
      */
-    public interface BranchUniversalReferralInitListener {
-        void onInitFinished(@Nullable BranchUniversalObject branchUniversalObject, @Nullable LinkProperties linkProperties, @Nullable BranchError error);
+    interface BranchUniversalReferralInitListener {
+        fun onInitFinished(
+            branchUniversalObject: BranchUniversalObject?,
+            linkProperties: LinkProperties?,
+            error: BranchError?
+        )
     }
-    
-    
+
     /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchReferralStateChangedListener}, defining a single method that takes a value of
-     * {@link Boolean} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
+     *
+     * An Interface class that is implemented by all classes that make use of
+     * [BranchReferralStateChangedListener], defining a single method that takes a value of
+     * [Boolean] format, and an error message of [BranchError] format that will be
+     * returned on failure of the request response.
      *
      * @see Boolean
+     *
      * @see BranchError
      */
-    public interface BranchReferralStateChangedListener {
-        void onStateChanged(boolean changed, @Nullable BranchError error);
+    interface BranchReferralStateChangedListener {
+        fun onStateChanged(changed: Boolean, error: BranchError?)
     }
-    
+
     /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchLinkCreateListener}, defining a single method that takes a URL
-     * {@link String} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
+     *
+     * An Interface class that is implemented by all classes that make use of
+     * [BranchLinkCreateListener], defining a single method that takes a URL
+     * [String] format, and an error message of [BranchError] format that will be
+     * returned on failure of the request response.
      *
      * @see String
+     *
      * @see BranchError
      */
-    public interface BranchLinkCreateListener {
-        void onLinkCreate(String url, BranchError error);
+    interface BranchLinkCreateListener {
+        fun onLinkCreate(url: String?, error: BranchError?)
     }
-    
+
     /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
+     *
+     * An Interface class that is implemented by all classes that make use of
+     * [BranchLinkShareListener], defining methods to listen for link sharing status.
      */
-    public interface BranchLinkShareListener {
+    interface BranchLinkShareListener {
         /**
-         * <p> Callback method to update when share link dialog is launched.</p>
+         *
+         *  Callback method to update when share link dialog is launched.
          */
-        void onShareLinkDialogLaunched();
-        
+        fun onShareLinkDialogLaunched()
+
         /**
-         * <p> Callback method to update when sharing dialog is dismissed.</p>
+         *
+         *  Callback method to update when sharing dialog is dismissed.
          */
-        void onShareLinkDialogDismissed();
-        
+        fun onShareLinkDialogDismissed()
+
         /**
-         * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
+         *
+         *  Callback method to update the sharing status. Called on sharing completed or on error.
          *
          * @param sharedLink    The link shared to the channel.
          * @param sharedChannel Channel selected for sharing.
-         * @param error         A {@link BranchError} to update errors, if there is any.
+         * @param error         A [BranchError] to update errors, if there is any.
          */
-        void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
-        
+        fun onLinkShareResponse(sharedLink: String?, sharedChannel: String?, error: BranchError?)
+
         /**
-         * <p>Called when user select a channel for sharing a deep link.
+         *
+         * Called when user select a channel for sharing a deep link.
          * Branch will create a deep link for the selected channel and share with it after calling this
          * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
          * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
-         * and sharing complete.</p>
+         * and sharing complete.
          *
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
-        void onChannelSelected(String channelName);
+        fun onChannelSelected(channelName: String?)
     }
-    
+
     /**
-     * <p>An extended version of {@link BranchLinkShareListener} with callback that supports updating link data or properties after user select a channel to share
-     * This will provide the extended callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} only when sharing a link using Branch Universal Object.</p>
+     *
+     * An extended version of [BranchLinkShareListener] with callback that supports updating link data or properties after user select a channel to share
+     * This will provide the extended callback [.onChannelSelected] only when sharing a link using Branch Universal Object.
      */
-    public interface ExtendedBranchLinkShareListener extends BranchLinkShareListener {
+    interface ExtendedBranchLinkShareListener : BranchLinkShareListener {
         /**
-         * <p>
+         *
+         *
          * Called when user select a channel for sharing a deep link.
-         * This method allows modifying the link data and properties by providing the params  {@link BranchUniversalObject} and {@link LinkProperties}
-         * </p>
+         * This method allows modifying the link data and properties by providing the params  [BranchUniversalObject] and [LinkProperties]
+         *
          *
          * @param channelName    The name of the channel user selected for sharing a link
-         * @param buo            {@link BranchUniversalObject} BUO used for sharing link for updating any params
-         * @param linkProperties {@link LinkProperties} associated with the sharing link for updating the properties
-         * @return Return {@code true} to create link with any updates added to the data ({@link BranchUniversalObject}) or to the properties ({@link LinkProperties}).
-         * Return {@code false} otherwise.
+         * @param buo            [BranchUniversalObject] BUO used for sharing link for updating any params
+         * @param linkProperties [LinkProperties] associated with the sharing link for updating the properties
+         * @return Return `true` to create link with any updates added to the data ([BranchUniversalObject]) or to the properties ([LinkProperties]).
+         * Return `false` otherwise.
          */
-        boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
+        fun onChannelSelected(
+            channelName: String?,
+            buo: BranchUniversalObject?,
+            linkProperties: LinkProperties?
+        ): Boolean
     }
-    
+
     /**
-     * <p>An interface class for customizing sharing properties with selected channel.</p>
+     *
+     * An interface class for customizing sharing properties with selected channel.
      */
-    public interface IChannelProperties {
+    interface IChannelProperties {
         /**
          * @param channel The name of the channel selected for sharing.
-         * @return {@link String} with value for the message title for sharing the link with the selected channel
+         * @return [String] with value for the message title for sharing the link with the selected channel
          */
-        String getSharingTitleForChannel(String channel);
-        
+        fun getSharingTitleForChannel(channel: String?): String?
+
         /**
          * @param channel The name of the channel selected for sharing.
-         * @return {@link String} with value for the message body for sharing the link with the selected channel
+         * @return [String] with value for the message body for sharing the link with the selected channel
          */
-        String getSharingMessageForChannel(String channel);
+        fun getSharingMessageForChannel(channel: String?): String?
     }
-    
+
     /**
-     * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchListResponseListener}, defining a single method that takes a list of
-     * {@link JSONArray} format, and an error message of {@link BranchError} format that will be
-     * returned on failure of the request response.</p>
+     *
+     * An Interface class that is implemented by all classes that make use of
+     * [BranchListResponseListener], defining a single method that takes a list of
+     * [JSONArray] format, and an error message of [BranchError] format that will be
+     * returned on failure of the request response.
      *
      * @see JSONArray
+     *
      * @see BranchError
      */
-    public interface BranchListResponseListener {
-        void onReceivingResponse(JSONArray list, BranchError error);
+    interface BranchListResponseListener {
+        fun onReceivingResponse(list: JSONArray?, error: BranchError?)
     }
-    
+
     /**
-     * <p>
+     *
+     *
      * Callback interface for listening logout status
-     * </p>
+     *
      */
-    public interface LogoutStatusListener {
+    interface LogoutStatusListener {
         /**
          * Called on finishing the the logout process
          *
-         * @param loggedOut A {@link Boolean} which is set to true if logout succeeded
-         * @param error     An instance of {@link BranchError} to notify any error occurred during logout.
-         *                  A null value is set if logout succeeded.
+         * @param loggedOut A [Boolean] which is set to true if logout succeeded
+         * @param error     An instance of [BranchError] to notify any error occurred during logout.
+         * A null value is set if logout succeeded.
          */
-        void onLogoutFinished(boolean loggedOut, BranchError error);
+        fun onLogoutFinished(loggedOut: Boolean, error: BranchError?)
     }
-    
+
     /**
-     * <p>enum containing the sort options for return of credit history.</p>
+     *
+     * enum containing the sort options for return of credit history.
      */
-    public enum CreditHistoryOrder {
+    enum class CreditHistoryOrder {
         kMostRecentFirst, kLeastRecentFirst
     }
-    
+
     /**
      * Async Task to create  a short link for synchronous methods
      */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
+    private inner class GetShortLinkTask : AsyncTask<ServerRequest?, Void?, ServerResponse>() {
+        protected override fun doInBackground(vararg serverRequests: ServerRequest): ServerResponse {
+            return branchRemoteInterface_.make_restful_post(
+                serverRequests[0].post,
+                prefHelper!!.apiBaseUrl + Defines.RequestPath.GetURL.path,
+                Defines.RequestPath.GetURL.path, prefHelper.branchKey
+            )
         }
     }
 
@@ -2218,699 +1778,552 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
      * published in the main thread.
      */
-    private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
-        ServerRequest thisReq_;
-        final CountDownLatch latch_;
-
-        public BranchPostTask(ServerRequest request, CountDownLatch latch) {
-            super();
-            thisReq_ = request;
-            latch_ = latch;
+    private inner class BranchPostTask(var thisReq_: ServerRequest, val latch_: CountDownLatch?) :
+        BranchAsyncTask<Void?, Void?, ServerResponse?>() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+            thisReq_.onPreExecute()
+            thisReq_.doFinalUpdateOnMainThread()
         }
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            thisReq_.onPreExecute();
-            thisReq_.doFinalUpdateOnMainThread();
-        }
-
-        @Override
-        protected ServerResponse doInBackground(Void... voids) {
+        protected override fun doInBackground(vararg voids: Void): ServerResponse {
             // update queue wait time
-            addExtraInstrumentationData(thisReq_.getRequestPath() + "-" + Defines.Jsonkey.Queue_Wait_Time.getKey(), String.valueOf(thisReq_.getQueueWaitTime()));
-            thisReq_.doFinalUpdateOnBackgroundThread();
-            if (isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+            addExtraInstrumentationData(
+                thisReq_.requestPath + "-" + Defines.Jsonkey.Queue_Wait_Time.key,
+                thisReq_.queueWaitTime.toString()
+            )
+            thisReq_.doFinalUpdateOnBackgroundThread()
+            if (isTrackingDisabled && !thisReq_.prepareExecuteWithoutTracking()) {
+                return ServerResponse(
+                    thisReq_.requestPath,
+                    BranchError.ERR_BRANCH_TRACKING_DISABLED,
+                    ""
+                )
             }
-            String branchKey = prefHelper_.getBranchKey();
-            ServerResponse result;
-            if (thisReq_.isGetRequest()) {
-                result = getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
+            val branchKey = prefHelper!!.branchKey
+            val result: ServerResponse
+            result = if (thisReq_.isGetRequest) {
+                branchRemoteInterface!!.make_restful_get(
+                    thisReq_.requestUrl,
+                    thisReq_.getParams,
+                    thisReq_.requestPath,
+                    branchKey
+                )
             } else {
-                result = getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+                branchRemoteInterface!!.make_restful_post(
+                    thisReq_.getPostWithInstrumentationValues(
+                        instrumentationExtraData_
+                    ), thisReq_.requestUrl, thisReq_.requestPath, branchKey
+                )
             }
-            if (latch_ != null) {
-                latch_.countDown();
-            }
-            return result;
+            latch_?.countDown()
+            return result
         }
 
-        @Override
-        protected void onPostExecute(ServerResponse serverResponse) {
-            super.onPostExecute(serverResponse);
-            onPostExecuteInner(serverResponse);
+        protected override fun onPostExecute(serverResponse: ServerResponse) {
+            super.onPostExecute(serverResponse)
+            onPostExecuteInner(serverResponse)
         }
 
-        void onPostExecuteInner(ServerResponse serverResponse) {
-            if (latch_ != null) {
-                latch_.countDown();
-            }
+        fun onPostExecuteInner(serverResponse: ServerResponse?) {
+            latch_?.countDown()
             if (serverResponse == null) {
-                thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
-                return;
+                thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.")
+                return
             }
-
-            int status = serverResponse.getStatusCode();
+            val status = serverResponse.statusCode
             if (status == 200) {
-                onRequestSuccess(serverResponse);
+                onRequestSuccess(serverResponse)
             } else {
-                onRequestFailed(serverResponse, status);
+                onRequestFailed(serverResponse, status)
             }
-            networkCount_ = 0;
+            networkCount_ = 0
 
             // In rare cases where this method is called directly (eg. when network calls time out),
             // starting the next queue item can lead to stack over flow. Ensuring that this is
             // queued back to the main thread mitigates this.
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    processNextQueueItem();
-                }
-            });
+            val handler = Handler(Looper.getMainLooper())
+            handler.post { processNextQueueItem() }
         }
 
-        private void onRequestSuccess(ServerResponse serverResponse) {
+        private fun onRequestSuccess(serverResponse: ServerResponse) {
             // If the request succeeded
-            @Nullable final JSONObject respJson = serverResponse.getObject();
+            val respJson = serverResponse.getObject()
             if (respJson == null) {
-                thisReq_.handleFailure(500, "Null response json.");
+                thisReq_.handleFailure(500, "Null response json.")
             }
-
-            if (thisReq_ instanceof ServerRequestCreateUrl && respJson != null) {
+            if (thisReq_ is ServerRequestCreateUrl && respJson != null) {
                 try {
                     // cache the link
-                    BranchLinkData postBody = ((ServerRequestCreateUrl) thisReq_).getLinkPost();
-                    final String url = respJson.getString("url");
-                    linkCache_.put(postBody, url);
-                } catch (JSONException ex) {
-                    ex.printStackTrace();
+                    val postBody = (thisReq_ as ServerRequestCreateUrl).linkPost
+                    val url = respJson.getString("url")
+                    linkCache_[postBody] = url
+                } catch (ex: JSONException) {
+                    ex.printStackTrace()
                 }
-            } else if (thisReq_ instanceof ServerRequestLogout) {
+            } else if (thisReq_ is ServerRequestLogout) {
                 //On Logout clear the link cache and all pending requests
-                linkCache_.clear();
-                requestQueue_.clear();
+                linkCache_.clear()
+                requestQueue_!!.clear()
             }
-
-
-            if (thisReq_ instanceof ServerRequestInitSession || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
+            if (thisReq_ is ServerRequestInitSession || thisReq_ is ServerRequestIdentifyUserRequest) {
                 // If this request changes a session update the session-id to queued requests.
-                boolean updateRequestsInQueue = false;
-                if (!isTrackingDisabled() && respJson != null) {
+                var updateRequestsInQueue = false
+                if (!isTrackingDisabled && respJson != null) {
                     // Update PII data only if tracking is disabled
                     try {
-                        if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                            prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
-                            updateRequestsInQueue = true;
+                        if (respJson.has(Defines.Jsonkey.SessionID.key)) {
+                            prefHelper!!.sessionID =
+                                respJson.getString(Defines.Jsonkey.SessionID.key)
+                            updateRequestsInQueue = true
                         }
-                        if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
-                            String new_Randomized_Bundle_Token = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey());
-                            if (!prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                        if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.key)) {
+                            val new_Randomized_Bundle_Token =
+                                respJson.getString(Defines.Jsonkey.RandomizedBundleToken.key)
+                            if (prefHelper!!.randomizedBundleToken != new_Randomized_Bundle_Token) {
                                 //On setting a new Randomized Bundle Token clear the link cache
-                                linkCache_.clear();
-                                prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
-                                updateRequestsInQueue = true;
+                                linkCache_.clear()
+                                prefHelper.randomizedBundleToken = new_Randomized_Bundle_Token
+                                updateRequestsInQueue = true
                             }
                         }
-                        if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
-                            prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
-                            updateRequestsInQueue = true;
+                        if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.key)) {
+                            prefHelper!!.randomizedDeviceToken =
+                                respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.key)
+                            updateRequestsInQueue = true
                         }
                         if (updateRequestsInQueue) {
-                            updateAllRequestsInQueue();
+                            updateAllRequestsInQueue()
                         }
-                    } catch (JSONException ex) {
-                        ex.printStackTrace();
+                    } catch (ex: JSONException) {
+                        ex.printStackTrace()
                     }
                 }
-
-                if (thisReq_ instanceof ServerRequestInitSession) {
-                    setInitState(Branch.SESSION_STATE.INITIALISED);
-                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                        checkForAutoDeepLinkConfiguration();
+                if (thisReq_ is ServerRequestInitSession) {
+                    initState = SESSION_STATE.INITIALISED
+                    if (!(thisReq_ as ServerRequestInitSession).handleBranchViewIfAvailable(
+                            serverResponse
+                        )
+                    ) {
+                        checkForAutoDeepLinkConfiguration()
                     }
                     // Count down the latch holding getLatestReferringParamsSync
                     if (getLatestReferringParamsLatch != null) {
-                        getLatestReferringParamsLatch.countDown();
+                        getLatestReferringParamsLatch!!.countDown()
                     }
                     // Count down the latch holding getFirstReferringParamsSync
                     if (getFirstReferringParamsLatch != null) {
-                        getFirstReferringParamsLatch.countDown();
+                        getFirstReferringParamsLatch!!.countDown()
                     }
                 }
             }
-
             if (respJson != null) {
-                thisReq_.onRequestSucceeded(serverResponse, branchReferral_);
-                requestQueue_.remove(thisReq_);
+                thisReq_.onRequestSucceeded(serverResponse, branchReferral_)
+                requestQueue_!!.remove(thisReq_)
             } else if (thisReq_.shouldRetryOnFail()) {
                 // already called handleFailure above
-                thisReq_.clearCallbacks();
+                thisReq_.clearCallbacks()
             } else {
-                requestQueue_.remove(thisReq_);
+                requestQueue_!!.remove(thisReq_)
             }
         }
 
-        void onRequestFailed(ServerResponse serverResponse, int status) {
+        fun onRequestFailed(serverResponse: ServerResponse, status: Int) {
             // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
-            if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(prefHelper_.getSessionParams())) {
-                setInitState(Branch.SESSION_STATE.UNINITIALISED);
+            if (thisReq_ is ServerRequestInitSession && PrefHelper.NO_STRING_VALUE == prefHelper!!.sessionParams) {
+                initState = SESSION_STATE.UNINITIALISED
             }
 
             // On a bad request or in case of a conflict notify with call back and remove the request.
-            if ((status == 400 || status == 409) && thisReq_ instanceof ServerRequestCreateUrl) {
-                ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
+            if ((status == 400 || status == 409) && thisReq_ is ServerRequestCreateUrl) {
+                (thisReq_ as ServerRequestCreateUrl).handleDuplicateURLError()
             } else {
                 //On Network error or Branch is down fail all the pending requests in the queue except
                 //for request which need to be replayed on failure.
-                networkCount_ = 0;
-                thisReq_.handleFailure(status, serverResponse.getFailReason());
+                networkCount_ = 0
+                thisReq_.handleFailure(status, serverResponse.failReason)
             }
-
-            boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
+            val unretryableErrorCode =
+                400 <= status && status <= 451 || status == BranchError.ERR_BRANCH_TRACKING_DISABLED
             // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
             // remove it from the queue
-            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || (thisReq_.currentRetryCount >= prefHelper_.getNoConnectionRetryMax())) {
-                requestQueue_.remove(thisReq_);
+            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || thisReq_.currentRetryCount >= prefHelper!!.noConnectionRetryMax) {
+                requestQueue_!!.remove(thisReq_)
             } else {
                 // failure has already been handled
                 // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
-                thisReq_.clearCallbacks();
+                thisReq_.clearCallbacks()
             }
-
-            thisReq_.currentRetryCount++;
+            thisReq_.currentRetryCount++
         }
     }
 
-    //-------------------Auto deep link feature-------------------------------------------//
-    
-    /**
-     * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activity configured for auto deep link on seeing matching keys.
-     * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
-     * Configure your activity in your manifest to enable auto deep linking as follows
-     * <!--
-     * <activity android:name=".YourActivity">
-     * <meta-data android:name="io.branch.sdk.auto_link" android:value="DeepLinkKey1","DeepLinkKey2" />
-     * </activity>
-     * -->
-     *
-     * @param activity Instance of activity to check if launched on auto deep link.
-     * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
-     */
-    public static boolean isAutoDeepLinkLaunch(Activity activity) {
-        return (activity.getIntent().getStringExtra(Defines.IntentKeys.AutoDeepLinked.getKey()) != null);
-    }
-    
-    void checkForAutoDeepLinkConfiguration() {
-        JSONObject latestParams = getLatestReferringParams();
-        String deepLinkActivity = null;
-        
+    fun checkForAutoDeepLinkConfiguration() {
+        val latestParams = latestReferringParams
+        var deepLinkActivity: String? = null
         try {
             //Check if the application is launched by clicking a Branch link.
-            if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
-                    || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
-                return;
+            if (!latestParams!!.has(Defines.Jsonkey.Clicked_Branch_Link.key)
+                || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.key)
+            ) {
+                return
             }
             if (latestParams.length() > 0) {
                 // Check if auto deep link is disabled.
-                ApplicationInfo appInfo = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-                if (appInfo.metaData != null && appInfo.metaData.getBoolean(AUTO_DEEP_LINK_DISABLE, false)) {
-                    return;
+                val appInfo = applicationContext!!.packageManager.getApplicationInfo(
+                    applicationContext.packageName, PackageManager.GET_META_DATA
+                )
+                if (appInfo.metaData != null && appInfo.metaData.getBoolean(
+                        AUTO_DEEP_LINK_DISABLE,
+                        false
+                    )
+                ) {
+                    return
                 }
-                PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), PackageManager.GET_ACTIVITIES | PackageManager.GET_META_DATA);
-                ActivityInfo[] activityInfos = info.activities;
-                int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
-                
+                val info = applicationContext.packageManager.getPackageInfo(
+                    applicationContext.packageName,
+                    PackageManager.GET_ACTIVITIES or PackageManager.GET_META_DATA
+                )
+                val activityInfos = info.activities
+                var deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE
                 if (activityInfos != null) {
-                    for (ActivityInfo activityInfo : activityInfos) {
-                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
-                            if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                                deepLinkActivity = activityInfo.name;
-                                deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
-                                break;
+                    for (activityInfo in activityInfos) {
+                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(
+                                AUTO_DEEP_LINK_KEY
+                            ) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)
+                        ) {
+                            if (checkForAutoDeepLinkKeys(
+                                    latestParams,
+                                    activityInfo
+                                ) || checkForAutoDeepLinkPath(latestParams, activityInfo)
+                            ) {
+                                deepLinkActivity = activityInfo.name
+                                deepLinkActivityReqCode = activityInfo.metaData.getInt(
+                                    AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE
+                                )
+                                break
                             }
                         }
                     }
                 }
-                if (deepLinkActivity != null && getCurrentActivity() != null) {
-                    Activity currentActivity = getCurrentActivity();
-
-                    Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
-                    intent.putExtra(Defines.IntentKeys.AutoDeepLinked.getKey(), "true");
+                if (deepLinkActivity != null && currentActivity != null) {
+                    val currentActivity = currentActivity
+                    val intent = Intent(currentActivity, Class.forName(deepLinkActivity))
+                    intent.putExtra(Defines.IntentKeys.AutoDeepLinked.key, "true")
 
                     // Put the raw JSON params as extra in case need to get the deep link params as JSON String
-                    intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
+                    intent.putExtra(Defines.Jsonkey.ReferringData.key, latestParams.toString())
 
                     // Add individual parameters in the data
-                    Iterator<?> keys = latestParams.keys();
+                    val keys: Iterator<*> = latestParams.keys()
                     while (keys.hasNext()) {
-                        String key = (String) keys.next();
-                        intent.putExtra(key, latestParams.getString(key));
+                        val key = keys.next() as String
+                        intent.putExtra(key, latestParams.getString(key))
                     }
-                    currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
+                    currentActivity!!.startActivityForResult(intent, deepLinkActivityReqCode)
                 } else {
                     // This case should not happen. Adding a safe handling for any corner case
-                    PrefHelper.Debug("No activity reference to launch deep linked activity");
+                    PrefHelper.Debug("No activity reference to launch deep linked activity")
                 }
             }
-        } catch (final PackageManager.NameNotFoundException e) {
-            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct!");
-        } catch (ClassNotFoundException e) {
-            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
-        } catch (Exception ignore) {
+        } catch (e: PackageManager.NameNotFoundException) {
+            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct!")
+        } catch (e: ClassNotFoundException) {
+            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity $deepLinkActivity")
+        } catch (ignore: Exception) {
             // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
         }
     }
-    
-    private boolean checkForAutoDeepLinkKeys(JSONObject params, ActivityInfo activityInfo) {
+
+    private fun checkForAutoDeepLinkKeys(params: JSONObject?, activityInfo: ActivityInfo): Boolean {
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
-            String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
-            for (String activityLinkKey : activityLinkKeys) {
-                if (params.has(activityLinkKey)) {
-                    return true;
+            val activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY)!!
+                .split(",").toTypedArray()
+            for (activityLinkKey in activityLinkKeys) {
+                if (params!!.has(activityLinkKey)) {
+                    return true
                 }
             }
         }
-        return false;
+        return false
     }
-    
-    private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
-        String deepLinkPath = null;
+
+    private fun checkForAutoDeepLinkPath(params: JSONObject?, activityInfo: ActivityInfo): Boolean {
+        var deepLinkPath: String? = null
         try {
-            if (params.has(Defines.Jsonkey.AndroidDeepLinkPath.getKey())) {
-                deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.getKey());
-            } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
-                deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
+            if (params!!.has(Defines.Jsonkey.AndroidDeepLinkPath.key)) {
+                deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.key)
+            } else if (params.has(Defines.Jsonkey.DeepLinkPath.key)) {
+                deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.key)
             }
-        } catch (JSONException ignored) {
+        } catch (ignored: JSONException) {
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
-            String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
-            for (String activityLinkPath : activityLinkPaths) {
-                if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
-                    return true;
+            val activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH)!!
+                .split(",").toTypedArray()
+            for (activityLinkPath in activityLinkPaths) {
+                if (pathMatch(activityLinkPath.trim { it <= ' ' }, deepLinkPath)) {
+                    return true
                 }
             }
         }
-        return false;
+        return false
     }
-    
-    private boolean pathMatch(String templatePath, String path) {
-        boolean matched = true;
-        String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
-        String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
-        if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
-            return false;
+
+    private fun pathMatch(templatePath: String, path: String): Boolean {
+        var matched = true
+        val pathSegmentsTemplate =
+            templatePath.split("\\?").toTypedArray()[0].split("/").toTypedArray()
+        val pathSegmentsTarget = path.split("\\?").toTypedArray()[0].split("/").toTypedArray()
+        if (pathSegmentsTemplate.size != pathSegmentsTarget.size) {
+            return false
         }
-        for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
-            String pathSegmentTemplate = pathSegmentsTemplate[i];
-            String pathSegmentTarget = pathSegmentsTarget[i];
-            if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("*")) {
-                matched = false;
-                break;
+        var i = 0
+        while (i < pathSegmentsTemplate.size && i < pathSegmentsTarget.size) {
+            val pathSegmentTemplate = pathSegmentsTemplate[i]
+            val pathSegmentTarget = pathSegmentsTarget[i]
+            if (pathSegmentTemplate != pathSegmentTarget && !pathSegmentTemplate.contains("*")) {
+                matched = false
+                break
             }
+            i++
         }
-        return matched;
+        return matched
     }
 
-    /**
-     * Enable Logging, independent of Debug Mode.
-     */
-    public static void enableLogging() {
-        PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
-        PrefHelper.enableLogging(true);
-    }
-
-    /**
-     * Disable Logging, independent of Debug Mode.
-     */
-    public static void disableLogging() {
-        PrefHelper.enableLogging(false);
-    }
-
-    /**
-     * <p> Use this method cautiously, it is meant to enable the ability to start a session before
-     * the user opens the app.
-     *
-     * The use case explained:
-     * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
-     * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
-     * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
-     * will bypass waiting for intent, so session could technically be initialized from a background service
-     * or otherwise before the application is even opened.
-     *
-     * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
-     * in certain cases.</p>
-     *
-     * @param bypassIntent a {@link Boolean} indicating if SDK should wait for onResume in order to fire the
-     *                     session initialization request.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static void bypassWaitingForIntent(boolean bypassIntent) { bypassWaitingForIntent_ = bypassIntent; }
-
-
-    /**
-     * Returns true if session initialization should bypass waiting for intent (retrieved after onResume).
-     *
-     * @return {@link Boolean} with value true to enable forced session
-     *
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static boolean isWaitingForIntent() { return !bypassWaitingForIntent_; }
-    
-    public static void enableBypassCurrentActivityIntentState() {
-        bypassCurrentActivityIntentState_ = true;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public static boolean bypassCurrentActivityIntentState() {
-        return bypassCurrentActivityIntentState_;
-    }
-    
     //------------------------ Content Indexing methods----------------------//
-    
-    public void registerView(BranchUniversalObject branchUniversalObject,
-                             BranchUniversalObject.RegisterViewStatusListener callback) {
-        if (context_ != null) {
-            new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
-                    .addContentItems(branchUniversalObject)
-                    .logEvent(context_);
+    fun registerView(
+        branchUniversalObject: BranchUniversalObject?,
+        callback: RegisterViewStatusListener?
+    ) {
+        if (applicationContext != null) {
+            BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
+                .addContentItems(branchUniversalObject)
+                .logEvent(applicationContext)
         }
     }
-    
     ///-------Instrumentation additional data---------------///
-    
     /**
      * Update the extra instrumentation data provided to Branch
      *
-     * @param instrumentationData A {@link HashMap} with key value pairs for instrumentation data.
+     * @param instrumentationData A [HashMap] with key value pairs for instrumentation data.
      */
-    public void addExtraInstrumentationData(HashMap<String, String> instrumentationData) {
-        instrumentationExtraData_.putAll(instrumentationData);
+    fun addExtraInstrumentationData(instrumentationData: HashMap<String, String>?) {
+        instrumentationExtraData_.putAll(instrumentationData!!)
     }
-    
+
     /**
      * Update the extra instrumentation data provided to Branch
      *
-     * @param key   A {@link String} Value for instrumentation data key
-     * @param value A {@link String} Value for instrumentation data value
+     * @param key   A [String] Value for instrumentation data key
+     * @param value A [String] Value for instrumentation data value
      */
-    public void addExtraInstrumentationData(String key, String value) {
-        instrumentationExtraData_.put(key, value);
+    fun addExtraInstrumentationData(key: String, value: String) {
+        instrumentationExtraData_[key] = value
     }
-    
-    
+
     //-------------------- Branch view handling--------------------//
-    
-    
-    @Override
-    public void onBranchViewVisible(String action, String branchViewID) {
+    override fun onBranchViewVisible(action: String, branchViewID: String) {
         //No Implementation on purpose
     }
-    
-    @Override
-    public void onBranchViewAccepted(String action, String branchViewID) {
+
+    override fun onBranchViewAccepted(action: String, branchViewID: String) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
+            checkForAutoDeepLinkConfiguration()
         }
     }
-    
-    @Override
-    public void onBranchViewCancelled(String action, String branchViewID) {
+
+    override fun onBranchViewCancelled(action: String, branchViewID: String) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
+            checkForAutoDeepLinkConfiguration()
         }
     }
-    
-    @Override
-    public void onBranchViewError(int errorCode, String errorMsg, String action) {
+
+    override fun onBranchViewError(errorCode: Int, errorMsg: String, action: String) {
         if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
+            checkForAutoDeepLinkConfiguration()
         }
     }
-    
+
     /**
      * Interface for defining optional Branch view behaviour for Activities
      */
-    public interface IBranchViewControl {
+    interface IBranchViewControl {
         /**
          * Defines if an activity is interested to show Branch views or not.
          * By default activities are considered as Branch view enabled. In case of activities which are not interested to show a Branch view (Splash screen for example)
          * should implement this and return false. The pending Branch view will be shown with the very next Branch view enabled activity
          *
-         * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
+         * @return A [Boolean] whose value is true if the activity don't want to show any Branch view.
          */
-        boolean skipBranchViewsOnThisActivity();
-    }
-    
-    
-    ///----------------- Instant App  support--------------------------//
-    
-    /**
-     * Checks if this is an Instant app instance
-     *
-     * @param context Current {@link Context}
-     * @return {@code true}  if current application is an instance of instant app
-     */
-    public static boolean isInstantApp(@NonNull Context context) {
-        return InstantAppUtil.isInstantApp(context);
-    }
-    
-    /**
-     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
-     * full app up on Branch#initSession()
-     *
-     * @param activity    Current activity
-     * @param requestCode Request code for the activity to receive the result
-     * @return {@code true} if install prompt is shown to user
-     */
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode) {
-        String installReferrerString = "";
-        if (Branch.getInstance() != null) {
-            JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
-            String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
-            if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
-                String referringLink = "";
-                try {
-                    referringLink = latestReferringParams.getString(referringLinkKey);
-                    // Considering the case that url may contain query params with `=` and `&` with it and may cause issue when parsing play store referrer
-                    referringLink = URLEncoder.encode(referringLink, "UTF-8");
-                } catch (JSONException | UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-                if (!TextUtils.isEmpty(referringLink)) {
-                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
-                }
-            }
-        }
-        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
-    }
-    
-    /**
-     * Method shows play store install prompt for the full app. Use this method only if you have custom parameters to pass to the full app using referrer else use
-     * {@link #showInstallPrompt(Activity, int)}
-     *
-     * @param activity    Current activity
-     * @param requestCode Request code for the activity to receive the result
-     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1%26referrer_key2=referrer_value2")
-     * @return {@code true} if install prompt is shown to user
-     */
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
-        String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
-        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
-    }
-    
-    /**
-     * Method shows play store install prompt for the full app. Use this method only if you want the full app to receive a custom {@link BranchUniversalObject} to do deferred deep link.
-     * Please see {@link #showInstallPrompt(Activity, int)}
-     * NOTE :
-     * This method will do a synchronous generation of Branch short link for the BUO. So please consider calling this method on non UI thread
-     * Please make sure your instant app and full ap are using same Branch key in order for the deferred deep link working
-     *
-     * @param activity    Current activity
-     * @param requestCode Request code for the activity to receive the result
-     * @param buo         {@link BranchUniversalObject} to pass to the full app up on install
-     * @return {@code true} if install prompt is shown to user
-     */
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @NonNull BranchUniversalObject buo) {
-        String shortUrl = buo.getShortUrl(activity, new LinkProperties());
-        String installReferrerString = Defines.Jsonkey.ReferringLink.getKey() + "=" + shortUrl;
-        if (!TextUtils.isEmpty(installReferrerString)) {
-            return showInstallPrompt(activity, requestCode, installReferrerString);
-        } else {
-            return showInstallPrompt(activity, requestCode, "");
-        }
+        fun skipBranchViewsOnThisActivity(): Boolean
     }
 
-    private void extractSessionParamsForIDL(Uri data, Activity activity) {
-        if (activity == null || activity.getIntent() == null) return;
-
-        Intent intent = activity.getIntent();
+    private fun extractSessionParamsForIDL(data: Uri?, activity: Activity?) {
+        if (activity == null || activity.intent == null) return
+        val intent = activity.intent
         try {
             if (data == null || isIntentParamsAlreadyConsumed(activity)) {
                 // Considering the case of a deferred install. In this case the app behaves like a cold
                 // start but still Branch can do probabilistic match. So skipping instant deep link feature
                 // until first Branch open happens.
-                if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                    JSONObject nonLinkClickJson = new JSONObject();
-                    nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                    prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                    isInstantDeepLinkPossible = true;
+                if (prefHelper!!.installParams != PrefHelper.NO_STRING_VALUE) {
+                    val nonLinkClickJson = JSONObject()
+                    nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.key, false)
+                    prefHelper.sessionParams = nonLinkClickJson.toString()
+                    isInstantDeepLinkPossible = true
                 }
-            } else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.IntentKeys.BranchData.getKey()))) {
+            } else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.IntentKeys.BranchData.key))) {
                 // If not cold start, check the intent data to see if there are deep link params
-                String rawBranchData = intent.getStringExtra(Defines.IntentKeys.BranchData.getKey());
+                val rawBranchData = intent.getStringExtra(Defines.IntentKeys.BranchData.key)
                 if (rawBranchData != null) {
                     // Make sure the data received is complete and in correct format
-                    JSONObject branchDataJson = new JSONObject(rawBranchData);
-                    branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                    prefHelper_.setSessionParams(branchDataJson.toString());
-                    isInstantDeepLinkPossible = true;
+                    val branchDataJson = JSONObject(rawBranchData)
+                    branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.key, true)
+                    prefHelper!!.sessionParams = branchDataJson.toString()
+                    isInstantDeepLinkPossible = true
                 }
 
                 // Remove Branch data from the intent once used
-                intent.removeExtra(Defines.IntentKeys.BranchData.getKey());
-                activity.setIntent(intent);
-            } else if (data.isHierarchical() && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
+                intent.removeExtra(Defines.IntentKeys.BranchData.key)
+                activity.intent = intent
+            } else if (data.isHierarchical && java.lang.Boolean.valueOf(
+                    data.getQueryParameter(
+                        Defines.Jsonkey.Instant.key
+                    )
+                )
+            ) {
                 // If instant key is true in query params, use them for instant deep linking
-                JSONObject branchDataJson = new JSONObject();
-                for (String key : data.getQueryParameterNames()) {
-                    branchDataJson.put(key, data.getQueryParameter(key));
+                val branchDataJson = JSONObject()
+                for (key in data.queryParameterNames) {
+                    branchDataJson.put(key, data.getQueryParameter(key))
                 }
-                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                prefHelper_.setSessionParams(branchDataJson.toString());
-                isInstantDeepLinkPossible = true;
+                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.key, true)
+                prefHelper!!.sessionParams = branchDataJson.toString()
+                isInstantDeepLinkPossible = true
             }
-        } catch (JSONException ignored) {}
+        } catch (ignored: JSONException) {
+        }
     }
 
-    private void extractAppLink(Uri data, Activity activity) {
-        if (data == null || activity == null) return;
-
-        String scheme = data.getScheme();
-        Intent intent = activity.getIntent();
+    private fun extractAppLink(data: Uri?, activity: Activity?) {
+        if (data == null || activity == null) return
+        val scheme = data.scheme
+        val intent = activity.intent
         if (scheme != null && intent != null &&
-                (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https")) &&
-                !TextUtils.isEmpty(data.getHost()) &&
-                !isIntentParamsAlreadyConsumed(activity)) {
-
-            String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
-
-            if (data.toString().equalsIgnoreCase(strippedUrl)) {
+            (scheme.equals("http", ignoreCase = true) || scheme.equals(
+                "https",
+                ignoreCase = true
+            )) &&
+            !TextUtils.isEmpty(data.host) &&
+            !isIntentParamsAlreadyConsumed(activity)
+        ) {
+            val strippedUrl = UniversalResourceAnalyser.getInstance(applicationContext)
+                .getStrippedURL(data.toString())
+            if (data.toString().equals(strippedUrl, ignoreCase = true)) {
                 // Send app links only if URL is not skipped.
-                prefHelper_.setAppLink(data.toString());
+                prefHelper!!.appLink = data.toString()
             }
-            intent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
-            activity.setIntent(intent);
+            intent.putExtra(Defines.IntentKeys.BranchLinkUsed.key, true)
+            activity.intent = intent
         }
     }
 
-    private boolean extractClickID(Uri data, Activity activity) {
-        try {
-            if (data == null || !data.isHierarchical()) return false;
-
-            String linkClickID = data.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-            if (linkClickID == null) return false;
-
-            prefHelper_.setLinkClickIdentifier(linkClickID);
-            String paramString = "link_click_id=" + linkClickID;
-            String uriString = data.toString();
-
-            if (paramString.equals(data.getQuery())) {
-                paramString = "\\?" + paramString;
-            } else if ((uriString.length() - paramString.length()) == uriString.indexOf(paramString)) {
-                paramString = "&" + paramString;
+    private fun extractClickID(data: Uri?, activity: Activity?): Boolean {
+        return try {
+            if (data == null || !data.isHierarchical) return false
+            val linkClickID =
+                data.getQueryParameter(Defines.Jsonkey.LinkClickID.key) ?: return false
+            prefHelper!!.linkClickIdentifier = linkClickID
+            var paramString = "link_click_id=$linkClickID"
+            val uriString = data.toString()
+            paramString = if (paramString == data.query) {
+                "\\?$paramString"
+            } else if (uriString.length - paramString.length == uriString.indexOf(paramString)) {
+                "&$paramString"
             } else {
-                paramString = paramString + "&";
+                "$paramString&"
             }
-
-            Uri uriWithoutClickID = Uri.parse(uriString.replaceFirst(paramString, ""));
-            activity.getIntent().setData(uriWithoutClickID);
-            activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
-            return true;
-        } catch (Exception ignore) {
-            return false;
+            val uriWithoutClickID = Uri.parse(uriString.replaceFirst(paramString.toRegex(), ""))
+            activity!!.intent.data = uriWithoutClickID
+            activity.intent.putExtra(Defines.IntentKeys.BranchLinkUsed.key, true)
+            true
+        } catch (ignore: Exception) {
+            false
         }
     }
 
-    private boolean extractBranchLinkFromIntentExtra(Activity activity) {
+    private fun extractBranchLinkFromIntentExtra(activity: Activity?): Boolean {
         //Check for any push identifier in case app is launched by a push notification
         try {
-            if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
+            if (activity != null && activity.intent != null && activity.intent.extras != null) {
                 if (!isIntentParamsAlreadyConsumed(activity)) {
-                    Object object = activity.getIntent().getExtras().get(Defines.IntentKeys.BranchURI.getKey());
-                    String branchLink = null;
-
-                    if (object instanceof String) {
-                        branchLink = (String) object;
-                    } else if (object instanceof Uri) {
-                        Uri uri = (Uri) object;
-                        branchLink = uri.toString();
+                    val `object` = activity.intent.extras!![Defines.IntentKeys.BranchURI.key]
+                    var branchLink: String? = null
+                    if (`object` is String) {
+                        branchLink = `object`
+                    } else if (`object` is Uri) {
+                        branchLink = `object`.toString()
                     }
-
                     if (!TextUtils.isEmpty(branchLink)) {
-                        prefHelper_.setPushIdentifier(branchLink);
-                        Intent thisIntent = activity.getIntent();
-                        thisIntent.putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
-                        activity.setIntent(thisIntent);
-                        return true;
+                        prefHelper!!.pushIdentifier = branchLink
+                        val thisIntent = activity.intent
+                        thisIntent.putExtra(Defines.IntentKeys.BranchLinkUsed.key, true)
+                        activity.intent = thisIntent
+                        return true
                     }
                 }
             }
-        } catch (Exception ignore) {
+        } catch (ignore: Exception) {
         }
-        return false;
+        return false
     }
 
-    private void extractExternalUriAndIntentExtras(Uri data, Activity activity) {
+    private fun extractExternalUriAndIntentExtras(data: Uri?, activity: Activity?) {
         try {
             if (!isIntentParamsAlreadyConsumed(activity)) {
-                String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
-                prefHelper_.setExternalIntentUri(strippedUrl);
-
-                if (strippedUrl.equals(data.toString())) {
-                    Bundle bundle = activity.getIntent().getExtras();
-                    Set<String> extraKeys = bundle.keySet();
-                    if (extraKeys.isEmpty()) return;
-
-                    JSONObject extrasJson = new JSONObject();
-                    for (String key : EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
+                val strippedUrl = UniversalResourceAnalyser.getInstance(applicationContext)
+                    .getStrippedURL(data.toString())
+                prefHelper!!.externalIntentUri = strippedUrl
+                if (strippedUrl == data.toString()) {
+                    val bundle = activity!!.intent.extras
+                    val extraKeys = bundle!!.keySet()
+                    if (extraKeys.isEmpty()) return
+                    val extrasJson = JSONObject()
+                    for (key in EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST) {
                         if (extraKeys.contains(key)) {
-                            extrasJson.put(key, bundle.get(key));
+                            extrasJson.put(key, bundle[key])
                         }
                     }
                     if (extrasJson.length() > 0) {
-                        prefHelper_.setExternalIntentExtra(extrasJson.toString());
+                        prefHelper.externalIntentExtra = extrasJson.toString()
                     }
-
                 }
             }
-        } catch (Exception ignore) {
+        } catch (ignore: Exception) {
         }
     }
 
-    @Nullable Activity getCurrentActivity() {
-        if (currentActivityReference_ == null) return null;
-        return currentActivityReference_.get();
-    }
+    val currentActivity: Activity?
+        get() = if (currentActivityReference_ == null) null else currentActivityReference_!!.get()
 
-    public static class InitSessionBuilder {
-        private BranchReferralInitListener callback;
-        private boolean isAutoInitialization;
-        private int delay;
-        private Uri uri;
-        private Boolean ignoreIntent;
-        private boolean isReInitializing;
+    class InitSessionBuilder(activity: Activity?) {
+        private var callback: BranchReferralInitListener? = null
+        private var isAutoInitialization = false
+        private var delay = 0
+        private var uri: Uri? = null
+        private var ignoreIntent: Boolean? = null
+        private var isReInitializing = false
 
-        private InitSessionBuilder(Activity activity) {
-            Branch branch = Branch.getInstance();
-            if (activity != null && (branch.getCurrentActivity() == null ||
-                    !branch.getCurrentActivity().getLocalClassName().equals(activity.getLocalClassName()))) {
+        init {
+            val branch = instance
+            if (activity != null && (branch!!.currentActivity == null ||
+                        branch.currentActivity!!.localClassName != activity.localClassName)
+            ) {
                 // currentActivityReference_ is set in onActivityCreated (before initSession), which should happen if
                 // users follow Android guidelines and call super.onStart as the first thing in Activity.onStart,
                 // however, if they don't, we try to set currentActivityReference_ here too.
-                branch.currentActivityReference_ = new WeakReference<>(activity);
+                branch.currentActivityReference_ = WeakReference(activity)
             }
         }
 
@@ -2918,75 +2331,75 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * Helps differentiating between sdk session auto-initialization and client driven session
          * initialization. For internal SDK use only.
          */
-        InitSessionBuilder isAutoInitialization(boolean isAuto) {
-            this.isAutoInitialization = isAuto;
-            return this;
+        fun isAutoInitialization(isAuto: Boolean): InitSessionBuilder {
+            isAutoInitialization = isAuto
+            return this
         }
 
         /**
-         * <p> Add callback to Branch initialization to retrieve referring params attached to the
+         *
+         *  Add callback to Branch initialization to retrieve referring params attached to the
          * Branch link via the dashboard. User eventually decides how to use the referring params but
          * they are primarily meant to be used for navigating to specific content within the app.
-         * Use only one withCallback() method.</p>
+         * Use only one withCallback() method.
          *
-         * @param callback     A {@link BranchUniversalReferralInitListener} instance that will be called
-         *                     following successful (or unsuccessful) initialisation of the session
-         *                     with the Branch API.
+         * @param callback     A [BranchUniversalReferralInitListener] instance that will be called
+         * following successful (or unsuccessful) initialisation of the session
+         * with the Branch API.
          */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
-            this.callback = new BranchUniversalReferralInitWrapper(callback);
-            return this;
+        fun withCallback(callback: BranchUniversalReferralInitListener?): InitSessionBuilder {
+            this.callback = BranchUniversalReferralInitWrapper(callback)
+            return this
         }
 
         /**
-         * <p> Delay session initialization by certain time (used when other async or otherwise time
-         * consuming ops need to be completed prior to session initialization).</p>
          *
-         * @param delayMillis  An {@link Integer} indicating the length of the delay in milliseconds.
+         *  Delay session initialization by certain time (used when other async or otherwise time
+         * consuming ops need to be completed prior to session initialization).
+         *
+         * @param delayMillis  An [Integer] indicating the length of the delay in milliseconds.
          */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder withDelay(int delayMillis) {
-            this.delay = delayMillis;
-            return this;
+        fun withDelay(delayMillis: Int): InitSessionBuilder {
+            delay = delayMillis
+            return this
         }
 
         /**
-         * <p> Add callback to Branch initialization to retrieve referring params attached to the
+         *
+         *  Add callback to Branch initialization to retrieve referring params attached to the
          * Branch link via the dashboard. User eventually decides how to use the referring params but
          * they are primarily meant to be used for navigating to specific content within the app.
-         * Use only one withCallback() method.</p>
+         * Use only one withCallback() method.
          *
-         * @param callback     A {@link BranchReferralInitListener} instance that will be called
-         *                     following successful (or unsuccessful) initialisation of the session
-         *                     with the Branch API.
+         * @param callback     A [BranchReferralInitListener] instance that will be called
+         * following successful (or unsuccessful) initialisation of the session
+         * with the Branch API.
          */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder withCallback(BranchReferralInitListener callback) {
-            this.callback = callback;
-            return this;
+        fun withCallback(callback: BranchReferralInitListener?): InitSessionBuilder {
+            this.callback = callback
+            return this
         }
 
         /**
-         * <p> Specify a {@link Uri} variable containing the details of the source link that led to
-         * this initialisation action.</p>
          *
-         * @param uri A {@link  Uri} variable from the intent.
+         *  Specify a [Uri] variable containing the details of the source link that led to
+         * this initialisation action.
+         *
+         * @param uri A [Uri] variable from the intent.
          */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder withData(Uri uri) {
-            this.uri = uri;
-            return this;
+        fun withData(uri: Uri?): InitSessionBuilder {
+            this.uri = uri
+            return this
         }
 
-        /** @deprecated */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder isReferrable(boolean isReferrable) {
-            return this;
+        @Deprecated("")
+        fun isReferrable(isReferrable: Boolean): InitSessionBuilder {
+            return this
         }
 
         /**
-         * <p> Use this method cautiously, it is meant to enable the ability to start a session before
+         *
+         *  Use this method cautiously, it is meant to enable the ability to start a session before
          * the user even opens the app.
          *
          * The use case explained:
@@ -2997,102 +2410,106 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          * or otherwise before the application is even opened.
          *
          * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
-         * in certain cases. See also Branch.bypassWaitingForIntent(boolean). </p>
+         * in certain cases. See also Branch.bypassWaitingForIntent(boolean).
          *
-         * @param ignore       a {@link Boolean} indicating if SDK should wait for onResume to retrieve
-         *                     the most up recent intent data before firing the session initialization request.
+         * @param ignore       a [Boolean] indicating if SDK should wait for onResume to retrieve
+         * the most up recent intent data before firing the session initialization request.
          */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder ignoreIntent(boolean ignore) {
-            ignoreIntent = ignore;
-            return this;
+        fun ignoreIntent(ignore: Boolean): InitSessionBuilder {
+            ignoreIntent = ignore
+            return this
         }
 
         /**
-         * <p>Initialises a session with the Branch API, registers the passed in Activity, callback
-         * and configuration variables, then initializes session.</p>
+         *
+         * Initialises a session with the Branch API, registers the passed in Activity, callback
+         * and configuration variables, then initializes session.
          */
-        public void init() {
-            PrefHelper.Debug("Beginning session initialization");
-            PrefHelper.Debug("Session uri is " + uri);
-
-            if(deferInitForPluginRuntime){
-                PrefHelper.Debug("Session init is deferred until signaled by plugin.");
-                cacheSessionBuilder(this);
-                return;
+        fun init() {
+            PrefHelper.Debug("Beginning session initialization")
+            PrefHelper.Debug("Session uri is $uri")
+            if (deferInitForPluginRuntime) {
+                PrefHelper.Debug("Session init is deferred until signaled by plugin.")
+                cacheSessionBuilder(this)
+                return
             }
-
-            final Branch branch = Branch.getInstance();
+            val branch = instance
             if (branch == null) {
-                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
-                        " in your application class or declare BranchApp in your manifest.");
-                return;
+                PrefHelper.LogAlways(
+                    "Branch is not setup properly, make sure to call getAutoInstance" +
+                            " in your application class or declare BranchApp in your manifest."
+                )
+                return
             }
             if (ignoreIntent != null) {
-                Branch.bypassWaitingForIntent(ignoreIntent);
+                bypassWaitingForIntent(ignoreIntent!!)
             }
-
-            Activity activity = branch.getCurrentActivity();
-            Intent intent = activity != null ? activity.getIntent() : null;
-
+            val activity = branch.currentActivity
+            val intent = activity?.intent
             if (activity != null && intent != null && ActivityCompat.getReferrer(activity) != null) {
-                PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
+                PrefHelper.getInstance(activity).initialReferrer =
+                    ActivityCompat.getReferrer(activity).toString()
             }
-
             if (uri != null) {
-                branch.readAndStripParam(uri, activity);
-            }
-            else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
-                branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
-            }
-            else if (isReInitializing) {
+                branch.readAndStripParam(uri, activity)
+            } else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
+                branch.readAndStripParam(intent?.data, activity)
+            } else if (isReInitializing) {
                 // User called reInit but isRestartSessionRequested = false, meaning the new intent was
                 // not initiated by Branch and should not be considered a "new session", return early
                 if (callback != null) {
-                    callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
+                    callback!!.onInitFinished(
+                        null,
+                        BranchError("", BranchError.ERR_IMPROPER_REINITIALIZATION)
+                    )
                 }
-                return;
+                return
             }
 
             // readAndStripParams (above) may set isInstantDeepLinkPossible to true
             if (branch.isInstantDeepLinkPossible) {
                 // reset state
-                branch.isInstantDeepLinkPossible = false;
+                branch.isInstantDeepLinkPossible = false
                 // invoke callback returning LatestReferringParams, which were parsed out inside readAndStripParam
                 // from either intent extra "branch_data", or as parameters attached to the referring app link
-                if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
+                if (callback != null) callback!!.onInitFinished(branch.latestReferringParams, null)
                 // mark this session as IDL session
-                branch.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+                branch.addExtraInstrumentationData(
+                    Defines.Jsonkey.InstantDeepLinkSession.key,
+                    "true"
+                )
                 // potentially routes the user to the Activity configured to consume this particular link
-                branch.checkForAutoDeepLinkConfiguration();
+                branch.checkForAutoDeepLinkConfiguration()
                 // we already invoked the callback for let's set it to null, we will still make the
                 // init session request but for analytics purposes only
-                callback = null;
+                callback = null
             }
-
             if (delay > 0) {
-                expectDelayedSessionInitialization(true);
+                expectDelayedSessionInitialization(true)
             }
-
-            ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            branch.initializeSession(initRequest, delay);
+            val initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization)
+            branch.initializeSession(initRequest, delay)
         }
 
-        private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
-            Branch.getInstance().deferredSessionBuilder = this;
-            PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit()" +
-                    "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
-                    "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
-                    "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
-                    "\nisReInitializing: " + Branch.getInstance().deferredSessionBuilder.isReInitializing +
-                    "\ndelay: " + Branch.getInstance().deferredSessionBuilder.delay +
-                    "\nisAutoInitialization: " + Branch.getInstance().deferredSessionBuilder.isAutoInitialization +
-                    "\nignoreIntent: " + Branch.getInstance().deferredSessionBuilder.ignoreIntent
-            );
+        private fun cacheSessionBuilder(initSessionBuilder: InitSessionBuilder) {
+            instance!!.deferredSessionBuilder = this
+            PrefHelper.Debug(
+                """
+    Session initialization deferred until plugin invokes notifyNativeToInit()
+    Caching Session Builder ${instance!!.deferredSessionBuilder}
+    uri: ${instance!!.deferredSessionBuilder!!.uri}
+    callback: ${instance!!.deferredSessionBuilder!!.callback}
+    isReInitializing: ${instance!!.deferredSessionBuilder!!.isReInitializing}
+    delay: ${instance!!.deferredSessionBuilder!!.delay}
+    isAutoInitialization: ${instance!!.deferredSessionBuilder!!.isAutoInitialization}
+    ignoreIntent: ${instance!!.deferredSessionBuilder!!.ignoreIntent}
+    """.trimIndent()
+            )
         }
 
         /**
-         * <p> Re-Initialize a session. Call from Activity.onNewIntent().
+         *
+         *  Re-Initialize a session. Call from Activity.onNewIntent().
          * This solves a very specific use case, whereas the app is already in the foreground and a new
          * intent with a Uri is delivered to the foregrounded activity.
          *
@@ -3100,91 +2517,764 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *
          * Note also, that the since the method is expected to be called from Activity.onNewIntent(),
          * the implementation assumes the intent will be non-null and will contain a Branch link in
-         * either the URI or in the the extra.</p>
+         * either the URI or in the the extra.
          *
          */
-        @SuppressWarnings("WeakerAccess")
-        public void reInit() {
-            isReInitializing = true;
-            init();
+        fun reInit() {
+            isReInitializing = true
+            init()
         }
     }
 
-    boolean isIDLSession() {
-        return Boolean.parseBoolean(instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
-    }
-    /**
-     * <p> Create Branch session builder. Add configuration variables with the available methods
-     * in the returned {@link InitSessionBuilder} class. Must be finished with init() or reInit(),
-     * otherwise takes no effect.</p>
-     *
-     * @param activity     The calling {@link Activity} for context.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static InitSessionBuilder sessionBuilder(Activity activity) {
-        return new InitSessionBuilder(activity);
-    }
-    
-    /**
-     * Method will return the current Branch SDK version number
-     * @return String value representing the current SDK version number (e.g. 4.3.2)
-     */
-    public static String getSdkVersionNumber() {
-        return io.branch.referral.BuildConfig.VERSION_NAME;
-    }
+    val isIDLSession: Boolean
+        get() = java.lang.Boolean.parseBoolean(instrumentationExtraData_[Defines.Jsonkey.InstantDeepLinkSession.key])
 
-
-    /**
-     * Scenario: Integrations using our plugin SDKs (React-Native, Capacitor, Unity, etc),
-     * it is possible to have a race condition wherein the native layers finish their initialization
-     * before the JS/C# layers have finished loaded and registering their receivers- dropping the
-     * Branch parameters.
-     *
-     * Because these plugin delays are not deterministic, or consistent, a constant
-     * offset to delay is not guaranteed to work in all cases, and possibly penalizes performant
-     * devices.
-     *
-     * To solve, we wait for the plugin to signal when it is ready, and then begin native init
-     *
-     * Reusing disable autoinitialization to prevent uninitialization errors
-     * @param isDeferred
-     */
-    static void deferInitForPluginRuntime(boolean isDeferred){
-        PrefHelper.Debug("deferInitForPluginRuntime " + isDeferred);
-
-        deferInitForPluginRuntime = isDeferred;
-        if(isDeferred){
-            expectDelayedSessionInitialization(isDeferred);
-        }
-    }
-
-    /**
-     * Method to be invoked from plugin to initialize the session originally built by the user
-     * Only invokes the last session built
-     */
-    public static void notifyNativeToInit(){
-        PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
-
-        SESSION_STATE sessionState = Branch.getInstance().getInitState();
-        if(sessionState == SESSION_STATE.UNINITIALISED) {
-            deferInitForPluginRuntime = false;
-            if (Branch.getInstance().deferredSessionBuilder != null) {
-                Branch.getInstance().deferredSessionBuilder.init();
-            }
-        }
-        else {
-            PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
-        }
-    }
-
-    public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+    fun logEventWithPurchase(context: Context, purchase: Purchase) {
+        getInstance().startBillingClient { succeeded: Boolean ->
             if (succeeded) {
-                BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+                getInstance().logEventWithPurchase(context, purchase)
             } else {
-                PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                PrefHelper.LogException(
+                    "Cannot log IAP event. Billing client setup failed",
+                    Exception("Billing Client Setup Failed")
+                )
             }
-            return null;
-        });
+            null
+        }
+    }
+
+    companion object {
+        private val BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + sdkVersionNumber
+        private val GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION
+
+        /**
+         * Hard-coded [String] that denotes a [BranchLinkData.tags]; applies to links that
+         * are shared with others directly as a user action, via social media for instance.
+         */
+        const val FEATURE_TAG_SHARE = "share"
+
+        /**
+         * Hard-coded [String] that denotes a 'referral' tag; applies to links that are associated
+         * with a referral program, incentivized or not.
+         */
+        const val FEATURE_TAG_REFERRAL = "referral"
+
+        /**
+         * The redirect URL provided when the link is handled by a desktop client.
+         */
+        const val REDIRECT_DESKTOP_URL = "\$desktop_url"
+
+        /**
+         * The redirect URL provided when the link is handled by an Android device.
+         */
+        const val REDIRECT_ANDROID_URL = "\$android_url"
+
+        /**
+         * The redirect URL provided when the link is handled by an iOS device.
+         */
+        const val REDIRECT_IOS_URL = "\$ios_url"
+
+        /**
+         * The redirect URL provided when the link is handled by a large form-factor iOS device such as
+         * an iPad.
+         */
+        const val REDIRECT_IPAD_URL = "\$ipad_url"
+
+        /**
+         * The redirect URL provided when the link is handled by an Amazon Fire device.
+         */
+        const val REDIRECT_FIRE_URL = "\$fire_url"
+
+        /**
+         * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
+         *
+         * @see [Open Graph - Basic Metadata](http://ogp.me/.metadata)
+         */
+        const val OG_TITLE = "\$og_title"
+
+        /**
+         * The description of the object to appear in social media feeds that use
+         * Facebook's Open Graph specification.
+         *
+         * @see [Open Graph - Basic Metadata](http://ogp.me/.metadata)
+         */
+        const val OG_DESC = "\$og_description"
+
+        /**
+         * An image URL which should represent your object to appear in social media feeds that use
+         * Facebook's Open Graph specification.
+         *
+         * @see [Open Graph - Basic Metadata](http://ogp.me/.metadata)
+         */
+        const val OG_IMAGE_URL = "\$og_image_url"
+
+        /**
+         * A URL to a video file that complements this object.
+         *
+         * @see [Open Graph - Basic Metadata](http://ogp.me/.metadata)
+         */
+        const val OG_VIDEO = "\$og_video"
+
+        /**
+         * The canonical URL of your object that will be used as its permanent ID in the graph.
+         *
+         * @see [Open Graph - Basic Metadata](http://ogp.me/.metadata)
+         */
+        const val OG_URL = "\$og_url"
+
+        /**
+         * Unique identifier for the app in use.
+         */
+        const val OG_APP_ID = "\$og_app_id"
+
+        /**
+         * [String] value denoting the deep link path to override Branch's default one. By
+         * default, Branch will use yourapp://open?link_click_id=12345. If you specify this key/value,
+         * Branch will use yourapp://'$deeplink_path'?link_click_id=12345
+         */
+        const val DEEPLINK_PATH = "\$deeplink_path"
+
+        /**
+         * [String] value indicating whether the link should always initiate a deep link action.
+         * By default, unless overridden on the dashboard, Branch will only open the app if they are
+         * 100% sure the app is installed. This setting will cause the link to always open the app.
+         * Possible values are "true" or "false"
+         */
+        const val ALWAYS_DEEPLINK = "\$always_deeplink"
+
+        /**
+         * An [Integer] value indicating the user to reward for applying a referral code. In this
+         * case, the user applying the referral code receives credit.
+         */
+        const val REFERRAL_CODE_LOCATION_REFERREE = 0
+
+        /**
+         * An [Integer] value indicating the user to reward for applying a referral code. In this
+         * case, the user who created the referral code receives credit.
+         */
+        const val REFERRAL_CODE_LOCATION_REFERRING_USER = 2
+
+        /**
+         * An [Integer] value indicating the user to reward for applying a referral code. In this
+         * case, both the creator and applicant receive credit
+         */
+        const val REFERRAL_CODE_LOCATION_BOTH = 3
+
+        /**
+         * An [Integer] value indicating the calculation type of the referral code. In this case,
+         * the referral code can be applied continually.
+         */
+        const val REFERRAL_CODE_AWARD_UNLIMITED = 1
+
+        /**
+         * An [Integer] value indicating the calculation type of the referral code. In this case,
+         * a user can only apply a specific referral code once.
+         */
+        const val REFERRAL_CODE_AWARD_UNIQUE = 0
+
+        /**
+         * An [Integer] value indicating the link type. In this case, the link can be used an
+         * unlimited number of times.
+         */
+        const val LINK_TYPE_UNLIMITED_USE = 0
+
+        /**
+         * An [Integer] value indicating the link type. In this case, the link can be used only
+         * once. After initial use, subsequent attempts will not validate.
+         */
+        const val LINK_TYPE_ONE_TIME_USE = 1
+
+        /**
+         * If true, instantiate a new webview instance ui thread to retrieve user agent string
+         */
+        var userAgentSync = false
+
+        /**
+         * Package private user agent string cached to save on repeated queries
+         */
+        @JvmField
+        var _userAgentString = ""
+
+        /**
+         * Returns true if reading device id is disabled
+         *
+         * @return [Boolean] with value true to disable reading Andoid ID
+         */
+        var isDeviceIDFetchDisabled = false
+            private set
+        var bypassWaitingForIntent_ = false
+        private var bypassCurrentActivityIntentState_ = false
+        @JvmField
+        var disableAutoSessionInitialization = false
+        var checkInstallReferrer_ = true
+        private var playStoreReferrerWaitTime: Long = 1500
+        const val NO_PLAY_STORE_REFERRER_WAIT: Long = 0
+        var isReferringLinkAttributionForPreinstalledAppsEnabled = false
+
+        /**
+         *
+         * A [Branch] object that is instantiated on init and holds the singleton instance of
+         * the class during application runtime.
+         */
+        private var branchReferral_: Branch? = null
+
+        /* Set to true when {@link Activity} life cycle callbacks are registered. */
+        private var isActivityLifeCycleCallbackRegistered_ = false
+
+        /* */
+        var deferInitForPluginRuntime = false
+
+        /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
+        private const val AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys"
+
+        /* Path for $deeplink_path or $android_deeplink_path to auto deep link. The activities which need to automatically deep linked should define in this in the activity metadata. */
+        private const val AUTO_DEEP_LINK_PATH = "io.branch.sdk.auto_link_path"
+
+        /* Key for disabling auto deep link feature. Setting this to true in manifest will disable auto deep linking feature. */
+        private const val AUTO_DEEP_LINK_DISABLE = "io.branch.sdk.auto_link_disable"
+
+        /*Key for defining a request code for an activity. should be added as a metadata for an activity. This is used as a request code for launching a an activity on auto deep link. */
+        private const val AUTO_DEEP_LINK_REQ_CODE = "io.branch.sdk.auto_link_request_code"
+
+        /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
+        private const val DEF_AUTO_DEEP_LINK_REQ_CODE = 1501
+        private var cookieBasedMatchDomain_: String? =
+            "app.link" // Domain name used for cookie based matching.
+        private const val LATCH_WAIT_UNTIL =
+            2500 //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+
+        /* List of keys whose values are collected from the Intent Extra.*/
+        private val EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = arrayOf(
+            "extra_launch_uri",  // Key for embedded uri in FB ads triggered intents
+            "branch_intent" // A boolean that specifies if this intent is originated by Branch
+        )
+        @JvmField
+        var installDeveloperId: String? = null
+
+        /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
+        private var enableInstantDeepLinking = false
+
+        /** Variables for reporting plugin type and version (some TUNE customers do that), plus helps
+         * us make data driven decisions.  */
+        @JvmStatic
+        var pluginVersion: String? = null
+            private set
+        @JvmStatic
+        var pluginName: String? = null
+            private set
+
+        /**
+         *
+         * Singleton method to return the pre-initialised object of the type [Branch].
+         * Make sure your app is instantiating [BranchApp] before calling this method
+         * or you have created an instance of Branch already by calling getInstance(Context ctx).
+         *
+         * @return An initialised singleton [Branch] object
+         */
+        @JvmStatic
+        @get:Synchronized
+        val instance: Branch?
+            get() {
+                if (branchReferral_ == null) {
+                    PrefHelper.Debug("Branch instance is not created yet. Make sure you call getAutoInstance(Context).")
+                }
+                return branchReferral_
+            }
+
+        @Synchronized
+        private fun initBranchSDK(context: Context, branchKey: String): Branch? {
+            if (branchReferral_ != null) {
+                PrefHelper.Debug("Warning, attempted to reinitialize Branch SDK singleton!")
+                return branchReferral_
+            }
+            branchReferral_ = Branch(context.applicationContext)
+            if (TextUtils.isEmpty(branchKey)) {
+                PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!")
+                branchReferral_!!.prefHelper!!.branchKey =
+                    PrefHelper.NO_STRING_VALUE
+            } else {
+                branchReferral_!!.prefHelper!!.branchKey = branchKey
+            }
+
+            /* If {@link Application} is instantiated register for activity life cycle events. */if (context is Application) {
+                branchReferral_!!.setActivityLifeCycleObserver(
+                    context
+                )
+            }
+
+            // Cache the user agent from a webview instance if needed
+            if (userAgentSync && DeviceInfo.getInstance() != null) {
+                DeviceInfo.getInstance().getUserAgentStringSync(context)
+            }
+            return branchReferral_
+        }
+
+        /**
+         *
+         * Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+         * object of the type [Branch].
+         *
+         * Use this whenever you need to call a method directly on the [Branch] object.
+         *
+         * @param context A [Context] from which this call was made.
+         * @return An initialised [Branch] object, either fetched from a pre-initialised
+         * instance within the singleton class, or a newly instantiated object where
+         * one was not already requested during the current app lifecycle.
+         */
+        @Synchronized
+        fun getAutoInstance(context: Context): Branch? {
+            if (branchReferral_ == null) {
+                if (BranchUtil.getEnableLoggingConfig(context)) {
+                    enableLogging()
+                }
+
+                // Should only be set in json config
+                deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context))
+                BranchUtil.setTestMode(BranchUtil.checkTestMode(context))
+                branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context))
+                BranchPreinstall.getPreinstallSystemData(branchReferral_, context)
+            }
+            return branchReferral_
+        }
+
+        /**
+         *
+         * Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+         * object of the type [Branch].
+         *
+         * Use this whenever you need to call a method directly on the [Branch] object.
+         *
+         * @param context   A [Context] from which this call was made.
+         * @param branchKey A [String] value used to initialize Branch.
+         * @return An initialised [Branch] object, either fetched from a pre-initialised
+         * instance within the singleton class, or a newly instantiated object where
+         * one was not already requested during the current app lifecycle.
+         */
+        @JvmStatic
+        fun getAutoInstance(context: Context, branchKey: String): Branch? {
+            var branchKey = branchKey
+            if (branchReferral_ == null) {
+                if (BranchUtil.getEnableLoggingConfig(context)) {
+                    enableLogging()
+                }
+
+                // Should only be set in json config
+                deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context))
+                BranchUtil.setTestMode(BranchUtil.checkTestMode(context))
+                // If a Branch key is passed already use it. Else read the key
+                if (!PrefHelper.isValidBranchKey(branchKey)) {
+                    PrefHelper.Debug("Warning, Invalid branch key passed! Branch key will be read from manifest instead!")
+                    branchKey = BranchUtil.readBranchKey(context)
+                }
+                branchReferral_ = initBranchSDK(context, branchKey)
+                BranchPreinstall.getPreinstallSystemData(branchReferral_, context)
+            }
+            return branchReferral_
+        }
+
+        /**
+         *
+         *
+         * Enables the test mode for the SDK. This will use the Branch Test Keys. This is same as setting
+         * "io.branch.sdk.TestMode" to "True" in Manifest file.
+         *
+         * Note: As of v5.0.1, enableTestMode has been changed. It now uses the test key but will not log or randomize
+         * the device IDs. If you wish to enable logging, please invoke enableLogging. If you wish to simulate
+         * installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
+         * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
+         *
+         */
+        @JvmStatic
+        fun enableTestMode() {
+            BranchUtil.setTestMode(true)
+            PrefHelper.LogAlways(
+                "enableTestMode has been changed. It now uses the test key but will not" +
+                        " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
+                        " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
+                        " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data)."
+            )
+        }
+
+        /**
+         *
+         *
+         * Disables the test mode for the SDK.
+         *
+         */
+        @JvmStatic
+        fun disableTestMode() {
+            BranchUtil.setTestMode(false)
+        }
+
+        /**
+         * Temporarily disables auto session initialization until user initializes themselves.
+         *
+         * Context: Branch expects session initialization to be started in LauncherActivity.onStart(),
+         * if session initialization has not been started/completed by the time ANY Activity resumes,
+         * Branch will auto-initialize. This allows Branch to keep an accurate count of all app sessions,
+         * including instances when app is launched from a recent apps list and the first visible Activity
+         * is not LauncherActivity.
+         *
+         * However, in certain scenarios users may need to delay session initialization (e.g. to asynchronously
+         * retrieve some data that needs to be passed to Branch prior to session initialization). In those
+         * cases, use expectDelayedSessionInitialization() to temporarily disable auto self initialization.
+         * Once the user initializes the session themselves, the flag will be reset and auto session initialization
+         * will be re-enabled.
+         *
+         * @param expectDelayedInit A [Boolean] to set the expectation flag.
+         */
+        @JvmStatic
+        fun expectDelayedSessionInitialization(expectDelayedInit: Boolean) {
+            disableAutoSessionInitialization = expectDelayedInit
+        }
+
+        /**
+         *
+         * Sets a custom base URL for all calls to the Branch API.  Requires https.
+         * @param url The [String] URL base URL that the Branch API uses.
+         */
+        fun setAPIUrl(url: String?) {
+            PrefHelper.setAPIUrl(url)
+        }
+
+        /**
+         *
+         * Sets a custom CDN base URL.
+         * @param url The [String] base URL for CDN endpoints.
+         */
+        fun setCDNBaseUrl(url: String?) {
+            PrefHelper.setCDNBaseUrl(url)
+        }
+
+        /**
+         * Set timeout for Play Store Referrer library. Play Store Referrer library allows Branch to provide
+         * more accurate tracking and attribution. This delays Branch initialization only the first time user opens the app.
+         * This method allows to override the maximum wait time for play store referrer to arrive.
+         *
+         *
+         *
+         * @param delay [Long] Maximum wait time for install referrer broadcast in milli seconds. Set to [Branch.NO_PLAY_STORE_REFERRER_WAIT] if you don't want to wait for play store referrer
+         */
+        @JvmStatic
+        fun setPlayStoreReferrerCheckTimeout(delay: Long) {
+            checkInstallReferrer_ = delay > 0
+            playStoreReferrerWaitTime = delay
+        }
+
+        /**
+         *
+         *
+         * Disables or enables the instant deep link functionality.
+         *
+         *
+         * @param disableIDL Value `true` disables the  instant deep linking. Value `false` enables the  instant deep linking.
+         */
+        fun disableInstantDeepLinking(disableIDL: Boolean) {
+            enableInstantDeepLinking = !disableIDL
+        }
+
+        // Package Private
+        // For Unit Testing, we need to reset the Branch state
+        @JvmStatic
+        fun shutDown() {
+            ServerRequestQueue.shutDown()
+            PrefHelper.shutDown()
+            BranchUtil.shutDown()
+
+            // BranchStrongMatchHelper.shutDown();
+            // BranchViewHandler.shutDown();
+            // DeepLinkRoutingValidator.shutDown();
+            // GooglePlayStoreAttribution.shutDown();
+            // InstantAppUtil.shutDown();
+            // IntegrationValidator.shutDown();
+            // ShareLinkManager.shutDown();
+            // UniversalResourceAnalyser.shutDown();
+
+            // Release these contexts immediately.
+
+            // Reset all of the statics.
+            branchReferral_ = null
+            bypassCurrentActivityIntentState_ = false
+            enableInstantDeepLinking = false
+            isActivityLifeCycleCallbackRegistered_ = false
+            bypassWaitingForIntent_ = false
+            checkInstallReferrer_ = true
+        }
+
+        /**
+         * Method to control reading Android ID from device. Set this to true to disable reading the device id.
+         * This method should be called from your [Application.onCreate] method before creating Branch auto instance by calling [Branch.getAutoInstance]
+         *
+         * @param deviceIdFetch [with value true to disable reading the Android id from device][Boolean]
+         */
+        @JvmStatic
+        fun disableDeviceIDFetch(deviceIdFetch: Boolean) {
+            isDeviceIDFetchDisabled = deviceIdFetch
+        }
+
+        /**
+         * Enables referring url attribution for preinstalled apps.
+         *
+         * By default, Branch prioritizes preinstall attribution on preinstalled apps.
+         * Some clients prefer the referring link, when present, to be prioritized over preinstall attribution.
+         */
+        fun setReferringLinkAttributionForPreinstalledAppsEnabled() {
+            isReferringLinkAttributionForPreinstalledAppsEnabled = true
+        }
+
+        fun setIsUserAgentSync(sync: Boolean) {
+            userAgentSync = sync
+        }
+
+        /**
+         *
+         *
+         * Enabled Strong matching check using chrome cookies. This method should be called before
+         * Branch#getAutoInstance(Context).
+         *
+         * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
+         */
+        fun enableCookieBasedMatching(cookieMatchDomain: String?) {
+            cookieBasedMatchDomain_ = cookieMatchDomain
+        }
+
+        /**
+         *
+         *
+         * Enabled Strong matching check using chrome cookies. This method should be called before
+         * Branch#getAutoInstance(Context).
+         *
+         * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
+         * @param delay             Time in millisecond to wait for the strong match to check to finish before Branch init session is called.
+         * Default time is 750 msec.
+         */
+        fun enableCookieBasedMatching(cookieMatchDomain: String?, delay: Int) {
+            cookieBasedMatchDomain_ = cookieMatchDomain
+            BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay)
+        }
+
+        fun registerPlugin(name: String?, version: String?) {
+            pluginName = name
+            pluginVersion = version
+        }
+        //-------------------Auto deep link feature-------------------------------------------//
+        /**
+         *
+         * Checks if an activity is launched by Branch auto deep link feature. Branch launches activity configured for auto deep link on seeing matching keys.
+         * Keys for auto deep linking should be specified to each activity as a meta data in manifest.
+         * Configure your activity in your manifest to enable auto deep linking as follows
+         *
+         *
+         * @param activity Instance of activity to check if launched on auto deep link.
+         * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
+         */
+        @JvmStatic
+        fun isAutoDeepLinkLaunch(activity: Activity): Boolean {
+            return activity.intent.getStringExtra(Defines.IntentKeys.AutoDeepLinked.key) != null
+        }
+
+        /**
+         * Enable Logging, independent of Debug Mode.
+         */
+        @JvmStatic
+        fun enableLogging() {
+            PrefHelper.LogAlways(GOOGLE_VERSION_TAG)
+            PrefHelper.enableLogging(true)
+        }
+
+        /**
+         * Disable Logging, independent of Debug Mode.
+         */
+        fun disableLogging() {
+            PrefHelper.enableLogging(false)
+        }
+
+        /**
+         *
+         *  Use this method cautiously, it is meant to enable the ability to start a session before
+         * the user opens the app.
+         *
+         * The use case explained:
+         * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
+         * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
+         * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
+         * will bypass waiting for intent, so session could technically be initialized from a background service
+         * or otherwise before the application is even opened.
+         *
+         * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
+         * in certain cases.
+         *
+         * @param bypassIntent a [Boolean] indicating if SDK should wait for onResume in order to fire the
+         * session initialization request.
+         */
+        fun bypassWaitingForIntent(bypassIntent: Boolean) {
+            bypassWaitingForIntent_ = bypassIntent
+        }
+
+        /**
+         * Returns true if session initialization should bypass waiting for intent (retrieved after onResume).
+         *
+         * @return [Boolean] with value true to enable forced session
+         */
+        val isWaitingForIntent: Boolean
+            get() = !bypassWaitingForIntent_
+
+        fun enableBypassCurrentActivityIntentState() {
+            bypassCurrentActivityIntentState_ = true
+        }
+
+        @JvmStatic
+        fun bypassCurrentActivityIntentState(): Boolean {
+            return bypassCurrentActivityIntentState_
+        }
+        ///----------------- Instant App  support--------------------------//
+        /**
+         * Checks if this is an Instant app instance
+         *
+         * @param context Current [Context]
+         * @return `true`  if current application is an instance of instant app
+         */
+        fun isInstantApp(context: Context): Boolean {
+            return InstantAppUtil.isInstantApp(context)
+        }
+
+        /**
+         * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
+         * full app up on Branch#initSession()
+         *
+         * @param activity    Current activity
+         * @param requestCode Request code for the activity to receive the result
+         * @return `true` if install prompt is shown to user
+         */
+        fun showInstallPrompt(activity: Activity, requestCode: Int): Boolean {
+            var installReferrerString = ""
+            if (instance != null) {
+                val latestReferringParams = instance!!.latestReferringParams
+                val referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.key
+                if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
+                    var referringLink = ""
+                    try {
+                        referringLink = latestReferringParams.getString(referringLinkKey)
+                        // Considering the case that url may contain query params with `=` and `&` with it and may cause issue when parsing play store referrer
+                        referringLink = URLEncoder.encode(referringLink, "UTF-8")
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    } catch (e: UnsupportedEncodingException) {
+                        e.printStackTrace()
+                    }
+                    if (!TextUtils.isEmpty(referringLink)) {
+                        installReferrerString =
+                            Defines.Jsonkey.IsFullAppConv.key + "=true&" + Defines.Jsonkey.ReferringLink.key + "=" + referringLink
+                    }
+                }
+            }
+            return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString)
+        }
+
+        /**
+         * Method shows play store install prompt for the full app. Use this method only if you have custom parameters to pass to the full app using referrer else use
+         * [.showInstallPrompt]
+         *
+         * @param activity    Current activity
+         * @param requestCode Request code for the activity to receive the result
+         * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1%26referrer_key2=referrer_value2")
+         * @return `true` if install prompt is shown to user
+         */
+        fun showInstallPrompt(activity: Activity, requestCode: Int, referrer: String?): Boolean {
+            val installReferrerString = Defines.Jsonkey.IsFullAppConv.key + "=true&" + referrer
+            return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString)
+        }
+
+        /**
+         * Method shows play store install prompt for the full app. Use this method only if you want the full app to receive a custom [BranchUniversalObject] to do deferred deep link.
+         * Please see [.showInstallPrompt]
+         * NOTE :
+         * This method will do a synchronous generation of Branch short link for the BUO. So please consider calling this method on non UI thread
+         * Please make sure your instant app and full ap are using same Branch key in order for the deferred deep link working
+         *
+         * @param activity    Current activity
+         * @param requestCode Request code for the activity to receive the result
+         * @param buo         [BranchUniversalObject] to pass to the full app up on install
+         * @return `true` if install prompt is shown to user
+         */
+        fun showInstallPrompt(
+            activity: Activity,
+            requestCode: Int,
+            buo: BranchUniversalObject
+        ): Boolean {
+            val shortUrl = buo.getShortUrl(activity, LinkProperties())
+            val installReferrerString = Defines.Jsonkey.ReferringLink.key + "=" + shortUrl
+            return if (!TextUtils.isEmpty(installReferrerString)) {
+                showInstallPrompt(
+                    activity,
+                    requestCode,
+                    installReferrerString
+                )
+            } else {
+                showInstallPrompt(activity, requestCode, "")
+            }
+        }
+
+        /**
+         *
+         *  Create Branch session builder. Add configuration variables with the available methods
+         * in the returned [InitSessionBuilder] class. Must be finished with init() or reInit(),
+         * otherwise takes no effect.
+         *
+         * @param activity     The calling [Activity] for context.
+         */
+        @JvmStatic
+        fun sessionBuilder(activity: Activity?): InitSessionBuilder {
+            return InitSessionBuilder(activity)
+        }
+
+        /**
+         * Method will return the current Branch SDK version number
+         * @return String value representing the current SDK version number (e.g. 4.3.2)
+         */
+        @JvmStatic
+        val sdkVersionNumber: String
+            get() = BuildConfig.VERSION_NAME
+
+        /**
+         * Scenario: Integrations using our plugin SDKs (React-Native, Capacitor, Unity, etc),
+         * it is possible to have a race condition wherein the native layers finish their initialization
+         * before the JS/C# layers have finished loaded and registering their receivers- dropping the
+         * Branch parameters.
+         *
+         * Because these plugin delays are not deterministic, or consistent, a constant
+         * offset to delay is not guaranteed to work in all cases, and possibly penalizes performant
+         * devices.
+         *
+         * To solve, we wait for the plugin to signal when it is ready, and then begin native init
+         *
+         * Reusing disable autoinitialization to prevent uninitialization errors
+         * @param isDeferred
+         */
+        fun deferInitForPluginRuntime(isDeferred: Boolean) {
+            PrefHelper.Debug("deferInitForPluginRuntime $isDeferred")
+            deferInitForPluginRuntime = isDeferred
+            if (isDeferred) {
+                expectDelayedSessionInitialization(isDeferred)
+            }
+        }
+
+        /**
+         * Method to be invoked from plugin to initialize the session originally built by the user
+         * Only invokes the last session built
+         */
+        @JvmStatic
+        fun notifyNativeToInit() {
+            PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + instance!!.deferredSessionBuilder)
+            val sessionState = instance!!.initState
+            if (sessionState == SESSION_STATE.UNINITIALISED) {
+                deferInitForPluginRuntime = false
+                if (instance!!.deferredSessionBuilder != null) {
+                    instance!!.deferredSessionBuilder!!.init()
+                }
+            } else {
+                PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is $sessionState")
+            }
+        }
     }
 }
