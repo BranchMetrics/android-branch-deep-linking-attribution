@@ -248,8 +248,8 @@ public class BranchEvent {
     }
 
     public interface BranchLogEventCallback {
-        void onSuccess(ServerResponse response, Branch branch);
-        void onFailure(int errorCode, String errorMessage);
+        void onSuccess(int responseCode);
+        void onFailure(Exception e);
     }
 
     /**
@@ -268,21 +268,23 @@ public class BranchEvent {
                         @Override
                         public void onRequestSucceeded(ServerResponse response, Branch branch) {
                             if (callback != null) {
-                                callback.onSuccess(response, branch);
+                                callback.onSuccess(response.getStatusCode());
                             }
                         }
 
                         @Override
                         public void handleFailure(int statusCode, String causeMsg) {
                             if (callback != null) {
-                                callback.onFailure(statusCode, causeMsg);
+                                Exception e = new Exception("Failed logEvent server request: " + statusCode + causeMsg);
+                                callback.onFailure(e);
                             }
                         }
                     }
             );
             isReqQueued = true;
         } else if (callback != null) {
-            callback.onFailure(0, "Error logging event because the Branch instance was not available");
+            Exception e = new Exception("Failed logEvent server request: The Branch instance was not available");
+            callback.onFailure(e);
         }
         return isReqQueued;
     }

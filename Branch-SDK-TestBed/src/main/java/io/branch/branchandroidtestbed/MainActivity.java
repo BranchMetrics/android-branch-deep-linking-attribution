@@ -515,13 +515,13 @@ public class MainActivity extends Activity {
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
-                            public void onSuccess(ServerResponse response, Branch branch) {
-                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event", Toast.LENGTH_SHORT).show();
+                            public void onSuccess(int responseCode) {
+                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
-                            public void onFailure(int errorCode, String errorMessage) {
-                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + errorMessage, Toast.LENGTH_SHORT).show();
+                            public void onFailure(Exception e) {
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
                             }
                         });
 
