@@ -23,6 +23,6 @@ public class BranchApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Branch.Companion.getAutoInstance(this);
+        Branch.getAutoInstance(this);
     }
 }

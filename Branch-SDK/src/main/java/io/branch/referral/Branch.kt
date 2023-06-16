@@ -12,84 +12,33 @@ import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
 import androidx.core.app.ActivityCompat
+import com.android.billingclient.api.Purchase
+import io.branch.indexing.BranchUniversalObject
+import io.branch.indexing.BranchUniversalObject.RegisterViewStatusListener
 import io.branch.referral.BillingGooglePlay.*
+import io.branch.referral.BillingGooglePlay.Companion.getInstance
 import io.branch.referral.BranchViewHandler.IBranchViewEvents
-import io.branch.referral.SystemObserver.AdsParamsFetchEvents
+import io.branch.referral.Defines.PreinstallKey
+import io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener
+import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener
 import io.branch.referral.StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents
 import io.branch.referral.StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents
 import io.branch.referral.StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents
 import io.branch.referral.StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents
+import io.branch.referral.SystemObserver.AdsParamsFetchEvents
 import io.branch.referral.network.BranchRemoteInterface
-import io.branch.referral.PrefHelper
-import io.branch.referral.DeviceInfo
-import io.branch.referral.BranchPluginSupport
-import io.branch.referral.BranchQRCodeCache
-import io.branch.referral.ServerRequestQueue
-import io.branch.referral.BranchLinkData
-import io.branch.referral.Branch.INTENT_STATE
-import io.branch.referral.Branch.SESSION_STATE
-import io.branch.referral.ShareLinkManager
-import io.branch.referral.BranchActivityLifecycleObserver
-import io.branch.referral.TrackingController
-import io.branch.referral.Branch.BranchReferralInitListener
-import io.branch.referral.Branch.InitSessionBuilder
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection
-import io.branch.referral.Defines.PreinstallKey
-import io.branch.referral.ServerRequest
-import io.branch.referral.ServerRequestRegisterClose
-import io.branch.referral.Defines
-import io.branch.referral.StoreReferrerUtils
-import io.branch.referral.UniversalResourceAnalyser
-import io.branch.referral.ServerRequestIdentifyUserRequest
-import io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener
-import io.branch.referral.ServerRequestGetCPID
-import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener
-import io.branch.referral.ServerRequestGetLATD
-import io.branch.referral.Branch.LogoutStatusListener
-import io.branch.referral.ServerRequestLogout
-import io.branch.referral.ServerRequestActionCompleted
-import io.branch.referral.util.CommerceEvent
 import io.branch.referral.util.BRANCH_STANDARD_EVENT
-import io.branch.referral.ServerRequestCreateUrl
-import io.branch.referral.BranchShareSheetBuilder
-import io.branch.referral.ServerResponse
-import io.branch.referral.Branch.GetShortLinkTask
-import io.branch.referral.ServerRequestRegisterInstall
-import io.branch.referral.BranchError
-import io.branch.referral.Branch.BranchPostTask
-import io.branch.referral.ServerRequestInitSession
-import io.branch.referral.BranchUtil
-import io.branch.referral.DeferredAppLinkDataHandler
-import io.branch.referral.DeferredAppLinkDataHandler.AppLinkFetchEvents
-import io.branch.referral.StoreReferrerGooglePlayStore
-import io.branch.referral.StoreReferrerHuaweiAppGallery
-import io.branch.referral.StoreReferrerSamsungGalaxyStore
-import io.branch.referral.StoreReferrerXiaomiGetApps
-import io.branch.referral.ServerRequestRegisterOpen
-import io.branch.referral.BranchStrongMatchHelper
-import io.branch.referral.BranchStrongMatchHelper.StrongMatchCheckEvents
-import io.branch.indexing.BranchUniversalObject
-import io.branch.referral.Branch.BranchLinkShareListener
-import io.branch.referral.BranchAsyncTask
-import io.branch.indexing.BranchUniversalObject.RegisterViewStatusListener
 import io.branch.referral.util.BranchEvent
-import io.branch.referral.Branch.BranchUniversalReferralInitListener
-import io.branch.referral.BranchUniversalReferralInitWrapper
-import com.android.billingclient.api.Purchase
-import io.branch.referral.BillingGooglePlay
-import io.branch.referral.BillingGooglePlay.Companion.getInstance
-import io.branch.referral.BranchPreinstall
-import io.branch.referral.InstantAppUtil
+import io.branch.referral.util.CommerceEvent
 import io.branch.referral.util.LinkProperties
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.UnsupportedEncodingException
-import java.lang.Exception
 import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URLEncoder
-import java.util.HashMap
 import java.util.concurrent.*
 
 /**
@@ -2699,6 +2648,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
          *
          * @return [Boolean] with value true to disable reading Andoid ID
          */
+        @JvmStatic
         var isDeviceIDFetchDisabled = false
             private set
         var bypassWaitingForIntent_ = false
@@ -2708,6 +2658,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
         var checkInstallReferrer_ = true
         private var playStoreReferrerWaitTime: Long = 1500
         const val NO_PLAY_STORE_REFERRER_WAIT: Long = 0
+        @JvmStatic
         var isReferringLinkAttributionForPreinstalledAppsEnabled = false
 
         /**
@@ -2821,6 +2772,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
          * one was not already requested during the current app lifecycle.
          */
         @Synchronized
+        @JvmStatic
         fun getAutoInstance(context: Context): Branch? {
             if (branchReferral_ == null) {
                 if (BranchUtil.getEnableLoggingConfig(context)) {

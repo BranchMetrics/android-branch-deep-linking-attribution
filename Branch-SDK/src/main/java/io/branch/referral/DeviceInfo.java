@@ -225,7 +225,7 @@ public class DeviceInfo {
      */
     void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
         try {
-            requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.Companion.isDeviceIDFetchDisabled());
+            requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
         }
         catch (JSONException ignore){
         }
@@ -288,7 +288,7 @@ public class DeviceInfo {
      * Note that if either Debug is enabled or Fetch has been disabled, then return a "fake" ID.
      */
     public SystemObserver.UniqueId getHardwareID() {
-        return getSystemObserver().getUniqueID(context_, Branch.Companion.isDeviceIDFetchDisabled());
+        return getSystemObserver().getUniqueID(context_, Branch.isDeviceIDFetchDisabled());
     }
 
     public String getOsName() {
