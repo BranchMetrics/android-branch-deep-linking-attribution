@@ -48,6 +48,7 @@ import io.branch.referral.BranchError;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.Defines;
+import io.branch.referral.ServerResponse;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -514,7 +515,7 @@ public class MainActivity extends Activity {
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
-                            public void onEventLogged(boolean success) {
+                            public void onSuccess(ServerResponse response, Branch branch) {
                                 Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event", Toast.LENGTH_SHORT).show();
                             }
 

@@ -2,7 +2,6 @@ package io.branch.referral.util;
 
 import android.content.Context;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -10,12 +9,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Defines;
-import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerRequestLogEvent;
 import io.branch.referral.ServerResponse;
 
@@ -244,15 +241,14 @@ public class BranchEvent {
      * Logs this BranchEvent to Branch for tracking and analytics
      *
      * @param context Current context
-     * @return {@code true}
+     * @return {@code true} if the event is logged to Branch
      */
     public boolean logEvent(Context context) {
-        logEvent(context, null);
-        return true;
+        return logEvent(context, null);
     }
 
     public interface BranchLogEventCallback {
-        void onEventLogged(boolean success);
+        void onSuccess(ServerResponse response, Branch branch);
         void onFailure(int errorCode, String errorMessage);
     }
 
@@ -261,8 +257,10 @@ public class BranchEvent {
      *
      * @param context  Current context
      * @param callback A {@link BranchLogEventCallback} callback that gets triggered once the event is logged
+     * @return {@code true} if the event is logged to Branch
      */
-    public void logEvent(Context context, final BranchLogEventCallback callback) {
+    public boolean logEvent(Context context, final BranchLogEventCallback callback) {
+        boolean isReqQueued = false;
         Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
         if (Branch.getInstance() != null) {
             Branch.getInstance().handleNewRequest(
@@ -270,7 +268,7 @@ public class BranchEvent {
                         @Override
                         public void onRequestSucceeded(ServerResponse response, Branch branch) {
                             if (callback != null) {
-                                callback.onEventLogged(true);
+                                callback.onSuccess(response, branch);
                             }
                         }
 
@@ -282,9 +280,11 @@ public class BranchEvent {
                         }
                     }
             );
+            isReqQueued = true;
         } else if (callback != null) {
             callback.onFailure(0, "Error logging event because the Branch instance was not available");
         }
+        return isReqQueued;
     }
 
 
