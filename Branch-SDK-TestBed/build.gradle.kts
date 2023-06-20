@@ -74,4 +74,5 @@ android {
             signingConfig = signingConfigs.findByName("release")
         }
     }
+    namespace = "io.branch.branchandroidtestbed"
 }
