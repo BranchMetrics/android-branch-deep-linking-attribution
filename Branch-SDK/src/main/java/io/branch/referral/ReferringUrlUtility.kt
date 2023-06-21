@@ -120,7 +120,6 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
 
     private fun deserializeFromJson(json: JSONObject): MutableMap<String, BranchUrlQueryParameter> {
         val result = mutableMapOf<String, BranchUrlQueryParameter>()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
 
         val keys = json.keys()
         while (keys.hasNext()) {
