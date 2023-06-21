@@ -60,6 +60,10 @@ android {
         abortOnError = false
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         fun String.wrapInQuotes(): String {
             return "\"$this\""
