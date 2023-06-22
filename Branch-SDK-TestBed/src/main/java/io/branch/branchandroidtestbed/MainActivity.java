@@ -252,8 +252,8 @@ public class MainActivity extends Activity {
                             (billingResult, list) -> {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
                                     Log.d("BillingClient", "Purchase was successful. Logging event");
-                                    for (Object purchase : list) {
-                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
+                                    for (Purchase purchase : list) {
+                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, purchase);
                                     }
                                 }
                             }

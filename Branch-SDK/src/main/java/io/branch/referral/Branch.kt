@@ -2478,9 +2478,9 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
         get() = java.lang.Boolean.parseBoolean(instrumentationExtraData_[Defines.Jsonkey.InstantDeepLinkSession.key])
 
     fun logEventWithPurchase(context: Context, purchase: Purchase) {
-        getInstance().startBillingClient { succeeded: Boolean ->
+        BillingGooglePlay.getInstance().startBillingClient { succeeded: Boolean ->
             if (succeeded) {
-                getInstance().logEventWithPurchase(context, purchase)
+                BillingGooglePlay.getInstance().logEventWithPurchase(context, purchase)
             } else {
                 PrefHelper.LogException(
                     "Cannot log IAP event. Billing client setup failed",
