@@ -70,7 +70,7 @@ android {
         }
 
         debug {
-            isTestCoverageEnabled = true
+            enableUnitTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
         }
