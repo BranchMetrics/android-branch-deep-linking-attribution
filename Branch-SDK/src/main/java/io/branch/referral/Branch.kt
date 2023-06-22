@@ -1145,7 +1145,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
 
     // Determine if a Session is available for a Request to proceed.
     private val isSessionAvailableForRequest: Boolean
-        private get() = hasSession() && hasRandomizedDeviceToken()
+        get() = hasSession() && hasRandomizedDeviceToken()
 
     fun updateAllRequestsInQueue() {
         try {
@@ -1936,7 +1936,7 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
                 var deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE
                 if (activityInfos != null) {
                     for (activityInfo in activityInfos) {
-                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(
+                        if (activityInfo?.metaData != null && (activityInfo.metaData.getString(
                                 AUTO_DEEP_LINK_KEY
                             ) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)
                         ) {
@@ -2340,11 +2340,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
             return this
         }
 
-        @Deprecated("")
-        fun isReferrable(isReferrable: Boolean): InitSessionBuilder {
-            return this
-        }
-
         /**
          *
          *  Use this method cautiously, it is meant to enable the ability to start a session before
@@ -2589,36 +2584,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
          * Possible values are "true" or "false"
          */
         const val ALWAYS_DEEPLINK = "\$always_deeplink"
-
-        /**
-         * An [Integer] value indicating the user to reward for applying a referral code. In this
-         * case, the user applying the referral code receives credit.
-         */
-        const val REFERRAL_CODE_LOCATION_REFERREE = 0
-
-        /**
-         * An [Integer] value indicating the user to reward for applying a referral code. In this
-         * case, the user who created the referral code receives credit.
-         */
-        const val REFERRAL_CODE_LOCATION_REFERRING_USER = 2
-
-        /**
-         * An [Integer] value indicating the user to reward for applying a referral code. In this
-         * case, both the creator and applicant receive credit
-         */
-        const val REFERRAL_CODE_LOCATION_BOTH = 3
-
-        /**
-         * An [Integer] value indicating the calculation type of the referral code. In this case,
-         * the referral code can be applied continually.
-         */
-        const val REFERRAL_CODE_AWARD_UNLIMITED = 1
-
-        /**
-         * An [Integer] value indicating the calculation type of the referral code. In this case,
-         * a user can only apply a specific referral code once.
-         */
-        const val REFERRAL_CODE_AWARD_UNIQUE = 0
 
         /**
          * An [Integer] value indicating the link type. In this case, the link can be used an
