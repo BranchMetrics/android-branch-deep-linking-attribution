@@ -3,6 +3,8 @@ on: [push]
 env:
   API_MIN: 21
   API_CURRENT: 33
+  JAVA_DISTRIBUTION: 'corretto'
+  JAVA_VERSION: '17'
 jobs:
   unit-test-api-level-min:
     name: unit-test-api-level-$API_MIN
@@ -14,8 +16,8 @@ jobs:
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
-          java-version: '17'
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
       - name: Run unit tests
         run: |
           ./gradlew :Branch-SDK:testDebugUnitTest 
@@ -49,8 +51,8 @@ jobs:
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
-          java-version: '17'
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
       # gradlew will automatically connect to booted emulator
       - name: Run instrumented tests
         run: |
@@ -72,8 +74,8 @@ jobs:
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
-          java-version: '17'
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
       - name: Run unit tests
         run: |
           ./gradlew :Branch-SDK:testDebugUnitTest 
@@ -107,8 +109,8 @@ jobs:
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
-          java-version: '17'
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
       # gradlew will automatically connect to booted emulator
       - name: Run instrumented tests
         run: |
