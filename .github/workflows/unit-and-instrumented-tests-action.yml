@@ -16,7 +16,7 @@ jobs:
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: $JAVA_DISTRIBUTION
+          distribution: 'corretto'
           java-version: $JAVA_VERSION
       - name: Run unit tests
         run: |
