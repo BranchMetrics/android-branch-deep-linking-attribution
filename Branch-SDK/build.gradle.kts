@@ -61,13 +61,17 @@ android {
         abortOnError = false
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         fun String.wrapInQuotes(): String {
             return "\"$this\""
         }
 
         debug {
-            isTestCoverageEnabled = true
+            enableUnitTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
         }
@@ -80,6 +84,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    namespace = "io.branch.referral"
 
     publishing {
         singleVariant("release") {
