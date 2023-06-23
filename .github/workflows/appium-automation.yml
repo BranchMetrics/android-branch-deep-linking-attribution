@@ -7,7 +7,7 @@ env:
   SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
   BROWSERSTACK_USER: ${{ secrets.BROWSER_STACK_USER }}
   BROWSERSTACK_KEY: ${{ secrets.BROWSER_STACK_KEY }}
-  JAVA_DISTRIBUTION: 'corretto'
+  JAVA_DISTRIBUTION: 'oracle'
   JAVA_VERSION: '17'
 jobs:  
   appium-automation-tests:

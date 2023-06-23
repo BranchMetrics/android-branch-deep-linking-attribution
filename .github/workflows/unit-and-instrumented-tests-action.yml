@@ -3,7 +3,7 @@ on: [push]
 env:
   API_MIN: 21
   API_CURRENT: 33
-  JAVA_DISTRIBUTION: 'corretto'
+  JAVA_DISTRIBUTION: 'oracle'
   JAVA_VERSION: '17'
 jobs:
   unit-test-api-level-min:
