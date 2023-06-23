@@ -9,6 +9,7 @@ env:
   BROWSERSTACK_KEY: ${{ secrets.BROWSER_STACK_KEY }}
   JAVA_DISTRIBUTION: 'corretto'
   JAVA_VERSION: '17'
+  JAVA_VERSION_AUTOMATION: '11'
 jobs:  
   appium-automation-tests:
     name: appium-automation-tests
@@ -25,8 +26,8 @@ jobs:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
-        # repo's gradle is configured to run on java 11
-      - name: Setup java 11 for gradle
+      # repo's gradle is configured to run on java 17
+      - name: Setup java for gradle
         uses: actions/setup-java@v3
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -42,6 +43,12 @@ jobs:
           parsed=$(echo $response | jq ".app_url")
           echo "::add-mask::$parsed"
           echo "APP_URL=$parsed" >> "$GITHUB_ENV"
+      # automation is compatible with java 11
+      - name: Setup java for gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION_AUTOMATION }}
       - name: Execute automation
         run: |
           cd qa
