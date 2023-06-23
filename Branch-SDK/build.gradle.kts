@@ -54,6 +54,7 @@ android {
         minSdk = ANDROID_BUILD_TARGET_SDK_MINIMUM.toInt()
         targetSdk = ANDROID_BUILD_TARGET_SDK_VERSION.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("proguard-consumer.txt")
     }
 
     lint {
