@@ -44,7 +44,7 @@ jobs:
           echo "::add-mask::$parsed"
           echo "APP_URL=$parsed" >> "$GITHUB_ENV"
       # automation is compatible with java 11
-      - name: Setup java for gradle
+      - name: Setup java for automation
         uses: actions/setup-java@v3
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
