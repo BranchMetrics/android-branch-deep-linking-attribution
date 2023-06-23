@@ -7,7 +7,7 @@ env:
   SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
   BROWSERSTACK_USER: ${{ secrets.BROWSER_STACK_USER }}
   BROWSERSTACK_KEY: ${{ secrets.BROWSER_STACK_KEY }}
-  JAVA_DISTRIBUTION: 'oracle'
+  JAVA_DISTRIBUTION: 'corretto'
   JAVA_VERSION: '17'
 jobs:  
   appium-automation-tests:
@@ -29,8 +29,8 @@ jobs:
       - name: Setup java 11 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: $JAVA_DISTRIBUTION
-          java-version: $JAVA_VERSION
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
       # to reduce complexity, testbed app uses sdk as a project reference
       - name: Build testbed app
         run: |
