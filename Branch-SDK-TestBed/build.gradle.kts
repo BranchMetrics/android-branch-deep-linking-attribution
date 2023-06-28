@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":Branch-SDK"))
-    implementation("com.google.android.gms:play-services-ads:16.0.0")
+    implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
 
     /* Add chrome custom tabs for guaranteed matching */
     implementation("androidx.browser:browser:1.0.0") {
