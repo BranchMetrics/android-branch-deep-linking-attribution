@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v5.6.1
+  * _*Master Release*_ - Jun 30, 2023
+    - Revert the Kotlin version update from 1.8.22 back to 1.6.20.
 
 - v5.6.0
   * _*Master Release*_ - Jun 28, 2023
