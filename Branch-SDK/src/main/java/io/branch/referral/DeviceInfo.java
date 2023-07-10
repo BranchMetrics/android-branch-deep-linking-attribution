@@ -26,7 +26,7 @@ import java.util.Iterator;
  * device info to Branch requests
  * </p>
  */
-class DeviceInfo {
+public class DeviceInfo {
     private final SystemObserver systemObserver_;
     private final Context context_;
 

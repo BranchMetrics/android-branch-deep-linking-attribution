@@ -17,13 +17,13 @@ class ReferringUrlUtilityTests : BranchTest() {
     private fun openServerRequest(): ServerRequest {
         val jsonString = "{\"REQ_POST\":{\"randomized_device_token\":\"1144756305514505535\",\"randomized_bundle_token\":\"1160050998451292762\",\"hardware_id\":\"90570b07852c65e1\",\"is_hardware_id_real\":true,\"brand\":\"Google\",\"model\":\"sdk_gphone64_arm64\",\"screen_dpi\":440,\"screen_height\":2236,\"screen_width\":1080,\"wifi\":true,\"ui_mode\":\"UI_MODE_TYPE_NORMAL\",\"os\":\"Android\",\"os_version\":32,\"cpu_type\":\"aarch64\",\"build\":\"TPP2.220218.008\",\"locale\":\"en_US\",\"connection_type\":\"wifi\",\"device_carrier\":\"T-Mobile\",\"os_version_android\":\"12\",\"country\":\"US\",\"language\":\"en\",\"local_ip\":\"10.0.2.16\"},\"REQ_POST_PATH\":\"v1\\/open\",\"INITIATED_BY_CLIENT\":true}"
         val jsonObject = JSONObject(jsonString)
-        return ServerRequest.fromJSON(jsonObject, Branch.getInstance().applicationContext)
+        return ServerRequest.fromJSON(jsonObject, Branch.instance!!.applicationContext)
     }
 
     @Before
     fun initializeValues() {
         initBranchInstance()
-        referringUrlUtility = ReferringUrlUtility(PrefHelper.getInstance(Branch.getInstance().applicationContext))
+        referringUrlUtility = ReferringUrlUtility(PrefHelper.getInstance(Branch.instance!!.applicationContext))
     }
 
     @Test
@@ -166,13 +166,13 @@ class ReferringUrlUtilityTests : BranchTest() {
 
     @Test
     fun testCheckForAndMigrateOldGclid() {
-        PrefHelper.getInstance(Branch.getInstance().applicationContext).setReferringUrlQueryParameters(null);
+        PrefHelper.getInstance(Branch.instance!!.applicationContext).setReferringUrlQueryParameters(null);
         val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": false}""")
 
-        PrefHelper.getInstance(Branch.getInstance().applicationContext).referrerGclid = "12345"
-        PrefHelper.getInstance(Branch.getInstance().applicationContext).referrerGclidValidForWindow = 2592000;
+        PrefHelper.getInstance(Branch.instance!!.applicationContext).referrerGclid = "12345"
+        PrefHelper.getInstance(Branch.instance!!.applicationContext).referrerGclidValidForWindow = 2592000;
 
-        val utility = ReferringUrlUtility(PrefHelper.getInstance(Branch.getInstance().applicationContext))
+        val utility = ReferringUrlUtility(PrefHelper.getInstance(Branch.instance!!.applicationContext))
         val params = utility.getURLQueryParamsForRequest(openServerRequest())
 
         assertTrue(areJSONObjectsEqual(expected, params))

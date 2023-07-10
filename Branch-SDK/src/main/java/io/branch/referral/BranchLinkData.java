@@ -19,7 +19,7 @@ import java.util.Collection;
  * deep link shared via the Branch platform contains.
  * </p>
  */
-class BranchLinkData extends JSONObject {
+public class BranchLinkData extends JSONObject {
 
     /**
      * <p>An iterable {@link Collection} of {@link String} tags associated with a deep
