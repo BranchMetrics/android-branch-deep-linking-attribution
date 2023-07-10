@@ -11,7 +11,7 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
     implementation(kotlin("stdlib"))
     implementation(kotlin("stdlib-jdk8"))
-    implementation("androidx.annotation:annotation:1.6.0")
+    implementation("androidx.annotation:annotation:1.4.0")
     implementation("com.android.installreferrer:installreferrer:2.2")
 
     // --- optional dependencies -----
