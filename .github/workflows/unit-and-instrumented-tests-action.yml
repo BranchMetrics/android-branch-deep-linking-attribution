@@ -44,7 +44,7 @@ jobs:
       - name: Launch Emulator
         run: |
           echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -memory 8192 -cache-size 1000 -partition-size 8192 2>&1 &
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
