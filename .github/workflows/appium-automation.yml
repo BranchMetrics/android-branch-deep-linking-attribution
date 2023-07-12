@@ -1,5 +1,6 @@
 name: appium-automation
-on: 
+on:
+  workflow_dispatch: 
   pull_request:
     types: [ opened, synchronize, reopened ]
 env:
@@ -52,4 +53,4 @@ jobs:
       - name: Execute automation
         run: |
           cd qa
-          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection.json" -DUploadNewBuild="Yes"
+          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DUploadNewBuild="Yes"
