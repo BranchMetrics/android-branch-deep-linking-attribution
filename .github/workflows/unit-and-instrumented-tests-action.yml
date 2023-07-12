@@ -39,7 +39,7 @@ jobs:
         run: |
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64" 
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         run: |
