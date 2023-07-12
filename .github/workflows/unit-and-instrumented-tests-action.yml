@@ -2,7 +2,7 @@ name: unit-and-instrumented-tests
 on: [push]
 env:
   API_MIN: 21
-  API_CURRENT: 33
+  API_CURRENT: 34
   JAVA_DISTRIBUTION: 'corretto'
   JAVA_VERSION: '17'
 jobs:
@@ -96,9 +96,6 @@ jobs:
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo $ANDROID_HOME/tools/bin/sdkmanager --list
-          echo $ANDROID_HOME/tools/bin/sdkmanager --update
-          echo $ANDROID_HOME/tools/bin/sdkmanager --list
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
