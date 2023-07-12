@@ -100,7 +100,7 @@ jobs:
           echo $ANDROID_HOME/tools/bin/sdkmanager --update
           echo $ANDROID_HOME/tools/bin/sdkmanager --list
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
