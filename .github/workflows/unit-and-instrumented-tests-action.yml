@@ -2,7 +2,9 @@ name: unit-and-instrumented-tests
 on: [push]
 env:
   API_MIN: 21
-  API_CURRENT: 33
+  API_CURRENT: 34
+  JAVA_DISTRIBUTION: 'corretto'
+  JAVA_VERSION: '17'
 jobs:
   unit-test-api-level-min:
     name: unit-test-api-level-$API_MIN
@@ -10,12 +12,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      # repo's gradle is configured to run on java 11
-      - name: Setup java 11 for gradle
+      # repo's gradle is configured to run on java 17
+      - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Run unit tests
         run: |
           ./gradlew :Branch-SDK:testDebugUnitTest 
@@ -45,12 +47,12 @@ jobs:
           nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
-      # repo's gradle is configured to run on java 11
-      - name: Setup java 11 for gradle
+      # repo's gradle is configured to run on java 17
+      - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
       # gradlew will automatically connect to booted emulator
       - name: Run instrumented tests
         run: |
@@ -68,12 +70,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      # repo's gradle is configured to run on java 11
-      - name: Setup java 11 for gradle
+      # repo's gradle is configured to run on java 17
+      - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Run unit tests
         run: |
           ./gradlew :Branch-SDK:testDebugUnitTest 
@@ -94,8 +96,9 @@ jobs:
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis;x86_64"
+          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         run: |
@@ -103,12 +106,12 @@ jobs:
           nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
-      # repo's gradle is configured to run on java 11
-      - name: Setup java 11 for gradle
+      # repo's gradle is configured to run on java 17
+      - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
       # gradlew will automatically connect to booted emulator
       - name: Run instrumented tests
         run: |

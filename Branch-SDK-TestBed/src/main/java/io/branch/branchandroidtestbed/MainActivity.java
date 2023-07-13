@@ -509,8 +509,19 @@ public class MainActivity extends Activity {
                         .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
                         .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
                         .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event", Toast.LENGTH_SHORT).show();
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+
             }
         });
 
