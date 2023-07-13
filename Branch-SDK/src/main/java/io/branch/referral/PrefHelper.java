@@ -110,8 +110,6 @@ public class PrefHelper {
     private static final String KEY_EXTERNAL_INTENT_EXTRA = "bnc_external_intent_extra";
     
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
-    private static final String KEY_LAST_STRONG_MATCH_TIME = "bnc_branch_strong_match_time";
-    
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
@@ -738,9 +736,11 @@ public class PrefHelper {
      * @return
      */
     public JSONObject getReferringURLQueryParameters()  {
-
         String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
+        PrefHelper.Debug("getReferringURLQueryParameters " + string);
+
         JSONObject params = new JSONObject();
+
         try {
             params = new JSONObject(string);
         }
@@ -1291,25 +1291,7 @@ public class PrefHelper {
         String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
         return getInteger(key, 0);
     }
-    
-    /**
-     * Saves the last strong match epoch time stamp
-     *
-     * @param strongMatchCheckTime epoch time stamp for last strong match
-     */
-    public void saveLastStrongMatchTime(long strongMatchCheckTime) {
-        setLong(KEY_LAST_STRONG_MATCH_TIME, strongMatchCheckTime);
-    }
-    
-    /**
-     * Get the last strong match check epoch time
-     *
-     * @return {@link Long} with last strong match epoch timestamp
-     */
-    public long getLastStrongMatchTime() {
-        return getLong(KEY_LAST_STRONG_MATCH_TIME);
-    }
-    
+
     /**
      * <p>Clears all the Branch referral shared preferences related to the current key.
      * Should be called before setting a new Branch-Key. </p>

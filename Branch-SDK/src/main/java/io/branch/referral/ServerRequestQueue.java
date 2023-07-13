@@ -290,19 +290,4 @@ public class ServerRequestQueue {
             }
         }
     }
-    
-    /**
-     * Sets the strong match wait for any init session request in the queue
-     */
-    void setStrongMatchWaitLock() {
-        synchronized (reqQueueLockObject) {
-            for (ServerRequest req : queue) {
-                if (req != null) {
-                    if (req instanceof ServerRequestInitSession) {
-                        req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
-                    }
-                }
-            }
-        }
-    }
 }

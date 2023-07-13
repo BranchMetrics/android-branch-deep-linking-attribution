@@ -109,8 +109,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
     private var waitingForSamsungInstallReferrer = false
     private var waitingForXiaomiInstallReferrer = false
 
-    /* Flag for checking of Strong matching is waiting on GAID fetch */
-    private var performCookieBasedStrongMatchingOnGAIDAvailable = false
     private var isInstantDeepLinkPossible = false
     private var activityLifeCycleObserver: BranchActivityLifecycleObserver? = null
     val trackingController: TrackingController
@@ -448,12 +446,8 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
     override fun onAdsParamsFetchFinished() {
         isGAParamsFetchInProgress = false
         requestQueue_!!.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK)
-        if (performCookieBasedStrongMatchingOnGAIDAvailable) {
-            performCookieBasedStrongMatch()
-            performCookieBasedStrongMatchingOnGAIDAvailable = false
-        } else {
-            processNextQueueItem()
-        }
+
+        processNextQueueItem()
     }
 
     override fun onGoogleInstallReferrerEventsFinished() {
@@ -1394,34 +1388,8 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
         if (grabIntentParams) {
             val intentData = activity.intent.data
             readAndStripParam(intentData, activity)
-            // Check for cookie based matching only if Tracking is enabled
-            if (!isTrackingDisabled && cookieBasedMatchDomain_ != null && prefHelper!!.branchKey != null &&
-                !prefHelper.branchKey.equals(PrefHelper.NO_STRING_VALUE, ignoreCase = true)
-            ) {
-                if (isGAParamsFetchInProgress) {
-                    // Wait for GAID to Available
-                    performCookieBasedStrongMatchingOnGAIDAvailable = true
-                } else {
-                    performCookieBasedStrongMatch()
-                }
-            }
         }
         processNextQueueItem()
-    }
-
-    private fun performCookieBasedStrongMatch() {
-        if (!trackingController.isTrackingDisabled) {
-            if (applicationContext != null) {
-                requestQueue_!!.setStrongMatchWaitLock()
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(
-                    applicationContext, cookieBasedMatchDomain_,
-                    deviceInfo, prefHelper
-                ) {
-                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK)
-                    processNextQueueItem()
-                }
-            }
-        }
     }
 
     /**
@@ -2653,10 +2621,8 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
 
         /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
         private const val DEF_AUTO_DEEP_LINK_REQ_CODE = 1501
-        private var cookieBasedMatchDomain_: String? =
-            "app.link" // Domain name used for cookie based matching.
-        private const val LATCH_WAIT_UNTIL =
-            2500 //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+
+        private const val LATCH_WAIT_UNTIL = 2500 //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
 
         /* List of keys whose values are collected from the Intent Extra.*/
         private val EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = arrayOf(
@@ -2897,7 +2863,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
             PrefHelper.shutDown()
             BranchUtil.shutDown()
 
-            // BranchStrongMatchHelper.shutDown();
             // BranchViewHandler.shutDown();
             // DeepLinkRoutingValidator.shutDown();
             // GooglePlayStoreAttribution.shutDown();
@@ -2940,33 +2905,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
 
         fun setIsUserAgentSync(sync: Boolean) {
             userAgentSync = sync
-        }
-
-        /**
-         *
-         *
-         * Enabled Strong matching check using chrome cookies. This method should be called before
-         * Branch#getAutoInstance(Context).
-         *
-         * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-         */
-        fun enableCookieBasedMatching(cookieMatchDomain: String?) {
-            cookieBasedMatchDomain_ = cookieMatchDomain
-        }
-
-        /**
-         *
-         *
-         * Enabled Strong matching check using chrome cookies. This method should be called before
-         * Branch#getAutoInstance(Context).
-         *
-         * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-         * @param delay             Time in millisecond to wait for the strong match to check to finish before Branch init session is called.
-         * Default time is 750 msec.
-         */
-        fun enableCookieBasedMatching(cookieMatchDomain: String?, delay: Int) {
-            cookieBasedMatchDomain_ = cookieMatchDomain
-            BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay)
         }
 
         fun registerPlugin(name: String?, version: String?) {
