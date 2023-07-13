@@ -24,15 +24,15 @@ dependencies {
 
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test:runner:1.4.0")
-    androidTestImplementation("androidx.test:rules:1.4.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     // assume partner has it
-    androidTestImplementation("com.google.android.gms:play-services-ads-identifier:17.0.0")
+    androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("junit:junit:4.12")
+    testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20201115")
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 }
@@ -54,10 +54,15 @@ android {
         minSdk = ANDROID_BUILD_TARGET_SDK_MINIMUM.toInt()
         targetSdk = ANDROID_BUILD_TARGET_SDK_VERSION.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("proguard-consumer.txt")
     }
 
     lint {
         abortOnError = false
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -66,7 +71,7 @@ android {
         }
 
         debug {
-            isTestCoverageEnabled = true
+            enableUnitTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
         }
@@ -79,6 +84,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    namespace = "io.branch.referral"
 
     publishing {
         singleVariant("release") {

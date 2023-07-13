@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":Branch-SDK"))
-    implementation("com.google.android.gms:play-services-ads:16.0.0")
+    implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
 
     /* Add chrome custom tabs for guaranteed matching */
     implementation("androidx.browser:browser:1.0.0") {
@@ -15,10 +15,10 @@ dependencies {
     }
     implementation("com.android.billingclient:billing:5.1.0")
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test:runner:1.4.0")
-    androidTestImplementation("androidx.test:rules:1.4.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
 
 android {
@@ -74,4 +74,5 @@ android {
             signingConfig = signingConfigs.findByName("release")
         }
     }
+    namespace = "io.branch.branchandroidtestbed"
 }

@@ -1,5 +1,13 @@
 # Branch Android SDK change log
+- v5.6.1
+  * _*Master Release*_ - Jun 30, 2023
+    - Revert the Kotlin version update from 1.8.22 back to 1.6.20.
 
+- v5.6.0
+  * _*Master Release*_ - Jun 28, 2023
+    - Added new method for logging a Branch Event with a callback, `logEvent(Context context, final BranchLogEventCallback callback)`
+    - Added proguard consumer rules to prevent R8 warning on Gradle 8 builds
+    
 - v5.5.0
   * _*Master Release*_ - Jun 14, 2023
     - Added support for easily logging Play Store transactions as Branch Events with `logEventWithPurchase`.
