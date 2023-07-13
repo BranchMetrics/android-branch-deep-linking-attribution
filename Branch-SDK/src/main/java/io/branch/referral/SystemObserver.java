@@ -34,6 +34,13 @@ import java.util.UUID;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+
+import io.branch.referral.coroutines.DataCoroutinesKt;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
+
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
  * attributes and parameters used by the Branch class, and made publicly available for use by
@@ -446,10 +453,50 @@ abstract class SystemObserver {
             if (isHuaweiMobileServicesAvailable(context)) {
                 new HuaweiOAIDFetchTask(context, callback).executeTask();
             } else {
-                new GAdsPrefetchTask(context, callback).executeTask();
+                this.executeAdInfoCoroutine(context, callback);
             }
         }
         return isPrefetchStarted;
+    }
+
+    private void executeAdInfoCoroutine(Context context, AdsParamsFetchEvents callback) {
+        DataCoroutinesKt.getAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
+            @NonNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
+
+            @Override
+            public void resumeWith(Object o) {
+                PrefHelper.Debug("info object resumeWith " + o);
+                if (o != null) {
+                    AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
+
+                    DeviceInfo di = DeviceInfo.getInstance();
+                    if (di == null) {
+                        di = new DeviceInfo(context);
+                    }
+
+                    SystemObserver so = di.getSystemObserver();
+                    if (so != null) {
+                        boolean latEnabled = info.isLimitAdTrackingEnabled();
+                        so.setLAT(latEnabled ? 1 : 0);
+
+                        // if limit ad tracking is enabled, null any advertising id
+                        if (latEnabled) {
+                            so.setGAID(null);
+                        }
+                        else {
+                            so.setGAID(info.getId());
+                        }
+                    }
+                    if (callback != null) {
+                        callback.onAdsParamsFetchFinished();
+                    }
+                }
+            }
+        });
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
