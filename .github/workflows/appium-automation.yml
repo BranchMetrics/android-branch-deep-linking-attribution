@@ -1,5 +1,6 @@
 name: appium-automation
 on: 
+  workflow_dispatch:
   pull_request:
     types: [ opened, synchronize, reopened ]
 env:
