@@ -10,7 +10,8 @@ suspend fun getAdvertisingInfoObject(context: Context): AdvertisingIdClient.Info
     return withContext(Dispatchers.Default) {
         try {
             AdvertisingIdClient.getAdvertisingIdInfo(context)
-        } catch (exception: Exception) {
+        }
+        catch (exception: Exception) {
             PrefHelper.Debug("getAdvertisingIdInfo exception: $exception")
             null
         }

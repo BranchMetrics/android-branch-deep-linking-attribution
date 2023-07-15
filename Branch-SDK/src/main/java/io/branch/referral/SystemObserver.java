@@ -37,6 +37,7 @@ import static android.content.Context.UI_MODE_SERVICE;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 
 import io.branch.referral.coroutines.DataCoroutinesKt;
+import io.branch.referral.util.PartnerUtilsKt;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -460,43 +461,57 @@ abstract class SystemObserver {
     }
 
     private void executeAdInfoCoroutine(Context context, AdsParamsFetchEvents callback) {
-        DataCoroutinesKt.getAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
-            @NonNull
-            @Override
-            public CoroutineContext getContext() {
-                return EmptyCoroutineContext.INSTANCE;
-            }
+        if(PartnerUtilsKt.classExists(PartnerUtilsKt.playStoreAdvertisingIdClientClass)) {
+            DataCoroutinesKt.getAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
 
-            @Override
-            public void resumeWith(Object o) {
-                PrefHelper.Debug("info object resumeWith " + o);
-                if (o != null) {
-                    AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
+                @Override
+                public void resumeWith(Object o) {
+                    if (o != null) {
+                        try {
+                            AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
 
-                    DeviceInfo di = DeviceInfo.getInstance();
-                    if (di == null) {
-                        di = new DeviceInfo(context);
-                    }
+                            DeviceInfo di = DeviceInfo.getInstance();
+                            if (di == null) {
+                                di = new DeviceInfo(context);
+                            }
 
-                    SystemObserver so = di.getSystemObserver();
-                    if (so != null) {
-                        boolean latEnabled = info.isLimitAdTrackingEnabled();
-                        so.setLAT(latEnabled ? 1 : 0);
+                            SystemObserver so = di.getSystemObserver();
+                            if (so != null) {
+                                boolean latEnabled = info.isLimitAdTrackingEnabled();
+                                so.setLAT(latEnabled ? 1 : 0);
 
-                        // if limit ad tracking is enabled, null any advertising id
-                        if (latEnabled) {
-                            so.setGAID(null);
+                                // if limit ad tracking is enabled, null any advertising id
+                                if (latEnabled) {
+                                    so.setGAID(null);
+                                }
+                                else {
+                                    so.setGAID(info.getId());
+                                }
+                            }
+                        } catch (Exception e) {
+                            PrefHelper.Debug("Error in continuation: " + e);
+                        } finally {
+                            if (callback != null) {
+                                callback.onAdsParamsFetchFinished();
+                            }
                         }
-                        else {
-                            so.setGAID(info.getId());
-                        }
-                    }
-                    if (callback != null) {
-                        callback.onAdsParamsFetchFinished();
                     }
                 }
+            });
+        }
+        else{
+            if (callback != null) {
+                callback.onAdsParamsFetchFinished();
             }
-        });
+
+            PrefHelper.Debug("Play Store service not found. " +
+                    "If not expected, import com.google.android.gms:play-services-ads-identifier into your gradle dependencies");
+        }
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {

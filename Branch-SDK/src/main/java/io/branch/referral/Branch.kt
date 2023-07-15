@@ -32,6 +32,7 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT
 import io.branch.referral.util.BranchEvent
 import io.branch.referral.util.CommerceEvent
 import io.branch.referral.util.LinkProperties
+import io.branch.referral.util.classExists
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -134,9 +135,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
         branchPluginSupport = BranchPluginSupport(context)
         branchQRCodeCache = BranchQRCodeCache(context)
         requestQueue_ = ServerRequestQueue.getInstance(context)
-        if (!trackingController.isTrackingDisabled) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress = deviceInfo.systemObserver.prefetchAdsParams(context, this)
-        }
     }
 
     /**
@@ -1290,7 +1288,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
             // just in case user accidentally queues up a couple install requests at the same time. During later sessions
             // request instanceof ServerRequestRegisterInstall = false
             if (checkInstallReferrer_ && request is ServerRequestRegisterInstall) {
-
                 // We may need to check if play store services exist, in the future
                 // Obtain all needed locks before executing any fetches
                 if (!StoreReferrerGooglePlayStore.hasBeenUsed) {
@@ -1353,16 +1350,6 @@ class Branch private constructor(context: Context) : IBranchViewEvents, AdsParam
             processNextQueueItem()
         } else {
             r.callback_ = request.callback_
-        }
-    }
-
-    private fun classExists(className: String): Boolean {
-        return try {
-            Class.forName(className)
-            true
-        } catch (e: ClassNotFoundException) {
-            PrefHelper.Debug("Could not find $className. If expected, import the dependency into your app.")
-            false
         }
     }
 
