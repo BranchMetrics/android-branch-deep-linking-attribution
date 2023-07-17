@@ -38,4 +38,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation(project(":Branch-SDK"))
     implementation 'com.intuit.sdp:sdp-android:1.0.6'
+
+    implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
 }
