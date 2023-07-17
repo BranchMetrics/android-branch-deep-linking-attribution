@@ -937,31 +937,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * <p>
-     * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).</p>
-     *
-     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     */
-    public static void enableCookieBasedMatching(String cookieMatchDomain) {
-        cookieBasedMatchDomain_ = cookieMatchDomain;
-    }
-    
-    /**
-     * <p>
-     * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).</p>
-     *
-     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     * @param delay             Time in millisecond to wait for the strong match to check to finish before Branch init session is called.
-     *                          Default time is 750 msec.
-     */
-    public static void enableCookieBasedMatching(String cookieMatchDomain, int delay) {
-        cookieBasedMatchDomain_ = cookieMatchDomain;
-        BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay);
-    }
-    
-    /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
      */
@@ -1060,12 +1035,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void onAdsParamsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        if (performCookieBasedStrongMatchingOnGAIDAvailable) {
-            performCookieBasedStrongMatch();
-            performCookieBasedStrongMatchingOnGAIDAvailable = false;
-        } else {
-            processNextQueueItem();
-        }
+
+        processNextQueueItem();
     }
     
     @Override
@@ -2078,35 +2049,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
-            // Check for cookie based matching only if Tracking is enabled
-            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null &&
-                    prefHelper_.getBranchKey() != null &&
-                    !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-                if (isGAParamsFetchInProgress_) {
-                    // Wait for GAID to Available
-                    performCookieBasedStrongMatchingOnGAIDAvailable = true;
-                } else {
-                    performCookieBasedStrongMatch();
-                }
-            }
         }
         processNextQueueItem();
-    }
-
-    private void performCookieBasedStrongMatch() {
-        if (!trackingController.isTrackingDisabled()) {
-            if (context_ != null) {
-                requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context_, cookieBasedMatchDomain_,
-                        deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
-                    @Override
-                    public void onStrongMatchCheckFinished() {
-                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
-                        processNextQueueItem();
-                    }
-                });
-            }
-        }
     }
     
     /**
