@@ -78,7 +78,12 @@ public class DeviceInfoTest extends BranchTest {
 
         Assert.assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
 
-        Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
+        if(DeviceInfo.getInstance().getSystemObserver().getLATVal() == 0) {
+            Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
+        }
+        else{
+            Assert.assertTrue(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
+        }
     }
 
     @Test

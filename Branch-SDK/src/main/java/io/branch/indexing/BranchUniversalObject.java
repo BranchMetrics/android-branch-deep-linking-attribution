@@ -281,52 +281,6 @@ public class BranchUniversalObject implements Parcelable {
     
     /**
      * <p>
-     * Publish this BUO with Google app indexing so that the contents will be available with google search
-     * with branch link pointing to the app.
-     * </p>
-     *
-     * @param context Application context
-     */
-    public void listOnGoogleSearch(Context context) {
-        AppIndexingHelper.addToAppIndex(context, this, null);
-    }
-    
-    /**
-     * <p>
-     * Publish this BUO with Google app indexing so that the contents will be available with google search
-     * with branch link pointing to the app. This method takes additional {@link LinkProperties} parameter to configure the link settings for your link that is indexed
-     * </p>
-     *
-     * @param context Application context
-     */
-    public void listOnGoogleSearch(Context context, LinkProperties linkProperties) {
-        AppIndexingHelper.addToAppIndex(context, this, linkProperties);
-    }
-    
-    /**
-     * Remove the BUO from the local indexing if it is added to the local indexing already
-     * This will remove the content from Google(Firebase) and other supported Indexing services
-     *
-     * @param context Application context
-     */
-    public void removeFromLocalIndexing(Context context) {
-        AppIndexingHelper.removeFromFirebaseLocalIndex(context, this, null);
-    }
-    
-    /**
-     * Remove the BUO from the local indexing if it is added to the local indexing already
-     * This will remove the content from Google(Firebase) and other supported Indexing services
-     * This method takes additional {@link LinkProperties} parameter. Use this method if you indexed the content using {@link #listOnGoogleSearch(Context, LinkProperties)} method
-     * otherwise use {@link #removeFromLocalIndexing(Context)}
-     *
-     * @param context Application context
-     */
-    public void removeFromLocalIndexing(Context context, LinkProperties linkProperties) {
-        AppIndexingHelper.removeFromFirebaseLocalIndex(context, this, linkProperties);
-    }
-    
-    /**
-     * <p>
      * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
      * </p>
      *

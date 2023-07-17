@@ -23,9 +23,6 @@ dependencies {
     compileOnly("com.google.android.gms:play-services-ads-identifier:18.0.1")
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
 
-    implementation("com.google.firebase:firebase-appindexing:19.0.0")
-
-
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")
