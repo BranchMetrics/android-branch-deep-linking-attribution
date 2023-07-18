@@ -241,8 +241,6 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 branchUniversalObject.registerView();
                 // List on google search
-                branchUniversalObject.listOnGoogleSearch(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Registered View and Listed on Google", Toast.LENGTH_SHORT).show();
             }
         });
 

@@ -46,8 +46,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK,
-        STRONG_MATCH_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK,
+        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK,
         HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK,
         GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK,
         SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK,
@@ -199,12 +198,14 @@ public abstract class ServerRequest {
 
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
-        } else {
+        }
+        else {
             JSONObject userDataObj = new JSONObject();
             params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
-        DeviceInfo.getInstance().updateRequestWithParamsAllEvents(this, prefHelper_, params_);
+
+        params_.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
     }
     
     /**

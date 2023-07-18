@@ -217,20 +217,6 @@ class DeviceInfo {
         } catch (JSONException ignore) { }
     }
 
-    /**
-     * Update the server request with params for all events
-     * @param serverRequest
-     * @param prefHelper
-     * @param requestObj
-     */
-    void updateRequestWithParamsAllEvents(ServerRequest serverRequest, PrefHelper prefHelper, JSONObject requestObj){
-        try {
-            requestObj.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
-        }
-        catch (JSONException ignore){
-        }
-    }
-
     private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {
         if (serverRequest.isInitializationOrEventRequest()) {
             // fields for parity with Tune traffic

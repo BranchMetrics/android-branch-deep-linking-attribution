@@ -379,8 +379,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
-
-    private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
     
     private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
     
@@ -400,8 +398,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean waitingForSamsungInstallReferrer = false;
     private boolean waitingForXiaomiInstallReferrer = false;
 
-    /* Flag for checking of Strong matching is waiting on GAID fetch */
-    private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
     private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
@@ -691,7 +687,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
-        // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
         // DeepLinkRoutingValidator.shutDown();
         // GooglePlayStoreAttribution.shutDown();
@@ -937,31 +932,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * <p>
-     * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).</p>
-     *
-     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     */
-    public static void enableCookieBasedMatching(String cookieMatchDomain) {
-        cookieBasedMatchDomain_ = cookieMatchDomain;
-    }
-    
-    /**
-     * <p>
-     * Enabled Strong matching check using chrome cookies. This method should be called before
-     * Branch#getAutoInstance(Context).</p>
-     *
-     * @param cookieMatchDomain The domain for the url used to match the cookie (eg. example.app.link)
-     * @param delay             Time in millisecond to wait for the strong match to check to finish before Branch init session is called.
-     *                          Default time is 750 msec.
-     */
-    public static void enableCookieBasedMatching(String cookieMatchDomain, int delay) {
-        cookieBasedMatchDomain_ = cookieMatchDomain;
-        BranchStrongMatchHelper.getInstance().setStrongMatchUrlHitDelay(delay);
-    }
-    
-    /**
      * <p>Perform the state-safe actions required to terminate any open session, and report the
      * closed application event to the Branch API.</p>
      */
@@ -1060,12 +1030,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     public void onAdsParamsFetchFinished() {
         isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        if (performCookieBasedStrongMatchingOnGAIDAvailable) {
-            performCookieBasedStrongMatch();
-            performCookieBasedStrongMatchingOnGAIDAvailable = false;
-        } else {
-            processNextQueueItem();
-        }
+
+        processNextQueueItem();
     }
     
     @Override
@@ -2078,35 +2044,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
-            // Check for cookie based matching only if Tracking is enabled
-            if (!isTrackingDisabled() && cookieBasedMatchDomain_ != null &&
-                    prefHelper_.getBranchKey() != null &&
-                    !prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE)) {
-                if (isGAParamsFetchInProgress_) {
-                    // Wait for GAID to Available
-                    performCookieBasedStrongMatchingOnGAIDAvailable = true;
-                } else {
-                    performCookieBasedStrongMatch();
-                }
-            }
         }
         processNextQueueItem();
-    }
-
-    private void performCookieBasedStrongMatch() {
-        if (!trackingController.isTrackingDisabled()) {
-            if (context_ != null) {
-                requestQueue_.setStrongMatchWaitLock();
-                BranchStrongMatchHelper.getInstance().checkForStrongMatch(context_, cookieBasedMatchDomain_,
-                        deviceInfo_, prefHelper_, new BranchStrongMatchHelper.StrongMatchCheckEvents() {
-                    @Override
-                    public void onStrongMatchCheckFinished() {
-                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.STRONG_MATCH_PENDING_WAIT_LOCK);
-                        processNextQueueItem();
-                    }
-                });
-            }
-        }
     }
     
     /**
@@ -3346,170 +3285,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         else {
             PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
         }
-    }
-
-    //-------------------------- DEPRECATED --------------------------------------//
-
-    /**
-     * <p> Legacy class for building a share link dialog. Use {@link BranchShareSheetBuilder} instead. </p>
-     */
-    @Deprecated public static class ShareLinkBuilder extends BranchShareSheetBuilder {
-        @Deprecated public ShareLinkBuilder(Activity activity, JSONObject parameters) { super(activity, parameters); }
-        @Deprecated public ShareLinkBuilder(Activity activity, BranchShortLinkBuilder shortLinkBuilder) { super(activity, shortLinkBuilder); }
-        public ShareLinkBuilder setMessage(String message) { super.setMessage(message); return this; }
-        public ShareLinkBuilder setSubject(String subject) { super.setSubject(subject); return this; }
-        public ShareLinkBuilder addTag(String tag) { super.addTag(tag); return this; }
-        public ShareLinkBuilder addTags(ArrayList<String> tags) { super.addTags(tags); return this; }
-        public ShareLinkBuilder setFeature(String feature) { super.setFeature(feature); return this; }
-        public ShareLinkBuilder setStage(String stage) { super.setStage(stage); return this; }
-        public ShareLinkBuilder setCallback(BranchLinkShareListener callback) { super.setCallback(callback); return this; }
-        public ShareLinkBuilder setChannelProperties(IChannelProperties channelPropertiesCallback) { super.setChannelProperties(channelPropertiesCallback); return this; }
-        public ShareLinkBuilder addPreferredSharingOption(SharingHelper.SHARE_WITH preferredOption) { super.addPreferredSharingOption(preferredOption); return this; }
-        public ShareLinkBuilder addPreferredSharingOptions(ArrayList<SharingHelper.SHARE_WITH> preferredOptions) { super.addPreferredSharingOptions(preferredOptions); return this; }
-        public ShareLinkBuilder addParam(String key, String value) { super.addParam(key, value); return this; }
-        public ShareLinkBuilder setDefaultURL(String url) { super.setDefaultURL(url); return this; }
-        public ShareLinkBuilder setMoreOptionStyle(Drawable icon, String label) { super.setMoreOptionStyle(icon, label); return this; }
-        public ShareLinkBuilder setMoreOptionStyle(int drawableIconID, int stringLabelID) { super.setMoreOptionStyle(drawableIconID, stringLabelID); return this; }
-        public ShareLinkBuilder setCopyUrlStyle(Drawable icon, String label, String message) { super.setCopyUrlStyle(icon, label, message); return this; }
-        public ShareLinkBuilder setCopyUrlStyle(int drawableIconID, int stringLabelID, int stringMessageID) { super.setCopyUrlStyle(drawableIconID, stringLabelID, stringMessageID); return this; }
-        public ShareLinkBuilder setAlias(String alias) { super.setAlias(alias); return this; }
-        public ShareLinkBuilder setMatchDuration(int matchDuration) { super.setMatchDuration(matchDuration); return this; }
-        public ShareLinkBuilder setAsFullWidthStyle(boolean setFullWidthStyle) { super.setAsFullWidthStyle(setFullWidthStyle); return this; }
-        public ShareLinkBuilder setDialogThemeResourceID(@StyleRes int styleResourceID) { super.setDialogThemeResourceID(styleResourceID); return this; }
-        public ShareLinkBuilder setDividerHeight(int height) { super.setDividerHeight(height); return this; }
-        public ShareLinkBuilder setSharingTitle(String title) { super.setSharingTitle(title); return this; }
-        public ShareLinkBuilder setSharingTitle(View titleView) { super.setSharingTitle(titleView); return this; }
-        public ShareLinkBuilder setIconSize(int iconSize) { super.setIconSize(iconSize); return this; }
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull String packageName) { super.excludeFromShareSheet(packageName); return this; }
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull String[] packageName) { super.excludeFromShareSheet(packageName); return this; }
-        public ShareLinkBuilder excludeFromShareSheet(@NonNull List<String> packageNames) { super.excludeFromShareSheet(packageNames); return this; }
-        public ShareLinkBuilder includeInShareSheet(@NonNull String packageName) { super.includeInShareSheet(packageName); return this; }
-        public ShareLinkBuilder includeInShareSheet(@NonNull String[] packageName) { super.includeInShareSheet(packageName); return this; }
-        public ShareLinkBuilder includeInShareSheet(@NonNull List<String> packageNames) { super.includeInShareSheet(packageNames); return this; }
-    }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback) { Branch.sessionBuilder(null).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).init(); */
-    public boolean initSession(BranchReferralInitListener callback) { Branch.sessionBuilder(null).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).init(); */
-    public boolean initSession(BranchReferralInitListener callback, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data) {Branch.sessionBuilder(null).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, Uri data) {Branch.sessionBuilder(null).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, Uri data, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, Uri data, Activity activity) { Branch.sessionBuilder(activity).withCallback(callback).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).init(); */
-    public boolean initSession() {Branch.sessionBuilder(null).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).init(); */
-    public boolean initSession(Activity activity) {Branch.sessionBuilder(activity).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init(); */
-    public boolean initSessionForced(BranchReferralInitListener callback) { Branch.sessionBuilder(null).ignoreIntent(true).withCallback(callback).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withData(data).init(); */
-    public boolean initSessionWithData(Uri data) {Branch.sessionBuilder(null).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withData(data).init(); */
-    public boolean initSessionWithData(Uri data, Activity activity) {Branch.sessionBuilder(activity).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).isReferrable(isReferrable).init(); */
-    public boolean initSession(boolean isReferrable) {Branch.sessionBuilder(null).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).isReferrable(isReferrable).init(); */
-    public boolean initSession(boolean isReferrable, @NonNull Activity activity) {Branch.sessionBuilder(activity).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Uri data, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).withData(data).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable) {Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable) { Branch.sessionBuilder(null).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchUniversalReferralInitListener callback, boolean isReferrable, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init(); */
-    public boolean initSession(BranchReferralInitListener callback, boolean isReferrable, Activity activity) {Branch.sessionBuilder(activity).withCallback(callback).isReferrable(isReferrable).init();return true; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit(); */
-    public boolean reInitSession(Activity activity, BranchUniversalReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
-    /** @deprecated use Branch.sessionBuilder(activity).withCallback(callback).reInit();*/
-    public boolean reInitSession(Activity activity, BranchReferralInitListener callback) {Branch.sessionBuilder(activity).withCallback(callback).reInit();return activity == null || activity.getIntent() == null; }
-
-    /**
-     * @deprecated setDebug is deprecated and all functionality has been disabled. If you wish to enable
-     * logging, please invoke enableLogging. If you wish to simulate installs, please see add a Test Device
-     * (https://help.branch.io/using-branch/docs/adding-test-devices) then reset your test device's data
-     * (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * If you wish to use the test key rather than the live key, please invoke enableTestMode.
-     */
-    public void setDebug() {
-        PrefHelper.LogAlways("setDebug is deprecated and all functionality has been disabled. " +
-                "If you wish to enable logging, please invoke enableLogging. If you wish to simulate installs," +
-                " please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
-                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data). " +
-                "If you wish to use the test key rather than the live key, please invoke enableTestMode.");
-    }
-
-    /**
-     * @deprecated enableDebugMode is deprecated and all functionality has been disabled. If you wish to enable
-     * logging, please invoke enableLogging. If you wish to simulate installs, please see add a Test Device
-     * (https://help.branch.io/using-branch/docs/adding-test-devices) then reset your test device's data
-     * (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * If you wish to use the test key rather than the live key, please invoke enableTestMode.
-     */
-    public static void enableDebugMode() {
-        PrefHelper.LogAlways("enableDebugMode is deprecated and all functionality has been disabled. " +
-                "If you wish to enable logging, please invoke enableLogging. If you wish to simulate installs," +
-                " please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
-                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data). " +
-                "If you wish to use the test key rather than the live key, please invoke enableTestMode.");
-    }
-
-    /** @deprecated (deprecated and all functionality has been disabled, see enableDebugMode for more information) */
-    public static void disableDebugMode() {}
-
-    /**
-     * @deprecated enableSimulateInstalls is deprecated and all functionality has been disabled. If
-     * you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
-     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * */
-    public static void enableSimulateInstalls() {
-        PrefHelper.LogAlways("enableSimulateInstalls is deprecated and all functionality has been disabled. " +
-                "If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices) " +
-                "then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
-    }
-
-    /** @deprecated see enableSimulateInstalls() for more information */
-    public static void disableSimulateInstalls() { }
-
-    /** @deprecated use getAutoInstance(context) and the set <meta-data android:name="io.branch.sdk.TestMode" android:value="false" /> in your manifest */
-    public static Branch getInstance(@NonNull Context context) { return getAutoInstance(context); }
-
-    /** @deprecated use getAutoInstance(context) and the set <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> in your manifest */
-    public static Branch getTestInstance(@NonNull Context context) {
-        Branch.enableTestMode();
-        return getAutoInstance(context);
-    }
-
-    /** @deprecated use getAutoInstance(Context), isReferrable functionality (i.e. treating opens as installs) is discontinued. */
-    public static Branch getAutoInstance(@NonNull Context context, boolean isReferrable) { return getAutoInstance(context); }
-
-    /** @deprecated use Branch.enableTestMode() together with getAutoInstance(Context) */
-    public static Branch getAutoTestInstance(@NonNull Context context) {
-        Branch.enableTestMode();
-        return getAutoInstance(context);
-    }
-
-    /** @deprecated use getAutoInstance(Context, String) */
-    public static Branch getInstance(@NonNull Context context, @NonNull String branchKey) { return getAutoInstance(context, branchKey); }
-
-    /** @deprecated use Branch.enableTestMode() together with getAutoInstance(Context), isReferrable functionality (i.e. treating opens as installs) is discontinued. */
-    public static Branch getAutoTestInstance(@NonNull Context context, boolean isReferrable) {
-        Branch.enableTestMode();
-        return getAutoInstance(context, null);
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
