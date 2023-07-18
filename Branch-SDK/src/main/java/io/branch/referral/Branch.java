@@ -379,8 +379,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
     private boolean isGAParamsFetchInProgress_ = false;
-
-    private static String cookieBasedMatchDomain_ = "app.link"; // Domain name used for cookie based matching.
     
     private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
     
@@ -400,8 +398,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private boolean waitingForSamsungInstallReferrer = false;
     private boolean waitingForXiaomiInstallReferrer = false;
 
-    /* Flag for checking of Strong matching is waiting on GAID fetch */
-    private boolean performCookieBasedStrongMatchingOnGAIDAvailable = false;
     private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
@@ -691,7 +687,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
-        // BranchStrongMatchHelper.shutDown();
         // BranchViewHandler.shutDown();
         // DeepLinkRoutingValidator.shutDown();
         // GooglePlayStoreAttribution.shutDown();

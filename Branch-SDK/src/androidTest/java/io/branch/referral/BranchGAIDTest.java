@@ -138,22 +138,6 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     @Test
-    public void testLogout_hasGAIDv1() {
-        // TODO: initSession needed first
-    }
-
-    @Test
-    public void testPing_hasGAIDv1() {
-        // TODO: Ping does not get enqueued
-    }
-
-    @Test
-    public void testClose_hasGAIDv1() {
-        // TODO: Close happens in a Session context
-        // Note that closeSessionInternal cannot be run on a non-UI thread
-    }
-
-    @Test
     public void testStandardEvent_hasGAIDv2() {
         initBranchInstance(TEST_KEY);
         initSessionResumeActivity(new Runnable() {
