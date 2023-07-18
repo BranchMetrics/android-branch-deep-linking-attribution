@@ -493,9 +493,11 @@ abstract class SystemObserver {
                                     so.setGAID(info.getId());
                                 }
                             }
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e) {
                             PrefHelper.Debug("Error in continuation: " + e);
-                        } finally {
+                        }
+                        finally {
                             if (callback != null) {
                                 callback.onAdsParamsFetchFinished();
                             }
