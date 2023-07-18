@@ -5,6 +5,7 @@ plugins {
     kotlin("android")
     `maven-publish`
     signing
+    id("org.gradle.test-retry") version "1.5.3"
 }
 
 dependencies {
@@ -248,6 +249,9 @@ tasks {
             )
             showStandardStreams = true
             showExceptions = true
+        }
+        retry {
+            maxRetries.set(3)
         }
     }
 }
