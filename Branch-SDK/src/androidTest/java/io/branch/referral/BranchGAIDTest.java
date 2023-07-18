@@ -232,7 +232,6 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasGAIDv1(ServerRequest serverRequest, boolean assertTrue) {
-        PrefHelper.Debug("serverrequest " + serverRequest.getGetParams());
         if (assertTrue) {
             Assert.assertTrue(hasV1LAT(serverRequest));
 
