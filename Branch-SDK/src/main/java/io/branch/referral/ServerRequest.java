@@ -198,12 +198,14 @@ public abstract class ServerRequest {
 
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
-        } else {
+        }
+        else {
             JSONObject userDataObj = new JSONObject();
             params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
-        DeviceInfo.getInstance().updateRequestWithParamsAllEvents(this, prefHelper_, params_);
+
+        params_.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
     }
     
     /**
