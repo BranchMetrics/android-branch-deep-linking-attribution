@@ -1662,35 +1662,27 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     // PRIVATE FUNCTIONS
     
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
-        if (trackingController.isTrackingDisabled()) {
-            return req.getLongUrl();
+        ServerResponse response = null;
+        try {
+            int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
+            response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
         }
-        if (initState_ == SESSION_STATE.INITIALISED) {
-            ServerResponse response = null;
+        String url = null;
+        if (req.isDefaultToLongUrl()) {
+            url = req.getLongUrl();
+        }
+        if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
             try {
-                int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-                response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
-            }
-            String url = null;
-            if (req.isDefaultToLongUrl()) {
-                url = req.getLongUrl();
-            }
-            if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                try {
-                    url = response.getObject().getString("url");
-                    if (req.getLinkPost() != null) {
-                        linkCache_.put(req.getLinkPost(), url);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                url = response.getObject().getString("url");
+                if (req.getLinkPost() != null) {
+                    linkCache_.put(req.getLinkPost(), url);
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            return url;
-        } else {
-            PrefHelper.Debug("Warning: User session has not been initialized");
         }
-        return null;
+        return url;
     }
     
     private JSONObject convertParamsStringToDictionary(String paramString) {
