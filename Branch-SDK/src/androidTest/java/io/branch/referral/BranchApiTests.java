@@ -71,7 +71,7 @@ public class BranchApiTests extends BranchTest {
     }
 
     @Test
-    public void test00GetShortUrlSyncFailure() {
+    public void test00GetShortUrlSync() {
         String url = new BranchShortLinkBuilder(getTestContext()).getShortUrl();
         Assert.assertNotNull(url);
     }
