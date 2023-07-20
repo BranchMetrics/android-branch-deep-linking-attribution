@@ -118,8 +118,6 @@ jobs:
       - name: Run instrumented tests
         run: |
           ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --info
-          adb shell dumpsys package io.branch.referral.test
-          adb shell "cat /proc/meminfo"
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
