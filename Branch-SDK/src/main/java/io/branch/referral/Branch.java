@@ -900,6 +900,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void closeSessionInternal() {
         clearPartnerParameters();
         executeClose();
+        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setExternalIntentUri(null);
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
