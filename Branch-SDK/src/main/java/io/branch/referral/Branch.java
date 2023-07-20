@@ -937,15 +937,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void executeClose() {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
-            ServerRequest req = new ServerRequestRegisterClose(context_);
-            if (closeRequestNeeded) {
-                handleNewRequest(req);
-            } else {
-                req.onRequestSucceeded(null, null);
-            }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
-        closeRequestNeeded = false;
     }
 
     public static void registerPlugin(String name, String version) {
@@ -2067,10 +2060,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             if ((req instanceof ServerRequestLogout)) {
                 req.handleFailure(BranchError.ERR_NO_SESSION, "");
                 PrefHelper.Debug("Branch is not initialized, cannot logout");
-                return;
-            }
-            if ((req instanceof ServerRequestRegisterClose)) {
-                PrefHelper.Debug("Branch is not initialized, cannot close session");
                 return;
             }
             if (requestNeedsSession(req)) {
