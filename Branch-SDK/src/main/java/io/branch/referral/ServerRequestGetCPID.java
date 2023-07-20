@@ -69,11 +69,6 @@ public class ServerRequestGetCPID extends ServerRequest {
         return BRANCH_API_VERSION.V1_CPID;
     }
 
-    @Override
-    protected boolean shouldUpdateLimitFacebookTracking() {
-        return true;
-    }
-
     public interface BranchCrossPlatformIdListener {
         void onDataFetched(BranchCPID branchCPID, BranchError error);
     }

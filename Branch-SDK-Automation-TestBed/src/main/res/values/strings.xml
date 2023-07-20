@@ -253,7 +253,6 @@
         <item>INITIATE_PURCHASE</item>
         <item>ADD_PAYMENT_INFO</item>
         <item>PURCHASE</item>
-        <item>SPEND_CREDITS</item>
         <item>SEARCH</item>
         <item>VIEW_ITEM</item>
         <item>VIEW_ITEMS</item>

@@ -87,11 +87,6 @@ public class ServerRequestLogEvent extends ServerRequest {
         return BRANCH_API_VERSION.V2; //This is a v2 event
     }
 
-    @Override
-    protected boolean shouldUpdateLimitFacebookTracking() {
-        return true;
-    }
-
     public boolean shouldRetryOnFail() {
         return true; // Branch event need to be retried on failure.
     }
