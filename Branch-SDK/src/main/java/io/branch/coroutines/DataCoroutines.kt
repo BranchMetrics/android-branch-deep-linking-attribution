@@ -6,7 +6,6 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import io.branch.referral.PrefHelper
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,7 +16,6 @@ suspend fun getAdvertisingInfoObject(context: Context): AdvertisingIdClient.Info
             AdvertisingIdClient.getAdvertisingIdInfo(context)
         }
         catch (exception: Exception) {
-            PrefHelper.Debug("getAdvertisingIdInfo exception: $exception")
             null
         }
     }
@@ -145,4 +143,6 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
         }
     })
     return deferredReferrerDetails.await()
+}
+
 }
