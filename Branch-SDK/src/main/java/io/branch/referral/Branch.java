@@ -1239,8 +1239,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         //On Logout clear the link cache and all pending requests
         linkCache_.clear();
         requestQueue_.clear();
-        if (callback_ != null) {
-            callback_.onLogoutFinished(true, null);
+        if (callback != null) {
+            callback.onLogoutFinished(true, null);
         }
     }
     
