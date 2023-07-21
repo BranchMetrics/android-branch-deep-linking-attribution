@@ -374,8 +374,6 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
-            extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
             extendedReq = new ServerRequestRegisterClose(Defines.RequestPath.RegisterClose, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {

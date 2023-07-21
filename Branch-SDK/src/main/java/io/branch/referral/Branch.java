@@ -1232,9 +1232,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        ServerRequest req = new ServerRequestLogout(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
+        prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.clearUserValues();
+        //On Logout clear the link cache and all pending requests
+        linkCache_.clear();
+        requestQueue_.clear();
+        if (callback_ != null) {
+            callback_.onLogoutFinished(true, null);
         }
     }
     
@@ -2064,11 +2070,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            if ((req instanceof ServerRequestLogout)) {
-                req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                PrefHelper.Debug("Branch is not initialized, cannot logout");
-                return;
-            }
             if ((req instanceof ServerRequestRegisterClose)) {
                 PrefHelper.Debug("Branch is not initialized, cannot close session");
                 return;
@@ -2402,12 +2403,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 } catch (JSONException ex) {
                     ex.printStackTrace();
                 }
-            } else if (thisReq_ instanceof ServerRequestLogout) {
-                //On Logout clear the link cache and all pending requests
-                linkCache_.clear();
-                requestQueue_.clear();
             }
-
 
             if (thisReq_ instanceof ServerRequestInitSession || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
                 // If this request changes a session update the session-id to queued requests.

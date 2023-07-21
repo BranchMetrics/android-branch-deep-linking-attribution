@@ -259,7 +259,6 @@ public class Defines {
         @Deprecated GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
-        Logout("v1/logout"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
