@@ -23,6 +23,8 @@ dependencies {
 
     compileOnly("com.google.android.gms:play-services-ads-identifier:18.0.1")
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
+    compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
+    compileOnly("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
