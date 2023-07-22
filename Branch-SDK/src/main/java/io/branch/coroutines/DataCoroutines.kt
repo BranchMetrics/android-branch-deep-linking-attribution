@@ -6,6 +6,7 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import io.branch.referral.PrefHelper
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,6 +17,7 @@ suspend fun getAdvertisingInfoObject(context: Context): AdvertisingIdClient.Info
             AdvertisingIdClient.getAdvertisingIdInfo(context)
         }
         catch (exception: Exception) {
+            PrefHelper.Debug("getAdvertisingIdInfo exception: $exception")
             null
         }
     }
@@ -33,6 +35,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails
                         client.installReferrer
                     }
                     catch (e: RemoteException) {
+                        PrefHelper.Debug("getGooglePlayStoreReferrerDetails exception: $e")
                         null
                     }
                 )
@@ -64,6 +67,7 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms
                         client.installReferrer
                     }
                     catch (e: RemoteException) {
+                        PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails exception: $e")
                         null
                     }
                 )
@@ -95,6 +99,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer
                         client.installReferrer
                     }
                     catch (e: RemoteException) {
+                        PrefHelper.Debug("getXiaomiGetAppsReferrerDetails exception: $e")
                         null
                     }
                 )
@@ -120,12 +125,13 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
 
     client.startConnection(object : com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
         override fun onInstallReferrerSetupFinished(p0: Int) {
-            if (p0 == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
+            if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                 deferredReferrerDetails.complete(
                     try {
                         client.installReferrer
                     }
                     catch (e: RemoteException) {
+                        PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails exception: $e")
                         null
                     }
                 )
@@ -143,6 +149,4 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
         }
     })
     return deferredReferrerDetails.await()
-}
-
 }
