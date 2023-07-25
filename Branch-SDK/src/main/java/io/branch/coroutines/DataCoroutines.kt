@@ -41,6 +41,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails
                 )
             }
             else {
+                PrefHelper.Debug("getGooglePlayStoreReferrerDetails response code: $responseInt")
                 deferredReferrerDetails.complete(null)
             }
             client.endConnection()
@@ -73,6 +74,7 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms
                 )
             }
             else {
+                PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails response code: $responseInt")
                 deferredReferrerDetails.complete(null)
             }
             client.endConnection()
@@ -105,6 +107,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer
                 )
             }
             else {
+                PrefHelper.Debug("getXiaomiGetAppsReferrerDetails response code: $state")
                 deferredReferrerDetails.complete(null)
             }
             client.endConnection()
@@ -137,6 +140,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
                 )
             }
             else {
+                PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails response code: $p0")
                 deferredReferrerDetails.complete(null)
             }
             client.endConnection()
