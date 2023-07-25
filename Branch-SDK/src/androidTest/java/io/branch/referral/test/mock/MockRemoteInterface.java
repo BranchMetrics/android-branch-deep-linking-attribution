@@ -1,22 +1,19 @@
 package io.branch.referral.test.mock;
 
+import static io.branch.referral.Defines.RequestPath.GetCPID;
+import static io.branch.referral.Defines.RequestPath.GetURL;
+import static io.branch.referral.Defines.RequestPath.IdentifyUser;
+import static io.branch.referral.Defines.RequestPath.QRCode;
+import static io.branch.referral.Defines.RequestPath.RegisterInstall;
+import static io.branch.referral.Defines.RequestPath.RegisterOpen;
+
 import org.json.JSONObject;
 
 import java.util.UUID;
 
-import io.branch.referral.Branch;
 import io.branch.referral.BranchTest;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.network.BranchRemoteInterface;
-
-import static io.branch.referral.Defines.RequestPath.GetCPID;
-import static io.branch.referral.Defines.RequestPath.QRCode;
-import static io.branch.referral.Defines.RequestPath.GetCreditHistory;
-import static io.branch.referral.Defines.RequestPath.GetCredits;
-import static io.branch.referral.Defines.RequestPath.GetURL;
-import static io.branch.referral.Defines.RequestPath.IdentifyUser;
-import static io.branch.referral.Defines.RequestPath.RegisterInstall;
-import static io.branch.referral.Defines.RequestPath.RegisterOpen;
 
 public class MockRemoteInterface extends BranchRemoteInterface {
     private final static String TAG = "MockRemoteInterface";

@@ -255,8 +255,6 @@ public class Defines {
         RegisterInstall("v1/install"),
         RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
-        @Deprecated GetCredits("v1/credits/"),
-        @Deprecated GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
         Logout("v1/logout"),
