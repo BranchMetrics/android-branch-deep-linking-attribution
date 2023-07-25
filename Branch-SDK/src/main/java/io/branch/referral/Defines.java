@@ -253,7 +253,6 @@ public class Defines {
         GetURL("v1/url"),
         GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
-        RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
