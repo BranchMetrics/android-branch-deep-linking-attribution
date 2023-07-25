@@ -46,7 +46,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK,
+        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK,
         HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK,
         GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK,
         SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK,
@@ -155,6 +155,16 @@ public abstract class ServerRequest {
      */
     boolean isPersistable() {
         return true;
+    }
+    
+    /**
+     * Specifies whether this request should add the limit app tracking value
+     *
+     * @return {@code true} to add the limit app tracking value to the request else false.
+     * {@code false} by default. Should override for requests that need limited app tracking value.
+     */
+    protected boolean shouldUpdateLimitFacebookTracking() {
+        return false;
     }
     
     /**
@@ -522,6 +532,22 @@ public abstract class ServerRequest {
            PrefHelper.Debug("Could not merge metadata, ignoring user metadata.");
         }
     }
+    
+    /*
+     * Update the the limit app tracking value to the request
+     */
+    private void updateLimitFacebookTracking() {
+        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        if (updateJson != null) {
+            boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
+            if (isLimitFacebookTracking) {
+                try {
+                    updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
+                } catch (JSONException ignore) {
+                }
+            }
+        }
+    }
 
     private void updateDisableAdNetworkCallouts() {
         JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
@@ -552,6 +578,9 @@ public abstract class ServerRequest {
     
     void doFinalUpdateOnMainThread() {
         updateRequestMetadata();
+        if (shouldUpdateLimitFacebookTracking()) {
+            updateLimitFacebookTracking();
+        }
     }
     
     void doFinalUpdateOnBackgroundThread() {

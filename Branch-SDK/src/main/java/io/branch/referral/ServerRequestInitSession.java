@@ -55,6 +55,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if(!TextUtils.isEmpty(prefHelper_.getInitialReferrer()) && !prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
             post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
         }
+        post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
@@ -64,6 +65,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if(!TextUtils.isEmpty(identity) && !identity.equals(PrefHelper.NO_STRING_VALUE)){
             post.put(Defines.Jsonkey.Identity.getKey(), identity);
         }
+    }
+
+    @Override
+    protected boolean shouldUpdateLimitFacebookTracking() {
+        return true;
     }
 
     public abstract String getRequestActionName();
@@ -141,8 +147,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
-            }
-            catch (JSONException ignore) {
+                getPost().put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
+            } catch (JSONException ignore) {
             }
         }
         // Add Google search install referrer if present
@@ -285,6 +291,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
             post.remove(Defines.Jsonkey.RandomizedDeviceToken.getKey());
             post.remove(Defines.Jsonkey.RandomizedBundleToken.getKey());
+            post.remove(Defines.Jsonkey.FaceBookAppLinkChecked.getKey());
             post.remove(Defines.Jsonkey.External_Intent_Extra.getKey());
             post.remove(Defines.Jsonkey.External_Intent_URI.getKey());
             post.remove(Defines.Jsonkey.FirstInstallTime.getKey());

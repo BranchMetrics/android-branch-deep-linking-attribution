@@ -291,6 +291,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     private static boolean disableDeviceIDFetch_;
     
+    private boolean enableFacebookAppLinkCheck_ = false;
+    
     static boolean bypassWaitingForIntent_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
@@ -834,6 +836,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     public void disableAppList() {
         // Do nothing
+    }
+    
+    /**
+     * <p>
+     * Enable Facebook app link check operation during Branch initialisation.
+     * </p>
+     */
+    public void enableFacebookAppLinkCheck() {
+        enableFacebookAppLinkCheck_ = true;
+    }
+    
+    /**
+     * Enables or disables app tracking with Branch or any other third parties that Branch use internally
+     *
+     * @param isLimitFacebookTracking {@code true} to limit app tracking
+     */
+    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
+        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
     }
 
     /**
@@ -1841,6 +1861,29 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             return;
         } else if (isTestModeEnabled()) {
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+        }
+
+        if (initState_ == SESSION_STATE.UNINITIALISED && getSessionReferredLink() == null && enableFacebookAppLinkCheck_) {
+            // Check if opened by facebook with deferred install data
+            boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
+                    context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
+                @Override
+                public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
+                    prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
+                    if (nativeAppLinkUrl != null) {
+                        Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
+                        String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
+                        if (!TextUtils.isEmpty(bncLinkClickId)) {
+                            prefHelper_.setLinkClickIdentifier(bncLinkClickId);
+                        }
+                    }
+                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
+                    processNextQueueItem();
+                }
+            });
+            if (appLinkRqSucceeded) {
+                initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
+            }
         }
 
         if (delay > 0) {

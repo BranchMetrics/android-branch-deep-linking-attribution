@@ -74,6 +74,11 @@ public class ServerRequestGetLATD extends ServerRequest {
         return BRANCH_API_VERSION.V1_LATD;
     }
 
+    @Override
+    protected boolean shouldUpdateLimitFacebookTracking() {
+        return true;
+    }
+
     public interface BranchLastAttributedTouchDataListener {
         void onDataFetched(JSONObject jsonObject, BranchError error);
     }
