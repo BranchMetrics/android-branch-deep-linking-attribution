@@ -30,7 +30,7 @@ android {
 
     compileSdk = ANDROID_BUILD_SDK_VERSION.toInt()
     defaultConfig {
-        applicationId = "io.branch.branchandroidtestbed"
+        applicationId = "io.branch.branchster"
         minSdk = ANDROID_BUILD_TARGET_SDK_MINIMUM.toInt()
         targetSdk = ANDROID_BUILD_TARGET_SDK_VERSION.toInt()
         versionName = VERSION_NAME

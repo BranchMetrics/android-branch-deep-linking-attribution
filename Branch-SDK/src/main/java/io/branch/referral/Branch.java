@@ -75,7 +75,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -308,10 +308,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     CountDownLatch getFirstReferringParamsLatch = null;
     CountDownLatch getLatestReferringParamsLatch = null;
 
-    private boolean waitingForHuaweiInstallReferrer = false;
-    private boolean waitingForGoogleInstallReferrer = false;
-    private boolean waitingForSamsungInstallReferrer = false;
-    private boolean waitingForXiaomiInstallReferrer = false;
+    boolean waitingForHuaweiInstallReferrer = false;
+    boolean waitingForGoogleInstallReferrer = false;
+    boolean waitingForSamsungInstallReferrer = false;
+    boolean waitingForXiaomiInstallReferrer = false;
 
     private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
@@ -939,13 +939,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
         processNextQueueItem();
     }
-    
-    @Override
-    public void onGoogleInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForGoogleInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
 
     @Override
     public void onHuaweiInstallReferrerEventsFinished() {
@@ -968,7 +961,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         tryProcessNextQueueItemAfterInstallReferrer();
     }
 
-    private void tryProcessNextQueueItemAfterInstallReferrer() {
+    void tryProcessNextQueueItemAfterInstallReferrer() {
         if(!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)){
             String store = StoreReferrerUtils.getLatestValidReferrerStore();
             StoreReferrerUtils.writeLatestInstallReferrer(context_, store);
@@ -1790,7 +1783,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
 
                 if(waitingForGoogleInstallReferrer){
-                    StoreReferrerGooglePlayStore.fetch(context_, this);
+                    StoreReferrerGooglePlayStore.fetch(context_);
                 }
 
                 if(waitingForHuaweiInstallReferrer){
