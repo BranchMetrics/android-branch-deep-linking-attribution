@@ -24,36 +24,46 @@ suspend fun getAdvertisingInfoObject(context: Context): AdvertisingIdClient.Info
 }
 
 suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails? {
-    val deferredReferrerDetails = CompletableDeferred<ReferrerDetails?>()
-    val client = InstallReferrerClient.newBuilder(context.applicationContext).build()
+    return withContext(Dispatchers.Default) {
+        try {
+            val deferredReferrerDetails = CompletableDeferred<ReferrerDetails?>()
+            val client = InstallReferrerClient.newBuilder(context.applicationContext).build()
 
-    client.startConnection(object : InstallReferrerStateListener {
-        override fun onInstallReferrerSetupFinished(responseInt: Int) {
-            if (responseInt == InstallReferrerClient.InstallReferrerResponse.OK) {
-                deferredReferrerDetails.complete(
-                    try {
-                        client.installReferrer
-                    }
-                    catch (e: RemoteException) {
-                        PrefHelper.Debug("getGooglePlayStoreReferrerDetails exception: $e")
-                        null
-                    }
-                )
-            }
-            else {
-                PrefHelper.Debug("getGooglePlayStoreReferrerDetails response code: $responseInt")
-                deferredReferrerDetails.complete(null)
-            }
-            client.endConnection()
-        }
+            client.startConnection(object : InstallReferrerStateListener {
+                override fun onInstallReferrerSetupFinished(responseInt: Int) {
+                    PrefHelper.Debug("getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
 
-        override fun onInstallReferrerServiceDisconnected() {
-            if (!deferredReferrerDetails.isCompleted) {
-                deferredReferrerDetails.complete(null)
-            }
+                    if (responseInt == InstallReferrerClient.InstallReferrerResponse.OK) {
+                        deferredReferrerDetails.complete(
+                            try {
+                                client.installReferrer
+                            }
+                            catch (e: Exception) {
+                                PrefHelper.Debug("getGooglePlayStoreReferrerDetails installReferrer exception: $e")
+                                null
+                            }
+                        )
+                    }
+                    else {
+                        deferredReferrerDetails.complete(null)
+                    }
+
+                    client.endConnection()
+                }
+
+                override fun onInstallReferrerServiceDisconnected() {
+                    if (!deferredReferrerDetails.isCompleted) {
+                        deferredReferrerDetails.complete(null)
+                    }
+                }
+            })
+            deferredReferrerDetails.await()
         }
-    })
-    return deferredReferrerDetails.await()
+        catch (exception: Exception) {
+            PrefHelper.Debug("getGooglePlayStoreReferrerDetails exception: $exception")
+            null
+        }
+    }
 }
 
 suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms.ads.installreferrer.api.ReferrerDetails? {

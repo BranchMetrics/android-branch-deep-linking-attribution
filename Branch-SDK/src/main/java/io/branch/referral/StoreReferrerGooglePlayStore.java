@@ -36,24 +36,24 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
             }
 
             @Override
-            public void resumeWith(Object o) {
-                if (o != null) {
+            public void resumeWith(@NonNull Object o) {
+                try {
                     ReferrerDetails referrerDetails = (ReferrerDetails) o;
-
-                    try {
-                        rawReferrer = referrerDetails.getInstallReferrer();
-                        clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
-                        installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
-                    }
-                    catch (Exception e) {
-                        PrefHelper.Debug(e.getMessage());
-                        erroredOut = true;
-                    }
-                    finally {
-                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        Branch.getInstance().waitingForGoogleInstallReferrer = false;
-                        Branch.getInstance().tryProcessNextQueueItemAfterInstallReferrer();
-                    }
+                    rawReferrer = referrerDetails.getInstallReferrer();
+                    clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
+                    installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
+                    
+                    // TODO: We can get rid of InstantAppUtil.java with this one line
+                    //  boolean isInstantApp = referrerDetails.getGooglePlayInstantParam();
+                }
+                catch (Exception e) {
+                    PrefHelper.Debug(e.getMessage());
+                    erroredOut = true;
+                }
+                finally {
+                    Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    Branch.getInstance().waitingForGoogleInstallReferrer = false;
+                    Branch.getInstance().tryProcessNextQueueItemAfterInstallReferrer();
                 }
             }
         });

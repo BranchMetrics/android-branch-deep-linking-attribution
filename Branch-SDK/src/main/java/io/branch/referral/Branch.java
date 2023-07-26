@@ -962,6 +962,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     void tryProcessNextQueueItemAfterInstallReferrer() {
+        PrefHelper.Debug("tryProcessNextQueueItemAfterInstallReferrer"
+        + "\n waitingForGoogleInstallReferrer " + waitingForGoogleInstallReferrer
+        + "\n waitingForHuaweiInstallReferrer " + waitingForHuaweiInstallReferrer
+        + "\n waitingForSamsungInstallReferrer " + waitingForSamsungInstallReferrer
+        + "\n waitingForXiaomiInstallReferrer "  + waitingForXiaomiInstallReferrer);
         if(!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)){
             String store = StoreReferrerUtils.getLatestValidReferrerStore();
             StoreReferrerUtils.writeLatestInstallReferrer(context_, store);
