@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONException;
@@ -198,6 +200,7 @@ public class BranchGAIDTest extends BranchTest {
     // Check to see if the GAID is available (V1)
     private boolean hasV1GAID(ServerRequest request) {
         JSONObject jsonObject = request.getGetParams();
+        Log.i("BranchSDK", "hasV1GAID " + jsonObject);
         String gaid = jsonObject.optString(Defines.Jsonkey.GoogleAdvertisingID.getKey());
         return (gaid.length() > 0);
     }
@@ -205,6 +208,7 @@ public class BranchGAIDTest extends BranchTest {
     // Check to see if the GAID is available (V2)
     private boolean hasV2GAID(ServerRequest request) {
         JSONObject jsonObject = request.getGetParams();
+        Log.i("BranchSDK", "hasV2GAID " + jsonObject);
         JSONObject userDataObj = jsonObject.optJSONObject(Defines.Jsonkey.UserData.getKey());
 
         if (userDataObj == null) {
