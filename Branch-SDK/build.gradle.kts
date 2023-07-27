@@ -31,7 +31,11 @@ dependencies {
     androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
+
+    // Test GAID
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
+    // Test OAID
+    androidTestImplementation("com.huawei.hms:ads-identifier:3.4.34.301")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")

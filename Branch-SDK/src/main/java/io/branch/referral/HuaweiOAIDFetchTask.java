@@ -24,6 +24,7 @@ public class HuaweiOAIDFetchTask extends BranchAsyncTask<Void, Void, Void> {
     private WeakReference<Context> contextRef_;
     private final SystemObserver.AdsParamsFetchEvents callback_;
 
+    //TODO: Replace with coroutine. Should be about the same as GAID
     HuaweiOAIDFetchTask(Context context, SystemObserver.AdsParamsFetchEvents callback) {
         contextRef_ = new WeakReference<>(context);
         callback_ = callback;
