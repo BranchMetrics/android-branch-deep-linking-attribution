@@ -30,6 +30,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
+    androidTestImplementation("com.android.billingclient:billing:6.0.1")
+
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")
