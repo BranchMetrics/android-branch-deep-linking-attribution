@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 
@@ -115,7 +116,7 @@ public class DeepLinkRoutingValidator {
             link = blob.getString("~" + Defines.Jsonkey.ReferringLink.getKey());
             link = link.split("\\?")[0];
         } catch (Exception e) {
-            PrefHelper.Debug("Failed to get referring link");
+            BranchLogger.v("Failed to get referring link");
         }
         link += "?" + VALIDATE_LINK_PARAM_KEY + "=true";
         if (!TextUtils.isEmpty(result)) {

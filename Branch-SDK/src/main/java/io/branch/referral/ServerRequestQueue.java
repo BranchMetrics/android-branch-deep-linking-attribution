@@ -88,7 +88,7 @@ class ServerRequestQueue {
             editor.putString(PREF_KEY, jsonArr.toString()).apply();
         } catch (Exception ex) {
             String msg = ex.getMessage();
-            PrefHelper.Debug("Failed to persist queue" + (msg == null ? "" : msg));
+            BranchLogger.v("Failed to persist queue" + (msg == null ? "" : msg));
         }
     }
     

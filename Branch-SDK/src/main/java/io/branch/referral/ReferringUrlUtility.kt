@@ -22,7 +22,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
         for (originalParamName in uri.queryParameterNames) {
             val paramName = originalParamName.lowercase()
             val paramValue = uri.getQueryParameter(originalParamName)
-            PrefHelper.Debug("Found URL Query Parameter - Key: $paramName, Value: $paramValue")
+            BranchLogger.v("Found URL Query Parameter - Key: $paramName, Value: $paramValue")
 
             if (isSupportedQueryParameter(paramName)) {
                 val param = findUrlQueryParam(paramName)
@@ -40,7 +40,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
         }
 
         prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
-        PrefHelper.Debug(prefHelper.referringURLQueryParameters.toString())
+        BranchLogger.v(prefHelper.referringURLQueryParameters.toString())
     }
 
     fun getURLQueryParamsForRequest(request: ServerRequest): JSONObject {
@@ -181,7 +181,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                 prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
                 prefHelper.clearGclid()
 
-                PrefHelper.Debug("Updated old Gclid ($existingGclidValue) to new BranchUrlQueryParameter ($gclid)")
+                BranchLogger.v("Updated old Gclid ($existingGclidValue) to new BranchUrlQueryParameter ($gclid)")
             }
         }
     }

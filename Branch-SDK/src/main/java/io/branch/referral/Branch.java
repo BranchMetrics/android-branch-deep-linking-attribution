@@ -346,20 +346,20 @@ public class Branch {
      */
     synchronized public static Branch getInstance() {
         if (branchReferral_ == null) {
-            PrefHelper.Debug("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
+            BranchLogger.v("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
         }
         return branchReferral_;
     }
 
     synchronized private static Branch initBranchSDK(@NonNull Context context, String branchKey) {
         if (branchReferral_ != null) {
-            PrefHelper.Debug("Warning, attempted to reinitialize Branch SDK singleton!");
+            BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
             return branchReferral_;
         }
         branchReferral_ = new Branch(context.getApplicationContext());
 
         if (TextUtils.isEmpty(branchKey)) {
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
+            BranchLogger.w("Warning: Please enter your branch_key in your project's Manifest file!");
             branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
@@ -427,7 +427,7 @@ public class Branch {
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
-                PrefHelper.Debug("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
+                BranchLogger.w("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
                 branchKey = BranchUtil.readBranchKey(context);
             }
             branchReferral_ = initBranchSDK(context, branchKey);
@@ -549,7 +549,7 @@ public class Branch {
     public boolean isTrackingDisabled() {
         return trackingController.isTrackingDisabled();
     }
-    
+
     /**
      * <p>
      * Disables or enables the instant deep link functionality.
@@ -1043,7 +1043,7 @@ public class Branch {
             handleNewRequest(req);
         }
     }
-    
+
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
@@ -1179,7 +1179,7 @@ public class Branch {
         try {
             if (originalParams != null && deeplinkDebugParams_ != null) {
                 if (deeplinkDebugParams_.length() > 0) {
-                    PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+                    BranchLogger.v("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
                 }
                 Iterator<String> keys = deeplinkDebugParams_.keys();
                 while (keys.hasNext()) {
@@ -1194,7 +1194,7 @@ public class Branch {
     
     public JSONObject getDeeplinkDebugParams() {
         if (deeplinkDebugParams_ != null && deeplinkDebugParams_.length() > 0) {
-            PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+            BranchLogger.v("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
         }
         return deeplinkDebugParams_;
     }
@@ -1309,11 +1309,11 @@ public class Branch {
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
+                    BranchLogger.v("processNextQueueItem, req " + req.getClass().getSimpleName());
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            PrefHelper.Debug("Branch Error: User session has not been initialized!");
+                            BranchLogger.v("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
                             req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         }
@@ -1478,10 +1478,10 @@ public class Branch {
             if (initRequest.callback_ != null) {
                 initRequest.callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's manifest");
+            BranchLogger.w("Warning: Please enter your branch_key in your project's manifest");
             return;
         } else if (isTestModeEnabled()) {
-            PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
+            BranchLogger.w("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
         if (delay > 0) {
@@ -1603,7 +1603,7 @@ public class Branch {
         PrefHelper.Debug("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
-            PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
+            BranchLogger.v("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
             req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             return;
         }
@@ -1611,11 +1611,15 @@ public class Branch {
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if ((req instanceof ServerRequestLogout)) {
                 req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                PrefHelper.Debug("Branch is not initialized, cannot logout");
+                BranchLogger.v("Branch is not initialized, cannot logout");
+                return;
+            }
+            if ((req instanceof ServerRequestRegisterClose)) {
+                BranchLogger.v("Branch is not initialized, cannot close session");
                 return;
             }
             if (requestNeedsSession(req)) {
-                PrefHelper.Debug("handleNewRequest " + req + " needs a session");
+                BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
         }
@@ -1644,7 +1648,7 @@ public class Branch {
         } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
-            PrefHelper.Debug(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+            BranchLogger.v(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
         }
     }
 
@@ -1830,7 +1834,7 @@ public class Branch {
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
     }
-    
+
     /**
      * Async Task to create  a short link for synchronous methods
      */
@@ -2102,13 +2106,13 @@ public class Branch {
                     currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
                 } else {
                     // This case should not happen. Adding a safe handling for any corner case
-                    PrefHelper.Debug("No activity reference to launch deep linked activity");
+                    BranchLogger.v("No activity reference to launch deep linked activity");
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
-            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct!");
+            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct!");
         } catch (ClassNotFoundException e) {
-            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
+            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
         } catch (Exception ignore) {
             // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
         }
@@ -2171,7 +2175,7 @@ public class Branch {
     public static void enableLogging() {
         PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
 //        PrefHelper.enableLogging(true);
-        BranchLogger.enableLogging(true);
+        BranchLogger.setLoggingEnabled(true);
     }
 
     /**
@@ -2179,7 +2183,7 @@ public class Branch {
      */
     public static void disableLogging() {
 //        PrefHelper.enableLogging(false);
-        BranchLogger.enableLogging(false);
+        BranchLogger.setLoggingEnabled(true);
     }
 
     /**
@@ -2616,11 +2620,11 @@ public class Branch {
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
-            PrefHelper.Debug("Beginning session initialization");
-            PrefHelper.Debug("Session uri is " + uri);
+            BranchLogger.v("Beginning session initialization");
+            BranchLogger.v("Session uri is " + uri);
 
             if(deferInitForPluginRuntime){
-                PrefHelper.Debug("Session init is deferred until signaled by plugin.");
+                BranchLogger.v("Session init is deferred until signaled by plugin.");
                 cacheSessionBuilder(this);
                 return;
             }
@@ -2678,13 +2682,13 @@ public class Branch {
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            PrefHelper.Debug("Creating " + initRequest + " from init");
+            BranchLogger.d("Creating " + initRequest + " from init");
             branch.initializeSession(initRequest, delay);
         }
 
         private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
             Branch.getInstance().deferredSessionBuilder = this;
-            PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit()" +
+            BranchLogger.v("Session initialization deferred until plugin invokes notifyNativeToInit()" +
                     "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
                     "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
                     "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
@@ -2754,7 +2758,7 @@ public class Branch {
      * @param isDeferred
      */
     static void deferInitForPluginRuntime(boolean isDeferred){
-        PrefHelper.Debug("deferInitForPluginRuntime " + isDeferred);
+        BranchLogger.v("deferInitForPluginRuntime " + isDeferred);
 
         deferInitForPluginRuntime = isDeferred;
         if(isDeferred){
@@ -2767,7 +2771,7 @@ public class Branch {
      * Only invokes the last session built
      */
     public static void notifyNativeToInit(){
-        PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
+        BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
         SESSION_STATE sessionState = Branch.getInstance().getInitState();
         if(sessionState == SESSION_STATE.UNINITIALISED) {
@@ -2777,7 +2781,7 @@ public class Branch {
             }
         }
         else {
-            PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
+            BranchLogger.v("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
         }
     }
 

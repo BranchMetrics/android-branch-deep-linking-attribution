@@ -97,7 +97,7 @@ public class ServerRequestTests extends BranchTest {
                 buo.generateShortUrl(getTestContext(), linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        PrefHelper.Debug("error is " + error);
+                        BranchLogger.v("error is " + error);
                         Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
                         lock3.countDown();
                     }

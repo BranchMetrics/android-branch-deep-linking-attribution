@@ -521,7 +521,7 @@ public abstract class ServerRequest {
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
-           PrefHelper.Debug("Could not merge metadata, ignoring user metadata.");
+           BranchLogger.v("Could not merge metadata, ignoring user metadata.");
         }
     }
     
@@ -606,7 +606,7 @@ public abstract class ServerRequest {
         boolean permissionGranted = (result == PackageManager.PERMISSION_GRANTED);
 
         if (!permissionGranted) {
-            PrefHelper.Debug("Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
+            BranchLogger.v("Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
         }
 
         return result == PackageManager.PERMISSION_GRANTED;
