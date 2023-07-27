@@ -929,14 +929,17 @@ public class BranchUniversalObject implements Parcelable {
         
         @Override
         public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-            HashMap<String, String> metaData = new HashMap<>();
+            BranchEvent shareEvent = new BranchEvent(BRANCH_STANDARD_EVENT.SHARE);
             if (error == null) {
-                metaData.put(Defines.Jsonkey.SharedLink.getKey(), sharedLink);
+                shareEvent.addCustomDataProperty(Defines.Jsonkey.SharedLink.getKey(), sharedLink);
+                shareEvent.addCustomDataProperty(Defines.Jsonkey.SharedChannel.getKey(), sharedChannel);
+                shareEvent.addContentItems(BranchUniversalObject.this);
             } else {
-                metaData.put(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
+                shareEvent.addCustomDataProperty(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
-            //noinspection deprecation
-            userCompletedAction(BRANCH_STANDARD_EVENT.SHARE.getName(), metaData);
+
+            shareEvent.logEvent(Branch.getInstance().getApplicationContext());
+
             if (originalCallback_ != null) {
                 originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
             }
@@ -953,7 +956,5 @@ public class BranchUniversalObject implements Parcelable {
                 }
             }
         }
-        
     }
-    
 }
