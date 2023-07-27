@@ -2120,13 +2120,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * <p>enum containing the sort options for return of credit history.</p>
-     */
-    public enum CreditHistoryOrder {
-        kMostRecentFirst, kLeastRecentFirst
-    }
-    
-    /**
      * Async Task to create  a short link for synchronous methods
      */
     private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
