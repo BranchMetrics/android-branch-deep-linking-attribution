@@ -60,7 +60,7 @@ class ServerRequestActionCompleted extends ServerRequest {
 
         if (action != null && action.equalsIgnoreCase(BRANCH_STANDARD_EVENT.PURCHASE.getName())
                 && commerceEvent == null) {
-            PrefHelper.Debug("Warning: You are sending a purchase event with our non-dedicated " +
+            BranchLogger.w("Warning: You are sending a purchase event with our non-dedicated " +
                     "purchase function. Please see function sendCommerceEvent");
         }
     }

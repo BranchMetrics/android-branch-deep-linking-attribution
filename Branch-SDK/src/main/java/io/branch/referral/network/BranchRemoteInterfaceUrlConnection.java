@@ -13,6 +13,7 @@ import com.google.android.gms.common.util.Strings;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import java.io.BufferedReader;
@@ -90,14 +91,14 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     }
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
-                    PrefHelper.Debug("A resource conflict occurred with this request " + url);
+                    BranchLogger.v("A resource conflict occurred with this request " + url);
                     result = new BranchResponse(null, responseCode);
                 }
                 result.requestId = Strings.emptyToNull(requestId);
                 return result;
             }
         } catch (SocketException ex) {
-            PrefHelper.Debug("Http connect exception: " + ex.getMessage());
+            BranchLogger.v("Http connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
 
         } catch (SocketTimeoutException ex) {
@@ -127,7 +128,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
             }
         } catch (IOException ex) {
-            PrefHelper.Debug("Branch connect exception: " + ex.getMessage());
+            BranchLogger.v("Branch connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
         } finally {
             if (connection != null) {
@@ -209,7 +210,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
                 } catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
-                    PrefHelper.Debug("A resource conflict occurred with this request " + url);
+                    BranchLogger.v("A resource conflict occurred with this request " + url);
                     result = new BranchResponse(null, responseCode);
                 }
 
@@ -261,10 +262,10 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
             }
         } catch (Exception ex) {
-            PrefHelper.Debug("Exception: " + ex.getMessage());
+            BranchLogger.v("Exception: " + ex.getMessage());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
                 if (ex instanceof NetworkOnMainThreadException)
-                    PrefHelper.Debug("Branch Error: Don't call our synchronous methods on the main thread!!!");
+                    BranchLogger.v("Branch Error: Don't call our synchronous methods on the main thread!!!");
             }
             return new BranchResponse(null, 500);
         } finally {

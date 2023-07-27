@@ -134,7 +134,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
             if (callback != null) {
                 callback.onLinkCreate(null, new BranchError("session has not been initialized", BranchError.ERR_NO_SESSION));
             }
-            PrefHelper.Debug("Warning: User session has not been initialized");
+            BranchLogger.w("Warning: User session has not been initialized");
         }
     }
 }

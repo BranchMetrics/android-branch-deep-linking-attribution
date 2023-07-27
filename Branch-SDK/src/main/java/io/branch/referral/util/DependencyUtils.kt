@@ -1,13 +1,13 @@
 package io.branch.referral.util
 
-import io.branch.referral.PrefHelper
+import io.branch.referral.BranchLogger
 
 fun classExists(className: String): Boolean {
     return try {
         Class.forName(className)
         true
     } catch (e: ClassNotFoundException) {
-        PrefHelper.Debug("Could not find $className. If expected, import the dependency into your app.")
+        BranchLogger.v("Could not find $className. If expected, import the dependency into your app.")
         false
     }
 }
