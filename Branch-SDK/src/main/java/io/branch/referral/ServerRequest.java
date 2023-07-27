@@ -670,6 +670,13 @@ public abstract class ServerRequest {
      * @return True if this request if any pre processing operation pending
      */
     public boolean isWaitingOnProcessToFinish() {
+        //TODO: This is temporary. There's a race condition wherein the backgrounded coroutines
+        // complete before the request gets enqueued, meaning the lock is lifted on an empty
+        // queue, also meaning it is deadlocked. Other coroutines will need the same treatment.
+        if(StoreReferrerGooglePlayStore.erroredOut || StoreReferrerGooglePlayStore.hasBeenUsed){
+            locks_.remove(PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+        }
+
         return locks_.size() > 0;
     }
     
