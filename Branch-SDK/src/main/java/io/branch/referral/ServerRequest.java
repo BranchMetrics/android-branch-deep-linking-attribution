@@ -391,9 +391,14 @@ public abstract class ServerRequest {
      * Otherwise we're good to send the generated UUID
      */
     void updateGAdsParams() {
+        Log.i("BranchSDK", "updateGAdsParams");
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
+        Log.i("BranchSDK", "updateGAdsParams LATVal " + LATVal);
+
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
+        Log.i("BranchSDK", "updateGAdsParams gaid " + gaid);
+
         if (!TextUtils.isEmpty(gaid)) {
             updateAdvertisingIdsObject(gaid);
             // gaid is put in the request body below, calling to remove hardware id from request now
@@ -434,6 +439,7 @@ public abstract class ServerRequest {
     }
 
     private void updateAdvertisingIdsObject(@NonNull String aid) {
+        Log.i("BranchSDK", "updateAdvertisingIdsObject " + aid);
         try {
             String key;
             if (SystemObserver.isFireOSDevice()) {
