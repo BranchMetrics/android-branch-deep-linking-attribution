@@ -2170,14 +2170,16 @@ public class Branch {
      */
     public static void enableLogging() {
         PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
-        PrefHelper.enableLogging(true);
+//        PrefHelper.enableLogging(true);
+        BranchLogger.enableLogging(true);
     }
 
     /**
      * Disable Logging, independent of Debug Mode.
      */
     public static void disableLogging() {
-        PrefHelper.enableLogging(false);
+//        PrefHelper.enableLogging(false);
+        BranchLogger.enableLogging(false);
     }
 
     /**
