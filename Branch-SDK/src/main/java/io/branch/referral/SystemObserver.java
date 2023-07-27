@@ -34,14 +34,6 @@ import java.util.UUID;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
-
-import io.branch.coroutines.DataCoroutinesKt;
-import io.branch.referral.util.DependencyUtilsKt;
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
-
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
  * attributes and parameters used by the Branch class, and made publicly available for use by
@@ -454,66 +446,10 @@ abstract class SystemObserver {
             if (isHuaweiMobileServicesAvailable(context)) {
                 new HuaweiOAIDFetchTask(context, callback).executeTask();
             } else {
-                this.executeAdInfoCoroutine(context, callback);
+                new GAdsPrefetchTask(context, callback).executeTask();
             }
         }
         return isPrefetchStarted;
-    }
-
-    private void executeAdInfoCoroutine(Context context, AdsParamsFetchEvents callback) {
-        if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
-            DataCoroutinesKt.getAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
-
-                @Override
-                public void resumeWith(Object o) {
-                    if (o != null) {
-                        try {
-                            AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
-
-                            DeviceInfo di = DeviceInfo.getInstance();
-                            if (di == null) {
-                                di = new DeviceInfo(context);
-                            }
-
-                            SystemObserver so = di.getSystemObserver();
-                            if (so != null) {
-                                boolean latEnabled = info.isLimitAdTrackingEnabled();
-                                so.setLAT(latEnabled ? 1 : 0);
-
-                                // if limit ad tracking is enabled, null any advertising id
-                                if (latEnabled) {
-                                    so.setGAID(null);
-                                }
-                                else {
-                                    so.setGAID(info.getId());
-                                }
-                            }
-                        }
-                        catch (Exception e) {
-                            PrefHelper.Debug("Error in continuation: " + e);
-                        }
-                        finally {
-                            if (callback != null) {
-                                callback.onAdsParamsFetchFinished();
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        else {
-            if (callback != null) {
-                callback.onAdsParamsFetchFinished();
-            }
-
-            PrefHelper.Debug("Play Store service not found. " +
-                    "If not expected, import com.google.android.gms:play-services-ads-identifier into your gradle dependencies");
-        }
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {

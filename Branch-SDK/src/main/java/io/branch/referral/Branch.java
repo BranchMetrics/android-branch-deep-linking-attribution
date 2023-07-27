@@ -429,6 +429,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
+        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
+            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
+        }
     }
 
     /**
