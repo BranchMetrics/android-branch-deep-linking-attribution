@@ -1,6 +1,8 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONObject;
@@ -83,6 +85,7 @@ abstract class BranchTestRequestUtil {
     }
 
     protected ServerRequest doFinalUpdate(ServerRequest request) {
+        Log.i("BranchSDK", "doFinalUpdate " + request);
         request.doFinalUpdateOnBackgroundThread();
         return request;
     }

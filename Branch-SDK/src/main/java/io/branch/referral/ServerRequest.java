@@ -590,6 +590,7 @@ public abstract class ServerRequest {
     }
     
     void doFinalUpdateOnBackgroundThread() {
+        Log.i("BranchSDK", "doFinalUpdateOnBackgroundThread");
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
             if (prioritizeLinkAttribution(this.params_)) {
