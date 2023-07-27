@@ -19,6 +19,7 @@ import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -471,6 +472,7 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
+                    Log.i("BranchSDK", "resumeWith " + o);
                     if (o != null) {
                         try {
                             AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
@@ -705,10 +707,12 @@ abstract class SystemObserver {
     }
 
     void setGAID(String gaid) {
+        Log.i("BranchSDK", "setGAID " + gaid);
         GAIDString_ = gaid;
     }
 
     void setLAT(int lat) {
+        Log.i("BranchSDK", "setLAT " + lat);
         LATVal_ = lat;
     }
 
