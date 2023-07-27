@@ -220,6 +220,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasGAIDv1(ServerRequest serverRequest, boolean assertTrue) {
+        Log.i("BranchSDK", "assumingLatIsDisabledHasGAIDv1 " +  (serverRequest.getGetParams() != null ? serverRequest.getGetParams().toString() : " null"));
         if (assertTrue) {
             Assert.assertTrue(hasV1LAT(serverRequest));
 
@@ -235,6 +236,8 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasGAIDv2(ServerRequest serverRequest, boolean assertTrue) {
+        Log.i("BranchSDK", "assumingLatIsDisabledHasGAIDv2 " +  (serverRequest.getGetParams() != null ? serverRequest.getGetParams().toString() : " null"));
+
         if (assertTrue) {
             Assert.assertTrue(hasV2LAT(serverRequest));
 
