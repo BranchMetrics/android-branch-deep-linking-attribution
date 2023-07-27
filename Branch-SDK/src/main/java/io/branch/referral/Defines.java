@@ -44,7 +44,6 @@ public class Defines {
         Event("event"),
         Metadata("metadata"),
         CommerceData("commerce_data"),
-        @Deprecated ReferralCode("referral_code"),
         Total("total"),
         Unique("unique"),
         Length("length"),
@@ -249,14 +248,10 @@ public class Defines {
      * </p>
      */
     public enum RequestPath {
-        @Deprecated RedeemRewards("v1/redeem"),
         GetURL("v1/url"),
         GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
-        RegisterClose("v1/close"),
         RegisterOpen("v1/open"),
-        @Deprecated GetCredits("v1/credits/"),
-        @Deprecated GetCreditHistory("v1/credithistory"),
         CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
         Logout("v1/logout"),
