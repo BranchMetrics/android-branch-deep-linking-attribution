@@ -5,6 +5,7 @@ import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
+import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 import static io.branch.referral.util.DependencyUtilsKt.galaxyStoreInstallReferrerClass;
 import static io.branch.referral.util.DependencyUtilsKt.huaweiInstallReferrerClass;
@@ -3266,13 +3267,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-            if (succeeded) {
-                BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-            } else {
-                PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
-            }
-            return null;
-        });
+        if (classExists(billingGooglePlayClass)) {
+            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+                if (succeeded) {
+                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+                } else {
+                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                }
+                return null;
+            });
+        }
     }
 }
