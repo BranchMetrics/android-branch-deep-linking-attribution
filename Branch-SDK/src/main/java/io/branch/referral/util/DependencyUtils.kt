@@ -24,3 +24,5 @@ const val galaxyStoreInstallReferrerClass =
     "com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient"
 
 const val xiaomiInstallReferrerClass = "com.miui.referrer.api.GetAppsReferrerClient"
+
+const val billingGooglePlayClass = "com.android.billingclient.api.BillingClient"
