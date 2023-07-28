@@ -294,7 +294,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
 
     /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
-    private boolean isGAParamsFetchInProgress_ = false;
+    boolean isGAParamsFetchInProgress_ = false;
     
     private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
     
@@ -1625,14 +1625,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     PrefHelper getPrefHelper() {
         return prefHelper_;
-    }
-
-    boolean isGAParamsFetchInProgress() {
-        return isGAParamsFetchInProgress_;
-    }
-
-    void setGAParamsFetchInProgress(boolean GAParamsFetchInProgress) {
-        isGAParamsFetchInProgress_ = GAParamsFetchInProgress;
     }
 
     ShareLinkManager getShareLinkManager() {

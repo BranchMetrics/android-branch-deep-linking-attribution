@@ -50,7 +50,11 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
         activityCnt_++;
 
-        maybeRefreshAdvertisingID(activity);
+        if(branch.getDeviceInfo() != null && branch.getDeviceInfo().getSystemObserver() != null){
+            if(!branch.getTrackingController().isTrackingDisabled()){
+                branch.getDeviceInfo().getSystemObserver().fetchAdsParams(branch.getApplicationContext(), branch);
+            }
+        }
     }
 
     @Override
@@ -122,23 +126,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
 
         activitiesOnStack_.remove(activity.toString());
-    }
-
-    private void maybeRefreshAdvertisingID(Context context) {
-        Branch branch = Branch.getInstance();
-        if (branch == null) return;
-
-        boolean fullyInitialized = branch.getTrackingController() != null &&
-                branch.getDeviceInfo() != null && branch.getDeviceInfo().getSystemObserver() != null &&
-                branch.getPrefHelper() != null && branch.getPrefHelper().getSessionID() != null;
-        if (!fullyInitialized) return;
-
-        final String AIDInitializationSessionID = branch.getDeviceInfo().getSystemObserver().getAIDInitializationSessionID();
-        boolean AIDInitializedInThisSession = branch.getPrefHelper().getSessionID().equals(AIDInitializationSessionID);
-
-        if (!AIDInitializedInThisSession && !branch.isGAParamsFetchInProgress() && !branch.getTrackingController().isTrackingDisabled()) {
-            branch.setGAParamsFetchInProgress(branch.getDeviceInfo().getSystemObserver().prefetchAdsParams(context, branch));
-        }
     }
 
     boolean isCurrentActivityLaunchedFromStack() {

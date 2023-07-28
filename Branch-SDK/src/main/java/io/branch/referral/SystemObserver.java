@@ -60,9 +60,6 @@ abstract class SystemObserver {
     private String GAIDString_ = null;
     private int LATVal_ = 0;
 
-    /* Needed to avoid duplicating GAID initialization from App.onCreate and Activity.onStart */
-    private String AIDInitializationSessionID_;
-
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
      * immutable value is generated upon initial device setup, and re-used throughout the life of
@@ -445,20 +442,20 @@ abstract class SystemObserver {
      * @param callback {@link AdsParamsFetchEvents} instance to notify process completion
      * @return {@link Boolean} with true if GAID fetch process started.
      */
-    boolean prefetchAdsParams(Context context, AdsParamsFetchEvents callback) {
-        AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
-        boolean isPrefetchStarted = false;
+    void fetchAdsParams(Context context, AdsParamsFetchEvents callback) {
+        Branch.getInstance().isGAParamsFetchInProgress_ = true;
+
         if (isFireOSDevice()) {
             setFireAdId(context, callback);
-        } else {
-            isPrefetchStarted = true;
+        }
+        else {
             if (isHuaweiMobileServicesAvailable(context)) {
                 new HuaweiOAIDFetchTask(context, callback).executeTask();
-            } else {
+            }
+            else {
                 this.executeAdInfoCoroutine(context, callback);
             }
         }
-        return isPrefetchStarted;
     }
 
     private void executeAdInfoCoroutine(Context context, AdsParamsFetchEvents callback) {
@@ -713,9 +710,5 @@ abstract class SystemObserver {
     void setLAT(int lat) {
         Log.i("BranchSDK", "setLAT " + lat);
         LATVal_ = lat;
-    }
-
-    String getAIDInitializationSessionID() {
-        return AIDInitializationSessionID_;
     }
 }

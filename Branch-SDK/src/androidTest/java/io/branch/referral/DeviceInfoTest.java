@@ -69,7 +69,7 @@ public class DeviceInfoTest extends BranchTest {
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        DeviceInfo.getInstance().getSystemObserver().prefetchAdsParams(getTestContext(), new SystemObserver.AdsParamsFetchEvents() {
+        DeviceInfo.getInstance().getSystemObserver().fetchAdsParams(getTestContext(), new SystemObserver.AdsParamsFetchEvents() {
             @Override
             public void onAdsParamsFetchFinished() {
                 latch.countDown();
