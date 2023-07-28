@@ -11,7 +11,6 @@ import static io.branch.referral.util.DependencyUtilsKt.galaxyStoreInstallReferr
 import static io.branch.referral.util.DependencyUtilsKt.huaweiInstallReferrerClass;
 import static io.branch.referral.util.DependencyUtilsKt.xiaomiInstallReferrerClass;
 
-
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -20,25 +19,19 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StyleRes;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import com.android.billingclient.api.Purchase;
 
-import io.branch.referral.Defines.PreinstallKey;
-import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,7 +40,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -60,6 +52,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.Defines.PreinstallKey;
+import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -351,9 +345,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
-        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
-        }
     }
 
     /**
@@ -1781,19 +1772,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
-                if (classExists("com.huawei.hms.ads.installreferrer.api.InstallReferrerClient")
+                if (classExists(huaweiInstallReferrerClass)
                 && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
                     waitingForHuaweiInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
-                if (classExists("com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient")
+                if (classExists(galaxyStoreInstallReferrerClass)
                 && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
                     waitingForSamsungInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
-                if (classExists("com.miui.referrer.api.GetAppsReferrerClient")
+                if (classExists(xiaomiInstallReferrerClass)
                 && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
                     waitingForXiaomiInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
@@ -1842,16 +1833,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             processNextQueueItem();
         } else {
             r.callback_ = request.callback_;
-        }
-    }
-
-    private boolean classExists(String className) {
-        try  {
-            Class.forName(className);
-            return true;
-        }  catch (ClassNotFoundException e) {
-            PrefHelper.Debug("Could not find " + className + ". If expected, import the dependency into your app.");
-            return false;
         }
     }
     
