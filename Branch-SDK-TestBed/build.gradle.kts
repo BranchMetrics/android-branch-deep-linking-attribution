@@ -8,8 +8,7 @@ plugins {
 dependencies {
     implementation(project(":Branch-SDK"))
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
-
-    implementation("com.android.billingclient:billing:5.1.0")
+    implementation("com.android.billingclient:billing:6.0.1")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
