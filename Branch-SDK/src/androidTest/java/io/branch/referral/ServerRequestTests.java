@@ -35,7 +35,7 @@ public class ServerRequestTests extends BranchTest {
 
     @Test
     public void testTimedOutInitSessionCallbackInvoked() throws InterruptedException {
-        setTimeouts(10,15000);
+        setTimeouts(10,10000);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
