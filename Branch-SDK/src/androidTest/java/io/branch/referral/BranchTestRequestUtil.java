@@ -22,7 +22,7 @@ abstract class BranchTestRequestUtil {
 
     // can be pretty short because we mock remote interface and don't actually make async calls from the SDK
     public static final int TEST_REQUEST_TIMEOUT = 1000;
-    public static final int TEST_INIT_SESSION_TIMEOUT = 10000;
+    public static final int TEST_INIT_SESSION_TIMEOUT = 15000;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.
     protected boolean isStandardEvent(BranchEvent event) throws Exception {

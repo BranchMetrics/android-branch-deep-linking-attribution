@@ -15,6 +15,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
+import java.sql.Time;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +29,6 @@ import io.branch.referral.test.mock.MockRemoteInterface;
 abstract public class BranchTest extends BranchTestRequestUtil {
     private static final String TAG = "BranchTest";
     protected static final String TEST_KEY = "key_live_testing_only";
-    private final int TEAR_DOWN_TIMEOUT = 10000;
 
     protected Context mContext;
     protected Branch branch;
@@ -45,7 +45,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
     public void tearDown() throws InterruptedException {
         if (activityScenario != null) {
             activityScenario.close();
-            Thread.sleep(TEAR_DOWN_TIMEOUT);
+            Thread.sleep(TEST_REQUEST_TIMEOUT);
         }
 
         if (branch != null) {
@@ -105,6 +105,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
             @Override
             public void perform(final MockActivity activity) {
+                Log.i("BranchSDK", "starting perform at " + System.currentTimeMillis());
                 Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
@@ -133,6 +134,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         });
 
         try {
+            Log.i("BranchSDK", "making assertion at " + System.currentTimeMillis());
             Assert.assertTrue(sessionLatch.await(TEST_INIT_SESSION_TIMEOUT, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e) {
             Assert.fail("session initialization timeout");
