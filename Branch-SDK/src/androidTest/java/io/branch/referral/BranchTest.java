@@ -109,6 +109,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                 Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
+                        Log.i("BranchSDK", "test on init finished at " + System.currentTimeMillis());
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
                         PrefHelper.Debug(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
                         Assert.assertNotNull(referringParams);
