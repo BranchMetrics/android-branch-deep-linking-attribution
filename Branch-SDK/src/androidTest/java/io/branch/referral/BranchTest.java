@@ -28,6 +28,7 @@ import io.branch.referral.test.mock.MockRemoteInterface;
 abstract public class BranchTest extends BranchTestRequestUtil {
     private static final String TAG = "BranchTest";
     protected static final String TEST_KEY = "key_live_testing_only";
+    private final int TEAR_DOWN_TIMEOUT = 10000;
 
     protected Context mContext;
     protected Branch branch;
@@ -44,7 +45,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
     public void tearDown() throws InterruptedException {
         if (activityScenario != null) {
             activityScenario.close();
-            Thread.sleep(TEST_REQUEST_TIMEOUT);
+            Thread.sleep(TEAR_DOWN_TIMEOUT);
         }
 
         if (branch != null) {
