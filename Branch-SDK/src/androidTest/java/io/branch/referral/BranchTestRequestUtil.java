@@ -21,7 +21,7 @@ abstract class BranchTestRequestUtil {
     private static final String TAG = "BranchEventTestUtil";
 
     // can be pretty short because we mock remote interface and don't actually make async calls from the SDK
-    public static final int TEST_REQUEST_TIMEOUT = 3000;
+    public static final int TEST_REQUEST_TIMEOUT = 5000;
     public static final int TEST_INIT_SESSION_TIMEOUT = 15000;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.

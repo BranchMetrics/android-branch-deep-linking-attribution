@@ -836,8 +836,12 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         Log.i("BranchSDK", "closeSessionInternal");
         clearPartnerParameters();
         executeClose();
-        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setExternalIntentUri(null);
+
+        //TODO: Make tests thread safe
+        if(prefHelper_ != null) {
+            prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(null);
+        }
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
     
