@@ -31,7 +31,7 @@ dependencies {
     androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     androidTestImplementation("com.android.billingclient:billing:6.0.1")
-
+    androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")

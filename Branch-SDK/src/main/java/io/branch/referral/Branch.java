@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -596,6 +597,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
+        Log.i("BranchSDK", "shutting down branch objects");
         ServerRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();

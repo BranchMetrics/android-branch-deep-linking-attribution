@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import static io.branch.referral.SystemObserver.isFireOSDevice;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Assert;
@@ -65,7 +67,14 @@ public class BranchPluginSupportTest extends BranchTest {
 
     @Test
     public void testOS() {
-        Assert.assertEquals("Android", deviceData.get("os"));
+        String os = (String) deviceData.get("os");
+        Assert.assertNotNull(os);
+        if(isFireOSDevice()){
+            Assert.assertTrue(os.toLowerCase().contains("amazon"));
+        }
+        else {
+            Assert.assertEquals("Android", os);
+        }
     }
 
     @Test

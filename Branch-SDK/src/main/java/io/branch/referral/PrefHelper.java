@@ -202,6 +202,7 @@ public class PrefHelper {
 
     // Package Private
     static void shutDown() {
+        Log.i("BranchSDK", "shutting down prefhelper");
         if (prefHelper_ != null) {
             prefHelper_.prefsEditor_ = null;
         }
