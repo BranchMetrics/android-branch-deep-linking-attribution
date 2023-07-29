@@ -36,14 +36,9 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
     @Before
     public void setUp() {
-        if (branch != null) {
-            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
-            Branch.shutDown();
-            clearSharedPrefs(mContext);
-            branch = null;
-        }
-
+        Branch.shutDown();
         mContext = ApplicationProvider.getApplicationContext();
+        clearSharedPrefs(mContext);
     }
 
     @After
@@ -51,6 +46,13 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         if (activityScenario != null) {
             activityScenario.close();
             Thread.sleep(TEST_REQUEST_TIMEOUT);
+        }
+
+        if (branch != null) {
+            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
+            clearSharedPrefs(mContext);
+            Branch.shutDown();
+            branch = null;
         }
 
         mContext = null;
