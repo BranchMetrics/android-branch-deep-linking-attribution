@@ -59,6 +59,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
 
     public void clearSharedPrefs(Context mContext) {
+        Log.i("BranchSDK", "clearSharedPrefs");
         PrefHelper.Debug("clearSharedPrefs");
         // Clear the PrefHelper shared preferences
         SharedPreferences sharedPreferences = mContext.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);

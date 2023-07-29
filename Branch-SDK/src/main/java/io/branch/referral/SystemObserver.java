@@ -517,6 +517,7 @@ abstract class SystemObserver {
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
         if (context != null) {
             try {
+                // TODO: should be backgrounded
                 ContentResolver cr = context.getContentResolver();
                 setLAT(Secure.getInt(cr, "limit_ad_tracking"));
                 setGAID(Secure.getString(cr, "advertising_id"));

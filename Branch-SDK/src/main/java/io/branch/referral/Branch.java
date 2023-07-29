@@ -833,6 +833,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * </p>
      */
     void closeSessionInternal() {
+        Log.i("BranchSDK", "closeSessionInternal");
         clearPartnerParameters();
         executeClose();
         prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
