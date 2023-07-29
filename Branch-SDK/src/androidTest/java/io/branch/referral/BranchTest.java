@@ -49,11 +49,11 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
         if (branch != null) {
             branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
+            clearSharedPrefs(mContext);
             Branch.shutDown();
             branch = null;
         }
 
-        clearSharedPrefs(mContext);
         mContext = null;
     }
 
