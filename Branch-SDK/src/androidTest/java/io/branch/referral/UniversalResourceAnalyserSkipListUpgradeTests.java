@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,7 +62,8 @@ class SkipListRegex {
             skipURIArray.put("^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth");
             skipURIArray.put("^(?i)(?!(http|https):).*(:|:.*\\b)(password|o?auth|o?auth.?token|access|access.?token)\\b");
             skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*\\b(password|o?auth|o?auth.?token|access|access.?token)\\b");
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return skiplist;
     }
@@ -82,7 +84,8 @@ class SkipListRegex {
             skipURIArray.put("^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth");
             skipURIArray.put("^(?i)(?!(http|https):).*(:|:.*\\b)(password|o?auth|o?auth.?token|access|access.?token)\\b");
             skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*\\b(password|o?auth|o?auth.?token|access|access.?token)\\b");
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return skiplist;
     }
@@ -103,7 +106,8 @@ class SkipListRegex {
             skipURIArray.put("^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth");
             skipURIArray.put("^(?i)(?!(http|https):).*(:|:.*\\b)(password|o?auth|o?auth.?token|access|access.?token)\\b");
             skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*\\b(password|o?auth|o?auth.?token|access|access.?token)\\b");
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return skiplist;
     }
@@ -130,7 +134,8 @@ class SkipListRegex {
                             break;
                         }
 
-                    } catch (JSONException ignore) {
+                    } catch (JSONException e) {
+                        BranchLogger.d(Objects.requireNonNull(e.getMessage()));
                     }
                 }
             }

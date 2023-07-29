@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -675,7 +676,8 @@ public class BranchUniversalObject implements Parcelable {
                     branchUniversalObject = createInstance(branchInstance.getLatestReferringParams());
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         return branchUniversalObject;
     }
@@ -731,7 +733,8 @@ public class BranchUniversalObject implements Parcelable {
                 branchUniversalObject.metadata_.addCustomMetadata(key, pendingJson.optString(key));
             }
             
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return branchUniversalObject;
     }
@@ -782,7 +785,8 @@ public class BranchUniversalObject implements Parcelable {
             buoJsonModel.put(Defines.Jsonkey.LocallyIndexable.getKey(), isLocallyIndexable());
             buoJsonModel.put(Defines.Jsonkey.CreationTimestamp.getKey(), creationTimeStamp_);
             
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return buoJsonModel;
     }

@@ -27,6 +27,8 @@ import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.Objects;
+
 import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -146,7 +148,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
         try {
             payload.put(RETRY_NUMBER, retryNumber);
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         try {
             // set the setThreadStatsTag for POST if API 26+
@@ -287,7 +290,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 }
                 rd.close();
                 responseString = sb.toString();
-            } catch (IOException ignore) {
+            } catch (IOException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return responseString;

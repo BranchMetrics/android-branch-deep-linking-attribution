@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -1287,7 +1288,8 @@ public class PrefHelper {
         }
         try {
             installMetadata.putOpt(key, value);
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
     }
 
@@ -1303,7 +1305,8 @@ public class PrefHelper {
 
         try {
            return this.installMetadata.get(key).toString();
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             return null;
         }
     }
@@ -1320,7 +1323,8 @@ public class PrefHelper {
     boolean shouldAddModules () {
         try {
             return secondaryRequestMetadata.length() != 0;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             return false;
         }
     }

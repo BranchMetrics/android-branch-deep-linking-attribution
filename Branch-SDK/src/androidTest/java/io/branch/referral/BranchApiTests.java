@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -262,7 +263,8 @@ public class BranchApiTests extends BranchTest {
                         try {
                             Assert.assertEquals(installParams.getString("name"), "test name");
                             Assert.assertEquals(installParams.getString("message"), "hello there with short url");
-                        } catch (JSONException ignore) {
+                        } catch (JSONException e) {
+                            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
                         }
 
                         signal.countDown();

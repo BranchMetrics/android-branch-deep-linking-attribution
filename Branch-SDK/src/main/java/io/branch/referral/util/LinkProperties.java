@@ -11,9 +11,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 
 /**
  * <p>
@@ -290,7 +292,8 @@ public class LinkProperties implements Parcelable {
                         }
                     }
                 }
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return linkProperties;

@@ -9,6 +9,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.util.Objects;
+
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
 /**
@@ -119,6 +121,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
             } catch (JSONException ignore) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         // Add Google search install referrer if present
@@ -126,7 +129,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!googleSearchInstallIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallIdentifier);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         // Add Google play raw referrer if present
@@ -134,7 +138,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!googlePlayReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
 
@@ -142,7 +147,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if(!PrefHelper.NO_STRING_VALUE.equals(appStore)) {
             try {
                 getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
 
@@ -151,7 +157,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 getPost().put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
                 getPost().put(Defines.Jsonkey.IsFullAppConv.getKey(), true);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
     }
@@ -175,7 +182,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
 
-        } catch (JSONException ignore) { }
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
         Branch.expectDelayedSessionInitialization(false);
@@ -277,7 +286,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.remove(Defines.Jsonkey.AnonID.getKey());
             try {
                 post.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
             return true;
         } else {

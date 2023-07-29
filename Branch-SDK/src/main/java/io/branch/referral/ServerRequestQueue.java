@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * <p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
@@ -106,7 +107,8 @@ class ServerRequestQueue {
                             result.add(req);
                         }
                     }
-                } catch (JSONException ignored) {
+                } catch (JSONException e) {
+                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
                 }
             }
         }
@@ -154,7 +156,8 @@ class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(0);
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+            } catch (IndexOutOfBoundsException | NoSuchElementException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return req;
@@ -175,7 +178,8 @@ class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(index);
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+            } catch (IndexOutOfBoundsException | NoSuchElementException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return req;
@@ -198,7 +202,8 @@ class ServerRequestQueue {
                 }
                 queue.add(index, request);
                 persist();
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
     }
@@ -219,7 +224,8 @@ class ServerRequestQueue {
             try {
                 req = queue.remove(index);
                 persist();
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return req;
@@ -238,7 +244,8 @@ class ServerRequestQueue {
             try {
                 isRemoved = queue.remove(request);
                 persist();
-            } catch (UnsupportedOperationException ignored) {
+            } catch (UnsupportedOperationException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return isRemoved;
@@ -252,7 +259,8 @@ class ServerRequestQueue {
             try {
                 queue.clear();
                 persist();
-            } catch (UnsupportedOperationException ignored) {
+            } catch (UnsupportedOperationException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
     }
