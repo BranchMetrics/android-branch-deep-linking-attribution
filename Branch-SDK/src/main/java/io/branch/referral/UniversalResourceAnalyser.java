@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,7 +61,8 @@ class UniversalResourceAnalyser {
             skipURIArray.put("^com\\.googleusercontent\\.apps\\.\\d+-.*:\\/oauth");
             skipURIArray.put("^(?i)(?!(http|https):).*(:|:.*\\b)(password|o?auth|o?auth.?token|access|access.?token)\\b");
             skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*\\b(password|o?auth|o?auth.?token|access|access.?token)\\b");
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         skipURLFormats = retrieveSkipURLFormats(context);
         acceptURLFormats = new ArrayList<>();
@@ -75,7 +77,8 @@ class UniversalResourceAnalyser {
         } else {
             try {
                 urlFormat = new JSONObject(latestUrlFormats);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
         return urlFormat;
@@ -89,8 +92,8 @@ class UniversalResourceAnalyser {
                 skipURLFormats.put(SKIP_LIST_KEY, skipURLArray);
             }
             skipURLArray.put(skipURLFormat);
-        } catch (Exception ignore) {
-        
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
     }
     
@@ -105,7 +108,9 @@ class UniversalResourceAnalyser {
     void checkAndUpdateSkipURLFormats(Context context) {
         try {
             new UrlSkipListUpdateTask(context).executeTask();
-        } catch (Exception ignore) { }
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
     }
     
     String getStrippedURL(String url) {
@@ -123,7 +128,8 @@ class UniversalResourceAnalyser {
                             break;
                         }
                         
-                    } catch (JSONException ignore) {
+                    } catch (JSONException e) {
+                        BranchLogger.d(Objects.requireNonNull(e.getMessage()));
                     }
                 }
             }
@@ -171,7 +177,8 @@ class UniversalResourceAnalyser {
                         respObject = new JSONObject(rd.readLine());
                     }
                 }
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             } finally {
                 if (connection != null) {
                     connection.disconnect();

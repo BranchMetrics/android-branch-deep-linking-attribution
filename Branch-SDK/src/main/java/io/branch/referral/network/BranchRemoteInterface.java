@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Locale;
+import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -216,7 +217,8 @@ public abstract class BranchRemoteInterface {
                 post.put(Defines.Jsonkey.BranchKey.getKey(), branch_key);
                 return true;
             }
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return false;
     }

@@ -6,6 +6,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
+import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
 
 public class BranchCPID {
@@ -28,7 +31,9 @@ public class BranchCPID {
             try {
                 return cpidData.getJSONObject(Defines.Jsonkey.UserData.getKey()).
                         getString(key_cross_platform_id);
-            } catch (JSONException ignored) {}
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            }
         }
         return null;
     }
@@ -57,7 +62,9 @@ public class BranchCPID {
                             probCPIDs.getDouble(i)));
                 }
                 return finalCPIDsArray;
-            } catch (JSONException ignored) {}
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            }
 
         }
         return null;
@@ -68,7 +75,9 @@ public class BranchCPID {
             try {
                 return cpidData.getJSONObject(Defines.Jsonkey.UserData.getKey()).
                         getString(key_developer_identity);
-            } catch (JSONException ignored) {}
+            } catch (JSONException e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            }
         }
         return null;
     }

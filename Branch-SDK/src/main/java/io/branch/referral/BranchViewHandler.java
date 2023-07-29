@@ -26,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Objects;
 
 /**
  * <p>
@@ -237,7 +238,8 @@ public class BranchViewHandler {
                     isRedirectionHandled = true;
                 }
             }
-        } catch (URISyntaxException ignore) {
+        } catch (URISyntaxException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return isRedirectionHandled;
     }
@@ -315,8 +317,9 @@ public class BranchViewHandler {
                     outputStream.close();
                     inputStream.close();
                 }
-            } catch (Exception ignore) {
-            }
+            } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
             return code == HttpURLConnection.HTTP_OK;
         }
 
@@ -358,8 +361,8 @@ public class BranchViewHandler {
                 if (branchViewJson.has(Defines.Jsonkey.BranchViewHtml.getKey())) {
                     webViewHtml_ = branchViewJson.getString(Defines.Jsonkey.BranchViewHtml.getKey());
                 }
-            } catch (Exception ignore) {
-
+            } catch (Exception e) {
+                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             }
         }
 

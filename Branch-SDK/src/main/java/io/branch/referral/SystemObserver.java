@@ -30,6 +30,7 @@ import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -581,7 +582,7 @@ abstract class SystemObserver {
                     }
                 }
                 catch (Exception e){
-                    PrefHelper.Debug("Error in continuation: " + e);
+                    BranchLogger.d("Error in continuation: " + e);
                 }
                 finally {
                     if (callback != null) {
@@ -647,7 +648,9 @@ abstract class SystemObserver {
                     }
                 }
             }
-        } catch (Exception ignore) { }
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
 
         return ipAddress;
     }

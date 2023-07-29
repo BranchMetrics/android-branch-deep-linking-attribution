@@ -3,6 +3,8 @@ package io.branch.referral;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * <p>Class providing the structure of a HTTP response as recieved from the Branch API.
  * </p>
@@ -128,7 +130,8 @@ public class ServerResponse {
                     causeMsg = causeMsg + ".";
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return causeMsg;
     }

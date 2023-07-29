@@ -9,9 +9,11 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import io.branch.referral.BranchAsyncTask;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
 
@@ -51,7 +53,9 @@ class BranchIntegrationModel {
             // Avoid ANRs on reading and parsing manifest with a timeout
             obj = new getDeepLinkSchemeTasks().executeTask(context).get(2500, TimeUnit.MILLISECONDS);
             appSettingsAvailable = true;
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
         if (obj != null) {
             deeplinkUriScheme = obj.optJSONObject(Defines.Jsonkey.URIScheme.getKey());
             JSONArray hostArray = obj.optJSONArray(Defines.Jsonkey.AppLinks.getKey());

@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -1311,7 +1312,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     originalParams.put(key, deeplinkDebugParams_.get(key));
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return originalParams;
     }
@@ -1387,7 +1389,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         try {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
             response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         String url = null;
         if (req.isDefaultToLongUrl()) {
@@ -2284,7 +2287,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
-        } catch (JSONException ignored) {
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
@@ -2580,7 +2584,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 prefHelper_.setSessionParams(branchDataJson.toString());
                 isInstantDeepLinkPossible = true;
             }
-        } catch (JSONException ignored) {}
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
     }
 
     private void extractAppLink(Uri data, Activity activity) {
@@ -2627,7 +2633,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             activity.getIntent().setData(uriWithoutClickID);
             activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
             return true;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
             return false;
         }
     }
@@ -2656,7 +2663,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     }
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return false;
     }
@@ -2684,7 +2692,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
     }
 

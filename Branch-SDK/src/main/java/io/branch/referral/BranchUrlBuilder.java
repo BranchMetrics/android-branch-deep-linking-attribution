@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -100,8 +101,8 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
                 this.params_ = new JSONObject();
             }
             this.params_.put(key, value);
-        } catch (JSONException ignore) {
-
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
         }
         return (T) this;
     }

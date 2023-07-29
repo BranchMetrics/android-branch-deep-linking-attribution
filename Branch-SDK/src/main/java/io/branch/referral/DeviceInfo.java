@@ -19,6 +19,7 @@ import static android.content.Context.UI_MODE_SERVICE;
 import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * <p>
@@ -110,7 +111,9 @@ class DeviceInfo {
             if ((!TextUtils.isEmpty(localIpAddr))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
-        } catch (JSONException ignore) { }
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
     }
 
     /**
@@ -214,7 +217,9 @@ class DeviceInfo {
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
 
-        } catch (JSONException ignore) { }
+        } catch (JSONException e) {
+            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+        }
     }
 
     private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {
