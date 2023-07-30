@@ -45,6 +45,14 @@ public class BranchGAIDTest extends BranchTest {
                 ServerRequest initRequest = queue.peekAt(0);
                 doFinalUpdate(initRequest);
 
+                //TODO: Callback needs to be corrected for async retrieval
+                try {
+                    Thread.sleep(2000);
+                }
+                catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
                 assumingLatIsDisabledHasGAIDv1(initRequest, true);
                 assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(initRequest, true);
                 assumingLatIsDisabledHasGAIDv2(initRequest, false);
@@ -73,6 +81,14 @@ public class BranchGAIDTest extends BranchTest {
 
                     Assert.assertNotNull(serverRequest);
                     doFinalUpdate(serverRequest);
+
+                    //TODO: Callback needs to be corrected for async retrieval
+                    try {
+                        Thread.sleep(2000);
+                    }
+                    catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     assumingLatIsDisabledHasGAIDv1(serverRequest, true);
                     assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
@@ -104,6 +120,14 @@ public class BranchGAIDTest extends BranchTest {
                     Assert.assertNotNull(serverRequest);
                     doFinalUpdate(serverRequest);
 
+                    //TODO: Callback needs to be corrected for async retrieval
+                    try {
+                        Thread.sleep(2000);
+                    }
+                    catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
                     assumingLatIsDisabledHasGAIDv1(serverRequest, true);
                     assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
                     assumingLatIsDisabledHasGAIDv2(serverRequest, false);
@@ -127,6 +151,14 @@ public class BranchGAIDTest extends BranchTest {
 
                     Assert.assertNotNull(serverRequest);
                     doFinalUpdate(serverRequest);
+
+                    //TODO: Callback needs to be corrected for async retrieval
+                    try {
+                        Thread.sleep(2000);
+                    }
+                    catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     assumingLatIsDisabledHasGAIDv1(serverRequest, true);
                     assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, true);
@@ -152,6 +184,14 @@ public class BranchGAIDTest extends BranchTest {
                     ServerRequest serverRequest = logEvent(getTestContext(), branchEvent);
                     Assert.assertNotNull(serverRequest);
 
+                    //TODO: Callback needs to be corrected for async retrieval
+                    try {
+                        Thread.sleep(2000);
+                    }
+                    catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    
                     assumingLatIsDisabledHasGAIDv1(serverRequest, false);
                     assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(serverRequest, false);
                     assumingLatIsDisabledHasGAIDv2(serverRequest, true);
