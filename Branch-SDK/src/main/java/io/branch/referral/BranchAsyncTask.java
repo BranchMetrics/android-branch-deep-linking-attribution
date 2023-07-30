@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.os.AsyncTask;
 import android.os.Build;
+import android.util.Log;
 
 /**
  * <p>
@@ -22,5 +23,17 @@ public abstract class BranchAsyncTask<Params, Progress, Result> extends AsyncTas
         } catch (Exception t) {
             return execute(params);
         }
+    }
+
+    @Override
+    public void onCancelled(){
+        Log.i("BranchSDK", "async task onCancelled");
+        super.onCancelled();
+    }
+
+    @Override
+    public void onCancelled(Result result){
+        Log.i("BranchSDK", "async task onCancelled with result " + result);
+        super.onCancelled(result);
     }
 }
