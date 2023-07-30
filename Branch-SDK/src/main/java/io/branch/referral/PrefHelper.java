@@ -204,6 +204,7 @@ public class PrefHelper {
     static void shutDown() {
         Log.i("BranchSDK", "shutting down prefhelper");
         if (prefHelper_ != null) {
+            Log.i("BranchSDK", "nulling prefseditor");
             prefHelper_.prefsEditor_ = null;
         }
 
@@ -1238,6 +1239,7 @@ public class PrefHelper {
      * @param value A {@link String} value to set the preference record to.
      */
     public void setString(String key, String value) {
+        Log.i("BranchSDK", "prefs editor is " + prefsEditor_ + " key " + key + " value " + value);
         prefsEditor_.putString(key, value).apply();
     }
     

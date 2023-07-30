@@ -21,7 +21,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
     // TODO: Revisit with MockWebServer and mock out different response codes
     // since most tests use TEST_TIMEOUT to await network requests, lower it here, so TEST_TIMEOUT
     // ends up including a little bit of a buffer for scheduling network requests.
-    private final long networkRequestDuration = BranchTest.TEST_REQUEST_TIMEOUT;
+    private final long networkRequestDuration = BranchTest.TEST_REQUEST_TIMEOUT / 2;
 
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {
