@@ -44,8 +44,8 @@ abstract public class BranchTest extends BranchTestRequestUtil {
     @After
     public void tearDown() throws InterruptedException {
         Log.i("BranchSDK", "teardown " +  System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
+        Thread.sleep(TEST_REQUEST_TIMEOUT);
         if (activityScenario != null) {
-            Thread.sleep(TEST_REQUEST_TIMEOUT);
             activityScenario.close();
         }
 

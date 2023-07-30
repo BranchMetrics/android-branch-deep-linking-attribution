@@ -2188,6 +2188,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
 
         private void onRequestSuccess(ServerResponse serverResponse) {
+            Log.i("BranchSDK", "onRequestSuccess " + serverResponse + " " + System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
+            Log.i("BranchSDK", "onRequestSuccess branch " + branchReferral_ + " prefhelper " + prefHelper_ + " queue " + requestQueue_);
+
             // If the request succeeded
             @Nullable final JSONObject respJson = serverResponse.getObject();
             if (respJson == null) {
