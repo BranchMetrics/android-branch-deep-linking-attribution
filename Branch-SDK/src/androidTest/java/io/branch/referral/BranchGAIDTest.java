@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONException;
@@ -216,6 +218,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasGAIDv1(ServerRequest serverRequest, boolean assertTrue) {
+        Log.i("BranchSDK","assumingLatIsDisabledHasGAIDv1 " + serverRequest.getGetParams() + " Thread " + Thread.currentThread().getName() + " " + System.currentTimeMillis());
         if (assertTrue) {
             Assert.assertTrue(hasV1LAT(serverRequest));
 
@@ -231,6 +234,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasGAIDv2(ServerRequest serverRequest, boolean assertTrue) {
+        Log.i("BranchSDK","assumingLatIsDisabledHasGAIDv2 " + serverRequest.getGetParams() + " Thread " + Thread.currentThread().getName() + " " + System.currentTimeMillis());
         if (assertTrue) {
             Assert.assertTrue(hasV2LAT(serverRequest));
 
@@ -271,6 +275,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasAdIdFromAdIdsObjectV1(ServerRequest serverRequest, boolean assertTrue) {
+        Log.i("BranchSDK","assumingLatIsDisabledHasAdIdFromAdIdsObjectV1 " + serverRequest.getGetParams() + " Thread " + Thread.currentThread().getName() + " " + System.currentTimeMillis());
         boolean hasAdIdFromAdIdsObject = getAdIdFromAdIdsObject(serverRequest).length() > 0;
         if (assertTrue) {
             Assert.assertTrue(hasV1LAT(serverRequest));
@@ -286,6 +291,7 @@ public class BranchGAIDTest extends BranchTest {
     }
 
     private void assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(ServerRequest serverRequest, boolean assertTrue) {
+        Log.i("BranchSDK","assumingLatIsDisabledHasAdIdFromAdIdsObjectV2 " + serverRequest.getGetParams() + " Thread " + Thread.currentThread().getName() + " " + System.currentTimeMillis());
         boolean hasAdIdFromAdIdsObject = getAdIdFromAdIdsObject(serverRequest).length() > 0;
         if (assertTrue) {
             Assert.assertTrue(hasV2LAT(serverRequest));
