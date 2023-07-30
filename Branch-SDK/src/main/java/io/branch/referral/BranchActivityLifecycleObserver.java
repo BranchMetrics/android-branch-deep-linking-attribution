@@ -51,7 +51,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         activityCnt_++;
 
         if(branch.getDeviceInfo() != null && branch.getDeviceInfo().getSystemObserver() != null){
-            if(!branch.getTrackingController().isTrackingDisabled()){
+            if(!branch.getTrackingController().isTrackingDisabled() && !branch.isGAParamsFetchInProgress_){
                 branch.getDeviceInfo().getSystemObserver().fetchAdsParams(branch.getApplicationContext(), branch);
             }
         }

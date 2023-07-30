@@ -443,6 +443,7 @@ abstract class SystemObserver {
      * @return {@link Boolean} with true if GAID fetch process started.
      */
     void fetchAdsParams(Context context, AdsParamsFetchEvents callback) {
+        Log.i("BranchSDK", "fetchAdParams");
         Branch.getInstance().isGAParamsFetchInProgress_ = true;
 
         if (isFireOSDevice()) {
@@ -469,6 +470,7 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
+                    Log.i("BranchSDK", "resumeWith " + o + " Thread " + Thread.currentThread().getName());
                     if (o != null) {
                         try {
                             AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
