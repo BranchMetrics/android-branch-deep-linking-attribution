@@ -43,6 +43,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
     @After
     public void tearDown() throws InterruptedException {
+        Log.i("BranchSDK", "teardown " +  System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
         if (activityScenario != null) {
             activityScenario.close();
             Thread.sleep(TEST_REQUEST_TIMEOUT);
@@ -105,11 +106,11 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
             @Override
             public void perform(final MockActivity activity) {
-                Log.i("BranchSDK", "starting perform at " + System.currentTimeMillis());
+                Log.i("BranchSDK", "starting perform at " + System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
                 Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
-                        Log.i("BranchSDK", "test on init finished at " + System.currentTimeMillis());
+                        Log.i("BranchSDK", "test on init finished at " + System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
                         PrefHelper.Debug(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
                         Assert.assertNotNull(referringParams);
@@ -135,7 +136,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         });
 
         try {
-            Log.i("BranchSDK", "making assertion at " + System.currentTimeMillis());
+            Log.i("BranchSDK", "making assertion at " + System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
             Assert.assertTrue(sessionLatch.await(TEST_INIT_SESSION_TIMEOUT, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e) {
             Assert.fail("session initialization timeout");

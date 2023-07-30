@@ -597,7 +597,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
-        Log.i("BranchSDK", "shutting down branch objects");
+        Log.i("BranchSDK", "shutting down branch objects "  + System.currentTimeMillis() + " Thread " + Thread.currentThread().getName());
         ServerRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
