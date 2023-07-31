@@ -31,8 +31,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.UI_MODE_SERVICE;
+
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+
+import io.branch.coroutines.AdvertisingIdsKt;
+import io.branch.referral.util.DependencyUtilsKt;
+import kotlin.Pair;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
@@ -436,38 +447,166 @@ abstract class SystemObserver {
      * @param callback {@link AdsParamsFetchEvents} instance to notify process completion
      * @return {@link Boolean} with true if GAID fetch process started.
      */
-    boolean prefetchAdsParams(Context context, AdsParamsFetchEvents callback) {
-        AIDInitializationSessionID_ = PrefHelper.getInstance(context).getSessionID();
-        boolean isPrefetchStarted = false;
+    public void fetchAdId(Context context, AdsParamsFetchEvents callback) {
         if (isFireOSDevice()) {
             setFireAdId(context, callback);
-        } else {
-            isPrefetchStarted = true;
+        }
+        else {
             if (isHuaweiMobileServicesAvailable(context)) {
-                new HuaweiOAIDFetchTask(context, callback).executeTask();
-            } else {
-                new GAdsPrefetchTask(context, callback).executeTask();
+                this.fetchHuaweiAdId(context, callback);
+            }
+            else {
+                this.fetchGoogleAdId(context, callback);
             }
         }
-        return isPrefetchStarted;
+
+        // TODO: Remove this when we have structured concurrency.
+        //  It is possible but rare for this backgrounded process complete before the request is queued
+        class ReleaseLockByTimer implements Runnable {
+            @Override
+            public void run() {
+                if (callback != null) {
+                    PrefHelper.Debug("Advertising id fetch lock released by timer");
+                    callback.onAdsParamsFetchFinished();
+                }
+            }
+        }
+
+        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+        long delay = 2000;
+        exec.scheduleWithFixedDelay(new ReleaseLockByTimer(), delay, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private void fetchHuaweiAdId(Context context, AdsParamsFetchEvents callback) {
+        if(DependencyUtilsKt.classExists(DependencyUtilsKt.huaweiAdvertisingIdClientClass)) {
+            AdvertisingIdsKt.getHuaweiAdvertisingInfoObject(context, new Continuation<com.huawei.hms.ads.identifier.AdvertisingIdClient.Info>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(Object o) {
+                    PrefHelper.Debug("resumeWith " + o);
+                    if (o != null) {
+                        try {
+                            com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
+
+                            boolean lat = info.isLimitAdTrackingEnabled();
+                            String aid = null;
+
+                            if(!lat) {
+                                aid = info.getId();
+                            }
+
+                            setLAT(lat ? 1 : 0);
+                            setGAID(aid);
+                        }
+                        catch (Exception e) {
+                            PrefHelper.Debug("Error in continuation: " + e);
+                        }
+                        finally {
+                            if (callback != null) {
+                                callback.onAdsParamsFetchFinished();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        else {
+            if (callback != null) {
+                callback.onAdsParamsFetchFinished();
+            }
+
+            PrefHelper.Debug("Huawei advertising service not found. " +
+                    "If not expected, import " + DependencyUtilsKt.huaweiAdvertisingIdClientClass + " into your gradle dependencies");
+        }
+    }
+
+
+
+    private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
+        if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
+            AdvertisingIdsKt.getGoogleAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(Object o) {
+                    if (o != null) {
+                        try {
+                            AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
+
+                            boolean lat = info.isLimitAdTrackingEnabled();
+                            String aid = null;
+
+                            if(!lat) {
+                                aid = info.getId();
+                            }
+
+                            setLAT(lat ? 1 : 0);
+                            setGAID(aid);
+                        }
+                        catch (Exception e) {
+                            PrefHelper.Debug("Error in continuation: " + e);
+                        }
+                        finally {
+                            if (callback != null) {
+                                callback.onAdsParamsFetchFinished();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        else {
+            if (callback != null) {
+                callback.onAdsParamsFetchFinished();
+            }
+
+            PrefHelper.Debug("Play Store advertising service not found. " +
+                    "If not expected, import " + DependencyUtilsKt.playStoreAdvertisingIdClientClass + " into your gradle dependencies");
+        }
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
-        if (context != null) {
-            try {
-                ContentResolver cr = context.getContentResolver();
-                setLAT(Secure.getInt(cr, "limit_ad_tracking"));
-                setGAID(Secure.getString(cr, "advertising_id"));
-                // Don't save advertising id if it's empty/all zeroes/lat=true
-                if (TextUtils.isEmpty(GAIDString_) || GAIDString_.equals(UUID_EMPTY) || LATVal_ == 1) {
-                    setGAID(null);
-                }
-            } catch (Settings.SettingNotFoundException ignored) {}
-        }
+        PrefHelper.Debug("setFireAdId");
+        AdvertisingIdsKt.getAmazonFireAdvertisingInfoObject(context, new Continuation<Pair<? extends Integer, ? extends String>>() {
+            @NonNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
 
-        if (callback != null) {
-            callback.onAdsParamsFetchFinished();
-        }
+            @Override
+            public void resumeWith(@NonNull Object o) {
+                try {
+                    if (o != null) {
+                        Pair<Integer, String> info = (Pair<Integer, String>) o;
+                        setLAT(info.component1());
+                        if (info.component1() == 0) {
+                            setGAID(info.component2());
+                        }
+                        else {
+                            setGAID(info.component2());
+                        }
+                    }
+                }
+                catch (Exception e){
+                    PrefHelper.Debug("Error in continuation: " + e);
+                }
+                finally {
+                    if (callback != null) {
+                        callback.onAdsParamsFetchFinished();
+                    }
+                }
+            }
+        });
     }
 
     interface AdsParamsFetchEvents {
@@ -646,9 +785,5 @@ abstract class SystemObserver {
 
     void setLAT(int lat) {
         LATVal_ = lat;
-    }
-
-    String getAIDInitializationSessionID() {
-        return AIDInitializationSessionID_;
     }
 }

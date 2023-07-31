@@ -1,8 +1,8 @@
 package io.branch.referral;
 
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,6 +27,11 @@ import io.branch.referral.util.CommerceEvent;
  [ ] ServerRequestRegisterOpen.java
  */
 
+//TODO: Previously, the advertising info tasks were implemented as AsyncTasks and called in App.OnCreate
+// Occasionally they'd fail in GHA, removing the App.OnCreate makes that near certain, as the test
+// invokes the check on the main thread on a normally backgrounded function.
+// This will be fixed with queue changes and test callbacks.
+
 @RunWith(AndroidJUnit4.class)
 public class BranchGAIDTest extends BranchTest {
     private static final String TAG = "BranchGAIDTest";
@@ -35,11 +40,10 @@ public class BranchGAIDTest extends BranchTest {
     public void testInitSession_hasGAIDv1() {
         initBranchInstance();
         final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
-        initSessionResumeActivity(new Runnable() {
+        initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
                 Assert.assertEquals(1, queue.getSize());
-
                 ServerRequest initRequest = queue.peekAt(0);
                 doFinalUpdate(initRequest);
 
@@ -48,13 +52,13 @@ public class BranchGAIDTest extends BranchTest {
                 assumingLatIsDisabledHasGAIDv2(initRequest, false);
                 assumingLatIsDisabledHasAdIdFromAdIdsObjectV2(initRequest, false);
             }
-        }, null);
+        });
     }
 
     @Test
     public void testActionCompleted_hasGAIDv1() {
         initBranchInstance();
-        initSessionResumeActivity(new Runnable() {
+        initSessionResumeActivity(null,new Runnable() {
             @Override
             public void run() {
                 try {
@@ -64,7 +68,6 @@ public class BranchGAIDTest extends BranchTest {
                     params.put("int", 1);
                     params.put("double", 0.13415512301);
 
-                    // final CountDownLatch latch = new CountDownLatch(1);
                     Branch.getInstance().userCompletedAction("buy", params);
 
                     ServerRequest serverRequest = findRequestOnQueue(getTestContext(), "event", "buy");
@@ -80,13 +83,13 @@ public class BranchGAIDTest extends BranchTest {
                     Assert.fail();
                 }
             }
-        }, null);
+        });
     }
 
     @Test
     public void testCommerceEvent_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity(new Runnable() {
+        initSessionResumeActivity(null,new Runnable() {
             @Override
             public void run() {
                 try {
@@ -110,13 +113,13 @@ public class BranchGAIDTest extends BranchTest {
                     Assert.fail();
                 }
             }
-        }, null);
+        });
     }
 
     @Test
     public void testIdentity_hasGAIDv1() {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity(new Runnable() {
+        initSessionResumeActivity(null,new Runnable() {
             @Override
             public void run() {
                 try {
@@ -134,13 +137,13 @@ public class BranchGAIDTest extends BranchTest {
                     Assert.fail();
                 }
             }
-        }, null);
+        });
     }
 
     @Test
     public void testStandardEvent_hasGAIDv2() {
         initBranchInstance(TEST_KEY);
-        initSessionResumeActivity(new Runnable() {
+        initSessionResumeActivity(null,new Runnable() {
             @Override
             public void run() {
                 try {
@@ -158,7 +161,7 @@ public class BranchGAIDTest extends BranchTest {
                     Assert.fail();
                 }
             }
-        }, null);
+        });
     }
 
     // Check to see if the LAT is available (V1)

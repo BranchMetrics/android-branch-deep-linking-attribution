@@ -22,6 +22,7 @@ dependencies {
 
     compileOnly("com.google.android.gms:play-services-ads-identifier:18.0.1")
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
+    compileOnly("com.huawei.hms:ads-identifier:3.4.62.300")
     compileOnly("com.android.billingclient:billing:6.0.1")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -31,6 +32,7 @@ dependencies {
     androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     androidTestImplementation("com.android.billingclient:billing:6.0.1")
+    androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
 
 
     testImplementation("junit:junit:4.13.2")
