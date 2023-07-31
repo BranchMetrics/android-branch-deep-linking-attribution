@@ -740,7 +740,7 @@ public class PrefHelper {
             try {
                 params = new JSONObject(string);
             } catch (JSONException e) {
-                PrefHelper.LogException("Unable to get URL query parameters as string: ", e);
+                PrefHelper.Warning("Unable to get URL query parameters as string: " + e);
             }
         }
 
