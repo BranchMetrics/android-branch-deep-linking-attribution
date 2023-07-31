@@ -86,61 +86,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * are shared with others directly as a user action, via social media for instance.
      */
     public static final String FEATURE_TAG_SHARE = "share";
-    
-    /**
-     * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are associated
-     * with a referral program, incentivized or not.
-     */
-    public static final String FEATURE_TAG_REFERRAL = "referral";
 
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_INVITE = "invite";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_DEAL = "deal";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_GIFT = "gift";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REDEEM_CODE = "$redeem_code";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_BUCKET_DEFAULT = "default";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_CODE_TYPE = "credit";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_CODE = "referral_code";
-    
     /**
      * The redirect URL provided when the link is handled by a desktop client.
      */
@@ -233,37 +179,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Possible values are "true" or "false"
      */
     public static final String ALWAYS_DEEPLINK = "$always_deeplink";
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, the user applying the referral code receives credit.
-     */
-    public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, the user who created the referral code receives credit.
-     */
-    public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, both the creator and applicant receive credit
-     */
-    public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
-    
-    /**
-     * An {@link Integer} value indicating the calculation type of the referral code. In this case,
-     * the referral code can be applied continually.
-     */
-    public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
-    
-    /**
-     * An {@link Integer} value indicating the calculation type of the referral code. In this case,
-     * a user can only apply a specific referral code once.
-     */
-    public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
-    
+
     /**
      * An {@link Integer} value indicating the link type. In this case, the link can be used an
      * unlimited number of times.
@@ -920,6 +836,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void closeSessionInternal() {
         clearPartnerParameters();
         executeClose();
+        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setExternalIntentUri(null);
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
@@ -937,15 +854,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void executeClose() {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
-            ServerRequest req = new ServerRequestRegisterClose(context_);
-            if (closeRequestNeeded) {
-                handleNewRequest(req);
-            } else {
-                req.onRequestSucceeded(null, null);
-            }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
-        closeRequestNeeded = false;
     }
 
     public static void registerPlugin(String name, String version) {
@@ -1237,82 +1147,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             handleNewRequest(req);
         }
     }
-    
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void loadRewards() { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void loadRewards(BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCredits() { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCreditsForBucket(String bucket) { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(int count, BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(@NonNull final String bucket, final int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(@NonNull final String bucket,
-                              final int count, BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(BranchListResponseListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener
-            callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(@NonNull final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(final String bucket, final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
     
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
@@ -2051,10 +1885,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 PrefHelper.Debug("Branch is not initialized, cannot logout");
                 return;
             }
-            if ((req instanceof ServerRequestRegisterClose)) {
-                PrefHelper.Debug("Branch is not initialized, cannot close session");
-                return;
-            }
             if (requestNeedsSession(req)) {
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
@@ -2269,13 +2099,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *                  A null value is set if logout succeeded.
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
-    }
-    
-    /**
-     * <p>enum containing the sort options for return of credit history.</p>
-     */
-    public enum CreditHistoryOrder {
-        kMostRecentFirst, kLeastRecentFirst
     }
     
     /**
