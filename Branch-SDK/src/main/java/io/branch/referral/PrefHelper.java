@@ -735,11 +735,13 @@ public class PrefHelper {
 
         String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
         JSONObject params = new JSONObject();
-        try {
-            params = new JSONObject(string);
-        }
-        catch (JSONException e) {
-            PrefHelper.LogException("Unable to get URL query parameters as string: ", e);
+
+        if (string != NO_STRING_VALUE) {
+            try {
+                params = new JSONObject(string);
+            } catch (JSONException e) {
+                PrefHelper.LogException("Unable to get URL query parameters as string: ", e);
+            }
         }
 
         return params;
