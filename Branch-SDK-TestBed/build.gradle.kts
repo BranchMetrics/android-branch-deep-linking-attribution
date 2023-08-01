@@ -8,11 +8,6 @@ plugins {
 dependencies {
     implementation(project(":Branch-SDK"))
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
-
-    /* Add chrome custom tabs for guaranteed matching */
-    implementation("androidx.browser:browser:1.0.0") {
-        exclude(module = "support-v4")
-    }
     implementation("com.android.billingclient:billing:6.0.1")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
