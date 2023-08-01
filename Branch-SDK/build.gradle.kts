@@ -7,13 +7,14 @@ plugins {
     signing
     id("org.gradle.test-retry") version "1.5.3"
 }
+val coroutinesVersion = "1.6.4"
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
     implementation(kotlin("stdlib"))
     implementation(kotlin("stdlib-jdk8"))
     implementation("androidx.annotation:annotation:1.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     implementation("com.android.installreferrer:installreferrer:2.2")
 
     // --- optional dependencies -----
@@ -30,10 +31,11 @@ dependencies {
     androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("org.skyscreamer:jsonassert:1.5.0")
+    androidTestImplementation( "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     androidTestImplementation("com.android.billingclient:billing:6.0.1")
     androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
-
+    androidTestImplementation("com.huawei.hms:base:4.0.2.300")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")
