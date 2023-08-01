@@ -736,12 +736,14 @@ public class PrefHelper {
         String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
         JSONObject params = new JSONObject();
 
-        if (string != NO_STRING_VALUE) {
+        if (!TextUtils.isEmpty(string) && !PrefHelper.NO_STRING_VALUE.equals(string)) {
             try {
                 params = new JSONObject(string);
             } catch (JSONException e) {
                 PrefHelper.Warning("Unable to get URL query parameters as string: " + e);
             }
+        } else {
+            PrefHelper.Debug("There are no saved referring URL query parameters.");
         }
 
         return params;
