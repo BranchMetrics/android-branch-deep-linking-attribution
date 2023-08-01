@@ -460,22 +460,6 @@ abstract class SystemObserver {
                 this.fetchGoogleAdId(context, callback);
             }
         }
-
-        // TODO: Remove this when we have structured concurrency.
-        //  It is possible but rare for this backgrounded process complete before the request is queued
-        class ReleaseLockByTimer implements Runnable {
-            @Override
-            public void run() {
-                if (callback != null) {
-                    PrefHelper.Debug("Advertising id fetch lock released by timer " + Thread.currentThread().getName());
-                    callback.onAdsParamsFetchFinished();
-                }
-            }
-        }
-
-        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
-        long delay = 2000;
-        exec.scheduleWithFixedDelay(new ReleaseLockByTimer(), delay, delay, TimeUnit.MILLISECONDS);
     }
 
     private void fetchHuaweiAdId(Context context, AdsParamsFetchEvents callback) {
