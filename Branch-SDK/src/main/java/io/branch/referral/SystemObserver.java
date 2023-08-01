@@ -467,7 +467,7 @@ abstract class SystemObserver {
             @Override
             public void run() {
                 if (callback != null) {
-                    PrefHelper.Debug("Advertising id fetch lock released by timer");
+                    PrefHelper.Debug("Advertising id fetch lock released by timer " + Thread.currentThread().getName());
                     callback.onAdsParamsFetchFinished();
                 }
             }
