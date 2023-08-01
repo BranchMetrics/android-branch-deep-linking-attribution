@@ -19,6 +19,7 @@ import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -538,6 +539,7 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
+                    Log.i("BranchSDK", "resumeWith " + o + " " + Thread.currentThread().getName());
                     if (o != null) {
                         try {
                             AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
@@ -772,10 +774,12 @@ abstract class SystemObserver {
     }
 
     String getAID() {
+        Log.i("BranchSDK",GAIDString_ + " " + Thread.currentThread().getName());
         return GAIDString_;
     }
 
     int getLATVal() {
+        Log.i("BranchSDK",LATVal_ + " " + Thread.currentThread().getName());
         return LATVal_;
     }
 

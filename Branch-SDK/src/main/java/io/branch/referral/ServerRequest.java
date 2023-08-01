@@ -584,6 +584,7 @@ public abstract class ServerRequest {
     }
     
     void doFinalUpdateOnBackgroundThread() {
+        Log.i("BranchSDK", "doFinalUpdateOnBackgroundThread "+ Thread.currentThread().getName());
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
             if (prioritizeLinkAttribution(this.params_)) {
