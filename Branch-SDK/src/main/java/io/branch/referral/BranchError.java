@@ -12,14 +12,10 @@ public class BranchError {
     public static final int ERR_NO_SESSION = -101;
     /* Error processing request since app doesn't have internet permission. */
     public static final int ERR_NO_INTERNET_PERMISSION = -102;
-    /* Error processing request since referral code provided is invalid. */
-    @Deprecated public static final int ERR_INVALID_REFERRAL_CODE = -103;
     /* Error processing request since Branch is not initialised. */
     public static final int ERR_BRANCH_INIT_FAILED = -104;
     /* Error processing request since alias is already used. */
     public static final int ERR_BRANCH_DUPLICATE_URL = -105;
-    @Deprecated public static final int ERR_BRANCH_DUPLICATE_REFERRAL_CODE = -106;
-    @Deprecated public static final int ERR_BRANCH_REDEEM_REWARD = -107;
     /* Error with API level below 14. */
     public static final int ERR_API_LVL_14_NEEDED = -108;
     /* Error Branch is not instantiated. */
