@@ -472,7 +472,6 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
-                    PrefHelper.Debug("resumeWith " + o);
                     if (o != null) {
                         try {
                             com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
