@@ -2,15 +2,16 @@ package io.branch.referral;
 
 import android.content.Context;
 
-import com.huawei.hms.ads.installreferrer.api.InstallReferrerClient;
-import com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener;
+import androidx.annotation.NonNull;
+
 import com.huawei.hms.ads.installreferrer.api.ReferrerDetails;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import io.branch.coroutines.InstallReferrersKt;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
-public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
-    private static IHuaweiInstallReferrerEvents callback_ = null;
+public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer {
     static boolean hasBeenUsed = false;
     static boolean erroredOut = false;
 
@@ -18,81 +19,34 @@ public class StoreReferrerHuaweiAppGallery extends AppStoreReferrer{
     static long installBeginTimestamp = Long.MIN_VALUE;
     static String rawReferrer = null;
 
-    public static void fetch(final Context context, IHuaweiInstallReferrerEvents iHuaweiInstallReferrerEvents) {
-        callback_ = iHuaweiInstallReferrerEvents;
+    public static void fetch(final Context context) {
         hasBeenUsed = true;
 
-        try {
-            final InstallReferrerClient mReferrerClient = InstallReferrerClient.newBuilder(context).build();
+        InstallReferrersKt.getHuaweiAppGalleryReferrerDetails(context, new Continuation<ReferrerDetails>() {
+            @NonNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
 
-            mReferrerClient.startConnection(new InstallReferrerStateListener() {
-                @Override
-                public void onInstallReferrerSetupFinished(int responseCode) {
-                    PrefHelper.Debug("Huawei AppGallery onInstallReferrerSetupFinished, responseCode = " + responseCode);
-
-                    switch (responseCode) {
-                        case InstallReferrerClient.InstallReferrerResponse.OK:
-                            try {
-                                ReferrerDetails referrerDetails = mReferrerClient.getInstallReferrer();
-
-                                rawReferrer = referrerDetails.getInstallReferrer();
-                                clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
-                                installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
-
-                                mReferrerClient.endConnection();
-                                onReferrerClientFinished(context, rawReferrer, clickTimestamp, installBeginTimestamp, mReferrerClient.getClass().getName());
-                            }
-                            catch (Exception e) {
-                                PrefHelper.Debug(e.getMessage());
-                                onReferrerClientError();
-                            }
-                            break;
-                        case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
-                        case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
-                        case InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED:
-                        case InstallReferrerClient.InstallReferrerResponse.DEVELOPER_ERROR:
-                            onReferrerClientError();
-                            break;
-                    }
+            @Override
+            public void resumeWith(@NonNull Object o) {
+                try {
+                    ReferrerDetails referrerDetails = (ReferrerDetails) o;
+                    rawReferrer = referrerDetails.getInstallReferrer();
+                    clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
+                    installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
                 }
-
-                @Override
-                public void onInstallReferrerServiceDisconnected() {
-                    PrefHelper.Debug("Huawei AppGallery onInstallReferrerServiceDisconnected");
+                catch (Exception e) {
+                    PrefHelper.Debug(e.getMessage());
+                    erroredOut = true;
                 }
-            });
-
-            new Timer().schedule(new TimerTask() {
-                @Override public void run() {
-                    PrefHelper.Debug("Huawei Store Referrer fetch lock released by timer");
-                    reportInstallReferrer();
+                finally {
+                    Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    Branch.getInstance().waitingForHuaweiInstallReferrer = false;
+                    Branch.getInstance().tryProcessNextQueueItemAfterInstallReferrer();
                 }
-            }, 1500);
-        }
-        catch (Exception exception) {
-            PrefHelper.Debug(exception.getMessage());
-            exception.printStackTrace();
-        }
-    }
-
-    private static void onReferrerClientError() {
-        erroredOut = true;
-        reportInstallReferrer();
-    }
-
-    interface IHuaweiInstallReferrerEvents {
-        void onHuaweiInstallReferrerEventsFinished();
-    }
-
-    public static void reportInstallReferrer() {
-        if (callback_ != null) {
-            callback_.onHuaweiInstallReferrerEventsFinished();
-            callback_ = null;
-        }
-    }
-
-    protected static void onReferrerClientFinished(Context context, String rawReferrerString, long clickTS, long InstallBeginTS, String clientName) {
-        PrefHelper.Debug(clientName + " onReferrerClientFinished() Referrer: " + rawReferrerString + " Click Timestamp: " + clickTS + " Install Timestamp: "  + InstallBeginTS);
-        reportInstallReferrer();
+            }
+        });
     }
 }

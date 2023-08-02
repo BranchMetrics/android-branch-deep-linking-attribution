@@ -24,14 +24,16 @@ dependencies {
     compileOnly("com.google.android.gms:play-services-ads-identifier:18.0.1")
     // Huawei Open Advertising ID
     compileOnly("com.huawei.hms:ads-identifier:3.4.62.300")
+
     // Google Play install referrer, included in the build
     implementation("com.android.installreferrer:installreferrer:2.2")
-    // Xiaomi install referrer
-    compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
     // Huawei install referrer
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
     // Samsung install referrer
     compileOnly("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
+    // Xiaomi install referrer
+    compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
+
     // Google Play Billing library
     compileOnly("com.android.billingclient:billing:6.0.1")
 

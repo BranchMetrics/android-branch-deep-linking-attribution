@@ -40,6 +40,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +77,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents{
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -937,27 +938,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         processNextQueueItem();
     }
 
-    @Override
-    public void onHuaweiInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForHuaweiInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
-    @Override
-    public void onSamsungInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForSamsungInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
-    @Override
-    public void onXiaomiInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForXiaomiInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
     void tryProcessNextQueueItemAfterInstallReferrer() {
         PrefHelper.Debug("tryProcessNextQueueItemAfterInstallReferrer"
         + "\n waitingForGoogleInstallReferrer " + waitingForGoogleInstallReferrer
@@ -1503,7 +1483,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
+                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName() + " locks " + Arrays.toString(req.locks_.toArray()));
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
@@ -1781,15 +1761,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
 
                 if(waitingForHuaweiInstallReferrer){
-                    StoreReferrerHuaweiAppGallery.fetch(context_, this);
+                    StoreReferrerHuaweiAppGallery.fetch(context_);
                 }
 
                 if(waitingForSamsungInstallReferrer){
-                    StoreReferrerSamsungGalaxyStore.fetch(context_, this);
+                    StoreReferrerSamsungGalaxyStore.fetch(context_);
                 }
 
                 if(waitingForXiaomiInstallReferrer){
-                    StoreReferrerXiaomiGetApps.fetch(context_, this);
+                    StoreReferrerXiaomiGetApps.fetch(context_);
                 }
 
                 // StoreReferrer error are thrown synchronously, so we remove

@@ -1,18 +1,12 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 
-import com.android.installreferrer.api.InstallReferrerClient;
-import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import io.branch.coroutines.DataCoroutinesKt;
+import io.branch.coroutines.InstallReferrersKt;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -28,7 +22,7 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
     public static void fetch(final Context context) {
         hasBeenUsed = true;
 
-        DataCoroutinesKt.getGooglePlayStoreReferrerDetails(context, new Continuation<ReferrerDetails>() {
+        InstallReferrersKt.getGooglePlayStoreReferrerDetails(context, new Continuation<ReferrerDetails>() {
             @NonNull
             @Override
             public CoroutineContext getContext() {
@@ -42,7 +36,7 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
                     rawReferrer = referrerDetails.getInstallReferrer();
                     clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
                     installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
-                    
+
                     // TODO: We can get rid of InstantAppUtil.java with this one line
                     //  boolean isInstantApp = referrerDetails.getGooglePlayInstantParam();
                 }
