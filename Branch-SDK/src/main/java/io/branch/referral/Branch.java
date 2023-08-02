@@ -5,6 +5,7 @@ import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
+import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 import static io.branch.referral.util.DependencyUtilsKt.galaxyStoreInstallReferrerClass;
 import static io.branch.referral.util.DependencyUtilsKt.huaweiInstallReferrerClass;
@@ -344,6 +345,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
+        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
+            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
+        }
     }
 
     /**
@@ -2096,13 +2100,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * <p>enum containing the sort options for return of credit history.</p>
-     */
-    public enum CreditHistoryOrder {
-        kMostRecentFirst, kLeastRecentFirst
-    }
-    
-    /**
      * Async Task to create  a short link for synchronous methods
      */
     private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
@@ -3094,13 +3091,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-            if (succeeded) {
-                BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-            } else {
-                PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
-            }
-            return null;
-        });
+        if (classExists(billingGooglePlayClass)) {
+            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+                if (succeeded) {
+                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+                } else {
+                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                }
+                return null;
+            });
+        }
     }
 }

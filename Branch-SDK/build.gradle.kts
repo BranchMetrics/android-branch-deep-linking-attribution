@@ -15,7 +15,6 @@ dependencies {
     implementation("androidx.annotation:annotation:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("com.android.installreferrer:installreferrer:2.2")
-    implementation("com.android.billingclient:billing:5.1.0")
 
     // --- optional dependencies -----
     //Please note that the Branch SDK does not require any of the below optional dependencies to operate. This dependency is listed here so there will not be build errors,
@@ -25,6 +24,7 @@ dependencies {
     compileOnly("com.huawei.hms:ads-installreferrer:3.4.39.302")
     compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
     compileOnly("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
+    compileOnly("com.android.billingclient:billing:6.0.1")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
@@ -35,7 +35,8 @@ dependencies {
     // Test GAID
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     // Test OAID
-    androidTestImplementation("com.huawei.hms:ads-identifier:3.4.34.301")
+    androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
+    androidTestImplementation("com.android.billingclient:billing:6.0.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")
