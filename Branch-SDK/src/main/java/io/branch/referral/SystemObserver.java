@@ -451,13 +451,11 @@ abstract class SystemObserver {
         if (isFireOSDevice()) {
             setFireAdId(context, callback);
         }
+        else if (isHuaweiMobileServicesAvailable(context)) {
+            this.fetchHuaweiAdId(context, callback);
+        }
         else {
-            if (isHuaweiMobileServicesAvailable(context)) {
-                this.fetchHuaweiAdId(context, callback);
-            }
-            else {
-                this.fetchGoogleAdId(context, callback);
-            }
+            this.fetchGoogleAdId(context, callback);
         }
     }
 
