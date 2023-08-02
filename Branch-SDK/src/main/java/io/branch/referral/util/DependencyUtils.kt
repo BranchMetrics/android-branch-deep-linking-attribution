@@ -20,6 +20,8 @@ const val playStoreAdvertisingIdClientClass =
 const val huaweiInstallReferrerClass =
     "com.huawei.hms.ads.installreferrer.api.InstallReferrerClient"
 
+const val huaweiAdvertisingIdClientClass = "com.huawei.hms.ads.identifier.AdvertisingIdClient";
+
 const val galaxyStoreInstallReferrerClass =
     "com.sec.android.app.samsungapps.installreferrer.api.InstallReferrerClient"
 

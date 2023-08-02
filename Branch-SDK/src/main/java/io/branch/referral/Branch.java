@@ -292,9 +292,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
     final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
-
-    /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
-    private boolean isGAParamsFetchInProgress_ = false;
     
     private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
     
@@ -345,9 +342,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
         requestQueue_ = ServerRequestQueue.getInstance(context);
-        if (!trackingController.isTrackingDisabled()) { // Do not get GAID when tracking is disabled
-            isGAParamsFetchInProgress_ = deviceInfo_.getSystemObserver().prefetchAdsParams(context,this);
-        }
     }
 
     /**
@@ -938,7 +932,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     @Override
     public void onAdsParamsFetchFinished() {
-        isGAParamsFetchInProgress_ = false;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
 
         processNextQueueItem();
@@ -1628,14 +1621,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return prefHelper_;
     }
 
-    boolean isGAParamsFetchInProgress() {
-        return isGAParamsFetchInProgress_;
-    }
-
-    void setGAParamsFetchInProgress(boolean GAParamsFetchInProgress) {
-        isGAParamsFetchInProgress_ = GAParamsFetchInProgress;
-    }
-
     ShareLinkManager getShareLinkManager() {
         return shareLinkManager_;
     }
@@ -1824,9 +1809,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
-        if (isGAParamsFetchInProgress_) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        }
+        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        deviceInfo_.getSystemObserver().fetchAdId(context_, this);
 
         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
         if (r == null) {
