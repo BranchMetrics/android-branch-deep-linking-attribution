@@ -743,7 +743,7 @@ public class PrefHelper {
                 PrefHelper.Warning("Unable to get URL query parameters as string: " + e);
             }
         } else {
-            PrefHelper.Debug("There are no saved referring URL query parameters.");
+            PrefHelper.Debug("No URL parameters found.");
         }
 
         return params;
