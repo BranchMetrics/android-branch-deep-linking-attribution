@@ -26,7 +26,7 @@ class SystemObserverTests : BranchTest() {
     }
 
     @Test
-    fun fetchAdIdLat    (){
+    fun fetchAdIdLatNotEnabledGaidNotNull(){
         initBranchInstance()
         val so = DeviceInfo.getInstance().systemObserver
 
@@ -36,7 +36,18 @@ class SystemObserverTests : BranchTest() {
             if(so.latVal == 0){
                 Assert.assertNotNull(so.aid)
             }
-            else{
+        }
+    }
+
+    @Test
+    fun fetchAdIdLatEnabledAidNull(){
+        initBranchInstance()
+        val so = DeviceInfo.getInstance().systemObserver
+
+        so.fetchAdId(
+            testContext
+        ) {
+            if(so.latVal == 1){
                 Assert.assertNull(so.aid)
             }
         }
