@@ -70,7 +70,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             connection.setReadTimeout(timeout);
 
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
-            maybeSetCloseRequestFlag(connection);
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= 500 && retryNumber < prefHelper.getRetryCount()) {
@@ -176,7 +175,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             outputStreamWriter.close();
 
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
-            maybeSetCloseRequestFlag(connection);
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
@@ -273,18 +271,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             if (connection != null) {
                 connection.disconnect();
             }
-        }
-    }
-
-    private void maybeSetCloseRequestFlag(HttpsURLConnection connection) {
-        // technically only open/install events should have this header, but this method is called with
-        // every request and, by default, "X-Branch-Send-Close-Request" header is not added to the response.
-        // Note that, even if it gets added, we do not reset the `branch.closeRequestNeeded` flag if it has been set to `true`
-        // at least once during this session already. The flag will be reset in `executeClose()` where we potentially call v1/close.
-        // In the case of intra-app linking, this means that we will close session after the last v1/open event.
-        @Nullable String maybeHeaderVal =  connection.getHeaderField(Defines.HeaderKey.SendCloseRequest.getKey());
-        if (maybeHeaderVal != null && !branch.closeRequestNeeded) {
-            branch.closeRequestNeeded = Boolean.parseBoolean(maybeHeaderVal);
         }
     }
 

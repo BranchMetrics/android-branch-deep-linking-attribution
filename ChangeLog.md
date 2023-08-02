@@ -1,4 +1,20 @@
 # Branch Android SDK change log
+- v5.6.2
+  * _*Master Release*_ - Jul 31, 2023
+    - Removing
+      - Credits end points
+      - Jetifier flag
+      - Firebase App Indexing
+      - Long deprecated public functions
+        setDebug
+        enableDebugMode
+        disableDebugMode
+        enableSimulateInstalls
+        disableSimulateInstalls
+        ShareLinkBuilder (use BranchShareSheetBuilder instead)
+    - Short links can now be made while tracking is disabled.
+    - Google Play Billing Library is now optional. To enable, import com.android.billingclient:billing
+
 - v5.6.1
   * _*Master Release*_ - Jun 30, 2023
     - Revert the Kotlin version update from 1.8.22 back to 1.6.20.
