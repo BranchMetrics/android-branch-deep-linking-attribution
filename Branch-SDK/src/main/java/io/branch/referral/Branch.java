@@ -52,6 +52,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.coroutines.InstallReferrersKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -65,6 +66,10 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -1774,49 +1779,68 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
-                if(waitingForGoogleInstallReferrer){
-                    StoreReferrerGooglePlayStore.fetch(context_, new GoogleInstallReferrerEvents() {
-                        @Override
-                        public void onGoogleInstallReferrerFetched() {
-                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                            waitingForGoogleInstallReferrer = false;
-                            tryProcessNextQueueItemAfterInstallReferrer();
-                        }
-                    });
-                }
+                InstallReferrersKt.getAllInstallReferrerDetails(context_, new Continuation<Unit>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
 
-                if(waitingForHuaweiInstallReferrer){
-                    StoreReferrerHuaweiAppGallery.fetch(context_, new HuaweiInstallReferrerEvents() {
-                        @Override
-                        public void onHuaweiInstallReferrerFetched() {
-                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                            waitingForHuaweiInstallReferrer = false;
-                            tryProcessNextQueueItemAfterInstallReferrer();
-                        }
-                    });
-                }
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        PrefHelper.Debug("getAllInstallReferrerDetails resumeWith " + o);
+                        // TODO: Write latest result
+                        // TODO: Factor out locks
+                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    }
+                });
 
-                if(waitingForSamsungInstallReferrer){
-                    StoreReferrerSamsungGalaxyStore.fetch(context_, new SamsungInstallReferrerEvents() {
-                        @Override
-                        public void onSamsungInstallReferrerFetched() {
-                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                            waitingForSamsungInstallReferrer = false;
-                            tryProcessNextQueueItemAfterInstallReferrer();
-                        }
-                    });
-                }
-
-                if(waitingForXiaomiInstallReferrer){
-                    StoreReferrerXiaomiGetApps.fetch(context_, new XiaomiInstallReferrerEvents() {
-                        @Override
-                        public void onXiaomiInstallReferrerFetched() {
-                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                            waitingForXiaomiInstallReferrer = false;
-                            tryProcessNextQueueItemAfterInstallReferrer();
-                        }
-                    });
-                }
+//                if(waitingForGoogleInstallReferrer){
+//                    StoreReferrerGooglePlayStore.fetch(context_, new GoogleInstallReferrerEvents() {
+//                        @Override
+//                        public void onGoogleInstallReferrerFetched() {
+//                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+//                            waitingForGoogleInstallReferrer = false;
+//                            tryProcessNextQueueItemAfterInstallReferrer();
+//                        }
+//                    });
+//                }
+//
+//                if(waitingForHuaweiInstallReferrer){
+//                    StoreReferrerHuaweiAppGallery.fetch(context_, new HuaweiInstallReferrerEvents() {
+//                        @Override
+//                        public void onHuaweiInstallReferrerFetched() {
+//                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+//                            waitingForHuaweiInstallReferrer = false;
+//                            tryProcessNextQueueItemAfterInstallReferrer();
+//                        }
+//                    });
+//                }
+//
+//                if(waitingForSamsungInstallReferrer){
+//                    StoreReferrerSamsungGalaxyStore.fetch(context_, new SamsungInstallReferrerEvents() {
+//                        @Override
+//                        public void onSamsungInstallReferrerFetched() {
+//                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+//                            waitingForSamsungInstallReferrer = false;
+//                            tryProcessNextQueueItemAfterInstallReferrer();
+//                        }
+//                    });
+//                }
+//
+//                if(waitingForXiaomiInstallReferrer){
+//                    StoreReferrerXiaomiGetApps.fetch(context_, new XiaomiInstallReferrerEvents() {
+//                        @Override
+//                        public void onXiaomiInstallReferrerFetched() {
+//                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+//                            waitingForXiaomiInstallReferrer = false;
+//                            tryProcessNextQueueItemAfterInstallReferrer();
+//                        }
+//                    });
+//                }
 
                 // StoreReferrer error are thrown synchronously, so we remove
                 // *_INSTALL_REFERRER_FETCH_WAIT_LOCK manually

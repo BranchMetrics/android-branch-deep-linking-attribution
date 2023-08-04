@@ -9,6 +9,8 @@ import com.miui.referrer.api.GetAppsReferrerDetails
 import io.branch.referral.PrefHelper
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
 suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails? {
@@ -67,6 +69,8 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms
             client.startConnection(object :
                 com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
                 override fun onInstallReferrerSetupFinished(responseInt: Int) {
+                    PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+
                     if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
@@ -114,6 +118,8 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
             client.startConnection(object :
                 com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
                 override fun onInstallReferrerSetupFinished(p0: Int) {
+                    PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
+
                     if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
@@ -156,6 +162,8 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer
 
             client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
                 override fun onGetAppsReferrerSetupFinished(state: Int) {
+                    PrefHelper.Debug("getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
+
                     if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
@@ -186,5 +194,16 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer
             PrefHelper.Debug("getXiaomiGetAppsReferrerDetails exception: $exception")
             null
         }
+    }
+}
+
+suspend fun getAllInstallReferrerDetails(context: Context) {
+    return coroutineScope {
+        val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
+        val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
+        val samsungReferrer = async { getSamsungGalaxyStoreReferrerDetails(context) }
+        val xiaomiReferrer = async { getXiaomiGetAppsReferrerDetails(context) }
+
+        PrefHelper.Debug("The result is ${googleReferrer.await()}, ${huaweiReferrer.await()}, ${samsungReferrer.await()}, ${xiaomiReferrer.await()}")
     }
 }
