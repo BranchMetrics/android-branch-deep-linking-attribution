@@ -81,7 +81,8 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents{
+
+public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -934,13 +935,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         String link = prefHelper_.getExternalIntentUri();
         return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
     }
-    
-    @Override
-    public void onAdsParamsFetchFinished() {
-        PrefHelper.Debug("onAdsParamsFetchFinished " + Arrays.toString(requestQueue_.queue.toArray()));
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        processNextQueueItem();
-    }
 
     void tryProcessNextQueueItemAfterInstallReferrer() {
         PrefHelper.Debug("tryProcessNextQueueItemAfterInstallReferrer"
@@ -1736,8 +1730,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          processNextQueueItem();
      }
 
-    void initTasks(ServerRequest request, boolean ignoreWaitLocks){
+
+    private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
         if (!ignoreWaitLocks) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
             if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
@@ -1838,9 +1835,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
-        deviceInfo_.getSystemObserver().fetchAdId(context_, this);
+        deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
+            @Override
+            public void onAdsParamsFetchFinished() {
+                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+                processNextQueueItem();
+            }
+        });
     }
-    
+
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
         if (hasUser()) {
