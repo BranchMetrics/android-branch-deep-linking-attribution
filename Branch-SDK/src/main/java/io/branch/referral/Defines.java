@@ -124,6 +124,8 @@ public class Defines {
         Params("params"),
         SharedLink("$shared_link"),
         ShareError("$share_error"),
+        SharedChannel("$shared_channel"),
+
         URLSource("android"),
         
         External_Intent_URI("external_intent_uri"),
