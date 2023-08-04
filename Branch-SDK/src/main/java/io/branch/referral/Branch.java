@@ -76,7 +76,7 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
+public class Branch implements BranchViewHandler.IBranchViewEvents, StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -929,14 +929,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         String link = prefHelper_.getExternalIntentUri();
         return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
     }
-    
-    @Override
-    public void onAdsParamsFetchFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
 
-        processNextQueueItem();
-    }
-    
     @Override
     public void onGoogleInstallReferrerEventsFinished() {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
@@ -1739,9 +1732,24 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * will wait on the wait locks to complete any pending operations
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
-        setInitState(SESSION_STATE.INITIALISING);
+         setInitState(SESSION_STATE.INITIALISING);
 
+         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+         if (r == null) {
+             insertRequestAtFront(request);
+         }
+         else {
+             r.callback_ = request.callback_;
+         }
+
+         initTasks(request, ignoreWaitLocks);
+         processNextQueueItem();
+     }
+
+    private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
         if (!ignoreWaitLocks) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
             if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
@@ -1761,19 +1769,19 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
 
                 if (classExists(huaweiInstallReferrerClass)
-                && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
+                        && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
                     waitingForHuaweiInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
                 if (classExists(galaxyStoreInstallReferrerClass)
-                && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
+                        && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
                     waitingForSamsungInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
                 if (classExists(xiaomiInstallReferrerClass)
-                && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
+                        && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
                     waitingForXiaomiInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
@@ -1811,18 +1819,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
-        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        deviceInfo_.getSystemObserver().fetchAdId(context_, this);
-
-        ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
-        if (r == null) {
-            insertRequestAtFront(request);
-            processNextQueueItem();
-        } else {
-            r.callback_ = request.callback_;
-        }
+        deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
+            @Override
+            public void onAdsParamsFetchFinished() {
+                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+                processNextQueueItem();
+            }
+        });
     }
-    
+
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
         if (hasUser()) {
