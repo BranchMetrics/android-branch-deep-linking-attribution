@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.android.installreferrer.api.ReferrerDetails;
 
 import io.branch.coroutines.InstallReferrersKt;
+import io.branch.referral.interfaces.GoogleInstallReferrerEvents;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -19,7 +20,7 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
     static Long installBeginTimestamp = Long.MIN_VALUE;
     static String rawReferrer = null;
 
-    public static void fetch(final Context context) {
+    public static void fetch(final Context context, GoogleInstallReferrerEvents googleInstallReferrerEvents) {
         hasBeenUsed = true;
 
         InstallReferrersKt.getGooglePlayStoreReferrerDetails(context, new Continuation<ReferrerDetails>() {
@@ -31,23 +32,25 @@ public class StoreReferrerGooglePlayStore extends AppStoreReferrer{
 
             @Override
             public void resumeWith(@NonNull Object o) {
-                try {
-                    ReferrerDetails referrerDetails = (ReferrerDetails) o;
-                    rawReferrer = referrerDetails.getInstallReferrer();
-                    clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
-                    installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
+                PrefHelper.Debug("getGooglePlayStoreReferrerDetails resumeWith " + o);
+                if (o != null) {
+                    try {
+                        ReferrerDetails referrerDetails = (ReferrerDetails) o;
+                        rawReferrer = referrerDetails.getInstallReferrer();
+                        clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
+                        installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
 
-                    // TODO: We can get rid of InstantAppUtil.java with this one line
-                    //  boolean isInstantApp = referrerDetails.getGooglePlayInstantParam();
+                        // TODO: We can get rid of InstantAppUtil.java with this one line
+                        //  boolean isInstantApp = referrerDetails.getGooglePlayInstantParam();
+                    }
+                    catch (Exception e) {
+                        PrefHelper.Debug(e.getMessage());
+                        erroredOut = true;
+                    }
                 }
-                catch (Exception e) {
-                    PrefHelper.Debug(e.getMessage());
-                    erroredOut = true;
-                }
-                finally {
-                    Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                    Branch.getInstance().waitingForGoogleInstallReferrer = false;
-                    Branch.getInstance().tryProcessNextQueueItemAfterInstallReferrer();
+
+                if(googleInstallReferrerEvents != null){
+                    googleInstallReferrerEvents.onGoogleInstallReferrerFetched();
                 }
             }
         });

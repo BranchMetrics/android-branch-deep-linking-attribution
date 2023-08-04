@@ -45,6 +45,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails
                     }
                 }
             })
+
             deferredReferrerDetails.await()
         }
         catch (exception: Exception) {
@@ -55,100 +56,135 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails
 }
 
 suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms.ads.installreferrer.api.ReferrerDetails? {
-    val deferredReferrerDetails = CompletableDeferred<com.huawei.hms.ads.installreferrer.api.ReferrerDetails?>()
-    val client = com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.newBuilder(context).build()
+    return withContext(Dispatchers.Default) {
+        try {
+            val deferredReferrerDetails =
+                CompletableDeferred<com.huawei.hms.ads.installreferrer.api.ReferrerDetails?>()
+            val client =
+                com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.newBuilder(context)
+                    .build()
 
-    client.startConnection(object : com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
-        override fun onInstallReferrerSetupFinished(responseInt: Int) {
-            if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
-                deferredReferrerDetails.complete(
-                    try {
-                        client.installReferrer
+            client.startConnection(object :
+                com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
+                override fun onInstallReferrerSetupFinished(responseInt: Int) {
+                    if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
+                        deferredReferrerDetails.complete(
+                            try {
+                                client.installReferrer
+                            }
+                            catch (e: Exception) {
+                                PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails exception: $e")
+                                null
+                            }
+                        )
                     }
-                    catch (e: RemoteException) {
-                        PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails exception: $e")
-                        null
+                    else {
+                        PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails response code: $responseInt")
+                        deferredReferrerDetails.complete(null)
                     }
-                )
-            }
-            else {
-                PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails response code: $responseInt")
-                deferredReferrerDetails.complete(null)
-            }
-            client.endConnection()
-        }
+                    client.endConnection()
+                }
 
-        override fun onInstallReferrerServiceDisconnected() {
-            if (!deferredReferrerDetails.isCompleted) {
-                deferredReferrerDetails.complete(null)
-            }
-        }
-    })
-    return deferredReferrerDetails.await()
-}
-
-suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer.api.GetAppsReferrerDetails? {
-    val deferredReferrerDetails = CompletableDeferred<GetAppsReferrerDetails?>()
-    val client = com.miui.referrer.api.GetAppsReferrerClient.newBuilder(context).build()
-
-    client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
-        override fun onGetAppsReferrerSetupFinished(state: Int) {
-            if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
-                deferredReferrerDetails.complete(
-                    try {
-                        client.installReferrer
+                override fun onInstallReferrerServiceDisconnected() {
+                    if (!deferredReferrerDetails.isCompleted) {
+                        deferredReferrerDetails.complete(null)
                     }
-                    catch (e: RemoteException) {
-                        PrefHelper.Debug("getXiaomiGetAppsReferrerDetails exception: $e")
-                        null
-                    }
-                )
-            }
-            else {
-                PrefHelper.Debug("getXiaomiGetAppsReferrerDetails response code: $state")
-                deferredReferrerDetails.complete(null)
-            }
-            client.endConnection()
-        }
+                }
+            })
 
-        override fun onGetAppsServiceDisconnected() {
-            if (!deferredReferrerDetails.isCompleted) {
-                deferredReferrerDetails.complete(null)
-            }
+            deferredReferrerDetails.await()
         }
-    })
-    return deferredReferrerDetails.await()
+        catch (exception: Exception) {
+            PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails exception: $exception")
+            null
+        }
+    }
 }
 
 suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.android.sdk.sinstallreferrer.api.ReferrerDetails? {
-    val deferredReferrerDetails = CompletableDeferred<com.samsung.android.sdk.sinstallreferrer.api.ReferrerDetails?>()
-    val client = com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.newBuilder(context).build()
+    return withContext(Dispatchers.Default) {
+        try {
+            val deferredReferrerDetails =
+                CompletableDeferred<com.samsung.android.sdk.sinstallreferrer.api.ReferrerDetails?>()
+            val client =
+                com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.newBuilder(
+                    context
+                ).build()
 
-    client.startConnection(object : com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
-        override fun onInstallReferrerSetupFinished(p0: Int) {
-            if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
-                deferredReferrerDetails.complete(
-                    try {
-                        client.installReferrer
+            client.startConnection(object :
+                com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
+                override fun onInstallReferrerSetupFinished(p0: Int) {
+                    if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
+                        deferredReferrerDetails.complete(
+                            try {
+                                client.installReferrer
+                            }
+                            catch (e: RemoteException) {
+                                PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails exception: $e")
+                                null
+                            }
+                        )
                     }
-                    catch (e: RemoteException) {
-                        PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails exception: $e")
-                        null
+                    else {
+                        PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails response code: $p0")
+                        deferredReferrerDetails.complete(null)
                     }
-                )
-            }
-            else {
-                PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails response code: $p0")
-                deferredReferrerDetails.complete(null)
-            }
-            client.endConnection()
-        }
+                    client.endConnection()
+                }
 
-        override fun onInstallReferrerServiceDisconnected() {
-            if (!deferredReferrerDetails.isCompleted) {
-                deferredReferrerDetails.complete(null)
-            }
+                override fun onInstallReferrerServiceDisconnected() {
+                    if (!deferredReferrerDetails.isCompleted) {
+                        deferredReferrerDetails.complete(null)
+                    }
+                }
+            })
+
+            deferredReferrerDetails.await()
         }
-    })
-    return deferredReferrerDetails.await()
+        catch (exception: Exception) {
+            PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails exception: $exception")
+            null
+        }
+    }
+}
+
+suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer.api.GetAppsReferrerDetails? {
+    return withContext(Dispatchers.Default) {
+        try {
+            val deferredReferrerDetails = CompletableDeferred<GetAppsReferrerDetails?>()
+            val client = com.miui.referrer.api.GetAppsReferrerClient.newBuilder(context).build()
+
+            client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
+                override fun onGetAppsReferrerSetupFinished(state: Int) {
+                    if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
+                        deferredReferrerDetails.complete(
+                            try {
+                                client.installReferrer
+                            }
+                            catch (e: RemoteException) {
+                                PrefHelper.Debug("getXiaomiGetAppsReferrerDetails exception: $e")
+                                null
+                            }
+                        )
+                    }
+                    else {
+                        PrefHelper.Debug("getXiaomiGetAppsReferrerDetails response code: $state")
+                        deferredReferrerDetails.complete(null)
+                    }
+                    client.endConnection()
+                }
+
+                override fun onGetAppsServiceDisconnected() {
+                    if (!deferredReferrerDetails.isCompleted) {
+                        deferredReferrerDetails.complete(null)
+                    }
+                }
+            })
+            deferredReferrerDetails.await()
+        }
+        catch (exception: Exception) {
+            PrefHelper.Debug("getXiaomiGetAppsReferrerDetails exception: $exception")
+            null
+        }
+    }
 }

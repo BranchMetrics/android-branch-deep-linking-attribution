@@ -46,9 +46,11 @@ dependencies {
 
     androidTestImplementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
-    androidTestImplementation("com.android.billingclient:billing:6.0.1")
-    androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
+    androidTestImplementation("com.huawei.hms:ads-installreferrer:3.4.39.302")
     androidTestImplementation("com.huawei.hms:base:4.0.2.300")
+    androidTestImplementation("com.android.billingclient:billing:6.0.1")
+    androidTestImplementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
+    androidTestImplementation("com.miui.referrer:homereferrer:1.0.0.7")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")

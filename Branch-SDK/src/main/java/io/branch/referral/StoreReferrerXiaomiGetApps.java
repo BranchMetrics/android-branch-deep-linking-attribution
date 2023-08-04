@@ -5,7 +5,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.miui.referrer.api.GetAppsReferrerDetails;
+
 import io.branch.coroutines.InstallReferrersKt;
+import io.branch.referral.interfaces.XiaomiInstallReferrerEvents;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -18,7 +20,7 @@ public class StoreReferrerXiaomiGetApps extends AppStoreReferrer{
     static Long installBeginTimestamp = Long.MIN_VALUE;
     static String rawReferrer = null;
 
-    public static void fetch(final Context context) {
+    public static void fetch(final Context context, XiaomiInstallReferrerEvents xiaomiInstallReferrerEvents) {
         hasBeenUsed = true;
 
         InstallReferrersKt.getXiaomiGetAppsReferrerDetails(context, new Continuation<GetAppsReferrerDetails>() {
@@ -30,20 +32,22 @@ public class StoreReferrerXiaomiGetApps extends AppStoreReferrer{
 
             @Override
             public void resumeWith(@NonNull Object o) {
-                try {
-                    GetAppsReferrerDetails referrerDetails = (GetAppsReferrerDetails) o;
-                    rawReferrer = referrerDetails.getInstallReferrer();
-                    clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
-                    installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
+                PrefHelper.Debug("getXiaomiGetAppsReferrerDetails resumeWith " + o);
+                if(o != null) {
+                    try {
+                        GetAppsReferrerDetails referrerDetails = (GetAppsReferrerDetails) o;
+                        rawReferrer = referrerDetails.getInstallReferrer();
+                        clickTimestamp = referrerDetails.getReferrerClickTimestampSeconds();
+                        installBeginTimestamp = referrerDetails.getInstallBeginTimestampSeconds();
+                    }
+                    catch (Exception e) {
+                        PrefHelper.Debug(e.getMessage());
+                        erroredOut = true;
+                    }
                 }
-                catch (Exception e) {
-                    PrefHelper.Debug(e.getMessage());
-                    erroredOut = true;
-                }
-                finally {
-                    Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                    Branch.getInstance().waitingForXiaomiInstallReferrer = false;
-                    Branch.getInstance().tryProcessNextQueueItemAfterInstallReferrer();
+
+                if(xiaomiInstallReferrerEvents != null){
+                    xiaomiInstallReferrerEvents.onXiaomiInstallReferrerFetched();
                 }
             }
         });

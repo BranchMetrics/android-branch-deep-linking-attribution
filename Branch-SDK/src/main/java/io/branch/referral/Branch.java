@@ -55,6 +55,10 @@ import java.util.concurrent.TimeoutException;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
+import io.branch.referral.interfaces.GoogleInstallReferrerEvents;
+import io.branch.referral.interfaces.HuaweiInstallReferrerEvents;
+import io.branch.referral.interfaces.SamsungInstallReferrerEvents;
+import io.branch.referral.interfaces.XiaomiInstallReferrerEvents;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -933,8 +937,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     
     @Override
     public void onAdsParamsFetchFinished() {
+        PrefHelper.Debug("onAdsParamsFetchFinished " + Arrays.toString(requestQueue_.queue.toArray()));
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-
         processNextQueueItem();
     }
 
@@ -1483,7 +1487,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName() + " locks " + Arrays.toString(req.locks_.toArray()));
+                    PrefHelper.Debug("processNextQueueItem, req " + req + " locks " + Arrays.toString(req.locks_.toArray()));
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
@@ -1717,14 +1721,31 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * will wait on the wait locks to complete any pending operations
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
-        setInitState(SESSION_STATE.INITIALISING);
+         setInitState(SESSION_STATE.INITIALISING);
 
+         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+         if (r == null) {
+             insertRequestAtFront(request);
+         }
+         else {
+             r.callback_ = request.callback_;
+         }
+
+         initTasks(request, ignoreWaitLocks);
+
+         processNextQueueItem();
+     }
+
+    void initTasks(ServerRequest request, boolean ignoreWaitLocks){
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
             if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
+
+            PrefHelper.Debug("Adding gaid fetch lock " + request);
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
 
             // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
             // just in case user accidentally queues up a couple install requests at the same time. During later sessions
@@ -1739,37 +1760,65 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 }
 
                 if (classExists(huaweiInstallReferrerClass)
-                && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
+                        && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
                     waitingForHuaweiInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
                 if (classExists(galaxyStoreInstallReferrerClass)
-                && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
+                        && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
                     waitingForSamsungInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
                 if (classExists(xiaomiInstallReferrerClass)
-                && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
+                        && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
                     waitingForXiaomiInstallReferrer = true;
                     request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
                 }
 
                 if(waitingForGoogleInstallReferrer){
-                    StoreReferrerGooglePlayStore.fetch(context_);
+                    StoreReferrerGooglePlayStore.fetch(context_, new GoogleInstallReferrerEvents() {
+                        @Override
+                        public void onGoogleInstallReferrerFetched() {
+                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                            waitingForGoogleInstallReferrer = false;
+                            tryProcessNextQueueItemAfterInstallReferrer();
+                        }
+                    });
                 }
 
                 if(waitingForHuaweiInstallReferrer){
-                    StoreReferrerHuaweiAppGallery.fetch(context_);
+                    StoreReferrerHuaweiAppGallery.fetch(context_, new HuaweiInstallReferrerEvents() {
+                        @Override
+                        public void onHuaweiInstallReferrerFetched() {
+                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                            waitingForHuaweiInstallReferrer = false;
+                            tryProcessNextQueueItemAfterInstallReferrer();
+                        }
+                    });
                 }
 
                 if(waitingForSamsungInstallReferrer){
-                    StoreReferrerSamsungGalaxyStore.fetch(context_);
+                    StoreReferrerSamsungGalaxyStore.fetch(context_, new SamsungInstallReferrerEvents() {
+                        @Override
+                        public void onSamsungInstallReferrerFetched() {
+                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                            waitingForSamsungInstallReferrer = false;
+                            tryProcessNextQueueItemAfterInstallReferrer();
+                        }
+                    });
                 }
 
                 if(waitingForXiaomiInstallReferrer){
-                    StoreReferrerXiaomiGetApps.fetch(context_);
+                    StoreReferrerXiaomiGetApps.fetch(context_, new XiaomiInstallReferrerEvents() {
+                        @Override
+                        public void onXiaomiInstallReferrerFetched() {
+                            requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                            waitingForXiaomiInstallReferrer = false;
+                            tryProcessNextQueueItemAfterInstallReferrer();
+                        }
+                    });
                 }
 
                 // StoreReferrer error are thrown synchronously, so we remove
@@ -1789,16 +1838,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
         }
 
-        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         deviceInfo_.getSystemObserver().fetchAdId(context_, this);
-
-        ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
-        if (r == null) {
-            insertRequestAtFront(request);
-            processNextQueueItem();
-        } else {
-            r.callback_ = request.callback_;
-        }
     }
     
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
@@ -1834,6 +1874,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
+        PrefHelper.Debug("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
@@ -1848,6 +1889,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 return;
             }
             if (requestNeedsSession(req)) {
+                PrefHelper.Debug("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
         }
@@ -2952,6 +2994,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
+            PrefHelper.Debug("Creating " + initRequest + " from init");
             branch.initializeSession(initRequest, delay);
         }
 
