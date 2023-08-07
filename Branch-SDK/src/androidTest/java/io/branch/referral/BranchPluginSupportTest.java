@@ -65,7 +65,15 @@ public class BranchPluginSupportTest extends BranchTest {
 
     @Test
     public void testOS() {
-        Assert.assertEquals("Android", deviceData.get("os"));
+        String os = (String) deviceData.get("os");
+        Assert.assertNotNull(os);
+
+        if(SystemObserver.isFireOSDevice()){
+            Assert.assertTrue(os.toLowerCase().contains("amazon"));
+        }
+        else {
+            Assert.assertEquals("Android", deviceData.get("os"));
+        }
     }
 
     @Test
