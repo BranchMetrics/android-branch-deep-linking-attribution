@@ -1438,7 +1438,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req);
+                    PrefHelper.Debug("processNextQueueItem, req " + req.locks_);
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
