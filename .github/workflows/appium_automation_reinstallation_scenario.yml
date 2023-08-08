@@ -1,4 +1,4 @@
-name: appium-automation
+name: appium-automation-re-installation-scenario
 on: 
   workflow_dispatch:
   pull_request:
