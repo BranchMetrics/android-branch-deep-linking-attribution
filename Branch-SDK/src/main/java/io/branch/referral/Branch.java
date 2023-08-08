@@ -1681,12 +1681,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          else {
              r.callback_ = request.callback_;
          }
-
          initTasks(request, ignoreWaitLocks);
 
          processNextQueueItem();
      }
-
 
     private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
         if (!ignoreWaitLocks) {
