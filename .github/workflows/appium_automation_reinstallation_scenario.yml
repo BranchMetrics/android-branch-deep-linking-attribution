@@ -1,0 +1,80 @@
+name: appium-automation
+on: 
+  workflow_dispatch:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+env:
+  ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+  SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+  BROWSERSTACK_USER: ${{ secrets.BROWSER_STACK_USER }}
+  BROWSERSTACK_KEY: ${{ secrets.BROWSER_STACK_KEY }}
+  JAVA_DISTRIBUTION: 'corretto'
+  JAVA_VERSION: '17'
+  JAVA_VERSION_AUTOMATION: '11'
+jobs:  
+  appium-automation-tests:
+    name: appium-automation-tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout SDK repo with testbed app
+        uses: actions/checkout@v3
+        with:
+          path: sdk
+      # point to automation master branch by default
+      - name: Checkout qa automation
+        uses: actions/checkout@v3
+        with:
+          path: qa
+          repository: BranchMetrics/qentelli-saas-sdk-testing-automation
+          ref: Re-Installation-Scenario
+          token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
+      # repo's gradle is configured to run on java 17
+      - name: Setup java for gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+      # to reduce complexity, testbed app uses sdk as a project reference
+      - name: Build testbed app
+        run: |
+          cd sdk
+          ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
+      - name: Upload APK to BrowserStack
+        run: |
+          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
+          parsed=$(echo $response | jq ".app_url")
+          echo "::add-mask::$parsed"
+          echo "BrowserStackAndroidOldBuildKey=$parsed" >> "$GITHUB_ENV"
+
+
+
+
+      - name: Checkout SDK repo with testbed app
+        uses: actions/checkout@v3
+        with:
+          path: sdk
+          ref: ${{ github.ref }}
+      # to reduce complexity, testbed app uses sdk as a project reference
+      - name: Build testbed app
+        run: |
+          cd sdk
+          ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
+      - name: Upload APK to BrowserStack
+        run: |
+          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
+          parsed=$(echo $response | jq ".app_url")
+          echo "::add-mask::$parsed"
+          echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
+
+
+          
+      # automation is compatible with java 11
+      - name: Setup java for automation
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION_AUTOMATION }}
+      - name: Execute automation
+        run: |
+          cd qa
+          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DUploadNewBuild="Yes" -DTestType="ReInstallationScenario"
