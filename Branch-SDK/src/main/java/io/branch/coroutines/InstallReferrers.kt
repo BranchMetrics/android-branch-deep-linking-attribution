@@ -17,6 +17,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 
 suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrerResult? {
@@ -233,7 +234,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
  * Await all and then do list operations
  */
 suspend fun fetchLatestInstallReferrer(context: Context) {
-    return coroutineScope {
+    return supervisorScope {
         val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
         val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
         val samsungReferrer = async { getSamsungGalaxyStoreReferrerDetails(context) }
