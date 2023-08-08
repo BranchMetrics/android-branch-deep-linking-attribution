@@ -46,11 +46,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK,
-        HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK,
-        GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK,
-        SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK,
-        XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK
+        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
     }
     
     // Set for holding any active wait locks
@@ -670,13 +666,6 @@ public abstract class ServerRequest {
      * @return True if this request if any pre processing operation pending
      */
     public boolean isWaitingOnProcessToFinish() {
-        //TODO: This is temporary. There's a race condition wherein the backgrounded coroutines
-        // complete before the request gets enqueued, meaning the lock is lifted on an empty
-        // queue, also meaning it is deadlocked. Other coroutines will need the same treatment.
-        if(StoreReferrerGooglePlayStore.erroredOut || StoreReferrerGooglePlayStore.hasBeenUsed){
-            locks_.remove(PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        }
-
         return locks_.size() > 0;
     }
     

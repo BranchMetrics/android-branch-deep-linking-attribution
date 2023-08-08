@@ -2,10 +2,12 @@ package io.branch.coroutines
 
 import android.content.Context
 import android.os.RemoteException
+import android.util.Log
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
-import com.android.installreferrer.api.ReferrerDetails
-import com.miui.referrer.api.GetAppsReferrerDetails
+import io.branch.data.InstallReferrerResult
+import io.branch.referral.AppStoreReferrer
+import io.branch.referral.Defines.Jsonkey
 import io.branch.referral.PrefHelper
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -13,10 +15,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
-suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails? {
+suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
         try {
-            val deferredReferrerDetails = CompletableDeferred<ReferrerDetails?>()
+            val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
             val client = InstallReferrerClient.newBuilder(context.applicationContext).build()
 
             client.startConnection(object : InstallReferrerStateListener {
@@ -26,7 +28,8 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails
                     if (responseInt == InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
-                                client.installReferrer
+                                val result = client.installReferrer
+                                InstallReferrerResult(Jsonkey.Google_Play_Store.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
                             }
                             catch (e: Exception) {
                                 PrefHelper.Debug("getGooglePlayStoreReferrerDetails installReferrer exception: $e")
@@ -57,11 +60,11 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): ReferrerDetails
     }
 }
 
-suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms.ads.installreferrer.api.ReferrerDetails? {
+suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
         try {
             val deferredReferrerDetails =
-                CompletableDeferred<com.huawei.hms.ads.installreferrer.api.ReferrerDetails?>()
+                CompletableDeferred<InstallReferrerResult?>()
             val client =
                 com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.newBuilder(context)
                     .build()
@@ -74,7 +77,8 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms
                     if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
-                                client.installReferrer
+                                val result = client.installReferrer
+                                InstallReferrerResult(Jsonkey.Huawei_App_Gallery.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
                             }
                             catch (e: Exception) {
                                 PrefHelper.Debug("getHuaweiAppGalleryReferrerDetails exception: $e")
@@ -105,11 +109,11 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): com.huawei.hms
     }
 }
 
-suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.android.sdk.sinstallreferrer.api.ReferrerDetails? {
+suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
         try {
             val deferredReferrerDetails =
-                CompletableDeferred<com.samsung.android.sdk.sinstallreferrer.api.ReferrerDetails?>()
+                CompletableDeferred<InstallReferrerResult?>()
             val client =
                 com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.newBuilder(
                     context
@@ -123,7 +127,8 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
                     if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
-                                client.installReferrer
+                                val result = client.installReferrer
+                                InstallReferrerResult(Jsonkey.Samsung_Galaxy_Store.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
                             }
                             catch (e: RemoteException) {
                                 PrefHelper.Debug("getSamsungGalaxyStoreReferrerDetails exception: $e")
@@ -154,10 +159,10 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): com.samsung.
     }
 }
 
-suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer.api.GetAppsReferrerDetails? {
+suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
         try {
-            val deferredReferrerDetails = CompletableDeferred<GetAppsReferrerDetails?>()
+            val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
             val client = com.miui.referrer.api.GetAppsReferrerClient.newBuilder(context).build()
 
             client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
@@ -167,7 +172,8 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer
                     if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
                             try {
-                                client.installReferrer
+                                val result = client.installReferrer
+                                InstallReferrerResult(Jsonkey.Xiaomi_Get_Apps.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
                             }
                             catch (e: RemoteException) {
                                 PrefHelper.Debug("getXiaomiGetAppsReferrerDetails exception: $e")
@@ -197,13 +203,35 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): com.miui.referrer
     }
 }
 
-suspend fun getAllInstallReferrerDetails(context: Context) {
+/**
+ * Invokes the source install referrer's coroutines in parallel.
+ * Await all and then do list operations
+ */
+suspend fun fetchLatestInstallReferrer(context: Context) {
     return coroutineScope {
         val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
         val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
         val samsungReferrer = async { getSamsungGalaxyStoreReferrerDetails(context) }
         val xiaomiReferrer = async { getXiaomiGetAppsReferrerDetails(context) }
 
-        PrefHelper.Debug("The result is ${googleReferrer.await()}, ${huaweiReferrer.await()}, ${samsungReferrer.await()}, ${xiaomiReferrer.await()}")
+        val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await())
+        val latestReferrer = getLatestValidReferrerStore(allReferrers)
+
+        if (latestReferrer != null) {
+            AppStoreReferrer.processReferrerInfo(context, latestReferrer.latestRawReferrer, latestReferrer.latestClickTimestamp, latestReferrer.latestClickTimestamp, latestReferrer.appStore)
+        }
     }
+}
+
+/**
+ * Given a list of InstallReferrerResults, select the one with the latest install timestamp
+ * Note that the Play Store, an organic install, will still report a raw referrer string
+ * with install and click timestamp of 0. All other stores return null string.
+ */
+fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): InstallReferrerResult? {
+    val result = allReferrers.filterNotNull().maxByOrNull {
+        it.latestInstallTimestamp
+    }
+
+    return result
 }
