@@ -7,6 +7,7 @@
     - Bug fixes: 
         - Install referrer tasks are now done in parallel
         - Non-critical JSON exception is now logged as a warning
+        - When sharing a link by share sheet, the `userCompletedAction` event is replaced by v2/event
 - v5.6.2
   * _*Master Release*_ - Jul 31, 2023
     - Removing
