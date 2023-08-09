@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.UiModeManager;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -14,7 +13,6 @@ import android.hardware.display.DisplayManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -31,14 +29,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 
 import io.branch.coroutines.AdvertisingIdsKt;
+import io.branch.coroutines.InstallReferrersKt;
+import io.branch.data.InstallReferrerResult;
 import io.branch.referral.util.DependencyUtilsKt;
 import kotlin.Pair;
 import kotlin.coroutines.Continuation;
@@ -590,8 +588,41 @@ abstract class SystemObserver {
         });
     }
 
+    public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
+        try {
+            InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NonNull Object o) {
+                    PrefHelper.Debug("resumeWith " + o);
+                    if (o != null) {
+                        InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
+                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore());
+                    }
+                }
+            });
+        }
+        catch(Exception e){
+            PrefHelper.Debug(e.getMessage());
+        }
+        finally {
+            if(callback != null){
+                callback.onInstallReferrersFinished();
+            }
+        }
+    }
+
     interface AdsParamsFetchEvents {
         void onAdsParamsFetchFinished();
+    }
+
+    interface InstallReferrerFetchEvents {
+        void onInstallReferrersFinished();
     }
 
     /**

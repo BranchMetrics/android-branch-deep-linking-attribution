@@ -37,7 +37,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +48,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.coroutines.InstallReferrersKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -59,10 +57,6 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
-import kotlin.Unit;
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -1703,19 +1697,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
             if (request instanceof ServerRequestRegisterInstall) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-
-                InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<Unit>() {
-                    @NonNull
+                deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
                     @Override
-                    public CoroutineContext getContext() {
-                        return EmptyCoroutineContext.INSTANCE;
-                    }
-
-                    @Override
-                    public void resumeWith(@NonNull Object o) {
-                        PrefHelper.Debug("resumeWith " + o);
+                    public void onInstallReferrersFinished() {
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        PrefHelper.Debug("calling processNextQueueItem from resumeWith");
+                        PrefHelper.Debug("calling processNextQueueItem from onInstallReferrersFinished");
                         processNextQueueItem();
                     }
                 });
