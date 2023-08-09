@@ -39,6 +39,8 @@ import static android.content.Context.UI_MODE_SERVICE;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 
 import io.branch.coroutines.AdvertisingIdsKt;
+import io.branch.coroutines.InstallReferrersKt;
+import io.branch.data.InstallReferrerResult;
 import io.branch.referral.util.DependencyUtilsKt;
 import kotlin.Pair;
 import kotlin.coroutines.Continuation;
@@ -590,10 +592,41 @@ abstract class SystemObserver {
         });
     }
 
+    public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
+        try {
+            InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NonNull Object o) {
+                    if (o != null) {
+                        InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
+                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore());
+                    }
+                }
+            });
+        }
+        catch(Exception e){
+            PrefHelper.Debug(e.getMessage());
+        }
+        finally {
+            if(callback != null){
+                callback.onInstallReferrersFinished();
+            }
+        }
+    }
+
     interface AdsParamsFetchEvents {
         void onAdsParamsFetchFinished();
     }
 
+    interface InstallReferrerFetchEvents {
+        void onInstallReferrersFinished();
+    }
     /**
      * Get IP address from first non local net Interface
      */

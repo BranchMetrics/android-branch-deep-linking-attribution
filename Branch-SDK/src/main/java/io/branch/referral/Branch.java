@@ -306,11 +306,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     CountDownLatch getFirstReferringParamsLatch = null;
     CountDownLatch getLatestReferringParamsLatch = null;
 
-    boolean waitingForHuaweiInstallReferrer = false;
-    boolean waitingForGoogleInstallReferrer = false;
-    boolean waitingForSamsungInstallReferrer = false;
-    boolean waitingForXiaomiInstallReferrer = false;
-
     private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
@@ -1438,7 +1433,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req);
+                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
@@ -1688,30 +1683,22 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
         if (!ignoreWaitLocks) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
             if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
 
-            PrefHelper.Debug("Adding gaid fetch lock " + request);
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
 
             if (request instanceof ServerRequestRegisterInstall) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
 
-                InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<Unit>() {
-                    @NonNull
+                deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
                     @Override
-                    public CoroutineContext getContext() {
-                        return EmptyCoroutineContext.INSTANCE;
-                    }
-
-                    @Override
-                    public void resumeWith(@NonNull Object o) {
+                    public void onInstallReferrersFinished() {
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        PrefHelper.Debug("calling processNextQueueItem from onInstallReferrersFinished");
                         processNextQueueItem();
                     }
                 });

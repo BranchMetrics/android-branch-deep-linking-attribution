@@ -50,7 +50,7 @@ public abstract class ServerRequest {
     }
     
     // Set for holding any active wait locks
-    final Set<PROCESS_WAIT_LOCK> locks_;
+    private final Set<PROCESS_WAIT_LOCK> locks_;
     
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;

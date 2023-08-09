@@ -233,7 +233,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
  * Invokes the source install referrer's coroutines in parallel.
  * Await all and then do list operations
  */
-suspend fun fetchLatestInstallReferrer(context: Context) {
+suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult? {
     return supervisorScope {
         val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
         val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
@@ -243,9 +243,7 @@ suspend fun fetchLatestInstallReferrer(context: Context) {
         val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await())
         val latestReferrer = getLatestValidReferrerStore(allReferrers)
 
-        if (latestReferrer != null) {
-            AppStoreReferrer.processReferrerInfo(context, latestReferrer.latestRawReferrer, latestReferrer.latestClickTimestamp, latestReferrer.latestClickTimestamp, latestReferrer.appStore)
-        }
+        latestReferrer
     }
 }
 
