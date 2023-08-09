@@ -884,6 +884,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     void unlockSDKInitWaitLock() {
         if (requestQueue_ == null) return;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
+        PrefHelper.Debug("calling processNextQueueItem from unlockSDKInitWaitLock");
         processNextQueueItem();
     }
     
@@ -1193,6 +1194,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     @SuppressWarnings("WeakerAccess")
     public void removeSessionInitializationDelay() {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
+        PrefHelper.Debug("calling processNextQueueItem from removeSessionInitializationDelay");
         processNextQueueItem();
     }
     
@@ -1438,7 +1440,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.locks_);
+                    PrefHelper.Debug("processNextQueueItem, req " + req + " " + req.locks_);
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
@@ -1628,6 +1630,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                         }
                     }
                     requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
+                    PrefHelper.Debug("calling processNextQueueItem from onAppLinkFetchFinished");
                     processNextQueueItem();
                 }
             });
@@ -1682,6 +1685,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
              r.callback_ = request.callback_;
          }
          initTasks(request, ignoreWaitLocks);
+         PrefHelper.Debug("calling processNextQueueItem from registerAppInit");
 
          processNextQueueItem();
      }
@@ -1713,6 +1717,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     public void resumeWith(@NonNull Object o) {
                         PrefHelper.Debug("resumeWith " + o);
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        PrefHelper.Debug("calling processNextQueueItem from resumeWith");
                         processNextQueueItem();
                     }
                 });
@@ -1723,6 +1728,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             @Override
             public void onAdsParamsFetchFinished() {
                 requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+                PrefHelper.Debug("calling processNextQueueItem from onAdsParamsFetchFinished");
                 processNextQueueItem();
             }
         });
@@ -1750,6 +1756,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
+        PrefHelper.Debug("calling processNextQueueItem from onIntentReady");
         processNextQueueItem();
     }
     
@@ -1784,6 +1791,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         requestQueue_.enqueue(req);
         req.onRequestQueued();
 
+        PrefHelper.Debug("calling processNextQueueItem from handleNewRequest");
         processNextQueueItem();
     }
 
@@ -2077,6 +2085,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
+                    PrefHelper.Debug("calling processNextQueueItem from onPostExecuteInner");
                     processNextQueueItem();
                 }
             });

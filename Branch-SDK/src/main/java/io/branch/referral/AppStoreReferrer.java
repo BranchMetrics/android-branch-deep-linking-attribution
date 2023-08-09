@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -16,6 +17,7 @@ public class AppStoreReferrer {
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
 
     public static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store) {
+        Log.i("BranchSDK", "processReferrerInfo " + rawReferrerString + referrerClickTS + " " + installClickTS + " " + store);
         PrefHelper prefHelper = PrefHelper.getInstance(context);
         if(!TextUtils.isEmpty(store)){
             prefHelper.setAppStoreSource(store);
