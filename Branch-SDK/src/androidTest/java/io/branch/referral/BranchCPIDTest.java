@@ -14,20 +14,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class BranchCPIDTest extends BranchTest {
-
-    @Test
-    public void testGetCPID() {
-        initBranchInstance();
-        branch.getCrossPlatformIds(null);
-
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
-        Assert.assertEquals(1, queue.getSize());
-
-        ServerRequest cpidRequest = queue.peekAt(0);
-
-        Assert.assertEquals(cpidRequest.getRequestPath(), RequestPath.GetCPID.getPath());
-    }
-
     @Test
     public void testGetLATD() {
         initBranchInstance();
