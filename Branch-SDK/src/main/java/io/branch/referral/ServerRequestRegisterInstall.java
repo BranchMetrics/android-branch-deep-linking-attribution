@@ -47,8 +47,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (installBeginTS > 0) {
                 getPost().put(Defines.Jsonkey.InstallBeginTimeStamp.getKey(), installBeginTS);
             }
-            if (!StoreReferrerGooglePlayStore.getInstallationID().equals(PrefHelper.NO_STRING_VALUE)) {
-                getPost().put(Defines.Jsonkey.LinkClickID.getKey(), StoreReferrerGooglePlayStore.getInstallationID());
+            if (!AppStoreReferrer.getInstallationID().equals(PrefHelper.NO_STRING_VALUE)) {
+                getPost().put(Defines.Jsonkey.LinkClickID.getKey(), AppStoreReferrer.getInstallationID());
             }
         } catch (JSONException ignore) {
         

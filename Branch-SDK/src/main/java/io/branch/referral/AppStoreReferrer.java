@@ -10,12 +10,12 @@ import java.util.HashMap;
 /**
  * Abstract class for Store Referrers
  */
-public abstract class AppStoreReferrer {
+public class AppStoreReferrer {
 
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
 
-    protected static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store) {
+    public static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store) {
         PrefHelper prefHelper = PrefHelper.getInstance(context);
         if(!TextUtils.isEmpty(store)){
             prefHelper.setAppStoreSource(store);
