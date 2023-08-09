@@ -7,6 +7,7 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import io.branch.data.InstallReferrerResult
 import io.branch.referral.AppStoreReferrer
+import io.branch.referral.Branch
 import io.branch.referral.Defines.Jsonkey
 import io.branch.referral.PrefHelper
 import io.branch.referral.util.classExists
@@ -17,6 +18,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 
@@ -234,7 +236,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
  * Await all and then do list operations
  */
 suspend fun fetchLatestInstallReferrer(context: Context) {
-    return supervisorScope {
+    return withContext(Dispatchers.Default) {
         val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
         val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
         val samsungReferrer = async { getSamsungGalaxyStoreReferrerDetails(context) }
@@ -248,8 +250,6 @@ suspend fun fetchLatestInstallReferrer(context: Context) {
         if (latestReferrer != null) {
             AppStoreReferrer.processReferrerInfo(context, latestReferrer.latestRawReferrer, latestReferrer.latestClickTimestamp, latestReferrer.latestClickTimestamp, latestReferrer.appStore)
         }
-
-        PrefHelper.Debug("fetchLatestInstallReferrer complete")
     }
 }
 
