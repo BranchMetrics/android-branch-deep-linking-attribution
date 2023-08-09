@@ -241,6 +241,7 @@ suspend fun fetchLatestInstallReferrer(context: Context) {
         val xiaomiReferrer = async { getXiaomiGetAppsReferrerDetails(context) }
 
         val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await())
+        Log.i("BranchSDK", "all referrers completed with " + allReferrers)
         val latestReferrer = getLatestValidReferrerStore(allReferrers)
 
         if (latestReferrer != null) {

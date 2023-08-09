@@ -1711,6 +1711,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                     @Override
                     public void resumeWith(@NonNull Object o) {
+                        PrefHelper.Debug("resumeWith " + o);
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                         processNextQueueItem();
                     }
