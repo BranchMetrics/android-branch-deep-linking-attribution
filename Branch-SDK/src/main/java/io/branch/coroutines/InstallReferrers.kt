@@ -248,6 +248,8 @@ suspend fun fetchLatestInstallReferrer(context: Context) {
         if (latestReferrer != null) {
             AppStoreReferrer.processReferrerInfo(context, latestReferrer.latestRawReferrer, latestReferrer.latestClickTimestamp, latestReferrer.latestClickTimestamp, latestReferrer.appStore)
         }
+
+        PrefHelper.Debug("fetchLatestInstallReferrer complete")
     }
 }
 
