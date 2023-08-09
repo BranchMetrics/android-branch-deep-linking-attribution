@@ -1362,7 +1362,7 @@ public class PrefHelper {
      */
     public static void Debug(String message) {
         if (enableLogging_ && !TextUtils.isEmpty(message)) {
-            Log.i(TAG, message);
+            Log.i(TAG, message + " on thread: " + Thread.currentThread().getName());
         }
     }
 
