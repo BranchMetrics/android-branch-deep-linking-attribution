@@ -476,7 +476,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     public static void enableTestMode() {
         BranchUtil.setTestMode(true);
-        PrefHelper.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
+        BranchLogger.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
                 " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
@@ -1135,7 +1135,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     @Deprecated
     public void userCompletedAction(@NonNull final String action, JSONObject metadata,
                                     BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
+        BranchLogger.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
         ServerRequest req = new ServerRequestActionCompleted(context_,
                 action, null, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -1151,7 +1151,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     @Deprecated
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
                                   BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
+        BranchLogger.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
         ServerRequest req = new ServerRequestActionCompleted(context_,
                 BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -1313,7 +1313,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return originalParams;
     }
@@ -1390,7 +1390,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
             response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         String url = null;
         if (req.isDefaultToLongUrl()) {
@@ -2288,7 +2288,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
@@ -2323,7 +2323,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
-        PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
+        BranchLogger.LogAlways(GOOGLE_VERSION_TAG);
 //        PrefHelper.enableLogging(true);
         BranchLogger.setLoggingEnabled(true);
     }
@@ -2585,7 +2585,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 isInstantDeepLinkPossible = true;
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -2634,7 +2634,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
             return true;
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
             return false;
         }
     }
@@ -2664,7 +2664,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return false;
     }
@@ -2693,7 +2693,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -2831,7 +2831,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                BranchLogger.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
@@ -2991,7 +2991,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 if (succeeded) {
                     BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
                 } else {
-                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                    BranchLogger.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
                 }
                 return null;
             });

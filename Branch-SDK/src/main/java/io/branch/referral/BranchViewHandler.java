@@ -239,7 +239,7 @@ public class BranchViewHandler {
                 }
             }
         } catch (URISyntaxException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return isRedirectionHandled;
     }
@@ -318,7 +318,7 @@ public class BranchViewHandler {
                     inputStream.close();
                 }
             } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
             return code == HttpURLConnection.HTTP_OK;
         }
@@ -362,7 +362,7 @@ public class BranchViewHandler {
                     webViewHtml_ = branchViewJson.getString(Defines.Jsonkey.BranchViewHtml.getKey());
                 }
             } catch (Exception e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
 

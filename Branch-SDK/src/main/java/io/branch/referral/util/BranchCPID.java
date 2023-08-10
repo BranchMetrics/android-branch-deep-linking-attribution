@@ -32,7 +32,7 @@ public class BranchCPID {
                 return cpidData.getJSONObject(Defines.Jsonkey.UserData.getKey()).
                         getString(key_cross_platform_id);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return null;
@@ -63,7 +63,7 @@ public class BranchCPID {
                 }
                 return finalCPIDsArray;
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
 
         }
@@ -76,7 +76,7 @@ public class BranchCPID {
                 return cpidData.getJSONObject(Defines.Jsonkey.UserData.getKey()).
                         getString(key_developer_identity);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return null;

@@ -102,7 +102,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
             }
             this.params_.put(key, value);
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return (T) this;
     }

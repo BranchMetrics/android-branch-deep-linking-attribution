@@ -131,7 +131,7 @@ public class ServerResponse {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return causeMsg;
     }

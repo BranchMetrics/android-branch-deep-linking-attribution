@@ -53,7 +53,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 getPost().put(Defines.Jsonkey.LinkClickID.getKey(), AppStoreReferrer.getInstallationID());
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
     

@@ -102,7 +102,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
                     return true;
                 }
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
                 return true;
             }
         }

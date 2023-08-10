@@ -328,7 +328,7 @@ public class BranchUniversalObject implements Parcelable {
                 Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
     
@@ -741,7 +741,7 @@ public class BranchUniversalObject implements Parcelable {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return branchUniversalObject;
     }
@@ -798,7 +798,7 @@ public class BranchUniversalObject implements Parcelable {
             }
             
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return branchUniversalObject;
     }
@@ -850,7 +850,7 @@ public class BranchUniversalObject implements Parcelable {
             buoJsonModel.put(Defines.Jsonkey.CreationTimestamp.getKey(), creationTimeStamp_);
             
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return buoJsonModel;
     }

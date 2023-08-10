@@ -260,11 +260,11 @@ public abstract class ServerRequest {
                     }
                     extendedPost.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
                 } catch (JSONException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 }
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         } catch (ConcurrentModificationException ex) {
             extendedPost = params_;
         }
@@ -290,7 +290,7 @@ public abstract class ServerRequest {
         try {
             params_.put(paramKey, paramValue);
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
     
@@ -349,7 +349,7 @@ public abstract class ServerRequest {
                 initiatedByClient = json.getBoolean(INITIATED_BY_CLIENT);
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         
         if (!TextUtils.isEmpty(requestPath)) {
@@ -433,7 +433,7 @@ public abstract class ServerRequest {
                 }
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -452,7 +452,7 @@ public abstract class ServerRequest {
             JSONObject advertisingIdsObject = new JSONObject().put(key, aid);
             params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -496,7 +496,7 @@ public abstract class ServerRequest {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
                     userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
                 } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
             }
         }
@@ -551,7 +551,7 @@ public abstract class ServerRequest {
                 try {
                     updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
                 } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
             }
         }
@@ -565,7 +565,7 @@ public abstract class ServerRequest {
                 try {
                     updateJson.putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
                 } catch (JSONException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }
@@ -715,7 +715,7 @@ public abstract class ServerRequest {
                 post.put(Defines.Jsonkey.Environment.getKey(), environment);
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 

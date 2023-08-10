@@ -108,7 +108,7 @@ class ServerRequestQueue {
                         }
                     }
                 } catch (JSONException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }
@@ -157,7 +157,7 @@ class ServerRequestQueue {
             try {
                 req = queue.get(0);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return req;
@@ -179,7 +179,7 @@ class ServerRequestQueue {
             try {
                 req = queue.get(index);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return req;
@@ -203,7 +203,7 @@ class ServerRequestQueue {
                 queue.add(index, request);
                 persist();
             } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
     }
@@ -225,7 +225,7 @@ class ServerRequestQueue {
                 req = queue.remove(index);
                 persist();
             } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return req;
@@ -245,7 +245,7 @@ class ServerRequestQueue {
                 isRemoved = queue.remove(request);
                 persist();
             } catch (UnsupportedOperationException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return isRemoved;
@@ -260,7 +260,7 @@ class ServerRequestQueue {
                 queue.clear();
                 persist();
             } catch (UnsupportedOperationException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
     }

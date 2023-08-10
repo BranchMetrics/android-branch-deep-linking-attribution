@@ -110,7 +110,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 packageName = packageInfo.packageName;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining PackageName", e);
+                BranchLogger.LogException("Error obtaining PackageName", e);
             }
         }
         return packageName;
@@ -128,7 +128,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 appVersion = packageInfo.versionName;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining AppVersion", e);
+                BranchLogger.LogException("Error obtaining AppVersion", e);
             }
         }
         return (TextUtils.isEmpty(appVersion) ? BLANK : appVersion);
@@ -146,7 +146,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 firstTime = packageInfo.firstInstallTime;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining FirstInstallTime", e);
+                BranchLogger.LogException("Error obtaining FirstInstallTime", e);
             }
         }
 
@@ -171,7 +171,7 @@ abstract class SystemObserver {
 
                 isInstalled = (!list.isEmpty());
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining PackageInfo", e);
+                BranchLogger.LogException("Error obtaining PackageInfo", e);
             }
         }
 
@@ -190,7 +190,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 lastTime = packageInfo.lastUpdateTime;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining LastUpdateTime", e);
+                BranchLogger.LogException("Error obtaining LastUpdateTime", e);
             }
         }
 
@@ -649,7 +649,7 @@ abstract class SystemObserver {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
 
         return ipAddress;

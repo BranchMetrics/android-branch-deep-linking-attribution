@@ -253,7 +253,7 @@ public class AdvancedWebView extends WebView {
 			((ViewGroup) getParent()).removeView(this);
 		}
 		catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
 
 		// then try to remove all child views from this view
@@ -261,7 +261,7 @@ public class AdvancedWebView extends WebView {
 			removeAllViews();
 		}
 		catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
 
 		// and finally destroy this view
@@ -298,7 +298,7 @@ public class AdvancedWebView extends WebView {
 							}
 						}
 						catch (Exception e) {
-								BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+								BranchLogger.d(e.getMessage());
 							}
 
 						mFileUploadCallbackSecond.onReceiveValue(dataUris);
@@ -568,7 +568,7 @@ public class AdvancedWebView extends WebView {
 							}
 						}
 						catch (ActivityNotFoundException e) {
-							BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+							BranchLogger.d(e.getMessage());
 						}
 
 						// cancel the original request
@@ -1203,7 +1203,7 @@ public class AdvancedWebView extends WebView {
 			else if (mLanguageIso3.equals("guj")) return decodeBase64("4KqP4KqVIOCqq+CqvuCqh+CqsuCqqOCrhyDgqqrgqrjgqoLgqqY=");
 		}
 		catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
 
 		// return English translation by default
