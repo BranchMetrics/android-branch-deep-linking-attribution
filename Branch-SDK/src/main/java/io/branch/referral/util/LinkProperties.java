@@ -293,7 +293,7 @@ public class LinkProperties implements Parcelable {
                     }
                 }
             } catch (Exception e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return linkProperties;

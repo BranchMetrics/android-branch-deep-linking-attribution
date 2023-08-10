@@ -68,7 +68,7 @@ public class BranchShareSheetBuilder {
                 shortLinkBuilder_.addParameters(key, parameters.get(key));
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         shareMsg_ = "";
         callback_ = null;
@@ -233,7 +233,7 @@ public class BranchShareSheetBuilder {
         try {
             this.shortLinkBuilder_.addParameters(key, value);
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return this;
     }

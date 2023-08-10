@@ -54,7 +54,7 @@ class BranchIntegrationModel {
             obj = new getDeepLinkSchemeTasks().executeTask(context).get(2500, TimeUnit.MILLISECONDS);
             appSettingsAvailable = true;
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         if (obj != null) {
             deeplinkUriScheme = obj.optJSONObject(Defines.Jsonkey.URIScheme.getKey());

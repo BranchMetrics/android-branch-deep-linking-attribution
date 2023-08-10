@@ -474,7 +474,7 @@ public class Branch {
      */
     public static void enableTestMode() {
         BranchUtil.setTestMode(true);
-        PrefHelper.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
+        BranchLogger.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
                 " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
@@ -716,7 +716,7 @@ public class Branch {
     public void disableAppList() {
         // Do nothing
     }
-    
+
     /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
      *
@@ -1189,7 +1189,7 @@ public class Branch {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return originalParams;
     }
@@ -1266,7 +1266,7 @@ public class Branch {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
             response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         String url = null;
         if (req.isDefaultToLongUrl()) {
@@ -2142,7 +2142,7 @@ public class Branch {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
@@ -2177,7 +2177,7 @@ public class Branch {
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
-        PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
+        BranchLogger.LogAlways(GOOGLE_VERSION_TAG);
 //        PrefHelper.enableLogging(true);
         BranchLogger.setLoggingEnabled(true);
     }
@@ -2394,7 +2394,7 @@ public class Branch {
                 isInstantDeepLinkPossible = true;
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -2443,7 +2443,7 @@ public class Branch {
             activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
             return true;
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
             return false;
         }
     }
@@ -2473,7 +2473,7 @@ public class Branch {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return false;
     }
@@ -2502,7 +2502,7 @@ public class Branch {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -2640,7 +2640,7 @@ public class Branch {
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                BranchLogger.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
@@ -2800,7 +2800,7 @@ public class Branch {
                 if (succeeded) {
                     BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
                 } else {
-                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                    BranchLogger.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
                 }
                 return null;
             });

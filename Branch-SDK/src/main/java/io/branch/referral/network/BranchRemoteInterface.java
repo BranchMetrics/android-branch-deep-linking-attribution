@@ -218,7 +218,7 @@ public abstract class BranchRemoteInterface {
                 return true;
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return false;
     }

@@ -69,11 +69,11 @@ class BranchPreinstall {
                         throw new FileNotFoundException();
                     }
                 } catch (FileNotFoundException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 } catch (IOException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 } catch (JSONException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }).start();
@@ -117,7 +117,7 @@ class BranchPreinstall {
                     }
                 }
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
     }

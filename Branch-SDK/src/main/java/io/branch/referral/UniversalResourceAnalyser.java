@@ -62,7 +62,7 @@ class UniversalResourceAnalyser {
             skipURIArray.put("^(?i)(?!(http|https):).*(:|:.*\\b)(password|o?auth|o?auth.?token|access|access.?token)\\b");
             skipURIArray.put("^(?i)((http|https):\\/\\/).*[\\/|?|#].*\\b(password|o?auth|o?auth.?token|access|access.?token)\\b");
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         skipURLFormats = retrieveSkipURLFormats(context);
         acceptURLFormats = new ArrayList<>();
@@ -78,7 +78,7 @@ class UniversalResourceAnalyser {
             try {
                 urlFormat = new JSONObject(latestUrlFormats);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return urlFormat;
@@ -93,7 +93,7 @@ class UniversalResourceAnalyser {
             }
             skipURLArray.put(skipURLFormat);
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
     
@@ -109,7 +109,7 @@ class UniversalResourceAnalyser {
         try {
             new UrlSkipListUpdateTask(context).executeTask();
         } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
     
@@ -129,7 +129,7 @@ class UniversalResourceAnalyser {
                         }
                         
                     } catch (JSONException e) {
-                        BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                        BranchLogger.d(e.getMessage());
                     }
                 }
             }
@@ -178,7 +178,7 @@ class UniversalResourceAnalyser {
                     }
                 }
             } catch (Exception e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             } finally {
                 if (connection != null) {
                     connection.disconnect();

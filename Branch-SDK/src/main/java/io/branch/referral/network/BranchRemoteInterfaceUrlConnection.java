@@ -149,7 +149,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         try {
             payload.put(RETRY_NUMBER, retryNumber);
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         try {
             // set the setThreadStatsTag for POST if API 26+
@@ -291,7 +291,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 rd.close();
                 responseString = sb.toString();
             } catch (IOException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         return responseString;

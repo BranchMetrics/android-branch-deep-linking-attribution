@@ -120,8 +120,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
-            } catch (JSONException ignore) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         // Add Google search install referrer if present
@@ -130,7 +130,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallIdentifier);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
         // Add Google play raw referrer if present
@@ -139,7 +139,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
 
@@ -148,7 +148,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
 
@@ -158,7 +158,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 getPost().put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
                 getPost().put(Defines.Jsonkey.IsFullAppConv.getKey(), true);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
         }
     }
@@ -183,7 +183,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
 
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
@@ -287,7 +287,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 post.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
             return true;
         } else {

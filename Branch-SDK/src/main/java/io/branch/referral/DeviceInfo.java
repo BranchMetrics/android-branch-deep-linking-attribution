@@ -112,7 +112,7 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -218,7 +218,7 @@ class DeviceInfo {
             }
 
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
     }
 

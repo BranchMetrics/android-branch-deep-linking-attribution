@@ -103,7 +103,7 @@ public class BranchUtil {
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         if (branchKey != null) return branchKey;
 
@@ -161,7 +161,7 @@ public class BranchUtil {
             }
         }
         catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return null;
     }
@@ -174,7 +174,7 @@ public class BranchUtil {
             try {
                 tempJsonObj = new JSONObject(jsonObject.toString());
             } catch (JSONException e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             }
             this.jsonObject = tempJsonObj;
         }
@@ -306,7 +306,7 @@ public class BranchUtil {
                 is.read(xml);
                 obj = new ApkParser().decompressXMLForValidator(xml, context);
             } catch (Exception e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         } finally {
                 try {
                     if (is != null) {
@@ -318,7 +318,7 @@ public class BranchUtil {
                         jf.close();
                     }
                 } catch (IOException e) {
-                    BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }

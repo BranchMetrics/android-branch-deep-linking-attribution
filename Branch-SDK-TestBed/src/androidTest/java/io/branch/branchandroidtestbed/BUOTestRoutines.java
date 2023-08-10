@@ -181,7 +181,7 @@ public class BUOTestRoutines {
                     }
                 }
             } catch (Exception e) {
-                BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                BranchLogger.d(e.getMessage());
             } finally {
                 if (connection != null) {
                     connection.disconnect();

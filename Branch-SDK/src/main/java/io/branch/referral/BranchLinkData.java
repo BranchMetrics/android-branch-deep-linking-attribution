@@ -476,7 +476,7 @@ class BranchLinkData extends JSONObject {
             linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), type);
             linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), duration);
         } catch (JSONException e) {
-            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+            BranchLogger.d(e.getMessage());
         }
         return linkDataJson;
     }

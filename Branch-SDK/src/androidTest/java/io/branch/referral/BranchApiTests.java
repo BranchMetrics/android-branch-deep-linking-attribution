@@ -264,7 +264,7 @@ public class BranchApiTests extends BranchTest {
                             Assert.assertEquals(installParams.getString("name"), "test name");
                             Assert.assertEquals(installParams.getString("message"), "hello there with short url");
                         } catch (JSONException e) {
-                            BranchLogger.d(Objects.requireNonNull(e.getMessage()));
+                            BranchLogger.d(e.getMessage());
                         }
 
                         signal.countDown();
