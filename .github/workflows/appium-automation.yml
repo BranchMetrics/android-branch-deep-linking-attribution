@@ -1,4 +1,4 @@
-name: appium-automation-re-installation-scenario
+name: appium-automation-re-installation-scenario test
 on: 
   workflow_dispatch:
   pull_request:
@@ -26,7 +26,7 @@ jobs:
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
-          ref: Re-Installation-Scenario
+          ref: ReInstallationScenario
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
       # repo's gradle is configured to run on java 17
       - name: Setup java for gradle
@@ -53,16 +53,16 @@ jobs:
       - name: Checkout SDK repo with testbed app
         uses: actions/checkout@v3
         with:
-          path: sdk
+          path: sdkNewBuild
           ref: ${{ github.ref }}
       # to reduce complexity, testbed app uses sdk as a project reference
       - name: Build testbed app
         run: |
-          cd sdk
+          cd sdkNewBuild
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
       - name: Upload APK to BrowserStack
         run: |
-          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
+          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdkNewBuild/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
           parsed=$(echo $response | jq ".app_url")
           echo "::add-mask::$parsed"
           echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
