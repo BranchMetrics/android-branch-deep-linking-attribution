@@ -81,7 +81,6 @@ public class PrefHelper {
     private static final String KEY_GCLID_VALUE = "bnc_gclid_value";
     private static final String KEY_GCLID_EXPIRATION_DATE = "bnc_gclid_expiration_date";
     private static final String KEY_GCLID_VALID_FOR_WINDOW = "bnc_gclid_expiration_window";
-    private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
@@ -578,24 +577,6 @@ public class PrefHelper {
      */
     public String getLinkClickID() {
         return getString(KEY_LINK_CLICK_ID);
-    }
-    
-    /**
-     * Set the value to specify if the current init is triggered by an FB app link
-     *
-     * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
-     */
-    public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
-        setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
-    }
-    
-    /**
-     * Specifies the value to specify if the current init is triggered by an FB app link
-     *
-     * @return {@link Boolean} with value true if the init is triggered by an FB app link
-     */
-    public boolean getIsAppLinkTriggeredInit() {
-        return getBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK);
     }
 
     /**
@@ -1252,17 +1233,6 @@ public class PrefHelper {
      */
     public void setBool(String key, Boolean value) {
         prefsEditor_.putBoolean(key, value).apply();
-    }
-    
-    public void updateBranchViewUsageCount(String branchViewId) {
-        String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
-        int currentUsage = getBranchViewUsageCount(branchViewId) + 1;
-        setInteger(key, currentUsage);
-    }
-    
-    public int getBranchViewUsageCount(String branchViewId) {
-        String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
-        return getInteger(key, 0);
     }
 
     /**

@@ -30,9 +30,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (branch == null) return;
 
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
-        if (BranchViewHandler.getInstance().isInstallOrOpenBranchViewPending(activity.getApplicationContext())) {
-            BranchViewHandler.getInstance().showPendingBranchView(activity);
-        }
     }
 
     @Override
@@ -117,7 +114,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (branch.getCurrentActivity() == activity) {
             branch.currentActivityReference_.clear();
         }
-        BranchViewHandler.getInstance().onCurrentActivityDestroyed(activity);
 
         activitiesOnStack_.remove(activity.toString());
     }

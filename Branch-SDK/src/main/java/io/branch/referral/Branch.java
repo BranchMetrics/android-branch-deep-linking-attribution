@@ -80,7 +80,7 @@ import kotlin.coroutines.EmptyCoroutineContext;
  * -->
  */
 
-public class Branch implements BranchViewHandler.IBranchViewEvents {
+public class Branch {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -210,9 +210,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     private JSONObject deeplinkDebugParams_;
     
     private static boolean disableDeviceIDFetch_;
-    
-    private boolean enableFacebookAppLinkCheck_ = false;
-    
+
     static boolean bypassWaitingForIntent_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
@@ -570,7 +568,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
-        // BranchViewHandler.shutDown();
         // DeepLinkRoutingValidator.shutDown();
         // GooglePlayStoreAttribution.shutDown();
         // InstantAppUtil.shutDown();
@@ -717,15 +714,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     public void disableAppList() {
         // Do nothing
-    }
-    
-    /**
-     * <p>
-     * Enable Facebook app link check operation during Branch initialisation.
-     * </p>
-     */
-    public void enableFacebookAppLinkCheck() {
-        enableFacebookAppLinkCheck_ = true;
     }
     
     /**
@@ -1067,105 +1055,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         if (!req.constructError_ && !req.handleErrors(context_)) {
             handleNewRequest(req);
         }
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
-     *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
-     *                 user action that has just been completed.
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
-        userCompletedAction(action, metadata, null);
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API.</p>
-     *
-     * @param action A {@link String} value to be passed as an action that the user has carried
-     *               out. For example "registered" or "logged in".
-     * @deprecated   Please use {@link BranchEvent} for your event tracking use cases.
-     *               You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
-     *               Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(final String action) {
-        userCompletedAction(action, null, null);
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API.</p>
-     *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(final String action, BranchViewHandler.
-            IBranchViewEvents callback) {
-        userCompletedAction(action, null, callback);
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
-     *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
-     *                 user action that has just been completed.
-     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata,
-                                    BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
-        ServerRequest req = new ServerRequestActionCompleted(context_,
-                action, null, metadata, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-    
-    /**
-     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
-     *              Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
-                                  BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
-        ServerRequest req = new ServerRequestActionCompleted(context_,
-                BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-    
-    /**
-     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
-     *              Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
-        sendCommerceEvent(commerceEvent, null, null);
     }
     
     /**
@@ -1606,29 +1495,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             return;
         } else if (isTestModeEnabled()) {
             PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
-        }
-
-        if (initState_ == SESSION_STATE.UNINITIALISED && getSessionReferredLink() == null && enableFacebookAppLinkCheck_) {
-            // Check if opened by facebook with deferred install data
-            boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
-                    context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
-                @Override
-                public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
-                    prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
-                    if (nativeAppLinkUrl != null) {
-                        Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
-                        String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                        if (!TextUtils.isEmpty(bncLinkClickId)) {
-                            prefHelper_.setLinkClickIdentifier(bncLinkClickId);
-                        }
-                    }
-                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
-                    processNextQueueItem();
-                }
-            });
-            if (appLinkRqSucceeded) {
-                initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
-            }
         }
 
         if (delay > 0) {
@@ -2124,9 +1990,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
                     setInitState(Branch.SESSION_STATE.INITIALISED);
-                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                        checkForAutoDeepLinkConfiguration();
-                    }
+
+                    //TODO:Since the check was removed, should this be deleted or always happen?
+                    checkForAutoDeepLinkConfiguration();
+
                     // Count down the latch holding getLatestReferringParamsSync
                     if (getLatestReferringParamsLatch != null) {
                         getLatestReferringParamsLatch.countDown();
@@ -2411,52 +2278,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     public void addExtraInstrumentationData(String key, String value) {
         instrumentationExtraData_.put(key, value);
     }
-    
-    
-    //-------------------- Branch view handling--------------------//
-    
-    
-    @Override
-    public void onBranchViewVisible(String action, String branchViewID) {
-        //No Implementation on purpose
-    }
-    
-    @Override
-    public void onBranchViewAccepted(String action, String branchViewID) {
-        if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
-        }
-    }
-    
-    @Override
-    public void onBranchViewCancelled(String action, String branchViewID) {
-        if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
-        }
-    }
-    
-    @Override
-    public void onBranchViewError(int errorCode, String errorMsg, String action) {
-        if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
-        }
-    }
-    
-    /**
-     * Interface for defining optional Branch view behaviour for Activities
-     */
-    public interface IBranchViewControl {
-        /**
-         * Defines if an activity is interested to show Branch views or not.
-         * By default activities are considered as Branch view enabled. In case of activities which are not interested to show a Branch view (Splash screen for example)
-         * should implement this and return false. The pending Branch view will be shown with the very next Branch view enabled activity
-         *
-         * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
-         */
-        boolean skipBranchViewsOnThisActivity();
-    }
-    
-    
+
     ///----------------- Instant App  support--------------------------//
     
     /**
