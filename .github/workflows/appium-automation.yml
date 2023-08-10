@@ -59,7 +59,7 @@ jobs:
       - name: Build testbed app
         run: |
           cd sdkNewBuild
-          ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
+          ./gradlew Branch-SDK-Automation-TestBed:assembleDebug -Pandroid.injected.version.code=1234 -Pandroid.injected.version.name=1.2.3.4
       - name: Upload APK to BrowserStack
         run: |
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdkNewBuild/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
