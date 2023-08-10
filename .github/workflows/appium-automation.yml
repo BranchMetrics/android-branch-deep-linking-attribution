@@ -42,6 +42,7 @@ jobs:
       - name: Upload APK to BrowserStack
         run: |
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
+          print $response
           parsed=$(echo $response | jq ".app_url")
           echo "::add-mask::$parsed"
           echo "BrowserStackAndroidOldBuildKey=$parsed" >> "$GITHUB_ENV"
@@ -62,8 +63,9 @@ jobs:
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug -Pandroid.injected.version.code=1234 -Pandroid.injected.version.name=1.2.3.4
       - name: Upload APK to BrowserStack
         run: |
-          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdkNewBuild/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
-          parsed=$(echo $response | jq ".app_url")
+          responseNew=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdkNewBuild/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
+          print $responseNew
+          parsed=$(echo $responseNew | jq ".app_url")
           echo "::add-mask::$parsed"
           echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
 
