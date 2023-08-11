@@ -43,7 +43,7 @@ class BillingGooglePlay private constructor() {
                     } else {
                         val errorMessage =
                             "Billing Client setup failed with error: ${billingResult.debugMessage}"
-                        BranchLogger.LogException(errorMessage, Exception())
+                        BranchLogger.logException(errorMessage, Exception())
                         callback(false)
                     }
                 }
@@ -119,7 +119,7 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                BranchLogger.LogException(
+                BranchLogger.logException(
                     "Failed to query subscriptions. Error: " + billingResult.debugMessage,
                     Exception()
                 )
@@ -159,7 +159,7 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                BranchLogger.LogException(
+                BranchLogger.logException(
                     "Failed to query subscriptions. Error: " + billingResult.debugMessage,
                     Exception()
                 )

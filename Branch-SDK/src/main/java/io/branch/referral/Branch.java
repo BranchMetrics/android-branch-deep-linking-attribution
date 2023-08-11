@@ -37,11 +37,9 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -50,7 +48,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.coroutines.InstallReferrersKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -60,10 +57,6 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
-import kotlin.Unit;
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -476,7 +469,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     public static void enableTestMode() {
         BranchUtil.setTestMode(true);
-        BranchLogger.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
+        BranchLogger.logAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
                 " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
@@ -1135,7 +1128,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     @Deprecated
     public void userCompletedAction(@NonNull final String action, JSONObject metadata,
                                     BranchViewHandler.IBranchViewEvents callback) {
-        BranchLogger.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
+        BranchLogger.logAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
         ServerRequest req = new ServerRequestActionCompleted(context_,
                 action, null, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -1151,7 +1144,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     @Deprecated
     public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
                                   BranchViewHandler.IBranchViewEvents callback) {
-        BranchLogger.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
+        BranchLogger.logAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
         ServerRequest req = new ServerRequestActionCompleted(context_,
                 BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
         if (!req.constructError_ && !req.handleErrors(context_)) {
@@ -1701,7 +1694,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     @Override
                     public void onInstallReferrersFinished() {
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        PrefHelper.Debug("calling processNextQueueItem from onInstallReferrersFinished");
+                        BranchLogger.v("calling processNextQueueItem from onInstallReferrersFinished");
                         processNextQueueItem();
                     }
                 });
@@ -1750,7 +1743,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
-        PrefHelper.Debug("handleNewRequest " + req);
+        BranchLogger.v("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             BranchLogger.v("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
@@ -1764,10 +1757,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 BranchLogger.v("Branch is not initialized, cannot logout");
                 return;
             }
-            if ((req instanceof ServerRequestRegisterClose)) {
-                BranchLogger.v("Branch is not initialized, cannot close session");
-                return;
-            }
+
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
@@ -2323,8 +2313,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
-        BranchLogger.LogAlways(GOOGLE_VERSION_TAG);
-//        PrefHelper.enableLogging(true);
+        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
         BranchLogger.setLoggingEnabled(true);
     }
 
@@ -2332,8 +2321,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * Disable Logging, independent of Debug Mode.
      */
     public static void disableLogging() {
-//        PrefHelper.enableLogging(false);
-        BranchLogger.setLoggingEnabled(true);
+        BranchLogger.setLoggingEnabled(false);
     }
 
     /**
@@ -2831,7 +2819,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                BranchLogger.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                BranchLogger.logAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
@@ -2991,7 +2979,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 if (succeeded) {
                     BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
                 } else {
-                    BranchLogger.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                    BranchLogger.logException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
                 }
                 return null;
             });

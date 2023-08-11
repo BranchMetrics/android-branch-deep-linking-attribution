@@ -3,6 +3,7 @@ package io.branch.coroutines
 import android.content.Context
 import android.provider.Settings
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import io.branch.referral.BranchLogger
 import io.branch.referral.PrefHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +14,7 @@ suspend fun getGoogleAdvertisingInfoObject(context: Context): AdvertisingIdClien
             AdvertisingIdClient.getAdvertisingIdInfo(context)
         }
         catch (exception: Exception) {
-            PrefHelper.Debug("getGoogleAdvertisingInfoObject exception: $exception")
+            BranchLogger.d("getGoogleAdvertisingInfoObject exception: $exception")
             null
         }
     }
@@ -25,7 +26,7 @@ suspend fun getHuaweiAdvertisingInfoObject(context: Context):  com.huawei.hms.ad
             com.huawei.hms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo(context)
         }
         catch (exception: Exception) {
-            PrefHelper.Debug("getHuaweiAdvertisingInfoObject exception: $exception")
+            BranchLogger.d("getHuaweiAdvertisingInfoObject exception: $exception")
             null
         }
     }
@@ -41,7 +42,7 @@ suspend fun getAmazonFireAdvertisingInfoObject(context: Context): Pair<Int, Stri
             )
         }
         catch (exception: Exception) {
-            PrefHelper.Debug("getAmazonFireAdvertisingInfo exception: $exception")
+            BranchLogger.d("getAmazonFireAdvertisingInfo exception: $exception")
             null
         }
     }
