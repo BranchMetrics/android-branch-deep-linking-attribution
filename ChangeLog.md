@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v5.6.4
+  * _*Master Release*_ - Aug 11, 2023
+    - Bug fix: Added proguard policy to not break minification builds because of newly added compile only classes.
 - v5.6.3
   * _*Master Release*_ - Aug 9, 2023
     - Updated Samsung Galaxy Store install referrer, to enable import `implementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")`
