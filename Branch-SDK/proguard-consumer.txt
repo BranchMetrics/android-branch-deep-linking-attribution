@@ -1,2 +1,5 @@
 # Remove references to Huawei's OAID (Google's advertising id equivalent) if the dependency is not available in your project.
 -dontwarn com.huawei.hms.ads.**
+
+-dontwarn com.miui.referrer.**
+-dontwarn com.samsung.android.sdk.sinstallreferrer.**
