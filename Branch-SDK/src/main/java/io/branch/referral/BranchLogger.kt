@@ -1,6 +1,5 @@
 package io.branch.referral
 
-import android.text.TextUtils
 import android.util.Log
 
 object BranchLogger {
@@ -71,14 +70,14 @@ object BranchLogger {
     }
 
     @JvmStatic
-    fun LogAlways(message: String) {
+    fun logAlways(message: String) {
         if (message.isNotEmpty()) {
             Log.i(TAG, message)
         }
     }
 
     @JvmStatic
-    fun LogException(message: String, t: Exception?) {
+    fun logException(message: String, t: Exception?) {
         if (message.isNotEmpty()) {
             Log.e(TAG, message, t)
         }
