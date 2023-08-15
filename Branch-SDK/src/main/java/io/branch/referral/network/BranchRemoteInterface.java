@@ -111,7 +111,7 @@ public abstract class BranchRemoteInterface {
             // Add total round trip time
             if (Branch.getInstance() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }
@@ -147,7 +147,7 @@ public abstract class BranchRemoteInterface {
         } finally {
             if (Branch.getInstance() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.getInstance().addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }

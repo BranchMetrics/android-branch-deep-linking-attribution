@@ -266,7 +266,7 @@ public class BranchQRCode {
                 callback.onFailure(e);
             }
         });
-        Branch.getInstance().handleNewRequest(req);
+        Branch.getInstance().requestQueue_.handleNewRequest(req);
     }
 
     public void getQRCodeAsImage(@NonNull Activity activity, @NonNull BranchUniversalObject branchUniversalObject, @NonNull LinkProperties linkProperties, @NonNull final BranchQRCodeImageHandler callback) throws IOException {
