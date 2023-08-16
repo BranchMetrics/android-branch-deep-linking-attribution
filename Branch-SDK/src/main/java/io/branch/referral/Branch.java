@@ -980,19 +980,6 @@ public class Branch {
     }
 
     /**
-     * Gets all available cross platform ids.
-     *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener}
-     *                to callback with cross platform ids
-     *
-     */
-    public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
-        if (context_ != null) {
-            handleNewRequest(new ServerRequestGetCPID(context_, callback));
-        }
-    }
-
-    /**
      * Gets the available last attributed touch data. The attribution window is set to the value last
      * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
      * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).

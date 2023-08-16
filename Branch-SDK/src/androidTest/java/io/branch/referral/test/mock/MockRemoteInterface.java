@@ -1,6 +1,5 @@
 package io.branch.referral.test.mock;
 
-import static io.branch.referral.Defines.RequestPath.GetCPID;
 import static io.branch.referral.Defines.RequestPath.GetURL;
 import static io.branch.referral.Defines.RequestPath.IdentifyUser;
 import static io.branch.referral.Defines.RequestPath.QRCode;
@@ -52,8 +51,6 @@ public class MockRemoteInterface extends BranchRemoteInterface {
             return "{\"session_id\":\"880938553235373649\",\"randomized_bundle_token\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24randomized_bundle_token=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"randomized_device_token\":\"867130134518497054\"}";
         } else if (url.contains(RegisterInstall.getPath()) || url.contains(RegisterOpen.getPath())) {
             return "{\"session_id\":\"880938553235373649\",\"randomized_bundle_token\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24randomized_bundle_token=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"randomized_device_token\":\"867130134518497054\"}";
-        } else if (url.contains(GetCPID.getPath())) {
-            return "{\"user_data\":{\"cross_platform_id\":\"afb3e7f98b18dc6c90ebaeade4dbc6cac67fbb8e3f34e9cd8217490bf8f24b1f\",\"past_cross_platform_ids\":[],\"prob_cross_platform_ids\":[],\"developer_identity\":\"880938553226608667\"}}";
         } else if (url.contains(QRCode.getPath())) {
             return "{iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAAAXNSR0IArs4c6QAAAARzQklUCAgI\n" +
                     "CHwIZIgAACAASURBVHic7d15tCVlYe7/561h7zPPPdJNAw0ILTSTggjBERWnq6KJN/FeTWLudSUm\n" +

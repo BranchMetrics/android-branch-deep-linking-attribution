@@ -251,7 +251,6 @@ public class Defines {
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
-        GetCPID("v1/cpid"),
         GetLATD("v1/cpid/latd"),
         QRCode("v1/qr-code");
 

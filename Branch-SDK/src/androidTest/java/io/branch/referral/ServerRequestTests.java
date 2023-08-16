@@ -15,7 +15,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.util.BranchCPID;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.LinkProperties;
 
@@ -41,32 +40,6 @@ public class ServerRequestTests extends BranchTest {
             public void run() {
                 // just to confirm this runnable does get invoked
                 Assert.assertTrue(true);
-            }
-        });
-    }
-
-    @Test
-    public void testTimedOutCrossPlatformIdsCallbackInvoked() {
-        initSessionResumeActivity(null, new Runnable() {
-            @Override
-            public void run() {
-                setTimeouts(10,10);
-
-                final CountDownLatch lock = new CountDownLatch(1);
-                branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
-                    @Override
-                    public void onDataFetched(BranchCPID branchCPID, BranchError error) {
-                        PrefHelper.Debug("branchCPID = " + branchCPID + ", error: " + error);
-                        lock.countDown();
-                        Assert.assertNotNull(error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
-                    }
-                });
-                try {
-                    Assert.assertTrue(lock.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Assert.fail();
-                }
             }
         });
     }

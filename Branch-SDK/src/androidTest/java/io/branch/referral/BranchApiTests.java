@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.branch.referral.Branch.BranchLinkCreateListener;
-import io.branch.referral.util.BranchCPID;
 
 @RunWith(AndroidJUnit4.class)
 public class BranchApiTests extends BranchTest {
@@ -42,32 +41,6 @@ public class BranchApiTests extends BranchTest {
     public void tearDown() throws InterruptedException {
         branch.linkCache_.clear();
         super.tearDown();
-    }
-
-    @Test
-    public void testGetCPID() {
-        initSessionResumeActivity(null, new Runnable() {
-            @Override
-            public void run() {
-                final CountDownLatch lock = new CountDownLatch(1);
-                branch.getCrossPlatformIds(new ServerRequestGetCPID.BranchCrossPlatformIdListener() {
-                    @Override public void onDataFetched(BranchCPID cpidResponse, BranchError error) {
-                        if (error == null) {
-                            Assert.assertNotNull(cpidResponse);
-                        } else {
-                            Assert.fail("getCrossPlatformIds returned error, " + error.getMessage());
-                        }
-                        lock.countDown();
-                    }
-                });
-
-                try {
-                    Assert.assertTrue(lock.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Assert.fail("timeout");
-                }
-            }
-        });
     }
 
     @Test

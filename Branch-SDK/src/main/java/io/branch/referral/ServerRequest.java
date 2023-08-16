@@ -56,7 +56,6 @@ public abstract class ServerRequest {
     
     public enum BRANCH_API_VERSION {
         V1,
-        V1_CPID,
         V1_LATD,
         V2
     }
