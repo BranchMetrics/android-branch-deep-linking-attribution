@@ -60,17 +60,17 @@ jobs:
           
           
       # to reduce complexity, testbed app uses sdk as a project reference
-      # - name: Build testbed app
-      #   run: |
-      #     cd sdk
-      #     ./gradlew Branch-SDK-Automation-TestBed:assembleDebug -Pandroid.injected.version.code=3 -Pandroid.injected.version.name=1.
-      # - name: Upload APK to BrowserStack
-      #   run: |
-      #     response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
-      #     echo $response
-      #     parsed=$(echo $response | jq ".app_url")
-      #     echo "::add-mask::$parsed"
-      #     echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
+      - name: Build testbed app
+        run: |
+          cd sdk
+          ./gradlew Branch-SDK-Automation-TestBed:assembleDebug -Pandroid.injected.version.code=3 -Pandroid.injected.version.name=1.2
+      - name: Upload APK to BrowserStack
+        run: |
+          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
+          echo $response
+          parsed=$(echo $response | jq ".app_url")
+          echo "::add-mask::$parsed"
+          echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
 
 
 
@@ -84,4 +84,4 @@ jobs:
       - name: Execute automation
         run: |
           cd qa
-          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DUploadNewBuild="Yes" -DTestType="ReInstallationScenario" -DBrowserStackAndroidOldBuildKey=$BrowserStackAndroidOldBuildKey
+          mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DUploadNewBuild="Yes" -DTestType="ReInstallationScenario" -DBrowserStackAndroidOldBuildKey=$BrowserStackAndroidOldBuildKey -DBrowserStackAndroidNewBuildKey=$BrowserStackAndroidNewBuildKey
