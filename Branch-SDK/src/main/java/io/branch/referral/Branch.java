@@ -1063,8 +1063,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        prefHelper_.setInstallParams(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
         prefHelper_.clearUserValues();
         //On Logout clear the link cache and all pending requests
@@ -1762,11 +1760,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            if ((req instanceof ServerRequestLogout)) {
-                req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                PrefHelper.Debug("Branch is not initialized, cannot logout");
-                return;
-            }
             if (requestNeedsSession(req)) {
                 PrefHelper.Debug("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
