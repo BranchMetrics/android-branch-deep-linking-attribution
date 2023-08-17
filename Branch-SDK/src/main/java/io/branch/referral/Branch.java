@@ -5,10 +5,8 @@ import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
+import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
-import static io.branch.referral.util.DependencyUtilsKt.galaxyStoreInstallReferrerClass;
-import static io.branch.referral.util.DependencyUtilsKt.huaweiInstallReferrerClass;
-import static io.branch.referral.util.DependencyUtilsKt.xiaomiInstallReferrerClass;
 
 import android.app.Activity;
 import android.app.Application;
@@ -39,6 +37,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -50,6 +49,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.coroutines.InstallReferrersKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -59,6 +59,10 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -75,7 +79,8 @@ import io.branch.referral.util.LinkProperties;
  * </pre>
  * -->
  */
-public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserver.AdsParamsFetchEvents, StoreReferrerGooglePlayStore.IGoogleInstallReferrerEvents, StoreReferrerHuaweiAppGallery.IHuaweiInstallReferrerEvents, StoreReferrerSamsungGalaxyStore.ISamsungInstallReferrerEvents, StoreReferrerXiaomiGetApps.IXiaomiInstallReferrerEvents {
+
+public class Branch implements BranchViewHandler.IBranchViewEvents {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -85,61 +90,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * are shared with others directly as a user action, via social media for instance.
      */
     public static final String FEATURE_TAG_SHARE = "share";
-    
-    /**
-     * Hard-coded {@link String} that denotes a 'referral' tag; applies to links that are associated
-     * with a referral program, incentivized or not.
-     */
-    public static final String FEATURE_TAG_REFERRAL = "referral";
 
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_INVITE = "invite";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_DEAL = "deal";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String FEATURE_TAG_GIFT = "gift";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REDEEM_CODE = "$redeem_code";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_BUCKET_DEFAULT = "default";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_CODE_TYPE = "credit";
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final int REFERRAL_CREATION_SOURCE_SDK = 2;
-
-    /**
-     * @deprecated Referral feature has been deprecated.
-     */
-    @Deprecated
-    public static final String REFERRAL_CODE = "referral_code";
-    
     /**
      * The redirect URL provided when the link is handled by a desktop client.
      */
@@ -232,37 +183,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * Possible values are "true" or "false"
      */
     public static final String ALWAYS_DEEPLINK = "$always_deeplink";
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, the user applying the referral code receives credit.
-     */
-    public static final int REFERRAL_CODE_LOCATION_REFERREE = 0;
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, the user who created the referral code receives credit.
-     */
-    public static final int REFERRAL_CODE_LOCATION_REFERRING_USER = 2;
-    
-    /**
-     * An {@link Integer} value indicating the user to reward for applying a referral code. In this
-     * case, both the creator and applicant receive credit
-     */
-    public static final int REFERRAL_CODE_LOCATION_BOTH = 3;
-    
-    /**
-     * An {@link Integer} value indicating the calculation type of the referral code. In this case,
-     * the referral code can be applied continually.
-     */
-    public static final int REFERRAL_CODE_AWARD_UNLIMITED = 1;
-    
-    /**
-     * An {@link Integer} value indicating the calculation type of the referral code. In this case,
-     * a user can only apply a specific referral code once.
-     */
-    public static final int REFERRAL_CODE_AWARD_UNIQUE = 0;
-    
+
     /**
      * An {@link Integer} value indicating the link type. In this case, the link can be used an
      * unlimited number of times.
@@ -297,10 +218,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static boolean bypassCurrentActivityIntentState_ = false;
 
     static boolean disableAutoSessionInitialization;
-
-    static boolean checkInstallReferrer_ = true;
-    private static long playStoreReferrerWaitTime = 1500;
-    public static final long NO_PLAY_STORE_REFERRER_WAIT = 0;
 
     static boolean referringLinkAttributionForPreinstalledAppsEnabled = false;
     
@@ -375,9 +292,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
     
     final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
-
-    /* In order to get Google's advertising ID an AsyncTask is needed, however Fire OS does not require AsyncTask, so isGAParamsFetchInProgress_ would remain false */
-    private boolean isGAParamsFetchInProgress_ = false;
     
     private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
     
@@ -391,11 +305,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
 
     CountDownLatch getFirstReferringParamsLatch = null;
     CountDownLatch getLatestReferringParamsLatch = null;
-
-    private boolean waitingForHuaweiInstallReferrer = false;
-    private boolean waitingForGoogleInstallReferrer = false;
-    private boolean waitingForSamsungInstallReferrer = false;
-    private boolean waitingForXiaomiInstallReferrer = false;
 
     private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
@@ -644,28 +553,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
     
     /**
-     * @deprecated This method is deprecated since INSTALL_REFERRER broadcasts were discontinued on 3/2020.
-     * And Branch SDK bundles Play Store Referrer library since v4.2.2
-     * Please use {@link #setPlayStoreReferrerCheckTimeout(long)} instead.
-     */
-    public static void enablePlayStoreReferrer(long delay) {
-        setPlayStoreReferrerCheckTimeout(delay);
-    }
-    
-    /**
-     * Set timeout for Play Store Referrer library. Play Store Referrer library allows Branch to provide
-     * more accurate tracking and attribution. This delays Branch initialization only the first time user opens the app.
-     * This method allows to override the maximum wait time for play store referrer to arrive.
-     * <p>
-     *
-     * @param delay {@link Long} Maximum wait time for install referrer broadcast in milli seconds. Set to {@link Branch#NO_PLAY_STORE_REFERRER_WAIT} if you don't want to wait for play store referrer
-     */
-    public static void setPlayStoreReferrerCheckTimeout(long delay) {
-        checkInstallReferrer_ = delay > 0;
-        playStoreReferrerWaitTime = delay;
-    }
-    
-    /**
      * <p>
      * Disables or enables the instant deep link functionality.
      * </p>
@@ -700,8 +587,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         isActivityLifeCycleCallbackRegistered_ = false;
 
         bypassWaitingForIntent_ = false;
-
-        checkInstallReferrer_ = true;
     }
 
 
@@ -916,6 +801,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     void closeSessionInternal() {
         clearPartnerParameters();
         executeClose();
+        prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setExternalIntentUri(null);
         trackingController.updateTrackingState(context_); // Update the tracking state for next cold start
     }
@@ -933,15 +819,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      */
     private void executeClose() {
         if (initState_ != SESSION_STATE.UNINITIALISED) {
-            ServerRequest req = new ServerRequestRegisterClose(context_);
-            if (closeRequestNeeded) {
-                handleNewRequest(req);
-            } else {
-                req.onRequestSucceeded(null, null);
-            }
             setInitState(SESSION_STATE.UNINITIALISED);
         }
-        closeRequestNeeded = false;
     }
 
     public static void registerPlugin(String name, String version) {
@@ -1020,50 +899,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     String getSessionReferredLink() {
         String link = prefHelper_.getExternalIntentUri();
         return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
-    }
-    
-    @Override
-    public void onAdsParamsFetchFinished() {
-        isGAParamsFetchInProgress_ = false;
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-
-        processNextQueueItem();
-    }
-    
-    @Override
-    public void onGoogleInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForGoogleInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
-    @Override
-    public void onHuaweiInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForHuaweiInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
-    @Override
-    public void onSamsungInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForSamsungInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
-    @Override
-    public void onXiaomiInstallReferrerEventsFinished() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-        waitingForXiaomiInstallReferrer = false;
-        tryProcessNextQueueItemAfterInstallReferrer();
-    }
-
-    private void tryProcessNextQueueItemAfterInstallReferrer() {
-        if(!(waitingForGoogleInstallReferrer || waitingForHuaweiInstallReferrer || waitingForSamsungInstallReferrer || waitingForXiaomiInstallReferrer)){
-            String store = StoreReferrerUtils.getLatestValidReferrerStore();
-            StoreReferrerUtils.writeLatestInstallReferrer(context_, store);
-            processNextQueueItem();
-        }
     }
 
     /**
@@ -1239,82 +1074,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             callback.onLogoutFinished(true, null);
         }
     }
-    
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void loadRewards() { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void loadRewards(BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCredits() { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCreditsForBucket(String bucket) { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(int count, BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(@NonNull final String bucket, final int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void redeemRewards(@NonNull final String bucket,
-                              final int count, BranchReferralStateChangedListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(BranchListResponseListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(@NonNull final String bucket, BranchListResponseListener
-            callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(@NonNull final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void getCreditHistory(final String bucket, final String afterId, final int length,
-                                 @NonNull final CreditHistoryOrder order, BranchListResponseListener callback) { /* no-op */ }
     
     /**
      * <p>A void call to indicate that the user has performed a specific action and for that to be
@@ -1798,14 +1557,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         return prefHelper_;
     }
 
-    boolean isGAParamsFetchInProgress() {
-        return isGAParamsFetchInProgress_;
-    }
-
-    void setGAParamsFetchInProgress(boolean GAParamsFetchInProgress) {
-        isGAParamsFetchInProgress_ = GAParamsFetchInProgress;
-    }
-
     ShareLinkManager getShareLinkManager() {
         return shareLinkManager_;
     }
@@ -1922,8 +1673,21 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * will wait on the wait locks to complete any pending operations
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
-        setInitState(SESSION_STATE.INITIALISING);
+         setInitState(SESSION_STATE.INITIALISING);
 
+         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+         if (r == null) {
+             insertRequestAtFront(request);
+         }
+         else {
+             r.callback_ = request.callback_;
+         }
+         initTasks(request, ignoreWaitLocks);
+
+         processNextQueueItem();
+     }
+
+    private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
@@ -1931,82 +1695,31 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
 
-            // Google Play Referrer lib should only be used once, so we use GooglePlayStoreAttribution.hasBeenUsed flag
-            // just in case user accidentally queues up a couple install requests at the same time. During later sessions
-            // request instanceof ServerRequestRegisterInstall = false
-            if (checkInstallReferrer_ && request instanceof ServerRequestRegisterInstall) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
 
-                // We may need to check if play store services exist, in the future
-                // Obtain all needed locks before executing any fetches
-                if(!StoreReferrerGooglePlayStore.hasBeenUsed) {
-                    waitingForGoogleInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
+            if (request instanceof ServerRequestRegisterInstall) {
+                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
 
-                if (classExists(huaweiInstallReferrerClass)
-                && !StoreReferrerHuaweiAppGallery.hasBeenUsed) {
-                    waitingForHuaweiInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
-
-                if (classExists(galaxyStoreInstallReferrerClass)
-                && !StoreReferrerSamsungGalaxyStore.hasBeenUsed) {
-                    waitingForSamsungInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
-
-                if (classExists(xiaomiInstallReferrerClass)
-                && !StoreReferrerXiaomiGetApps.hasBeenUsed) {
-                    waitingForXiaomiInstallReferrer = true;
-                    request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
-
-                if(waitingForGoogleInstallReferrer){
-                    StoreReferrerGooglePlayStore.fetch(context_, this);
-                }
-
-                if(waitingForHuaweiInstallReferrer){
-                    StoreReferrerHuaweiAppGallery.fetch(context_, this);
-                }
-
-                if(waitingForSamsungInstallReferrer){
-                    StoreReferrerSamsungGalaxyStore.fetch(context_, this);
-                }
-
-                if(waitingForXiaomiInstallReferrer){
-                    StoreReferrerXiaomiGetApps.fetch(context_, this);
-                }
-
-                // StoreReferrer error are thrown synchronously, so we remove
-                // *_INSTALL_REFERRER_FETCH_WAIT_LOCK manually
-                if (StoreReferrerGooglePlayStore.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
-                if (StoreReferrerHuaweiAppGallery.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
-                if (StoreReferrerSamsungGalaxyStore.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
-                if (StoreReferrerXiaomiGetApps.erroredOut) {
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                }
+                deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
+                    @Override
+                    public void onInstallReferrersFinished() {
+                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        PrefHelper.Debug("calling processNextQueueItem from onInstallReferrersFinished");
+                        processNextQueueItem();
+                    }
+                });
             }
         }
 
-        if (isGAParamsFetchInProgress_) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        }
-
-        ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
-        if (r == null) {
-            insertRequestAtFront(request);
-            processNextQueueItem();
-        } else {
-            r.callback_ = request.callback_;
-        }
+        deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
+            @Override
+            public void onAdsParamsFetchFinished() {
+                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+                processNextQueueItem();
+            }
+        });
     }
-    
+
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
         if (hasUser()) {
@@ -2040,6 +1753,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
+        PrefHelper.Debug("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
@@ -2048,11 +1762,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            if ((req instanceof ServerRequestRegisterClose)) {
-                PrefHelper.Debug("Branch is not initialized, cannot close session");
+            if ((req instanceof ServerRequestLogout)) {
+                req.handleFailure(BranchError.ERR_NO_SESSION, "");
+                PrefHelper.Debug("Branch is not initialized, cannot logout");
                 return;
             }
             if (requestNeedsSession(req)) {
+                PrefHelper.Debug("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
         }
@@ -2266,13 +1982,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
          *                  A null value is set if logout succeeded.
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
-    }
-    
-    /**
-     * <p>enum containing the sort options for return of credit history.</p>
-     */
-    public enum CreditHistoryOrder {
-        kMostRecentFirst, kLeastRecentFirst
     }
     
     /**
@@ -3159,6 +2868,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
+            PrefHelper.Debug("Creating " + initRequest + " from init");
             branch.initializeSession(initRequest, delay);
         }
 
@@ -3262,13 +2972,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents, SystemObserv
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-            if (succeeded) {
-                BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-            } else {
-                PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
-            }
-            return null;
-        });
+        if (classExists(billingGooglePlayClass)) {
+            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+                if (succeeded) {
+                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+                } else {
+                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                }
+                return null;
+            });
+        }
     }
 }

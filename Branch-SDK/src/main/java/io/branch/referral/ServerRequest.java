@@ -46,11 +46,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK,
-        HUAWEI_INSTALL_REFERRER_FETCH_WAIT_LOCK,
-        GOOGLE_INSTALL_REFERRER_FETCH_WAIT_LOCK,
-        SAMSUNG_INSTALL_REFERRER_FETCH_WAIT_LOCK,
-        XIAOMI_INSTALL_REFERRER_FETCH_WAIT_LOCK
+        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
     }
     
     // Set for holding any active wait locks
@@ -374,8 +370,8 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterClose.getPath())) {
-            extendedReq = new ServerRequestRegisterClose(Defines.RequestPath.RegisterClose, post, context);
+        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
+            extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
             extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context, initiatedByClient);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {

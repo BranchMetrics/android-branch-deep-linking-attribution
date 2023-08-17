@@ -1,4 +1,32 @@
 # Branch Android SDK change log
+- v5.6.4
+  * _*Master Release*_ - Aug 11, 2023
+    - Bug fix: Added proguard policy to not break minification builds because of newly added compile only classes.
+- v5.6.3
+  * _*Master Release*_ - Aug 9, 2023
+    - Updated Samsung Galaxy Store install referrer, to enable import `implementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")`
+    - Xiaomi referrer also available from Maven Central, import `implementation("com.miui.referrer:homereferrer:1.0.0.7")`
+    - Removed old no op `enablePlayStoreReferrer`
+    - Bug fixes: 
+        - Install referrer tasks are now done in parallel
+        - Non-critical JSON exception is now logged as a warning
+        - When sharing a link by share sheet, the `userCompletedAction` event is replaced by v2/event
+- v5.6.2
+  * _*Master Release*_ - Jul 31, 2023
+    - Removing
+      - Credits end points
+      - Jetifier flag
+      - Firebase App Indexing
+      - Long deprecated public functions
+        setDebug
+        enableDebugMode
+        disableDebugMode
+        enableSimulateInstalls
+        disableSimulateInstalls
+        ShareLinkBuilder (use BranchShareSheetBuilder instead)
+    - Short links can now be made while tracking is disabled.
+    - Google Play Billing Library is now optional. To enable, import com.android.billingclient:billing
+
 - v5.6.1
   * _*Master Release*_ - Jun 30, 2023
     - Revert the Kotlin version update from 1.8.22 back to 1.6.20.

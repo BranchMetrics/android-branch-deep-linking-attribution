@@ -68,9 +68,6 @@ class ServerRequestCreateUrl extends ServerRequest {
 
         linkPost_ = new BranchLinkData();
         try {
-            linkPost_.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
-            linkPost_.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
-            linkPost_.put(Defines.Jsonkey.SessionID.getKey(), prefHelper_.getSessionID());
             if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
                 linkPost_.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
             }
@@ -88,11 +85,15 @@ class ServerRequestCreateUrl extends ServerRequest {
 
             setPost(linkPost_);
 
+            //Remove unnecessary fields
+            linkPost_.remove("anon_id");
+            linkPost_.remove("is_hardware_id_real");
+            linkPost_.remove("hardware_id");
+
         } catch (JSONException ex) {
             ex.printStackTrace();
             constructError_ = true;
         }
-
     }
 
     public ServerRequestCreateUrl(Defines.RequestPath requestPath, JSONObject post, Context context) {

@@ -8,12 +8,12 @@ plugins {
 dependencies {
     implementation(project(":Branch-SDK"))
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
+    implementation("com.huawei.hms:ads-identifier:3.4.62.300")
 
-    /* Add chrome custom tabs for guaranteed matching */
-    implementation("androidx.browser:browser:1.0.0") {
-        exclude(module = "support-v4")
-    }
-    implementation("com.android.billingclient:billing:5.1.0")
+    implementation("com.android.billingclient:billing:6.0.1")
+    implementation("com.huawei.hms:ads-installreferrer:3.4.39.302")
+    implementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
+    implementation("com.miui.referrer:homereferrer:1.0.0.7")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")

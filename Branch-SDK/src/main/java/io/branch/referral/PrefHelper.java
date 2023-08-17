@@ -89,10 +89,6 @@ public class PrefHelper {
     private static final String KEY_USER_URL = "bnc_user_url";
     private static final String KEY_LATD_ATTRIBUTION_WINDOW = "bnc_latd_attributon_window";
     private static final String KEY_INITIAL_REFERRER = "bnc_initial_referrer";
-
-    private static final String KEY_BUCKETS = "bnc_buckets";
-    private static final String KEY_CREDIT_BASE = "bnc_credit_base_";
-    
     private static final String KEY_ACTIONS = "bnc_actions";
     private static final String KEY_TOTAL_BASE = "bnc_total_base_";
     private static final String KEY_UNIQUE_BASE = "bnc_balance_base_";
@@ -739,11 +735,15 @@ public class PrefHelper {
 
         String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
         JSONObject params = new JSONObject();
-        try {
-            params = new JSONObject(string);
-        }
-        catch (JSONException e) {
-            PrefHelper.LogException("Unable to get URL query parameters as string: ", e);
+
+        if (!TextUtils.isEmpty(string) && !PrefHelper.NO_STRING_VALUE.equals(string)) {
+            try {
+                params = new JSONObject(string);
+            } catch (JSONException e) {
+                PrefHelper.Warning("Unable to get URL query parameters as string: " + e);
+            }
+        } else {
+            PrefHelper.Debug("No URL parameters found.");
         }
 
         return params;
@@ -982,31 +982,6 @@ public class PrefHelper {
         }
         setActions(new ArrayList<String>());
     }
-    
-    // REWARD TRACKING CALLS
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void setCreditCount(int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public void setCreditCount(String bucket, int count) { /* no-op */ }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCreditCount() { /* no-op */ return 0; }
-
-    /**
-     * @deprecated Referral feature has been deprecated. This is no-op.
-     */
-    @Deprecated
-    public int getCreditCount(String bucket) { /* no-op */ return 0; }
     
     // EVENT REFERRAL INSTALL CALLS
     

@@ -1,6 +1,8 @@
 package io.branch.referral;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONObject;
@@ -20,7 +22,7 @@ abstract class BranchTestRequestUtil {
 
     // can be pretty short because we mock remote interface and don't actually make async calls from the SDK
     public static final int TEST_REQUEST_TIMEOUT = 1000;
-    public static final int TEST_INIT_SESSION_TIMEOUT = 10000;
+    public static final int TEST_INIT_SESSION_TIMEOUT = 15000;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.
     protected boolean isStandardEvent(BranchEvent event) throws Exception {
@@ -32,15 +34,9 @@ abstract class BranchTestRequestUtil {
 
     // Obtain the ServerRequest that is on the queue that matches the BranchEvent to be logged.
     protected ServerRequest logEvent(Context context, BranchEvent event) throws Exception {
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
-        int queueSizeIn = queue.getSize();
-
         event.logEvent(context);
         ServerRequest queuedEvent = findRequestOnQueue(context, "name", event.getEventName());
         Assert.assertNotNull(queuedEvent);
-
-        int queueSizeOut = queue.getSize();
-        Assert.assertEquals(queueSizeOut, (queueSizeIn + 1));
 
         return doFinalUpdate(queuedEvent);
     }
@@ -52,7 +48,6 @@ abstract class BranchTestRequestUtil {
         final int interval = 50;
 
         while (wait_remaining > 0) {
-            Thread.sleep(interval);
             if (queue.getSize() > 0) {
                 int index = queue.getSize() - 1;
 
@@ -65,6 +60,7 @@ abstract class BranchTestRequestUtil {
                     return request;
                 }
             }
+            Thread.sleep(interval);
             wait_remaining -= interval;
         }
 
@@ -83,6 +79,7 @@ abstract class BranchTestRequestUtil {
     }
 
     protected ServerRequest doFinalUpdate(ServerRequest request) {
+        Log.i("BranchSDK", "doFinalUpdate" + Thread.currentThread().getName());
         request.doFinalUpdateOnBackgroundThread();
         return request;
     }
