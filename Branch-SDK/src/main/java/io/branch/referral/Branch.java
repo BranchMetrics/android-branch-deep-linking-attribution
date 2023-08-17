@@ -982,8 +982,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     installDeveloperId = userId;
                     prefHelper_.setIdentity(userId);
                 }
-                if (callback_ != null) {
-                    callback_.onInitFinished(branch.getFirstReferringParams(), null);
+                if (callback != null) {
+                    callback.onInitFinished(getFirstReferringParams(), null);
                 }
     }
 
