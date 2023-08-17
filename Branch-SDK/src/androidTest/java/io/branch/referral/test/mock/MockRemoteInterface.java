@@ -2,7 +2,6 @@ package io.branch.referral.test.mock;
 
 import static io.branch.referral.Defines.RequestPath.GetCPID;
 import static io.branch.referral.Defines.RequestPath.GetURL;
-import static io.branch.referral.Defines.RequestPath.IdentifyUser;
 import static io.branch.referral.Defines.RequestPath.QRCode;
 import static io.branch.referral.Defines.RequestPath.RegisterInstall;
 import static io.branch.referral.Defines.RequestPath.RegisterOpen;
@@ -48,8 +47,6 @@ public class MockRemoteInterface extends BranchRemoteInterface {
     public static String pathForSuccessResponse(String url) {
         if (url.contains(GetURL.getPath())) {
             return "{\"url\":\"https://bnc.lt/l/randomized_test_route_" + UUID.randomUUID().toString() + "\"}";
-        } else if (url.contains(IdentifyUser.getPath())) {
-            return "{\"session_id\":\"880938553235373649\",\"randomized_bundle_token\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24randomized_bundle_token=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"randomized_device_token\":\"867130134518497054\"}";
         } else if (url.contains(RegisterInstall.getPath()) || url.contains(RegisterOpen.getPath())) {
             return "{\"session_id\":\"880938553235373649\",\"randomized_bundle_token\":\"880938553226608667\",\"link\":\"https://branchster.test-app.link?%24randomized_bundle_token=880938553226608667\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"randomized_device_token\":\"867130134518497054\"}";
         } else if (url.contains(GetCPID.getPath())) {
