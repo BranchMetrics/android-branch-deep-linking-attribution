@@ -978,17 +978,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
             callback) {
-
-        installDeveloperId = userId;
-
-        ServerRequestIdentifyUserRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        } else {
-            if (req.isExistingID()) {
-                req.handleUserExist(branchReferral_);
-            }
-        }
+                if (userId != null && !userId.equals(prefHelper_.getIdentity())) {
+                    installDeveloperId = userId;
+                    prefHelper_.setIdentity(userId);
+                }
+                if (callback_ != null) {
+                    callback_.onInitFinished(branch.getFirstReferringParams(), null);
+                }
     }
 
     /**
@@ -2091,7 +2087,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
 
 
-            if (thisReq_ instanceof ServerRequestInitSession || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
+            if (thisReq_ instanceof ServerRequestInitSession) {
                 // If this request changes a session update the session-id to queued requests.
                 boolean updateRequestsInQueue = false;
                 if (!isTrackingDisabled() && respJson != null) {

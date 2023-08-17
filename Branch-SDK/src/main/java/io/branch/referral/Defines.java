@@ -255,7 +255,6 @@ public class Defines {
         RegisterInstall("v1/install"),
         RegisterOpen("v1/open"),
         CompletedAction("v1/event"),
-        IdentifyUser("v1/profile"),
         Logout("v1/logout"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),

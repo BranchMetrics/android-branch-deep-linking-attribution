@@ -283,7 +283,6 @@ public class BranchApiTests extends BranchTest {
                     public void onInitFinished(JSONObject referringParams, BranchError error) {
                         Assert.assertNull(error);
                         Assert.assertNotNull(referringParams);
-                        Assert.assertEquals(prefHelper.getRandomizedBundleToken(), "880938553226608667");
 
                         JSONObject installParams = branch.getFirstReferringParams();
                         try {
