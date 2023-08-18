@@ -48,7 +48,7 @@ jobs:
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
           echo $response
           parsed=$(echo $response | jq ".app_url")
-          echo "::add-mask::$parsed"
+          # echo "::add-mask::$parsed"
           echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
 
           
@@ -68,7 +68,7 @@ jobs:
           responseNew=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdkNewBuild/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
           echo $responseNew
           parsedNew=$(echo $responseNew | jq ".app_url")
-          echo "::add-mask::$parsedNew"
+          # echo "::add-mask::$parsedNew"
           echo "BrowserStackAndroidOldBuildKey=$parsedNew" >> "$GITHUB_ENV"
           
           
