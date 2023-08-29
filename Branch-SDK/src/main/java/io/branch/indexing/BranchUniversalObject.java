@@ -278,70 +278,7 @@ public class BranchUniversalObject implements Parcelable {
     public BranchUniversalObject setPrice(double price, CurrencyType currency) {
         return this;
     }
-    
-    /**
-     * <p>
-     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
-     * </p>
-     *
-     * @param action A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
-     *               NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT)} instead
-     */
-    public void userCompletedAction(String action) {
-        userCompletedAction(action, null);
-    }
-    
-    /**
-     * <p>
-     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
-     * </p>
-     *
-     * @param action A {@link BRANCH_STANDARD_EVENT }with value of user action name.  See {@link BRANCH_STANDARD_EVENT} for Branch defined user events.
-     */
-    public void userCompletedAction(BRANCH_STANDARD_EVENT action) {
-        userCompletedAction(action.getName(), null);
-    }
-    
-    /**
-     * <p>
-     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
-     * </p>
-     *
-     * @param action   A {@link String }with value of user action name.  See {@link BranchEvent} for Branch defined user events.
-     * @param metadata A HashMap containing any additional metadata need to add to this user event
-     *                 NOTE : please consider using {@link #userCompletedAction(BRANCH_STANDARD_EVENT, HashMap)} instead
-     */
-    public void userCompletedAction(String action, HashMap<String, String> metadata) {
-        JSONObject actionCompletedPayload = new JSONObject();
-        try {
-            JSONArray canonicalIDList = new JSONArray();
-            canonicalIDList.put(canonicalIdentifier_);
-            actionCompletedPayload.put(canonicalIdentifier_, convertToJson());
-            if (metadata != null) {
-                for (String key : metadata.keySet()) {
-                    actionCompletedPayload.put(key, metadata.get(key));
-                }
-            }
-            if (Branch.getInstance() != null) {
-                Branch.getInstance().userCompletedAction(action, actionCompletedPayload);
-            }
-        } catch (JSONException ignore) {
-        }
-    }
-    
-    /**
-     * <p>
-     * Method to report user actions happened on this BUO. Use this method to report the user actions for analytics purpose.
-     * </p>
-     *
-     * @param action   A {@link BRANCH_STANDARD_EVENT }with value of user action name.  See {@link BRANCH_STANDARD_EVENT} for Branch defined user events.
-     * @param metadata A HashMap containing any additional metadata need to add to this user event
-     */
-    @SuppressWarnings("deprecation")
-    public void userCompletedAction(BRANCH_STANDARD_EVENT action, HashMap<String, String> metadata) {
-        userCompletedAction(action.getName(), metadata);
-    }
-    
+
     /**
      * <p>
      * Specifies whether the contents referred by this object is publically indexable

@@ -30,7 +30,6 @@ public abstract class ServerRequest {
     private static final Defines.RequestPath[] initializationAndEventRoutes = new Defines.RequestPath[]{
             Defines.RequestPath.RegisterInstall,
             Defines.RequestPath.RegisterOpen,
-            Defines.RequestPath.CompletedAction,
             Defines.RequestPath.ContentEvent,
             Defines.RequestPath.TrackStandardEvent,
             Defines.RequestPath.TrackCustomEvent};
@@ -46,7 +45,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, FB_APP_LINK_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
+        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
     }
     
     // Set for holding any active wait locks
@@ -57,7 +56,6 @@ public abstract class ServerRequest {
     
     public enum BRANCH_API_VERSION {
         V1,
-        V1_CPID,
         V1_LATD,
         V2
     }
@@ -364,9 +362,7 @@ public abstract class ServerRequest {
     private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context, boolean initiatedByClient) {
         ServerRequest extendedReq = null;
         
-        if (requestPath.equalsIgnoreCase(Defines.RequestPath.CompletedAction.getPath())) {
-            extendedReq = new ServerRequestActionCompleted(Defines.RequestPath.CompletedAction, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
+        if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
