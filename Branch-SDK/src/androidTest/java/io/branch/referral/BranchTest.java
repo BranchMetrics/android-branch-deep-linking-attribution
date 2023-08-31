@@ -59,7 +59,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
 
     public void clearSharedPrefs(Context mContext) {
-        PrefHelper.Debug("clearSharedPrefs");
+        BranchLogger.v("clearSharedPrefs");
         // Clear the PrefHelper shared preferences
         SharedPreferences sharedPreferences = mContext.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -107,7 +107,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
-                        PrefHelper.Debug(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
+                        BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
                         Assert.assertNotNull(referringParams);
                         if (error != null) {
                             if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {

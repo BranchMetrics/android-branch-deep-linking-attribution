@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
@@ -545,7 +547,7 @@ public class BranchUniversalObject implements Parcelable {
             if (callback != null) {
                 callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
             } else {
-                PrefHelper.Debug("Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
+                BranchLogger.v("Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
             }
         } else {
             BranchShareSheetBuilder shareLinkBuilder = new BranchShareSheetBuilder(activity, getLinkBuilder(activity, linkProperties));
@@ -674,7 +676,8 @@ public class BranchUniversalObject implements Parcelable {
                     branchUniversalObject = createInstance(branchInstance.getLatestReferringParams());
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         return branchUniversalObject;
     }
@@ -730,7 +733,8 @@ public class BranchUniversalObject implements Parcelable {
                 branchUniversalObject.metadata_.addCustomMetadata(key, pendingJson.optString(key));
             }
             
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         return branchUniversalObject;
     }
@@ -781,7 +785,8 @@ public class BranchUniversalObject implements Parcelable {
             buoJsonModel.put(Defines.Jsonkey.LocallyIndexable.getKey(), isLocallyIndexable());
             buoJsonModel.put(Defines.Jsonkey.CreationTimestamp.getKey(), creationTimeStamp_);
             
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
         return buoJsonModel;
     }

@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -256,10 +257,12 @@ public abstract class ServerRequest {
                         instrumentationData.remove(key);
                     }
                     extendedPost.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
-                } catch (JSONException ignore) {
+                } catch (JSONException e) {
+                    BranchLogger.d(e.getMessage());
                 }
             }
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         } catch (ConcurrentModificationException ex) {
             extendedPost = params_;
         }
@@ -284,7 +287,8 @@ public abstract class ServerRequest {
     protected void addGetParam(String paramKey, String paramValue) {
         try {
             params_.put(paramKey, paramValue);
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
     }
     
@@ -342,7 +346,9 @@ public abstract class ServerRequest {
             if (json.has(INITIATED_BY_CLIENT)) {
                 initiatedByClient = json.getBoolean(INITIATED_BY_CLIENT);
             }
-        } catch (JSONException ignored) { }
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
         
         if (!TextUtils.isEmpty(requestPath)) {
             return getExtendedServerRequest(requestPath, post, context, initiatedByClient);
@@ -422,7 +428,9 @@ public abstract class ServerRequest {
                     }
                 }
             }
-        } catch (JSONException ignored) {}
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
     }
 
     private void updateAdvertisingIdsObject(@NonNull String aid) {
@@ -439,7 +447,9 @@ public abstract class ServerRequest {
 
             JSONObject advertisingIdsObject = new JSONObject().put(key, aid);
             params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
-        } catch (JSONException ignored) {}
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
     }
 
     /**
@@ -481,8 +491,9 @@ public abstract class ServerRequest {
                 try {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
                     userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
-                } catch (JSONException ignore) {
-                }
+                } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
+            }
             }
         }
     }
@@ -521,7 +532,7 @@ public abstract class ServerRequest {
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
-           PrefHelper.Debug("Could not merge metadata, ignoring user metadata.");
+           BranchLogger.v("Could not merge metadata, ignoring user metadata.");
         }
     }
     
@@ -535,8 +546,9 @@ public abstract class ServerRequest {
             if (isLimitFacebookTracking) {
                 try {
                     updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
-                } catch (JSONException ignore) {
-                }
+                } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
+            }
             }
         }
     }
@@ -548,7 +560,8 @@ public abstract class ServerRequest {
             if (disableAdNetworkCallouts) {
                 try {
                     updateJson.putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
-                } catch (JSONException ignore) {
+                } catch (JSONException e) {
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }
@@ -606,7 +619,7 @@ public abstract class ServerRequest {
         boolean permissionGranted = (result == PackageManager.PERMISSION_GRANTED);
 
         if (!permissionGranted) {
-            PrefHelper.Debug("Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
+            BranchLogger.v("Trouble executing your request. Please add 'android.permission.INTERNET' in your applications manifest file");
         }
 
         return result == PackageManager.PERMISSION_GRANTED;
@@ -697,7 +710,8 @@ public abstract class ServerRequest {
             } else {
                 post.put(Defines.Jsonkey.Environment.getKey(), environment);
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
     }
 

@@ -7,7 +7,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import android.text.TextUtils;
-import android.util.Log;
 import android.webkit.URLUtil;
 
 import org.json.JSONException;
@@ -721,10 +720,10 @@ public class PrefHelper {
             try {
                 params = new JSONObject(string);
             } catch (JSONException e) {
-                PrefHelper.Warning("Unable to get URL query parameters as string: " + e);
+                BranchLogger.w("Unable to get URL query parameters as string: " + e);
             }
         } else {
-            PrefHelper.Debug("No URL parameters found.");
+            BranchLogger.d("No URL parameters found.");
         }
 
         return params;
@@ -963,7 +962,7 @@ public class PrefHelper {
         }
         setActions(new ArrayList<String>());
     }
-    
+
     // EVENT REFERRAL INSTALL CALLS
     
     private ArrayList<String> getActions() {
@@ -1287,7 +1286,8 @@ public class PrefHelper {
         }
         try {
             installMetadata.putOpt(key, value);
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -1303,7 +1303,8 @@ public class PrefHelper {
 
         try {
            return this.installMetadata.get(key).toString();
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
             return null;
         }
     }
@@ -1320,37 +1321,9 @@ public class PrefHelper {
     boolean shouldAddModules () {
         try {
             return secondaryRequestMetadata.length() != 0;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
             return false;
-        }
-    }
-
-    /**
-     * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
-     *
-     * @param message A {@link String} value containing the debug message to record.
-     */
-    public static void Debug(String message) {
-        if (enableLogging_ && !TextUtils.isEmpty(message)) {
-            Log.i(TAG, message);
-        }
-    }
-
-    public static void Warning(String message) {
-        if (!TextUtils.isEmpty(message)) {
-            Log.w(TAG, message);
-        }
-    }
-
-    public static void LogException(String message, Exception t) {
-        if (!TextUtils.isEmpty(message)) {
-            Log.e(TAG, message, t);
-        }
-    }
-
-    public static void LogAlways(String message) {
-        if (!TextUtils.isEmpty(message)) {
-            Log.i(TAG, message);
         }
     }
 

@@ -9,7 +9,7 @@ import static io.branch.referral.Defines.RequestPath.RegisterOpen;
 import org.json.JSONObject;
 
 import java.util.UUID;
-
+import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchTest;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.network.BranchRemoteInterface;
@@ -29,7 +29,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        PrefHelper.Debug(TAG + ", doRestfulGet, url: " + url);
+        BranchLogger.v(TAG + ", doRestfulGet, url: " + url);
         return new BranchResponse(pathForSuccessResponse(url), 200);
     }
 
@@ -40,7 +40,7 @@ public class MockRemoteInterface extends BranchRemoteInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        PrefHelper.Debug(TAG + ", doRestfulPost, url: " + url + ", payload: " + payload);
+        BranchLogger.v(TAG + ", doRestfulPost, url: " + url + ", payload: " + payload);
         return new BranchResponse(pathForSuccessResponse(url), 200);
     }
 

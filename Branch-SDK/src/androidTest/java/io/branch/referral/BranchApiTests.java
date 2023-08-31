@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -157,7 +158,7 @@ public class BranchApiTests extends BranchTest {
                         .getShortUrl();
 
                 Assert.assertNotNull(linkedinUrl);
-                PrefHelper.Debug("linkedinUrl: " + linkedinUrl + ", urlFB.val: " + urlFB.val);
+                BranchLogger.v("linkedinUrl: " + linkedinUrl + ", urlFB.val: " + urlFB.val);
                 Assert.assertNotEquals(linkedinUrl, urlFB.val);
             }
         });
@@ -262,7 +263,8 @@ public class BranchApiTests extends BranchTest {
                         try {
                             Assert.assertEquals(installParams.getString("name"), "test name");
                             Assert.assertEquals(installParams.getString("message"), "hello there with short url");
-                        } catch (JSONException ignore) {
+                        } catch (JSONException e) {
+                            BranchLogger.d(e.getMessage());
                         }
 
                         signal.countDown();
@@ -283,7 +285,7 @@ public class BranchApiTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                PrefHelper.Debug("benas after init session = " + (now - System.currentTimeMillis()));
+                BranchLogger.v("benas after init session = " + (now - System.currentTimeMillis()));
                 final CountDownLatch signalFinal = new CountDownLatch(1);
                 final CountDownLatch signal = new CountDownLatch(1);
                 final int reps = 20;
@@ -294,11 +296,11 @@ public class BranchApiTests extends BranchTest {
                             .generateShortUrl(new BranchLinkCreateListener() {
                                 @Override
                                 public void onLinkCreate(String url, BranchError error) {
-                                    PrefHelper.Debug("benas callback " + callbackInvocations.get() + ": " + (now - System.currentTimeMillis()));
-                                    PrefHelper.Debug("url = " + url + ", error = " + error);
+                                    BranchLogger.v("benas callback " + callbackInvocations.get() + ": " + (now - System.currentTimeMillis()));
+                                    BranchLogger.v("url = " + url + ", error = " + error);
                                     Assert.assertNull(error);
                                     Assert.assertNotNull(url);
-                                    PrefHelper.Debug("idx = " + callbackInvocations.get());
+                                    BranchLogger.v("idx = " + callbackInvocations.get());
                                     if (callbackInvocations.getAndIncrement() == reps - 1) {
                                         signal.countDown();
                                     }

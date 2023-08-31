@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.jar.JarFile;
 
 /**
@@ -77,7 +78,7 @@ public class BranchUtil {
                 Resources resources = context.getResources();
                 result = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
             }
-        } catch (Exception ignore) { // Extending catch to trap any exception to handle a rare dead object scenario
+        } catch (Exception e) { // Extending catch to trap any exception to handle a rare dead object scenario
         }
         return result;
     }
@@ -101,7 +102,9 @@ public class BranchUtil {
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
             }
-        } catch (final PackageManager.NameNotFoundException ignore) { }
+        } catch (final PackageManager.NameNotFoundException e) {
+            BranchLogger.d(e.getMessage());
+        }
         if (branchKey != null) return branchKey;
 
         // check string resources as the last resort
@@ -157,7 +160,9 @@ public class BranchUtil {
                 return context.getResources().getString(resourceId);
             }
         }
-        catch (Exception ignored) { }
+        catch (Exception e) {
+            BranchLogger.d(e.getMessage());
+        }
         return null;
     }
 
@@ -168,7 +173,8 @@ public class BranchUtil {
             JSONObject tempJsonObj = new JSONObject();
             try {
                 tempJsonObj = new JSONObject(jsonObject.toString());
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
             this.jsonObject = tempJsonObj;
         }
@@ -299,8 +305,9 @@ public class BranchUtil {
                 //noinspection ResultOfMethodCallIgnored
                 is.read(xml);
                 obj = new ApkParser().decompressXMLForValidator(xml, context);
-            } catch (Exception ignored) {
-            } finally {
+            } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
+        } finally {
                 try {
                     if (is != null) {
                         is.close();
@@ -310,7 +317,8 @@ public class BranchUtil {
                     if (jf != null) {
                         jf.close();
                     }
-                } catch (IOException ignored) {
+                } catch (IOException e) {
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }

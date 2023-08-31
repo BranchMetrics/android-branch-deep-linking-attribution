@@ -10,6 +10,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -66,9 +68,12 @@ class BranchPreinstall {
                     } else {
                         throw new FileNotFoundException();
                     }
-                } catch (FileNotFoundException ignore) {
-                } catch (IOException ignore) {
-                } catch (JSONException ignore) {
+                } catch (FileNotFoundException e) {
+                    BranchLogger.d(e.getMessage());
+                } catch (IOException e) {
+                    BranchLogger.d(e.getMessage());
+                } catch (JSONException e) {
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }).start();
@@ -111,7 +116,8 @@ class BranchPreinstall {
                         }
                     }
                 }
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
     }

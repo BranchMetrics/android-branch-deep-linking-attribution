@@ -3,7 +3,6 @@ package io.branch.referral;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.UiModeManager;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -14,7 +13,6 @@ import android.hardware.display.DisplayManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -31,8 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.UI_MODE_SERVICE;
 
@@ -109,7 +105,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 packageName = packageInfo.packageName;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining PackageName", e);
+                BranchLogger.logException("Error obtaining PackageName", e);
             }
         }
         return packageName;
@@ -127,7 +123,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 appVersion = packageInfo.versionName;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining AppVersion", e);
+                BranchLogger.logException("Error obtaining AppVersion", e);
             }
         }
         return (TextUtils.isEmpty(appVersion) ? BLANK : appVersion);
@@ -145,7 +141,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 firstTime = packageInfo.firstInstallTime;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining FirstInstallTime", e);
+                BranchLogger.logException("Error obtaining FirstInstallTime", e);
             }
         }
 
@@ -170,7 +166,7 @@ abstract class SystemObserver {
 
                 isInstalled = (!list.isEmpty());
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining PackageInfo", e);
+                BranchLogger.logException("Error obtaining PackageInfo", e);
             }
         }
 
@@ -189,7 +185,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 lastTime = packageInfo.lastUpdateTime;
             } catch (Exception e) {
-                PrefHelper.LogException("Error obtaining LastUpdateTime", e);
+                BranchLogger.logException("Error obtaining LastUpdateTime", e);
             }
         }
 
@@ -487,7 +483,7 @@ abstract class SystemObserver {
                             setGAID(aid);
                         }
                         catch (Exception e) {
-                            PrefHelper.Debug("Error in continuation: " + e);
+                            BranchLogger.d("Error in continuation: " + e);
                         }
                         finally {
                             if (callback != null) {
@@ -503,7 +499,7 @@ abstract class SystemObserver {
                 callback.onAdsParamsFetchFinished();
             }
 
-            PrefHelper.Debug("Huawei advertising service not found. " +
+            BranchLogger.v("Huawei advertising service not found. " +
                     "If not expected, import " + DependencyUtilsKt.huaweiAdvertisingIdClientClass + " into your gradle dependencies");
         }
     }
@@ -536,7 +532,7 @@ abstract class SystemObserver {
                             setGAID(aid);
                         }
                         catch (Exception e) {
-                            PrefHelper.Debug("Error in continuation: " + e);
+                            BranchLogger.d("Error in continuation: " + e);
                         }
                         finally {
                             if (callback != null) {
@@ -552,13 +548,13 @@ abstract class SystemObserver {
                 callback.onAdsParamsFetchFinished();
             }
 
-            PrefHelper.Debug("Play Store advertising service not found. " +
+            BranchLogger.v("Play Store advertising service not found. " +
                     "If not expected, import " + DependencyUtilsKt.playStoreAdvertisingIdClientClass + " into your gradle dependencies");
         }
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
-        PrefHelper.Debug("setFireAdId");
+        BranchLogger.v("setFireAdId");
         AdvertisingIdsKt.getAmazonFireAdvertisingInfoObject(context, new Continuation<Pair<? extends Integer, ? extends String>>() {
             @NonNull
             @Override
@@ -581,7 +577,7 @@ abstract class SystemObserver {
                     }
                 }
                 catch (Exception e){
-                    PrefHelper.Debug("Error in continuation: " + e);
+                    BranchLogger.d("Error in continuation: " + e);
                 }
                 finally {
                     if (callback != null) {
@@ -611,7 +607,7 @@ abstract class SystemObserver {
             });
         }
         catch(Exception e){
-            PrefHelper.Debug(e.getMessage());
+            BranchLogger.d(e.getMessage());
         }
         finally {
             if(callback != null){
@@ -647,7 +643,9 @@ abstract class SystemObserver {
                     }
                 }
             }
-        } catch (Exception ignore) { }
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
+        }
 
         return ipAddress;
     }

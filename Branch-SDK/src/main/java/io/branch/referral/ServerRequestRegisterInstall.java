@@ -6,6 +6,8 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * * <p>
  * The server request for registering an app install to Branch API. Handles request creation and execution.
@@ -50,8 +52,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (!AppStoreReferrer.getInstallationID().equals(PrefHelper.NO_STRING_VALUE)) {
                 getPost().put(Defines.Jsonkey.LinkClickID.getKey(), AppStoreReferrer.getInstallationID());
             }
-        } catch (JSONException ignore) {
-        
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
     }
     
