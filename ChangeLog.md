@@ -1,4 +1,13 @@
 # Branch Android SDK change log
+- v5.7.0
+  * _*Master Release*_ - Sep 1, 2023
+    - SDK internal logging behavior has changed. Messages will now be sent through standard channels (`ERROR`, `WARN`, `INFO`, `DEBUG`, `VERBOSE`). Before, nearly all logs were sent to `INFO`.
+    - Fixed a minification warning-as-failure thrown by the non-inclusion of the GAID library.
+    - Removal of
+      - `enableFacebookAppLinkCheck`
+      - `getCrossPlatformIds`
+      - `userCompletedAction`
+      - `sendCommerceEvent`
 - v5.6.4
   * _*Master Release*_ - Aug 11, 2023
     - Bug fix: Added proguard policy to not break minification builds because of newly added compile only classes.
