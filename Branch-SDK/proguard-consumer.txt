@@ -3,3 +3,5 @@
 
 -dontwarn com.miui.referrer.**
 -dontwarn com.samsung.android.sdk.sinstallreferrer.**
+
+-dontwarn com.google.android.gms.**
