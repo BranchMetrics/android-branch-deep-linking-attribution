@@ -304,8 +304,7 @@ public class Branch {
     private static boolean enableInstantDeepLinking = false;
     private final TrackingController trackingController;
 
-    /** Variables for reporting plugin type and version (some TUNE customers do that), plus helps
-     * us make data driven decisions. */
+    // Variables for reporting plugin type and version, plus helps us make data driven decisions.
     private static String pluginVersion = null;
     private static String pluginName = null;
 
