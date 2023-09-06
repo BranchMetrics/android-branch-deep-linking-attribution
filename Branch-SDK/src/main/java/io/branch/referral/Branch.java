@@ -37,7 +37,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +48,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.branch.coroutines.InstallReferrersKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -59,10 +57,6 @@ import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
-import kotlin.Unit;
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -80,7 +74,7 @@ import kotlin.coroutines.EmptyCoroutineContext;
  * -->
  */
 
-public class Branch implements BranchViewHandler.IBranchViewEvents {
+public class Branch {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
@@ -210,9 +204,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     private JSONObject deeplinkDebugParams_;
     
     private static boolean disableDeviceIDFetch_;
-    
-    private boolean enableFacebookAppLinkCheck_ = false;
-    
+
     static boolean bypassWaitingForIntent_ = false;
     
     private static boolean bypassCurrentActivityIntentState_ = false;
@@ -348,20 +340,20 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     synchronized public static Branch getInstance() {
         if (branchReferral_ == null) {
-            PrefHelper.Debug("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
+            BranchLogger.v("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
         }
         return branchReferral_;
     }
 
     synchronized private static Branch initBranchSDK(@NonNull Context context, String branchKey) {
         if (branchReferral_ != null) {
-            PrefHelper.Debug("Warning, attempted to reinitialize Branch SDK singleton!");
+            BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
             return branchReferral_;
         }
         branchReferral_ = new Branch(context.getApplicationContext());
 
         if (TextUtils.isEmpty(branchKey)) {
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's Manifest file!");
+            BranchLogger.w("Warning: Please enter your branch_key in your project's Manifest file!");
             branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
@@ -429,7 +421,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
-                PrefHelper.Debug("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
+                BranchLogger.w("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
                 branchKey = BranchUtil.readBranchKey(context);
             }
             branchReferral_ = initBranchSDK(context, branchKey);
@@ -475,7 +467,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      */
     public static void enableTestMode() {
         BranchUtil.setTestMode(true);
-        PrefHelper.LogAlways("enableTestMode has been changed. It now uses the test key but will not" +
+        BranchLogger.logAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
                 " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
@@ -551,7 +543,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     public boolean isTrackingDisabled() {
         return trackingController.isTrackingDisabled();
     }
-    
+
     /**
      * <p>
      * Disables or enables the instant deep link functionality.
@@ -570,7 +562,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
-        // BranchViewHandler.shutDown();
         // DeepLinkRoutingValidator.shutDown();
         // GooglePlayStoreAttribution.shutDown();
         // InstantAppUtil.shutDown();
@@ -718,16 +709,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     public void disableAppList() {
         // Do nothing
     }
-    
-    /**
-     * <p>
-     * Enable Facebook app link check operation during Branch initialisation.
-     * </p>
-     */
-    public void enableFacebookAppLinkCheck() {
-        enableFacebookAppLinkCheck_ = true;
-    }
-    
+
     /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
      *
@@ -992,19 +974,6 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     }
 
     /**
-     * Gets all available cross platform ids.
-     *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetCPID.BranchCrossPlatformIdListener}
-     *                to callback with cross platform ids
-     *
-     */
-    public void getCrossPlatformIds(@NonNull ServerRequestGetCPID.BranchCrossPlatformIdListener callback) {
-        if (context_ != null) {
-            handleNewRequest(new ServerRequestGetCPID(context_, callback));
-        }
-    }
-
-    /**
      * Gets the available last attributed touch data. The attribution window is set to the value last
      * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
      * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
@@ -1072,106 +1041,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             callback.onLogoutFinished(true, null);
         }
     }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
-     *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
-     *                 user action that has just been completed.
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata) {
-        userCompletedAction(action, metadata, null);
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API.</p>
-     *
-     * @param action A {@link String} value to be passed as an action that the user has carried
-     *               out. For example "registered" or "logged in".
-     * @deprecated   Please use {@link BranchEvent} for your event tracking use cases.
-     *               You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
-     *               Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(final String action) {
-        userCompletedAction(action, null, null);
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API.</p>
-     *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(final String action, BranchViewHandler.
-            IBranchViewEvents callback) {
-        userCompletedAction(action, null, callback);
-    }
-    
-    /**
-     * <p>A void call to indicate that the user has performed a specific action and for that to be
-     * reported to the Branch API, with additional app-defined meta data to go along with that action.</p>
-     *
-     * @param action   A {@link String} value to be passed as an action that the user has carried
-     *                 out. For example "registered" or "logged in".
-     * @param metadata A {@link JSONObject} containing app-defined meta-data to be attached to a
-     *                 user action that has just been completed.
-     * @param callback instance of {@link BranchViewHandler.IBranchViewEvents} to listen Branch view events
-     * @deprecated     Please use {@link BranchEvent} for your event tracking use cases.
-     *                 You can refer to <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce, 
-     *                 Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void userCompletedAction(@NonNull final String action, JSONObject metadata,
-                                    BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'userCompletedAction' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
-        ServerRequest req = new ServerRequestActionCompleted(context_,
-                action, null, metadata, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-    
-    /**
-     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
-     *              Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent, JSONObject metadata,
-                                  BranchViewHandler.IBranchViewEvents callback) {
-        PrefHelper.LogAlways("'sendCommerceEvent' has been deprecated. Please use BranchEvent for your event tracking use cases.You can refer to  https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events for additional information.");
-        ServerRequest req = new ServerRequestActionCompleted(context_,
-                BRANCH_STANDARD_EVENT.PURCHASE.getName(), commerceEvent, metadata, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            handleNewRequest(req);
-        }
-    }
-    
-    /**
-     * @deprecated  Please use {@link BranchEvent} for your event tracking use cases.You can refer to
-     *              <a href="https://help.branch.io/developers-hub/docs/tracking-commerce-content-lifecycle-and-custom-events">Track Commerce,
-     *              Content, Lifecycle and Custom Events</a> for additional information.
-     */
-    @Deprecated
-    public void sendCommerceEvent(@NonNull CommerceEvent commerceEvent) {
-        sendCommerceEvent(commerceEvent, null, null);
-    }
-    
+
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
@@ -1307,7 +1177,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         try {
             if (originalParams != null && deeplinkDebugParams_ != null) {
                 if (deeplinkDebugParams_.length() > 0) {
-                    PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+                    BranchLogger.v("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
                 }
                 Iterator<String> keys = deeplinkDebugParams_.keys();
                 while (keys.hasNext()) {
@@ -1315,14 +1185,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     originalParams.put(key, deeplinkDebugParams_.get(key));
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         return originalParams;
     }
     
     public JSONObject getDeeplinkDebugParams() {
         if (deeplinkDebugParams_ != null && deeplinkDebugParams_.length() > 0) {
-            PrefHelper.Debug("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+            BranchLogger.v("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
         }
         return deeplinkDebugParams_;
     }
@@ -1391,7 +1262,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         try {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
             response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            BranchLogger.d(e.getMessage());
         }
         String url = null;
         if (req.isDefaultToLongUrl()) {
@@ -1437,11 +1309,11 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
+                    BranchLogger.v("processNextQueueItem, req " + req.getClass().getSimpleName());
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            PrefHelper.Debug("Branch Error: User session has not been initialized!");
+                            BranchLogger.v("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
                             req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         }
@@ -1606,33 +1478,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             if (initRequest.callback_ != null) {
                 initRequest.callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
             }
-            PrefHelper.Debug("Warning: Please enter your branch_key in your project's manifest");
+            BranchLogger.w("Warning: Please enter your branch_key in your project's manifest");
             return;
         } else if (isTestModeEnabled()) {
-            PrefHelper.Debug("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
-        }
-
-        if (initState_ == SESSION_STATE.UNINITIALISED && getSessionReferredLink() == null && enableFacebookAppLinkCheck_) {
-            // Check if opened by facebook with deferred install data
-            boolean appLinkRqSucceeded = DeferredAppLinkDataHandler.fetchDeferredAppLinkData(
-                    context_, new DeferredAppLinkDataHandler.AppLinkFetchEvents() {
-                @Override
-                public void onAppLinkFetchFinished(String nativeAppLinkUrl) {
-                    prefHelper_.setIsAppLinkTriggeredInit(true); // callback returns when app link fetch finishes with success or failure. Report app link checked in both cases
-                    if (nativeAppLinkUrl != null) {
-                        Uri appLinkUri = Uri.parse(nativeAppLinkUrl);
-                        String bncLinkClickId = appLinkUri.getQueryParameter(Defines.Jsonkey.LinkClickID.getKey());
-                        if (!TextUtils.isEmpty(bncLinkClickId)) {
-                            prefHelper_.setLinkClickIdentifier(bncLinkClickId);
-                        }
-                    }
-                    requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
-                    processNextQueueItem();
-                }
-            });
-            if (appLinkRqSucceeded) {
-                initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.FB_APP_LINK_WAIT_LOCK);
-            }
+            BranchLogger.w("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
         if (delay > 0) {
@@ -1702,7 +1551,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     @Override
                     public void onInstallReferrersFinished() {
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        PrefHelper.Debug("calling processNextQueueItem from onInstallReferrersFinished");
+                        BranchLogger.v("calling processNextQueueItem from onInstallReferrersFinished");
                         processNextQueueItem();
                     }
                 });
@@ -1751,17 +1600,17 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
-        PrefHelper.Debug("handleNewRequest " + req);
+        BranchLogger.v("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (trackingController.isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
-            PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
+            BranchLogger.v("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
             req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (initState_ != SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if (requestNeedsSession(req)) {
-                PrefHelper.Debug("handleNewRequest " + req + " needs a session");
+                BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
         }
@@ -1790,7 +1639,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
         } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
             isActivityLifeCycleCallbackRegistered_ = false;
             /* LifeCycleEvents are  available only from API level 14. */
-            PrefHelper.Debug(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+            BranchLogger.v(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
         }
     }
 
@@ -1976,7 +1825,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
     }
-    
+
     /**
      * Async Task to create  a short link for synchronous methods
      */
@@ -2118,9 +1967,10 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
                     setInitState(Branch.SESSION_STATE.INITIALISED);
-                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                        checkForAutoDeepLinkConfiguration();
-                    }
+
+                    //TODO:Since the check was removed, should this be deleted or always happen?
+                    checkForAutoDeepLinkConfiguration();
+
                     // Count down the latch holding getLatestReferringParamsSync
                     if (getLatestReferringParamsLatch != null) {
                         getLatestReferringParamsLatch.countDown();
@@ -2242,13 +2092,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
                 } else {
                     // This case should not happen. Adding a safe handling for any corner case
-                    PrefHelper.Debug("No activity reference to launch deep linked activity");
+                    BranchLogger.v("No activity reference to launch deep linked activity");
                 }
             }
         } catch (final PackageManager.NameNotFoundException e) {
-            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct!");
+            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct!");
         } catch (ClassNotFoundException e) {
-            PrefHelper.Debug("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
+            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
         } catch (Exception ignore) {
             // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
         }
@@ -2274,7 +2124,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
                 deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
             }
-        } catch (JSONException ignored) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
         if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
             String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
@@ -2309,15 +2160,15 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
-        PrefHelper.LogAlways(GOOGLE_VERSION_TAG);
-        PrefHelper.enableLogging(true);
+        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
+        BranchLogger.setLoggingEnabled(true);
     }
 
     /**
      * Disable Logging, independent of Debug Mode.
      */
     public static void disableLogging() {
-        PrefHelper.enableLogging(false);
+        BranchLogger.setLoggingEnabled(false);
     }
 
     /**
@@ -2405,52 +2256,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
     public void addExtraInstrumentationData(String key, String value) {
         instrumentationExtraData_.put(key, value);
     }
-    
-    
-    //-------------------- Branch view handling--------------------//
-    
-    
-    @Override
-    public void onBranchViewVisible(String action, String branchViewID) {
-        //No Implementation on purpose
-    }
-    
-    @Override
-    public void onBranchViewAccepted(String action, String branchViewID) {
-        if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
-        }
-    }
-    
-    @Override
-    public void onBranchViewCancelled(String action, String branchViewID) {
-        if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
-        }
-    }
-    
-    @Override
-    public void onBranchViewError(int errorCode, String errorMsg, String action) {
-        if (ServerRequestInitSession.isInitSessionAction(action)) {
-            checkForAutoDeepLinkConfiguration();
-        }
-    }
-    
-    /**
-     * Interface for defining optional Branch view behaviour for Activities
-     */
-    public interface IBranchViewControl {
-        /**
-         * Defines if an activity is interested to show Branch views or not.
-         * By default activities are considered as Branch view enabled. In case of activities which are not interested to show a Branch view (Splash screen for example)
-         * should implement this and return false. The pending Branch view will be shown with the very next Branch view enabled activity
-         *
-         * @return A {@link Boolean} whose value is true if the activity don't want to show any Branch view.
-         */
-        boolean skipBranchViewsOnThisActivity();
-    }
-    
-    
+
     ///----------------- Instant App  support--------------------------//
     
     /**
@@ -2568,7 +2374,9 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 prefHelper_.setSessionParams(branchDataJson.toString());
                 isInstantDeepLinkPossible = true;
             }
-        } catch (JSONException ignored) {}
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
     }
 
     private void extractAppLink(Uri data, Activity activity) {
@@ -2615,7 +2423,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             activity.getIntent().setData(uriWithoutClickID);
             activity.getIntent().putExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), true);
             return true;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
             return false;
         }
     }
@@ -2644,7 +2453,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                     }
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         return false;
     }
@@ -2672,7 +2482,8 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
 
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -2799,18 +2610,18 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
          * and configuration variables, then initializes session.</p>
          */
         public void init() {
-            PrefHelper.Debug("Beginning session initialization");
-            PrefHelper.Debug("Session uri is " + uri);
+            BranchLogger.v("Beginning session initialization");
+            BranchLogger.v("Session uri is " + uri);
 
             if(deferInitForPluginRuntime){
-                PrefHelper.Debug("Session init is deferred until signaled by plugin.");
+                BranchLogger.v("Session init is deferred until signaled by plugin.");
                 cacheSessionBuilder(this);
                 return;
             }
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                PrefHelper.LogAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                BranchLogger.logAlways("Branch is not setup properly, make sure to call getAutoInstance" +
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
@@ -2861,13 +2672,13 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            PrefHelper.Debug("Creating " + initRequest + " from init");
+            BranchLogger.d("Creating " + initRequest + " from init");
             branch.initializeSession(initRequest, delay);
         }
 
         private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
             Branch.getInstance().deferredSessionBuilder = this;
-            PrefHelper.Debug("Session initialization deferred until plugin invokes notifyNativeToInit()" +
+            BranchLogger.v("Session initialization deferred until plugin invokes notifyNativeToInit()" +
                     "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
                     "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
                     "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
@@ -2937,7 +2748,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * @param isDeferred
      */
     static void deferInitForPluginRuntime(boolean isDeferred){
-        PrefHelper.Debug("deferInitForPluginRuntime " + isDeferred);
+        BranchLogger.v("deferInitForPluginRuntime " + isDeferred);
 
         deferInitForPluginRuntime = isDeferred;
         if(isDeferred){
@@ -2950,7 +2761,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
      * Only invokes the last session built
      */
     public static void notifyNativeToInit(){
-        PrefHelper.Debug("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
+        BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
         SESSION_STATE sessionState = Branch.getInstance().getInitState();
         if(sessionState == SESSION_STATE.UNINITIALISED) {
@@ -2960,7 +2771,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
             }
         }
         else {
-            PrefHelper.Debug("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
+            BranchLogger.v("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
         }
     }
 
@@ -2970,7 +2781,7 @@ public class Branch implements BranchViewHandler.IBranchViewEvents {
                 if (succeeded) {
                     BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
                 } else {
-                    PrefHelper.LogException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                    BranchLogger.logException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
                 }
                 return null;
             });

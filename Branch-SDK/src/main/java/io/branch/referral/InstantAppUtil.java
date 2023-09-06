@@ -67,10 +67,10 @@ class InstantAppUtil {
     @SuppressWarnings("ConstantConditions")
     static boolean doShowInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
         if (activity == null) {
-            PrefHelper.Debug("Unable to show install prompt. Activity is null");
+            BranchLogger.v("Unable to show install prompt. Activity is null");
             return false;
         } else if (!isInstantApp(activity)) {
-            PrefHelper.Debug("Unable to show install prompt. Application is not an instant app");
+            BranchLogger.v("Unable to show install prompt. Application is not an instant app");
             return false;
         } else {
             Intent intent = (new Intent("android.intent.action.VIEW")).setPackage("com.android.vending").addCategory("android.intent.category.DEFAULT")

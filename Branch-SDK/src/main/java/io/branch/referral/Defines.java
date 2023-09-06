@@ -21,7 +21,6 @@ public class Defines {
         ReferrerGclid("referrer_gclid"), //Key APIOpen expects for gclid in event
         ReferringUrlQueryParameters("bnc_referringUrlQueryParameters"),
         InstallBeginTimeStamp("install_begin_ts"),
-        FaceBookAppLinkChecked("facebook_app_link_checked"),
         @Deprecated BranchLinkUsed("branch_used"),          //use Defines.IntentKeys.BranchLinkUsed
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),
@@ -135,14 +134,7 @@ public class Defines {
         Branch_Instrumentation("instrumentation"),
         Queue_Wait_Time("qwt"),
         InstantDeepLinkSession("instant_dl_session"),
-        
-        BranchViewData("branch_view_data"),
-        BranchViewID("id"),
-        BranchViewAction("action"),
-        BranchViewNumOfUse("number_of_use"),
-        BranchViewUrl("url"),
-        BranchViewHtml("html"),
-        
+
         Path("path"),
         ViewList("view_list"),
         ContentActionView("view"),
@@ -254,12 +246,10 @@ public class Defines {
         GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterOpen("v1/open"),
-        CompletedAction("v1/event"),
         IdentifyUser("v1/profile"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
-        GetCPID("v1/cpid"),
         GetLATD("v1/cpid/latd"),
         QRCode("v1/qr-code");
 

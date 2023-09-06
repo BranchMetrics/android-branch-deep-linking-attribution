@@ -70,7 +70,7 @@ public class AppStoreReferrer {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
-                PrefHelper.Debug("Illegal characters in url encoded string");
+                BranchLogger.v("Illegal characters in url encoded string");
             }
         }
     }

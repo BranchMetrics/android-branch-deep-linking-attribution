@@ -29,7 +29,7 @@ public class BranchPartnerParameters {
         if (isSha256Hashed(value)) {
             addParameterWithName(key, value, "fb");
         } else {
-            PrefHelper.Debug("Invalid partner parameter passed. Value must be a SHA 256 hash.");
+            BranchLogger.w("Invalid partner parameter passed. Value must be a SHA 256 hash.");
         }
     }
 
@@ -37,7 +37,7 @@ public class BranchPartnerParameters {
         if (isSha256Hashed(value)) {
             addParameterWithName(key, value, "snap");
         } else {
-            PrefHelper.Debug("Invalid partner parameter passed. Value must be a SHA 256 hash.");
+            BranchLogger.w("Invalid partner parameter passed. Value must be a SHA 256 hash.");
         }
     }
 

@@ -19,6 +19,7 @@ import static android.content.Context.UI_MODE_SERVICE;
 import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * <p>
@@ -110,7 +111,9 @@ class DeviceInfo {
             if ((!TextUtils.isEmpty(localIpAddr))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
-        } catch (JSONException ignore) { }
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
     }
 
     /**
@@ -121,7 +124,7 @@ class DeviceInfo {
     boolean isTV() {
         UiModeManager uiModeManager = (UiModeManager) context_.getSystemService(UI_MODE_SERVICE);
         if (uiModeManager == null) {
-            PrefHelper.Debug("uiModeManager is null, mark this as a non-TV device by default.");
+            BranchLogger.v("uiModeManager is null, mark this as a non-TV device by default.");
             return false;
         }
         return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
@@ -214,7 +217,9 @@ class DeviceInfo {
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
 
-        } catch (JSONException ignore) { }
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
     }
 
     private void maybeAddTuneFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {
@@ -295,11 +300,11 @@ class DeviceInfo {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             try {
-                PrefHelper.Debug("Retrieving user agent string from WebSettings");
+                BranchLogger.v("Retrieving user agent string from WebSettings");
                 Branch._userAgentString = WebSettings.getDefaultUserAgent(context);
             }
             catch (Exception exception) {
-                PrefHelper.Debug(exception.getMessage());
+                BranchLogger.v(exception.getMessage());
                 // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
                 // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
             }
@@ -323,13 +328,13 @@ class DeviceInfo {
             @Override
             public void run() {
                 try {
-                    PrefHelper.Debug("Running WebView initialization for user agent on thread " + Thread.currentThread());
+                    BranchLogger.v("Running WebView initialization for user agent on thread " + Thread.currentThread());
                     WebView w = new WebView(context);
                     Branch._userAgentString = w.getSettings().getUserAgentString();
                     w.destroy();
                 }
                 catch (Exception e) {
-                    PrefHelper.Debug(e.getMessage());
+                    BranchLogger.v(e.getMessage());
                 }
 
             }

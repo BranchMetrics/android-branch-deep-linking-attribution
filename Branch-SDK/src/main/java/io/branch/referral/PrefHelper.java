@@ -7,7 +7,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import android.text.TextUtils;
-import android.util.Log;
 import android.webkit.URLUtil;
 
 import org.json.JSONException;
@@ -81,7 +80,6 @@ public class PrefHelper {
     private static final String KEY_GCLID_VALUE = "bnc_gclid_value";
     private static final String KEY_GCLID_EXPIRATION_DATE = "bnc_gclid_expiration_date";
     private static final String KEY_GCLID_VALID_FOR_WINDOW = "bnc_gclid_expiration_window";
-    private static final String KEY_IS_TRIGGERED_BY_FB_APP_LINK = "bnc_triggered_by_fb_app_link";
     private static final String KEY_APP_LINK = "bnc_app_link";
     private static final String KEY_PUSH_IDENTIFIER = "bnc_push_identifier";
     private static final String KEY_SESSION_PARAMS = "bnc_session_params";
@@ -579,24 +577,6 @@ public class PrefHelper {
     public String getLinkClickID() {
         return getString(KEY_LINK_CLICK_ID);
     }
-    
-    /**
-     * Set the value to specify if the current init is triggered by an FB app link
-     *
-     * @param isAppLinkTriggered {@link Boolean} with value for triggered by an FB app link state
-     */
-    public void setIsAppLinkTriggeredInit(Boolean isAppLinkTriggered) {
-        setBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK, isAppLinkTriggered);
-    }
-    
-    /**
-     * Specifies the value to specify if the current init is triggered by an FB app link
-     *
-     * @return {@link Boolean} with value true if the init is triggered by an FB app link
-     */
-    public boolean getIsAppLinkTriggeredInit() {
-        return getBool(KEY_IS_TRIGGERED_BY_FB_APP_LINK);
-    }
 
     /**
      * Specify whether ad network callouts should be disabled. By default, they are enabled.
@@ -740,10 +720,10 @@ public class PrefHelper {
             try {
                 params = new JSONObject(string);
             } catch (JSONException e) {
-                PrefHelper.Warning("Unable to get URL query parameters as string: " + e);
+                BranchLogger.w("Unable to get URL query parameters as string: " + e);
             }
         } else {
-            PrefHelper.Debug("No URL parameters found.");
+            BranchLogger.d("No URL parameters found.");
         }
 
         return params;
@@ -982,7 +962,7 @@ public class PrefHelper {
         }
         setActions(new ArrayList<String>());
     }
-    
+
     // EVENT REFERRAL INSTALL CALLS
     
     private ArrayList<String> getActions() {
@@ -1253,17 +1233,6 @@ public class PrefHelper {
     public void setBool(String key, Boolean value) {
         prefsEditor_.putBoolean(key, value).apply();
     }
-    
-    public void updateBranchViewUsageCount(String branchViewId) {
-        String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
-        int currentUsage = getBranchViewUsageCount(branchViewId) + 1;
-        setInteger(key, currentUsage);
-    }
-    
-    public int getBranchViewUsageCount(String branchViewId) {
-        String key = KEY_BRANCH_VIEW_NUM_OF_USE + "_" + branchViewId;
-        return getInteger(key, 0);
-    }
 
     /**
      * <p>Clears all the Branch referral shared preferences related to the current key.
@@ -1317,7 +1286,8 @@ public class PrefHelper {
         }
         try {
             installMetadata.putOpt(key, value);
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -1333,7 +1303,8 @@ public class PrefHelper {
 
         try {
            return this.installMetadata.get(key).toString();
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
             return null;
         }
     }
@@ -1350,37 +1321,9 @@ public class PrefHelper {
     boolean shouldAddModules () {
         try {
             return secondaryRequestMetadata.length() != 0;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
             return false;
-        }
-    }
-
-    /**
-     * <p>Creates a <b>Debug</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
-     *
-     * @param message A {@link String} value containing the debug message to record.
-     */
-    public static void Debug(String message) {
-        if (enableLogging_ && !TextUtils.isEmpty(message)) {
-            Log.i(TAG, message);
-        }
-    }
-
-    public static void Warning(String message) {
-        if (!TextUtils.isEmpty(message)) {
-            Log.w(TAG, message);
-        }
-    }
-
-    public static void LogException(String message, Exception t) {
-        if (!TextUtils.isEmpty(message)) {
-            Log.e(TAG, message, t);
-        }
-    }
-
-    public static void LogAlways(String message) {
-        if (!TextUtils.isEmpty(message)) {
-            Log.i(TAG, message);
         }
     }
 

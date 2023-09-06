@@ -6,6 +6,8 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * * <p>
  * The server request for identifying current user to Branch API. Handles request creation and execution.
@@ -99,7 +101,8 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
                 if (userId == null || userId.length() == 0 || userId.equals(prefHelper_.getIdentity())) {
                     return true;
                 }
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
                 return true;
             }
         }

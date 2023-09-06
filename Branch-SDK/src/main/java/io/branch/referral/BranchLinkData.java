@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * <p>
@@ -474,7 +475,8 @@ class BranchLinkData extends JSONObject {
             }
             linkDataJson.put("~" + Defines.LinkParam.Type.getKey(), type);
             linkDataJson.put("~" + Defines.LinkParam.Duration.getKey(), duration);
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
         return linkDataJson;
     }
