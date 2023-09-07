@@ -86,7 +86,7 @@ class ShareLinkManager {
             if (callback_ != null) {
                 callback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
             } else {
-                PrefHelper.Debug("Unable create share options. Couldn't find applications on device to share the link.");
+                BranchLogger.v("Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
         return shareDlg_;
@@ -343,7 +343,7 @@ class ShareLinkManager {
                         if (callback_ != null) {
                             callback_.onLinkShareResponse(url, channelName, error);
                         } else {
-                            PrefHelper.Debug("Unable to share link " + error.getMessage());
+                            BranchLogger.v("Unable to share link " + error.getMessage());
                         }
                         if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY
                                 || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
@@ -362,7 +362,7 @@ class ShareLinkManager {
         if (callback_ != null) {
             callback_.onLinkShareResponse(url, channelName, null);
         } else {
-            PrefHelper.Debug("Shared link with " + channelName);
+            BranchLogger.v("Shared link with " + channelName);
         }
         if (selectedResolveInfo instanceof CopyLinkItem) {
             addLinkToClipBoard(url, builder_.getShareMsg());

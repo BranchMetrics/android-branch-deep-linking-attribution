@@ -17,6 +17,7 @@ import java.util.Map;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchQRCodeCache;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
@@ -127,10 +128,10 @@ public class BranchQRCode {
      */
     public BranchQRCode setWidth(@NonNull Integer width) {
         if (width > 2000) {
-            PrefHelper.Debug("Width was reduced to the maximum of 2000.");
+            BranchLogger.v("Width was reduced to the maximum of 2000.");
             this.width_ = 2000;
         } else if (width < 300) {
-            PrefHelper.Debug("Width was increased to the minimum of 300.");
+            BranchLogger.v("Width was increased to the minimum of 300.");
             this.width_ = 300;
         } else {
             this.width_ = width;
@@ -148,10 +149,10 @@ public class BranchQRCode {
      */
     public BranchQRCode setMargin(@NonNull Integer margin) {
         if (margin > 20) {
-            PrefHelper.Debug("Margin was reduced to the maximum of 20.");
+            BranchLogger.v("Margin was reduced to the maximum of 20.");
             this.margin_ = 20;
         } else if (margin < 1) {
-            PrefHelper.Debug("Margin was increased to the minimum of 1.");
+            BranchLogger.v("Margin was increased to the minimum of 1.");
             this.margin_ = 1;
         } else {
             this.margin_ = margin;

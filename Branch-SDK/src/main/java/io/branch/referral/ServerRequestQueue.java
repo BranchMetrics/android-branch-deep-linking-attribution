@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -105,7 +106,7 @@ public class ServerRequestQueue {
             editor.putString(PREF_KEY, jsonArr.toString()).apply();
         } catch (Exception ex) {
             String msg = ex.getMessage();
-            PrefHelper.Debug("Failed to persist queue" + (msg == null ? "" : msg));
+            BranchLogger.v("Failed to persist queue" + (msg == null ? "" : msg));
         }
     }
     
@@ -123,7 +124,8 @@ public class ServerRequestQueue {
                             result.add(req);
                         }
                     }
-                } catch (JSONException ignored) {
+                } catch (JSONException e) {
+                    BranchLogger.d(e.getMessage());
                 }
             }
         }
@@ -171,7 +173,8 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(0);
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+            } catch (IndexOutOfBoundsException | NoSuchElementException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         return req;
@@ -192,7 +195,8 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(index);
-            } catch (IndexOutOfBoundsException | NoSuchElementException ignored) {
+            } catch (IndexOutOfBoundsException | NoSuchElementException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         return req;
@@ -215,7 +219,8 @@ public class ServerRequestQueue {
                 }
                 queue.add(index, request);
                 persist();
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
     }
@@ -236,7 +241,8 @@ public class ServerRequestQueue {
             try {
                 req = queue.remove(index);
                 persist();
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         return req;
@@ -255,7 +261,8 @@ public class ServerRequestQueue {
             try {
                 isRemoved = queue.remove(request);
                 persist();
-            } catch (UnsupportedOperationException ignored) {
+            } catch (UnsupportedOperationException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         return isRemoved;
@@ -269,7 +276,8 @@ public class ServerRequestQueue {
             try {
                 queue.clear();
                 persist();
-            } catch (UnsupportedOperationException ignored) {
+            } catch (UnsupportedOperationException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
     }
@@ -317,11 +325,11 @@ public class ServerRequestQueue {
 
                 serverSema_.release();
                 if (req != null) {
-                    PrefHelper.Debug("processNextQueueItem, req " + req.getClass().getSimpleName());
+                    BranchLogger.d("processNextQueueItem, req " + req.getClass().getSimpleName());
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            PrefHelper.Debug("Branch Error: User session has not been initialized!");
+                            BranchLogger.d("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
                             req.handleFailure(BranchError.ERR_NO_SESSION, "");
                         }
@@ -332,13 +340,16 @@ public class ServerRequestQueue {
                         } else {
                             executeTimedBranchPostTask(req, Branch.getInstance().prefHelper_.getTaskTimeout());
                         }
-                    } else {
+                    }
+                    else {
                         networkCount_ = 0;
                     }
-                } else {
+                }
+                else {
                     this.remove(null); //In case there is any request nullified remove it.
                 }
-            } else {
+            }
+            else {
                 serverSema_.release();
             }
         } catch (Exception e) {
@@ -445,10 +456,10 @@ public class ServerRequestQueue {
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
-        PrefHelper.Debug("handleNewRequest " + req);
+        BranchLogger.d("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
-            PrefHelper.Debug("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
+            BranchLogger.d("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
             req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             return;
         }
@@ -456,11 +467,11 @@ public class ServerRequestQueue {
         if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if ((req instanceof ServerRequestLogout)) {
                 req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                PrefHelper.Debug("Branch is not initialized, cannot logout");
+                BranchLogger.d("Branch is not initialized, cannot logout");
                 return;
             }
             if (requestNeedsSession(req)) {
-                PrefHelper.Debug("handleNewRequest " + req + " needs a session");
+                BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
         }
@@ -605,9 +616,8 @@ public class ServerRequestQueue {
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
                     Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
-                    if (!((ServerRequestInitSession) thisReq_).handleBranchViewIfAvailable((serverResponse))) {
-                        Branch.getInstance().checkForAutoDeepLinkConfiguration();
-                    }
+
+                    Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
                     // Count down the latch holding getLatestReferringParamsSync
                     if (Branch.getInstance().getLatestReferringParamsLatch != null) {
                         Branch.getInstance().getLatestReferringParamsLatch.countDown();

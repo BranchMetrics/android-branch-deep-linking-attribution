@@ -12,12 +12,14 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.BranchAsyncTask;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.ContentMetadata;
@@ -178,7 +180,8 @@ public class BUOTestRoutines {
                         respObject = new JSONObject(rd.readLine());
                     }
                 }
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                BranchLogger.d(e.getMessage());
             } finally {
                 if (connection != null) {
                     connection.disconnect();

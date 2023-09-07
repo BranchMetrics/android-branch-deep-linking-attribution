@@ -10,9 +10,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Locale;
+import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.ServerResponse;
@@ -96,7 +98,7 @@ public abstract class BranchRemoteInterface {
         }
 
         long reqStartTime = System.currentTimeMillis();
-        PrefHelper.Debug("getting " + modifiedUrl);
+        BranchLogger.v("getting " + modifiedUrl);
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
@@ -132,8 +134,8 @@ public abstract class BranchRemoteInterface {
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
-        PrefHelper.Debug("posting to " + url);
-        PrefHelper.Debug("Post value = " + body.toString());
+        BranchLogger.v("posting to " + url);
+        BranchLogger.v("Post value = " + body.toString());
 
         try {
             BranchResponse response = doRestfulPost(url, body);
@@ -175,9 +177,9 @@ public abstract class BranchRemoteInterface {
 
         ServerResponse result = new ServerResponse(tag, statusCode, requestId);
         if(!TextUtils.isEmpty(requestId)){
-            PrefHelper.Debug(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
+            BranchLogger.v(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
-            PrefHelper.Debug(String.format("returned %s", responseString));
+            BranchLogger.v(String.format("returned %s", responseString));
         }
 
         if (responseString != null) {
@@ -195,10 +197,10 @@ public abstract class BranchRemoteInterface {
                             jsonObj.put(Defines.Jsonkey.QRCodeResponseString.getKey(), responseString);
                             result.setPost(jsonObj);
                         } catch (JSONException e) {
-                            PrefHelper.Debug("JSON exception: " + e.getMessage());
+                            BranchLogger.v("JSON exception: " + e.getMessage());
                         }
                     } else {
-                        PrefHelper.Debug("JSON exception: " + ex2.getMessage());
+                        BranchLogger.v("JSON exception: " + ex2.getMessage());
                     }
                 }
             }
@@ -215,7 +217,8 @@ public abstract class BranchRemoteInterface {
                 post.put(Defines.Jsonkey.BranchKey.getKey(), branch_key);
                 return true;
             }
-        } catch (JSONException ignore) {
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
         return false;
     }

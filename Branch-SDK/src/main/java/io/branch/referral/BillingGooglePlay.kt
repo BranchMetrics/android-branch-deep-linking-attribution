@@ -32,24 +32,24 @@ class BillingGooglePlay private constructor() {
 
     fun startBillingClient(callback: (Boolean) -> Unit) {
         if (billingClient.isReady) {
-            PrefHelper.Debug("Billing Client has already been started..")
+            BranchLogger.v("Billing Client has already been started..")
             callback(true)
         } else {
             billingClient.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        PrefHelper.Debug("Billing Client setup finished.")
+                        BranchLogger.v("Billing Client setup finished.")
                         callback(true)
                     } else {
                         val errorMessage =
                             "Billing Client setup failed with error: ${billingResult.debugMessage}"
-                        PrefHelper.LogException(errorMessage, Exception())
+                        BranchLogger.logException(errorMessage, Exception())
                         callback(false)
                     }
                 }
 
                 override fun onBillingServiceDisconnected() {
-                    PrefHelper.Warning("Billing Client disconnected")
+                    BranchLogger.w("Billing Client disconnected")
                     callback(false)
                 }
             })
@@ -119,7 +119,7 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                PrefHelper.LogException(
+                BranchLogger.logException(
                     "Failed to query subscriptions. Error: " + billingResult.debugMessage,
                     Exception()
                 )
@@ -159,7 +159,7 @@ class BillingGooglePlay private constructor() {
                     )
                 }
             } else {
-                PrefHelper.LogException(
+                BranchLogger.logException(
                     "Failed to query subscriptions. Error: " + billingResult.debugMessage,
                     Exception()
                 )
@@ -257,6 +257,6 @@ class BillingGooglePlay private constructor() {
             .addContentItems(contentItems)
             .logEvent(context)
 
-        PrefHelper.Debug("Successfully logged in-app purchase as Branch Event")
+        BranchLogger.i("Successfully logged in-app purchase as Branch Event")
     }
 }

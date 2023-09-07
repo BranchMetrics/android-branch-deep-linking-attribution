@@ -9,6 +9,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.util.Objects;
+
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
 /**
@@ -55,7 +57,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if(!TextUtils.isEmpty(prefHelper_.getInitialReferrer()) && !prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
             post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
         }
-        post.put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
@@ -81,33 +82,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         return isInitSessionAction;
     }
-
-    boolean handleBranchViewIfAvailable(ServerResponse resp) {
-        boolean isBranchViewShowing = false;
-        if (resp != null && resp.getObject() != null && resp.getObject().has(Defines.Jsonkey.BranchViewData.getKey())) {
-            try {
-                JSONObject branchViewJsonObj = resp.getObject().getJSONObject(Defines.Jsonkey.BranchViewData.getKey());
-                String actionName = getRequestActionName();
-                if ((Branch.getInstance().getCurrentActivity() != null)) {
-                    Activity currentActivity = Branch.getInstance().getCurrentActivity();
-                    boolean isActivityEnabledForBranchView = true;
-                    if (currentActivity instanceof Branch.IBranchViewControl) {
-                        isActivityEnabledForBranchView = !((Branch.IBranchViewControl) currentActivity).skipBranchViewsOnThisActivity();
-                    }
-                    if (isActivityEnabledForBranchView) {
-                        isBranchViewShowing = BranchViewHandler.getInstance().showBranchView(branchViewJsonObj, actionName, currentActivity, Branch.getInstance());
-                    } else {
-                        isBranchViewShowing = BranchViewHandler.getInstance().markInstallOrOpenBranchViewPending(branchViewJsonObj, actionName);
-                    }
-                } else {
-                    isBranchViewShowing = BranchViewHandler.getInstance().markInstallOrOpenBranchViewPending(branchViewJsonObj, actionName);
-                }
-            } catch (JSONException ignore) {
-            }
-        }
-        return isBranchViewShowing;
-    }
-
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         Branch.getInstance().unlockSDKInitWaitLock();
@@ -119,7 +93,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setIsAppLinkTriggeredInit(false);
         prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setIsFullAppConversion(false);
         prefHelper_.setInitialReferrer(PrefHelper.NO_STRING_VALUE);
@@ -147,8 +120,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
-                getPost().put(Defines.Jsonkey.FaceBookAppLinkChecked.getKey(), prefHelper_.getIsAppLinkTriggeredInit());
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         // Add Google search install referrer if present
@@ -156,7 +129,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!googleSearchInstallIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallIdentifier);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
         // Add Google play raw referrer if present
@@ -164,7 +138,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!googlePlayReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
 
@@ -172,7 +147,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if(!PrefHelper.NO_STRING_VALUE.equals(appStore)) {
             try {
                 getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
 
@@ -181,7 +157,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             try {
                 getPost().put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
                 getPost().put(Defines.Jsonkey.IsFullAppConv.getKey(), true);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
         }
     }
@@ -205,7 +182,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
             }
 
-        } catch (JSONException ignore) { }
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
         Branch.expectDelayedSessionInitialization(false);
@@ -291,7 +270,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
             post.remove(Defines.Jsonkey.RandomizedDeviceToken.getKey());
             post.remove(Defines.Jsonkey.RandomizedBundleToken.getKey());
-            post.remove(Defines.Jsonkey.FaceBookAppLinkChecked.getKey());
             post.remove(Defines.Jsonkey.External_Intent_Extra.getKey());
             post.remove(Defines.Jsonkey.External_Intent_URI.getKey());
             post.remove(Defines.Jsonkey.FirstInstallTime.getKey());
@@ -308,7 +286,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.remove(Defines.Jsonkey.AnonID.getKey());
             try {
                 post.put(Defines.Jsonkey.TrackingDisabled.getKey(), true);
-            } catch (JSONException ignore) {
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
             return true;
         } else {

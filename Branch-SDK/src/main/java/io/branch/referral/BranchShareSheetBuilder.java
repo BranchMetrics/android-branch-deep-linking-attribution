@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p> Class for building a share link dialog.This creates a chooser for selecting application for
@@ -66,7 +67,8 @@ public class BranchShareSheetBuilder {
                 String key = keys.next();
                 shortLinkBuilder_.addParameters(key, parameters.get(key));
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         shareMsg_ = "";
         callback_ = null;
@@ -230,7 +232,8 @@ public class BranchShareSheetBuilder {
     public BranchShareSheetBuilder addParam(String key, String value) {
         try {
             this.shortLinkBuilder_.addParameters(key, value);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
         }
         return this;
     }

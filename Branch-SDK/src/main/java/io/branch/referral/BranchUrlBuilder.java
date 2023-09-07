@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -100,8 +101,8 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
                 this.params_ = new JSONObject();
             }
             this.params_.put(key, value);
-        } catch (JSONException ignore) {
-
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
         }
         return (T) this;
     }
@@ -134,7 +135,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
             if (callback != null) {
                 callback.onLinkCreate(null, new BranchError("session has not been initialized", BranchError.ERR_NO_SESSION));
             }
-            PrefHelper.Debug("Warning: User session has not been initialized");
+            BranchLogger.w("Warning: User session has not been initialized");
         }
     }
 }
