@@ -159,6 +159,12 @@ public class Defines {
         Description("description"),
         SearchQuery("search_query"),
         AdType("ad_type"),
+        
+        CPUType("cpu_type"),
+        DeviceBuildId("build"),
+        Locale("locale"),
+        ConnectionType("connection_type"),
+        DeviceCarrier("device_carrier"),
 
         PluginName("plugin_name"),
         PluginVersion("plugin_version"),
