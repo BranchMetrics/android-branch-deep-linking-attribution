@@ -54,7 +54,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         }
         logValidationPassed();
 
-        Branch.getInstance().handleNewRequest(new ServerRequestGetAppConfig(context, this));
+        Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, this));
 
     }
 

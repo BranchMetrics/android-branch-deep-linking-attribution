@@ -49,7 +49,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             if (callback_ != null) {
                 callback_.onInitFinished(Branch.getInstance().getLatestReferringParams(), null);
             }
-            Branch.getInstance().addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+            Branch.getInstance().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
             Branch.getInstance().setInstantDeepLinkPossible(false);
         }
     }

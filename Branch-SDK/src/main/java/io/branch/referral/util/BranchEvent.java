@@ -263,7 +263,7 @@ public class BranchEvent {
         boolean isReqQueued = false;
         Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
         if (Branch.getInstance() != null) {
-            Branch.getInstance().handleNewRequest(
+            Branch.getInstance().requestQueue_.handleNewRequest(
                     new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
                         @Override
                         public void onRequestSucceeded(ServerResponse response, Branch branch) {
