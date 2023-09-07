@@ -159,7 +159,7 @@ public class Defines {
         Description("description"),
         SearchQuery("search_query"),
         AdType("ad_type"),
-        
+
         CPUType("cpu_type"),
         DeviceBuildId("build"),
         Locale("locale"),
