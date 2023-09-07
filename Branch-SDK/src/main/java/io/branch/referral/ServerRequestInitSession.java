@@ -26,7 +26,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     private static final int STATE_FRESH_INSTALL = 0;
     private static final int STATE_NO_CHANGE = 1;
     private static final int STATE_UPDATE = 2;
-    private static final int STATE_TUNE_MIGRATION = 5;
 
     static final String INITIATED_BY_CLIENT = "INITIATED_BY_CLIENT";
 
@@ -221,13 +220,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
             if ((lastUpdateTime - firstInstallTime) >= updateBufferTime) {
                 installOrUpdateState = STATE_UPDATE;
             }
-
-            // Finally, we check if this is the first session after a TUNE-> Branch migration, in which
-            // case server expects a special value.
-            if (isTuneMigration()) {
-                installOrUpdateState = STATE_TUNE_MIGRATION;
-            }
-
         } else if (!prefHelper_.getAppVersion().equals(currAppVersion)) {
             // if the current app version doesn't match the stored version, then it's an update
             installOrUpdateState = STATE_UPDATE;
@@ -251,14 +243,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME, lastUpdateTime);
         }
         post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
-    }
-
-    private boolean isTuneMigration() {
-        // getApplicationContext() matters here
-        SharedPreferences tunePrefs = context_.getApplicationContext().getSharedPreferences(
-                "com.mobileapptracking", Context.MODE_PRIVATE);
-        final String tuneID = tunePrefs.getString("mat_id", null);
-        return !TextUtils.isEmpty(tuneID);
     }
 
     @Override
