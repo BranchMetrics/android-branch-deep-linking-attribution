@@ -165,7 +165,6 @@ public class Defines {
         Locale("locale"),
         ConnectionType("connection_type"),
         DeviceCarrier("device_carrier"),
-
         PluginName("plugin_name"),
         PluginVersion("plugin_version"),
         OSVersionAndroid("os_version_android"),
