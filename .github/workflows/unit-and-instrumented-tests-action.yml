@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
@@ -35,7 +35,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
@@ -71,7 +71,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v3
@@ -93,7 +93,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
