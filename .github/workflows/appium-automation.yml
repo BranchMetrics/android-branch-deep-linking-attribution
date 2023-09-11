@@ -26,6 +26,7 @@ jobs:
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
+          ref: UpdateBrowserStackEnvVariable
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
       # repo's gradle is configured to run on java 17
       - name: Setup java for gradle
@@ -43,7 +44,7 @@ jobs:
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
           parsed=$(echo $response | jq ".app_url")
           echo "::add-mask::$parsed"
-          echo "APP_URL=$parsed" >> "$GITHUB_ENV"
+          echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
       # automation is compatible with java 11
       - name: Setup java for automation
         uses: actions/setup-java@v3
