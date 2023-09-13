@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -20,7 +19,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -37,7 +35,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.channels.RequestChannelKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -54,7 +52,6 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
-import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -785,6 +782,7 @@ public class Branch {
      */
     void clearPendingRequests() {
         requestQueue_.clear();
+        RequestChannelKt.getRequestChannel().close(new Exception("Channel was closed"));
     }
     
     /**
@@ -1304,7 +1302,7 @@ public class Branch {
         return branchQRCodeCache_;
     }
 
-    PrefHelper getPrefHelper() {
+    public PrefHelper getPrefHelper() {
         return prefHelper_;
     }
 
@@ -2282,8 +2280,6 @@ public class Branch {
                 // invoke callback returning LatestReferringParams, which were parsed out inside readAndStripParam
                 // from either intent extra "branch_data", or as parameters attached to the referring app link
                 if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
-                // mark this session as IDL session
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
                 // potentially routes the user to the Activity configured to consume this particular link
                 branch.checkForAutoDeepLinkConfiguration();
                 // we already invoked the callback for let's set it to null, we will still make the
@@ -2332,9 +2328,6 @@ public class Branch {
         }
     }
 
-    boolean isIDLSession() {
-        return Boolean.parseBoolean(Branch.getInstance().requestQueue_.instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
-    }
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods
      * in the returned {@link InitSessionBuilder} class. Must be finished with init() or reInit(),

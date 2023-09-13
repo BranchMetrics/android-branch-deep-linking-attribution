@@ -227,49 +227,6 @@ public abstract class ServerRequest {
     }
     
     /**
-     * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
-     * key-value pairs appended with the instrumentation data.</p>
-     * <p>
-     * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
-     *
-     * @return A {@link JSONObject} containing the post data supplied with the current request
-     * as key-value pairs and the instrumentation meta data.
-     */
-    public JSONObject getPostWithInstrumentationValues(ConcurrentHashMap<String, String> instrumentationData) {
-        JSONObject extendedPost = new JSONObject();
-        try {
-            //Add original parameters
-            if (params_ != null) {
-                JSONObject originalParams = new JSONObject(params_.toString());
-                Iterator<String> keys = originalParams.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    extendedPost.put(key, originalParams.get(key));
-                }
-            }
-            // Append instrumentation metadata
-            if (instrumentationData.size() > 0) {
-                JSONObject instrObj = new JSONObject();
-                Set<String> keys = instrumentationData.keySet();
-                try {
-                    for (String key : keys) {
-                        instrObj.put(key, instrumentationData.get(key));
-                        instrumentationData.remove(key);
-                    }
-                    extendedPost.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
-                } catch (JSONException e) {
-                    BranchLogger.d(e.getMessage());
-                }
-            }
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
-        } catch (ConcurrentModificationException ex) {
-            extendedPost = params_;
-        }
-        return extendedPost;
-    }
-    
-    /**
      * Returns a JsonObject with the parameters that needed to be set with the get request.
      *
      * @return A {@link JSONObject} representation of get request parameters.
@@ -581,14 +538,14 @@ public abstract class ServerRequest {
         params.remove(Defines.Jsonkey.GooglePlayInstallReferrer.getKey());
     }
     
-    void doFinalUpdateOnMainThread() {
+    public void doFinalUpdateOnMainThread() {
         updateRequestMetadata();
         if (shouldUpdateLimitFacebookTracking()) {
             updateLimitFacebookTracking();
         }
     }
     
-    void doFinalUpdateOnBackgroundThread() {
+    public void doFinalUpdateOnBackgroundThread() {
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
             if (prioritizeLinkAttribution(this.params_)) {
@@ -730,7 +687,7 @@ public abstract class ServerRequest {
      *
      * @return {@code true} if the request needed to be executed in tracking disabled mode
      */
-    protected boolean prepareExecuteWithoutTracking() {
+    public boolean prepareExecuteWithoutTracking() {
         // Default return false. Return true for request need to be executed when tracking is disabled
         return false;
     }

@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -28,6 +29,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import io.branch.channels.RequestChannelKt;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
+
 /**
  * <p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
  * complete. This allows you to start sending requests to the Branch API as soon as your app is
@@ -46,8 +53,6 @@ public class ServerRequestQueue {
     private final Semaphore serverSema_ = new Semaphore(1);
 
     int networkCount_ = 0;
-
-    final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
 
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
@@ -480,6 +485,23 @@ public class ServerRequestQueue {
         req.onRequestQueued();
 
         this.processNextQueueItem();
+
+        RequestChannelKt.enqueue(req, new Continuation<ServerResponse>() {
+            @NonNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
+
+            @Override
+            public void resumeWith(@NonNull Object o) {
+                BranchLogger.v("handleNewRequest onResume " + Thread.currentThread().getName());
+                if(o != null){
+                    ServerResponse serverResponse = (ServerResponse) o;
+                    BranchLogger.v("Response from server " + serverResponse);
+                }
+            }
+        });
     }
 
     /**
@@ -517,7 +539,7 @@ public class ServerRequestQueue {
             if (thisReq_.isGetRequest()) {
                 result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
             } else {
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+                result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPost(), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
             }
             if (latch_ != null) {
                 latch_.countDown();
@@ -669,26 +691,5 @@ public class ServerRequestQueue {
 
             thisReq_.currentRetryCount++;
         }
-    }
-
-    ///-------Instrumentation additional data---------------///
-
-    /**
-     * Update the extra instrumentation data provided to Branch
-     *
-     * @param instrumentationData A {@link HashMap} with key value pairs for instrumentation data.
-     */
-    public void addExtraInstrumentationData(HashMap<String, String> instrumentationData) {
-        instrumentationExtraData_.putAll(instrumentationData);
-    }
-
-    /**
-     * Update the extra instrumentation data provided to Branch
-     *
-     * @param key   A {@link String} Value for instrumentation data key
-     * @param value A {@link String} Value for instrumentation data value
-     */
-    public void addExtraInstrumentationData(String key, String value) {
-        instrumentationExtraData_.put(key, value);
     }
 }

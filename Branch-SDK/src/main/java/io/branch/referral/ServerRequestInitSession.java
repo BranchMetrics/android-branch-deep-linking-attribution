@@ -246,7 +246,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     @Override
-    protected boolean prepareExecuteWithoutTracking() {
+    public boolean prepareExecuteWithoutTracking() {
         JSONObject post = getPost();
         if ((post.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
                 || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())

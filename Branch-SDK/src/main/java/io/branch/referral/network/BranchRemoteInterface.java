@@ -97,7 +97,6 @@ public abstract class BranchRemoteInterface {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
 
-        long reqStartTime = System.currentTimeMillis();
         BranchLogger.v("getting " + modifiedUrl);
 
         try {
@@ -108,12 +107,6 @@ public abstract class BranchRemoteInterface {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
             } else { // All other errors are considered as connectivity error
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
-            }
-        } finally {
-            // Add total round trip time
-            if (Branch.getInstance() != null) {
-                int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }
@@ -128,13 +121,12 @@ public abstract class BranchRemoteInterface {
      * @return {@link ServerResponse} object representing the result of RESTful POST to Branch Server
      */
     public final ServerResponse make_restful_post(JSONObject body, String url, String tag, String branchKey) {
-        long reqStartTime = System.currentTimeMillis();
         body = body != null ? body : new JSONObject();
 
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
-        BranchLogger.v("posting to " + url);
+        BranchLogger.v("posting to " + url + " on thread " + Thread.currentThread().getName());
         BranchLogger.v("Post value = " + body.toString());
 
         try {
@@ -145,11 +137,6 @@ public abstract class BranchRemoteInterface {
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
             } else { // All other errors are considered as connectivity error
                 return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
-            }
-        } finally {
-            if (Branch.getInstance() != null) {
-                int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }

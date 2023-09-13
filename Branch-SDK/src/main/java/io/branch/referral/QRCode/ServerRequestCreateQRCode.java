@@ -69,7 +69,7 @@ public class ServerRequestCreateQRCode extends ServerRequest {
     }
 
     @Override
-    protected boolean prepareExecuteWithoutTracking() {
+    public boolean prepareExecuteWithoutTracking() {
         return true;
     }
 }
