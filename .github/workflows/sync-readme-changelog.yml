@@ -1,4 +1,4 @@
-name: Update Changelog on Readme.com
+name: Update Version History on Readme
 
 on:
   release:
@@ -61,9 +61,16 @@ jobs:
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": ":star: *What's New*:\n\n${{ github.event.release.body }}"
+                            "text": ":star: *What's New*"
                         }
                     },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": ${{ toJSON(github.event.release.body) }}
+                        }
+                	},
                     {
                         "type": "divider"
                     },
