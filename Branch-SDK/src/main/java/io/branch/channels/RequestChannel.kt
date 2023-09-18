@@ -8,8 +8,6 @@ import io.branch.referral.ServerResponse
 import io.branch.referral.TrackingController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,8 +34,8 @@ private suspend fun executeNetworkRequest(request: ServerRequest): ServerRespons
         BranchLogger.i("requestChannel executeNetworkRequest: $request" + Thread.currentThread().name)
 
         request.onPreExecute()
-        request.doFinalUpdateOnMainThread() // not actually on main thread in this context
-        request.doFinalUpdateOnBackgroundThread()
+        request.updateRequestData() // not actually on main thread in this context
+        request.updatePostData()
 
         if (TrackingController.isTrackingDisabled(Branch.getInstance().applicationContext) && !request.prepareExecuteWithoutTracking()) {
             return ServerResponse(
@@ -59,10 +57,6 @@ private suspend fun executeNetworkRequest(request: ServerRequest): ServerRespons
             )
         }
     }
-
-//    BranchLogger.i("requestChannel executeNetworkRequest start: ${System.currentTimeMillis()}")
-//    delay(5000L)
-//    BranchLogger.i("requestChannel executeNetworkRequest end: ${System.currentTimeMillis()}")
 
     return result
 }

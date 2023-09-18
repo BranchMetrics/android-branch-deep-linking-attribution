@@ -15,22 +15,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import io.branch.channels.RequestChannelKt;
-import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -481,10 +475,10 @@ public class ServerRequestQueue {
             }
         }
 
-        this.enqueue(req);
-        req.onRequestQueued();
+        //this.enqueue(req);
+        //req.onRequestQueued();
 
-        this.processNextQueueItem();
+        //this.processNextQueueItem();
 
         RequestChannelKt.enqueue(req, new Continuation<ServerResponse>() {
             @NonNull
@@ -495,13 +489,139 @@ public class ServerRequestQueue {
 
             @Override
             public void resumeWith(@NonNull Object o) {
-                BranchLogger.v("handleNewRequest onResume " + Thread.currentThread().getName());
+                //BranchLogger.v("handleNewRequest onResume " + Thread.currentThread().getName());
                 if(o != null){
                     ServerResponse serverResponse = (ServerResponse) o;
-                    BranchLogger.v("Response from server " + serverResponse);
+                    //BranchLogger.v("Response from server " + serverResponse);
+                    ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
                 }
             }
         });
+    }
+
+    public void onPostExecuteInner(ServerRequest serverRequest, ServerResponse serverResponse) {
+        if (serverResponse == null) {
+            serverRequest.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
+            return;
+        }
+
+        int status = serverResponse.getStatusCode();
+        if (status == 200) {
+            onRequestSuccess(serverRequest, serverResponse);
+        }
+        else {
+            onRequestFailed(serverRequest, serverResponse, status);
+        }
+    }
+
+    private void onRequestSuccess(ServerRequest serverRequest, ServerResponse serverResponse) {
+        // If the request succeeded
+        @Nullable final JSONObject respJson = serverResponse.getObject();
+        if (respJson == null) {
+            serverRequest.handleFailure(500, "Null response json.");
+        }
+
+        if (serverRequest instanceof ServerRequestCreateUrl && respJson != null) {
+            try {
+                // cache the link
+                BranchLinkData postBody = ((ServerRequestCreateUrl) serverRequest).getLinkPost();
+                final String url = respJson.getString("url");
+                Branch.getInstance().linkCache_.put(postBody, url);
+            }
+            catch (JSONException ex) {
+                ex.printStackTrace();
+            }
+        }
+        else if (serverRequest instanceof ServerRequestLogout) {
+            //On Logout clear the link cache and all pending requests
+            Branch.getInstance().linkCache_.clear();
+            ServerRequestQueue.this.clear();
+        }
+
+        if (serverRequest instanceof ServerRequestInitSession || serverRequest instanceof ServerRequestIdentifyUserRequest) {
+            // If this request changes a session update the session-id to queued requests.
+            boolean updateRequestsInQueue = false;
+            if (!Branch.getInstance().isTrackingDisabled() && respJson != null) {
+                // Update PII data only if tracking is disabled
+                try {
+                    if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                        Branch.getInstance().prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
+                        updateRequestsInQueue = true;
+                    }
+                    if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
+                        String new_Randomized_Bundle_Token = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey());
+                        if (!Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                            //On setting a new Randomized Bundle Token clear the link cache
+                            Branch.getInstance().linkCache_.clear();
+                            Branch.getInstance().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
+                            updateRequestsInQueue = true;
+                        }
+                    }
+                    if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
+                        Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
+                        updateRequestsInQueue = true;
+                    }
+                    if (updateRequestsInQueue) {
+                        updateAllRequestsInQueue();
+                    }
+                } catch (JSONException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            if (serverRequest instanceof ServerRequestInitSession) {
+                Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
+
+                // Count down the latch holding getLatestReferringParamsSync
+                if (Branch.getInstance().getLatestReferringParamsLatch != null) {
+                    Branch.getInstance().getLatestReferringParamsLatch.countDown();
+                }
+                // Count down the latch holding getFirstReferringParamsSync
+                if (Branch.getInstance().getFirstReferringParamsLatch != null) {
+                    Branch.getInstance().getFirstReferringParamsLatch.countDown();
+                }
+            }
+        }
+
+        if (respJson != null) {
+            serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
+            //ServerRequestQueue.this.remove(serverRequest);
+        } else if (serverRequest.shouldRetryOnFail()) {
+            // already called handleFailure above
+            serverRequest.clearCallbacks();
+        } else {
+            //ServerRequestQueue.this.remove(serverRequest);
+        }
+    }
+
+    void onRequestFailed(ServerRequest serverRequest, ServerResponse serverResponse, int status) {
+        // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
+        if (serverRequest instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
+            Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
+        }
+
+        // On a bad request or in case of a conflict notify with call back and remove the request.
+        if ((status == 400 || status == 409) && serverRequest instanceof ServerRequestCreateUrl) {
+            ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
+        } else {
+            //On Network error or Branch is down fail all the pending requests in the queue except
+            //for request which need to be replayed on failure.
+            //ServerRequestQueue.this.networkCount_ = 0;
+            serverRequest.handleFailure(status, serverResponse.getFailReason());
+        }
+
+        boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
+        // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
+        // remove it from the queue
+        if (unretryableErrorCode || !serverRequest.shouldRetryOnFail() || (serverRequest.currentRetryCount >= Branch.getInstance().prefHelper_.getNoConnectionRetryMax())) {
+            //Branch.getInstance().requestQueue_.remove(serverRequest);
+        } else {
+            // failure has already been handled
+            // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
+            serverRequest.clearCallbacks();
+        }
+
+        //serverRequest.currentRetryCount++;
     }
 
     /**
@@ -524,13 +644,13 @@ public class ServerRequestQueue {
         protected void onPreExecute() {
             super.onPreExecute();
             thisReq_.onPreExecute();
-            thisReq_.doFinalUpdateOnMainThread();
+            thisReq_.updateRequestData();
         }
 
         @Override
         protected ServerResponse doInBackground(Void... voids) {
             // update queue wait time
-            thisReq_.doFinalUpdateOnBackgroundThread();
+            thisReq_.updatePostData();
             if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
                 return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
             }
@@ -553,7 +673,7 @@ public class ServerRequestQueue {
             onPostExecuteInner(serverResponse);
         }
 
-        void onPostExecuteInner(ServerResponse serverResponse) {
+        public void onPostExecuteInner(ServerResponse serverResponse) {
             if (latch_ != null) {
                 latch_.countDown();
             }

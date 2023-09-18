@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
@@ -12,16 +11,11 @@ import androidx.annotation.NonNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
-
-import io.branch.referral.util.BranchEvent;
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -538,14 +532,14 @@ public abstract class ServerRequest {
         params.remove(Defines.Jsonkey.GooglePlayInstallReferrer.getKey());
     }
     
-    public void doFinalUpdateOnMainThread() {
+    public void updateRequestData() {
         updateRequestMetadata();
         if (shouldUpdateLimitFacebookTracking()) {
             updateLimitFacebookTracking();
         }
     }
     
-    public void doFinalUpdateOnBackgroundThread() {
+    public void updatePostData() {
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
             if (prioritizeLinkAttribution(this.params_)) {

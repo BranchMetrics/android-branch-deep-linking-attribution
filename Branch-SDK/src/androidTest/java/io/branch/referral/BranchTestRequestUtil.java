@@ -80,12 +80,12 @@ abstract class BranchTestRequestUtil {
 
     protected ServerRequest doFinalUpdate(ServerRequest request) {
         Log.i("BranchSDK", "doFinalUpdate" + Thread.currentThread().getName());
-        request.doFinalUpdateOnBackgroundThread();
+        request.updatePostData();
         return request;
     }
 
     protected ServerRequest doFinalUpdateOnMainThread(ServerRequest request) {
-        request.doFinalUpdateOnMainThread();
+        request.updateRequestData();
         return request;
     }
 }
