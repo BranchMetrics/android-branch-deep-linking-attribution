@@ -36,7 +36,7 @@ jobs:
       - name: Upload Coverage Test Report
         uses: codecov/codecov-action@v2
         with:
-         files: "./Branch-SDK/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
+         files: "./Branch-SDK/build/reports/jacoco/jacocoTestReport/html/index.html"
   instrumented-test-api-level-min:
     name: instrumented-test-api-level-$API_MIN
     runs-on: macos-latest
