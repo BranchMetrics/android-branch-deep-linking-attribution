@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -168,6 +169,7 @@ public class ServerRequestQueue {
      * @return The {@link ServerRequest} object at position with index 0 within the queue.
      */
     ServerRequest peek() {
+        BranchLogger.v("peek " + Arrays.toString(queue.toArray()));
         ServerRequest req = null;
         synchronized (reqQueueLockObject) {
             try {
@@ -489,11 +491,14 @@ public class ServerRequestQueue {
 
             @Override
             public void resumeWith(@NonNull Object o) {
-                //BranchLogger.v("handleNewRequest onResume " + Thread.currentThread().getName());
-                if(o != null){
+                BranchLogger.v("handleNewRequest onResume " + o + " " + Thread.currentThread().getName());
+                if(o != null && o instanceof ServerResponse){
                     ServerResponse serverResponse = (ServerResponse) o;
                     //BranchLogger.v("Response from server " + serverResponse);
                     ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
+                }
+                else{
+                    BranchLogger.v("Expected ServerResponse, was " + o);
                 }
             }
         });
@@ -535,6 +540,7 @@ public class ServerRequestQueue {
         else if (serverRequest instanceof ServerRequestLogout) {
             //On Logout clear the link cache and all pending requests
             Branch.getInstance().linkCache_.clear();
+            //todo close and make a new channel
             ServerRequestQueue.this.clear();
         }
 

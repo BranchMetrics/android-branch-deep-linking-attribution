@@ -34,7 +34,7 @@ private suspend fun executeNetworkRequest(request: ServerRequest): ServerRespons
         BranchLogger.i("requestChannel executeNetworkRequest: $request" + Thread.currentThread().name)
 
         request.onPreExecute()
-        request.updateRequestData() // not actually on main thread in this context
+        request.updateRequestData()
         request.updatePostData()
 
         if (TrackingController.isTrackingDisabled(Branch.getInstance().applicationContext) && !request.prepareExecuteWithoutTracking()) {

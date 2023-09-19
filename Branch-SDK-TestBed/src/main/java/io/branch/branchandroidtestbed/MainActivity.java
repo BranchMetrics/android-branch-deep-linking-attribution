@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -131,9 +132,13 @@ public class MainActivity extends Activity {
                                         if (error != null) {
                                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                                         }
-                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
 
-
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
                                     }
                                 });
                             }
@@ -160,7 +165,12 @@ public class MainActivity extends Activity {
                             Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         } else {
                             Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
-                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     }
                 });
@@ -226,11 +236,16 @@ public class MainActivity extends Activity {
                 branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        if (error != null) {
-                            txtShortUrl.setText(error.getMessage());
-                        } else {
-                            txtShortUrl.setText(url);
-                        }
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                if (error != null) {
+                                    txtShortUrl.setText(error.getMessage());
+                                }
+                                else {
+                                    txtShortUrl.setText(url);
+                                }
+                            }
+                        });
                     }
                 });
             }
@@ -473,13 +488,19 @@ public class MainActivity extends Activity {
                                     public void onClick(DialogInterface arg0, int arg1) {
                                     }
                                 });
-                                ImageDialog.show();
 
-                            } catch (Exception e) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ImageDialog.show();
+                                    }
+                                });
+
+                            }
+                            catch (Exception e) {
                                 Log.d("Adding Image to Alert", "Failed");
                                 e.printStackTrace();
                             }
-
                         }
 
                         @Override
@@ -497,7 +518,6 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommerceEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART)
                         .setAffiliation("test_affiliation")
                         .setCustomerEventAlias("my_custom_alias")
@@ -514,23 +534,29 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
-                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
 
                             @Override
                             public void onFailure(Exception e) {
-                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         });
-
-
-            }
-        });
+            }});
 
         findViewById(R.id.cmdContentEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 new BranchEvent(BRANCH_STANDARD_EVENT.SEARCH)
                         .setCustomerEventAlias("my_custom_alias")
                         .setDescription("Product Search")
@@ -538,7 +564,13 @@ public class MainActivity extends Activity {
                         .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
@@ -553,7 +585,12 @@ public class MainActivity extends Activity {
                         .addCustomDataProperty("registrationID", "12345")
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
@@ -564,7 +601,12 @@ public class MainActivity extends Activity {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
-                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
                 });
 

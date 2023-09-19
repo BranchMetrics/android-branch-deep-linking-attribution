@@ -782,7 +782,6 @@ public class Branch {
      */
     void clearPendingRequests() {
         requestQueue_.clear();
-        RequestChannelKt.getRequestChannel().close(new Exception("Channel was closed"));
     }
     
     /**
@@ -1381,6 +1380,8 @@ public class Branch {
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
          setInitState(SESSION_STATE.INITIALISING);
 
+         //todo job gaid and install referrer into open/install request
+         // get all saved serverrequests on init
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
          if (r == null) {
              requestQueue_.insertRequestAtFront(request);
