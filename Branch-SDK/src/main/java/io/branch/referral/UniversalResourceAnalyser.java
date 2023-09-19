@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.TrafficStats;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +21,11 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import io.branch.channels.SkipListChannel;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
+
 /**
  * Created by sojanpr on 2/8/18.
  * <p>
@@ -27,21 +34,20 @@ import javax.net.ssl.HttpsURLConnection;
  * </p>
  */
 
-class UniversalResourceAnalyser {
+public class UniversalResourceAnalyser {
     private static JSONObject skipURLFormats;
     private final ArrayList<String> acceptURLFormats;
     private static final String SKIP_URL_FORMATS_KEY = "skip_url_format_key";
-    private static final String VERSION_KEY = "version";
+    public static final String VERSION_KEY = "version";
     private static final String SKIP_LIST_KEY = "uri_skip_list";
-    // This is the path for updating skip url list. Check for the next version of the file
-    private static final String UPDATE_URL_PATH = "%sdk/uriskiplist_v#.json";
-    
+
     private final JSONObject DEFAULT_SKIP_URL_LIST;
 
     private static UniversalResourceAnalyser instance;
     
     
     public static UniversalResourceAnalyser getInstance(Context context) {
+        BranchLogger.d("UniversalResourceAnalyser getInstance");
         if (instance == null) {
             instance = new UniversalResourceAnalyser(context);
         }
@@ -66,6 +72,10 @@ class UniversalResourceAnalyser {
         }
         skipURLFormats = retrieveSkipURLFormats(context);
         acceptURLFormats = new ArrayList<>();
+    }
+
+    public JSONObject getSkipURLFormats(){
+        return this.getSkipURLFormats();
     }
     
     private JSONObject retrieveSkipURLFormats(Context context) {
@@ -107,7 +117,7 @@ class UniversalResourceAnalyser {
     
     void checkAndUpdateSkipURLFormats(Context context) {
         try {
-            new UrlSkipListUpdateTask(context).executeTask();
+            new UrlSkipListUpdateTask(context).executeTask(context);
         } catch (Exception e) {
             BranchLogger.d(e.getMessage());
         }
@@ -151,45 +161,35 @@ class UniversalResourceAnalyser {
         return strippedURL;
     }
     
-    private static class UrlSkipListUpdateTask extends BranchAsyncTask<Void, Void, JSONObject> {
+    private static class UrlSkipListUpdateTask {
         private final PrefHelper prefHelper;
-        private final int TIME_OUT = 1500;
         
         private UrlSkipListUpdateTask(Context context) {
             this.prefHelper = PrefHelper.getInstance(context);
         }
-        
-        @Override
-        protected JSONObject doInBackground(Void... params) {
-            TrafficStats.setThreadStatsTag(0);
-            JSONObject respObject = new JSONObject();
-            HttpsURLConnection connection = null;
-            try {
-                String update_url_path = UPDATE_URL_PATH.replace("%", PrefHelper.getCDNBaseUrl());
-                URL urlObject = new URL(update_url_path.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
-                connection = (HttpsURLConnection) urlObject.openConnection();
-                connection.setConnectTimeout(TIME_OUT);
-                connection.setReadTimeout(TIME_OUT);
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    if (connection.getInputStream() != null) {
-                        BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        respObject = new JSONObject(rd.readLine());
+
+        public void executeTask(Context context){
+            new SkipListChannel().enqueue(context, new Continuation<JSONObject>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NonNull Object o) {
+                    if(o != null && o instanceof JSONObject){
+                        onPostExecute((JSONObject) o);
+                    }
+                    else{
+                        BranchLogger.d("Expected JSONObject, was " + o);
                     }
                 }
-            } catch (Exception e) {
-                BranchLogger.d(e.getMessage());
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-            return respObject;
+            });
         }
-        
-        @Override
+
         protected void onPostExecute(JSONObject updatedURLFormatsObj) {
-            super.onPostExecute(updatedURLFormatsObj);
+            BranchLogger.d("UniversalResourceAnalyser onPostExecute " + updatedURLFormatsObj);
             if (updatedURLFormatsObj.optInt(VERSION_KEY) > skipURLFormats.optInt(VERSION_KEY)) {
                 skipURLFormats = updatedURLFormatsObj;
                 prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());

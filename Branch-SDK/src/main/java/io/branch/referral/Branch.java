@@ -857,7 +857,6 @@ public class Branch {
     void unlockSDKInitWaitLock() {
         if (requestQueue_ == null) return;
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        requestQueue_.processNextQueueItem();
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -1054,7 +1053,6 @@ public class Branch {
     @SuppressWarnings("WeakerAccess")
     public void removeSessionInitializationDelay() {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-        requestQueue_.processNextQueueItem();
     }
     
     /**
@@ -1472,14 +1470,13 @@ public class Branch {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
-        requestQueue_.processNextQueueItem();
     }
 
     /**
      * Notify Branch when network is available in order to process the next request in the queue.
      */
     public void notifyNetworkAvailable() {
-        requestQueue_.processNextQueueItem();
+        //todo reinit channel with saved events
     }
 
     private void setActivityLifeCycleObserver(Application application) {
