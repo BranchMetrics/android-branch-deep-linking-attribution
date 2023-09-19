@@ -477,11 +477,6 @@ public class ServerRequestQueue {
             }
         }
 
-        //this.enqueue(req);
-        //req.onRequestQueued();
-
-        //this.processNextQueueItem();
-
         RequestChannelKt.enqueue(req, new Continuation<ServerResponse>() {
             @NonNull
             @Override
@@ -494,7 +489,6 @@ public class ServerRequestQueue {
                 BranchLogger.v("handleNewRequest onResume " + o + " " + Thread.currentThread().getName());
                 if(o != null && o instanceof ServerResponse){
                     ServerResponse serverResponse = (ServerResponse) o;
-                    //BranchLogger.v("Response from server " + serverResponse);
                     ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
                 }
                 else{

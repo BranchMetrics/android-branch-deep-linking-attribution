@@ -46,6 +46,9 @@ import java.util.concurrent.TimeoutException;
 
 import io.branch.channels.RequestChannelKt;
 import io.branch.coroutines.RequestJobsKt;
+import io.branch.data.AdvertisingInfoObjectResult;
+import io.branch.data.InstallReferrerResult;
+import io.branch.data.PreInitDataResult;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -1384,8 +1387,7 @@ public class Branch {
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
          setInitState(SESSION_STATE.INITIALISING);
 
-         //todo job gaid and install referrer into open/install request
-         // get all saved serverrequests on init
+         // todo get all saved serverrequests on init
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
          if (r == null) {
              requestQueue_.insertRequestAtFront(request);
@@ -1395,7 +1397,7 @@ public class Branch {
          }
 
          if(ignoreWaitLocks || (!(request instanceof ServerRequestRegisterInstall))){
-             RequestJobsKt.openRequestJob(context_, new Continuation<ServerResponse>() {
+             RequestJobsKt.openRequestJob(context_, new Continuation<PreInitDataResult>() {
                  @NonNull
                  @Override
                  public CoroutineContext getContext() {
@@ -1404,12 +1406,14 @@ public class Branch {
 
                  @Override
                  public void resumeWith(@NonNull Object o) {
-                     BranchLogger.v("initTasks openRequestJob resumeWith");
+                     BranchLogger.v("initTasks openRequestJob resumeWith " + o);
+                     writePreInitResults(o);
+                     ServerRequestQueue.getInstance(context_).handleNewRequest(request);
                  }
              });
          }
          else {
-             RequestJobsKt.installRequestJob(context_, new Continuation<ServerResponse>() {
+             RequestJobsKt.installRequestJob(context_, new Continuation<PreInitDataResult>() {
                  @NonNull
                  @Override
                  public CoroutineContext getContext() {
@@ -1418,11 +1422,33 @@ public class Branch {
 
                  @Override
                  public void resumeWith(@NonNull Object o) {
-                     BranchLogger.v("initTasks installRequestJob resumeWith");
+                     BranchLogger.v("initTasks installRequestJob resumeWith " + o);
+                     writePreInitResults(o);
                  }
              });
          }
      }
+
+    private void writePreInitResults(Object o) {
+         if(o != null){
+             PreInitDataResult preInitDataResult = (PreInitDataResult) o;
+
+             AdvertisingInfoObjectResult advertisingInfoObjectResult = preInitDataResult.getAdvertisingInfoObjectResult();
+             if(advertisingInfoObjectResult != null && advertisingInfoObjectResult.getLimitAdTrackingValue() != null) {
+                 DeviceInfo.getInstance().getSystemObserver().setLAT(advertisingInfoObjectResult.getLimitAdTrackingValue());
+                 DeviceInfo.getInstance().getSystemObserver().setGAID(advertisingInfoObjectResult.getAdvertisingId());
+             }
+
+             InstallReferrerResult installReferrerResult = preInitDataResult.getInstallReferrerResult();
+             if(installReferrerResult != null){
+                 AppStoreReferrer.processReferrerInfo(context_,
+                         installReferrerResult.getLatestRawReferrer(),
+                         installReferrerResult.getLatestClickTimestamp(),
+                         installReferrerResult.getLatestInstallTimestamp(),
+                         installReferrerResult.getAppStore());
+             }
+         }
+    }
 
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;

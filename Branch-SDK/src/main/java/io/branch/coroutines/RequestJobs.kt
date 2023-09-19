@@ -1,30 +1,36 @@
 package io.branch.coroutines
 
 import android.content.Context
-import io.branch.data.InstallReferrerResult
-import io.branch.referral.Branch
+import io.branch.data.PreInitDataResult
 import io.branch.referral.BranchLogger
-import io.branch.referral.ServerRequest
-import io.branch.referral.ServerResponse
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 
-suspend fun installRequestJob(context: Context): ServerResponse? {
+suspend fun installRequestJob(context: Context): PreInitDataResult?  {
+    BranchLogger.v("installRequestJob")
     return supervisorScope {
-        val advertisingInfoObjectResult = async { getAdvertisingInfoObject(context) }
-        val latestInstallReferrerResult = async { fetchLatestInstallReferrer(context) }
+        try {
+            val advertisingInfoObjectResult = async { getAdvertisingInfoObject(context) }
+            val latestInstallReferrerResult = async { fetchLatestInstallReferrer(context) }
 
-        BranchLogger.d("latestInstallReferrerResult " + latestInstallReferrerResult.await() + " advertisingInfoObjectResult " + advertisingInfoObjectResult.await())
-        null
+            PreInitDataResult(advertisingInfoObjectResult.await(), latestInstallReferrerResult.await())
+        }
+        catch (exception: Exception){
+            BranchLogger.d(exception.message)
+            null
+        }
     }
 }
 
-suspend fun openRequestJob(context: Context): ServerResponse? {
+suspend fun openRequestJob(context: Context): PreInitDataResult? {
     return supervisorScope {
-        val advertisingInfoObjectResult = async { getAdvertisingInfoObject(context) }
-
-        BranchLogger.d("advertisingInfoObjectResult " + advertisingInfoObjectResult.await())
-        null
+        try {
+            val advertisingInfoObjectResult = async { getAdvertisingInfoObject(context) }
+            PreInitDataResult(advertisingInfoObjectResult.await(), null)
+        }
+        catch (exception: Exception) {
+            BranchLogger.d(exception.message)
+            null
+        }
     }
 }
