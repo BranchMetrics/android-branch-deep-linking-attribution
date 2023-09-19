@@ -30,12 +30,12 @@ class SystemObserverTests : BranchTest() {
         initBranchInstance()
         val so = DeviceInfo.getInstance().systemObserver
 
-        so.fetchAdId(
-            testContext
-        ) {
-            if(so.latVal == 0){
-                Assert.assertNotNull(so.aid)
-            }
+        so.fetchAdId(testContext)
+
+        Thread.sleep(1000) //TODO should be coroutine test
+
+        if(so.latVal == 0){
+            Assert.assertNotNull(so.aid)
         }
     }
 
@@ -44,12 +44,12 @@ class SystemObserverTests : BranchTest() {
         initBranchInstance()
         val so = DeviceInfo.getInstance().systemObserver
 
-        so.fetchAdId(
-            testContext
-        ) {
-            if(so.latVal == 1){
-                Assert.assertNull(so.aid)
-            }
+        so.fetchAdId(testContext)
+
+        Thread.sleep(1000)
+
+        if(so.latVal == 1){
+            Assert.assertNull(so.aid)
         }
     }
 }

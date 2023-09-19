@@ -48,7 +48,7 @@ import kotlin.coroutines.EmptyCoroutineContext;
  * attributes and parameters used by the Branch class, and made publicly available for use by
  * other classes.</p>
  */
-abstract class SystemObserver {
+public abstract class SystemObserver {
 
     /**
      * Default value for when no value has been returned by a system information call, but where
@@ -59,9 +59,6 @@ abstract class SystemObserver {
     static final String UUID_EMPTY = "00000000-0000-0000-0000-000000000000";
     private String GAIDString_ = null;
     private int LATVal_ = 0;
-
-    /* Needed to avoid duplicating GAID initialization from App.onCreate and Activity.onStart */
-    private String AIDInitializationSessionID_;
 
     /**
      * <p>Gets the {@link String} value of the {@link Secure#ANDROID_ID} setting in the device. This
@@ -241,7 +238,7 @@ abstract class SystemObserver {
     /**
     * Helper function to determine if the device is running Fire OS
     */
-    static boolean isFireOSDevice() {
+    public static boolean isFireOSDevice() {
         return getPhoneBrand().equalsIgnoreCase("amazon");
     }
 
@@ -249,7 +246,7 @@ abstract class SystemObserver {
      * Helper function to determine if the device is running on a Huawei device with HMS (Huawei Mobile Services),
      * for example "Mate 30 Pro". Note that non-Huawei devices will return false even if gradle pulls in HMS.
      */
-    static boolean isHuaweiMobileServicesAvailable(@NonNull Context context) {
+    public static boolean isHuaweiMobileServicesAvailable(@NonNull Context context) {
         // the proper way would be to use com.huawei.hms.api.HuaweiApiAvailability, however this class
         // is only found if Huawei ID lib is used (e.g. implementation 'com.huawei.hms:hwid:4.0.1.300')
         return isHuaweiDevice() && !isGooglePlayServicesAvailable(context);
@@ -438,191 +435,6 @@ abstract class SystemObserver {
         return "wifi".equalsIgnoreCase(getConnectionType(context));
     }
 
-    /**
-     * Method to prefetch the GAID and LAT values.
-     *
-     * @param context Context.
-     * @param callback {@link AdsParamsFetchEvents} instance to notify process completion
-     * @return {@link Boolean} with true if GAID fetch process started.
-     */
-    public void fetchAdId(Context context, AdsParamsFetchEvents callback) {
-        if (isFireOSDevice()) {
-            setFireAdId(context, callback);
-        }
-        else if (isHuaweiMobileServicesAvailable(context)) {
-            this.fetchHuaweiAdId(context, callback);
-        }
-        else {
-            this.fetchGoogleAdId(context, callback);
-        }
-    }
-
-    private void fetchHuaweiAdId(Context context, AdsParamsFetchEvents callback) {
-        if(DependencyUtilsKt.classExists(DependencyUtilsKt.huaweiAdvertisingIdClientClass)) {
-            AdvertisingIdsKt.getHuaweiAdvertisingInfoObject(context, new Continuation<com.huawei.hms.ads.identifier.AdvertisingIdClient.Info>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
-
-                @Override
-                public void resumeWith(Object o) {
-                    if (o != null) {
-                        try {
-                            com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
-
-                            boolean lat = info.isLimitAdTrackingEnabled();
-                            String aid = null;
-
-                            if(!lat) {
-                                aid = info.getId();
-                            }
-
-                            setLAT(lat ? 1 : 0);
-                            setGAID(aid);
-                        }
-                        catch (Exception e) {
-                            BranchLogger.d("Error in continuation: " + e);
-                        }
-                        finally {
-                            if (callback != null) {
-                                callback.onAdsParamsFetchFinished();
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        else {
-            if (callback != null) {
-                callback.onAdsParamsFetchFinished();
-            }
-
-            BranchLogger.v("Huawei advertising service not found. " +
-                    "If not expected, import " + DependencyUtilsKt.huaweiAdvertisingIdClientClass + " into your gradle dependencies");
-        }
-    }
-
-
-
-    private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
-        if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
-            AdvertisingIdsKt.getGoogleAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
-
-                @Override
-                public void resumeWith(Object o) {
-                    if (o != null) {
-                        try {
-                            AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
-
-                            boolean lat = info.isLimitAdTrackingEnabled();
-                            String aid = null;
-
-                            if(!lat) {
-                                aid = info.getId();
-                            }
-
-                            setLAT(lat ? 1 : 0);
-                            setGAID(aid);
-                        }
-                        catch (Exception e) {
-                            BranchLogger.d("Error in continuation: " + e);
-                        }
-                        finally {
-                            if (callback != null) {
-                                callback.onAdsParamsFetchFinished();
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        else {
-            if (callback != null) {
-                callback.onAdsParamsFetchFinished();
-            }
-
-            BranchLogger.v("Play Store advertising service not found. " +
-                    "If not expected, import " + DependencyUtilsKt.playStoreAdvertisingIdClientClass + " into your gradle dependencies");
-        }
-    }
-
-    private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
-        BranchLogger.v("setFireAdId");
-        AdvertisingIdsKt.getAmazonFireAdvertisingInfoObject(context, new Continuation<Pair<? extends Integer, ? extends String>>() {
-            @NonNull
-            @Override
-            public CoroutineContext getContext() {
-                return EmptyCoroutineContext.INSTANCE;
-            }
-
-            @Override
-            public void resumeWith(@NonNull Object o) {
-                try {
-                    if (o != null) {
-                        Pair<Integer, String> info = (Pair<Integer, String>) o;
-                        setLAT(info.component1());
-                        if (info.component1() == 0) {
-                            setGAID(info.component2());
-                        }
-                        else {
-                            setGAID(info.component2());
-                        }
-                    }
-                }
-                catch (Exception e){
-                    BranchLogger.d("Error in continuation: " + e);
-                }
-                finally {
-                    if (callback != null) {
-                        callback.onAdsParamsFetchFinished();
-                    }
-                }
-            }
-        });
-    }
-
-    public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
-        try {
-            InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
-
-                @Override
-                public void resumeWith(@NonNull Object o) {
-                    if (o != null) {
-                        InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
-                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore());
-                    }
-                }
-            });
-        }
-        catch(Exception e){
-            BranchLogger.d(e.getMessage());
-        }
-        finally {
-            if(callback != null){
-                callback.onInstallReferrersFinished();
-            }
-        }
-    }
-
-    interface AdsParamsFetchEvents {
-        void onAdsParamsFetchFinished();
-    }
-
-    interface InstallReferrerFetchEvents {
-        void onInstallReferrersFinished();
-    }
     /**
      * Get IP address from first non local net Interface
      */

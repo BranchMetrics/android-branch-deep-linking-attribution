@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.channels.RequestChannelKt;
+import io.branch.coroutines.RequestJobsKt;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -53,6 +54,9 @@ import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.LinkProperties;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -1389,43 +1393,36 @@ public class Branch {
          else {
              r.callback_ = request.callback_;
          }
-         initTasks(request, ignoreWaitLocks);
 
-         requestQueue_.processNextQueueItem();
+         if(ignoreWaitLocks || (!(request instanceof ServerRequestRegisterInstall))){
+             RequestJobsKt.openRequestJob(context_, new Continuation<ServerResponse>() {
+                 @NonNull
+                 @Override
+                 public CoroutineContext getContext() {
+                     return EmptyCoroutineContext.INSTANCE;
+                 }
+
+                 @Override
+                 public void resumeWith(@NonNull Object o) {
+                     BranchLogger.v("initTasks openRequestJob resumeWith");
+                 }
+             });
+         }
+         else {
+             RequestJobsKt.installRequestJob(context_, new Continuation<ServerResponse>() {
+                 @NonNull
+                 @Override
+                 public CoroutineContext getContext() {
+                     return EmptyCoroutineContext.INSTANCE;
+                 }
+
+                 @Override
+                 public void resumeWith(@NonNull Object o) {
+                     BranchLogger.v("initTasks installRequestJob resumeWith");
+                 }
+             });
+         }
      }
-
-    private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
-        if (!ignoreWaitLocks) {
-            // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
-            // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
-            if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-            }
-
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-
-            if (request instanceof ServerRequestRegisterInstall) {
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-
-                deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
-                    @Override
-                    public void onInstallReferrersFinished() {
-                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        BranchLogger.v("calling processNextQueueItem from onInstallReferrersFinished");
-                        requestQueue_.processNextQueueItem();
-                    }
-                });
-            }
-        }
-
-        deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
-            @Override
-            public void onAdsParamsFetchFinished() {
-                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                requestQueue_.processNextQueueItem();
-            }
-        });
-    }
 
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
