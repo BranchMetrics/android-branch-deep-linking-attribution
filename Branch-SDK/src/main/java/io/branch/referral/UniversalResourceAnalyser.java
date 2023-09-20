@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.net.TrafficStats;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -10,16 +9,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import io.branch.channels.SkipListChannel;
 import kotlin.coroutines.Continuation;
@@ -34,13 +28,14 @@ import kotlin.coroutines.EmptyCoroutineContext;
  * </p>
  */
 
-public class UniversalResourceAnalyser {
+class UniversalResourceAnalyser {
     private static JSONObject skipURLFormats;
     private final ArrayList<String> acceptURLFormats;
     private static final String SKIP_URL_FORMATS_KEY = "skip_url_format_key";
-    public static final String VERSION_KEY = "version";
+    private static final String VERSION_KEY = "version";
     private static final String SKIP_LIST_KEY = "uri_skip_list";
-
+    // This is the path for updating skip url list. Check for the next version of the file
+    private static final String UPDATE_URL_PATH = "%sdk/uriskiplist_v#.json";
     private final JSONObject DEFAULT_SKIP_URL_LIST;
 
     private static UniversalResourceAnalyser instance;
@@ -117,7 +112,7 @@ public class UniversalResourceAnalyser {
     
     void checkAndUpdateSkipURLFormats(Context context) {
         try {
-            new UrlSkipListUpdateTask(context).executeTask(context);
+            new UrlSkipListUpdateTask(context).executeTask();
         } catch (Exception e) {
             BranchLogger.d(e.getMessage());
         }
@@ -168,28 +163,36 @@ public class UniversalResourceAnalyser {
             this.prefHelper = PrefHelper.getInstance(context);
         }
 
-        public void executeTask(Context context){
-            new SkipListChannel().enqueue(context, new Continuation<JSONObject>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
+        public void executeTask(){
+            String update_url_path = UPDATE_URL_PATH.replace("%", PrefHelper.getCDNBaseUrl());
 
-                @Override
-                public void resumeWith(@NonNull Object o) {
-                    if(o != null && o instanceof JSONObject){
-                        onPostExecute((JSONObject) o);
+            try {
+                URL urlObject = new URL(update_url_path.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
+                new SkipListChannel().enqueue(urlObject, new Continuation<JSONObject>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
                     }
-                    else{
-                        BranchLogger.d("Expected JSONObject, was " + o);
+
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        if(o != null && o instanceof JSONObject){
+                            onPostExecute((JSONObject) o);
+                        }
+                        else{
+                            BranchLogger.d("Expected JSONObject, was " + o);
+                        }
                     }
-                }
-            });
+                });
+            }
+            catch (Exception e) {
+                BranchLogger.d(e.getMessage());
+            }
         }
 
         protected void onPostExecute(JSONObject updatedURLFormatsObj) {
-            BranchLogger.d("UniversalResourceAnalyser onPostExecute " + updatedURLFormatsObj);
+            BranchLogger.d("UniversalResourceAnalyser received " + updatedURLFormatsObj);
             if (updatedURLFormatsObj.optInt(VERSION_KEY) > skipURLFormats.optInt(VERSION_KEY)) {
                 skipURLFormats = updatedURLFormatsObj;
                 prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
