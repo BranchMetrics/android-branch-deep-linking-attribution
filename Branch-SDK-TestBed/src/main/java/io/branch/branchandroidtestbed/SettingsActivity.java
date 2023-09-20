@@ -61,7 +61,6 @@ public class SettingsActivity extends Activity {
             if (i == EditorInfo.IME_ACTION_DONE) {
                 String newApiUrl = textView.getText().toString();
                 Branch.setAPIUrl(newApiUrl);
-                PrefHelper.setAPIUrl(newApiUrl);
 
                 InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(apiUrlText.getWindowToken(), 0);
