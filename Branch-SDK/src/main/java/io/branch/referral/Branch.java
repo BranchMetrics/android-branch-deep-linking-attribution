@@ -35,6 +35,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -1383,15 +1384,18 @@ public class Branch {
      * will wait on the wait locks to complete any pending operations
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
+         BranchLogger.v("registerAppInit " + request + " " + ignoreWaitLocks);
          setInitState(SESSION_STATE.INITIALISING);
 
          // todo get all saved serverrequests on init
+         BranchLogger.v("registerAppInit queue is " + Arrays.toString(requestQueue_.queue.toArray()));
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
          if (r == null) {
              requestQueue_.insertRequestAtFront(request);
          }
          else {
              r.callback_ = request.callback_;
+             requestQueue_.insertRequestAtFront(r);
          }
 
          if(ignoreWaitLocks || (!(request instanceof ServerRequestRegisterInstall))){
@@ -1422,6 +1426,7 @@ public class Branch {
                  public void resumeWith(@NonNull Object o) {
                      BranchLogger.v("initTasks installRequestJob resumeWith " + o);
                      writePreInitResults(o);
+                     ServerRequestQueue.getInstance(context_).handleNewRequest(request);
                  }
              });
          }

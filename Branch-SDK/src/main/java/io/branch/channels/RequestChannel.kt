@@ -17,11 +17,9 @@ val requestChannel = Channel <ServerRequest>(capacity = 1)
 val mutex = Mutex()
 
 
-suspend fun enqueue(request: ServerRequest) : ServerResponse {
+suspend fun execute(request: ServerRequest) : ServerResponse {
     return withContext(Dispatchers.IO) {
         launch {
-            val timeStamp = System.currentTimeMillis()
-            BranchLogger.i("requestChannel enqueuing: $request" + " at $timeStamp" + " on" + Thread.currentThread().name)
             requestChannel.send(request)
         }
         executeNetworkRequest(requestChannel.receive())

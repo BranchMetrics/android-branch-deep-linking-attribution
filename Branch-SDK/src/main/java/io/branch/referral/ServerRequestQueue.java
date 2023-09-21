@@ -1,12 +1,8 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,10 +16,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 import io.branch.channels.RequestChannelKt;
 import kotlin.coroutines.Continuation;
@@ -41,13 +33,9 @@ public class ServerRequestQueue {
     private static ServerRequestQueue SharedInstance;
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
-    private final List<ServerRequest> queue;
+    public final List<ServerRequest> queue;
     //Object for synchronising operations on server request queue
     private static final Object reqQueueLockObject = new Object();
-
-    private final Semaphore serverSema_ = new Semaphore(1);
-
-    int networkCount_ = 0;
 
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
@@ -151,6 +139,7 @@ public class ServerRequestQueue {
      * @param request The {@link ServerRequest} object to add to the queue.
      */
     void enqueue(ServerRequest request) {
+        BranchLogger.v("ServerRequestQueue enqueue " + request);
         synchronized (reqQueueLockObject) {
             if (request != null) {
                 queue.add(request);
@@ -196,6 +185,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(index);
+                BranchLogger.v("ServerRequestQueue peakAt " + index + " returned " + req);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
                 BranchLogger.d(e.getMessage());
             }
@@ -261,6 +251,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 isRemoved = queue.remove(request);
+                BranchLogger.v("ServerRequestQueue removed " + request + " " + isRemoved);
                 persist();
             } catch (UnsupportedOperationException e) {
                 BranchLogger.d(e.getMessage());
@@ -273,6 +264,7 @@ public class ServerRequestQueue {
      * <p> Clears all pending requests in the queue </p>
      */
     void clear() {
+        BranchLogger.v("ServerRequestQueue clear");
         synchronized (reqQueueLockObject) {
             try {
                 queue.clear();
@@ -318,11 +310,8 @@ public class ServerRequestQueue {
     }
 
     void insertRequestAtFront(ServerRequest req) {
-        if (networkCount_ == 0) {
-            this.insert(req, 0);
-        } else {
-            this.insert(req, 1);
-        }
+        BranchLogger.v("ServerRequestQueue insertRequestAtFront " + req);
+        this.insert(req, 0);
     }
 
     // Determine if a Request needs a Session to proceed.
@@ -357,6 +346,7 @@ public class ServerRequestQueue {
     }
 
     void updateAllRequestsInQueue() {
+        BranchLogger.v("ServerRequestQueue updateAllRequestsInQueue");
         try {
             for (int i = 0; i < this.getSize(); i++) {
                 ServerRequest req = this.peekAt(i);
@@ -408,7 +398,27 @@ public class ServerRequestQueue {
             }
         }
 
-        RequestChannelKt.enqueue(req, new Continuation<ServerResponse>() {
+        enqueue(req);
+
+        if(req instanceof ServerRequestInitSession){
+            startSessionQueue();
+        }
+        else if(Branch.getInstance().initState_ == Branch.SESSION_STATE.INITIALISED){
+            executeRequest(req);
+        }
+    }
+
+    public void startSessionQueue(){
+        BranchLogger.v("ServerRequestQueue startSessionQueue " + Arrays.toString(queue.toArray()));
+        synchronized (reqQueueLockObject) {
+            for (ServerRequest req : queue) {
+                executeRequest(req);
+            }
+        }
+    }
+
+    private void executeRequest(ServerRequest req) {
+        RequestChannelKt.execute(req, new Continuation<ServerResponse>() {
             @NonNull
             @Override
             public CoroutineContext getContext() {
@@ -417,12 +427,12 @@ public class ServerRequestQueue {
 
             @Override
             public void resumeWith(@NonNull Object o) {
-                BranchLogger.v("handleNewRequest onResume " + o + " " + Thread.currentThread().getName());
-                if(o != null && o instanceof ServerResponse){
+                BranchLogger.v("handleNewRequest resumeWith " + o + " " + Thread.currentThread().getName());
+                if (o != null && o instanceof ServerResponse) {
                     ServerResponse serverResponse = (ServerResponse) o;
                     ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
                 }
-                else{
+                else {
                     BranchLogger.v("Expected ServerResponse, was " + o);
                 }
             }
@@ -430,6 +440,7 @@ public class ServerRequestQueue {
     }
 
     public void onPostExecuteInner(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onPostExecuteInner " + serverRequest + " " + serverResponse);
         if (serverResponse == null) {
             serverRequest.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
             return;
@@ -445,6 +456,7 @@ public class ServerRequestQueue {
     }
 
     private void onRequestSuccess(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onRequestSuccess " + serverRequest + " " + serverResponse);
         // If the request succeeded
         @Nullable final JSONObject respJson = serverResponse.getObject();
         if (respJson == null) {
@@ -516,16 +528,17 @@ public class ServerRequestQueue {
 
         if (respJson != null) {
             serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
-            //ServerRequestQueue.this.remove(serverRequest);
+            ServerRequestQueue.this.remove(serverRequest);
         } else if (serverRequest.shouldRetryOnFail()) {
             // already called handleFailure above
             serverRequest.clearCallbacks();
         } else {
-            //ServerRequestQueue.this.remove(serverRequest);
+            ServerRequestQueue.this.remove(serverRequest);
         }
     }
 
     void onRequestFailed(ServerRequest serverRequest, ServerResponse serverResponse, int status) {
+        BranchLogger.v("ServerRequestQueue onRequestFailed " + serverRequest + " " + serverResponse);
         // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
         if (serverRequest instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
             Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
@@ -534,7 +547,8 @@ public class ServerRequestQueue {
         // On a bad request or in case of a conflict notify with call back and remove the request.
         if ((status == 400 || status == 409) && serverRequest instanceof ServerRequestCreateUrl) {
             ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
-        } else {
+        }
+        else {
             //On Network error or Branch is down fail all the pending requests in the queue except
             //for request which need to be replayed on failure.
             //ServerRequestQueue.this.networkCount_ = 0;
@@ -545,8 +559,7 @@ public class ServerRequestQueue {
         // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
         // remove it from the queue
         if (unretryableErrorCode || !serverRequest.shouldRetryOnFail() || (serverRequest.currentRetryCount >= Branch.getInstance().prefHelper_.getNoConnectionRetryMax())) {
-            //Branch.getInstance().requestQueue_.remove(serverRequest);
-            //todo
+            Branch.getInstance().requestQueue_.remove(serverRequest);
         } else {
             // failure has already been handled
             // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
