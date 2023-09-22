@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import io.branch.channels.RequestChannelKt;
+import io.branch.channels.ServerRequestChannelKt;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -30,7 +30,7 @@ import kotlin.coroutines.EmptyCoroutineContext;
 public class ServerRequestQueue {
     private static final String PREF_KEY = "BNCServerRequestQueue";
     private static final int MAX_ITEMS = 25;
-    private static ServerRequestQueue SharedInstance;
+    private static volatile ServerRequestQueue SharedInstance;
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
     public final List<ServerRequest> queue;
@@ -93,9 +93,11 @@ public class ServerRequestQueue {
 
             BranchLogger.v("ServerRequestQueue persist " + jsonArr);
             editor.putString(PREF_KEY, jsonArr.toString()).apply();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             String msg = ex.getMessage();
-            BranchLogger.v("Failed to persist queue" + (msg == null ? "" : msg));
+
+            BranchLogger.v("Failed to persist queue " + ex + " "+ (msg == null ? "" : msg));
         }
     }
     
@@ -464,7 +466,7 @@ public class ServerRequestQueue {
     }
 
     private void executeRequest(ServerRequest req) {
-        RequestChannelKt.execute(req, new Continuation<ServerResponse>() {
+        ServerRequestChannelKt.execute(req, new Continuation<ServerResponse>() {
             @NonNull
             @Override
             public CoroutineContext getContext() {
@@ -477,6 +479,7 @@ public class ServerRequestQueue {
                 if (o != null && o instanceof ServerResponse) {
                     ServerResponse serverResponse = (ServerResponse) o;
                     ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
+                    //TODO: run callback on main by default
                 }
                 else {
                     BranchLogger.v("Expected ServerResponse, was " + o);
@@ -487,6 +490,7 @@ public class ServerRequestQueue {
 
     public void onPostExecuteInner(ServerRequest serverRequest, ServerResponse serverResponse) {
         BranchLogger.v("ServerRequestQueue onPostExecuteInner " + serverRequest + " " + serverResponse);
+        // run on main
         if (serverResponse == null) {
             serverRequest.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
             return;

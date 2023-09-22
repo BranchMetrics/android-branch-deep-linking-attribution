@@ -660,8 +660,15 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onStart() {
+        Log.d("BranchSDK_Tester", Branch.getInstance().getInitState() + "");
         super.onStart();
-        Branch.getInstance().setIdentity("testDevID");
+        for(int i = 0; i < 5; i++) {
+            new BranchEvent("beforeSetId"+i).logEvent(this);
+        }
+        Branch.getInstance().setIdentity("newID3");
+        for(int i = 0; i < 5; i++) {
+            new BranchEvent("afterSetId"+i).logEvent(this);
+        }
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));

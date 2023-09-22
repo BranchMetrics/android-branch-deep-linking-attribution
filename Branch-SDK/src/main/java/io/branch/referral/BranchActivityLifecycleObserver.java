@@ -54,19 +54,8 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         Branch branch = Branch.getInstance();
         if (branch == null) return;
 
-        // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
-        // activity also to make sure we do not override the intent data
-        if (!Branch.bypassCurrentActivityIntentState()) {
-            branch.onIntentReady(activity);
-        }
-
         if (branch.getInitState() == Branch.SESSION_STATE.UNINITIALISED && !Branch.disableAutoSessionInitialization) {
-            if (Branch.getPluginName() == null) {
-                // this is the only place where we self-initialize in case user opens the app from 'recent apps tray'
-                // and the entry Activity is not the launcher Activity where user placed initSession themselves.
-                BranchLogger.v("initializing session on user's behalf (onActivityResumed called but SESSION_STATE = UNINITIALISED)");
-                Branch.sessionBuilder(activity).isAutoInitialization(true).init();
-            } else {
+            if (Branch.getPluginName() != null) {
                 BranchLogger.v("onActivityResumed called and SESSION_STATE = UNINITIALISED, however this is a " + Branch.getPluginName() + " plugin, so we are NOT initializing session on user's behalf");
             }
         }
@@ -96,7 +85,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
         activityCnt_--; // Check if this is the last activity. If so, stop the session.
         if (activityCnt_ < 1) {
-            branch.setInstantDeepLinkPossible(false);
             branch.closeSessionInternal();
         }
     }

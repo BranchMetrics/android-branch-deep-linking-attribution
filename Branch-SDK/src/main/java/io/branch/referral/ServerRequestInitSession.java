@@ -1,15 +1,10 @@
 package io.branch.referral;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-
-import java.util.Objects;
 
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
@@ -83,7 +78,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        Branch.getInstance().unlockSDKInitWaitLock();
         // Check for any Third party SDK for data handling
         prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
         prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);

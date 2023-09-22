@@ -8,12 +8,13 @@ import io.branch.referral.ServerResponse
 import io.branch.referral.TrackingController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-val requestChannel = Channel <ServerRequest>(capacity = 1)
+val requestChannel = Channel <ServerRequest>(RENDEZVOUS)
 val mutex = Mutex()
 
 
@@ -29,7 +30,7 @@ suspend fun execute(request: ServerRequest) : ServerResponse {
 private suspend fun executeNetworkRequest(request: ServerRequest): ServerResponse {
     var result: ServerResponse
     mutex.withLock {
-        BranchLogger.i("requestChannel executeNetworkRequest: $request" + Thread.currentThread().name)
+        BranchLogger.v("ServerRequestChannel executeNetworkRequest: $request" + Thread.currentThread().name)
 
         request.onPreExecute()
         request.updateRequestData()
@@ -54,6 +55,11 @@ private suspend fun executeNetworkRequest(request: ServerRequest): ServerRespons
                 request.post, request.requestUrl, request.requestPath, branchKey
             )
         }
+
+        //TODO in between passing the result back and sending the next request
+        // it is possible to race against setting on the prefhelper
+        // must complete all writes before onPreExecute reads
+
     }
 
     return result
