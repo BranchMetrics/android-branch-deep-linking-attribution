@@ -91,6 +91,7 @@ public class ServerRequestQueue {
                 }
             }
 
+            BranchLogger.v("ServerRequestQueue persist " + jsonArr);
             editor.putString(PREF_KEY, jsonArr.toString()).apply();
         } catch (Exception ex) {
             String msg = ex.getMessage();
@@ -112,11 +113,14 @@ public class ServerRequestQueue {
                             result.add(req);
                         }
                     }
-                } catch (JSONException e) {
+                }
+                catch (JSONException e) {
                     BranchLogger.d(e.getMessage());
                 }
             }
         }
+
+        BranchLogger.v("ServerRequestQueue retrieve " + result);
         return result;
     }
     
@@ -259,6 +263,40 @@ public class ServerRequestQueue {
         }
         return isRemoved;
     }
+
+    /**
+     * If the request is currently in the queue, remove it from that position
+     * and insert at destination to prevent duplicates
+     * Else, just insert at that position
+     * @param request
+     * @param destination
+     */
+    public void move(ServerRequest request, int destination){
+        BranchLogger.v("ServerRequestQueue move " + request + " " + destination);
+        synchronized (reqQueueLockObject) {
+            try {
+                int index = -1;
+                for (int i = 0; i < queue.size(); i++) {
+                    if (queue.get(i) == request) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                // We found the request we want to move in the queue
+                if (index > -1) {
+                    queue.remove(index);
+                }
+
+                queue.add(destination, request);
+
+                persist();
+            }
+            catch (Exception e) {
+                BranchLogger.v(e.getMessage());
+            }
+        }
+    }
     
     /**
      * <p> Clears all pending requests in the queue </p>
@@ -307,11 +345,6 @@ public class ServerRequestQueue {
                 }
             }
         }
-    }
-
-    void insertRequestAtFront(ServerRequest req) {
-        BranchLogger.v("ServerRequestQueue insertRequestAtFront " + req);
-        this.insert(req, 0);
     }
 
     // Determine if a Request needs a Session to proceed.
@@ -378,7 +411,7 @@ public class ServerRequestQueue {
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
-        BranchLogger.d("handleNewRequest " + req);
+        BranchLogger.d("ServerRequestQueue handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             BranchLogger.d("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
@@ -394,20 +427,33 @@ public class ServerRequestQueue {
             }
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
-                req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
             }
         }
 
+        // If the request we are about to handle is an init
+        // Move it to the front, and persist state
+        // Then go through the queue in order
+        if(req instanceof ServerRequestInitSession){
+            move(req, 0);
+            startSessionQueue();
+            return;
+        }
+
+        // Add to the queue and persist the state locally
         enqueue(req);
 
-        if(req instanceof ServerRequestInitSession){
-            startSessionQueue();
-        }
-        else if(Branch.getInstance().initState_ == Branch.SESSION_STATE.INITIALISED){
+        // If the session is already initialized,
+        // Or, it doesn't need a session
+        // Then execute immediately
+        if(Branch.getInstance().initState_ == Branch.SESSION_STATE.INITIALISED
+        || !requestNeedsSession(req)){
             executeRequest(req);
         }
     }
 
+    /**
+     * Process all recorded ServerRequests now that the session is ready
+     */
     public void startSessionQueue(){
         BranchLogger.v("ServerRequestQueue startSessionQueue " + Arrays.toString(queue.toArray()));
         synchronized (reqQueueLockObject) {
@@ -427,7 +473,7 @@ public class ServerRequestQueue {
 
             @Override
             public void resumeWith(@NonNull Object o) {
-                BranchLogger.v("handleNewRequest resumeWith " + o + " " + Thread.currentThread().getName());
+                BranchLogger.v("ServerRequestQueue executeRequest resumeWith " + o + " " + Thread.currentThread().getName());
                 if (o != null && o instanceof ServerResponse) {
                     ServerResponse serverResponse = (ServerResponse) o;
                     ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
@@ -529,10 +575,12 @@ public class ServerRequestQueue {
         if (respJson != null) {
             serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
             ServerRequestQueue.this.remove(serverRequest);
-        } else if (serverRequest.shouldRetryOnFail()) {
+        }
+        else if (serverRequest.shouldRetryOnFail()) {
             // already called handleFailure above
             serverRequest.clearCallbacks();
-        } else {
+        }
+        else {
             ServerRequestQueue.this.remove(serverRequest);
         }
     }

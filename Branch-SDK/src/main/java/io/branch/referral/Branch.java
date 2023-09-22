@@ -1387,15 +1387,15 @@ public class Branch {
          BranchLogger.v("registerAppInit " + request + " " + ignoreWaitLocks);
          setInitState(SESSION_STATE.INITIALISING);
 
-         // todo get all saved serverrequests on init
          BranchLogger.v("registerAppInit queue is " + Arrays.toString(requestQueue_.queue.toArray()));
+
+         // Originally, if an open was previously persisted on the queue
+         // Check if it was initiated intentionally, i.e not an auto init
+         // If so, set the callback to this current init object.
+         // TODO: This may not be needed anymore as auto-init is removed.
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
-         if (r == null) {
-             requestQueue_.insertRequestAtFront(request);
-         }
-         else {
-             r.callback_ = request.callback_;
-             requestQueue_.insertRequestAtFront(r);
+         if (r != null) {
+             request.callback_ = r.callback_;
          }
 
          if(ignoreWaitLocks || (!(request instanceof ServerRequestRegisterInstall))){
