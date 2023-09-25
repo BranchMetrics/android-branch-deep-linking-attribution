@@ -4,6 +4,7 @@ import io.branch.referral.Branch
 import io.branch.referral.BranchError
 import io.branch.referral.BranchLogger
 import io.branch.referral.ServerRequest
+import io.branch.referral.ServerRequestQueue
 import io.branch.referral.ServerResponse
 import io.branch.referral.TrackingController
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +60,9 @@ private suspend fun executeNetworkRequest(request: ServerRequest): ServerRespons
         //TODO in between passing the result back and sending the next request
         // it is possible to race against setting on the prefhelper
         // must complete all writes before onPreExecute reads
+
+
+        ServerRequestQueue.getInstance(Branch.getInstance().applicationContext).onPostExecuteInner(request, result)
 
     }
 

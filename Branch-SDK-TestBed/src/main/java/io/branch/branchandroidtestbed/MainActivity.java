@@ -663,11 +663,33 @@ public class MainActivity extends Activity {
         Log.d("BranchSDK_Tester", Branch.getInstance().getInitState() + "");
         super.onStart();
         for(int i = 0; i < 5; i++) {
-            new BranchEvent("beforeSetId"+i).logEvent(this);
+            int finalI = i;
+            new BranchEvent("beforeSetId"+i).logEvent(this, new BranchEvent.BranchLogEventCallback() {
+                @Override
+                public void onSuccess(int responseCode) {
+                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "beforeSetId" + finalI + " onSuccess on thread " + Thread.currentThread().getName());
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "beforeSetId" + finalI + " onFailure on thread " + Thread.currentThread().getName());
+                }
+            });
         }
         Branch.getInstance().setIdentity("newID3");
         for(int i = 0; i < 5; i++) {
-            new BranchEvent("afterSetId"+i).logEvent(this);
+            int finalI = i;
+            new BranchEvent("afterSetId"+i).logEvent(this, new BranchEvent.BranchLogEventCallback() {
+                @Override
+                public void onSuccess(int responseCode) {
+                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "afterSetId" + finalI + " onSuccess on thread " + Thread.currentThread().getName());
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "afterSetId" + finalI + " onFailure on thread " + Thread.currentThread().getName());
+                }
+            });
         }
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));

@@ -77,7 +77,8 @@ public class ServerRequestQueue {
         queue = retrieve(c);
     }
     
-    private void persist() {
+    private void persist(String s) {
+        BranchLogger.v("ServerRequestQueue persist begin from " + s);
         try {
             JSONArray jsonArr = new JSONArray();
             synchronized (reqQueueLockObject) {
@@ -91,7 +92,8 @@ public class ServerRequestQueue {
                 }
             }
 
-            BranchLogger.v("ServerRequestQueue persist " + jsonArr);
+            //BranchLogger.v("ServerRequestQueue persist " + jsonArr);
+            BranchLogger.v("ServerRequestQueue persist " + Arrays.toString(queue.toArray()));
             editor.putString(PREF_KEY, jsonArr.toString()).apply();
         }
         catch (Exception ex) {
@@ -99,6 +101,7 @@ public class ServerRequestQueue {
 
             BranchLogger.v("Failed to persist queue " + ex + " "+ (msg == null ? "" : msg));
         }
+        BranchLogger.v("persist end");
     }
     
     private List<ServerRequest> retrieve(Context context) {
@@ -152,28 +155,9 @@ public class ServerRequestQueue {
                 if (getSize() >= MAX_ITEMS) {
                     queue.remove(1);
                 }
-                persist();
+                persist("enqueue " + request);
             }
         }
-    }
-    
-    /**
-     * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue
-     * without removing it.</p>
-     *
-     * @return The {@link ServerRequest} object at position with index 0 within the queue.
-     */
-    ServerRequest peek() {
-        BranchLogger.v("peek " + Arrays.toString(queue.toArray()));
-        ServerRequest req = null;
-        synchronized (reqQueueLockObject) {
-            try {
-                req = queue.get(0);
-            } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(e.getMessage());
-            }
-        }
-        return req;
     }
     
     /**
@@ -198,53 +182,7 @@ public class ServerRequestQueue {
         }
         return req;
     }
-    
-    /**
-     * <p>As the method name implies, inserts a {@link ServerRequest} into the queue at the index
-     * position specified.</p>
-     *
-     * @param request The {@link ServerRequest} to insert into the queue.
-     * @param index   An {@link Integer} value specifying the index at which to insert the
-     *                supplied {@link ServerRequest} object. Fails silently if the index
-     *                supplied is invalid.
-     */
-    void insert(ServerRequest request, int index) {
-        synchronized (reqQueueLockObject) {
-            try {
-                if (queue.size() < index) {
-                    index = queue.size();
-                }
-                queue.add(index, request);
-                persist();
-            } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(e.getMessage());
-            }
-        }
-    }
-    
-    /**
-     * <p>As the method name implies, removes the {@link ServerRequest} object, at the position
-     * indicated by the {@link Integer} parameter supplied.</p>
-     *
-     * @param index An {@link Integer} value specifying the index at which to remove the
-     *              {@link ServerRequest} object. Fails silently if the index
-     *              supplied is invalid.
-     * @return The {@link ServerRequest} object being removed.
-     */
-    @SuppressWarnings("unused")
-    public ServerRequest removeAt(int index) {
-        ServerRequest req = null;
-        synchronized (reqQueueLockObject) {
-            try {
-                req = queue.remove(index);
-                persist();
-            } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(e.getMessage());
-            }
-        }
-        return req;
-    }
-    
+
     /**
      * <p>As the method name implies, removes {@link ServerRequest} supplied in the parameter if it
      * is present in the queue.</p>
@@ -258,7 +196,7 @@ public class ServerRequestQueue {
             try {
                 isRemoved = queue.remove(request);
                 BranchLogger.v("ServerRequestQueue removed " + request + " " + isRemoved);
-                persist();
+                persist("remove " + request);
             } catch (UnsupportedOperationException e) {
                 BranchLogger.d(e.getMessage());
             }
@@ -292,7 +230,7 @@ public class ServerRequestQueue {
 
                 queue.add(destination, request);
 
-                persist();
+                persist("move " + request);
             }
             catch (Exception e) {
                 BranchLogger.v(e.getMessage());
@@ -308,7 +246,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 queue.clear();
-                persist();
+                persist("clear");
             } catch (UnsupportedOperationException e) {
                 BranchLogger.d(e.getMessage());
             }
@@ -403,6 +341,7 @@ public class ServerRequestQueue {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        BranchLogger.v("ServerRequestQueue updateAllRequestsInQueue end");
     }
 
     /**
@@ -478,7 +417,6 @@ public class ServerRequestQueue {
                 BranchLogger.v("ServerRequestQueue executeRequest resumeWith " + o + " " + Thread.currentThread().getName());
                 if (o != null && o instanceof ServerResponse) {
                     ServerResponse serverResponse = (ServerResponse) o;
-                    ServerRequestQueue.this.onPostExecuteInner(req, serverResponse);
                     //TODO: run callback on main by default
                 }
                 else {
@@ -509,9 +447,7 @@ public class ServerRequestQueue {
         BranchLogger.v("ServerRequestQueue onRequestSuccess " + serverRequest + " " + serverResponse);
         // If the request succeeded
         @Nullable final JSONObject respJson = serverResponse.getObject();
-        if (respJson == null) {
-            serverRequest.handleFailure(500, "Null response json.");
-        }
+
 
         if (serverRequest instanceof ServerRequestCreateUrl && respJson != null) {
             try {
@@ -527,7 +463,6 @@ public class ServerRequestQueue {
         else if (serverRequest instanceof ServerRequestLogout) {
             //On Logout clear the link cache and all pending requests
             Branch.getInstance().linkCache_.clear();
-            //todo close and make a new channel
             ServerRequestQueue.this.clear();
         }
 
@@ -576,16 +511,16 @@ public class ServerRequestQueue {
             }
         }
 
+        // can this be moved out?
+        ServerRequestQueue.this.remove(serverRequest);
+        // main thread
+        if (respJson == null) {
+            serverRequest.handleFailure(500, "Null response json.");
+        }
+
+        //main thread
         if (respJson != null) {
             serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
-            ServerRequestQueue.this.remove(serverRequest);
-        }
-        else if (serverRequest.shouldRetryOnFail()) {
-            // already called handleFailure above
-            serverRequest.clearCallbacks();
-        }
-        else {
-            ServerRequestQueue.this.remove(serverRequest);
         }
     }
 
@@ -603,7 +538,6 @@ public class ServerRequestQueue {
         else {
             //On Network error or Branch is down fail all the pending requests in the queue except
             //for request which need to be replayed on failure.
-            //ServerRequestQueue.this.networkCount_ = 0;
             serverRequest.handleFailure(status, serverResponse.getFailReason());
         }
 
@@ -614,7 +548,6 @@ public class ServerRequestQueue {
             Branch.getInstance().requestQueue_.remove(serverRequest);
         } else {
             // failure has already been handled
-            // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
             serverRequest.clearCallbacks();
         }
     }
