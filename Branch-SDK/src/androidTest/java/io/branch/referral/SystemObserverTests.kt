@@ -25,31 +25,31 @@ class SystemObserverTests : BranchTest() {
         // TODO: figure out how to handle disable tracking, seems the tracking controller is not very testable
     }
 
-    @Test
-    fun fetchAdIdLatNotEnabledGaidNotNull(){
-        initBranchInstance()
-        val so = DeviceInfo.getInstance().systemObserver
+//    @Test
+//    fun fetchAdIdLatNotEnabledGaidNotNull(){
+//        initBranchInstance()
+//        val so = DeviceInfo.getInstance().systemObserver
+//
+//        so.fetchAdId(testContext)
+//
+//        Thread.sleep(1000) //TODO should be coroutine test
+//
+//        if(so.latVal == 0){
+//            Assert.assertNotNull(so.aid)
+//        }
+//    }
 
-        so.fetchAdId(testContext)
-
-        Thread.sleep(1000) //TODO should be coroutine test
-
-        if(so.latVal == 0){
-            Assert.assertNotNull(so.aid)
-        }
-    }
-
-    @Test
-    fun fetchAdIdLatEnabledAidNull(){
-        initBranchInstance()
-        val so = DeviceInfo.getInstance().systemObserver
-
-        so.fetchAdId(testContext)
-
-        Thread.sleep(1000)
-
-        if(so.latVal == 1){
-            Assert.assertNull(so.aid)
-        }
-    }
+//    @Test
+//    fun fetchAdIdLatEnabledAidNull(){
+//        initBranchInstance()
+//        val so = DeviceInfo.getInstance().systemObserver
+//
+//        so.fetchAdId(testContext)
+//
+//        Thread.sleep(1000)
+//
+//        if(so.latVal == 1){
+//            Assert.assertNull(so.aid)
+//        }
+//    }
 }

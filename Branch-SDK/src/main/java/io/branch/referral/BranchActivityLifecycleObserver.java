@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -104,14 +103,5 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         }
 
         activitiesOnStack_.remove(activity.toString());
-    }
-
-    boolean isCurrentActivityLaunchedFromStack() {
-        Branch branch = Branch.getInstance();
-        if (branch == null || branch.getCurrentActivity() == null) {
-            // don't think this is possible
-            return false;
-        }
-        return activitiesOnStack_.contains(branch.getCurrentActivity().toString());
     }
 }

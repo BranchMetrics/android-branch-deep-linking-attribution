@@ -59,6 +59,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.validators.IntegrationValidator;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -672,8 +673,8 @@ public class MainActivity extends Activity {
 
 
                 // QA purpose only
-                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+                 //TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+                 BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
 
             }
         }).withData(this.getIntent().getData()).init();

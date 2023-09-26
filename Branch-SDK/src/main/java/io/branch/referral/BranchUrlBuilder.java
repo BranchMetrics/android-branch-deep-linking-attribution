@@ -117,6 +117,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
     protected String getUrl() {
         String shortUrl = null;
         if (branchReferral_ != null) {
+            BranchLogger.v("getUrl");
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
                     channel_, feature_, stage_, campaign_,
                     params_, null, false, defaultToLongUrl_);

@@ -11,12 +11,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -42,6 +37,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -1146,6 +1143,7 @@ public class Branch {
      * Note : This method can be used only internally. Use {@link BranchUrlBuilder} for creating short urls.
      */
     String generateShortLinkInternal(ServerRequestCreateUrl req) {
+        BranchLogger.v("generateShortLinkInternal is async " + req.isAsync());
         if (!req.constructError_ && !req.handleErrors(context_)) {
             if (linkCache_.containsKey(req.getLinkPost())) {
                 String url = linkCache_.get(req.getLinkPost());
@@ -1198,8 +1196,13 @@ public class Branch {
         ServerResponse response = null;
         try {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-            response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            // For one-off tasks
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            response = executor.submit(() -> branchRemoteInterface_.make_restful_post(req.getPost(),
+                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
+                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey())).get(timeOut, TimeUnit.MILLISECONDS);
+        }
+        catch (InterruptedException | ExecutionException | TimeoutException e) {
             BranchLogger.d(e.getMessage());
         }
         String url = null;
@@ -1618,149 +1621,6 @@ public class Branch {
          *                  A null value is set if logout succeeded.
          */
         void onLogoutFinished(boolean loggedOut, BranchError error);
-    }
-
-    /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
-
-    //-------------------Auto deep link feature-------------------------------------------//
-    
-    /**
-     * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activity configured for auto deep link on seeing matching keys.
-     * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
-     * Configure your activity in your manifest to enable auto deep linking as follows
-     * <!--
-     * <activity android:name=".YourActivity">
-     * <meta-data android:name="io.branch.sdk.auto_link" android:value="DeepLinkKey1","DeepLinkKey2" />
-     * </activity>
-     * -->
-     *
-     * @param activity Instance of activity to check if launched on auto deep link.
-     * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
-     */
-    public static boolean isAutoDeepLinkLaunch(Activity activity) {
-        return (activity.getIntent().getStringExtra(Defines.IntentKeys.AutoDeepLinked.getKey()) != null);
-    }
-    
-    void checkForAutoDeepLinkConfiguration() {
-        JSONObject latestParams = getLatestReferringParams();
-        String deepLinkActivity = null;
-        
-        try {
-            //Check if the application is launched by clicking a Branch link.
-            if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
-                    || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
-                return;
-            }
-            if (latestParams.length() > 0) {
-                // Check if auto deep link is disabled.
-                ApplicationInfo appInfo = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-                if (appInfo.metaData != null && appInfo.metaData.getBoolean(AUTO_DEEP_LINK_DISABLE, false)) {
-                    return;
-                }
-                PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), PackageManager.GET_ACTIVITIES | PackageManager.GET_META_DATA);
-                ActivityInfo[] activityInfos = info.activities;
-                int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
-                
-                if (activityInfos != null) {
-                    for (ActivityInfo activityInfo : activityInfos) {
-                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
-                            if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                                deepLinkActivity = activityInfo.name;
-                                deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (deepLinkActivity != null && getCurrentActivity() != null) {
-                    Activity currentActivity = getCurrentActivity();
-
-                    Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
-                    intent.putExtra(Defines.IntentKeys.AutoDeepLinked.getKey(), "true");
-
-                    // Put the raw JSON params as extra in case need to get the deep link params as JSON String
-                    intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
-
-                    // Add individual parameters in the data
-                    Iterator<?> keys = latestParams.keys();
-                    while (keys.hasNext()) {
-                        String key = (String) keys.next();
-                        intent.putExtra(key, latestParams.getString(key));
-                    }
-                    currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
-                } else {
-                    // This case should not happen. Adding a safe handling for any corner case
-                    BranchLogger.v("No activity reference to launch deep linked activity");
-                }
-            }
-        } catch (final PackageManager.NameNotFoundException e) {
-            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct!");
-        } catch (ClassNotFoundException e) {
-            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
-        } catch (Exception ignore) {
-            // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
-        }
-    }
-    
-    private boolean checkForAutoDeepLinkKeys(JSONObject params, ActivityInfo activityInfo) {
-        if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
-            String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
-            for (String activityLinkKey : activityLinkKeys) {
-                if (params.has(activityLinkKey)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
-        String deepLinkPath = null;
-        try {
-            if (params.has(Defines.Jsonkey.AndroidDeepLinkPath.getKey())) {
-                deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.getKey());
-            } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
-                deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
-            }
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
-        }
-        if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
-            String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
-            for (String activityLinkPath : activityLinkPaths) {
-                if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    private boolean pathMatch(String templatePath, String path) {
-        boolean matched = true;
-        String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
-        String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
-        if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
-            return false;
-        }
-        for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
-            String pathSegmentTemplate = pathSegmentsTemplate[i];
-            String pathSegmentTarget = pathSegmentsTarget[i];
-            if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("*")) {
-                matched = false;
-                break;
-            }
-        }
-        return matched;
     }
 
     /**

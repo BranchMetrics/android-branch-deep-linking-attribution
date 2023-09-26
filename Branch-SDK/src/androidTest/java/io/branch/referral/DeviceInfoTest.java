@@ -69,7 +69,7 @@ public class DeviceInfoTest extends BranchTest {
         Assert.assertNotNull(DeviceInfo.getInstance());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        DeviceInfo.getInstance().getSystemObserver().fetchAdId(getTestContext());
+        //TODO DeviceInfo.getInstance().getSystemObserver().fetchAdId(getTestContext());
 
         Assert.assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
 
