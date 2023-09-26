@@ -3,6 +3,8 @@ package io.branch.referral;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import io.branch.channels.ServerRequestChannelKt;
+import io.branch.data.ServerRequestResponsePair;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -101,7 +104,7 @@ public class ServerRequestQueue {
 
             BranchLogger.v("Failed to persist queue " + ex + " "+ (msg == null ? "" : msg));
         }
-        BranchLogger.v("persist end");
+        BranchLogger.v("ServerRequestQueue persist end");
     }
     
     private List<ServerRequest> retrieve(Context context) {
@@ -162,7 +165,7 @@ public class ServerRequestQueue {
     
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
-     * parameter, within the queue. Like {@link #peek()}, the item is not removed from the queue.</p>
+     * parameter, within the queue. The item is not removed from the queue.</p>
      *
      * @param index An {@link Integer} that specifies the position within the queue from which to
      *              pull the {@link ServerRequest} object.
@@ -352,18 +355,30 @@ public class ServerRequestQueue {
      * @param req The {@link ServerRequest} to execute
      */
     public void handleNewRequest(ServerRequest req) {
-        BranchLogger.d("ServerRequestQueue handleNewRequest " + req);
+        BranchLogger.d("ServerRequestQueue handleNewRequest " + req + " on thread " + Thread.currentThread().getName());
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             BranchLogger.d("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
-            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                 @Override
+                 public void run() {
+                     req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+                 }
+             });
             return;
         }
+
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if ((req instanceof ServerRequestLogout)) {
-                req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                BranchLogger.d("Branch is not initialized, cannot logout");
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                     @Override
+                     public void run() {
+                         req.handleFailure(BranchError.ERR_NO_SESSION, "");
+                         BranchLogger.d("Branch is not initialized, cannot logout");
+                     }
+                });
                 return;
             }
             if (requestNeedsSession(req)) {
@@ -405,7 +420,7 @@ public class ServerRequestQueue {
     }
 
     private void executeRequest(ServerRequest req) {
-        ServerRequestChannelKt.execute(req, new Continuation<ServerResponse>() {
+        ServerRequestChannelKt.execute(req, new Continuation<ServerRequestResponsePair>() {
             @NonNull
             @Override
             public CoroutineContext getContext() {
@@ -415,39 +430,79 @@ public class ServerRequestQueue {
             @Override
             public void resumeWith(@NonNull Object o) {
                 BranchLogger.v("ServerRequestQueue executeRequest resumeWith " + o + " " + Thread.currentThread().getName());
-                if (o != null && o instanceof ServerResponse) {
-                    ServerResponse serverResponse = (ServerResponse) o;
-                    //TODO: run callback on main by default
+
+                if (o != null && o instanceof ServerRequestResponsePair) {
+                    ServerRequestResponsePair serverRequestResponsePair = (ServerRequestResponsePair) o;
+
+                    ServerRequest serverRequest = serverRequestResponsePair.getServerRequest();
+                    ServerResponse serverResponse = serverRequestResponsePair.getServerResponse();
+
+                    ServerRequestQueue.this.onRequestComplete(serverRequest, serverResponse);
                 }
                 else {
-                    BranchLogger.v("Expected ServerResponse, was " + o);
+                    BranchLogger.v("ServerRequestQueue expected ServerRequestResponsePair, was " + o);
                 }
             }
         });
     }
 
-    public void onPostExecuteInner(ServerRequest serverRequest, ServerResponse serverResponse) {
-        BranchLogger.v("ServerRequestQueue onPostExecuteInner " + serverRequest + " " + serverResponse);
-        // run on main
+    /**
+     * Method for handling the completion of a request, success or failure
+     * @param serverRequest
+     * @param serverResponse
+     */
+    public void onRequestComplete(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onRequestComplete " + serverRequest + " " + serverResponse + " on thread " + Thread.currentThread().getName());
         if (serverResponse == null) {
             serverRequest.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
-            return;
-        }
-
-        int status = serverResponse.getStatusCode();
-        if (status == 200) {
-            onRequestSuccess(serverRequest, serverResponse);
         }
         else {
-            onRequestFailed(serverRequest, serverResponse, status);
+            @Nullable final JSONObject respJson = serverResponse.getObject();
+
+            if (respJson == null) {
+                serverRequest.handleFailure(500, "Null response json.");
+            }
+            else {
+                int status = serverResponse.getStatusCode();
+
+                if (status == 200) {
+                    serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
+                }
+                // We received an error code from the service
+                else {
+                    // On a bad request or in case of a conflict notify with call back and remove the request.
+                    if ((status == 400 || status == 409) && serverRequest instanceof ServerRequestCreateUrl) {
+                        ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
+                    }
+                    else {
+                        serverRequest.handleFailure(status, serverResponse.getFailReason());
+                    }
+                }
+            }
         }
     }
 
-    private void onRequestSuccess(ServerRequest serverRequest, ServerResponse serverResponse) {
-        BranchLogger.v("ServerRequestQueue onRequestSuccess " + serverRequest + " " + serverResponse);
-        // If the request succeeded
-        @Nullable final JSONObject respJson = serverResponse.getObject();
+    public void onPostExecuteInner(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onPostExecuteInner " + serverRequest + " " + serverResponse);
 
+        if(serverResponse != null) {
+            int status = serverResponse.getStatusCode();
+
+            // These write our stateful results from our service's response
+            if (status == 200) {
+                onRequestSuccessInternal(serverRequest, serverResponse);
+            }
+            else {
+                onRequestFailedInternal(serverRequest, serverResponse, status);
+            }
+
+            ServerRequestQueue.this.remove(serverRequest);
+        }
+    }
+
+    private void onRequestSuccessInternal(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onRequestSuccess " + serverRequest + " " + serverResponse);
+        @Nullable final JSONObject respJson = serverResponse.getObject();
 
         if (serverRequest instanceof ServerRequestCreateUrl && respJson != null) {
             try {
@@ -470,7 +525,7 @@ public class ServerRequestQueue {
             // If this request changes a session update the session-id to queued requests.
             boolean updateRequestsInQueue = false;
             if (!Branch.getInstance().isTrackingDisabled() && respJson != null) {
-                // Update PII data only if tracking is disabled
+                // Update PII data only if tracking is enabled
                 try {
                     if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
                         Branch.getInstance().prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
@@ -510,35 +565,14 @@ public class ServerRequestQueue {
                 }
             }
         }
-
-        // can this be moved out?
-        ServerRequestQueue.this.remove(serverRequest);
-        // main thread
-        if (respJson == null) {
-            serverRequest.handleFailure(500, "Null response json.");
-        }
-
-        //main thread
-        if (respJson != null) {
-            serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
-        }
     }
 
-    void onRequestFailed(ServerRequest serverRequest, ServerResponse serverResponse, int status) {
+    //TODO, refactor this
+    void onRequestFailedInternal(ServerRequest serverRequest, ServerResponse serverResponse, int status) {
         BranchLogger.v("ServerRequestQueue onRequestFailed " + serverRequest + " " + serverResponse);
         // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
         if (serverRequest instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
             Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
-        }
-
-        // On a bad request or in case of a conflict notify with call back and remove the request.
-        if ((status == 400 || status == 409) && serverRequest instanceof ServerRequestCreateUrl) {
-            ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
-        }
-        else {
-            //On Network error or Branch is down fail all the pending requests in the queue except
-            //for request which need to be replayed on failure.
-            serverRequest.handleFailure(status, serverResponse.getFailReason());
         }
 
         boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;

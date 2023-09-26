@@ -1,5 +1,6 @@
 package io.branch.channels
 
+import io.branch.data.ServerRequestResponsePair
 import io.branch.referral.Branch
 import io.branch.referral.BranchError
 import io.branch.referral.BranchLogger
@@ -19,52 +20,50 @@ val requestChannel = Channel <ServerRequest>(RENDEZVOUS)
 val mutex = Mutex()
 
 
-suspend fun execute(request: ServerRequest) : ServerResponse {
-    return withContext(Dispatchers.IO) {
+suspend fun execute(request: ServerRequest) : ServerRequestResponsePair {
+    return withContext(Dispatchers.Main) {
         launch {
+            BranchLogger.v("ServerRequestChannel sending " + request + " on thread " + Thread.currentThread().name )
             requestChannel.send(request)
         }
         executeNetworkRequest(requestChannel.receive())
     }
 }
 
-private suspend fun executeNetworkRequest(request: ServerRequest): ServerResponse {
+private suspend fun executeNetworkRequest(request: ServerRequest): ServerRequestResponsePair {
     var result: ServerResponse
     mutex.withLock {
-        BranchLogger.v("ServerRequestChannel executeNetworkRequest: $request" + Thread.currentThread().name)
+        BranchLogger.v("ServerRequestChannel executeNetworkRequest: $request on thread " + Thread.currentThread().name)
 
         request.onPreExecute()
         request.updateRequestData()
         request.updatePostData()
 
         if (TrackingController.isTrackingDisabled(Branch.getInstance().applicationContext) && !request.prepareExecuteWithoutTracking()) {
-            return ServerResponse(
+            return ServerRequestResponsePair(request, ServerResponse(
                 request.requestPath,
                 BranchError.ERR_BRANCH_TRACKING_DISABLED,
                 ""
-            )
+            ))
         }
+
         val branchKey = Branch.getInstance().prefHelper.branchKey
 
-        result = if (request.isGetRequest) {
-            Branch.getInstance().branchRemoteInterface.make_restful_get(
-                request.requestUrl, request.getParams, request.requestPath, branchKey
-            )
+        result = withContext(Dispatchers.IO) {
+            if (request.isGetRequest) {
+                Branch.getInstance().branchRemoteInterface.make_restful_get(
+                    request.requestUrl, request.getParams, request.requestPath, branchKey
+                )
+            }
+            else {
+                Branch.getInstance().branchRemoteInterface.make_restful_post(
+                    request.post, request.requestUrl, request.requestPath, branchKey
+                )
+            }
         }
-        else {
-            Branch.getInstance().branchRemoteInterface.make_restful_post(
-                request.post, request.requestUrl, request.requestPath, branchKey
-            )
-        }
-
-        //TODO in between passing the result back and sending the next request
-        // it is possible to race against setting on the prefhelper
-        // must complete all writes before onPreExecute reads
-
 
         ServerRequestQueue.getInstance(Branch.getInstance().applicationContext).onPostExecuteInner(request, result)
-
     }
 
-    return result
+    return ServerRequestResponsePair(request, result)
 }

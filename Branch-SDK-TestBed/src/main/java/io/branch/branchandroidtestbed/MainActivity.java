@@ -133,12 +133,7 @@ public class MainActivity extends Activity {
                                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                                         }
 
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
+                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             }
@@ -165,12 +160,7 @@ public class MainActivity extends Activity {
                             Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         } else {
                             Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
-                                }
-                            });
+                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -236,16 +226,12 @@ public class MainActivity extends Activity {
                 branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                if (error != null) {
-                                    txtShortUrl.setText(error.getMessage());
-                                }
-                                else {
-                                    txtShortUrl.setText(url);
-                                }
-                            }
-                        });
+                        if (error != null) {
+                            txtShortUrl.setText(error.getMessage());
+                        }
+                        else {
+                            txtShortUrl.setText(url);
+                        }
                     }
                 });
             }
@@ -489,13 +475,7 @@ public class MainActivity extends Activity {
                                     }
                                 });
 
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ImageDialog.show();
-                                    }
-                                });
-
+                                ImageDialog.show();
                             }
                             catch (Exception e) {
                                 Log.d("Adding Image to Alert", "Failed");
@@ -534,22 +514,12 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
+                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
                             public void onFailure(Exception e) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
-                                    }
-                                });
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
                             }
                         });
             }});
@@ -565,19 +535,14 @@ public class MainActivity extends Activity {
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+
                         Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
         });
 
         findViewById(R.id.cmdLifecycleEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 new BranchEvent(BRANCH_STANDARD_EVENT.COMPLETE_REGISTRATION)
                         .setCustomerEventAlias("my_custom_alias")
                         .setTransactionID("tx1234")
@@ -585,12 +550,8 @@ public class MainActivity extends Activity {
                         .addCustomDataProperty("registrationID", "12345")
                         .addContentItems(branchUniversalObject)
                         .logEvent(MainActivity.this);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+
                         Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
         });
 
@@ -601,12 +562,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -676,7 +632,7 @@ public class MainActivity extends Activity {
                 }
             });
         }
-        Branch.getInstance().setIdentity("newID3");
+        Branch.getInstance().setIdentity("newID5");
         for(int i = 0; i < 5; i++) {
             int finalI = i;
             new BranchEvent("afterSetId"+i).logEvent(this, new BranchEvent.BranchLogEventCallback() {
