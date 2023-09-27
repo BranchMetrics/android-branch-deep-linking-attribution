@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -34,7 +33,7 @@ public class ServerRequestTests extends BranchTest {
 
     @Test
     public void testTimedOutInitSessionCallbackInvoked() throws InterruptedException {
-        setTimeouts(10,10000);
+        setTimeouts(1,1);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -49,12 +48,13 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10);
+                setTimeouts(1,1);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
                 Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
+                        BranchLogger.v("error is " + error);
                         Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
                         lock1.countDown();
                     }
@@ -74,7 +74,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10);
+                setTimeouts(1,1);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
                 BranchUniversalObject buo = new BranchUniversalObject()

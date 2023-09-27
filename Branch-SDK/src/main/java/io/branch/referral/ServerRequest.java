@@ -38,14 +38,6 @@ public abstract class ServerRequest {
     private long queueWaitTime_ = 0;
     private final Context context_;
 
-    // Various process wait locks for Branch server request
-    enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
-    }
-    
-    // Set for holding any active wait locks
-    private final Set<PROCESS_WAIT_LOCK> locks_;
-    
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
     
@@ -68,7 +60,6 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
         params_ = new JSONObject();
-        locks_ = new HashSet<>();
     }
     
     /**
@@ -84,7 +75,6 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        locks_ = new HashSet<>();
     }
     
     /**
@@ -572,59 +562,6 @@ public abstract class ServerRequest {
         }
 
         return result == PackageManager.PERMISSION_GRANTED;
-    }
-    
-    /**
-     * Called when request is added to teh queue
-     */
-    public void onRequestQueued() {
-        queueWaitTime_ = System.currentTimeMillis();
-    }
-    
-    /**
-     * Returns the amount of time this request was in queque
-     *
-     * @return {@link Integer} with value of queued time in milli sec
-     */
-    public long getQueueWaitTime() {
-        long waitTime = 0;
-        if (queueWaitTime_ > 0) {
-            waitTime = System.currentTimeMillis() - queueWaitTime_;
-        }
-        return waitTime;
-    }
-    
-    /**
-     * <p>
-     * Set the specified process wait lock for this request. This request will not be blocked from
-     * Execution until the waiting process finishes     *
-     * </p>
-     *
-     * @param lock {@link PROCESS_WAIT_LOCK} type of lock
-     */
-    public void addProcessWaitLock(PROCESS_WAIT_LOCK lock) {
-        if (lock != null) {
-            locks_.add(lock);
-        }
-    }
-    
-    /**
-     * Unlock the specified lock from the request. Call this when the locked process finishes
-     *
-     * @param lock {@link PROCESS_WAIT_LOCK} type of lock
-     */
-    public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
-        locks_.remove(lock);
-    }
-    
-    
-    /**
-     * Check if this request is waiting on any operation to finish before processing
-     *
-     * @return True if this request if any pre processing operation pending
-     */
-    public boolean isWaitingOnProcessToFinish() {
-        return locks_.size() > 0;
     }
     
     /**

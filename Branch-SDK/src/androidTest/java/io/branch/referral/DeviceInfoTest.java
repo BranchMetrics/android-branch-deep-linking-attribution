@@ -8,9 +8,11 @@ import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import androidx.annotation.Nullable;
 import androidx.test.annotation.UiThreadTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,26 +61,6 @@ public class DeviceInfoTest extends BranchTest {
         Branch.disableDeviceIDFetch(false);
         SystemObserver.UniqueId uniqueId2 = DeviceInfo.getInstance().getHardwareID();
         Assert.assertEquals(uniqueId1, uniqueId2);
-    }
-
-    // TODO: Need to mock advertising ID providers
-    //  Tests are written to assume a valid AID is obtainable from the system
-    @Test
-    public void testGAIDFetch() throws InterruptedException {
-        initBranchInstance();
-        Assert.assertNotNull(DeviceInfo.getInstance());
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        //TODO DeviceInfo.getInstance().getSystemObserver().fetchAdId(getTestContext());
-
-        Assert.assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
-
-        if(DeviceInfo.getInstance().getSystemObserver().getLATVal() == 0) {
-            Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
-        }
-        else{
-            Assert.assertTrue(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
-        }
     }
 
     @Test

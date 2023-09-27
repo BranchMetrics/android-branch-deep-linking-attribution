@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -99,15 +100,15 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
     protected synchronized void initSessionResumeActivity(final Runnable pretest, final Runnable posttest) {
         final CountDownLatch sessionLatch = new CountDownLatch(1);
-
         activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
             @Override
             public void perform(final MockActivity activity) {
+                BranchLogger.v("perform on thread " + Thread.currentThread().getName());
                 Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
-                        BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
+                        BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error + " on thread " + Thread.currentThread().getName());
                         Assert.assertNotNull(referringParams);
                         if (error != null) {
                             if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {

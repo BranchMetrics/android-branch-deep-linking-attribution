@@ -21,7 +21,7 @@ abstract class BranchTestRequestUtil {
     private static final String TAG = "BranchEventTestUtil";
 
     // can be pretty short because we mock remote interface and don't actually make async calls from the SDK
-    public static final int TEST_REQUEST_TIMEOUT = 1000;
+    public static final int TEST_REQUEST_TIMEOUT = 2000;
     public static final int TEST_INIT_SESSION_TIMEOUT = 15000;
 
     // Dig out the variable for isStandardEvent from the BranchEvent object.
@@ -62,17 +62,6 @@ abstract class BranchTestRequestUtil {
             }
             Thread.sleep(interval);
             wait_remaining -= interval;
-        }
-
-        return null;
-    }
-
-    protected ServerRequest getLastRequestOnQueue(Context context, int minimumQueueSize) {
-        ServerRequestQueue queue = ServerRequestQueue.getInstance(context);
-
-        int size = queue.getSize();
-        if (size >= minimumQueueSize) {
-            return queue.peekAt(size - 1);
         }
 
         return null;

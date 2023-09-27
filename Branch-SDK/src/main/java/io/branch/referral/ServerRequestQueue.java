@@ -21,6 +21,7 @@ import java.util.NoSuchElementException;
 
 import io.branch.channels.ServerRequestChannelKt;
 import io.branch.data.ServerRequestResponsePair;
+import kotlin.Result;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -276,19 +277,6 @@ public class ServerRequestQueue {
         }
         return null;
     }
-    
-    /**
-     * Set Process wait lock to false for any open / install request in the queue
-     */
-    void unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK lock) {
-        synchronized (reqQueueLockObject) {
-            for (ServerRequest req : queue) {
-                if (req != null) {
-                    req.removeProcessWaitLock(lock);
-                }
-            }
-        }
-    }
 
     // Determine if a Request needs a Session to proceed.
     private boolean requestNeedsSession(ServerRequest request) {
@@ -391,7 +379,7 @@ public class ServerRequestQueue {
         // Then go through the queue in order
         if(req instanceof ServerRequestInitSession){
             move(req, 0);
-            startSessionQueue();
+            processQueue();
             return;
         }
 
@@ -410,8 +398,8 @@ public class ServerRequestQueue {
     /**
      * Process all recorded ServerRequests now that the session is ready
      */
-    public void startSessionQueue(){
-        BranchLogger.v("ServerRequestQueue startSessionQueue " + Arrays.toString(queue.toArray()));
+    public void processQueue(){
+        BranchLogger.v("ServerRequestQueue processQueue " + Arrays.toString(queue.toArray()));
         synchronized (reqQueueLockObject) {
             for (ServerRequest req : queue) {
                 executeRequest(req);
@@ -441,6 +429,11 @@ public class ServerRequestQueue {
                 }
                 else {
                     BranchLogger.v("ServerRequestQueue expected ServerRequestResponsePair, was " + o);
+                    if(o instanceof Result.Failure){
+                        BranchLogger.v("logging stack");
+                        Result.Failure failure = (Result.Failure) o;
+                        BranchLogger.v(Arrays.toString(failure.exception.getStackTrace()));
+                    }
                 }
             }
         });

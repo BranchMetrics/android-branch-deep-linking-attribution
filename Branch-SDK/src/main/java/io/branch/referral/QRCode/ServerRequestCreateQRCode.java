@@ -51,14 +51,6 @@ public class ServerRequestCreateQRCode extends ServerRequest {
     }
 
     @Override
-    /**
-     * Called when request is added to the queue
-     */
-    public void onRequestQueued() {
-        queueWaitTime_ = System.currentTimeMillis();
-    }
-
-    @Override
     public boolean isGetRequest() {
         return false;
     }

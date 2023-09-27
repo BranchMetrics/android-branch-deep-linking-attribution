@@ -993,11 +993,6 @@ public class Branch {
         firstReferringParams = appendDebugParams(firstReferringParams);
         return firstReferringParams;
     }
-
-    @SuppressWarnings("WeakerAccess")
-    public void removeSessionInitializationDelay() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-    }
     
     /**
      * <p>This function must be called from a non-UI thread! If Branch has no install link data,
@@ -1290,10 +1285,10 @@ public class Branch {
         }
 
         if (delay > 0) {
-            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
+
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
-                    removeSessionInitializationDelay();
+                    //TODO, put this on the init coroutine
                 }
             }, delay);
         }
@@ -1404,18 +1399,6 @@ public class Branch {
             request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
         }
         return request;
-    }
-    
-    void onIntentReady(@NonNull Activity activity) {
-        setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-
-        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
-
-        if (grabIntentParams) {
-            Uri intentData = activity.getIntent().getData();
-            readAndStripParam(intentData, activity);
-        }
     }
 
     /**

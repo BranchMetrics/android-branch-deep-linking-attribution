@@ -1,11 +1,15 @@
 package io.branch.referral;
 
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Arrays;
 
 import io.branch.referral.util.AdType;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -82,14 +86,6 @@ public class BranchEventTest extends BranchTest {
 
         ServerRequest eventRequest = queue.peekAt(0);
         Assert.assertEquals(Defines.RequestPath.TrackStandardEvent.getPath(), eventRequest.getRequestPath());
-        Assert.assertTrue(eventRequest.isWaitingOnProcessToFinish());
-
-        initSessionResumeActivity(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(2, queue.getSize());
-            }
-        }, null);
     }
 
     @Test

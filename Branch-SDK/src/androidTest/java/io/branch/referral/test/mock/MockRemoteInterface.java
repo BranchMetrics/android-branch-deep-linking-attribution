@@ -36,8 +36,11 @@ public class MockRemoteInterface extends BranchRemoteInterface {
     @Override
     public BranchResponse doRestfulPost(String url, JSONObject payload) throws BranchRemoteException {
         try {
+            BranchLogger.v("sleeping for " + networkRequestDuration + " milliseconds");
             Thread.sleep(networkRequestDuration);
-        } catch (InterruptedException e) {
+            BranchLogger.v("slept for " + networkRequestDuration + " milliseconds");
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
         BranchLogger.v(TAG + ", doRestfulPost, url: " + url + ", payload: " + payload);
