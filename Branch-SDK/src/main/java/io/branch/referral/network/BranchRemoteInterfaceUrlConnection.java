@@ -136,16 +136,21 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         int retryInterval = branch.getPrefHelper().getRetryInterval();
         int retryLimit = prefHelper.getRetryCount();
 
-        try {
-            payload.put(RETRY_NUMBER, retryNumber);
-        }
-        catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
-        }
-
         BranchResponse result = null;
 
-        do {
+        // Default is 3 attempts
+        while(shouldRetry(retryNumber, retryLimit)) {
+            try {
+                payload.put(RETRY_NUMBER, retryNumber);
+            }
+            catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
+            }
+
+
+            BranchLogger.v("posting to " + url + " on thread " + Thread.currentThread().getName());
+            BranchLogger.v("Post value = " + payload);
+
             try {
                 // set the setThreadStatsTag for POST if API 26+
                 if (android.os.Build.VERSION.SDK_INT >= 26) {
@@ -230,22 +235,23 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 }
             }
             finally {
-                sleepForInterval(retryInterval);
-                retryNumber++;
+                if(result == null) {
+                    sleepForInterval(retryInterval);
+                    retryNumber++;
+                }
 
                 if (connection != null) {
                     connection.disconnect();
                 }
             }
-
-            BranchLogger.v("BranchRemoteInterfaceUrlConnection end do retryCount=" + retryNumber + " result= " + result);
-        } while (shouldRetry(retryNumber, retryLimit) || result != null);
+        }
 
         return result;
     }
 
     private void sleepForInterval(int interval) {
         try {
+            BranchLogger.v("Sleeping for " + interval);
             Thread.sleep(interval);
         }
         catch (InterruptedException e) {
@@ -257,6 +263,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         return retryCount < retryLimit;
     }
 
+    // There are some exceptions we have historically wrapped as BranchRemoteExceptions
+    // These are thrown and parsed into ServerResponses
     private void handleException(Exception ex) throws BranchRemoteException {
         if (ex instanceof SocketTimeoutException) {
             // On socket time out retry the request for retryNumber of times
