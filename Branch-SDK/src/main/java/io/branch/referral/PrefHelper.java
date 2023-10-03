@@ -704,7 +704,11 @@ public class PrefHelper {
      * @param referringUrlQueryParameters
      */
     public void setReferringUrlQueryParameters(JSONObject referringUrlQueryParameters) {
-        setString(KEY_REFERRING_URL_QUERY_PARAMETERS, String.valueOf(referringUrlQueryParameters));
+        if (referringUrlQueryParameters.length() == 0) {
+            setString(KEY_REFERRING_URL_QUERY_PARAMETERS, NO_STRING_VALUE);
+        } else {
+            setString(KEY_REFERRING_URL_QUERY_PARAMETERS, String.valueOf(referringUrlQueryParameters));
+        }
     }
 
     /**
@@ -712,7 +716,6 @@ public class PrefHelper {
      * @return
      */
     public JSONObject getReferringURLQueryParameters()  {
-
         String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
         JSONObject params = new JSONObject();
 

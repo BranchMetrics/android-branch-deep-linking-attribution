@@ -69,15 +69,27 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
             val gclid = urlQueryParameters[Defines.Jsonkey.Gclid.key]
             if (gclid != null) {
                 if (gclid.value != null && gclid.value != PrefHelper.NO_STRING_VALUE) {
-                    returnParams.put(Defines.Jsonkey.Gclid.key, gclid.value)
 
-                    //Only v1/open requires is_deeplink_gclid
-                    if (request is ServerRequestRegisterOpen) {
-                        returnParams.put(Defines.Jsonkey.IsDeeplinkGclid.key, gclid.isDeepLink)
+                    // If current time is before the expiry time, proceed
+                    val currentTime = Date().time
+                    val gclidTimestamp = gclid.timestamp?.time
+                    val gclidValidityWindowMillis = 10//gclid.validityWindow * 1000L
+                    if (gclidTimestamp != null) {
+                        if (gclid.validityWindow == 0L || currentTime < gclidTimestamp + gclidValidityWindowMillis) {
+                            returnParams.put(Defines.Jsonkey.Gclid.key, gclid.value)
+
+                            // Only v1/open requires is_deeplink_gclid
+                            if (request is ServerRequestRegisterOpen) {
+                                returnParams.put(Defines.Jsonkey.IsDeeplinkGclid.key, gclid.isDeepLink)
+                            }
+
+                            gclid.isDeepLink = false
+                            prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
+                        } else {
+                            urlQueryParameters.remove(Defines.Jsonkey.Gclid.key)
+                            prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
+                        }
                     }
-
-                    gclid.isDeepLink = false
-                    prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
                 }
             }
         }
@@ -182,7 +194,6 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
      * 3. If that Gclid does exist, it will be turned into a BranchUrlQueryParameter and saved.
      * 4. Lastly, the old gclid is cleared and now the function
      */
-    @VisibleForTesting
     private fun checkForAndMigrateOldGclid() {
         val newGclid = urlQueryParameters[Defines.Jsonkey.Gclid.key]
         if (newGclid?.value == null) {
