@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.8.0
+  * _*Master Release*_ - Oct 3, 2023
+    - Fixed bug that prevented session from initializing after opening a link with gclid
+    - Removed remaining TUNE references
+    - Factored out queueing code from the Branch object
 - v5.7.0
   * _*Master Release*_ - Sep 1, 2023
     - SDK internal logging behavior has changed. Messages will now be sent through standard channels (`ERROR`, `WARN`, `INFO`, `DEBUG`, `VERBOSE`). Before, nearly all logs were sent to `INFO`.
