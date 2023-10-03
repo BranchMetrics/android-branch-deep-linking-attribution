@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONException
 
@@ -262,6 +263,42 @@ class ReferringUrlUtilityTests : BranchTest() {
         prefHelper.setReferringUrlQueryParameters(JSONObject())
 
         assertEquals("{}", prefHelper.referringURLQueryParameters.toString());
+    }
+
+    @Test
+    fun testSetGclidValidityWindow() {
+        val testValidityWindow = 1_000_000L
+        val expectedValidityWindow = (testValidityWindow / 1000).toInt()
+
+        val prefHelper =  PrefHelper.getInstance(Branch.getInstance().applicationContext)
+        prefHelper.referrerGclidValidForWindow = testValidityWindow
+
+        val url = "https://bnctestbed.app.link?gclid=12345"
+        referringUrlUtility.parseReferringURL(url)
+        val gclid = prefHelper.referringURLQueryParameters["gclid"] as JSONObject
+
+        assertEquals(expectedValidityWindow, gclid["validityWindow"])
+    }
+
+    @Test
+    fun testGclidExpires() {
+        val prefHelper =  PrefHelper.getInstance(Branch.getInstance().applicationContext)
+        prefHelper.referrerGclidValidForWindow = 1000
+
+        val url = "https://bnctestbed.app.link?gclid=12345"
+        referringUrlUtility.parseReferringURL(url)
+
+        //Gclid is still valid and should be included in requests.
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
+        val paramsOne = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+        assertTrue(areJSONObjectsEqual(expected, paramsOne))
+
+        Thread.sleep(2000)
+
+        //Gclid has expired now and should not be included in requests.
+        val expectedEmptyJSON = JSONObject()
+        val paramsTwo = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+        assertTrue(areJSONObjectsEqual(expectedEmptyJSON, paramsTwo))
     }
 
     //Helper functions
