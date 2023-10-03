@@ -737,12 +737,4 @@ public abstract class ServerRequest {
         // Default return false. Return true for request need to be executed when tracking is disabled
         return false;
     }
-
-    // needed for TUNE/Branch field parity for certain request (i.e. initialization and events)
-    boolean isInitializationOrEventRequest() {
-        for (Defines.RequestPath item : initializationAndEventRoutes) {
-            if (item.equals(requestPath_)) return true;
-        }
-        return false;
-    }
 }

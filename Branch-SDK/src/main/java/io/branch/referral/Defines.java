@@ -160,7 +160,6 @@ public class Defines {
         SearchQuery("search_query"),
         AdType("ad_type"),
 
-        // to accommodate Tune -> Branch migration
         CPUType("cpu_type"),
         DeviceBuildId("build"),
         Locale("locale"),
