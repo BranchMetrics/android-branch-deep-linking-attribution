@@ -74,7 +74,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
             if (gclid != null) {
                 if (gclid.value != null && gclid.value != PrefHelper.NO_STRING_VALUE) {
 
-                    // If gclid is still within validity window, process.
+                    // If gclid is still within validity window, proceed.
                     val currentTime = Date().time
                     val gclidTimestamp = gclid.timestamp?.time
                     val gclidValidityWindowMillis = gclid.validityWindow * 1000L
@@ -155,11 +155,11 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                 val param = BranchUrlQueryParameter()
                 param.name = temp.getString("name")
 
-                if (!temp.isNull("value")) {
+                if (temp.has("value")) {
                     param.value = temp.getString("value")
                 }
 
-                if (!temp.isNull("timestamp")) {
+                if (temp.has("timestamp")) {
                     try {
                         val timestampStr = temp.getString("timestamp")
                         param.timestamp = dateFormat.parse(timestampStr)
@@ -168,11 +168,11 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                     }
                 }
 
-                if (!temp.isNull("validityWindow")) {
+                if (temp.has("validityWindow")) {
                     param.validityWindow = temp.getLong("validityWindow")
                 }
 
-                if (!temp.isNull("isDeeplink")) {
+                if (temp.has("isDeeplink")) {
                     param.isDeepLink = temp.getBoolean("isDeeplink")
                 } else {
                     param.isDeepLink = false
