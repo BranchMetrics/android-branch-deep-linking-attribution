@@ -74,7 +74,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
             if (gclid != null) {
                 if (gclid.value != null && gclid.value != PrefHelper.NO_STRING_VALUE) {
 
-                    // If current time is before the expiry time, proceed
+                    // If gclid is still within validity window, process.
                     val currentTime = Date().time
                     val gclidTimestamp = gclid.timestamp?.time
                     val gclidValidityWindowMillis = gclid.validityWindow * 1000L
@@ -87,6 +87,8 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                                 returnParams.put(Defines.Jsonkey.IsDeeplinkGclid.key, gclid.isDeepLink)
                             }
 
+                            //isDeepLink is set to true by default when parsed, then is set to false and saved.
+                            //Now future v1/open requests will contain isDeepLink = false until a new gclid is parsed.
                             gclid.isDeepLink = false
                             prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
                         } else {
@@ -114,8 +116,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
     private fun defaultValidityWindowForParam(paramName: String): Long {
         return if (paramName == Defines.Jsonkey.Gclid.key) {
             30 * 24 * 60 * 60 // 30 days = 2,592,000 seconds
-        }
-        else {
+        } else {
             0L // Default, means indefinite.
         }
     }
