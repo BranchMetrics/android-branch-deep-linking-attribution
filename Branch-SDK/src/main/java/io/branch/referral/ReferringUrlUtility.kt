@@ -75,7 +75,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                     // If current time is before the expiry time, proceed
                     val currentTime = Date().time
                     val gclidTimestamp = gclid.timestamp?.time
-                    val gclidValidityWindowMillis = 10//gclid.validityWindow * 1000L
+                    val gclidValidityWindowMillis = gclid.validityWindow * 1000L
                     if (gclidTimestamp != null) {
                         if (gclid.validityWindow == 0L || currentTime < gclidTimestamp + gclidValidityWindowMillis) {
                             returnParams.put(Defines.Jsonkey.Gclid.key, gclid.value)
