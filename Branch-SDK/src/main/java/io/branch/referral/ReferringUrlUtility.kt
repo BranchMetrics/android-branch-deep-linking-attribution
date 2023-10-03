@@ -46,6 +46,8 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
             prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
 
             BranchLogger.v("Current referringURLQueryParameters: " + prefHelper.referringURLQueryParameters.toString())
+        } else {
+            BranchLogger.d("Skipping referring URL query parameter parsing due to disabled tracking.")
         }
     }
 
