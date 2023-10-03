@@ -104,7 +104,8 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
         }
     }
 
-    private fun serializeToJson(urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>): JSONObject {
+    @VisibleForTesting
+    internal fun serializeToJson(urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>): JSONObject {
         val json = JSONObject()
         try {
             for (param in urlQueryParameters.values) {
@@ -124,7 +125,8 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
         return json
     }
 
-    private fun deserializeFromJson(json: JSONObject): MutableMap<String, BranchUrlQueryParameter> {
+    @VisibleForTesting
+    internal fun deserializeFromJson(json: JSONObject): MutableMap<String, BranchUrlQueryParameter> {
         val result = mutableMapOf<String, BranchUrlQueryParameter>()
 
         try {
