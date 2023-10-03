@@ -115,7 +115,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
 
     private fun defaultValidityWindowForParam(paramName: String): Long {
         return if (paramName == Defines.Jsonkey.Gclid.key) {
-            30 * 24 * 60 * 60 // 30 days = 2,592,000 seconds
+            prefHelper.referrerGclidValidForWindow / 1000L // 30 days = 2,592,000 seconds
         } else {
             0L // Default, means indefinite.
         }
