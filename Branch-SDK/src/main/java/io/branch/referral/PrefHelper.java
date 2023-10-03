@@ -704,10 +704,10 @@ public class PrefHelper {
      * @param referringUrlQueryParameters
      */
     public void setReferringUrlQueryParameters(JSONObject referringUrlQueryParameters) {
-        if (referringUrlQueryParameters.length() == 0) {
+        if (referringUrlQueryParameters == null || referringUrlQueryParameters.length() == 0) {
             setString(KEY_REFERRING_URL_QUERY_PARAMETERS, NO_STRING_VALUE);
         } else {
-            setString(KEY_REFERRING_URL_QUERY_PARAMETERS, String.valueOf(referringUrlQueryParameters));
+            setString(KEY_REFERRING_URL_QUERY_PARAMETERS, referringUrlQueryParameters.toString());
         }
     }
 
