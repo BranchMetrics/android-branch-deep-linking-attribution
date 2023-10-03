@@ -256,6 +256,14 @@ class ReferringUrlUtilityTests : BranchTest() {
         }
     }
 
+    @Test
+    fun testSetReferringQueryParams() {
+        val prefHelper =  PrefHelper.getInstance(Branch.getInstance().applicationContext)
+        prefHelper.setReferringUrlQueryParameters(JSONObject())
+
+        assertEquals("{}", prefHelper.referringURLQueryParameters.toString());
+    }
+
     //Helper functions
     fun areJSONObjectsEqual(json1: JSONObject, json2: JSONObject): Boolean {
         if (json1.length() != json2.length()) return false
