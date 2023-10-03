@@ -725,10 +725,7 @@ public class PrefHelper {
             } catch (JSONException e) {
                 BranchLogger.w("Unable to get URL query parameters as string: " + e);
             }
-        } else {
-            BranchLogger.d("No URL parameters found.");
         }
-
         return params;
     }
 
