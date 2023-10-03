@@ -684,17 +684,20 @@ public abstract class ServerRequest {
      */
     public void onPreExecute() {
         if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
-            new ReferringUrlUtility(prefHelper_).parseReferringURL(prefHelper_.getExternalIntentUri());
+            try {
+                ReferringUrlUtility utility = new ReferringUrlUtility(prefHelper_);
+                String externalIntentUri = prefHelper_.getExternalIntentUri();
+                utility.parseReferringURL(externalIntentUri);
 
-            JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper_).getURLQueryParamsForRequest(this);
+                JSONObject urlQueryParams = utility.getURLQueryParamsForRequest(this);
 
-            for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
-                String key = it.next();
-                try {
+                for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
+                    String key = it.next();
                     this.params_.put(key, urlQueryParams.get(key));
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+
+            } catch (Exception e) {
+                BranchLogger.logException("Caught exception in onPreExecute: ", e);
             }
         }
     }

@@ -2,13 +2,16 @@ package io.branch.referral
 
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import org.json.JSONException
 import org.json.JSONObject
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ReferringUrlUtility (prefHelper: PrefHelper) {
     private val urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>
     private var prefHelper: PrefHelper
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
 
     init {
         this.prefHelper = prefHelper
@@ -40,7 +43,8 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
         }
 
         prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
-        BranchLogger.v(prefHelper.referringURLQueryParameters.toString())
+
+        BranchLogger.v("Current referringURLQueryParameters: " + prefHelper.referringURLQueryParameters.toString())
     }
 
     fun getURLQueryParamsForRequest(request: ServerRequest): JSONObject {
@@ -102,17 +106,19 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
 
     private fun serializeToJson(urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>): JSONObject {
         val json = JSONObject()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        try {
+            for (param in urlQueryParameters.values) {
+                val paramDict = JSONObject()
+                paramDict.put("name", param.name)
+                paramDict.put("value", param.value ?: JSONObject.NULL)
+                paramDict.put("timestamp", param.timestamp?.let { dateFormat.format(it) })
+                paramDict.put("isDeeplink", param.isDeepLink)
+                paramDict.put("validityWindow", param.validityWindow)
 
-        for (param in urlQueryParameters.values) {
-            val paramDict = JSONObject()
-            paramDict.put("name", param.name)
-            paramDict.put("value", param.value ?: JSONObject.NULL)
-            paramDict.put("timestamp", param.timestamp?.let { dateFormat.format(it) })
-            paramDict.put("isDeeplink", param.isDeepLink)
-            paramDict.put("validityWindow", param.validityWindow)
-
-            json.put(param.name.toString(), paramDict)
+                json.put(param.name.toString(), paramDict)
+            }
+        } catch (e: JSONException) {
+            BranchLogger.logException("Exception when serializing JSON for referring URL query parameters", e)
         }
 
         return json
@@ -121,30 +127,44 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
     private fun deserializeFromJson(json: JSONObject): MutableMap<String, BranchUrlQueryParameter> {
         val result = mutableMapOf<String, BranchUrlQueryParameter>()
 
-        val keys = json.keys()
-        while (keys.hasNext()) {
-            val key = keys.next()
-            val temp = json.getJSONObject(key)
+        try {
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val temp = json.getJSONObject(key)
 
-            val param = BranchUrlQueryParameter()
-            param.name = temp.getString("name")
+                val param = BranchUrlQueryParameter()
+                param.name = temp.getString("name")
 
-            if (!temp.isNull("value")) {
-                param.value = temp.getString("value")
+                if (!temp.isNull("value")) {
+                    param.value = temp.getString("value")
+                }
+
+                if (!temp.isNull("timestamp")) {
+                    try {
+                        val timestampStr = temp.getString("timestamp")
+                        param.timestamp = dateFormat.parse(timestampStr)
+                    } catch (e: ParseException) {
+                        BranchLogger.logException("Exception when parsing referring URL query parameter timestamp", e)
+                    }
+                }
+
+                if (!temp.isNull("validityWindow")) {
+                    param.validityWindow = temp.getLong("validityWindow")
+                }
+
+                if (!temp.isNull("isDeeplink")) {
+                    param.isDeepLink = temp.getBoolean("isDeeplink")
+                } else {
+                    param.isDeepLink = false
+                }
+
+                param.name?.let { paramName ->
+                    result[paramName] = param
+                }
             }
-
-            param.timestamp = temp.get("timestamp") as Date?
-            param.validityWindow = temp.getLong("validityWindow")
-
-            if (!temp.isNull("isDeeplink")) {
-                param.isDeepLink = temp.getBoolean("isDeeplink")
-            } else {
-                param.isDeepLink = false
-            }
-
-            param.name?.let { paramName ->
-                result[paramName] = param
-            }
+        } catch (e: JSONException) {
+            BranchLogger.logException("Exception when deserializing JSON for referring URL query parameters", e)
         }
 
         return result
