@@ -78,6 +78,7 @@ jobs:
 
   jacoco-test-coverage-api-level-min:
             name: jacoco-test-coverage-api-level-$API_MIN
+            if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
             needs: [unit-test-api-level-min, instrumented-test-api-level-min]
             runs-on: macos-latest
             steps:
