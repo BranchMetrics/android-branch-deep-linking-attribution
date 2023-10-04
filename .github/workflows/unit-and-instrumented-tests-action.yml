@@ -30,14 +30,6 @@ jobs:
         with:
           name: unit-test-api-level-$API_MIN
           path: ./Branch-SDK/build/
-      - name: Run Coverage
-        run: |
-            ./gradlew :Branch-SDK:jacocoTestReport
-      - name: Upload Coverage Test Report
-        uses: codecov/codecov-action@v3
-        with:
-            file: app/build/reports/jacoco/jacocoExternalDebugReport/jacocoExternalDebugReport.xml
-            fail_ci_if_error: true
             
   instrumented-test-api-level-min:
     name: instrumented-test-api-level-$API_MIN
