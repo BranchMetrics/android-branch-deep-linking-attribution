@@ -287,20 +287,21 @@ tasks {
 }
 
 tasks.create<JacocoReport>("jacocoTestReport") {
-    group = "verification"
-    dependsOn("testDebugUnitTest")
+    group = "Reporting"
+    description = "Generate Jacoco code coverage reports after running tests."
+    dependsOn("testDebugUnitTest","createDebugCoverageReport")
     reports {
         xml.required.set(true)
         html.required.set(true)
     }
     sourceDirectories.setFrom("${project.projectDir}/src/main/java")
-    classDirectories.setFrom(fileTree("${buildDir}/tmp/kotlin-classes/debug"))
+    classDirectories.setFrom("${project.buildDir}/intermediates/javac/debug/classes")
     executionData.setFrom(
         fileTree(project.buildDir) {
             include(
                 "jacoco/testDebugUnitTest.exec",
                 "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-                "outputs/code_coverage/debugAndroidTest/connected/**/coverage.ec",
+                "outputs/code_coverage/debugAndroidTest/connected/**/*.ec",
             )
         }
     )
