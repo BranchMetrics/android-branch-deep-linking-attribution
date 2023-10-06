@@ -139,7 +139,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         BranchResponse result = null;
 
         // Default is 3 attempts
-        while(shouldRetry(retryNumber, retryLimit)) {
+        while(willRetry(retryNumber, retryLimit)) {
             try {
                 payload.put(RETRY_NUMBER, retryNumber);
             }
@@ -150,6 +150,8 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
             BranchLogger.v("posting to " + url + " on thread " + Thread.currentThread().getName());
             BranchLogger.v("Post value = " + payload);
+
+            int responseCode = -1;
 
             try {
                 // set the setThreadStatsTag for POST if API 26+
@@ -174,17 +176,16 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 connection.setRequestMethod("POST");
 
                 OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
-
                 outputStreamWriter.write(payload.toString());
                 outputStreamWriter.flush();
                 outputStreamWriter.close();
 
                 String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
 
-                int responseCode = connection.getResponseCode();
+                responseCode = connection.getResponseCode();
 
                 // If we encounter a 5XX error from the service, retry
-                if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && shouldRetry(retryNumber, retryLimit)) {
+                if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && willRetry(retryNumber, retryLimit)) {
                     sleepForInterval(retryInterval);
                     retryNumber++;
                 }
@@ -226,18 +227,24 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     break;
                 }
             }
-
             catch (Exception ex) {
-                if(!shouldRetry(retryNumber, retryLimit)) {
-                    BranchLogger.v("Exception: " + ex.getMessage());
+                retryNumber++;
+                boolean willRetry = willRetry(retryNumber, retryLimit);
+
+                BranchLogger.v("Found exception: " + ex);
+                BranchLogger.v("Will retry request: " + willRetry);
+
+                // We've run out of retries, handle this exception and pass it into a result
+                if(!willRetry) {
                     handleException(ex);
-                    result = new BranchResponse(null, 500);
+                    BranchLogger.v("reached result");
+                    result = new BranchResponse(null, 500); // catch all
                 }
             }
             finally {
+                BranchLogger.v("Last response code received: " + responseCode);
                 if(result == null) {
                     sleepForInterval(retryInterval);
-                    retryNumber++;
                 }
 
                 if (connection != null) {
@@ -259,7 +266,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         }
     }
 
-    private boolean shouldRetry(int retryCount, int retryLimit){
+    private boolean willRetry(int retryCount, int retryLimit){
         return retryCount < retryLimit;
     }
 
@@ -278,8 +285,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         else if (ex instanceof IOException) {
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
         }
-        if (ex instanceof NetworkOnMainThreadException) {
-            BranchLogger.e("Branch Error: Cannot call network on main thread.");
+        else if (ex instanceof NetworkOnMainThreadException) {
+            throw new BranchRemoteException(BranchError.ERR_NETWORK_ON_MAIN);
+        }
+        else {
+            throw new BranchRemoteException(BranchError.ERR_OTHER);
         }
     }
 
