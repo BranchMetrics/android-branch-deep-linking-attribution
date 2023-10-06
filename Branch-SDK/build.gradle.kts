@@ -51,6 +51,7 @@ dependencies {
     androidTestImplementation("com.android.billingclient:billing:6.0.1")
     androidTestImplementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     androidTestImplementation("com.miui.referrer:homereferrer:1.0.0.7")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")

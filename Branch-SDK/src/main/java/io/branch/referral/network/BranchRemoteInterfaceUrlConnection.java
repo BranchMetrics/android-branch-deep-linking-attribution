@@ -185,9 +185,16 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 responseCode = connection.getResponseCode();
 
                 // If we encounter a 5XX error from the service, retry
-                if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && willRetry(retryNumber, retryLimit)) {
-                    sleepForInterval(retryInterval);
+                if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR) {
+                    BranchLogger.v("Last response code received: " + responseCode + " retryCount " + retryNumber);
                     retryNumber++;
+                    if (!willRetry(retryNumber, retryLimit)) {
+                        result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
+                        BranchLogger.v("result " + result);
+                    }
+                    else {
+                        sleepForInterval(retryInterval);
+                    }
                 }
                 // If it was not a 5XX, or we cannot retry
                 else {
@@ -240,13 +247,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                     BranchLogger.v("reached result");
                     result = new BranchResponse(null, 500); // catch all
                 }
-            }
-            finally {
-                BranchLogger.v("Last response code received: " + responseCode);
-                if(result == null) {
+                else{
                     sleepForInterval(retryInterval);
                 }
-
+            }
+            finally {
                 if (connection != null) {
                     connection.disconnect();
                 }
