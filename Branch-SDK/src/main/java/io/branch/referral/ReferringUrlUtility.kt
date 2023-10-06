@@ -2,13 +2,16 @@ package io.branch.referral
 
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import org.json.JSONException
 import org.json.JSONObject
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ReferringUrlUtility (prefHelper: PrefHelper) {
     private val urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>
     private var prefHelper: PrefHelper
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
 
     init {
         this.prefHelper = prefHelper
@@ -17,30 +20,35 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
     }
 
     fun parseReferringURL(urlString: String) {
-        val uri = Uri.parse(urlString)
+        if (!Branch.getInstance().isTrackingDisabled) {
+            val uri = Uri.parse(urlString)
 
-        for (originalParamName in uri.queryParameterNames) {
-            val paramName = originalParamName.lowercase()
-            val paramValue = uri.getQueryParameter(originalParamName)
-            BranchLogger.v("Found URL Query Parameter - Key: $paramName, Value: $paramValue")
+            for (originalParamName in uri.queryParameterNames) {
+                val paramName = originalParamName.lowercase()
+                val paramValue = uri.getQueryParameter(originalParamName)
+                BranchLogger.v("Found URL Query Parameter - Key: $paramName, Value: $paramValue")
 
-            if (isSupportedQueryParameter(paramName)) {
-                val param = findUrlQueryParam(paramName)
-                param.value = paramValue
-                param.timestamp = Date()
-                param.isDeepLink = true
+                if (isSupportedQueryParameter(paramName)) {
+                    val param = findUrlQueryParam(paramName)
+                    param.value = paramValue
+                    param.timestamp = Date()
+                    param.isDeepLink = true
 
-                // If there is no validity window, set to default.
-                if (param.validityWindow == 0L) {
-                    param.validityWindow = defaultValidityWindowForParam(paramName)
+                    // If there is no validity window, set to default.
+                    if (param.validityWindow == 0L) {
+                        param.validityWindow = defaultValidityWindowForParam(paramName)
+                    }
+
+                    urlQueryParameters[paramName] = param
                 }
-
-                urlQueryParameters[paramName] = param
             }
-        }
 
-        prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
-        BranchLogger.v(prefHelper.referringURLQueryParameters.toString())
+            prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
+
+            BranchLogger.v("Current referringURLQueryParameters: " + prefHelper.referringURLQueryParameters.toString())
+        } else {
+            BranchLogger.d("Skipping referring URL query parameter parsing due to disabled tracking.")
+        }
     }
 
     fun getURLQueryParamsForRequest(request: ServerRequest): JSONObject {
@@ -65,15 +73,29 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
             val gclid = urlQueryParameters[Defines.Jsonkey.Gclid.key]
             if (gclid != null) {
                 if (gclid.value != null && gclid.value != PrefHelper.NO_STRING_VALUE) {
-                    returnParams.put(Defines.Jsonkey.Gclid.key, gclid.value)
 
-                    //Only v1/open requires is_deeplink_gclid
-                    if (request is ServerRequestRegisterOpen) {
-                        returnParams.put(Defines.Jsonkey.IsDeeplinkGclid.key, gclid.isDeepLink)
+                    // If gclid is still within validity window, proceed.
+                    val currentTime = Date().time
+                    val gclidTimestamp = gclid.timestamp?.time
+                    val gclidValidityWindowMillis = gclid.validityWindow * 1000L
+                    if (gclidTimestamp != null) {
+                        if (gclid.validityWindow == 0L || currentTime < gclidTimestamp + gclidValidityWindowMillis) {
+                            returnParams.put(Defines.Jsonkey.Gclid.key, gclid.value)
+
+                            // Only v1/open requires is_deeplink_gclid
+                            if (request is ServerRequestRegisterOpen) {
+                                returnParams.put(Defines.Jsonkey.IsDeeplinkGclid.key, gclid.isDeepLink)
+                            }
+
+                            //isDeepLink is set to true by default when parsed, then is set to false and saved.
+                            //Now future v1/open requests will contain isDeepLink = false until a new gclid is parsed.
+                            gclid.isDeepLink = false
+                            prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
+                        } else {
+                            urlQueryParameters.remove(Defines.Jsonkey.Gclid.key)
+                            prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
+                        }
                     }
-
-                    gclid.isDeepLink = false
-                    prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
                 }
             }
         }
@@ -93,58 +115,75 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
 
     private fun defaultValidityWindowForParam(paramName: String): Long {
         return if (paramName == Defines.Jsonkey.Gclid.key) {
-            30 * 24 * 60 * 60 // 30 days = 2,592,000 seconds
-        }
-        else {
+            prefHelper.referrerGclidValidForWindow / 1000L // 30 days = 2,592,000 seconds
+        } else {
             0L // Default, means indefinite.
         }
     }
 
-    private fun serializeToJson(urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>): JSONObject {
+    @VisibleForTesting
+    internal fun serializeToJson(urlQueryParameters: MutableMap<String, BranchUrlQueryParameter>): JSONObject {
         val json = JSONObject()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        try {
+            for (param in urlQueryParameters.values) {
+                val paramDict = JSONObject()
+                paramDict.put("name", param.name)
+                paramDict.put("value", param.value ?: JSONObject.NULL)
+                paramDict.put("timestamp", param.timestamp?.let { dateFormat.format(it) })
+                paramDict.put("isDeeplink", param.isDeepLink)
+                paramDict.put("validityWindow", param.validityWindow)
 
-        for (param in urlQueryParameters.values) {
-            val paramDict = JSONObject()
-            paramDict.put("name", param.name)
-            paramDict.put("value", param.value ?: JSONObject.NULL)
-            paramDict.put("timestamp", param.timestamp?.let { dateFormat.format(it) })
-            paramDict.put("isDeeplink", param.isDeepLink)
-            paramDict.put("validityWindow", param.validityWindow)
-
-            json.put(param.name.toString(), paramDict)
+                json.put(param.name.toString(), paramDict)
+            }
+        } catch (e: JSONException) {
+            BranchLogger.logException("Exception when serializing JSON for referring URL query parameters", e)
         }
 
         return json
     }
 
-    private fun deserializeFromJson(json: JSONObject): MutableMap<String, BranchUrlQueryParameter> {
+    @VisibleForTesting
+    internal fun deserializeFromJson(json: JSONObject): MutableMap<String, BranchUrlQueryParameter> {
         val result = mutableMapOf<String, BranchUrlQueryParameter>()
 
-        val keys = json.keys()
-        while (keys.hasNext()) {
-            val key = keys.next()
-            val temp = json.getJSONObject(key)
+        try {
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val temp = json.getJSONObject(key)
 
-            val param = BranchUrlQueryParameter()
-            param.name = temp.getString("name")
+                val param = BranchUrlQueryParameter()
+                param.name = temp.getString("name")
 
-            if (!temp.isNull("value")) {
-                param.value = temp.getString("value")
+                if (temp.has("value")) {
+                    param.value = temp.getString("value")
+                }
+
+                if (temp.has("timestamp")) {
+                    try {
+                        val timestampStr = temp.getString("timestamp")
+                        param.timestamp = dateFormat.parse(timestampStr)
+                    } catch (e: ParseException) {
+                        BranchLogger.logException("Exception when parsing referring URL query parameter timestamp", e)
+                    }
+                }
+
+                if (temp.has("validityWindow")) {
+                    param.validityWindow = temp.getLong("validityWindow")
+                }
+
+                if (temp.has("isDeeplink")) {
+                    param.isDeepLink = temp.getBoolean("isDeeplink")
+                } else {
+                    param.isDeepLink = false
+                }
+
+                param.name?.let { paramName ->
+                    result[paramName] = param
+                }
             }
-
-            param.timestamp = temp.get("timestamp") as Date?
-            param.validityWindow = temp.getLong("validityWindow")
-
-            if (!temp.isNull("isDeeplink")) {
-                param.isDeepLink = temp.getBoolean("isDeeplink")
-            } else {
-                param.isDeepLink = false
-            }
-
-            param.name?.let { paramName ->
-                result[paramName] = param
-            }
+        } catch (e: JSONException) {
+            BranchLogger.logException("Exception when deserializing JSON for referring URL query parameters", e)
         }
 
         return result
@@ -160,7 +199,6 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
      * 3. If that Gclid does exist, it will be turned into a BranchUrlQueryParameter and saved.
      * 4. Lastly, the old gclid is cleared and now the function
      */
-    @VisibleForTesting
     private fun checkForAndMigrateOldGclid() {
         val newGclid = urlQueryParameters[Defines.Jsonkey.Gclid.key]
         if (newGclid?.value == null) {

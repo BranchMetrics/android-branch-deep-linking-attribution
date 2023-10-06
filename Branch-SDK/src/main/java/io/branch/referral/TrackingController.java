@@ -4,6 +4,8 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import org.json.JSONObject;
+
 /**
  * Created by sojanpr on 3/7/18.
  * <p>
@@ -64,6 +66,7 @@ public class TrackingController {
         prefHelper.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
         prefHelper.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.setAnonID(PrefHelper.NO_STRING_VALUE);
+        prefHelper.setReferringUrlQueryParameters(new JSONObject());
         Branch.getInstance().clearPartnerParameters();
     }
     

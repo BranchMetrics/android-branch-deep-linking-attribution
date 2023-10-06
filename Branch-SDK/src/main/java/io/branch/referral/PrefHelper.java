@@ -704,7 +704,11 @@ public class PrefHelper {
      * @param referringUrlQueryParameters
      */
     public void setReferringUrlQueryParameters(JSONObject referringUrlQueryParameters) {
-        setString(KEY_REFERRING_URL_QUERY_PARAMETERS, String.valueOf(referringUrlQueryParameters));
+        if (referringUrlQueryParameters == null || referringUrlQueryParameters.length() == 0) {
+            setString(KEY_REFERRING_URL_QUERY_PARAMETERS, NO_STRING_VALUE);
+        } else {
+            setString(KEY_REFERRING_URL_QUERY_PARAMETERS, referringUrlQueryParameters.toString());
+        }
     }
 
     /**
@@ -712,7 +716,6 @@ public class PrefHelper {
      * @return
      */
     public JSONObject getReferringURLQueryParameters()  {
-
         String string = getString(KEY_REFERRING_URL_QUERY_PARAMETERS);
         JSONObject params = new JSONObject();
 
@@ -722,10 +725,7 @@ public class PrefHelper {
             } catch (JSONException e) {
                 BranchLogger.w("Unable to get URL query parameters as string: " + e);
             }
-        } else {
-            BranchLogger.d("No URL parameters found.");
         }
-
         return params;
     }
 
