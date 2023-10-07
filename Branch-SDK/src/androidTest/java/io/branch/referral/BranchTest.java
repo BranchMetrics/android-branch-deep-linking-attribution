@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.test.mock.MockActivity;
 import io.branch.referral.test.mock.MockRemoteInterface;
 
@@ -75,7 +76,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
     }
 
     protected void initBranchInstance() {
-        initBranchInstance(null);
+        initBranchInstance("key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc");
     }
 
     protected void initBranchInstance(String branchKey) {
@@ -95,7 +96,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
 
-        branch.setBranchRemoteInterface(new MockRemoteInterface());
+        branch.setBranchRemoteInterface(new BranchRemoteInterfaceUrlConnection(Branch.getInstance()));
     }
 
     protected synchronized void initSessionResumeActivity(final Runnable pretest, final Runnable posttest) {
@@ -111,6 +112,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                         BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error + " on thread " + Thread.currentThread().getName());
                         Assert.assertNotNull(referringParams);
                         if (error != null) {
+                            BranchLogger.v("error is " + error);
                             if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
                                 Assert.fail("error should be null unless we are testing timeouts" + error.getMessage());
                             }
@@ -127,7 +129,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                     pretest.run();
                 }
 
-                Log.d(TAG, "initSessionResumeActivity completed");
+                BranchLogger.v("initSessionResumeActivity completed");
             }
         });
 

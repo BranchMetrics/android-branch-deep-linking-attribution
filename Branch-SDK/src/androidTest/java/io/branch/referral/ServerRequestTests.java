@@ -32,7 +32,7 @@ public class ServerRequestTests extends BranchTest {
     }
 
     @Test
-    public void testTimedOutInitSessionCallbackInvoked() throws InterruptedException {
+    public void testTimedOutInitSessionCallbackInvoked() {
         setTimeouts(1,1);
         initSessionResumeActivity(null, new Runnable() {
             @Override
@@ -44,7 +44,7 @@ public class ServerRequestTests extends BranchTest {
     }
 
     @Test
-    public void testTimedOutLastAttributedTouchDataCallbackInvoked() throws InterruptedException {
+    public void testTimedOutLastAttributedTouchDataCallbackInvoked() {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -55,7 +55,7 @@ public class ServerRequestTests extends BranchTest {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
                         BranchLogger.v("error is " + error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
+                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
                         lock1.countDown();
                     }
                 });
@@ -70,7 +70,7 @@ public class ServerRequestTests extends BranchTest {
     }
 
     @Test
-    public void testTimedOutGenerateShortUrlCallbackInvoked() throws InterruptedException {
+    public void testTimedOutGenerateShortUrlCallbackInvoked() {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -98,7 +98,7 @@ public class ServerRequestTests extends BranchTest {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         BranchLogger.v("error is " + error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
+                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
                         lock3.countDown();
                     }
                 });

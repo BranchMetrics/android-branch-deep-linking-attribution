@@ -104,6 +104,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
+        BranchLogger.v("install handle failure " + statusCode + " " + causeMsg);
+        BranchLogger.v("callback is " + callback_);
         if (callback_ != null) {
             JSONObject obj = new JSONObject();
             try {
@@ -111,6 +113,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             } catch (JSONException ex) {
                 ex.printStackTrace();
             }
+            BranchLogger.v("executing failure callback");
             callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + causeMsg, statusCode));
         }
     }
