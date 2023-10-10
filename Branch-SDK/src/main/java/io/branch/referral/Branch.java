@@ -1024,9 +1024,13 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        ServerRequest req = new ServerRequestLogout(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            requestQueue_.handleNewRequest(req);
+        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.clearUserValues();
+        //On Logout clear the link cache and all pending requests
+        linkCache_.clear();
+        requestQueue_.clear();
+        if (callback != null) {
+            callback.onLogoutFinished(true, null);
         }
     }
 
