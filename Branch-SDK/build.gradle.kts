@@ -6,8 +6,12 @@ plugins {
     `maven-publish`
     signing
     id("org.gradle.test-retry") version "1.5.3"
+    id("jacoco")
 }
 val coroutinesVersion = "1.6.4"
+jacoco {
+    toolVersion = "0.8.10"
+}
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
@@ -92,6 +96,7 @@ android {
 
         debug {
             enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
         }
@@ -274,5 +279,30 @@ tasks {
         retry {
             maxRetries.set(3)
         }
+        configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+        }
     }
+}
+
+tasks.create<JacocoReport>("jacocoTestReport") {
+    group = "Reporting"
+    description = "Generate Jacoco code coverage reports after running tests."
+    dependsOn("testDebugUnitTest","createDebugCoverageReport")
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    sourceDirectories.setFrom("${project.projectDir}/src/main/java")
+    classDirectories.setFrom("${project.buildDir}/intermediates/javac/debug/classes")
+    executionData.setFrom(
+        fileTree(project.buildDir) {
+            include(
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "outputs/code_coverage/debugAndroidTest/connected/**/*.ec",
+            )
+        }
+    )
 }
