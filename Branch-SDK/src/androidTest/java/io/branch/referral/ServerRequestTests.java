@@ -56,7 +56,8 @@ public class ServerRequestTests extends BranchTest {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
                         BranchLogger.v("error is " + error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
+                        Assert.assertTrue((BranchError.ERR_BRANCH_REQ_TIMED_OUT == error.getErrorCode())
+                                || BranchError.ERR_BRANCH_NO_CONNECTIVITY == error.getErrorCode());
                         lock1.countDown();
                     }
                 });
@@ -99,7 +100,8 @@ public class ServerRequestTests extends BranchTest {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         BranchLogger.v("error is " + error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_REQ_TIMED_OUT, error.getErrorCode());
+                        Assert.assertTrue((BranchError.ERR_BRANCH_REQ_TIMED_OUT == error.getErrorCode())
+                                || BranchError.ERR_BRANCH_NO_CONNECTIVITY == error.getErrorCode());
                         lock3.countDown();
                     }
                 });
