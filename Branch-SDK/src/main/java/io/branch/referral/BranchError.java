@@ -4,7 +4,6 @@ package io.branch.referral;
  * Returns a general error if the server back-end is down.
  */
 public class BranchError {
-    
     String errorMessage_ = "";
     int errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
     
@@ -42,6 +41,9 @@ public class BranchError {
     public static final int ERR_IMPROPER_REINITIALIZATION = -119;
     /* Request task timed out before completing*/
     public static final int ERR_BRANCH_TASK_TIMEOUT = -120;
+    /* In cases where some lower level exception is thrown */
+    public static final int ERR_NETWORK_ON_MAIN = -121;
+    public static final int ERR_OTHER = -122;
 
     /**
      * <p>Returns the message explaining the error.</p>
@@ -141,7 +143,14 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_TASK_TIMEOUT) {
             errorCode_ = ERR_BRANCH_TASK_TIMEOUT;
             errMsg = " Task exceeded timeout.";
-        } else {
+        } else if (statusCode == ERR_NETWORK_ON_MAIN){
+            errorCode_ = ERR_NETWORK_ON_MAIN;
+            errMsg = " Cannot call network on main.";
+        } else if (statusCode == ERR_OTHER){
+        errorCode_ = ERR_OTHER;
+        errMsg = " An exception occurred. View in debug logs.";
+        }
+        else {
             errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
             errMsg = " Check network connectivity and that you properly initialized.";
         }

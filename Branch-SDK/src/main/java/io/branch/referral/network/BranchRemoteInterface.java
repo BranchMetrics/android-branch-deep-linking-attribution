@@ -126,18 +126,13 @@ public abstract class BranchRemoteInterface {
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
         }
-        BranchLogger.v("posting to " + url + " on thread " + Thread.currentThread().getName());
-        BranchLogger.v("Post value = " + body.toString());
 
         try {
             BranchResponse response = doRestfulPost(url, body);
             return processEntityForJSON(response, tag, response.requestId);
-        } catch (BranchRemoteException branchError) {
-            if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
-            } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
-            }
+        }
+        catch (BranchRemoteException branchError) {
+            return new ServerResponse(tag, branchError.branchErrorCode, "");
         }
     }
 

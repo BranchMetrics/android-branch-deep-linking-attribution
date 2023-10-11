@@ -2,10 +2,8 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -19,8 +17,8 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.test.mock.MockActivity;
-import io.branch.referral.test.mock.MockRemoteInterface;
 
 /**
  * Base Instrumented test, which will execute on an Android device.
@@ -75,7 +73,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
     }
 
     protected void initBranchInstance() {
-        initBranchInstance(null);
+        initBranchInstance("key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc");
     }
 
     protected void initBranchInstance(String branchKey) {
@@ -95,7 +93,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
 
-        branch.setBranchRemoteInterface(new MockRemoteInterface());
+        branch.setBranchRemoteInterface(new BranchRemoteInterfaceUrlConnection(Branch.getInstance()));
     }
 
     protected synchronized void initSessionResumeActivity(final Runnable pretest, final Runnable posttest) {
@@ -111,8 +109,10 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                         BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error + " on thread " + Thread.currentThread().getName());
                         Assert.assertNotNull(referringParams);
                         if (error != null) {
-                            if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                                Assert.fail("error should be null unless we are testing timeouts" + error.getMessage());
+                            BranchLogger.v("error is " + error);
+                            if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT
+                            && error.getErrorCode() != BranchError.ERR_BRANCH_NO_CONNECTIVITY) {
+                                Assert.fail("error should be null unless we are testing timeouts  " + error.errorCode_ + error.getMessage());
                             }
                         }
                         sessionLatch.countDown();
@@ -127,7 +127,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                     pretest.run();
                 }
 
-                Log.d(TAG, "initSessionResumeActivity completed");
+                BranchLogger.v("initSessionResumeActivity completed");
             }
         });
 

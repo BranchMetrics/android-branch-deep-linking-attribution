@@ -458,6 +458,7 @@ public class ServerRequestQueue {
                         ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
                     }
                     else {
+                        BranchLogger.v("onRequestComplete handleFailure");
                         serverRequest.handleFailure(status, serverResponse.getFailReason());
                     }
                 }
@@ -545,22 +546,11 @@ public class ServerRequestQueue {
         }
     }
 
-    //TODO, refactor this
     void onRequestFailedInternal(ServerRequest serverRequest, ServerResponse serverResponse, int status) {
         BranchLogger.v("ServerRequestQueue onRequestFailed " + serverRequest + " " + serverResponse);
         // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
         if (serverRequest instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
             Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
-        }
-
-        boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
-        // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
-        // remove it from the queue
-        if (unretryableErrorCode || !serverRequest.shouldRetryOnFail() || (serverRequest.currentRetryCount >= Branch.getInstance().prefHelper_.getNoConnectionRetryMax())) {
-            Branch.getInstance().requestQueue_.remove(serverRequest);
-        } else {
-            // failure has already been handled
-            serverRequest.clearCallbacks();
         }
     }
 }

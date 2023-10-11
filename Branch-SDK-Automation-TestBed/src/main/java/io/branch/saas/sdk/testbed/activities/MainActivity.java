@@ -10,7 +10,10 @@ import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONObject;
+
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.saas.sdk.testbed.Common;
 import io.branch.saas.sdk.testbed.Constants;
 import io.branch.saas.sdk.testbed.R;
@@ -133,5 +136,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             intent.putExtra(Constants.TYPE, Constants.HANDLE_LINKS);
             startActivity(intent);
         }
+    }
+    
+    @Override
+    public void onStart() {
+        super.onStart();
+        Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                if (error == null) {
+                    Log.i("BranchSDK", referringParams.toString());
+                }
+                else {
+                    Log.i("BranchSDK error", error.getMessage());
+                }
+            }
+        }).withData(this.getIntent().getData()).init();
     }
 }
