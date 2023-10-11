@@ -115,7 +115,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                             BranchLogger.v("error is " + error);
                             if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT
                             || error.getErrorCode() != BranchError.ERR_BRANCH_NO_CONNECTIVITY) {
-                                Assert.fail("error should be null unless we are testing timeouts" + error.getMessage());
+                                Assert.fail("error should be null unless we are testing timeouts  " + error.errorCode_ + error.getMessage());
                             }
                         }
                         sessionLatch.countDown();
