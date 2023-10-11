@@ -4,7 +4,6 @@ package io.branch.referral;
  * Returns a general error if the server back-end is down.
  */
 public class BranchError {
-
     String errorMessage_ = "";
     int errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
     
