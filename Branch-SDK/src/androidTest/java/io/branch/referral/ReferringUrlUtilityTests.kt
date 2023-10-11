@@ -1,12 +1,15 @@
 package io.branch.referral
 
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.json.JSONException
 
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.text.SimpleDateFormat
 import java.util.*
 
 @RunWith(AndroidJUnit4::class)
@@ -176,6 +179,126 @@ class ReferringUrlUtilityTests : BranchTest() {
         val params = utility.getURLQueryParamsForRequest(openServerRequest())
 
         assertTrue(areJSONObjectsEqual(expected, params))
+    }
+
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+    @Test
+    fun testSerializeToJson() {
+        val params = mutableMapOf<String, BranchUrlQueryParameter>()
+        val date = Date(1672444800000L)
+        val param = BranchUrlQueryParameter(
+            name = "example",
+            value = "value",
+            timestamp = date,
+            isDeepLink = true,
+            validityWindow = 1000L
+        )
+        params["example"] = param
+
+        val resultJson = referringUrlUtility.serializeToJson(params)
+
+        val exampleJson = resultJson.getJSONObject("example")
+        assertEquals("example", exampleJson.getString("name"))
+        assertEquals("value", exampleJson.getString("value"))
+        assertEquals(dateFormat.format(date), exampleJson.getString("timestamp"))
+        assertEquals(true, exampleJson.getBoolean("isDeeplink"))
+        assertEquals(1000L, exampleJson.getLong("validityWindow"))
+    }
+
+    @Test
+    fun testDeserializeFromJson() {
+        val date = Date(1672444800000L)
+        val jsonString = """{
+            "example": {
+                "name": "example",
+                "value": "value",
+                "timestamp": "${dateFormat.format(date)}",
+                "isDeeplink": true,
+                "validityWindow": 1000
+            }
+        }"""
+        val jsonObj = JSONObject(jsonString)
+
+        val resultMap = referringUrlUtility.deserializeFromJson(jsonObj)
+
+        val exampleParam = resultMap["example"]!!
+        assertEquals("example", exampleParam.name)
+        assertEquals("value", exampleParam.value)
+        assertEquals(date, exampleParam.timestamp)
+        assertEquals(true, exampleParam.isDeepLink)
+        assertEquals(1000L, exampleParam.validityWindow)
+    }
+
+    @Test
+    fun testSerializationDeserializationRoundTrip() {
+        val params = mutableMapOf<String, BranchUrlQueryParameter>()
+        val date = Date(1672444800000L)
+        val param = BranchUrlQueryParameter(
+            name = "example",
+            value = "value",
+            timestamp = date,
+            isDeepLink = true,
+            validityWindow = 1000L
+        )
+        params["example"] = param
+
+        val serializedJson = referringUrlUtility.serializeToJson(params)
+        val deserializedMap = referringUrlUtility.deserializeFromJson(serializedJson)
+
+        assertTrue(params == deserializedMap)
+    }
+
+    @Test
+    fun testDeserializeFromJsonWithInvalidJSON() {
+        val badJsonString = "{ this is not valid json }"
+
+        assertThrows(JSONException::class.java) {
+            referringUrlUtility.deserializeFromJson(JSONObject(badJsonString))
+        }
+    }
+
+    @Test
+    fun testSetReferringQueryParams() {
+        val prefHelper =  PrefHelper.getInstance(Branch.getInstance().applicationContext)
+        prefHelper.setReferringUrlQueryParameters(JSONObject())
+
+        assertEquals("{}", prefHelper.referringURLQueryParameters.toString());
+    }
+
+    @Test
+    fun testSetGclidValidityWindow() {
+        val testValidityWindow = 1_000_000L
+        val expectedValidityWindow = (testValidityWindow / 1000).toInt()
+
+        val prefHelper =  PrefHelper.getInstance(Branch.getInstance().applicationContext)
+        prefHelper.referrerGclidValidForWindow = testValidityWindow
+
+        val url = "https://bnctestbed.app.link?gclid=12345"
+        referringUrlUtility.parseReferringURL(url)
+        val gclid = prefHelper.referringURLQueryParameters["gclid"] as JSONObject
+
+        assertEquals(expectedValidityWindow, gclid["validityWindow"])
+    }
+
+    @Test
+    fun testGclidExpires() {
+        val prefHelper =  PrefHelper.getInstance(Branch.getInstance().applicationContext)
+        prefHelper.referrerGclidValidForWindow = 1000
+
+        val url = "https://bnctestbed.app.link?gclid=12345"
+        referringUrlUtility.parseReferringURL(url)
+
+        //Gclid is still valid and should be included in requests.
+        val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
+        val paramsOne = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+        assertTrue(areJSONObjectsEqual(expected, paramsOne))
+
+        Thread.sleep(2000)
+
+        //Gclid has expired now and should not be included in requests.
+        val expectedEmptyJSON = JSONObject()
+        val paramsTwo = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+        assertTrue(areJSONObjectsEqual(expectedEmptyJSON, paramsTwo))
     }
 
     //Helper functions

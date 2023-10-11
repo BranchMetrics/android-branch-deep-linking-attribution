@@ -311,8 +311,6 @@ public abstract class ServerRequest {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
             extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
-            extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
             extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context, initiatedByClient);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
@@ -570,17 +568,20 @@ public abstract class ServerRequest {
      */
     public void onPreExecute() {
         if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
-            new ReferringUrlUtility(prefHelper_).parseReferringURL(prefHelper_.getExternalIntentUri());
+            try {
+                ReferringUrlUtility utility = new ReferringUrlUtility(prefHelper_);
+                String externalIntentUri = prefHelper_.getExternalIntentUri();
+                utility.parseReferringURL(externalIntentUri);
 
-            JSONObject urlQueryParams = new ReferringUrlUtility(prefHelper_).getURLQueryParamsForRequest(this);
+                JSONObject urlQueryParams = utility.getURLQueryParamsForRequest(this);
 
-            for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
-                String key = it.next();
-                try {
+                for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
+                    String key = it.next();
                     this.params_.put(key, urlQueryParams.get(key));
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+
+            } catch (Exception e) {
+                BranchLogger.logException("Caught exception in onPreExecute: ", e);
             }
         }
     }

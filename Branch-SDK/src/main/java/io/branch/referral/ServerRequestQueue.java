@@ -359,16 +359,6 @@ public class ServerRequestQueue {
 
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            if ((req instanceof ServerRequestLogout)) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                     @Override
-                     public void run() {
-                         req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                         BranchLogger.d("Branch is not initialized, cannot logout");
-                     }
-                });
-                return;
-            }
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
             }
@@ -507,11 +497,6 @@ public class ServerRequestQueue {
             catch (JSONException ex) {
                 ex.printStackTrace();
             }
-        }
-        else if (serverRequest instanceof ServerRequestLogout) {
-            //On Logout clear the link cache and all pending requests
-            Branch.getInstance().linkCache_.clear();
-            ServerRequestQueue.this.clear();
         }
 
         if (serverRequest instanceof ServerRequestInitSession || serverRequest instanceof ServerRequestIdentifyUserRequest) {
