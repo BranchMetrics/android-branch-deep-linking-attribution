@@ -27,13 +27,14 @@ public class ServerRequestTests extends BranchTest {
     }
     @After
     public void tearDown() throws InterruptedException {
+        BranchLogger.v("tearing down");
         setTimeouts(PrefHelper.TIMEOUT, PrefHelper.CONNECT_TIMEOUT);
         super.tearDown();
     }
 
     @Test
     public void testTimedOutInitSessionCallbackInvoked() {
-        setTimeouts(1,1);
+        setTimeouts(1, PrefHelper.CONNECT_TIMEOUT);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -48,7 +49,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(1,1);
+                setTimeouts(1, PrefHelper.CONNECT_TIMEOUT);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
                 Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
@@ -74,7 +75,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(1,1);
+                setTimeouts(1, PrefHelper.CONNECT_TIMEOUT);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
                 BranchUniversalObject buo = new BranchUniversalObject()
