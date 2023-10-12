@@ -25,10 +25,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
         BranchLogger.v("onActivityCreated, activity = " + activity);
-        Branch branch = Branch.getInstance();
-        if (branch == null) return;
-
-        branch.setIntentState(Branch.INTENT_STATE.PENDING);
     }
 
     @Override
@@ -43,7 +39,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         // it allows us to use currentActivityReference_ in session initialization code
         branch.currentActivityReference_ = new WeakReference<>(activity);
 
-        branch.setIntentState(Branch.INTENT_STATE.PENDING);
         activityCnt_++;
     }
 

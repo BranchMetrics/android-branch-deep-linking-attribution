@@ -235,15 +235,6 @@ public class Branch {
         INITIALISED, INITIALISING, UNINITIALISED
     }
     
-    
-    enum INTENT_STATE {
-        PENDING,
-        READY
-    }
-
-    /* Holds the current intent state. Default is set to PENDING. */
-    private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
-    
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
@@ -784,22 +775,24 @@ public class Branch {
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
-        if (intentState_ == INTENT_STATE.READY) {
+        BranchLogger.v("readAndStripParam " + data + " " + activity);
+        // Capture the intent URI and extra for analytics in case started by external intents such as google app search
+        extractExternalUriAndIntentExtras(data, activity);
 
-            // Capture the intent URI and extra for analytics in case started by external intents such as google app search
-            extractExternalUriAndIntentExtras(data, activity);
+        // if branch link is detected we don't need to look for click ID or app link anymore and can terminate early
+        if (extractBranchLinkFromIntentExtra(activity)) {
+            return;
+        }
 
-            // if branch link is detected we don't need to look for click ID or app link anymore and can terminate early
-            if (extractBranchLinkFromIntentExtra(activity)) return;
-
-            // Check for link click id or app link
-            if (!isActivityLaunchedFromHistory(activity)) {
-                // if click ID is detected we don't need to look for app link anymore and can terminate early
-                if (extractClickID(data, activity)) return;
-
-                // Check if the clicked url is an app link pointing to this app
-                extractAppLink(data, activity);
+        // Check for link click id or app link
+        if (!isActivityLaunchedFromHistory(activity)) {
+            // if click ID is detected we don't need to look for app link anymore and can terminate early
+            if (extractClickID(data, activity)) {
+                return;
             }
+
+            // Check if the clicked url is an app link pointing to this app
+            extractAppLink(data, activity);
         }
     }
     
@@ -1264,10 +1257,6 @@ public class Branch {
         return shareLinkManager_;
     }
 
-    void setIntentState(INTENT_STATE intentState) {
-        this.intentState_ = intentState;
-    }
-
     void setInitState(SESSION_STATE initState) {
         this.initState_ = initState;
     }
@@ -1276,7 +1265,7 @@ public class Branch {
         return initState_;
     }
 
-    private void initializeSession(ServerRequestInitSession initRequest, int delay) {
+    private void initializeSession(ServerRequestInitSession initRequest, int delay, boolean reInitializing) {
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
@@ -1308,12 +1297,21 @@ public class Branch {
         // which will blow up the session count in analytics but does the job.
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
+        BranchLogger.v("forceBranchSession " + forceBranchSession);
+
+        // If we are reinitializing, the onResume init will not have forceBranchSession
 
         if (getInitState() == SESSION_STATE.UNINITIALISED || forceBranchSession) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
+                registerAppInit(initRequest, false);
             }
-            registerAppInit(initRequest, false);
+            // reInitializing will be true if called by reInit() which means the onResume init should not execute
+            // TODO: With the above TODO, can we make this more elegant if we didn't have sessions?
+            else if(!reInitializing) {
+                BranchLogger.v("Not reinitializing, nor requested new session, executing onResume init()");
+                registerAppInit(initRequest, false);
+            }
         } else if (initRequest.callback_ != null) {
             // Else, let the user know session initialization failed because it's already initialized.
             initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
@@ -1969,6 +1967,8 @@ public class Branch {
                 PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
             }
 
+            BranchLogger.v("uri " + uri + " isReInitializing " + isReInitializing + " is restart requested " +  branch.isRestartSessionRequested(intent) + " intent is " + intent);
+
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
             }
@@ -1989,8 +1989,8 @@ public class Branch {
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            BranchLogger.d("Creating " + initRequest + " from init");
-            branch.initializeSession(initRequest, delay);
+            BranchLogger.v("Created " + initRequest + " from init with callback " + initRequest.callback_);
+            branch.initializeSession(initRequest, delay, isReInitializing);
         }
 
         private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
