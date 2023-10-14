@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Branch.getInstance().setIdentity("automation_test_user");
-        Branch.enableLogging();
         btBuoObj = findViewById(R.id.bt_buo_obj);
         btCreateDeepLink = findViewById(R.id.bt_create_deep_link);
         btShare = findViewById(R.id.bt_share);
