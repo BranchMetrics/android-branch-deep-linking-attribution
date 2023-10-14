@@ -76,6 +76,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
+                Branch.getInstance().setRetryCount(1);
                 setTimeouts(1, 1);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
