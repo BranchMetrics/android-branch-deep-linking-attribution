@@ -185,4 +185,11 @@ public class ReadDeepLinkActivity extends AppCompatActivity implements AdvancedW
     public void onExternalPageRequest(String url) {
         Log.e("onExternalPageRequest", "-->" + url);
     }
+
+    @Override
+    public void onNewIntent(Intent intent){
+        super.onNewIntent(intent);
+        setIntent(intent);
+        Log.i("BRANCH SDK ", "onNewIntent " + intent);
+    }
 }
