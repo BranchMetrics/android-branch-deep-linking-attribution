@@ -34,7 +34,7 @@ public class ServerRequestTests extends BranchTest {
 
     @Test
     public void testTimedOutInitSessionCallbackInvoked() {
-        setTimeouts(1, PrefHelper.CONNECT_TIMEOUT);
+        setTimeouts(1, 1);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -49,7 +49,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(1, PrefHelper.CONNECT_TIMEOUT);
+                setTimeouts(1, 1);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
                 Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
@@ -76,7 +76,7 @@ public class ServerRequestTests extends BranchTest {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(1, PrefHelper.CONNECT_TIMEOUT);
+                setTimeouts(1, 1);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
                 BranchUniversalObject buo = new BranchUniversalObject()
@@ -100,9 +100,13 @@ public class ServerRequestTests extends BranchTest {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         BranchLogger.v("error is " + error);
-                        Assert.assertTrue((BranchError.ERR_BRANCH_REQ_TIMED_OUT == error.getErrorCode())
-                                || BranchError.ERR_BRANCH_NO_CONNECTIVITY == error.getErrorCode());
-                        lock3.countDown();
+                        if (error == null) {
+                            Assert.fail("Error was null");
+                        }
+                        else {
+                            Assert.assertTrue((BranchError.ERR_BRANCH_REQ_TIMED_OUT == error.getErrorCode()) || BranchError.ERR_BRANCH_NO_CONNECTIVITY == error.getErrorCode());
+                            lock3.countDown();
+                        }
                     }
                 });
                 try {
