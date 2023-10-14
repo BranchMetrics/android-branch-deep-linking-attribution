@@ -83,6 +83,15 @@ public class ReadDeepLinkActivity extends AppCompatActivity implements AdvancedW
     @Override
     protected void onStart() {
         super.onStart();
+    }
+
+
+    @SuppressLint("NewApi")
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mWebView.onResume();
+        // ...
         if (!TextUtils.isEmpty(clickType) && clickType.equals(Constants.BUO_REFERENCE_AND_CREATE_DEP_LINK)) {
             return;
         }
@@ -113,15 +122,6 @@ public class ReadDeepLinkActivity extends AppCompatActivity implements AdvancedW
             JSONObject installParams = Branch.getInstance().getFirstReferringParams();
             Log.i("BRANCH SDK install", "installParams-->" + installParams);
         }
-    }
-
-
-    @SuppressLint("NewApi")
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mWebView.onResume();
-        // ...
     }
 
     @SuppressLint("NewApi")

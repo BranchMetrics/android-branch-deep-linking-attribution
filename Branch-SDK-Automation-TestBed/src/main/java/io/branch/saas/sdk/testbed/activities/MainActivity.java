@@ -141,6 +141,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onStart() {
         super.onStart();
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
         Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
