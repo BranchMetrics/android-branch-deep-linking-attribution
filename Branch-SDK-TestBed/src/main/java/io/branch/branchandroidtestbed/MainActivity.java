@@ -699,25 +699,7 @@ public class MainActivity extends Activity {
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         Log.d("BranchSDK_Tester", "initSession onNewIntent " + intent);
-
-        if(intent != null && intent.getData() != null) {
-            intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-        }
         this.setIntent(intent);
-
-        //what if you don't need a reinit call
-        Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
-            @Override
-            public void onInitFinished(JSONObject referringParams, BranchError error) {
-                if (error != null) {
-                    Log.e("BranchSDK_Tester_OnNI", error.getMessage());
-                } else if (referringParams != null) {
-                    Log.d("BranchSDK_Tester_OnNI", referringParams.toString());
-                }
-            }
-        }).reInit();
-
-
     }
 
     @Override
