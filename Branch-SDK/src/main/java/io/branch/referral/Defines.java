@@ -245,7 +245,6 @@ public class Defines {
         GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterOpen("v1/open"),
-        IdentifyUser("v1/profile"),
         Logout("v1/logout"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),
