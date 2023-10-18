@@ -33,6 +33,7 @@ public class PrefHelper {
      */
     static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
     static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
+    static final String BRANCH_EU_BASE_URL_V3 = "https://api3-eu.branch.io/";
 
     /**
      * The base URL to use for all CDN calls.
@@ -204,6 +205,7 @@ public class PrefHelper {
         enableLogging_ = false;
         prefHelper_ = null;
         customCDNBaseURL_ = null;
+        useEUEndpoint_ = false;
     }
 
     /**
@@ -222,6 +224,10 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
+        if (useEUEndpoint_) {
+            return BRANCH_EU_BASE_URL_V3;
+        }
+
         if (URLUtil.isHttpsUrl(getString(KEY_BASE_URL))) {
             return getString(KEY_BASE_URL);
         }
@@ -1323,9 +1329,14 @@ public class PrefHelper {
     }
 
     private static boolean enableLogging_ = false;
+    private static boolean useEUEndpoint_ = false;
 
     static void enableLogging(boolean fEnable) {
         enableLogging_ = fEnable;
+    }
+
+    static void useEUEndpoint(boolean enable) {
+        useEUEndpoint_ = enable;
     }
 
     boolean hasValidBranchKey() {

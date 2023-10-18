@@ -2416,4 +2416,8 @@ public class Branch {
             });
         }
     }
+
+    public static void useEUEndpoint() {
+        PrefHelper.useEUEndpoint(true);
+    }
 }
