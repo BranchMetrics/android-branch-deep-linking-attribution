@@ -465,11 +465,6 @@ public class ServerRequestQueue {
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
-            if ((req instanceof ServerRequestLogout)) {
-                req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                BranchLogger.d("Branch is not initialized, cannot logout");
-                return;
-            }
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
@@ -576,10 +571,6 @@ public class ServerRequestQueue {
                 } catch (JSONException ex) {
                     ex.printStackTrace();
                 }
-            } else if (thisReq_ instanceof ServerRequestLogout) {
-                //On Logout clear the link cache and all pending requests
-                Branch.getInstance().linkCache_.clear();
-                ServerRequestQueue.this.clear();
             }
 
 
