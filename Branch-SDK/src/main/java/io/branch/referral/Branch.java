@@ -2417,6 +2417,10 @@ public class Branch {
         }
     }
 
+    /**
+     * Send requests to EU endpoints.
+     * This feature must also be enabled on the server side, otherwise the server will drop requests. Contact your account manager for details.
+     */
     public static void useEUEndpoint() {
         PrefHelper.useEUEndpoint(true);
     }
