@@ -90,8 +90,6 @@ class DeviceInfo {
 
             requestObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
 
-            maybeAddSDFields(serverRequest, requestObj);
-
             if (Branch.getPluginName() != null) {
                 requestObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
                 requestObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
@@ -110,6 +108,15 @@ class DeviceInfo {
             String localIpAddr = SystemObserver.getLocalIPAddress();
             if ((!TextUtils.isEmpty(localIpAddr))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
+            }
+
+            if (serverRequest.isInitializationOrEventRequest()) {
+                requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+                requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+                requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+                requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+                requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
             }
         } catch (JSONException e) {
             BranchLogger.d(e.getMessage());
@@ -170,8 +177,6 @@ class DeviceInfo {
 
             userDataObj.put(Defines.Jsonkey.APILevel.getKey(), SystemObserver.getAPILevel());
 
-            maybeAddSDFields(serverRequest, userDataObj);
-
             if (Branch.getPluginName() != null) {
                 userDataObj.put(Defines.Jsonkey.PluginName.getKey(), Branch.getPluginName());
                 userDataObj.put(Defines.Jsonkey.PluginVersion.getKey(), Branch.getPluginVersion());
@@ -217,19 +222,17 @@ class DeviceInfo {
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
             }
 
+            if (serverRequest.isInitializationOrEventRequest()) {
+                userDataObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+                userDataObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+                userDataObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                userDataObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+                userDataObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+                userDataObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
+            }
+
         } catch (JSONException e) {
             BranchLogger.d(e.getMessage());
-        }
-    }
-
-    private void maybeAddSDFields(ServerRequest serverRequest, JSONObject requestObj) throws JSONException {
-        if (serverRequest.isInitializationOrEventRequest()) {
-            requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
-            requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
-            requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
-            requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
-            requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
-            requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
         }
     }
 
