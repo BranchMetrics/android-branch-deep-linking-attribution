@@ -3,6 +3,7 @@ package io.branch.branchandroidtestbed;
 import android.app.Activity;
 
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -25,7 +26,6 @@ public class SettingsActivity extends Activity {
         setupDisableAdNetworkCalloutsSwitch();
         setupPrepHelperView();
         setupRetryEditText();
-        setupApiUrlText();
     }
 
     void setupRetryEditText() {
@@ -35,40 +35,21 @@ public class SettingsActivity extends Activity {
 
         retryEditText.setText(Integer.toString(currentRetries));
 
-        retryEditText.setOnEditorActionListener((textView, i, keyEvent) -> {
-            if (i == EditorInfo.IME_ACTION_DONE) {
-                int retries = Integer.parseInt(textView.getText().toString());
-                PrefHelper.getInstance(SettingsActivity.this).setRetryCount(retries);
+        retryEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE) {
+                    int retries = Integer.valueOf(textView.getText().toString());
+                    PrefHelper.getInstance(SettingsActivity.this).setRetryCount(retries);
 
-                InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(retryEditText.getWindowToken(), 0);
+                    InputMethodManager imm = (InputMethodManager)getSystemService(SettingsActivity.this.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(retryEditText.getWindowToken(), 0);
 
-                Toast.makeText(getApplicationContext(), "Set Network Retries to " + retries, Toast.LENGTH_SHORT).show();
-                return true;
+                    Toast.makeText(getApplicationContext(), "Set Network Retries to " + retries, Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                return false;
             }
-            return false;
-        });
-    }
-
-    void setupApiUrlText() {
-        final EditText apiUrlText = findViewById(R.id.api_url_text);
-        final PrefHelper prefHelper = PrefHelper.getInstance(this);
-        String currentApiUrl = prefHelper.getAPIBaseUrl();
-
-        apiUrlText.setText(currentApiUrl);
-
-        apiUrlText.setOnEditorActionListener((textView, i, keyEvent) -> {
-            if (i == EditorInfo.IME_ACTION_DONE) {
-                String newApiUrl = textView.getText().toString();
-                Branch.getInstance().setAPIUrl(newApiUrl);
-
-                InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(apiUrlText.getWindowToken(), 0);
-
-                Toast.makeText(getApplicationContext(), "Set API Base URL to " + newApiUrl, Toast.LENGTH_SHORT).show();
-                return true;
-            }
-            return false;
         });
     }
 

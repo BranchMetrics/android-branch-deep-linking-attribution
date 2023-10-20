@@ -56,28 +56,6 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/testbed_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="API Base URL" />
-
-                <EditText
-                    android:id="@+id/api_url_text"
-                    android:layout_width="240dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:inputType="text"
-                    android:maxLines="1"
-                    android:hint="api2.branch.io" />
-
-            </LinearLayout>
-
             <TextView
                 android:id="@+id/prefhelper_text_view"
                 style="@style/testbed_text_view"
