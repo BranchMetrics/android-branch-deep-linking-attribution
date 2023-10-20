@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v5.7.2
+  * _*Master Release*_ - Oct 20, 2023
+    - Added additional fields to initialization and event requests
 - v5.7.1
   * _*Master Release*_ - Oct 3, 2023
     - Fixed bug that prevented session from initializing after opening a link with gclid
