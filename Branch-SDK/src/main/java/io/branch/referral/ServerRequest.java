@@ -738,7 +738,7 @@ public abstract class ServerRequest {
         return false;
     }
 
-    // needed for adding SD fields for certain request (i.e. initialization and events)
+    // needed for adding additional device info fields for certain request (i.e. initialization and events)
     boolean isInitializationOrEventRequest() {
         for (Defines.RequestPath item : initializationAndEventRoutes) {
             if (item.equals(requestPath_)) return true;
