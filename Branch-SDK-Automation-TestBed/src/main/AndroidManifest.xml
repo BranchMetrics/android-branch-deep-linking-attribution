@@ -34,7 +34,7 @@
 
         <meta-data
             android:name="io.branch.sdk.BranchKey"
-            android:value="key_live_nf8w3l1WBpzWdlC00KsLNdmbuEccK6Yr" /> <!-- For your test app, if you have one; Again, use your actual test Branch key -->
+            android:value="key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB" /> <!-- For your test app, if you have one; Again, use your actual test Branch key -->
         <meta-data
             android:name="io.branch.sdk.BranchKey.test"
             android:value="key_test_om2EWe1WBeBYmpz9Z1mdpopouDmoN72T" />
