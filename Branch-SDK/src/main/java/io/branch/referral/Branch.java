@@ -508,10 +508,11 @@ public class Branch {
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
-    public static void setAPIUrl(String url) {
-        PrefHelper.setAPIUrl(url);
+    public void setAPIUrl(String url) {
+        if (prefHelper_ != null && url.length() > 0) {
+            prefHelper_.setAPIUrl(url);
+        }
     }
-
     /**
      * <p>Sets a custom CDN base URL.</p>
      * @param url The {@link String} base URL for CDN endpoints.
@@ -1024,9 +1025,13 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        ServerRequest req = new ServerRequestLogout(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            requestQueue_.handleNewRequest(req);
+        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.clearUserValues();
+        //On Logout clear the link cache and all pending requests
+        linkCache_.clear();
+        requestQueue_.clear();
+        if (callback != null) {
+            callback.onLogoutFinished(true, null);
         }
     }
 
@@ -2410,5 +2415,13 @@ public class Branch {
                 return null;
             });
         }
+    }
+
+    /**
+     * Send requests to EU endpoints.
+     * This feature must also be enabled on the server side, otherwise the server will drop requests. Contact your account manager for details.
+     */
+    public static void useEUEndpoint() {
+        PrefHelper.useEUEndpoint(true);
     }
 }
