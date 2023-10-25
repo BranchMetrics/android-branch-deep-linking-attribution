@@ -109,6 +109,15 @@ class DeviceInfo {
             if ((!TextUtils.isEmpty(localIpAddr))) {
                 requestObj.put(Defines.Jsonkey.LocalIP.getKey(), localIpAddr);
             }
+
+            if (serverRequest.isInitializationOrEventRequest()) {
+                requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+                requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+                requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+                requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+                requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
+            }
         } catch (JSONException e) {
             BranchLogger.d(e.getMessage());
         }
@@ -211,6 +220,15 @@ class DeviceInfo {
             if (serverRequest instanceof ServerRequestGetLATD) {
                 userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
                         ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
+            }
+
+            if (serverRequest.isInitializationOrEventRequest()) {
+                userDataObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
+                userDataObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
+                userDataObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                userDataObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
+                userDataObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
+                userDataObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
             }
 
         } catch (JSONException e) {
