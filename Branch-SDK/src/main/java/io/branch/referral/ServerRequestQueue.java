@@ -574,7 +574,7 @@ public class ServerRequestQueue {
             }
 
 
-            if (thisReq_ instanceof ServerRequestInitSession || thisReq_ instanceof ServerRequestIdentifyUserRequest) {
+            if (thisReq_ instanceof ServerRequestInitSession) {
                 // If this request changes a session update the session-id to queued requests.
                 boolean updateRequestsInQueue = false;
                 if (!Branch.getInstance().isTrackingDisabled() && respJson != null) {
