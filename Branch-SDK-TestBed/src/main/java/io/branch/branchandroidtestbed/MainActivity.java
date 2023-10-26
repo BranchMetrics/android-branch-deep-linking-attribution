@@ -707,6 +707,10 @@ public class MainActivity extends Activity {
             Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(i);
         }
+
+        if(requestCode == getResources().getInteger(R.integer.ShareRequestCode)){
+            Log.d("BranchSDK", "Sharing result was " + resultCode + " intent " + data);
+        }
     }
 
 

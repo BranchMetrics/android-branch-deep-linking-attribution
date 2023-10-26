@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="AutoDeeplinkRequestCode">1001</integer>
+    <integer name="ShareRequestCode">1002</integer>
 </resources>

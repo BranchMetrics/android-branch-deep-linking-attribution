@@ -1,8 +1,8 @@
 package io.branch.referral.util
 
 import android.app.Activity
+import android.app.Instrumentation.ActivityResult
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -39,6 +39,7 @@ class SharingUtil {
                 ).intentSender
             )
 
-        activity.startActivity(chooserIntent)
+        activity.startActivityForResult(chooserIntent, 1002)
+
     }
 }
