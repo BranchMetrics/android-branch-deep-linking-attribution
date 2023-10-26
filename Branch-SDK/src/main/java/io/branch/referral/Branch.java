@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -20,7 +19,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -37,7 +35,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +51,6 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
-import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -1218,6 +1214,26 @@ public class Branch {
     }
 
 
+    /**
+     * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
+     * user selected clients using native android share sheet</p>
+     *
+     */
+    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchLinkShareListener callback){
+
+        //Cancel any existing sharing in progress.
+        /* if (shareLinkManager_ != null) {
+            shareLinkManager_.cancelShareLinkDialog(true);
+        }
+        shareLinkManager_ = new ShareLinkManager();
+        shareLinkManager_.shareLink(builder);*/
+
+        String shortUrl = buo.getShortUrl(activity, linkProperties);
+
+        NativeShareLinkManager nativeShareLinkManager = new NativeShareLinkManager();
+        nativeShareLinkManager.shareLink(activity, shortUrl, linkProperties, callback);
+
+    }
 
     /**
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
