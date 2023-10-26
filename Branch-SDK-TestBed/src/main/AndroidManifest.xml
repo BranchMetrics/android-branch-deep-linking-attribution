@@ -75,5 +75,10 @@
 
         <uses-library android:name="android.test.runner" />
 
+        <receiver android:name="io.branch.receivers.SharingBroadcastReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="EXTRA_CHOSEN_COMPONENT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

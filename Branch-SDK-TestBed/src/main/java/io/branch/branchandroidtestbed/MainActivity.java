@@ -1,5 +1,7 @@
 package io.branch.branchandroidtestbed;
 
+import static android.content.Intent.ACTION_SEND;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
@@ -42,9 +44,11 @@ import java.util.List;
 
 import io.branch.branchandroidtestbed.R;
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.receivers.SharingBroadcastReceiver;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.Defines;
@@ -58,6 +62,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.util.SharingUtil;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -387,6 +392,19 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.native_share_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                BranchShortLinkBuilder builder = new BranchShortLinkBuilder(MainActivity.this);
+                String url = builder.getShortUrl();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    new SharingUtil().share(url, "test share", MainActivity.this);
+                }
+            }
+        });
+
+
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -688,6 +706,10 @@ public class MainActivity extends Activity {
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(i);
+        }
+
+        if(requestCode == getResources().getInteger(R.integer.ShareRequestCode)){
+            Log.d("BranchSDK", "Sharing result was " + resultCode + " intent " + data);
         }
     }
 
