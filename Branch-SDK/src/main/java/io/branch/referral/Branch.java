@@ -17,12 +17,14 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.android.billingclient.api.Purchase;
@@ -1219,19 +1221,27 @@ public class Branch {
      * user selected clients using native android share sheet</p>
      *
      */
-    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchLinkShareListener callback){
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchLinkShareListener callback, @Nullable Branch.IChannelProperties channelProperties){
 
+        if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+            } else {
+                BranchLogger.v("Sharing error. Branch instance is not created yet. Make sure you have initialized Branch.");
+            }
+        } else {
         //Cancel any existing sharing in progress.
         /* if (shareLinkManager_ != null) {
             shareLinkManager_.cancelShareLinkDialog(true);
         }
         shareLinkManager_ = new ShareLinkManager();
         shareLinkManager_.shareLink(builder);*/
+            String shortUrl = buo.getShortUrl(activity, linkProperties);
 
-        String shortUrl = buo.getShortUrl(activity, linkProperties);
-
-        NativeShareLinkManager nativeShareLinkManager = new NativeShareLinkManager();
-        nativeShareLinkManager.shareLink(activity, shortUrl, linkProperties, callback);
+            NativeShareLinkManager nativeShareLinkManager = new NativeShareLinkManager();
+            nativeShareLinkManager.shareLink(activity, shortUrl, linkProperties, callback, channelProperties);
+        }
 
     }
 

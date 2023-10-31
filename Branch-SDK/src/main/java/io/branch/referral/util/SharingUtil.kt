@@ -41,5 +41,6 @@ class SharingUtil {
 
         activity.startActivityForResult(chooserIntent, 1002)
 
+        // TODO: Call onLinkShareResponse function once activity finishes.
     }
 }

@@ -13,5 +13,7 @@ class SharingBroadcastReceiver: BroadcastReceiver() {
 
         BranchLogger.v("Intent: $intent")
         BranchLogger.v("Clicked component: $clickedComponent")
+
+        // TODO : Get Pointer to BranchLinkShareListener and call function onChannelSelected
     }
 }

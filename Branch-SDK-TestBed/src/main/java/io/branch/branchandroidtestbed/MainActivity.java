@@ -1,7 +1,5 @@
 package io.branch.branchandroidtestbed;
 
-import static android.content.Intent.ACTION_SEND;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
@@ -22,7 +20,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -31,7 +29,6 @@ import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 
 import org.json.JSONObject;
@@ -42,17 +39,13 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.branch.branchandroidtestbed.R;
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.receivers.SharingBroadcastReceiver;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
-import io.branch.referral.BranchShortLinkBuilder;
+import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
-import io.branch.referral.Defines;
-import io.branch.referral.ServerResponse;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -62,7 +55,6 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.referral.util.SharingUtil;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -393,14 +385,54 @@ public class MainActivity extends Activity {
         });
 
         findViewById(R.id.native_share_btn).setOnClickListener(new OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
             @Override
             public void onClick(View view) {
 
-                BranchShortLinkBuilder builder = new BranchShortLinkBuilder(MainActivity.this);
-                String url = builder.getShortUrl();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                    new SharingUtil().share(url, "test share", MainActivity.this);
-                }
+                LinkProperties linkProperties = new LinkProperties()
+                        .addTag("myShareTag1")
+                        .addTag("myShareTag2")
+//                      .setAlias("mylinkName") // In case you need to white label your link
+                        .setChannel("myShareChannel2")
+                        .setFeature("mySharefeature2")
+                        .setStage("10")
+                        .setCampaign("Android campaign")
+                        .addControlParameter("$android_deeplink_path", "custom/path/*")
+                        .addControlParameter("$ios_url", "http://example.com/ios")
+                        .setDuration(100);
+                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchLinkShareListener() {
+
+                            @Override
+                            public void onShareLinkDialogLaunched() {
+                            }
+
+                            @Override
+                            public void onShareLinkDialogDismissed() {
+                            }
+
+                            @Override
+                            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+                            }
+
+                            @Override
+                            public void onChannelSelected(String channelName) {
+                            }
+                        },
+                        new Branch.IChannelProperties() {
+                            @Override
+                            public String getSharingTitleForChannel(String channel) {
+                                return channel.contains("Messaging") ? "title for SMS" :
+                                        channel.contains("Slack") ? "title for slack" :
+                                                channel.contains("Gmail") ? "title for gmail" : null;
+                            }
+
+                            @Override
+                            public String getSharingMessageForChannel(String channel) {
+                                return channel.contains("Messaging") ? "message for SMS" :
+                                        channel.contains("Slack") ? "message for slack" :
+                                                channel.contains("Gmail") ? "message for gmail" : null;
+                            }
+                        });
             }
         });
 
