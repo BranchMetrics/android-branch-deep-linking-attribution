@@ -43,6 +43,7 @@ private suspend fun executeNetworkRequest(request: ServerRequest): ServerRequest
             return ServerRequestResponsePair(request, ServerResponse(
                 request.requestPath,
                 BranchError.ERR_BRANCH_TRACKING_DISABLED,
+                "",
                 ""
             ))
         }

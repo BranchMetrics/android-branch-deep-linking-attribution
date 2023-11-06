@@ -86,7 +86,7 @@ public class BranchError {
      *
      * @return A {@link String} with localised error message for the given status
      */
-    private String initErrorCodeAndGetLocalisedMessage(int statusCode) {
+    private String initErrorCodeAndGetLocalisedMessage(int statusCode, String exceptionMessage) {
         String errMsg;
         if (statusCode == ERR_BRANCH_NO_CONNECTIVITY) {
             errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
@@ -143,17 +143,24 @@ public class BranchError {
         } else if (statusCode == ERR_BRANCH_TASK_TIMEOUT) {
             errorCode_ = ERR_BRANCH_TASK_TIMEOUT;
             errMsg = " Task exceeded timeout.";
-        } else if (statusCode == ERR_NETWORK_ON_MAIN){
+        } else if (statusCode == ERR_NETWORK_ON_MAIN) {
             errorCode_ = ERR_NETWORK_ON_MAIN;
             errMsg = " Cannot call network on main.";
-        } else if (statusCode == ERR_OTHER){
-        errorCode_ = ERR_OTHER;
-        errMsg = " An exception occurred. View in debug logs.";
         }
         else {
-            errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
-            errMsg = " Check network connectivity and that you properly initialized.";
+            errorCode_ = ERR_OTHER;
+            errMsg = " An exception occurred. View in debug logs. ";
         }
+
+        if(exceptionMessage != null){
+            errMsg += exceptionMessage;
+        }
+
         return errMsg;
+    }
+
+
+    private String initErrorCodeAndGetLocalisedMessage(int statusCode) {
+        return initErrorCodeAndGetLocalisedMessage(statusCode, null);
     }
 }

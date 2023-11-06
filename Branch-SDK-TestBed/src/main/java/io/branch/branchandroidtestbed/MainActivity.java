@@ -689,7 +689,7 @@ public class MainActivity extends Activity {
 
                 // QA purpose only
                 //TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+                //BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
 
             }
         }).withData(this.getIntent().getData()).init();

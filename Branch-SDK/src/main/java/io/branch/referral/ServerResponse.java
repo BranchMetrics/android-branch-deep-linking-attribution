@@ -41,6 +41,8 @@ public class ServerResponse {
      */
     private String requestId_;
 
+    private String message_;
+
     /**
      * <p>Main constructor method for the {@link ServerResponse} class that allows for the instantiation
      * of a server response object as a direct result of a server call.</p>
@@ -48,10 +50,11 @@ public class ServerResponse {
      * @param tag        A {@link String} value of the <i>Tag</i> attribute of the current link.
      * @param statusCode {@link Integer} value of the HTTP status code.
      */
-    public ServerResponse(String tag, int statusCode, String requestId) {
+    public ServerResponse(String tag, int statusCode, String requestId, String message) {
         tag_ = tag;
         statusCode_ = statusCode;
         requestId_ = requestId;
+        message_ = message;
     }
 
     /**
@@ -136,4 +139,7 @@ public class ServerResponse {
         return causeMsg;
     }
 
+    public String getAdditionalMessage(){
+        return this.message_;
+    }
 }

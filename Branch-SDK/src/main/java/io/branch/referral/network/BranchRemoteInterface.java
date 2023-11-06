@@ -94,7 +94,7 @@ public abstract class BranchRemoteInterface {
         if (addCommonParams(params, branchKey)) {
             modifiedUrl += this.convertJSONtoString(params);
         } else {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "");
         }
 
         BranchLogger.v("getting " + modifiedUrl);
@@ -104,9 +104,9 @@ public abstract class BranchRemoteInterface {
             return processEntityForJSON(response, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
             if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "", branchError.errorMessage);
             } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
+                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "", branchError.errorMessage);
             }
         }
     }
@@ -124,7 +124,7 @@ public abstract class BranchRemoteInterface {
         body = body != null ? body : new JSONObject();
 
         if (!addCommonParams(body, branchKey)) {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "");
         }
 
         try {
@@ -132,7 +132,7 @@ public abstract class BranchRemoteInterface {
             return processEntityForJSON(response, tag, response.requestId);
         }
         catch (BranchRemoteException branchError) {
-            return new ServerResponse(tag, branchError.branchErrorCode, "");
+            return new ServerResponse(tag, branchError.branchErrorCode, "", branchError.errorMessage);
         }
     }
 
@@ -157,7 +157,7 @@ public abstract class BranchRemoteInterface {
 
         int statusCode = response.responseCode;
 
-        ServerResponse result = new ServerResponse(tag, statusCode, requestId);
+        ServerResponse result = new ServerResponse(tag, statusCode, requestId, "");
         if(!TextUtils.isEmpty(requestId)){
             BranchLogger.v(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
@@ -249,6 +249,7 @@ public abstract class BranchRemoteInterface {
         private final String responseData;
         private final int responseCode;
         String requestId;
+        private String responseMessage;
 
         /**
          * Creates a BranchResponse object with response data and status code
@@ -260,6 +261,12 @@ public abstract class BranchRemoteInterface {
             this.responseData = responseData;
             this.responseCode = responseCode;
         }
+
+        public BranchResponse(@Nullable String responseData, int responseCode, String message) {
+            this.responseMessage = message;
+            this.responseData = responseData;
+            this.responseCode = responseCode;
+        }
     }
 
     /**
@@ -267,7 +274,8 @@ public abstract class BranchRemoteInterface {
      * see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
      */
     public static class BranchRemoteException extends Exception {
-        private int branchErrorCode = BranchError.ERR_BRANCH_NO_CONNECTIVITY;
+        private int branchErrorCode;
+        private String errorMessage;
 
         /**
          * Creates BranchRemoteException
@@ -275,8 +283,9 @@ public abstract class BranchRemoteInterface {
          * @param errorCode Error code for operation failure. Should be one of
          *                  {@link BranchError#ERR_BRANCH_REQ_TIMED_OUT} | {@link BranchError#ERR_BRANCH_NO_CONNECTIVITY}
          */
-        public BranchRemoteException(int errorCode) {
+        public BranchRemoteException(int errorCode, String message) {
             branchErrorCode = errorCode;
+            errorMessage = message;
         }
     }
 

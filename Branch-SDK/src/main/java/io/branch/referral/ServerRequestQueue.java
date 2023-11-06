@@ -459,7 +459,7 @@ public class ServerRequestQueue {
                     }
                     else {
                         BranchLogger.v("onRequestComplete handleFailure");
-                        serverRequest.handleFailure(status, serverResponse.getFailReason());
+                        serverRequest.handleFailure(status, serverResponse.getFailReason() + " " + serverResponse.getAdditionalMessage());
                     }
                 }
             }

@@ -96,7 +96,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             }
         } catch (SocketException ex) {
             BranchLogger.v("Http connect exception: " + ex.getMessage());
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
 
         } catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
@@ -105,7 +105,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, ex.getMessage());
             }
         } catch(InterruptedIOException ex){
             // When the thread times out before or while sending the request
@@ -114,11 +114,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT, ex.getMessage());
             }
         } catch (IOException ex) {
             BranchLogger.v("Branch connect exception: " + ex.getMessage());
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -245,7 +245,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 if(!willRetry) {
                     handleException(ex);
                     BranchLogger.v("reached result");
-                    result = new BranchResponse(null, 500); // catch all
+                    result = new BranchResponse(null, 500, ex.getMessage()); // catch all
                 }
                 else{
                     sleepForInterval(retryInterval);
@@ -278,23 +278,29 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     // There are some exceptions we have historically wrapped as BranchRemoteExceptions
     // These are thrown and parsed into ServerResponses
     private void handleException(Exception ex) throws BranchRemoteException {
+        String errorMessage = "";
+
+        if(ex != null &&  ex.getMessage() != null){
+            errorMessage = ex.getMessage();
+        }
+
         if (ex instanceof SocketTimeoutException) {
             // On socket time out retry the request for retryNumber of times
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, errorMessage);
         }
         else if (ex instanceof InterruptedIOException) {
             // When the thread times out before or while sending the request
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT, errorMessage);
         }
         // Unable to resolve host/Unknown host exception
         else if (ex instanceof IOException) {
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, errorMessage);
         }
         else if (ex instanceof NetworkOnMainThreadException) {
-            throw new BranchRemoteException(BranchError.ERR_NETWORK_ON_MAIN);
+            throw new BranchRemoteException(BranchError.ERR_NETWORK_ON_MAIN, errorMessage);
         }
         else {
-            throw new BranchRemoteException(BranchError.ERR_OTHER);
+            throw new BranchRemoteException(BranchError.ERR_OTHER, errorMessage);
         }
     }
 
