@@ -439,11 +439,11 @@ public class ServerRequestQueue {
         try {
             if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                 postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
+                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", ""));
             }
         } catch (InterruptedException e) {
             postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, ""));
+            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", e.getMessage()));
         }
     }
 
@@ -505,7 +505,7 @@ public class ServerRequestQueue {
             // update queue wait time
             thisReq_.doFinalUpdateOnBackgroundThread();
             if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "");
             }
             String branchKey = Branch.getInstance().prefHelper_.getBranchKey();
             ServerResponse result;
@@ -632,6 +632,7 @@ public class ServerRequestQueue {
         }
 
         void onRequestFailed(ServerResponse serverResponse, int status) {
+            BranchLogger.v("onRequestFailed " + serverResponse.getMessage());
             // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
             if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
                 Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
@@ -644,7 +645,7 @@ public class ServerRequestQueue {
                 //On Network error or Branch is down fail all the pending requests in the queue except
                 //for request which need to be replayed on failure.
                 ServerRequestQueue.this.networkCount_ = 0;
-                thisReq_.handleFailure(status, serverResponse.getFailReason());
+                thisReq_.handleFailure(status, serverResponse.getFailReason() + " " + serverResponse.getMessage());
             }
 
             boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
